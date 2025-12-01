@@ -11,12 +11,12 @@ import (
 )
 
 type AuthService struct {
-	userRepo  *repository.UserRepository
+	userRepo  repository.UserRepositoryInterface
 	jwtSecret string
 	idCounter int
 }
 
-func NewAuthService(userRepo *repository.UserRepository, jwtSecret string) *AuthService {
+func NewAuthService(userRepo repository.UserRepositoryInterface, jwtSecret string) *AuthService {
 	return &AuthService{
 		userRepo:  userRepo,
 		jwtSecret: jwtSecret,
@@ -24,23 +24,19 @@ func NewAuthService(userRepo *repository.UserRepository, jwtSecret string) *Auth
 }
 
 func (s *AuthService) Register(username, password, email string) (*models.User, string, error) {
-	// Validate
 	if username == "" || password == "" || email == "" {
 		return nil, "", errors.New("all fields are required")
 	}
 
-	// Check if user exists
 	if _, err := s.userRepo.FindByUsername(username); err == nil {
 		return nil, "", errors.New("username already exists")
 	}
 
-	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, "", err
 	}
 
-	// Create user
 	s.idCounter++
 	user := &models.User{
 		ID:       s.idCounter,
@@ -53,7 +49,6 @@ func (s *AuthService) Register(username, password, email string) (*models.User, 
 		return nil, "", err
 	}
 
-	// Generate token
 	token, err := utils.GenerateToken(user.ID, user.Username, s.jwtSecret, 24*time.Hour)
 	if err != nil {
 		return nil, "", err
@@ -63,18 +58,15 @@ func (s *AuthService) Register(username, password, email string) (*models.User, 
 }
 
 func (s *AuthService) Login(username, password string) (*models.User, string, error) {
-	// Find user
 	user, err := s.userRepo.FindByUsername(username)
 	if err != nil {
 		return nil, "", errors.New("invalid credentials")
 	}
 
-	// Verify password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		return nil, "", errors.New("invalid credentials")
 	}
 
-	// Generate token
 	token, err := utils.GenerateToken(user.ID, user.Username, s.jwtSecret, 24*time.Hour)
 	if err != nil {
 		return nil, "", err
