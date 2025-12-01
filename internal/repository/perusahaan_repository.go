@@ -13,50 +13,66 @@ func NewPerusahaanRepository(db *sql.DB) *PerusahaanRepository {
 	return &PerusahaanRepository{db: db}
 }
 
-func (repo *PerusahaanRepository) Create(req dto.PerusahaanRequest) (int, error) {
-	result, err := repo.db.Exec("INSERT INTO perusahaan (nama_perusahaan, jenis_usaha) VALUES (?, ?)", req.NamaPerusahaan, req.JenisUsaha)
-	if err != nil {
-		return 0, err
-	}
-
-	id, _ := result.LastInsertId()
-	return int(id), nil
+func (r *PerusahaanRepository) Create(req dto.PerusahaanRequest, id string) error {
+	_, err := r.db.Exec(`INSERT INTO perusahaan
+        (id, photo, nama_perusahaan, jenis_usaha, alamat, telepon, email, website)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+		id,
+		valueOrEmpty(req.Photo),
+		valueOrEmpty(req.NamaPerusahaan),
+		valueOrEmpty(req.JenisUsaha),
+		valueOrEmpty(req.Alamat),
+		valueOrEmpty(req.Telepon),
+		valueOrEmpty(req.Email),
+		valueOrEmpty(req.Website),
+	)
+	return err
 }
 
-func (repo *PerusahaanRepository) GetAll() ([]dto.PerusahaanResponse, error) {
-	rows, err := repo.db.Query("SELECT id, nama_perusahaan, jenis_usaha FROM perusahaan")
+func (r *PerusahaanRepository) GetAll() ([]dto.PerusahaanResponse, error) {
+	rows, err := r.db.Query(`SELECT id, photo, nama_perusahaan, jenis_usaha, alamat, telepon, email, website FROM perusahaan`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var perusahaan []dto.PerusahaanResponse
+	var result []dto.PerusahaanResponse
 	for rows.Next() {
 		var p dto.PerusahaanResponse
-		rows.Scan(&p.ID, &p.NamaPerusahaan, &p.JenisUsaha)
-		perusahaan = append(perusahaan, p)
+		rows.Scan(&p.ID, &p.Photo, &p.NamaPerusahaan, &p.JenisUsaha, &p.Alamat, &p.Telepon, &p.Email, &p.Website)
+		result = append(result, p)
 	}
-	return perusahaan, nil
+	return result, nil
 }
 
-func (repo *PerusahaanRepository) GetByID(id int) (*dto.PerusahaanResponse, error) {
-	row := repo.db.QueryRow("SELECT id, nama_perusahaan, jenis_usaha FROM perusahaan WHERE id = ?", id)
-
+func (r *PerusahaanRepository) GetByID(id string) (*dto.PerusahaanResponse, error) {
+	row := r.db.QueryRow(`SELECT id, photo, nama_perusahaan, jenis_usaha, alamat, telepon, email, website FROM perusahaan WHERE id = ?`, id)
 	var p dto.PerusahaanResponse
-	err := row.Scan(&p.ID, &p.NamaPerusahaan, &p.JenisUsaha)
+	err := row.Scan(&p.ID, &p.Photo, &p.NamaPerusahaan, &p.JenisUsaha, &p.Alamat, &p.Telepon, &p.Email, &p.Website)
 	if err != nil {
 		return nil, err
 	}
-
 	return &p, nil
 }
 
-func (repo *PerusahaanRepository) Update(id int, req dto.PerusahaanRequest) error {
-	_, err := repo.db.Exec("UPDATE perusahaan SET nama_perusahaan = ?, jenis_usaha = ? WHERE id = ?", req.NamaPerusahaan, req.JenisUsaha, id)
+func (r *PerusahaanRepository) Update(id string, p dto.PerusahaanResponse) error {
+	_, err := r.db.Exec(`UPDATE perusahaan SET
+        photo=?, nama_perusahaan=?, jenis_usaha=?, alamat=?, telepon=?, email=?, website=?
+        WHERE id=?`,
+		p.Photo, p.NamaPerusahaan, p.JenisUsaha, p.Alamat, p.Telepon, p.Email, p.Website, id,
+	)
 	return err
 }
 
-func (repo *PerusahaanRepository) Delete(id int) error {
-	_, err := repo.db.Exec("DELETE FROM perusahaan WHERE id = ?", id)
+func (r *PerusahaanRepository) Delete(id string) error {
+	_, err := r.db.Exec(`DELETE FROM perusahaan WHERE id=?`, id)
 	return err
+}
+
+// helper untuk convert pointer ke string
+func valueOrEmpty(s *string) string {
+	if s != nil {
+		return *s
+	}
+	return ""
 }

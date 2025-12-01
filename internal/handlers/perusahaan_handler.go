@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"fortyfour-backend/internal/dto"
@@ -12,24 +11,23 @@ import (
 )
 
 type PerusahaanHandler struct {
-	perusahaanService *services.PerusahaanService
+	service *services.PerusahaanService
 }
 
 func NewPerusahaanHandler(service *services.PerusahaanService) *PerusahaanHandler {
-	return &PerusahaanHandler{perusahaanService: service}
+	return &PerusahaanHandler{service: service}
 }
 
 func (h *PerusahaanHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req dto.PerusahaanRequest
-
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
-	p, err := h.perusahaanService.Create(req)
+	p, err := h.service.Create(req)
 	if err != nil {
-		utils.RespondError(w, 500, err.Error())
+		utils.RespondError(w, 400, err.Error())
 		return
 	}
 
@@ -37,29 +35,24 @@ func (h *PerusahaanHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PerusahaanHandler) GetAll(w http.ResponseWriter, r *http.Request) {
-	perusahaan, err := h.perusahaanService.GetAll()
+	data, err := h.service.GetAll()
 	if err != nil {
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, perusahaan)
+	utils.RespondJSON(w, 200, data)
 }
 
 func (h *PerusahaanHandler) GetByID(w http.ResponseWriter, r *http.Request) {
-	query := r.URL.Query().Get("id")
-	id, err := strconv.Atoi(query)
-	if err != nil {
-		utils.RespondError(w, 400, "Invalid ID")
+	id := strings.TrimPrefix(r.URL.Path, "/api/perusahaan/")
+	if id == "" {
+		utils.RespondError(w, 400, "ID wajib")
 		return
 	}
 
-	p, err := h.perusahaanService.GetByID(id)
+	p, err := h.service.GetByID(id)
 	if err != nil {
-		if strings.Contains(err.Error(), "no rows") {
-			utils.RespondError(w, 404, "Data not found")
-			return
-		}
-		utils.RespondError(w, 500, err.Error())
+		utils.RespondError(w, 404, "Data tidak ditemukan")
 		return
 	}
 
@@ -67,39 +60,36 @@ func (h *PerusahaanHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PerusahaanHandler) Update(w http.ResponseWriter, r *http.Request) {
+	id := strings.TrimPrefix(r.URL.Path, "/api/perusahaan/")
+	if id == "" {
+		http.Error(w, "ID wajib di path", http.StatusBadRequest)
+		return
+	}
+
 	var req dto.PerusahaanRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.RespondError(w, 400, "Invalid request body")
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	queryID := r.URL.Query().Get("id")
-	id, err := strconv.Atoi(queryID)
+	p, err := h.service.Update(id, req)
 	if err != nil {
-		utils.RespondError(w, 400, "Invalid ID")
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = h.perusahaanService.Update(id, req)
-	if err != nil {
-		utils.RespondError(w, 500, err.Error())
-		return
-	}
-
-	utils.RespondJSON(w, 200, map[string]string{"message": "Update success"})
+	json.NewEncoder(w).Encode(p)
 }
 
 func (h *PerusahaanHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	queryID := r.URL.Query().Get("id")
-	id, err := strconv.Atoi(queryID)
-	if err != nil {
-		utils.RespondError(w, 400, "Invalid ID")
+	id := strings.TrimPrefix(r.URL.Path, "/api/perusahaan/")
+	if id == "" {
+		utils.RespondError(w, 400, "ID wajib")
 		return
 	}
 
-	err = h.perusahaanService.Delete(id)
-	if err != nil {
-		utils.RespondError(w, 500, err.Error())
+	if err := h.service.Delete(id); err != nil {
+		utils.RespondError(w, 400, err.Error())
 		return
 	}
 
