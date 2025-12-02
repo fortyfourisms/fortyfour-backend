@@ -46,25 +46,25 @@ func main() {
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
 
 	router := mux.NewRouter()
-	mux := http.NewServeMux()
+	//mux := http.NewServeMux()
 
-	mux.HandleFunc("/api/register", authHandler.Register)
-	mux.HandleFunc("/api/login", authHandler.Login)
-	mux.HandleFunc("/api/posts", postHandler.GetPosts)
-	mux.HandleFunc("/api/posts/single", postHandler.GetPost)
+	router.HandleFunc("/api/register", authHandler.Register)
+	router.HandleFunc("/api/login", authHandler.Login)
+	router.HandleFunc("/api/posts", postHandler.GetPosts)
+	router.HandleFunc("/api/posts/single", postHandler.GetPost)
 	
-	mux.HandleFunc("/api/posts/create", authMiddleware.Authenticate(postHandler.CreatePost))
-	mux.HandleFunc("/api/posts/update", authMiddleware.Authenticate(postHandler.UpdatePost))
-	mux.HandleFunc("/api/posts/delete", authMiddleware.Authenticate(postHandler.DeletePost))
-
+	router.HandleFunc("/api/posts/create", authMiddleware.Authenticate(postHandler.CreatePost))
+	router.HandleFunc("/api/posts/update", authMiddleware.Authenticate(postHandler.UpdatePost))
+	router.HandleFunc("/api/posts/delete", authMiddleware.Authenticate(postHandler.DeletePost))
+ 
 	router.HandleFunc("/api/ikas", authMiddleware.Authenticate(ikasHandler.CreateIkas)).Methods("POST")
 	router.HandleFunc("/api/ikas", ikasHandler.GetAllIkas).Methods("GET")
 	router.HandleFunc("/api/ikas/{id}", ikasHandler.GetIkasByID).Methods("GET")
 	router.HandleFunc("/api/ikas/{id}", authMiddleware.Authenticate(ikasHandler.UpdateIkas)).Methods("PUT")
 	router.HandleFunc("/api/ikas/{id}", authMiddleware.Authenticate(ikasHandler.DeleteIkas)).Methods("DELETE")
 
-	router.PathPrefix("/").Handler(mux)
+	router.PathPrefix("/").Handler(router)
 
 	log.Printf("Server starting on %s", cfg.Port)
-	log.Fatal(http.ListenAndServe(cfg.Port, mux))
+	log.Fatal(http.ListenAndServe(cfg.Port, router))
 }
