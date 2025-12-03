@@ -14,3 +14,4 @@ CREATE TABLE `ikas` (
 );
 
 ALTER TABLE ikas MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
+ALTER TABLE `ikas` ADD FOREIGN KEY (`id_stakeholder`) REFERENCES `stakeholders` (`id`);
