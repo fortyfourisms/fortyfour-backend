@@ -3,8 +3,85 @@ package testhelpers
 import (
 	"errors"
 	"fortyfour-backend/internal/models"
+	"fortyfour-backend/pkg/cache"
+	"sync"
 	"time"
 )
+
+// ============================================================
+// Mock Redis Client for Testing
+// ============================================================
+
+type MockRedisClient struct {
+	data map[string]string
+	mu   sync.RWMutex
+}
+
+// Ensure MockRedisClient implements cache.RedisInterface
+var _ cache.RedisInterface = (*MockRedisClient)(nil)
+
+func NewMockRedisClient() *MockRedisClient {
+	return &MockRedisClient{
+		data: make(map[string]string),
+	}
+}
+
+func (m *MockRedisClient) Set(key string, value interface{}, expiration time.Duration) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// Convert value to string
+	strValue, ok := value.(string)
+	if !ok {
+		// Handle []byte conversion
+		if bytes, ok := value.([]byte); ok {
+			strValue = string(bytes)
+		} else {
+			return errors.New("invalid value type")
+		}
+	}
+
+	m.data[key] = strValue
+	return nil
+}
+
+func (m *MockRedisClient) Get(key string) (string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	value, exists := m.data[key]
+	if !exists {
+		return "", errors.New("key not found")
+	}
+	return value, nil
+}
+
+func (m *MockRedisClient) Delete(key string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	delete(m.data, key)
+	return nil
+}
+
+func (m *MockRedisClient) Exists(key string) (bool, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	_, exists := m.data[key]
+	return exists, nil
+}
+
+func (m *MockRedisClient) Close() error {
+	return nil
+}
+
+// Helper to clear all data (useful for test cleanup)
+func (m *MockRedisClient) Clear() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.data = make(map[string]string)
+}
 
 // ============================================================
 // Mock User Repository
@@ -12,6 +89,7 @@ import (
 
 type MockUserRepository struct {
 	users map[string]*models.User
+	mu    sync.RWMutex
 }
 
 func NewMockUserRepository() *MockUserRepository {
@@ -21,11 +99,16 @@ func NewMockUserRepository() *MockUserRepository {
 }
 
 func (m *MockUserRepository) Create(user *models.User) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.users[user.Username] = user
 	return nil
 }
 
 func (m *MockUserRepository) FindByUsername(username string) (*models.User, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	user, exists := m.users[username]
 	if !exists {
 		return nil, errors.New("user not found")
@@ -34,6 +117,9 @@ func (m *MockUserRepository) FindByUsername(username string) (*models.User, erro
 }
 
 func (m *MockUserRepository) FindByID(id int) (*models.User, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	for _, user := range m.users {
 		if user.ID == id {
 			return user, nil
@@ -43,6 +129,9 @@ func (m *MockUserRepository) FindByID(id int) (*models.User, error) {
 }
 
 func (m *MockUserRepository) Update(user *models.User) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if _, exists := m.users[user.Username]; !exists {
 		return errors.New("user not found")
 	}
@@ -51,6 +140,9 @@ func (m *MockUserRepository) Update(user *models.User) error {
 }
 
 func (m *MockUserRepository) Delete(id int) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	for username, user := range m.users {
 		if user.ID == id {
 			delete(m.users, username)
@@ -67,6 +159,7 @@ func (m *MockUserRepository) Delete(id int) error {
 type MockPostRepository struct {
 	posts  map[int]*models.Post
 	nextID int
+	mu     sync.RWMutex
 }
 
 func NewMockPostRepository() *MockPostRepository {
@@ -77,6 +170,9 @@ func NewMockPostRepository() *MockPostRepository {
 }
 
 func (m *MockPostRepository) Create(post *models.Post) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	post.ID = m.nextID
 	m.nextID++
 	post.CreatedAt = time.Now()
@@ -85,6 +181,9 @@ func (m *MockPostRepository) Create(post *models.Post) error {
 }
 
 func (m *MockPostRepository) FindAll() ([]*models.Post, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	posts := make([]*models.Post, 0, len(m.posts))
 	for _, p := range m.posts {
 		posts = append(posts, p)
@@ -93,6 +192,9 @@ func (m *MockPostRepository) FindAll() ([]*models.Post, error) {
 }
 
 func (m *MockPostRepository) FindByID(id int) (*models.Post, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	post, exists := m.posts[id]
 	if !exists {
 		return nil, errors.New("post not found")
@@ -101,6 +203,9 @@ func (m *MockPostRepository) FindByID(id int) (*models.Post, error) {
 }
 
 func (m *MockPostRepository) FindByAuthorID(authorID int) ([]*models.Post, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	posts := make([]*models.Post, 0)
 	for _, p := range m.posts {
 		if p.AuthorID == authorID {
@@ -111,6 +216,9 @@ func (m *MockPostRepository) FindByAuthorID(authorID int) ([]*models.Post, error
 }
 
 func (m *MockPostRepository) Update(post *models.Post) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if _, exists := m.posts[post.ID]; !exists {
 		return errors.New("post not found")
 	}
@@ -119,6 +227,9 @@ func (m *MockPostRepository) Update(post *models.Post) error {
 }
 
 func (m *MockPostRepository) Delete(id int) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	if _, exists := m.posts[id]; !exists {
 		return errors.New("post not found")
 	}

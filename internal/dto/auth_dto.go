@@ -13,7 +13,17 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
+type LogoutRequest struct {
+	RefreshToken string `json:"refresh_token"`
+}
+
 type AuthResponse struct {
-	Token string       `json:"token"`
-	User  models.User `json:"user"`
+	User         models.User `json:"user"`
+	AccessToken  string      `json:"access_token"`
+	RefreshToken string      `json:"refresh_token"`
+	ExpiresAt    string      `json:"expires_at"`
 }

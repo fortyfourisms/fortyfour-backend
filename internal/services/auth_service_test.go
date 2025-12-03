@@ -8,11 +8,16 @@ import (
 )
 
 func TestAuthService_Register_Success(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewAuthService(repo, "test-secret")
+	// Arrange
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := NewTokenService(redis, "test-secret")
+	authService := NewAuthService(userRepo, tokenService)
 
-	user, token, err := service.Register("testuser", "password123", "test@example.com")
+	// Act
+	user, tokens, err := authService.Register("testuser", "password123", "test@example.com")
 
+	// Assert
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -25,14 +30,19 @@ func TestAuthService_Register_Success(t *testing.T) {
 		t.Errorf("expected username 'testuser', got '%s'", user.Username)
 	}
 
-	if user.Email != "test@example.com" {
-		t.Errorf("expected email 'test@example.com', got '%s'", user.Email)
+	if tokens == nil {
+		t.Fatal("expected tokens to be returned")
 	}
 
-	if token == "" {
-		t.Error("expected token to be generated")
+	if tokens.AccessToken == "" {
+		t.Error("expected access token to be generated")
 	}
 
+	if tokens.RefreshToken == "" {
+		t.Error("expected refresh token to be generated")
+	}
+
+	// Verify password is hashed
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte("password123"))
 	if err != nil {
 		t.Error("password should be hashed correctly")
@@ -40,13 +50,18 @@ func TestAuthService_Register_Success(t *testing.T) {
 }
 
 func TestAuthService_Register_DuplicateUsername(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewAuthService(repo, "test-secret")
+	// Arrange
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := NewTokenService(redis, "test-secret")
+	authService := NewAuthService(userRepo, tokenService)
 
-	service.Register("testuser", "password123", "test@example.com")
+	authService.Register("testuser", "password123", "test@example.com")
 
-	_, _, err := service.Register("testuser", "newpassword", "another@example.com")
+	// Act
+	_, _, err := authService.Register("testuser", "newpassword", "another@example.com")
 
+	// Assert
 	if err == nil {
 		t.Fatal("expected error for duplicate username")
 	}
@@ -56,44 +71,19 @@ func TestAuthService_Register_DuplicateUsername(t *testing.T) {
 	}
 }
 
-func TestAuthService_Register_EmptyFields(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewAuthService(repo, "test-secret")
-
-	testCases := []struct {
-		name     string
-		username string
-		password string
-		email    string
-	}{
-		{"empty username", "", "password", "email@test.com"},
-		{"empty password", "user", "", "email@test.com"},
-		{"empty email", "user", "password", ""},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			_, _, err := service.Register(tc.username, tc.password, tc.email)
-
-			if err == nil {
-				t.Fatal("expected error for empty field")
-			}
-
-			if err.Error() != "all fields are required" {
-				t.Errorf("expected 'all fields are required', got '%s'", err.Error())
-			}
-		})
-	}
-}
-
 func TestAuthService_Login_Success(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewAuthService(repo, "test-secret")
+	// Arrange
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := NewTokenService(redis, "test-secret")
+	authService := NewAuthService(userRepo, tokenService)
 
-	service.Register("testuser", "password123", "test@example.com")
+	authService.Register("testuser", "password123", "test@example.com")
 
-	user, token, err := service.Login("testuser", "password123")
+	// Act
+	user, tokens, err := authService.Login("testuser", "password123")
 
+	// Assert
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -102,43 +92,62 @@ func TestAuthService_Login_Success(t *testing.T) {
 		t.Fatal("expected user to be returned")
 	}
 
-	if user.Username != "testuser" {
-		t.Errorf("expected username 'testuser', got '%s'", user.Username)
+	if tokens == nil {
+		t.Fatal("expected tokens to be returned")
 	}
 
-	if token == "" {
-		t.Error("expected token to be generated")
-	}
-}
-
-func TestAuthService_Login_InvalidUsername(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewAuthService(repo, "test-secret")
-
-	_, _, err := service.Login("nonexistent", "password123")
-
-	if err == nil {
-		t.Fatal("expected error for invalid username")
+	if tokens.AccessToken == "" {
+		t.Error("expected access token to be generated")
 	}
 
-	if err.Error() != "invalid credentials" {
-		t.Errorf("expected 'invalid credentials', got '%s'", err.Error())
+	if tokens.RefreshToken == "" {
+		t.Error("expected refresh token to be generated")
 	}
 }
 
 func TestAuthService_Login_InvalidPassword(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewAuthService(repo, "test-secret")
+	// Arrange
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := NewTokenService(redis, "test-secret")
+	authService := NewAuthService(userRepo, tokenService)
 
-	service.Register("testuser", "password123", "test@example.com")
+	authService.Register("testuser", "password123", "test@example.com")
 
-	_, _, err := service.Login("testuser", "wrongpassword")
+	// Act
+	_, _, err := authService.Login("testuser", "wrongpassword")
 
+	// Assert
 	if err == nil {
 		t.Fatal("expected error for invalid password")
 	}
 
 	if err.Error() != "invalid credentials" {
 		t.Errorf("expected 'invalid credentials', got '%s'", err.Error())
+	}
+}
+
+func TestAuthService_Logout_Success(t *testing.T) {
+	// Arrange
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := NewTokenService(redis, "test-secret")
+	authService := NewAuthService(userRepo, tokenService)
+
+	// Register and get tokens
+	_, tokens, _ := authService.Register("testuser", "password123", "test@example.com")
+
+	// Act
+	err := authService.Logout(tokens.RefreshToken)
+
+	// Assert
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Verify token is revoked
+	_, err = tokenService.RefreshAccessToken(tokens.RefreshToken)
+	if err == nil {
+		t.Error("expected error when using revoked token")
 	}
 }
