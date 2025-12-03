@@ -7,7 +7,7 @@ import (
 	"fortyfour-backend/internal/middleware"
 )
 
-func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusahaanH *handlers.PerusahaanHandler, authM *middleware.AuthMiddleware) *http.ServeMux {
+func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusahaanH *handlers.PerusahaanHandler, picH *handlers.PICPerusahaanHandler, authM *middleware.AuthMiddleware) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Routes Auth
@@ -37,6 +37,30 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 		}
 	})
 	mux.HandleFunc("/api/perusahaan/create", perusahaanH.Create)
+
+	// Routes PIC Perusahaan
+	mux.HandleFunc("/api/pic", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			picH.GetAll(w, r)
+		case http.MethodPost:
+			picH.Create(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+	mux.HandleFunc("/api/pic/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			picH.GetByID(w, r)
+		case http.MethodPut:
+			picH.Update(w, r)
+		case http.MethodDelete:
+			picH.Delete(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
 
 	return mux
 }
