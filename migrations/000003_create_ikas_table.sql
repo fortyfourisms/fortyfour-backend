@@ -12,3 +12,5 @@ CREATE TABLE `ikas` (
   `id_deteksi` integer,
   `id_gulih` integer
 );
+
+ALTER TABLE ikas MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
