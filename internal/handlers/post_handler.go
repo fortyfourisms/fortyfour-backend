@@ -115,7 +115,7 @@ func (h *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post, err := h.postService.UpdatePost(id, userID, req.Title, req.Content)
+	post, err := h.postService.UpdatePost(id, req.Title, req.Content, userID)
 	if err != nil {
 		if err.Error() == "unauthorized" {
 			utils.RespondError(w, http.StatusForbidden, "You can only update your own posts")

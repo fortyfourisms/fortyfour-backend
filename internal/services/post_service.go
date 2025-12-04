@@ -8,11 +8,11 @@ import (
 )
 
 type PostService struct {
-	postRepo  *repository.PostRepository
+	postRepo  repository.PostRepositoryInterface
 	idCounter int
 }
 
-func NewPostService(postRepo *repository.PostRepository) *PostService {
+func NewPostService(postRepo repository.PostRepositoryInterface) *PostService {
 	return &PostService{
 		postRepo: postRepo,
 	}
@@ -47,7 +47,7 @@ func (s *PostService) GetPostByID(id int) (*models.Post, error) {
 	return s.postRepo.FindByID(id)
 }
 
-func (s *PostService) UpdatePost(id, userID int, title, content string) (*models.Post, error) {
+func (s *PostService) UpdatePost(id int, title, content string, userID int) (*models.Post, error) {
 	post, err := s.postRepo.FindByID(id)
 	if err != nil {
 		return nil, err

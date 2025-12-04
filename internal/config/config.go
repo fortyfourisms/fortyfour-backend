@@ -1,13 +1,12 @@
 package config
 
-import (
-	"os"
-)
+import "os"
 
 type Config struct {
 	Port      string
 	JWTSecret string
 	Database  DatabaseConfig
+	Redis     RedisConfig
 }
 
 type DatabaseConfig struct {
@@ -18,6 +17,13 @@ type DatabaseConfig struct {
 	DBName   string
 }
 
+type RedisConfig struct {
+	Host     string
+	Port     string
+	Password string
+	DB       int
+}
+
 func Load() *Config {
 	return &Config{
 		Port:      getEnv("PORT", ":8080"),
@@ -26,8 +32,14 @@ func Load() *Config {
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnv("DB_PORT", "3306"),
 			User:     getEnv("DB_USER", "root"),
-			Password: getEnv("DB_PASSWORD", ""),
-			DBName:   getEnv("DB_NAME", "fortyfour-backend_db"),
+			Password: getEnv("DB_PASSWORD", "password"),
+			DBName:   getEnv("DB_NAME", "myapp_db"),
+		},
+		Redis: RedisConfig{
+			Host:     getEnv("REDIS_HOST", "localhost"),
+			Port:     getEnv("REDIS_PORT", "6379"),
+			Password: getEnv("REDIS_PASSWORD", ""),
+			DB:       0,
 		},
 	}
 }
