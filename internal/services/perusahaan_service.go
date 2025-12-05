@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/repository"
-	"strings"
 
 	"github.com/google/uuid"
 )
@@ -17,19 +16,14 @@ func NewPerusahaanService(repo *repository.PerusahaanRepository) *PerusahaanServ
 	return &PerusahaanService{repo: repo}
 }
 
-func (s *PerusahaanService) Create(req dto.PerusahaanRequest) (*dto.PerusahaanResponse, error) {
+func (s *PerusahaanService) Create(req dto.CreatePerusahaanRequest) (*dto.PerusahaanResponse, error) {
 	if req.NamaPerusahaan == nil || req.JenisUsaha == nil {
 		return nil, errors.New("nama_perusahaan dan jenis_usaha wajib diisi")
 	}
-	if req.Email != nil && !strings.Contains(*req.Email, "@") {
-		return nil, errors.New("format email tidak valid")
-	}
-
 	id := uuid.New().String()
 	if err := s.repo.Create(req, id); err != nil {
 		return nil, err
 	}
-
 	return s.repo.GetByID(id)
 }
 
@@ -41,14 +35,12 @@ func (s *PerusahaanService) GetByID(id string) (*dto.PerusahaanResponse, error) 
 	return s.repo.GetByID(id)
 }
 
-func (s *PerusahaanService) Update(id string, req dto.PerusahaanRequest) (*dto.PerusahaanResponse, error) {
-	// ambil data lama
+func (s *PerusahaanService) Update(id string, req dto.UpdatePerusahaanRequest) (*dto.PerusahaanResponse, error) {
 	perusahaan, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	// merge field yang dikirim
 	if req.NamaPerusahaan != nil {
 		perusahaan.NamaPerusahaan = *req.NamaPerusahaan
 	}
@@ -71,7 +63,6 @@ func (s *PerusahaanService) Update(id string, req dto.PerusahaanRequest) (*dto.P
 		perusahaan.Photo = *req.Photo
 	}
 
-	// simpan update
 	if err := s.repo.Update(id, *perusahaan); err != nil {
 		return nil, err
 	}

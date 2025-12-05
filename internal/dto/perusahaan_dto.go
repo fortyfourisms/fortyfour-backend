@@ -1,6 +1,16 @@
 package dto
 
-type PerusahaanRequest struct {
+type CreatePerusahaanRequest struct {
+	Photo          *string `json:"photo,omitempty"`
+	NamaPerusahaan *string `json:"nama_perusahaan,omitempty"`
+	JenisUsaha     *string `json:"jenis_usaha,omitempty"`
+	Alamat         *string `json:"alamat,omitempty"`
+	Telepon        *string `json:"telepon,omitempty"`
+	Email          *string `json:"email,omitempty"`
+	Website        *string `json:"website,omitempty"`
+}
+
+type UpdatePerusahaanRequest struct {
 	Photo          *string `json:"photo,omitempty"`
 	NamaPerusahaan *string `json:"nama_perusahaan,omitempty"`
 	JenisUsaha     *string `json:"jenis_usaha,omitempty"`

@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"fortyfour-backend/internal/config"
 	"fortyfour-backend/internal/handlers"
@@ -60,7 +61,9 @@ func main() {
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
 	postHandler := handlers.NewPostHandler(postService)
-	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService)
+	uploadPath := "./uploads"
+	os.MkdirAll(uploadPath, os.ModePerm)
+	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath)
 	picHandler := handlers.NewPICPerusahaanHandler(picService)
 	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
 

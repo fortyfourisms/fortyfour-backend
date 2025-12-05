@@ -13,7 +13,7 @@ func NewPerusahaanRepository(db *sql.DB) *PerusahaanRepository {
 	return &PerusahaanRepository{db: db}
 }
 
-func (r *PerusahaanRepository) Create(req dto.PerusahaanRequest, id string) error {
+func (r *PerusahaanRepository) Create(req dto.CreatePerusahaanRequest, id string) error {
 	_, err := r.db.Exec(`INSERT INTO perusahaan
         (id, photo, nama_perusahaan, jenis_usaha, alamat, telepon, email, website)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -46,7 +46,7 @@ func (r *PerusahaanRepository) GetAll() ([]dto.PerusahaanResponse, error) {
 }
 
 func (r *PerusahaanRepository) GetByID(id string) (*dto.PerusahaanResponse, error) {
-	row := r.db.QueryRow(`SELECT id, photo, nama_perusahaan, jenis_usaha, alamat, telepon, email, website FROM perusahaan WHERE id = ?`, id)
+	row := r.db.QueryRow(`SELECT id, photo, nama_perusahaan, jenis_usaha, alamat, telepon, email, website FROM perusahaan WHERE id=?`, id)
 	var p dto.PerusahaanResponse
 	err := row.Scan(&p.ID, &p.Photo, &p.NamaPerusahaan, &p.JenisUsaha, &p.Alamat, &p.Telepon, &p.Email, &p.Website)
 	if err != nil {
@@ -69,7 +69,6 @@ func (r *PerusahaanRepository) Delete(id string) error {
 	return err
 }
 
-// helper untuk convert pointer ke string
 func valueOrEmpty(s *string) string {
 	if s != nil {
 		return *s

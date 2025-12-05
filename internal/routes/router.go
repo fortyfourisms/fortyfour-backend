@@ -24,20 +24,8 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 	mux.HandleFunc("/api/posts/delete", authM.Authenticate(postH.DeletePost))
 
 	// Route Perusahaan
-	mux.HandleFunc("/api/perusahaan", perusahaanH.GetAll)
-	mux.HandleFunc("/api/perusahaan/", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			perusahaanH.GetByID(w, r)
-		case http.MethodPut:
-			perusahaanH.Update(w, r)
-		case http.MethodDelete:
-			perusahaanH.Delete(w, r)
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
-		}
-	})
-	mux.HandleFunc("/api/perusahaan/create", perusahaanH.Create)
+	mux.Handle("/api/perusahaan", perusahaanH)
+	mux.Handle("/api/perusahaan/", perusahaanH)
 
 	// Routes PIC Perusahaan
 	mux.HandleFunc("/api/pic", func(w http.ResponseWriter, r *http.Request) {
