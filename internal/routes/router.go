@@ -7,7 +7,8 @@ import (
 	"fortyfour-backend/internal/middleware"
 )
 
-func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusahaanH *handlers.PerusahaanHandler, picH *handlers.PICPerusahaanHandler, authM *middleware.AuthMiddleware) *http.ServeMux {
+func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusahaanH *handlers.PerusahaanHandler, picH *handlers.PICPerusahaanHandler,
+	identifikasiH *handlers.IdentifikasiHandler, authM *middleware.AuthMiddleware) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Routes Auth
@@ -57,6 +58,31 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 			picH.Update(w, r)
 		case http.MethodDelete:
 			picH.Delete(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	// Route Identifikasi
+	mux.HandleFunc("/api/identifikasi", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			identifikasiH.GetAll(w, r) // Read all
+		case http.MethodPost:
+			identifikasiH.Create(w, r) // Create
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/identifikasi/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			identifikasiH.GetByID(w, r) // Read by ID
+		case http.MethodPut:
+			identifikasiH.Update(w, r) // Update
+		case http.MethodDelete:
+			identifikasiH.Delete(w, r) // Delete
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
