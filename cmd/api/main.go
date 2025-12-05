@@ -10,7 +10,6 @@ import (
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/routes"
 	"fortyfour-backend/internal/services"
-	"fortyfour-backend/pkg/cache"
 	"fortyfour-backend/pkg/database"
 )
 
@@ -32,38 +31,44 @@ func main() {
 	defer db.Close()
 
 	// Initialize Redis
-	redisClient, err := cache.NewRedisClient(cache.RedisConfig{
-		Host:     cfg.Redis.Host,
-		Port:     cfg.Redis.Port,
-		Password: cfg.Redis.Password,
-		DB:       cfg.Redis.DB,
-	})
-	if err != nil {
-		log.Fatal("Failed to connect to Redis:", err)
-	}
-	defer redisClient.Close()
+	// redisClient, err := cache.NewRedisClient(cache.RedisConfig{
+	// 	Host:     cfg.Redis.Host,
+	// 	Port:     cfg.Redis.Port,
+	// 	Password: cfg.Redis.Password,
+	// 	DB:       cfg.Redis.DB,
+	// })
+	// if err != nil {
+	// 	log.Fatal("Failed to connect to Redis:", err)
+	// }
+	// defer redisClient.Close()
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
 	postRepo := repository.NewPostRepository(db)
 	perusahaanRepo := repository.NewPerusahaanRepository(db)
+	picRepo := repository.NewPICPerusahaanRepository(db)
+	identifikasiRepo := repository.NewIdentifikasiRepository(db)
 
 	// Initialize services
-	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
+	tokenService := services.NewTokenService(nil, cfg.JWTSecret)
 	authService := services.NewAuthService(userRepo, tokenService)
 	postService := services.NewPostService(postRepo)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo)
+	picService := services.NewPICPerusahaanService(picRepo)
+	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
 	postHandler := handlers.NewPostHandler(postService)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService)
+	picHandler := handlers.NewPICPerusahaanHandler(picService)
+	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
 
 	// Setup routes
-	mux := routes.InitRouter(authHandler, postHandler, perusahaanHandler, authMiddleware)
+	mux := routes.InitRouter(authHandler, postHandler, perusahaanHandler, picHandler, identifikasiHandler, authMiddleware)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.Port)
