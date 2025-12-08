@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/repository"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -17,9 +18,15 @@ func NewPerusahaanService(repo *repository.PerusahaanRepository) *PerusahaanServ
 }
 
 func (s *PerusahaanService) Create(req dto.CreatePerusahaanRequest) (*dto.PerusahaanResponse, error) {
-	if req.NamaPerusahaan == nil || req.JenisUsaha == nil {
-		return nil, errors.New("nama_perusahaan dan jenis_usaha wajib diisi")
+
+	if req.NamaPerusahaan == nil || strings.TrimSpace(*req.NamaPerusahaan) == "" {
+		return nil, errors.New("nama_perusahaan wajib diisi")
 	}
+
+	if req.Sektor == nil || strings.TrimSpace(*req.Sektor) == "" {
+		return nil, errors.New("sektor wajib diisi")
+	}
+
 	id := uuid.New().String()
 	if err := s.repo.Create(req, id); err != nil {
 		return nil, err
@@ -44,8 +51,8 @@ func (s *PerusahaanService) Update(id string, req dto.UpdatePerusahaanRequest) (
 	if req.NamaPerusahaan != nil {
 		perusahaan.NamaPerusahaan = *req.NamaPerusahaan
 	}
-	if req.JenisUsaha != nil {
-		perusahaan.JenisUsaha = *req.JenisUsaha
+	if req.Sektor != nil {
+		perusahaan.Sektor = *req.Sektor
 	}
 	if req.Alamat != nil {
 		perusahaan.Alamat = *req.Alamat

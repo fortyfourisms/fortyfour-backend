@@ -138,7 +138,7 @@ func (h *PerusahaanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *PerusahaanHandler) parseCreateForm(form *multipart.Form) dto.CreatePerusahaanRequest {
 	return dto.CreatePerusahaanRequest{
 		NamaPerusahaan: getFormValue(form, "nama_perusahaan"),
-		JenisUsaha:     getFormValue(form, "jenis_usaha"),
+		Sektor:         getFormValue(form, "sektor"),
 		Alamat:         getFormValue(form, "alamat"),
 		Telepon:        getFormValue(form, "telepon"),
 		Email:          getFormValue(form, "email"),
@@ -149,7 +149,7 @@ func (h *PerusahaanHandler) parseCreateForm(form *multipart.Form) dto.CreatePeru
 func (h *PerusahaanHandler) parseUpdateForm(form *multipart.Form) dto.UpdatePerusahaanRequest {
 	return dto.UpdatePerusahaanRequest{
 		NamaPerusahaan: getFormValue(form, "nama_perusahaan"),
-		JenisUsaha:     getFormValue(form, "jenis_usaha"),
+		Sektor:         getFormValue(form, "sektor"),
 		Alamat:         getFormValue(form, "alamat"),
 		Telepon:        getFormValue(form, "telepon"),
 		Email:          getFormValue(form, "email"),
