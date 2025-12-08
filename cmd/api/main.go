@@ -11,6 +11,7 @@ import (
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/routes"
 	"fortyfour-backend/internal/services"
+	"fortyfour-backend/pkg/cache"
 	"fortyfour-backend/pkg/database"
 )
 
@@ -32,30 +33,30 @@ func main() {
 	defer db.Close()
 
 	// Initialize Redis
-	// redisClient, err := cache.NewRedisClient(cache.RedisConfig{
-	// 	Host:     cfg.Redis.Host,
-	// 	Port:     cfg.Redis.Port,
-	// 	Password: cfg.Redis.Password,
-	// 	DB:       cfg.Redis.DB,
-	// })
-	// if err != nil {
-	// 	log.Fatal("Failed to connect to Redis:", err)
-	// }
-	// defer redisClient.Close()
+	redisClient, err := cache.NewRedisClient(cache.RedisConfig{
+		Host:     cfg.Redis.Host,
+		Port:     cfg.Redis.Port,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+	if err != nil {
+		log.Fatal("Failed to connect to Redis:", err)
+	}
+	defer redisClient.Close()
 
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
 	postRepo := repository.NewPostRepository(db)
 	perusahaanRepo := repository.NewPerusahaanRepository(db)
-	picRepo := repository.NewPICPerusahaanRepository(db)
+	picRepo := repository.NewPICRepository(db)
 	identifikasiRepo := repository.NewIdentifikasiRepository(db)
 
 	// Initialize services
-	tokenService := services.NewTokenService(nil, cfg.JWTSecret)
+	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
 	authService := services.NewAuthService(userRepo, tokenService)
 	postService := services.NewPostService(postRepo)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo)
-	picService := services.NewPICPerusahaanService(picRepo)
+	picService := services.NewPICService(picRepo)
 	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
 
 	// Initialize handlers
@@ -64,7 +65,7 @@ func main() {
 	uploadPath := "./uploads"
 	os.MkdirAll(uploadPath, os.ModePerm)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath)
-	picHandler := handlers.NewPICPerusahaanHandler(picService)
+	picHandler := handlers.NewPICHandler(picService)
 	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
 
 	// Initialize middleware
