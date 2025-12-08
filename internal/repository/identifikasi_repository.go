@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 )
@@ -65,6 +66,19 @@ func (r *IdentifikasiRepository) Update(id string, i models.Identifikasi) error 
 }
 
 func (r *IdentifikasiRepository) Delete(id string) error {
-	_, err := r.db.Exec(`DELETE FROM identifikasi WHERE id=?`, id)
-	return err
+	res, err := r.db.Exec(`DELETE FROM identifikasi WHERE id=?`, id)
+	if err != nil {
+		return err
+	}
+
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return fmt.Errorf("data dengan id %s tidak ditemukan", id)
+	}
+
+	return nil
 }

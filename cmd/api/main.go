@@ -50,6 +50,7 @@ func main() {
 	perusahaanRepo := repository.NewPerusahaanRepository(db)
 	picRepo := repository.NewPICRepository(db)
 	identifikasiRepo := repository.NewIdentifikasiRepository(db)
+	jabatanRepo := repository.NewJabatanRepository(db)
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
@@ -58,6 +59,7 @@ func main() {
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo)
 	picService := services.NewPICService(picRepo)
 	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
+	jabatanService := services.NewJabatanService(jabatanRepo)
 
 	// Initialize handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
@@ -67,12 +69,13 @@ func main() {
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath)
 	picHandler := handlers.NewPICHandler(picService)
 	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
+	jabatanHandler := handlers.NewJabatanHandler(jabatanService)
 
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
 
 	// Setup routes
-	mux := routes.InitRouter(authHandler, postHandler, perusahaanHandler, picHandler, identifikasiHandler, authMiddleware)
+	mux := routes.InitRouter(authHandler, postHandler, perusahaanHandler, picHandler, identifikasiHandler, jabatanHandler, authMiddleware)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.Port)

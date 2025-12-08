@@ -8,7 +8,7 @@ import (
 )
 
 func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusahaanH *handlers.PerusahaanHandler, picH *handlers.PICHandler,
-	identifikasiH *handlers.IdentifikasiHandler, authM *middleware.AuthMiddleware) *http.ServeMux {
+	identifikasiH *handlers.IdentifikasiHandler, jabatanH *handlers.JabatanHandler, authM *middleware.AuthMiddleware) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Routes Auth
@@ -25,6 +25,10 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 	// Route Perusahaan
 	mux.HandleFunc("/api/perusahaan", authM.Authenticate(utils.AdaptHandler(perusahaanH)))
 	mux.HandleFunc("/api/pic", authM.Authenticate(utils.AdaptHandler(picH)))
+
+	// Route Perusahaan
+	mux.HandleFunc("/api/jabatan", authM.Authenticate(utils.AdaptHandler(jabatanH)))
+	mux.HandleFunc("/api/jabatan/", authM.Authenticate(utils.AdaptHandler(jabatanH)))
 
 	// Route Identifikasi
 	mux.HandleFunc("/api/identifikasi", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
