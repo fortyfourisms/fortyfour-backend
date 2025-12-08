@@ -8,7 +8,7 @@ import (
 )
 
 func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusahaanH *handlers.PerusahaanHandler, picH *handlers.PICPerusahaanHandler,
-	identifikasiH *handlers.IdentifikasiHandler, authM *middleware.AuthMiddleware) *http.ServeMux {
+	identifikasiH *handlers.IdentifikasiHandler, gulihH *handlers.GulihHandler, authM *middleware.AuthMiddleware) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Routes Auth
@@ -83,6 +83,31 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 			identifikasiH.Update(w, r) // Update
 		case http.MethodDelete:
 			identifikasiH.Delete(w, r) // Delete
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	// Route Gulih
+	mux.HandleFunc("/api/gulih", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			gulihH.GetAll(w, r) // Read all
+		case http.MethodPost:
+			gulihH.Create(w, r) // Create
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/gulih/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			gulihH.GetByID(w, r) // Read by ID
+		case http.MethodPut:
+			gulihH.Update(w, r) // Update
+		case http.MethodDelete:
+			gulihH.Delete(w, r) // Delete
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
