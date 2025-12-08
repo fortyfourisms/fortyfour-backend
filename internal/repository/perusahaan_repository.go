@@ -31,7 +31,7 @@ func (r *PerusahaanRepository) Create(req dto.CreatePerusahaanRequest, id string
 }
 
 func (r *PerusahaanRepository) GetAll() ([]dto.PerusahaanResponse, error) {
-	rows, err := r.db.Query(`SELECT id, photo, nama_perusahaan, sektor, alamat, telepon, email, website FROM perusahaan`)
+	rows, err := r.db.Query(`SELECT id, photo, nama_perusahaan, sektor, alamat, telepon, email, website, created_at, updated_at FROM perusahaan`)
 	if err != nil {
 		return nil, err
 	}
@@ -40,16 +40,16 @@ func (r *PerusahaanRepository) GetAll() ([]dto.PerusahaanResponse, error) {
 	var result []dto.PerusahaanResponse
 	for rows.Next() {
 		var p dto.PerusahaanResponse
-		rows.Scan(&p.ID, &p.Photo, &p.NamaPerusahaan, &p.Sektor, &p.Alamat, &p.Telepon, &p.Email, &p.Website)
+		rows.Scan(&p.ID, &p.Photo, &p.NamaPerusahaan, &p.Sektor, &p.Alamat, &p.Telepon, &p.Email, &p.Website, &p.CreatedAt, &p.UpdatedAt)
 		result = append(result, p)
 	}
 	return result, nil
 }
 
 func (r *PerusahaanRepository) GetByID(id string) (*dto.PerusahaanResponse, error) {
-	row := r.db.QueryRow(`SELECT id, photo, nama_perusahaan, sektor, alamat, telepon, email, website FROM perusahaan WHERE id=?`, id)
+	row := r.db.QueryRow(`SELECT id, photo, nama_perusahaan, sektor, alamat, telepon, email, website, created_at, updated_at FROM perusahaan WHERE id=?`, id)
 	var p dto.PerusahaanResponse
-	err := row.Scan(&p.ID, &p.Photo, &p.NamaPerusahaan, &p.Sektor, &p.Alamat, &p.Telepon, &p.Email, &p.Website)
+	err := row.Scan(&p.ID, &p.Photo, &p.NamaPerusahaan, &p.Sektor, &p.Alamat, &p.Telepon, &p.Email, &p.Website, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (r *PerusahaanRepository) GetByID(id string) (*dto.PerusahaanResponse, erro
 
 func (r *PerusahaanRepository) Update(id string, p dto.PerusahaanResponse) error {
 	_, err := r.db.Exec(`UPDATE perusahaan SET
-        photo=?, nama_perusahaan=?, sektor=?, alamat=?, telepon=?, email=?, website=?
+        photo=?, nama_perusahaan=?, sektor=?, alamat=?, telepon=?, email=?, website=?, updated_at=CURRENT_TIMESTAMP
         WHERE id=?`,
 		p.Photo, p.NamaPerusahaan, p.Sektor, p.Alamat, p.Telepon, p.Email, p.Website, id,
 	)

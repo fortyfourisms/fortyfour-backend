@@ -9,4 +9,6 @@ type Perusahaan struct {
 	Telepon        string `json:"telepon"`
 	Email          string `json:"email"`
 	Website        string `json:"website"`
+	CreatedAt      string `json:"created_at"`
+	UpdatedAt      string `json:"updated_at"`
 }
