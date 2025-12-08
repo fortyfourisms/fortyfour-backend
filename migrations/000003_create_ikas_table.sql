@@ -1,17 +1,15 @@
-CREATE TABLE `ikas` (
-  `id` integer PRIMARY KEY,
-  `id_stakeholder` integer,
+CREATE TABLE IF NOT EXISTS ikas (
+  `id` char(36) PRIMARY KEY,
+  `id_stakeholder` char(36),
   `tanggal` datetime,
   `responden` varchar(255),
-  `telepon` integer,
+  `telepon` varchar(50),
   `jabatan` varchar(255),
   `nilai_kematangan` float,
   `target_nilai` float,
-  `id_identifikasi` integer,
-  `id_proteksi` integer,
-  `id_deteksi` integer,
-  `id_gulih` integer
+  `id_identifikasi` char(36),
+  `id_proteksi` char(36),
+  `id_deteksi` char(36),
+  `id_gulih` char(36),
+  FOREIGN KEY (`id_stakeholder`) REFERENCES `stakeholders` (`id`)
 );
-
-ALTER TABLE ikas MODIFY id INT AUTO_INCREMENT PRIMARY KEY;
-ALTER TABLE `ikas` ADD FOREIGN KEY (`id_stakeholder`) REFERENCES `stakeholders` (`id`);

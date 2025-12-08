@@ -3,105 +3,101 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
+	"strings"
 
-	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/services"
-
-	"github.com/gorilla/mux"
+	"fortyfour-backend/internal/utils"
 )
 
 type IkasHandler struct {
-	service services.IkasService
+	service *services.IkasService
 }
 
-func NewIkasHandler(service services.IkasService) *IkasHandler {
+func NewIkasHandler(service *services.IkasService) *IkasHandler {
 	return &IkasHandler{service: service}
 }
 
-func (h *IkasHandler) CreateIkas(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	var ikas models.Ikas
-	if err := json.NewDecoder(r.Body).Decode(&ikas); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+// CREATE
+func (h *IkasHandler) Create(w http.ResponseWriter, r *http.Request) {
+	var req dto.CreateIkasRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
-	if err := h.service.CreateIkas(&ikas); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	ikas, err := h.service.Create(req)
+	if err != nil {
+		utils.RespondError(w, 400, err.Error())
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "Data berhasil ditambahkan",
-		"data":    ikas,
-	})
+	utils.RespondJSON(w, 201, ikas)
 }
 
+// GET ALL
 func (h *IkasHandler) GetAllIkas(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	ikasList, err := h.service.GetAllIkas()
+	data, err := h.service.GetAll()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.RespondError(w, 500, err.Error())
 		return
 	}
 
-	json.NewEncoder(w).Encode(ikasList)
+	utils.RespondJSON(w, 200, data)
 }
 
+// GET BY ID
 func (h *IkasHandler) GetIkasByID(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	id := strings.TrimPrefix(r.URL.Path, "/api/ikas/")
+	if id == "" {
+		utils.RespondError(w, 400, "ID wajib")
+		return
+	}
 
-	params := mux.Vars(r)
-	id, _ := strconv.Atoi(params["id"])
-
-	ikas, err := h.service.GetIkasByID(id)
+	result, err := h.service.GetByID(id)
 	if err != nil {
-		http.Error(w, "Data tidak ditemukan", http.StatusNotFound)
+		utils.RespondError(w, 404, "Data tidak ditemukan")
 		return
 	}
 
-	json.NewEncoder(w).Encode(ikas)
+	utils.RespondJSON(w, 200, result)
 }
 
+// UPDATE
 func (h *IkasHandler) UpdateIkas(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	params := mux.Vars(r)
-	id, _ := strconv.Atoi(params["id"])
-
-	var ikas models.Ikas
-	if err := json.NewDecoder(r.Body).Decode(&ikas); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	id := strings.TrimPrefix(r.URL.Path, "/api/ikas/")
+	if id == "" {
+		utils.RespondError(w, 400, "ID wajib")
 		return
 	}
 
-	if err := h.service.UpdateIkas(id, &ikas); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	var req dto.UpdateIkasRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
-	ikas.ID = id
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"message": "Data berhasil diupdate",
-		"data":    ikas,
-	})
+	result, err := h.service.Update(id, req)
+	if err != nil {
+		utils.RespondError(w, 400, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, 200, result)
 }
 
+// DELETE 
 func (h *IkasHandler) DeleteIkas(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-
-	params := mux.Vars(r)
-	id, _ := strconv.Atoi(params["id"])
-
-	if err := h.service.DeleteIkas(id); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	id := strings.TrimPrefix(r.URL.Path, "/api/ikas/")
+	if id == "" {
+		utils.RespondError(w, 400, "ID wajib")
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Data berhasil dihapus",
-	})
+	if err := h.service.Delete(id); err != nil {
+		utils.RespondError(w, 400, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }

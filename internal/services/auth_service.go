@@ -4,37 +4,35 @@ import (
 	"errors"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/repository"
-	"fortyfour-backend/internal/utils"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
-	userRepo  repository.UserRepositoryInterface
-	jwtSecret string
-	idCounter int
+	userRepo     repository.UserRepositoryInterface
+	tokenService *TokenService
+	idCounter    int
 }
 
-func NewAuthService(userRepo repository.UserRepositoryInterface, jwtSecret string) *AuthService {
+func NewAuthService(userRepo repository.UserRepositoryInterface, tokenService *TokenService) *AuthService {
 	return &AuthService{
-		userRepo:  userRepo,
-		jwtSecret: jwtSecret,
+		userRepo:     userRepo,
+		tokenService: tokenService,
 	}
 }
 
-func (s *AuthService) Register(username, password, email string) (*models.User, string, error) {
+func (s *AuthService) Register(username, password, email string) (*models.User, *models.TokenPair, error) {
 	if username == "" || password == "" || email == "" {
-		return nil, "", errors.New("all fields are required")
+		return nil, nil, errors.New("all fields are required")
 	}
 
 	if _, err := s.userRepo.FindByUsername(username); err == nil {
-		return nil, "", errors.New("username already exists")
+		return nil, nil, errors.New("username already exists")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 
 	s.idCounter++
@@ -46,31 +44,37 @@ func (s *AuthService) Register(username, password, email string) (*models.User, 
 	}
 
 	if err := s.userRepo.Create(user); err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 
-	token, err := utils.GenerateToken(user.ID, user.Username, s.jwtSecret, 24*time.Hour)
+	// Generate token pair
+	tokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username)
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 
-	return user, token, nil
+	return user, tokens, nil
 }
 
-func (s *AuthService) Login(username, password string) (*models.User, string, error) {
+func (s *AuthService) Login(username, password string) (*models.User, *models.TokenPair, error) {
 	user, err := s.userRepo.FindByUsername(username)
 	if err != nil {
-		return nil, "", errors.New("invalid credentials")
+		return nil, nil, errors.New("invalid credentials")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		return nil, "", errors.New("invalid credentials")
+		return nil, nil, errors.New("invalid credentials")
 	}
 
-	token, err := utils.GenerateToken(user.ID, user.Username, s.jwtSecret, 24*time.Hour)
+	// Generate token pair
+	tokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username)
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 
-	return user, token, nil
+	return user, tokens, nil
+}
+
+func (s *AuthService) Logout(refreshToken string) error {
+	return s.tokenService.RevokeRefreshToken(refreshToken)
 }
