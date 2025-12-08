@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/utils"
 )
 
 type PerusahaanRepository struct {
@@ -18,13 +19,13 @@ func (r *PerusahaanRepository) Create(req dto.CreatePerusahaanRequest, id string
         (id, photo, nama_perusahaan, sektor, alamat, telepon, email, website)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
-		valueOrEmpty(req.Photo),
-		valueOrEmpty(req.NamaPerusahaan),
-		valueOrEmpty(req.Sektor),
-		valueOrEmpty(req.Alamat),
-		valueOrEmpty(req.Telepon),
-		valueOrEmpty(req.Email),
-		valueOrEmpty(req.Website),
+		utils.ValueOrEmpty(req.Photo),
+		utils.ValueOrEmpty(req.NamaPerusahaan),
+		utils.ValueOrEmpty(req.Sektor),
+		utils.ValueOrEmpty(req.Alamat),
+		utils.ValueOrEmpty(req.Telepon),
+		utils.ValueOrEmpty(req.Email),
+		utils.ValueOrEmpty(req.Website),
 	)
 	return err
 }
@@ -67,11 +68,4 @@ func (r *PerusahaanRepository) Update(id string, p dto.PerusahaanResponse) error
 func (r *PerusahaanRepository) Delete(id string) error {
 	_, err := r.db.Exec(`DELETE FROM perusahaan WHERE id=?`, id)
 	return err
-}
-
-func valueOrEmpty(s *string) string {
-	if s != nil {
-		return *s
-	}
-	return ""
 }
