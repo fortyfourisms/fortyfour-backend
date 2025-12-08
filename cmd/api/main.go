@@ -46,6 +46,7 @@ func main() {
 	postRepo := repository.NewPostRepository(db)
 	perusahaanRepo := repository.NewPerusahaanRepository(db)
 	ikasRepo := repository.NewIkasRepository(db)
+	proteksiRepo := repository.NewProteksiRepository(db)
 
 	// Initialize Services
 	tokenService := services.NewTokenService(nil, cfg.JWTSecret)
@@ -53,18 +54,20 @@ func main() {
 	postService := services.NewPostService(postRepo)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo)
 	ikasService := services.NewIkasService(ikasRepo)
+	proteksiService := services.NewProteksiService(proteksiRepo)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
 	postHandler := handlers.NewPostHandler(postService)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService)
 	ikasHandler := handlers.NewIkasHandler(ikasService)
+	proteksiHandler := handlers.NewProteksiHandler(proteksiService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
 
 	// Setup Routes
-	mux := routes.InitRouter(authHandler, postHandler, perusahaanHandler, ikasHandler, authMiddleware)
+	mux := routes.InitRouter(authHandler, postHandler, perusahaanHandler, ikasHandler, proteksiHandler, authMiddleware)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.Port)

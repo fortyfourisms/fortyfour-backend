@@ -7,7 +7,7 @@ import (
 	"fortyfour-backend/internal/middleware"
 )
 
-func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusahaanH *handlers.PerusahaanHandler, ikasH *handlers.IkasHandler, authM *middleware.AuthMiddleware) *http.ServeMux {
+func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusahaanH *handlers.PerusahaanHandler, ikasH *handlers.IkasHandler, proteksiH *handlers.ProteksiHandler, authM *middleware.AuthMiddleware) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Routes Auth
@@ -58,6 +58,19 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 			ikasH.UpdateIkas(w, r) // Update
 		case http.MethodDelete:
 			ikasH.DeleteIkas(w, r) // Delete
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+		mux.HandleFunc("/api/protelsi/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			proteksiH.GetProteksiByID(w, r) // Read by ID
+		case http.MethodPut:
+			proteksiH.UpdateProteksi(w, r) // Update
+		case http.MethodDelete:
+			proteksiH.DeleteProteksi(w, r) // Delete
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
