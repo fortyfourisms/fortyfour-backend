@@ -47,10 +47,11 @@ func main() {
 	perusahaanRepo := repository.NewPerusahaanRepository(db)
 	picRepo := repository.NewPICPerusahaanRepository(db)
 	identifikasiRepo := repository.NewIdentifikasiRepository(db)
-	ikasRepo := repository.NewIkasRepository(db)
 	proteksiRepo := repository.NewProteksiRepository(db)
+	deteksiRepo := repository.NewDeteksiRepository(db)
 	gulihRepo := repository.NewGulihRepository(db)
-
+	ikasRepo := repository.NewIkasRepository(db)
+	
 	// Initialize services
 	tokenService := services.NewTokenService(nil, cfg.JWTSecret)
 	authService := services.NewAuthService(userRepo, tokenService)
@@ -58,9 +59,10 @@ func main() {
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo)
 	picService := services.NewPICPerusahaanService(picRepo)
 	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
-	ikasService := services.NewIkasService(ikasRepo)
 	proteksiService := services.NewProteksiService(proteksiRepo)
+	deteksiService := services.NewDeteksiService(deteksiRepo)
 	gulihService := services.NewGulihService(gulihRepo)
+	ikasService := services.NewIkasService(ikasRepo)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
@@ -68,15 +70,16 @@ func main() {
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService)
 	picHandler := handlers.NewPICPerusahaanHandler(picService)
 	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
-	ikasHandler := handlers.NewIkasHandler(ikasService)
 	proteksiHandler := handlers.NewProteksiHandler(proteksiService)
+	deteksiHandler := handlers.NewDeteksiHandler(deteksiService)
 	gulihHandler := handlers.NewGulihHandler(gulihService)
+	ikasHandler := handlers.NewIkasHandler(ikasService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
 
 	// Setup routes
-	mux := routes.InitRouter(authHandler, postHandler, perusahaanHandler, picHandler, identifikasiHandler, gulihHandler, ikasHandler, proteksiHandler, authMiddleware)
+	mux := routes.InitRouter(authHandler, postHandler, perusahaanHandler, picHandler, identifikasiHandler, proteksiHandler, deteksiHandler, gulihHandler, ikasHandler, authMiddleware)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.Port)
