@@ -30,29 +30,33 @@ func main() {
 	defer db.Close()
 
 	// Initialize Redis
-	//redisClient, err := cache.NewRedisClient(cache.RedisConfig{
-	//	Host:     cfg.Redis.Host,
-	//	Port:     cfg.Redis.Port,
-	//	Password: cfg.Redis.Password,
-	//	DB:       cfg.Redis.DB,
-	//})
-	//if err != nil {
-	//	log.Fatal("Failed to connect to Redis:", err)
-	//}
-	//defer redisClient.Close()
+	// redisClient, err := cache.NewRedisClient(cache.RedisConfig{
+	// 	Host:     cfg.Redis.Host,
+	// 	Port:     cfg.Redis.Port,
+	// 	Password: cfg.Redis.Password,
+	// 	DB:       cfg.Redis.DB,
+	// })
+	// if err != nil {
+	// 	log.Fatal("Failed to connect to Redis:", err)
+	// }
+	// defer redisClient.Close()
 
 	// Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
 	postRepo := repository.NewPostRepository(db)
 	perusahaanRepo := repository.NewPerusahaanRepository(db)
+	picRepo := repository.NewPICPerusahaanRepository(db)
+	identifikasiRepo := repository.NewIdentifikasiRepository(db)
 	ikasRepo := repository.NewIkasRepository(db)
 	proteksiRepo := repository.NewProteksiRepository(db)
 
-	// Initialize Services
+	// Initialize services
 	tokenService := services.NewTokenService(nil, cfg.JWTSecret)
 	authService := services.NewAuthService(userRepo, tokenService)
 	postService := services.NewPostService(postRepo)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo)
+	picService := services.NewPICPerusahaanService(picRepo)
+	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
 	ikasService := services.NewIkasService(ikasRepo)
 	proteksiService := services.NewProteksiService(proteksiRepo)
 
@@ -60,14 +64,16 @@ func main() {
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
 	postHandler := handlers.NewPostHandler(postService)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService)
+	picHandler := handlers.NewPICPerusahaanHandler(picService)
+	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
 	ikasHandler := handlers.NewIkasHandler(ikasService)
 	proteksiHandler := handlers.NewProteksiHandler(proteksiService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
 
-	// Setup Routes
-	mux := routes.InitRouter(authHandler, postHandler, perusahaanHandler, ikasHandler, proteksiHandler, authMiddleware)
+	// Setup routes
+	mux := routes.InitRouter(authHandler, postHandler, perusahaanHandler, picHandler, identifikasiHandler, ikasHandler, proteksiHandler, authMiddleware)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.Port)
