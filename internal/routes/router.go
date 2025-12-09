@@ -42,9 +42,9 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 	mux.HandleFunc("/api/ikas", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			ikasH.GetAllIkas(w, r) // Read all
+			ikasH.GetAllIkas(w, r) 
 		case http.MethodPost:
-			ikasH.Create(w, r) // Create
+			ikasH.Create(w, r) 
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
@@ -53,24 +53,24 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 	mux.HandleFunc("/api/ikas/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			ikasH.GetIkasByID(w, r) // Read by ID
+			ikasH.GetIkasByID(w, r) 
 		case http.MethodPut:
-			ikasH.UpdateIkas(w, r) // Update
+			ikasH.UpdateIkas(w, r) 
 		case http.MethodDelete:
-			ikasH.DeleteIkas(w, r) // Delete
+			ikasH.DeleteIkas(w, r) 
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
-
+		// Route Proteksi
 		mux.HandleFunc("/api/protelsi/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			proteksiH.GetProteksiByID(w, r) // Read by ID
+			proteksiH.GetProteksiByID(w, r)
 		case http.MethodPut:
-			proteksiH.UpdateProteksi(w, r) // Update
+			proteksiH.UpdateProteksi(w, r) 
 		case http.MethodDelete:
-			proteksiH.DeleteProteksi(w, r) // Delete
+			proteksiH.DeleteProteksi(w, r) 
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}

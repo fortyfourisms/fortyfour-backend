@@ -59,40 +59,6 @@ func (s *ProteksiService) Update(id string, req dto.UpdateProteksiRequest) (*mod
 		proteksi.NilaiSubdomain6 = *req.NilaiSubdomain6
 	}
 
-	sum := 0
-	totalNilai := 0.0
-
-	if proteksi.NilaiSubdomain1 > 0 {
-		sum++
-		totalNilai += proteksi.NilaiSubdomain1
-	}
-	if proteksi.NilaiSubdomain2 > 0 {
-		sum++
-		totalNilai += proteksi.NilaiSubdomain2
-	}
-	if proteksi.NilaiSubdomain3 > 0 {
-		sum++
-		totalNilai += proteksi.NilaiSubdomain3
-	}
-	if proteksi.NilaiSubdomain4 > 0 {
-		sum++
-		totalNilai += proteksi.NilaiSubdomain4
-	}
-	if proteksi.NilaiSubdomain5 > 0 {
-		sum++
-		totalNilai += proteksi.NilaiSubdomain5
-	}
-	if proteksi.NilaiSubdomain6 > 0 {
-		sum++
-		totalNilai += proteksi.NilaiSubdomain6
-	}
-
-	if sum > 0 {
-		proteksi.NilaiProteksi = totalNilai / float64(sum)
-	} else {
-		proteksi.NilaiProteksi = 0
-	}
-
 	if err := s.repo.Update(id, *proteksi); err != nil {
 		return nil, err
 	}
