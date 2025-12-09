@@ -116,7 +116,7 @@ func (m *MockUserRepository) FindByUsername(username string) (*models.User, erro
 	return user, nil
 }
 
-func (m *MockUserRepository) FindByID(id int) (*models.User, error) {
+func (m *MockUserRepository) FindByID(id string) (*models.User, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -139,7 +139,7 @@ func (m *MockUserRepository) Update(user *models.User) error {
 	return nil
 }
 
-func (m *MockUserRepository) Delete(id int) error {
+func (m *MockUserRepository) Delete(id string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -241,7 +241,7 @@ func (m *MockPostRepository) Delete(id int) error {
 // Test Data Factories
 // ============================================================
 
-func CreateTestUser(id int, username, email string) *models.User {
+func CreateTestUser(id, username, email string) *models.User {
 	return &models.User{
 		ID:       id,
 		Username: username,

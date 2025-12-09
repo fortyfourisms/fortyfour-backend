@@ -10,13 +10,13 @@ import (
 )
 
 type Claims struct {
-	UserID   int    `json:"user_id"`
+	UserID   string `json:"user_id"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
 
 // GenerateAccessToken generates a short-lived access token
-func GenerateAccessToken(userID int, username, secret string) (string, time.Time, error) {
+func GenerateAccessToken(userID string, username, secret string) (string, time.Time, error) {
 	expiresAt := time.Now().Add(15 * time.Minute) // Short-lived: 15 minutes
 
 	claims := Claims{

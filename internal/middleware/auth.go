@@ -3,7 +3,6 @@ package middleware
 import (
 	"fortyfour-backend/internal/utils"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -35,7 +34,7 @@ func (m *AuthMiddleware) Authenticate(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		UserIDString := strconv.Itoa(claims.UserID)
+		UserIDString := claims.UserID
 
 		r.Header.Set("X-User-ID", UserIDString)
 		r.Header.Set("X-Username", claims.Username)
