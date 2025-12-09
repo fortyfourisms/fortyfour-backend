@@ -8,7 +8,7 @@ import (
 )
 
 func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusahaanH *handlers.PerusahaanHandler, picH *handlers.PICPerusahaanHandler,
-	identifikasiH *handlers.IdentifikasiHandler, gulihH *handlers.GulihHandler, authM *middleware.AuthMiddleware) *http.ServeMux {
+	identifikasiH *handlers.IdentifikasiHandler, gulihH *handlers.GulihHandler, ikasH *handlers.IkasHandler, proteksiH *handlers.ProteksiHandler, authM *middleware.AuthMiddleware) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Routes Auth
@@ -88,6 +88,13 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 		}
 	})
 
+	// Route IKAS
+	mux.HandleFunc("/api/ikas", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			ikasH.GetAllIkas(w, r) 
+		case http.MethodPost:
+			ikasH.Create(w, r) 
 	// Route Gulih
 	mux.HandleFunc("/api/gulih", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -100,6 +107,39 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 		}
 	})
 
+	mux.HandleFunc("/api/ikas/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			ikasH.GetIkasByID(w, r) 
+		case http.MethodPut:
+			ikasH.UpdateIkas(w, r) 
+		case http.MethodDelete:
+			ikasH.DeleteIkas(w, r) 
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	// Route Proteksi
+		mux.HandleFunc("/api/proteksi", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			proteksiH.GetAllProteksi(w, r) 
+		case http.MethodPost:
+			proteksiH.Create(w, r) 
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+		mux.HandleFunc("/api/proteksi/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			proteksiH.GetProteksiByID(w, r)
+		case http.MethodPut:
+			proteksiH.UpdateProteksi(w, r) 
+		case http.MethodDelete:
+			proteksiH.DeleteProteksi(w, r) 
 	mux.HandleFunc("/api/gulih/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:

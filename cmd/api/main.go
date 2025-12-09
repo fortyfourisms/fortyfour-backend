@@ -14,7 +14,6 @@ import (
 )
 
 func main() {
-	// Load configuration
 	cfg := config.Load()
 
 	// Initialize MySQL database
@@ -42,12 +41,14 @@ func main() {
 	// }
 	// defer redisClient.Close()
 
-	// Initialize repositories
+	// Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
 	postRepo := repository.NewPostRepository(db)
 	perusahaanRepo := repository.NewPerusahaanRepository(db)
 	picRepo := repository.NewPICPerusahaanRepository(db)
 	identifikasiRepo := repository.NewIdentifikasiRepository(db)
+	ikasRepo := repository.NewIkasRepository(db)
+	proteksiRepo := repository.NewProteksiRepository(db)
 	gulihRepo := repository.NewGulihRepository(db)
 
 	// Initialize services
@@ -57,21 +58,25 @@ func main() {
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo)
 	picService := services.NewPICPerusahaanService(picRepo)
 	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
+	ikasService := services.NewIkasService(ikasRepo)
+	proteksiService := services.NewProteksiService(proteksiRepo)
 	gulihService := services.NewGulihService(gulihRepo)
 
-	// Initialize handlers
+	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
 	postHandler := handlers.NewPostHandler(postService)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService)
 	picHandler := handlers.NewPICPerusahaanHandler(picService)
 	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
+	ikasHandler := handlers.NewIkasHandler(ikasService)
+	proteksiHandler := handlers.NewProteksiHandler(proteksiService)
 	gulihHandler := handlers.NewGulihHandler(gulihService)
 
-	// Initialize middleware
+	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
 
 	// Setup routes
-	mux := routes.InitRouter(authHandler, postHandler, perusahaanHandler, picHandler, identifikasiHandler, gulihHandler, authMiddleware)
+	mux := routes.InitRouter(authHandler, postHandler, perusahaanHandler, picHandler, identifikasiHandler, gulihHandler, ikasHandler, proteksiHandler, authMiddleware)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.Port)
