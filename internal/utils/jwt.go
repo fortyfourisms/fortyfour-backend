@@ -17,7 +17,7 @@ type Claims struct {
 
 // GenerateAccessToken generates a short-lived access token
 func GenerateAccessToken(userID string, username, secret string) (string, time.Time, error) {
-	expiresAt := time.Now().Add(15 * time.Minute) // Short-lived: 15 minutes
+	expiresAt := time.Now().Add(1 * time.Hour) // Short-lived: 1 Hour
 
 	claims := Claims{
 		UserID:   userID,
