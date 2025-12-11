@@ -8,8 +8,7 @@ import (
 )
 
 type PostService struct {
-	postRepo  repository.PostRepositoryInterface
-	idCounter int
+	postRepo repository.PostRepositoryInterface
 }
 
 func NewPostService(postRepo repository.PostRepositoryInterface) *PostService {
@@ -18,14 +17,12 @@ func NewPostService(postRepo repository.PostRepositoryInterface) *PostService {
 	}
 }
 
-func (s *PostService) CreatePost(title, content string, authorID int) (*models.Post, error) {
+func (s *PostService) CreatePost(title, content, authorID string) (*models.Post, error) {
 	if title == "" || content == "" {
 		return nil, errors.New("title and content are required")
 	}
 
-	s.idCounter++
 	post := &models.Post{
-		ID:        s.idCounter,
 		Title:     title,
 		Content:   content,
 		AuthorID:  authorID,
@@ -47,7 +44,7 @@ func (s *PostService) GetPostByID(id int) (*models.Post, error) {
 	return s.postRepo.FindByID(id)
 }
 
-func (s *PostService) UpdatePost(id int, title, content string, userID int) (*models.Post, error) {
+func (s *PostService) UpdatePost(id int, title, content, userID string) (*models.Post, error) {
 	post, err := s.postRepo.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -67,7 +64,7 @@ func (s *PostService) UpdatePost(id int, title, content string, userID int) (*mo
 	return post, nil
 }
 
-func (s *PostService) DeletePost(id, userID int) error {
+func (s *PostService) DeletePost(id int, userID string) error {
 	post, err := s.postRepo.FindByID(id)
 	if err != nil {
 		return err

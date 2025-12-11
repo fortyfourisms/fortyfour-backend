@@ -9,7 +9,7 @@ type TokenPair struct {
 }
 
 type RefreshTokenData struct {
-	UserID    int       `json:"user_id"`
+	UserID    string    `json:"user_id"`
 	Username  string    `json:"username"`
 	CreatedAt time.Time `json:"created_at"`
 }

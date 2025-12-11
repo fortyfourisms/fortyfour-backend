@@ -24,10 +24,10 @@ func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIDString := r.Header.Get("X-User-ID")
-	userID, err := strconv.Atoi(userIDString)
-	if err != nil {
-		log.Fatal("Error during string to int conversion:", err)
+	userID := r.Header.Get("X-User-ID") // UUID STRING
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
+		return
 	}
 
 	var req dto.CreatePostRequest
@@ -91,9 +91,13 @@ func (h *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIDString := r.Header.Get("X-User-ID")
-	idString := r.URL.Query().Get("id")
+	userID := r.Header.Get("X-User-ID")
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
+		return
+	}
 
+	idString := r.URL.Query().Get("id")
 	if idString == "" {
 		utils.RespondError(w, http.StatusBadRequest, "Post ID is required")
 		return
@@ -101,12 +105,8 @@ func (h *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		log.Fatal("Error during string to int conversion:", err)
-	}
-
-	userID, err := strconv.Atoi(userIDString)
-	if err != nil {
-		log.Fatal("Error during string to int conversion:", err)
+		utils.RespondError(w, http.StatusBadRequest, "Invalid post ID")
+		return
 	}
 
 	var req dto.UpdatePostRequest
@@ -134,9 +134,13 @@ func (h *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIDString := r.Header.Get("X-User-ID")
-	idString := r.URL.Query().Get("id")
+	userID := r.Header.Get("X-User-ID") // UUID
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
+		return
+	}
 
+	idString := r.URL.Query().Get("id")
 	if idString == "" {
 		utils.RespondError(w, http.StatusBadRequest, "Post ID is required")
 		return
@@ -144,12 +148,8 @@ func (h *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(idString)
 	if err != nil {
-		log.Fatal("Error during string to int conversion:", err)
-	}
-
-	userID, err := strconv.Atoi(userIDString)
-	if err != nil {
-		log.Fatal("Error during string to int conversion:", err)
+		utils.RespondError(w, http.StatusBadRequest, "Invalid post ID")
+		return
 	}
 
 	if err := h.postService.DeletePost(id, userID); err != nil {

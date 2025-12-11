@@ -1,3 +1,4 @@
+// services/token_service.go
 package services
 
 import (
@@ -22,21 +23,18 @@ func NewTokenService(redis cache.RedisInterface, jwtSecret string) *TokenService
 	}
 }
 
-// GenerateTokenPair creates both access and refresh tokens
-func (s *TokenService) GenerateTokenPair(userID int, username string) (*models.TokenPair, error) {
-	// Generate access token (short-lived)
+// GenerateTokenPair creates access & refresh tokens
+func (s *TokenService) GenerateTokenPair(userID string, username string) (*models.TokenPair, error) {
 	accessToken, expiresAt, err := utils.GenerateAccessToken(userID, username, s.jwtSecret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate access token: %w", err)
 	}
 
-	// Generate refresh token (random string)
 	refreshToken, err := utils.GenerateRefreshToken()
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
 	}
 
-	// Store refresh token in Redis with 7 days expiration
 	refreshTokenData := models.RefreshTokenData{
 		UserID:    userID,
 		Username:  username,
@@ -60,11 +58,10 @@ func (s *TokenService) GenerateTokenPair(userID int, username string) (*models.T
 	}, nil
 }
 
-// RefreshAccessToken validates refresh token and generates new access token
+// RefreshAccessToken validates a refresh token and issues new access token
 func (s *TokenService) RefreshAccessToken(refreshToken string) (*models.TokenPair, error) {
 	key := fmt.Sprintf("refresh_token:%s", refreshToken)
 
-	// Get refresh token data from Redis
 	data, err := s.redis.Get(key)
 	if err != nil {
 		return nil, errors.New("invalid or expired refresh token")
@@ -75,20 +72,17 @@ func (s *TokenService) RefreshAccessToken(refreshToken string) (*models.TokenPai
 		return nil, errors.New("invalid token data")
 	}
 
-	// Generate new token pair
 	return s.GenerateTokenPair(tokenData.UserID, tokenData.Username)
 }
 
-// RevokeRefreshToken removes a refresh token from Redis
+// RevokeRefreshToken deletes a single refresh token
 func (s *TokenService) RevokeRefreshToken(refreshToken string) error {
 	key := fmt.Sprintf("refresh_token:%s", refreshToken)
 	return s.redis.Delete(key)
 }
 
-// RevokeAllUserTokens removes all refresh tokens for a user
-func (s *TokenService) RevokeAllUserTokens(userID int) error {
-	// In production, you'd want to use Redis SCAN to find all tokens for a user
-	// For now, we'll implement a simple version
-	// You should store a set of tokens per user for this to work efficiently
+// RevokeAllUserTokens deletes all refresh tokens for a user
+func (s *TokenService) RevokeAllUserTokens(userID string) error {
+	// Implement Redis SCAN or key set per user in production
 	return nil
 }
