@@ -54,7 +54,7 @@ func main() {
 	deteksiRepo := repository.NewDeteksiRepository(db)
 	gulihRepo := repository.NewGulihRepository(db)
 	ikasRepo := repository.NewIkasRepository(db)
-	
+
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
 	authService := services.NewAuthService(userRepo, tokenService)
@@ -98,8 +98,9 @@ func main() {
 		postHandler,
 		perusahaanHandler,
 		picHandler,
-    jabatanHandler,
+		jabatanHandler,
 		identifikasiHandler,
+		deteksiHandler,
 		gulihHandler,
 		ikasHandler,
 		proteksiHandler,
