@@ -2,24 +2,24 @@ package handlers
 
 import (
 	"encoding/json"
+	"net/http"
+	"strings"
+
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
-	"net/http"
-	"strings"
 )
 
-type PICHandler struct {
-	service *services.PICService
+type JabatanHandler struct {
+	service *services.JabatanService
 }
 
-func NewPICHandler(service *services.PICService) *PICHandler {
-	return &PICHandler{service: service}
+func NewJabatanHandler(service *services.JabatanService) *JabatanHandler {
+	return &JabatanHandler{service: service}
 }
 
-func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// Correct the path to match the router
-	id := strings.TrimPrefix(r.URL.Path, "/api/pic")
+func (h *JabatanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	id := strings.TrimPrefix(r.URL.Path, "/api/jabatan")
 	id = strings.TrimPrefix(id, "/")
 
 	switch r.Method {
@@ -32,18 +32,18 @@ func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			utils.RespondJSON(w, 200, data)
 		} else {
-			p, err := h.service.GetByID(id)
+			j, err := h.service.GetByID(id)
 			if err != nil {
 				utils.RespondError(w, 404, "Data tidak ditemukan")
 				return
 			}
-			utils.RespondJSON(w, 200, p)
+			utils.RespondJSON(w, 200, j)
 		}
 
 	case http.MethodPost:
-		var req dto.CreatePICRequest
+		var req dto.CreateJabatanRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			utils.RespondError(w, 400, "Invalid JSON")
+			utils.RespondError(w, 400, "Invalid request body")
 			return
 		}
 
@@ -52,7 +52,6 @@ func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			utils.RespondError(w, 400, err.Error())
 			return
 		}
-
 		utils.RespondJSON(w, 201, resp)
 
 	case http.MethodPut:
@@ -61,9 +60,9 @@ func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		var req dto.UpdatePICRequest
+		var req dto.UpdateJabatanRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			utils.RespondError(w, 400, "Invalid JSON")
+			utils.RespondError(w, 400, "Invalid request body")
 			return
 		}
 
@@ -72,7 +71,6 @@ func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			utils.RespondError(w, 400, err.Error())
 			return
 		}
-
 		utils.RespondJSON(w, 200, resp)
 
 	case http.MethodDelete:
@@ -80,12 +78,10 @@ func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
-
 		if err := h.service.Delete(id); err != nil {
 			utils.RespondError(w, 400, err.Error())
 			return
 		}
-
 		utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 
 	default:

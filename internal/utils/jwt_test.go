@@ -6,7 +6,7 @@ import (
 )
 
 func TestGenerateToken_Success(t *testing.T) {
-	userID := 1
+	userID := "1"
 	username := "testuser"
 	secret := "test-secret"
 	expiresAt := time.Now().Add(15 * time.Minute)
@@ -27,7 +27,7 @@ func TestGenerateToken_Success(t *testing.T) {
 }
 
 func TestVerifyToken_Success(t *testing.T) {
-	userID := 1
+	userID := "1"
 	username := "testuser"
 	secret := "test-secret"
 
@@ -60,7 +60,7 @@ func TestVerifyToken_InvalidToken(t *testing.T) {
 }
 
 func TestVerifyToken_WrongSecret(t *testing.T) {
-	userID := 1
+	userID := "1"
 	username := "testuser"
 	secret := "test-secret"
 	wrongSecret := "wrong-secret"

@@ -9,7 +9,7 @@ func TestPostService_CreatePost_Success(t *testing.T) {
 	repo := testhelpers.NewMockPostRepository()
 	service := NewPostService(repo)
 
-	post, err := service.CreatePost("Test Title", "Test Content", 1)
+	post, err := service.CreatePost("Test Title", "Test Content", "1")
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -27,7 +27,7 @@ func TestPostService_CreatePost_Success(t *testing.T) {
 		t.Errorf("expected content 'Test Content', got '%s'", post.Content)
 	}
 
-	if post.AuthorID != 1 {
+	if post.AuthorID != "1" {
 		t.Errorf("expected author_id 1, got %d", post.AuthorID)
 	}
 
@@ -52,7 +52,7 @@ func TestPostService_CreatePost_EmptyFields(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := service.CreatePost(tc.title, tc.content, 1)
+			_, err := service.CreatePost(tc.title, tc.content, "1")
 
 			if err == nil {
 				t.Fatal("expected error for empty fields")
@@ -69,9 +69,9 @@ func TestPostService_GetAllPosts(t *testing.T) {
 	repo := testhelpers.NewMockPostRepository()
 	service := NewPostService(repo)
 
-	service.CreatePost("Post 1", "Content 1", 1)
-	service.CreatePost("Post 2", "Content 2", 1)
-	service.CreatePost("Post 3", "Content 3", 2)
+	service.CreatePost("Post 1", "Content 1", "1")
+	service.CreatePost("Post 2", "Content 2", "1")
+	service.CreatePost("Post 3", "Content 3", "2")
 
 	posts, err := service.GetAllPosts()
 
@@ -88,7 +88,7 @@ func TestPostService_GetPostByID_Success(t *testing.T) {
 	repo := testhelpers.NewMockPostRepository()
 	service := NewPostService(repo)
 
-	created, _ := service.CreatePost("Test Post", "Test Content", 1)
+	created, _ := service.CreatePost("Test Post", "Test Content", "1")
 
 	post, err := service.GetPostByID(created.ID)
 
@@ -124,9 +124,9 @@ func TestPostService_UpdatePost_Success(t *testing.T) {
 	repo := testhelpers.NewMockPostRepository()
 	service := NewPostService(repo)
 
-	created, _ := service.CreatePost("Original Title", "Original Content", 1)
+	created, _ := service.CreatePost("Original Title", "Original Content", "1")
 
-	updated, err := service.UpdatePost(created.ID, "Updated Title", "Updated Content", 1)
+	updated, err := service.UpdatePost(created.ID, "Updated Title", "Updated Content", "1")
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -145,9 +145,9 @@ func TestPostService_UpdatePost_Unauthorized(t *testing.T) {
 	repo := testhelpers.NewMockPostRepository()
 	service := NewPostService(repo)
 
-	created, _ := service.CreatePost("Test Post", "Test Content", 1)
+	created, _ := service.CreatePost("Test Post", "Test Content", "1")
 
-	_, err := service.UpdatePost(created.ID, "Updated Title", "Updated Content", 2)
+	_, err := service.UpdatePost(created.ID, "Updated Title", "Updated Content", "2")
 
 	if err == nil {
 		t.Fatal("expected error for unauthorized update")
@@ -162,9 +162,9 @@ func TestPostService_DeletePost_Success(t *testing.T) {
 	repo := testhelpers.NewMockPostRepository()
 	service := NewPostService(repo)
 
-	created, _ := service.CreatePost("Test Post", "Test Content", 1)
+	created, _ := service.CreatePost("Test Post", "Test Content", "1")
 
-	err := service.DeletePost(created.ID, 1)
+	err := service.DeletePost(created.ID, "1")
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -180,9 +180,9 @@ func TestPostService_DeletePost_Unauthorized(t *testing.T) {
 	repo := testhelpers.NewMockPostRepository()
 	service := NewPostService(repo)
 
-	created, _ := service.CreatePost("Test Post", "Test Content", 1)
+	created, _ := service.CreatePost("Test Post", "Test Content", "1")
 
-	err := service.DeletePost(created.ID, 2)
+	err := service.DeletePost(created.ID, "2")
 
 	if err == nil {
 		t.Fatal("expected error for unauthorized delete")
@@ -197,7 +197,7 @@ func TestPostService_DeletePost_NotFound(t *testing.T) {
 	repo := testhelpers.NewMockPostRepository()
 	service := NewPostService(repo)
 
-	err := service.DeletePost(999, 1)
+	err := service.DeletePost(999, "1")
 
 	if err == nil {
 		t.Fatal("expected error for non-existent post")

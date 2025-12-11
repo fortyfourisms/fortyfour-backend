@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"fortyfour-backend/internal/config"
 	"fortyfour-backend/internal/handlers"
@@ -46,19 +47,21 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	postRepo := repository.NewPostRepository(db)
 	perusahaanRepo := repository.NewPerusahaanRepository(db)
-	picRepo := repository.NewPICPerusahaanRepository(db)
+	picRepo := repository.NewPICRepository(db)
 	identifikasiRepo := repository.NewIdentifikasiRepository(db)
+	jabatanRepo := repository.NewJabatanRepository(db)
 	ikasRepo := repository.NewIkasRepository(db)
 	proteksiRepo := repository.NewProteksiRepository(db)
 	gulihRepo := repository.NewGulihRepository(db)
 
 	// Initialize services
-	tokenService := services.NewTokenService(nil, cfg.JWTSecret)
+	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
 	authService := services.NewAuthService(userRepo, tokenService)
 	postService := services.NewPostService(postRepo)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo)
-	picService := services.NewPICPerusahaanService(picRepo)
+	picService := services.NewPICService(picRepo)
 	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
+	jabatanService := services.NewJabatanService(jabatanRepo)
 	ikasService := services.NewIkasService(ikasRepo)
 	proteksiService := services.NewProteksiService(proteksiRepo)
 	gulihService := services.NewGulihService(gulihRepo)
@@ -66,9 +69,12 @@ func main() {
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
 	postHandler := handlers.NewPostHandler(postService)
-	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService)
-	picHandler := handlers.NewPICPerusahaanHandler(picService)
+	uploadPath := "./uploads"
+	os.MkdirAll(uploadPath, os.ModePerm)
+	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath)
+	picHandler := handlers.NewPICHandler(picService)
 	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
+	jabatanHandler := handlers.NewJabatanHandler(jabatanService)
 	ikasHandler := handlers.NewIkasHandler(ikasService)
 	proteksiHandler := handlers.NewProteksiHandler(proteksiService)
 	gulihHandler := handlers.NewGulihHandler(gulihService)
@@ -89,6 +95,7 @@ func main() {
 		postHandler,
 		perusahaanHandler,
 		picHandler,
+    jabatanHandler,
 		identifikasiHandler,
 		gulihHandler,
 		ikasHandler,

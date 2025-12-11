@@ -1,8 +1,10 @@
 package models
 
 type PICPerusahaan struct {
-	ID           string `db:"id" json:"id"`
-	Nama         string `db:"nama" json:"nama"`
-	Telepon      string `db:"telepon" json:"telepon"`
-	IDPerusahaan string `db:"id_perusahaan" json:"id_perusahaan"`
+	ID           string `json:"id"`
+	Nama         string `json:"nama"`
+	Telepon      string `json:"telepon"`
+	IDPerusahaan string `json:"id_perusahaan"`
+	CreatedAt    string `json:"created_at"`
+	UpdatedAt    string `json:"updated_at"`
 }
