@@ -135,7 +135,7 @@ func InitRouter(
 		}
 	}))
 
-	mux.HandleFunc("/api/ikas/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/proteksi/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			ikasH.GetIkasByID(w, r)
@@ -163,7 +163,7 @@ func InitRouter(
 	mux.HandleFunc("/api/proteksi/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			proteksiH.GetProteksiByID(w, r)
+			deteksiH.GetByID(w, r) // Read by ID
 		case http.MethodPut:
 			proteksiH.UpdateProteksi(w, r)
 		case http.MethodDelete:
@@ -179,6 +179,31 @@ func InitRouter(
 			gulihH.Update(w, r) // Update
 		case http.MethodDelete:
 			gulihH.Delete(w, r) // Delete
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	// Route IKAS
+	mux.HandleFunc("/api/ikas", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			ikasH.GetAllIkas(w, r) 
+		case http.MethodPost:
+			ikasH.Create(w, r) 
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/ikas/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			ikasH.GetIkasByID(w, r) 
+		case http.MethodPut:
+			ikasH.UpdateIkas(w, r) 
+		case http.MethodDelete:
+			ikasH.DeleteIkas(w, r) 
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}

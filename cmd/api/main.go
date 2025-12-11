@@ -50,10 +50,11 @@ func main() {
 	picRepo := repository.NewPICRepository(db)
 	identifikasiRepo := repository.NewIdentifikasiRepository(db)
 	jabatanRepo := repository.NewJabatanRepository(db)
-	ikasRepo := repository.NewIkasRepository(db)
 	proteksiRepo := repository.NewProteksiRepository(db)
+	deteksiRepo := repository.NewDeteksiRepository(db)
 	gulihRepo := repository.NewGulihRepository(db)
-
+	ikasRepo := repository.NewIkasRepository(db)
+	
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
 	authService := services.NewAuthService(userRepo, tokenService)
@@ -62,9 +63,10 @@ func main() {
 	picService := services.NewPICService(picRepo)
 	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
 	jabatanService := services.NewJabatanService(jabatanRepo)
-	ikasService := services.NewIkasService(ikasRepo)
 	proteksiService := services.NewProteksiService(proteksiRepo)
+	deteksiService := services.NewDeteksiService(deteksiRepo)
 	gulihService := services.NewGulihService(gulihRepo)
+	ikasService := services.NewIkasService(ikasRepo)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
@@ -75,9 +77,10 @@ func main() {
 	picHandler := handlers.NewPICHandler(picService)
 	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
 	jabatanHandler := handlers.NewJabatanHandler(jabatanService)
-	ikasHandler := handlers.NewIkasHandler(ikasService)
 	proteksiHandler := handlers.NewProteksiHandler(proteksiService)
+	deteksiHandler := handlers.NewDeteksiHandler(deteksiService)
 	gulihHandler := handlers.NewGulihHandler(gulihService)
+	ikasHandler := handlers.NewIkasHandler(ikasService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
