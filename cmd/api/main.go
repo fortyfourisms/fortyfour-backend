@@ -10,6 +10,7 @@ import (
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/routes"
 	"fortyfour-backend/internal/services"
+	"fortyfour-backend/pkg/cache"
 	"fortyfour-backend/pkg/database"
 )
 
@@ -30,16 +31,16 @@ func main() {
 	defer db.Close()
 
 	// Initialize Redis
-	// redisClient, err := cache.NewRedisClient(cache.RedisConfig{
-	// 	Host:     cfg.Redis.Host,
-	// 	Port:     cfg.Redis.Port,
-	// 	Password: cfg.Redis.Password,
-	// 	DB:       cfg.Redis.DB,
-	// })
-	// if err != nil {
-	// 	log.Fatal("Failed to connect to Redis:", err)
-	// }
-	// defer redisClient.Close()
+	redisClient, err := cache.NewRedisClient(cache.RedisConfig{
+		Host:     cfg.Redis.Host,
+		Port:     cfg.Redis.Port,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+	if err != nil {
+		log.Fatal("Failed to connect to Redis:", err)
+	}
+	defer redisClient.Close()
 
 	// Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
@@ -75,10 +76,35 @@ func main() {
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
 
+	// Initialize rate limiters with different configurations
+	rateLimitConfigs := middleware.GetRateLimitConfigs()
+
+	strictLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Strict)
+	moderateLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Moderate)
+	lenientLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Lenient)
+
 	// Setup routes
-	mux := routes.InitRouter(authHandler, postHandler, perusahaanHandler, picHandler, identifikasiHandler, gulihHandler, ikasHandler, proteksiHandler, authMiddleware)
+	mux := routes.InitRouter(
+		authHandler,
+		postHandler,
+		perusahaanHandler,
+		picHandler,
+		identifikasiHandler,
+		gulihHandler,
+		ikasHandler,
+		proteksiHandler,
+		authMiddleware,
+		strictLimiter,
+		moderateLimiter,
+		lenientLimiter,
+	)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.Port)
+	log.Println("Rate limiting enabled:")
+	log.Println("  - Auth endpoints: 5 requests/minute per IP")
+	log.Println("  - Public posts: 1000 requests/minute per IP")
+	log.Println("  - Protected posts: 100 requests/minute per user")
+
 	log.Fatal(http.ListenAndServe(cfg.Port, mux))
 }

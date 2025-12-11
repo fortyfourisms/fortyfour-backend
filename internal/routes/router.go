@@ -7,13 +7,27 @@ import (
 	"fortyfour-backend/internal/middleware"
 )
 
-func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusahaanH *handlers.PerusahaanHandler, picH *handlers.PICPerusahaanHandler,
-	identifikasiH *handlers.IdentifikasiHandler, gulihH *handlers.GulihHandler, ikasH *handlers.IkasHandler, proteksiH *handlers.ProteksiHandler, authM *middleware.AuthMiddleware) *http.ServeMux {
+func InitRouter(
+	authH *handlers.AuthHandler,
+	postH *handlers.PostHandler,
+	perusahaanH *handlers.PerusahaanHandler,
+	picH *handlers.PICPerusahaanHandler,
+	identifikasiH *handlers.IdentifikasiHandler,
+	gulihH *handlers.GulihHandler,
+	ikasH *handlers.IkasHandler,
+	proteksiH *handlers.ProteksiHandler,
+	authM *middleware.AuthMiddleware,
+	strictLimiter *middleware.RateLimiter,
+	moderateLimiter *middleware.RateLimiter,
+	lenientLimiter *middleware.RateLimiter,
+) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Routes Auth
-	mux.HandleFunc("/api/register", authH.Register)
-	mux.HandleFunc("/api/login", authH.Login)
+	mux.HandleFunc("/api/register", strictLimiter.LimitByIP(authH.Register))
+	mux.HandleFunc("/api/login", strictLimiter.LimitByIP(authH.Login))
+	mux.HandleFunc("/api/refresh", strictLimiter.LimitByIP(authH.RefreshToken))
+	mux.HandleFunc("/api/logout", authH.Logout)
 
 	// Routes Posts
 	mux.HandleFunc("/api/posts", postH.GetPosts)
@@ -37,7 +51,12 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
-	mux.HandleFunc("/api/perusahaan/create", perusahaanH.Create)
+
+	mux.HandleFunc("/api/perusahaan/create",
+		authM.Authenticate(
+			moderateLimiter.LimitByUser(perusahaanH.Create),
+		),
+	)
 
 	// Routes PIC Perusahaan
 	mux.HandleFunc("/api/pic", func(w http.ResponseWriter, r *http.Request) {
@@ -92,9 +111,12 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 	mux.HandleFunc("/api/ikas", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			ikasH.GetAllIkas(w, r) 
+			ikasH.GetAllIkas(w, r)
 		case http.MethodPost:
-			ikasH.Create(w, r) 
+			ikasH.Create(w, r)
+		}
+	})
+
 	// Route Gulih
 	mux.HandleFunc("/api/gulih", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -110,36 +132,39 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 	mux.HandleFunc("/api/ikas/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			ikasH.GetIkasByID(w, r) 
+			ikasH.GetIkasByID(w, r)
 		case http.MethodPut:
-			ikasH.UpdateIkas(w, r) 
+			ikasH.UpdateIkas(w, r)
 		case http.MethodDelete:
-			ikasH.DeleteIkas(w, r) 
+			ikasH.DeleteIkas(w, r)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
 
 	// Route Proteksi
-		mux.HandleFunc("/api/proteksi", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/proteksi", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
-			proteksiH.GetAllProteksi(w, r) 
+			proteksiH.GetAllProteksi(w, r)
 		case http.MethodPost:
-			proteksiH.Create(w, r) 
+			proteksiH.Create(w, r)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
 
-		mux.HandleFunc("/api/proteksi/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/proteksi/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			proteksiH.GetProteksiByID(w, r)
 		case http.MethodPut:
-			proteksiH.UpdateProteksi(w, r) 
+			proteksiH.UpdateProteksi(w, r)
 		case http.MethodDelete:
-			proteksiH.DeleteProteksi(w, r) 
+			proteksiH.DeleteProteksi(w, r)
+		}
+	})
+
 	mux.HandleFunc("/api/gulih/", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
