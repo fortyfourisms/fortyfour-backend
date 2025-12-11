@@ -202,7 +202,7 @@ func (m *MockPostRepository) FindByID(id int) (*models.Post, error) {
 	return post, nil
 }
 
-func (m *MockPostRepository) FindByAuthorID(authorID int) ([]*models.Post, error) {
+func (m *MockPostRepository) FindByAuthorID(authorID string) ([]*models.Post, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
@@ -250,7 +250,7 @@ func CreateTestUser(id, username, email string) *models.User {
 	}
 }
 
-func CreateTestPost(id, authorID int, title, content string) *models.Post {
+func CreateTestPost(id int, authorID string, title, content string) *models.Post {
 	return &models.Post{
 		ID:        id,
 		Title:     title,

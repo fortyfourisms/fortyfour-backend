@@ -47,8 +47,8 @@ func TestPostHandler_GetPosts_Success(t *testing.T) {
 	service := services.NewPostService(repo)
 	handler := NewPostHandler(service)
 
-	service.CreatePost("Post 1", "Content 1", 1)
-	service.CreatePost("Post 2", "Content 2", 1)
+	service.CreatePost("Post 1", "Content 1", "1")
+	service.CreatePost("Post 2", "Content 2", "1")
 
 	req := httptest.NewRequest(http.MethodGet, "/api/posts", nil)
 	w := httptest.NewRecorder()
@@ -72,7 +72,7 @@ func TestPostHandler_UpdatePost_Success(t *testing.T) {
 	service := services.NewPostService(repo)
 	handler := NewPostHandler(service)
 
-	created, _ := service.CreatePost("Original", "Original Content", 1)
+	created, _ := service.CreatePost("Original", "Original Content", "1")
 
 	reqBody := map[string]string{
 		"title":   "Updated",

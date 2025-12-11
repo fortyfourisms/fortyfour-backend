@@ -16,7 +16,7 @@ type PostRepositoryInterface interface {
 	Create(post *models.Post) error
 	FindAll() ([]*models.Post, error)
 	FindByID(id int) (*models.Post, error)
-	FindByAuthorID(authorID int) ([]*models.Post, error)
+	FindByAuthorID(authorID string) ([]*models.Post, error)
 	Update(post *models.Post) error
 	Delete(id int) error
 }
