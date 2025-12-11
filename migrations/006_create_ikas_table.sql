@@ -1,15 +1,15 @@
 CREATE TABLE IF NOT EXISTS ikas (
   `id` char(36) PRIMARY KEY,
-  `id_stakeholder` char(36),
+  `id_stakeholder` char(36) NOT NULL,
   `tanggal` datetime,
-  `responden` varchar(255),
+  `responden` varchar(255) NOT NULL,
   `telepon` varchar(50),
   `jabatan` varchar(255),
-  `nilai_kematangan` float,
-  `target_nilai` float,
-  `id_identifikasi` char(36),
-  `id_proteksi` char(36),
-  `id_deteksi` char(36),
-  `id_gulih` char(36),
+  `nilai_kematangan` float NOT NULL,
+  `target_nilai` float NOT NULL,
+  `id_identifikasi` char(36) NOT NULL,
+  `id_proteksi` char(36) NOT NULL,
+  `id_deteksi` char(36) NOT NULL,
+  `id_gulih` char(36) NOT NULL,
   FOREIGN KEY (`id_stakeholder`) REFERENCES `stakeholders` (`id`)
 );

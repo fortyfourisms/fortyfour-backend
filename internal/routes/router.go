@@ -89,25 +89,18 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 	})
 
 	// Route IKAS
-	mux.HandleFunc("/api/ikas", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/ikas", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			ikasH.GetAllIkas(w, r) 
 		case http.MethodPost:
 			ikasH.Create(w, r) 
-	// Route Gulih
-	mux.HandleFunc("/api/gulih", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			gulihH.GetAll(w, r) // Read all
-		case http.MethodPost:
-			gulihH.Create(w, r) // Create
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
-	})
+	}))
 
-	mux.HandleFunc("/api/ikas/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/ikas/", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			ikasH.GetIkasByID(w, r) 
@@ -118,10 +111,10 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
-	})
+	}))
 
-	// Route Proteksi
-		mux.HandleFunc("/api/proteksi", func(w http.ResponseWriter, r *http.Request) {
+		// Route Proteksi
+		mux.HandleFunc("/api/proteksi", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			proteksiH.GetAllProteksi(w, r) 
@@ -130,9 +123,9 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
-	})
+	}))
 
-		mux.HandleFunc("/api/proteksi/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/proteksi/", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			proteksiH.GetProteksiByID(w, r)
@@ -140,18 +133,36 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 			proteksiH.UpdateProteksi(w, r) 
 		case http.MethodDelete:
 			proteksiH.DeleteProteksi(w, r) 
-	mux.HandleFunc("/api/gulih/", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			gulihH.GetByID(w, r) // Read by ID
-		case http.MethodPut:
-			gulihH.Update(w, r) // Update
-		case http.MethodDelete:
-			gulihH.Delete(w, r) // Delete
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
-	})
+	}))
+	
+	// Route Gulih
+	mux.HandleFunc("/api/gulih", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			gulihH.GetAll(w, r)
+		case http.MethodPost:
+			gulihH.Create(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	}))
+
+	mux.HandleFunc("/api/gulih/", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			gulihH.GetByID(w, r)
+		case http.MethodPut:
+			gulihH.Update(w, r)
+		case http.MethodDelete:
+			gulihH.Delete(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	}))
+
 
 	return mux
 }
