@@ -7,13 +7,28 @@ import (
 	"net/http"
 )
 
-func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusahaanH *handlers.PerusahaanHandler, picH *handlers.PICHandler,
-	identifikasiH *handlers.IdentifikasiHandler, jabatanH *handlers.JabatanHandler, gulihH *handlers.GulihHandler, ikasH *handlers.IkasHandler, proteksiH *handlers.ProteksiHandler, authM *middleware.AuthMiddleware) *http.ServeMux {
+func InitRouter(
+	authH *handlers.AuthHandler,
+	postH *handlers.PostHandler,
+	perusahaanH *handlers.PerusahaanHandler,
+	picH *handlers.PICPerusahaanHandler,
+  jabatanH *handlers.JabatanHandler,
+	identifikasiH *handlers.IdentifikasiHandler,
+	gulihH *handlers.GulihHandler,
+	ikasH *handlers.IkasHandler,
+	proteksiH *handlers.ProteksiHandler,
+	authM *middleware.AuthMiddleware,
+	strictLimiter *middleware.RateLimiter,
+	moderateLimiter *middleware.RateLimiter,
+	lenientLimiter *middleware.RateLimiter,
+) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// Routes Auth
-	mux.HandleFunc("/api/register", authH.Register)
-	mux.HandleFunc("/api/login", authH.Login)
+	mux.HandleFunc("/api/register", strictLimiter.LimitByIP(authH.Register))
+	mux.HandleFunc("/api/login", strictLimiter.LimitByIP(authH.Login))
+	mux.HandleFunc("/api/refresh", strictLimiter.LimitByIP(authH.RefreshToken))
+	mux.HandleFunc("/api/logout", authH.Logout)
 
 	// Routes Posts
 	mux.HandleFunc("/api/posts", authM.Authenticate(postH.GetPosts))
@@ -25,6 +40,25 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 	// Route Perusahaan
 	mux.HandleFunc("/api/perusahaan", authM.Authenticate(utils.AdaptHandler(perusahaanH)))
 	mux.HandleFunc("/api/pic", authM.Authenticate(utils.AdaptHandler(picH)))
+	mux.HandleFunc("/api/perusahaan", perusahaanH.GetAll)
+	mux.HandleFunc("/api/perusahaan/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			perusahaanH.GetByID(w, r)
+		case http.MethodPut:
+			perusahaanH.Update(w, r)
+		case http.MethodDelete:
+			perusahaanH.Delete(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	})
+
+	mux.HandleFunc("/api/perusahaan/create",
+		authM.Authenticate(
+			moderateLimiter.LimitByUser(perusahaanH.Create),
+		),
+	)
 
 	// Route Perusahaan
 	mux.HandleFunc("/api/jabatan", authM.Authenticate(utils.AdaptHandler(jabatanH)))
@@ -77,6 +111,18 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 	}))
 
 	mux.HandleFunc("/api/gulih/", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+	// Route IKAS
+	mux.HandleFunc("/api/ikas", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			ikasH.GetAllIkas(w, r)
+		case http.MethodPost:
+			ikasH.Create(w, r)
+		}
+	})
+
+	// Route Gulih
+	mux.HandleFunc("/api/gulih", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			gulihH.GetByID(w, r)
@@ -122,6 +168,19 @@ func InitRouter(authH *handlers.AuthHandler, postH *handlers.PostHandler, perusa
 			proteksiH.UpdateProteksi(w, r)
 		case http.MethodDelete:
 			proteksiH.DeleteProteksi(w, r)
+		}
+	})
+
+	mux.HandleFunc("/api/gulih/", func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			gulihH.GetByID(w, r) // Read by ID
+		case http.MethodPut:
+			gulihH.Update(w, r) // Update
+		case http.MethodDelete:
+			gulihH.Delete(w, r) // Delete
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
 	})
 

@@ -82,10 +82,36 @@ func main() {
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
 
+	// Initialize rate limiters with different configurations
+	rateLimitConfigs := middleware.GetRateLimitConfigs()
+
+	strictLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Strict)
+	moderateLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Moderate)
+	lenientLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Lenient)
+
 	// Setup routes
-	mux := routes.InitRouter(authHandler, postHandler, perusahaanHandler, picHandler, identifikasiHandler, jabatanHandler, gulihHandler, ikasHandler, proteksiHandler, authMiddleware)
+	mux := routes.InitRouter(
+		authHandler,
+		postHandler,
+		perusahaanHandler,
+		picHandler,
+    jabatanHandler,
+		identifikasiHandler,
+		gulihHandler,
+		ikasHandler,
+		proteksiHandler,
+		authMiddleware,
+		strictLimiter,
+		moderateLimiter,
+		lenientLimiter,
+	)
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.Port)
+	log.Println("Rate limiting enabled:")
+	log.Println("  - Auth endpoints: 5 requests/minute per IP")
+	log.Println("  - Public posts: 1000 requests/minute per IP")
+	log.Println("  - Protected posts: 100 requests/minute per user")
+
 	log.Fatal(http.ListenAndServe(cfg.Port, mux))
 }
