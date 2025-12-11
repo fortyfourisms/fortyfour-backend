@@ -12,7 +12,7 @@ func TestTokenService_GenerateTokenPair_Success(t *testing.T) {
 	service := NewTokenService(redis, "test-secret")
 
 	// Act
-	tokens, err := service.GenerateTokenPair(1, "testuser")
+	tokens, err := service.GenerateTokenPair("1", "testuser")
 
 	// Assert
 	if err != nil {
@@ -48,7 +48,7 @@ func TestTokenService_RefreshAccessToken_Success(t *testing.T) {
 	service := NewTokenService(redis, "test-secret")
 
 	// Generate initial token pair
-	initialTokens, _ := service.GenerateTokenPair(1, "testuser")
+	initialTokens, _ := service.GenerateTokenPair("1", "testuser")
 
 	// Wait a moment to ensure new token is different
 	time.Sleep(10 * time.Millisecond)
@@ -94,7 +94,7 @@ func TestTokenService_RevokeRefreshToken_Success(t *testing.T) {
 	service := NewTokenService(redis, "test-secret")
 
 	// Generate token pair
-	tokens, _ := service.GenerateTokenPair(1, "testuser")
+	tokens, _ := service.GenerateTokenPair("1", "testuser")
 
 	// Act
 	err := service.RevokeRefreshToken(tokens.RefreshToken)

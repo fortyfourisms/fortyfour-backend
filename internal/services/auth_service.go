@@ -1,3 +1,4 @@
+// services/auth_service.go
 package services
 
 import (
@@ -11,7 +12,6 @@ import (
 type AuthService struct {
 	userRepo     repository.UserRepositoryInterface
 	tokenService *TokenService
-	idCounter    int
 }
 
 func NewAuthService(userRepo repository.UserRepositoryInterface, tokenService *TokenService) *AuthService {
@@ -21,7 +21,8 @@ func NewAuthService(userRepo repository.UserRepositoryInterface, tokenService *T
 	}
 }
 
-func (s *AuthService) Register(username, password, email string) (*models.User, *models.TokenPair, error) {
+// Register creates a new user and returns token pair
+func (s *AuthService) Register(username, password, email string, idJabatan ...string) (*models.User, *models.TokenPair, error) {
 	if username == "" || password == "" || email == "" {
 		return nil, nil, errors.New("all fields are required")
 	}
@@ -35,12 +36,14 @@ func (s *AuthService) Register(username, password, email string) (*models.User, 
 		return nil, nil, err
 	}
 
-	s.idCounter++
 	user := &models.User{
-		ID:       s.idCounter,
 		Username: username,
 		Password: string(hashedPassword),
 		Email:    email,
+	}
+
+	if len(idJabatan) > 0 {
+		user.IDJabatan = &idJabatan[0]
 	}
 
 	if err := s.userRepo.Create(user); err != nil {
@@ -56,6 +59,7 @@ func (s *AuthService) Register(username, password, email string) (*models.User, 
 	return user, tokens, nil
 }
 
+// Login authenticates a user and returns token pair
 func (s *AuthService) Login(username, password string) (*models.User, *models.TokenPair, error) {
 	user, err := s.userRepo.FindByUsername(username)
 	if err != nil {
@@ -66,7 +70,6 @@ func (s *AuthService) Login(username, password string) (*models.User, *models.To
 		return nil, nil, errors.New("invalid credentials")
 	}
 
-	// Generate token pair
 	tokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username)
 	if err != nil {
 		return nil, nil, err
@@ -75,6 +78,7 @@ func (s *AuthService) Login(username, password string) (*models.User, *models.To
 	return user, tokens, nil
 }
 
+// Logout revokes a single refresh token
 func (s *AuthService) Logout(refreshToken string) error {
 	return s.tokenService.RevokeRefreshToken(refreshToken)
 }

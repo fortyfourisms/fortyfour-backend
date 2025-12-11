@@ -85,7 +85,7 @@ func (r *PostRepository) FindByID(id int) (*models.Post, error) {
 	return post, nil
 }
 
-func (r *PostRepository) FindByAuthorID(authorID int) ([]*models.Post, error) {
+func (r *PostRepository) FindByAuthorID(authorID string) ([]*models.Post, error) {
 	query := `SELECT id, title, content, author_id, created_at, updated_at 
 	          FROM posts WHERE author_id = ? ORDER BY created_at DESC`
 

@@ -1,21 +1,22 @@
 package dto
 
-type CreatePICPerusahaanRequest struct {
-	Nama         string `json:"nama"`
-	Telepon      string `json:"telepon"`
-	IDPerusahaan string `json:"id_perusahaan"`
+type CreatePICRequest struct {
+	Nama         *string `json:"nama,omitempty"`
+	Telepon      *string `json:"telepon,omitempty"`
+	IDPerusahaan *string `json:"id_perusahaan,omitempty"`
 }
 
-type UpdatePICPerusahaanRequest struct {
-	Nama         string `json:"nama"`
-	Telepon      string `json:"telepon"`
-	IDPerusahaan string `json:"id_perusahaan"`
+type UpdatePICRequest struct {
+	Nama         *string `json:"nama,omitempty"`
+	Telepon      *string `json:"telepon,omitempty"`
+	IDPerusahaan *string `json:"id_perusahaan,omitempty"`
 }
 
-type PICPerusahaanResponse struct {
+type PICResponse struct {
 	ID           string `json:"id"`
 	Nama         string `json:"nama"`
 	Telepon      string `json:"telepon"`
 	IDPerusahaan string `json:"id_perusahaan"`
-	NamaCompany  string `json:"nama_perusahaan"`
+	CreatedAt    string `json:"created_at"`
+	UpdatedAt    string `json:"updated_at"`
 }
