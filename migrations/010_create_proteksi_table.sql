@@ -7,5 +7,4 @@ CREATE TABLE `proteksi` (
   `nilai_subdomain4` float,
   `nilai_subdomain5` float,
   `nilai_subdomain6` float,
-  FOREIGN KEY (`id`) REFERENCES `ikas` (`id_proteksi`)
 );
