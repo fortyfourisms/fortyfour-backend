@@ -50,30 +50,8 @@ func InitRouter(
 	mux.HandleFunc("/api/jabatan/", authM.Authenticate(utils.AdaptHandler(jabatanH)))
 
 	// Route Identifikasi
-	mux.HandleFunc("/api/identifikasi", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			identifikasiH.GetAll(w, r)
-		case http.MethodPost:
-			identifikasiH.Create(w, r)
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
-		}
-	}))
-
-	mux.HandleFunc("/api/identifikasi/", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			identifikasiH.GetByID(w, r)
-		case http.MethodPut:
-			identifikasiH.Update(w, r)
-		case http.MethodDelete:
-			identifikasiH.Delete(w, r)
-		default:
-			w.WriteHeader(http.StatusMethodNotAllowed)
-		}
-	}))
-
+	mux.HandleFunc("/api/identifikasi", authM.Authenticate(utils.AdaptHandler(identifikasiH)))
+	mux.HandleFunc("/api/identifikasi/", authM.Authenticate(utils.AdaptHandler(identifikasiH)))
 	// Route IKAS
 	mux.HandleFunc("/api/ikas", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
