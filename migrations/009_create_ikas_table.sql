@@ -1,15 +1,21 @@
-CREATE TABLE IF NOT EXISTS ikas (
-  `id` char(36) PRIMARY KEY,
-  `id_stakeholder` char(36),
-  `tanggal` datetime,
-  `responden` varchar(255),
-  `telepon` varchar(50),
-  `jabatan` varchar(255),
-  `nilai_kematangan` float,
-  `target_nilai` float,
-  `id_identifikasi` char(36),
-  `id_proteksi` char(36),
-  `id_deteksi` char(36),
-  `id_gulih` char(36),
-  FOREIGN KEY (`id_stakeholder`) REFERENCES `stakeholders` (`id`)
+CREATE TABLE ikas (
+  id CHAR(36) PRIMARY KEY,
+  id_perusahaan CHAR(36),
+  id_identifikasi CHAR(36),
+  id_proteksi CHAR(36),
+  id_deteksi CHAR(36),
+  id_gulih CHAR(36),
+
+  tanggal DATETIME,
+  responden VARCHAR(255),
+  telepon VARCHAR(50),
+  jabatan VARCHAR(255),
+  nilai_kematangan FLOAT,
+  target_nilai FLOAT,
+
+  FOREIGN KEY (id_perusahaan) REFERENCES perusahaan(id),
+  FOREIGN KEY (id_identifikasi) REFERENCES identifikasi(id),
+  FOREIGN KEY (id_proteksi) REFERENCES proteksi(id),
+  FOREIGN KEY (id_deteksi) REFERENCES deteksi(id),
+  FOREIGN KEY (id_gulih) REFERENCES gulih(id)
 );
