@@ -23,115 +23,161 @@ import (
 	"github.com/nfnt/resize"
 )
 
+const (
+	maxUploadSize = 10 << 20
+	maxImageSize  = 1 << 20
+	imageQuality  = 80
+	resizeHeight  = 1024
+)
+
 type PerusahaanHandler struct {
 	service    *services.PerusahaanService
 	uploadPath string
 }
 
 func NewPerusahaanHandler(service *services.PerusahaanService, uploadPath string) *PerusahaanHandler {
-	return &PerusahaanHandler{service: service, uploadPath: uploadPath}
+	return &PerusahaanHandler{
+		service:    service,
+		uploadPath: uploadPath,
+	}
 }
 
 func (h *PerusahaanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/api/perusahaan")
-	id = strings.TrimPrefix(id, "/")
+	id := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/api/perusahaan"), "/")
 
 	switch r.Method {
 	case http.MethodGet:
 		if id == "" {
-			data, err := h.service.GetAll()
-			if err != nil {
-				utils.RespondError(w, 500, err.Error())
-				return
-			}
-			utils.RespondJSON(w, 200, data)
+			h.handleGetAll(w, r)
 		} else {
-			p, err := h.service.GetByID(id)
-			if err != nil {
-				utils.RespondError(w, 404, "Data tidak ditemukan")
-				return
-			}
-			utils.RespondJSON(w, 200, p)
+			h.handleGetByID(w, r, id)
 		}
-
 	case http.MethodPost:
-		var req dto.CreatePerusahaanRequest
-		if err := r.ParseMultipartForm(10 << 20); err != nil {
-			utils.RespondError(w, 400, "Gagal membaca form data")
+		if id != "" {
+			utils.RespondError(w, 400, "ID tidak diperlukan untuk create")
 			return
 		}
-		req = h.parseCreateForm(r.MultipartForm)
-
-		file, header, err := r.FormFile("photo")
-		if err == nil {
-			defer file.Close()
-			filename, err := h.handleFileUpload(file, header)
-			if err != nil {
-				utils.RespondError(w, 400, err.Error())
-				return
-			}
-			req.Photo = &filename
-		}
-
-		resp, err := h.service.Create(req)
-		if err != nil {
-			utils.RespondError(w, 400, err.Error())
-			return
-		}
-		utils.RespondJSON(w, 201, resp)
-
+		h.handleCreate(w, r)
 	case http.MethodPut:
 		if id == "" {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
-
-		var req dto.UpdatePerusahaanRequest
-		if err := r.ParseMultipartForm(10 << 20); err != nil {
-			utils.RespondError(w, 400, "Gagal membaca form data")
-			return
-		}
-		req = h.parseUpdateForm(r.MultipartForm)
-
-		file, header, err := r.FormFile("photo")
-		if err == nil {
-			defer file.Close()
-
-			// ambil data lama dari DB
-			perusahaan, errGet := h.service.GetByID(id)
-			if errGet == nil && perusahaan.Photo != "" {
-				oldPath := filepath.Join(h.uploadPath, perusahaan.Photo)
-				os.Remove(oldPath)
-			}
-
-			filename, err := h.handleFileUpload(file, header)
-			if err != nil {
-				utils.RespondError(w, 400, err.Error())
-				return
-			}
-			req.Photo = &filename
-		}
-
-		resp, err := h.service.Update(id, req)
-		if err != nil {
-			utils.RespondError(w, 400, err.Error())
-			return
-		}
-		utils.RespondJSON(w, 200, resp)
-
+		h.handleUpdate(w, r, id)
 	case http.MethodDelete:
 		if id == "" {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
-		if err := h.service.Delete(id); err != nil {
-			utils.RespondError(w, 400, err.Error())
-			return
-		}
-		utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
-
+		h.handleDelete(w, r, id)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+	data, err := h.service.GetAll()
+	if err != nil {
+		utils.RespondError(w, 500, err.Error())
+		return
+	}
+	utils.RespondJSON(w, 200, data)
+}
+
+func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
+	data, err := h.service.GetByID(id)
+	if err != nil {
+		utils.RespondError(w, 404, "Data tidak ditemukan")
+		return
+	}
+	utils.RespondJSON(w, 200, data)
+}
+
+func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+		utils.RespondError(w, 400, "Gagal membaca form data")
+		return
+	}
+
+	req := h.parseCreateForm(r.MultipartForm)
+
+	// Handle file upload jika ada
+	if filename, err := h.processFileUpload(r); err != nil {
+		utils.RespondError(w, 400, err.Error())
+		return
+	} else if filename != "" {
+		req.Photo = &filename
+	}
+
+	resp, err := h.service.Create(req)
+	if err != nil {
+		utils.RespondError(w, 400, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, 201, resp)
+}
+
+func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
+	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+		utils.RespondError(w, 400, "Gagal membaca form data")
+		return
+	}
+
+	req := h.parseUpdateForm(r.MultipartForm)
+
+	// Handle file upload jika ada
+	if filename, err := h.processFileUpload(r); err != nil {
+		utils.RespondError(w, 400, err.Error())
+		return
+	} else if filename != "" {
+		// Hapus file lama
+		h.deleteOldPhoto(id)
+		req.Photo = &filename
+	}
+
+	resp, err := h.service.Update(id, req)
+	if err != nil {
+		utils.RespondError(w, 400, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, 200, resp)
+}
+
+func (h *PerusahaanHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+	// Hapus file photo sebelum delete record
+	h.deleteOldPhoto(id)
+
+	if err := h.service.Delete(id); err != nil {
+		utils.RespondError(w, 400, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
+}
+
+// processFileUpload menangani upload file dan return filename (empty string jika tidak ada file)
+func (h *PerusahaanHandler) processFileUpload(r *http.Request) (string, error) {
+	file, header, err := r.FormFile("photo")
+	if err != nil {
+		// Tidak ada file di-upload, bukan error
+		if err == http.ErrMissingFile {
+			return "", nil
+		}
+		return "", fmt.Errorf("gagal membaca file: %v", err)
+	}
+	defer file.Close()
+
+	return h.saveUploadedFile(file, header)
+}
+
+// deleteOldPhoto menghapus file photo lama dari disk
+func (h *PerusahaanHandler) deleteOldPhoto(id string) {
+	perusahaan, err := h.service.GetByID(id)
+	if err == nil && perusahaan.Photo != "" {
+		oldPath := filepath.Join(h.uploadPath, perusahaan.Photo)
+		os.Remove(oldPath) // ignore error
 	}
 }
 
@@ -157,46 +203,78 @@ func (h *PerusahaanHandler) parseUpdateForm(form *multipart.Form) dto.UpdatePeru
 	}
 }
 
-func getFormValue(form *multipart.Form, key string) *string {
-	values := form.Value[key]
-	if len(values) > 0 {
-		return &values[0]
+func (h *PerusahaanHandler) saveUploadedFile(file multipart.File, header *multipart.FileHeader) (string, error) {
+	// Validasi content type
+	if err := h.validateImageFile(header); err != nil {
+		return "", err
 	}
-	return nil
-}
 
-func (h *PerusahaanHandler) handleFileUpload(file multipart.File, header *multipart.FileHeader) (string, error) {
+	// Baca file ke buffer
 	buff := &bytes.Buffer{}
 	size, err := io.Copy(buff, file)
 	if err != nil {
 		return "", fmt.Errorf("gagal membaca file")
 	}
 
+	// Decode dan resize jika perlu
+	img, err := h.processImage(buff.Bytes(), size)
+	if err != nil {
+		return "", err
+	}
+
+	// Generate filename unik
+	filename := h.generateFilename(header.Filename)
+
+	// Simpan file
+	if err := h.saveImageToFile(img, filename); err != nil {
+		return "", err
+	}
+
+	return filename, nil
+}
+
+func (h *PerusahaanHandler) validateImageFile(header *multipart.FileHeader) error {
 	contentType := header.Header.Get("Content-Type")
 	if !strings.HasPrefix(contentType, "image/") {
-		return "", fmt.Errorf("hanya file gambar yang diizinkan")
+		return fmt.Errorf("hanya file gambar yang diizinkan")
 	}
+	return nil
+}
 
-	img, _, err := image.Decode(bytes.NewReader(buff.Bytes()))
+func (h *PerusahaanHandler) processImage(data []byte, size int64) (image.Image, error) {
+	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
-		return "", fmt.Errorf("gagal decode image")
+		return nil, fmt.Errorf("gagal decode image")
 	}
 
-	if size > 1<<20 { // >1MB compress
-		img = resize.Resize(0, 1024, img, resize.Lanczos3)
+	// Resize jika ukuran lebih dari 1MB
+	if size > maxImageSize {
+		img = resize.Resize(0, resizeHeight, img, resize.Lanczos3)
 	}
 
-	ext := filepath.Ext(header.Filename)
-	hash := sha256.Sum256([]byte(fmt.Sprintf("%d%s", time.Now().UnixNano(), header.Filename)))
-	filename := hex.EncodeToString(hash[:]) + ext
+	return img, nil
+}
 
+func (h *PerusahaanHandler) generateFilename(originalFilename string) string {
+	ext := filepath.Ext(originalFilename)
+	hash := sha256.Sum256([]byte(fmt.Sprintf("%d%s", time.Now().UnixNano(), originalFilename)))
+	return hex.EncodeToString(hash[:]) + ext
+}
+
+func (h *PerusahaanHandler) saveImageToFile(img image.Image, filename string) error {
 	outPath := filepath.Join(h.uploadPath, filename)
 	out, err := os.Create(outPath)
 	if err != nil {
-		return "", fmt.Errorf("gagal menyimpan file")
+		return fmt.Errorf("gagal menyimpan file")
 	}
 	defer out.Close()
-	jpeg.Encode(out, img, &jpeg.Options{Quality: 80})
 
-	return filename, nil
+	return jpeg.Encode(out, img, &jpeg.Options{Quality: imageQuality})
+}
+
+func getFormValue(form *multipart.Form, key string) *string {
+	if values := form.Value[key]; len(values) > 0 {
+		return &values[0]
+	}
+	return nil
 }

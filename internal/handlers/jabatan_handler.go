@@ -19,72 +19,93 @@ func NewJabatanHandler(service *services.JabatanService) *JabatanHandler {
 }
 
 func (h *JabatanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/api/jabatan")
-	id = strings.TrimPrefix(id, "/")
+	id := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/api/jabatan"), "/")
 
 	switch r.Method {
 	case http.MethodGet:
 		if id == "" {
-			data, err := h.service.GetAll()
-			if err != nil {
-				utils.RespondError(w, 500, err.Error())
-				return
-			}
-			utils.RespondJSON(w, 200, data)
+			h.handleGetAll(w, r)
 		} else {
-			j, err := h.service.GetByID(id)
-			if err != nil {
-				utils.RespondError(w, 404, "Data tidak ditemukan")
-				return
-			}
-			utils.RespondJSON(w, 200, j)
+			h.handleGetByID(w, r, id)
 		}
-
 	case http.MethodPost:
-		var req dto.CreateJabatanRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			utils.RespondError(w, 400, "Invalid request body")
+		if id != "" {
+			utils.RespondError(w, 400, "ID tidak diperlukan untuk create")
 			return
 		}
-
-		resp, err := h.service.Create(req)
-		if err != nil {
-			utils.RespondError(w, 400, err.Error())
-			return
-		}
-		utils.RespondJSON(w, 201, resp)
-
+		h.handleCreate(w, r)
 	case http.MethodPut:
 		if id == "" {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
-
-		var req dto.UpdateJabatanRequest
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			utils.RespondError(w, 400, "Invalid request body")
-			return
-		}
-
-		resp, err := h.service.Update(id, req)
-		if err != nil {
-			utils.RespondError(w, 400, err.Error())
-			return
-		}
-		utils.RespondJSON(w, 200, resp)
-
+		h.handleUpdate(w, r, id)
 	case http.MethodDelete:
 		if id == "" {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
-		if err := h.service.Delete(id); err != nil {
-			utils.RespondError(w, 400, err.Error())
-			return
-		}
-		utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
-
+		h.handleDelete(w, r, id)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
+}
+
+func (h *JabatanHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+	data, err := h.service.GetAll()
+	if err != nil {
+		utils.RespondError(w, 500, err.Error())
+		return
+	}
+	utils.RespondJSON(w, 200, data)
+}
+
+func (h *JabatanHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
+	data, err := h.service.GetByID(id)
+	if err != nil {
+		utils.RespondError(w, 404, "Data tidak ditemukan")
+		return
+	}
+	utils.RespondJSON(w, 200, data)
+}
+
+func (h *JabatanHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
+	var req dto.CreateJabatanRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, 400, "Invalid request body")
+		return
+	}
+
+	resp, err := h.service.Create(req)
+	if err != nil {
+		utils.RespondError(w, 400, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, 201, resp)
+}
+
+func (h *JabatanHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
+	var req dto.UpdateJabatanRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, 400, "Invalid request body")
+		return
+	}
+
+	resp, err := h.service.Update(id, req)
+	if err != nil {
+		utils.RespondError(w, 400, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, 200, resp)
+}
+
+func (h *JabatanHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+	if err := h.service.Delete(id); err != nil {
+		utils.RespondError(w, 400, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }
