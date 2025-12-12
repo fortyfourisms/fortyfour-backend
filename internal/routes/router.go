@@ -40,19 +40,19 @@ func InitRouter(
 
 	// Route Perusahaan
 	mux.HandleFunc("/api/perusahaan", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH))))
-	mux.HandleFunc("/api/perusahaan/", authM.Authenticate(utils.AdaptHandler(perusahaanH)))
+	mux.HandleFunc("/api/perusahaan/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH))))
 
 	// Route PIC
 	mux.HandleFunc("/api/pic", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(picH))))
-	mux.HandleFunc("/api/pic/", authM.Authenticate(utils.AdaptHandler(picH)))
+	mux.HandleFunc("/api/pic/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(picH))))
 
 	// Route Perusahaan
 	mux.HandleFunc("/api/jabatan", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(jabatanH))))
-	mux.HandleFunc("/api/jabatan/", authM.Authenticate(utils.AdaptHandler(jabatanH)))
+	mux.HandleFunc("/api/jabatan/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(jabatanH))))
 
 	// Route Identifikasi
-	mux.HandleFunc("/api/identifikasi", authM.Authenticate(utils.AdaptHandler(identifikasiH)))
-	mux.HandleFunc("/api/identifikasi/", authM.Authenticate(utils.AdaptHandler(identifikasiH)))
+	mux.HandleFunc("/api/identifikasi", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(identifikasiH))))
+	mux.HandleFunc("/api/identifikasi/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(identifikasiH))))
 
 	// Route Gulih
 	mux.HandleFunc("/api/gulih", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
