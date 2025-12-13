@@ -28,7 +28,7 @@ func TestPostService_CreatePost_Success(t *testing.T) {
 	}
 
 	if post.AuthorID != "1" {
-		t.Errorf("expected author_id 1, got %s", post.AuthorID)
+		t.Errorf("expected author_id 1, got  %s", post.AuthorID)
 	}
 
 	if post.ID == 0 {

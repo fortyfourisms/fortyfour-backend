@@ -41,8 +41,8 @@ func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*models.Ikas
 	}
 
 	// Update hanya field yang dikirim (non-nil)
-	if req.IDStakeholder != nil {
-		ikas.IDStakeholder = *req.IDStakeholder
+	if req.IDPerusahaan != nil {
+		ikas.IDPerusahaan = *req.IDPerusahaan
 	}
 	if req.Tanggal != nil {
 		ikas.Tanggal = *req.Tanggal
