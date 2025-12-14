@@ -16,10 +16,17 @@ func NewIdentifikasiRepository(db *sql.DB) *IdentifikasiRepository {
 }
 
 func (r *IdentifikasiRepository) Create(req dto.CreateIdentifikasiRequest, id string) error {
-	_, err := r.db.Exec(`INSERT INTO identifikasi 
-        (id, nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4, nilai_subdomain5)
-        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+	// Hitung nilai_identifikasi (rata-rata dari 5 subdomain)
+	NilaiIdentifikasi := (req.NilaiSubdomain1 + req.NilaiSubdomain2 + req.NilaiSubdomain3 +
+						req.NilaiSubdomain4 + req.NilaiSubdomain5 ) / 5.0
+	
+	query := `INSERT INTO identifikasi 
+			(id, nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4, nilai_subdomain5)
+        	VALUES (?, ?, ?, ?, ?, ?, ?)`
+
+	_, err := r.db.Exec(query,
 		id,
+		NilaiIdentifikasi,
 		req.NilaiIdentifikasi,
 		req.NilaiSubdomain1,
 		req.NilaiSubdomain2,

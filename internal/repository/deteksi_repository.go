@@ -15,11 +15,15 @@ func NewDeteksiRepository(db *sql.DB) *DeteksiRepository {
 }
 
 func (r *DeteksiRepository) Create(req dto.CreateDeteksiRequest, id string) error {
-	_, err := r.db.Exec(`
-		INSERT INTO deteksi (
-			id, nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3
-		) VALUES (?, ?, ?, ?, ?)`,
+	// Hitung nilai_deteksi (rata-rata dari 3 subdomain)
+	NilaiDeteksi := (req.NilaiSubdomain1 + req.NilaiSubdomain2 + req.NilaiSubdomain3) / 3.0
+	
+	query := `INSERT INTO deteksi (id, nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3) 
+			  VALUES (?, ?, ?, ?, ?)`
+
+	_, err := r.db.Exec(query,
 		id,
+		NilaiDeteksi,
 		req.NilaiDeteksi,
 		req.NilaiSubdomain1,
 		req.NilaiSubdomain2,
