@@ -16,10 +16,10 @@ func NewIkasRepository(db *sql.DB) *IkasRepository {
 
 func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string) error {
 	query := `INSERT INTO ikas
-		(id, id_perusahaan, tanggal, responden, telepon, jabatan,
-		 nilai_kematangan, target_nilai, id_identifikasi, id_proteksi,
-		 id_deteksi, id_gulih)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+				(id, id_perusahaan, tanggal, responden, telepon, jabatan,
+				nilai_kematangan, target_nilai, id_identifikasi, id_proteksi,
+				id_deteksi, id_gulih)
+				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	_, err := r.db.Exec(query,
 		id,
@@ -42,8 +42,8 @@ func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string) error {
 func (r *IkasRepository) GetAll() ([]models.Ikas, error) {
 	rows, err := r.db.Query(`
 		SELECT id, id_perusahaan, tanggal, responden, telepon, jabatan,
-			   nilai_kematangan, target_nilai, id_identifikasi, id_proteksi,
-			   id_deteksi, id_gulih
+       	nilai_kematangan, target_nilai, id_identifikasi, id_proteksi,
+       	id_deteksi, id_gulih
 		FROM ikas`)
 	if err != nil {
 		return nil, err
@@ -68,6 +68,7 @@ func (r *IkasRepository) GetAll() ([]models.Ikas, error) {
 			&i.IDDeteksi,
 			&i.IDGulih,
 		)
+
 		if err != nil {
 			return nil, err
 		}
@@ -78,15 +79,15 @@ func (r *IkasRepository) GetAll() ([]models.Ikas, error) {
 }
 
 func (r *IkasRepository) GetByID(id string) (*models.Ikas, error) {
-	row := r.db.QueryRow(`
+	rows := r.db.QueryRow(`
 		SELECT id, id_perusahaan, tanggal, responden, telepon, jabatan,
-			   nilai_kematangan, target_nilai, id_identifikasi, id_proteksi,
-			   id_deteksi, id_gulih
+      	nilai_kematangan, target_nilai, id_identifikasi, id_proteksi,
+       	id_deteksi, id_gulih
 		FROM ikas
 		WHERE id = ?`, id)
 
 	var i models.Ikas
-	err := row.Scan(
+	err := rows.Scan(
 		&i.ID,
 		&i.IDPerusahaan,
 		&i.Tanggal,
@@ -100,7 +101,6 @@ func (r *IkasRepository) GetByID(id string) (*models.Ikas, error) {
 		&i.IDDeteksi,
 		&i.IDGulih,
 	)
-
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,7 @@ func (r *IkasRepository) Update(id string, i models.Ikas) error {
 		i.IDProteksi,
 		i.IDDeteksi,
 		i.IDGulih,
-		id,
+		i.ID,
 	)
 
 	return err

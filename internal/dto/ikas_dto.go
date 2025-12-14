@@ -1,7 +1,7 @@
 package dto
 
 type CreateIkasRequest struct {
-	IDPerusahaan   string  `json:"id_perusahaan"`
+	IDPerusahaan    string  `json:"id_perusahaan"`
 	Tanggal         string  `json:"tanggal"`
 	Responden       string  `json:"responden"`
 	Telepon         string  `json:"telepon"`
@@ -15,7 +15,7 @@ type CreateIkasRequest struct {
 }
 
 type UpdateIkasRequest struct {
-	IDPerusahaan   *string  `json:"id_perusahaan,omitempty"`
+	IDPerusahaan    *string  `json:"id_perusahaan,omitempty"`
 	Tanggal         *string  `json:"tanggal,omitempty"`
 	Responden       *string  `json:"responden,omitempty"`
 	Telepon         *string  `json:"telepon,omitempty"`
