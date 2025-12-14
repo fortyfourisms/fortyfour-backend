@@ -2,7 +2,7 @@ package models
 
 type Ikas struct {
 	ID              string     	`json:"id"`
-	IDStakeholder   string     	`json:"id_stakeholder"`
+	IDPerusahaan   string     	`json:"id_perusahaan"`
 	Tanggal         string  	`json:"tanggal"`
 	Responden       string 		`json:"responden"`
 	Telepon         string		`json:"telepon"`

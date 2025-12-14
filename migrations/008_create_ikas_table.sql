@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS ikas (
   `id` char(36) PRIMARY KEY,
-  `id_stakeholder` char(36) NOT NULL,
+  `id_perusahaan` char(36) NOT NULL,
   `tanggal` datetime,
   `responden` varchar(255) NOT NULL,
   `telepon` varchar(50),
@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS ikas (
   `id_proteksi` char(36) NOT NULL,
   `id_deteksi` char(36) NOT NULL,
   `id_gulih` char(36) NOT NULL,
-  FOREIGN KEY (`id_stakeholder`) REFERENCES `stakeholders` (`id`)
+  FOREIGN KEY (`id_perusahaan`) REFERENCES `perusahaan` (`id`)
 );
