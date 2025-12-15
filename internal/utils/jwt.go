@@ -1,3 +1,4 @@
+// internal/utils/jwt.go
 package utils
 
 import (
@@ -12,16 +13,18 @@ import (
 type Claims struct {
 	UserID   string `json:"user_id"`
 	Username string `json:"username"`
+	Role     string `json:"role"`
 	jwt.RegisteredClaims
 }
 
 // GenerateAccessToken generates a short-lived access token
-func GenerateAccessToken(userID string, username, secret string) (string, time.Time, error) {
-	expiresAt := time.Now().Add(1 * time.Hour) // Short-lived: 1 Hour
+func GenerateAccessToken(userID string, username, role, secret string) (string, time.Time, error) {
+	expiresAt := time.Now().Add(1 * time.Hour)
 
 	claims := Claims{
 		UserID:   userID,
 		Username: username,
+		Role:     role, // TAMBAH INI
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

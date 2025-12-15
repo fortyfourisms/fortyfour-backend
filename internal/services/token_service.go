@@ -1,4 +1,4 @@
-// services/token_service.go
+// internal/services/token_service.go
 package services
 
 import (
@@ -24,8 +24,8 @@ func NewTokenService(redis cache.RedisInterface, jwtSecret string) *TokenService
 }
 
 // GenerateTokenPair creates access & refresh tokens
-func (s *TokenService) GenerateTokenPair(userID string, username string) (*models.TokenPair, error) {
-	accessToken, expiresAt, err := utils.GenerateAccessToken(userID, username, s.jwtSecret)
+func (s *TokenService) GenerateTokenPair(userID, username, role string) (*models.TokenPair, error) {
+	accessToken, expiresAt, err := utils.GenerateAccessToken(userID, username, role, s.jwtSecret)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate access token: %w", err)
 	}
@@ -35,20 +35,24 @@ func (s *TokenService) GenerateTokenPair(userID string, username string) (*model
 		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
 	}
 
-	refreshTokenData := models.RefreshTokenData{
+	tokenData := models.RefreshTokenData{
 		UserID:    userID,
 		Username:  username,
 		CreatedAt: time.Now(),
+		Role:      role,
 	}
 
-	data, err := json.Marshal(refreshTokenData)
+	tokenDataJSON, err := json.Marshal(tokenData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal refresh token data: %w", err)
 	}
 
-	key := fmt.Sprintf("refresh_token:%s", refreshToken)
-	if err := s.redis.Set(key, data, 7*24*time.Hour); err != nil {
-		return nil, fmt.Errorf("failed to store refresh token: %w", err)
+	if err := s.redis.Set(
+		fmt.Sprintf("refresh_token:%s", refreshToken),
+		string(tokenDataJSON),
+		7*24*time.Hour,
+	); err != nil {
+		return nil, err
 	}
 
 	return &models.TokenPair{
@@ -61,7 +65,6 @@ func (s *TokenService) GenerateTokenPair(userID string, username string) (*model
 // RefreshAccessToken validates a refresh token and issues new access token
 func (s *TokenService) RefreshAccessToken(refreshToken string) (*models.TokenPair, error) {
 	key := fmt.Sprintf("refresh_token:%s", refreshToken)
-
 	data, err := s.redis.Get(key)
 	if err != nil {
 		return nil, errors.New("invalid or expired refresh token")
@@ -72,7 +75,8 @@ func (s *TokenService) RefreshAccessToken(refreshToken string) (*models.TokenPai
 		return nil, errors.New("invalid token data")
 	}
 
-	return s.GenerateTokenPair(tokenData.UserID, tokenData.Username)
+	// FIX: Tambah parameter role
+	return s.GenerateTokenPair(tokenData.UserID, tokenData.Username, tokenData.Role)
 }
 
 // RevokeRefreshToken deletes a single refresh token
