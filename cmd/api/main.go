@@ -13,6 +13,7 @@ import (
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/pkg/cache"
 	"fortyfour-backend/pkg/database"
+	_ "fortyfour-backend/docs"
 )
 
 func main() {

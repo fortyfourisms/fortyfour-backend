@@ -5,6 +5,8 @@ import (
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/utils"
 	"net/http"
+		httpSwagger "github.com/swaggo/http-swagger"
+	_ "fortyfour-backend/docs"
 )
 
 func InitRouter(
@@ -69,6 +71,9 @@ func InitRouter(
 	// Route Ikas
 	mux.HandleFunc("/api/ikas", authM.Authenticate(utils.AdaptHandler(ikasH)))
 	mux.HandleFunc("/api/ikas/", authM.Authenticate(utils.AdaptHandler(ikasH)))
+
+	// Swagger UI
+	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
 	return mux
 }

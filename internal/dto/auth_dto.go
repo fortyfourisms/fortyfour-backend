@@ -28,3 +28,17 @@ type AuthResponse struct {
 	RefreshToken string      `json:"refresh_token"`
 	ExpiresAt    string      `json:"expires_at"`
 }
+
+type ErrorResponse struct {
+	Message string `json:"message" example:"invalid credentials"`
+}
+
+type MessageResponse struct {
+	Message string `json:"message" example:"Logged out successfully"`
+}
+
+type TokenPair struct {
+	AccessToken  string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	RefreshToken string `json:"refresh_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+	ExpiresAt    string `json:"expires_at" example:"2025-12-15T15:04:05+07:00"`
+}
