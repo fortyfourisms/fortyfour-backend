@@ -13,6 +13,7 @@ import (
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/pkg/cache"
 	"fortyfour-backend/pkg/database"
+	"fortyfour-backend/pkg/rbac"
 )
 
 func main() {
@@ -42,6 +43,12 @@ func main() {
 		log.Fatal("Failed to connect to Redis:", err)
 	}
 	defer redisClient.Close()
+
+	enforcer, err := rbac.NewEnforcer("./model.conf", "./policy.csv")
+	if err != nil {
+		log.Fatal("Failed to initialize Casbin enforcer:", err)
+	}
+	log.Println("Casbin RBAC initialized successfully")
 
 	// Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
@@ -84,6 +91,7 @@ func main() {
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
+	authzMiddleware := middleware.NewAuthorizationMiddleware(enforcer)
 
 	// Initialize rate limiters with different configurations
 	rateLimitConfigs := middleware.GetRateLimitConfigs()
@@ -105,6 +113,7 @@ func main() {
 		ikasHandler,
 		proteksiHandler,
 		authMiddleware,
+		authzMiddleware,
 		strictLimiter,
 		moderateLimiter,
 		lenientLimiter,

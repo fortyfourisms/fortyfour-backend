@@ -1,6 +1,8 @@
+// internal/middleware/auth.go
 package middleware
 
 import (
+	"context"
 	"fortyfour-backend/internal/utils"
 	"net/http"
 	"strings"
@@ -35,10 +37,12 @@ func (m *AuthMiddleware) Authenticate(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		UserIDString := claims.UserID
-
 		r.Header.Set("X-User-ID", UserIDString)
 		r.Header.Set("X-Username", claims.Username)
 
-		next(w, r)
+		// TAMBAHAN: Set role ke context untuk Casbin
+		ctx := context.WithValue(r.Context(), "role", claims.Role)
+
+		next(w, r.WithContext(ctx))
 	}
 }

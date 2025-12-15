@@ -19,6 +19,7 @@ func InitRouter(
 	ikasH *handlers.IkasHandler,
 	proteksiH *handlers.ProteksiHandler,
 	authM *middleware.AuthMiddleware,
+	authzM *middleware.AuthorizationMiddleware,
 	strictLimiter *middleware.RateLimiter,
 	moderateLimiter *middleware.RateLimiter,
 	lenientLimiter *middleware.RateLimiter,
@@ -32,43 +33,43 @@ func InitRouter(
 	mux.HandleFunc("/api/logout", authH.Logout)
 
 	// Routes Posts
-	mux.HandleFunc("/api/posts", authM.Authenticate(postH.GetPosts))
-	mux.HandleFunc("/api/posts/single", authM.Authenticate(postH.GetPost))
-	mux.HandleFunc("/api/posts/create", authM.Authenticate(postH.CreatePost))
-	mux.HandleFunc("/api/posts/update", authM.Authenticate(postH.UpdatePost))
-	mux.HandleFunc("/api/posts/delete", authM.Authenticate(postH.DeletePost))
+	mux.HandleFunc("/api/posts", authM.Authenticate(authzM.Authorize(postH.GetPosts)))
+	mux.HandleFunc("/api/posts/single", authM.Authenticate(authzM.Authorize(postH.GetPost)))
+	mux.HandleFunc("/api/posts/create", authM.Authenticate(authzM.Authorize(postH.CreatePost)))
+	mux.HandleFunc("/api/posts/update", authM.Authenticate(authzM.Authorize(postH.UpdatePost)))
+	mux.HandleFunc("/api/posts/delete", authM.Authenticate(authzM.Authorize(postH.DeletePost)))
 
 	// Route Perusahaan
-	mux.HandleFunc("/api/perusahaan", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH))))
-	mux.HandleFunc("/api/perusahaan/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH))))
+	mux.HandleFunc("/api/perusahaan", authM.Authenticate(authzM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))))
+	mux.HandleFunc("/api/perusahaan/", authM.Authenticate(authzM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))))
 
 	// Route PIC
-	mux.HandleFunc("/api/pic", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(picH))))
-	mux.HandleFunc("/api/pic/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(picH))))
+	mux.HandleFunc("/api/pic", authM.Authenticate(authzM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(picH)))))
+	mux.HandleFunc("/api/pic/", authM.Authenticate(authzM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(picH)))))
 
-	// Route Perusahaan
-	mux.HandleFunc("/api/jabatan", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(jabatanH))))
-	mux.HandleFunc("/api/jabatan/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(jabatanH))))
+	// Route Jabatan
+	mux.HandleFunc("/api/jabatan", authM.Authenticate(authzM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(jabatanH)))))
+	mux.HandleFunc("/api/jabatan/", authM.Authenticate(authzM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(jabatanH)))))
 
 	// Route Identifikasi
-	mux.HandleFunc("/api/identifikasi", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(identifikasiH))))
-	mux.HandleFunc("/api/identifikasi/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(identifikasiH))))
+	mux.HandleFunc("/api/identifikasi", authM.Authenticate(authzM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(identifikasiH)))))
+	mux.HandleFunc("/api/identifikasi/", authM.Authenticate(authzM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(identifikasiH)))))
 
 	// Route Gulih
-	mux.HandleFunc("/api/gulih", authM.Authenticate(utils.AdaptHandler(gulihH)))
-	mux.HandleFunc("/api/gulih/", authM.Authenticate(utils.AdaptHandler(gulihH)))
+	mux.HandleFunc("/api/gulih", authM.Authenticate(authzM.Authorize(utils.AdaptHandler(gulihH))))
+	mux.HandleFunc("/api/gulih/", authM.Authenticate(authzM.Authorize(utils.AdaptHandler(gulihH))))
 
 	// Route Proteksi
-	mux.HandleFunc("/api/proteksi", authM.Authenticate(utils.AdaptHandler(proteksiH)))
-	mux.HandleFunc("/api/proteksi/", authM.Authenticate(utils.AdaptHandler(proteksiH)))
+	mux.HandleFunc("/api/proteksi", authM.Authenticate(authzM.Authorize(utils.AdaptHandler(proteksiH))))
+	mux.HandleFunc("/api/proteksi/", authM.Authenticate(authzM.Authorize(utils.AdaptHandler(proteksiH))))
 
 	// Route Deteksi
-	mux.HandleFunc("/api/deteksi", authM.Authenticate(utils.AdaptHandler(deteksiH)))
-	mux.HandleFunc("/api/deteksi/", authM.Authenticate(utils.AdaptHandler(deteksiH)))
+	mux.HandleFunc("/api/deteksi", authM.Authenticate(authzM.Authorize(utils.AdaptHandler(deteksiH))))
+	mux.HandleFunc("/api/deteksi/", authM.Authenticate(authzM.Authorize(utils.AdaptHandler(deteksiH))))
 
 	// Route Ikas
-	mux.HandleFunc("/api/ikas", authM.Authenticate(utils.AdaptHandler(ikasH)))
-	mux.HandleFunc("/api/ikas/", authM.Authenticate(utils.AdaptHandler(ikasH)))
+	mux.HandleFunc("/api/ikas", authM.Authenticate(authzM.Authorize(utils.AdaptHandler(ikasH))))
+	mux.HandleFunc("/api/ikas/", authM.Authenticate(authzM.Authorize(utils.AdaptHandler(ikasH))))
 
 	return mux
 }
