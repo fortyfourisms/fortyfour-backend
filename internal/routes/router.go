@@ -22,6 +22,7 @@ func InitRouter(
 	strictLimiter *middleware.RateLimiter,
 	moderateLimiter *middleware.RateLimiter,
 	lenientLimiter *middleware.RateLimiter,
+	csirtH *handlers.CsirtHandler,
 ) *http.ServeMux {
 	mux := http.NewServeMux()
 
@@ -69,6 +70,10 @@ func InitRouter(
 	// Route Ikas
 	mux.HandleFunc("/api/ikas", authM.Authenticate(utils.AdaptHandler(ikasH)))
 	mux.HandleFunc("/api/ikas/", authM.Authenticate(utils.AdaptHandler(ikasH)))
+
+	// Route CSIRT
+	mux.HandleFunc("/api/csirt", authM.Authenticate(utils.AdaptHandler(csirtH)))
+	mux.HandleFunc("/api/csirt/", authM.Authenticate(utils.AdaptHandler(csirtH)))
 
 	return mux
 }
