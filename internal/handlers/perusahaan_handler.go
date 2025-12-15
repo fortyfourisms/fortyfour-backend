@@ -75,7 +75,7 @@ func (h *PerusahaanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
 		utils.RespondError(w, 500, err.Error())
@@ -84,7 +84,7 @@ func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, r *http.Request)
 	utils.RespondJSON(w, 200, data)
 }
 
-func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
+func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
 		utils.RespondError(w, 404, "Data tidak ditemukan")
@@ -145,7 +145,7 @@ func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request,
 	utils.RespondJSON(w, 200, resp)
 }
 
-func (h *PerusahaanHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+func (h *PerusahaanHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	// Hapus file photo sebelum delete record
 	h.deleteOldPhoto(id)
 

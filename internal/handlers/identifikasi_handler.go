@@ -66,7 +66,7 @@ func (h *IdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 	utils.RespondJSON(w, 201, resp)
 }
 
-func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
 		utils.RespondError(w, 500, err.Error())
@@ -76,7 +76,7 @@ func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 	utils.RespondJSON(w, 200, data)
 }
 
-func (h *IdentifikasiHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
+func (h *IdentifikasiHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
 		utils.RespondError(w, 404, "Data tidak ditemukan")
@@ -102,7 +102,7 @@ func (h *IdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 	utils.RespondJSON(w, 200, resp)
 }
 
-func (h *IdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+func (h *IdentifikasiHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())
 		return

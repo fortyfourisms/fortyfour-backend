@@ -51,7 +51,7 @@ func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *IkasHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+func (h *IkasHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
 		utils.RespondError(w, 500, err.Error())
@@ -60,7 +60,7 @@ func (h *IkasHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 200, data)
 }
 
-func (h *IkasHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
+func (h *IkasHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
 		utils.RespondError(w, 404, "Data tidak ditemukan")
@@ -101,7 +101,7 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 	utils.RespondJSON(w, 200, resp)
 }
 
-func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+func (h *IkasHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())
 		return
