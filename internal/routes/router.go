@@ -18,6 +18,7 @@ func InitRouter(
 	gulihH *handlers.GulihHandler,
 	ikasH *handlers.IkasHandler,
 	proteksiH *handlers.ProteksiHandler,
+	roleH *handlers.RoleHandler,
 	authM *middleware.AuthMiddleware,
 	authzM *middleware.AuthorizationMiddleware,
 	strictLimiter *middleware.RateLimiter,
@@ -70,6 +71,10 @@ func InitRouter(
 	// Route Ikas
 	mux.HandleFunc("/api/ikas", authM.Authenticate(authzM.Authorize(utils.AdaptHandler(ikasH))))
 	mux.HandleFunc("/api/ikas/", authM.Authenticate(authzM.Authorize(utils.AdaptHandler(ikasH))))
+
+	// Route Role
+	mux.HandleFunc("/api/role", authM.Authenticate(authzM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(roleH)))))
+	mux.HandleFunc("/api/role/", authM.Authenticate(authzM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(roleH)))))
 
 	return mux
 }

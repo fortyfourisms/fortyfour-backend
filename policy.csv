@@ -3,38 +3,51 @@ p, admin, /api/posts, GET
 p, admin, /api/posts, POST
 p, admin, /api/posts, PUT
 p, admin, /api/posts, DELETE
+
 p, admin, /api/perusahaan, GET
 p, admin, /api/perusahaan, POST
 p, admin, /api/perusahaan, PUT
 p, admin, /api/perusahaan, DELETE
+
 p, admin, /api/pic, GET
 p, admin, /api/pic, POST
 p, admin, /api/pic, PUT
 p, admin, /api/pic, DELETE
+
 p, admin, /api/jabatan, GET
 p, admin, /api/jabatan, POST
 p, admin, /api/jabatan, PUT
 p, admin, /api/jabatan, DELETE
+
 p, admin, /api/identifikasi, GET
 p, admin, /api/identifikasi, POST
 p, admin, /api/identifikasi, PUT
 p, admin, /api/identifikasi, DELETE
+
 p, admin, /api/gulih, GET
 p, admin, /api/gulih, POST
 p, admin, /api/gulih, PUT
 p, admin, /api/gulih, DELETE
+
 p, admin, /api/proteksi, GET
 p, admin, /api/proteksi, POST
 p, admin, /api/proteksi, PUT
 p, admin, /api/proteksi, DELETE
+
 p, admin, /api/deteksi, GET
 p, admin, /api/deteksi, POST
 p, admin, /api/deteksi, PUT
 p, admin, /api/deteksi, DELETE
+
 p, admin, /api/ikas, GET
 p, admin, /api/ikas, POST
 p, admin, /api/ikas, PUT
 p, admin, /api/ikas, DELETE
+
+p, admin, /api/role, GET
+p, admin, /api/role, POST
+p, admin, /api/role, PUT
+p, admin, /api/role, DELETE
 
 # User permissions (read only)
 p, user, /api/posts, GET

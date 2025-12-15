@@ -61,6 +61,7 @@ func main() {
 	deteksiRepo := repository.NewDeteksiRepository(db)
 	gulihRepo := repository.NewGulihRepository(db)
 	ikasRepo := repository.NewIkasRepository(db)
+	roleRepo := repository.NewRoleRepository(db)
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
@@ -74,6 +75,7 @@ func main() {
 	deteksiService := services.NewDeteksiService(deteksiRepo)
 	gulihService := services.NewGulihService(gulihRepo)
 	ikasService := services.NewIkasService(ikasRepo)
+	roleService := services.NewRoleService(roleRepo)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
@@ -88,6 +90,7 @@ func main() {
 	deteksiHandler := handlers.NewDeteksiHandler(deteksiService)
 	gulihHandler := handlers.NewGulihHandler(gulihService)
 	ikasHandler := handlers.NewIkasHandler(ikasService)
+	roleHandler := handlers.NewRoleHandler(roleService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
@@ -112,6 +115,7 @@ func main() {
 		gulihHandler,
 		ikasHandler,
 		proteksiHandler,
+		roleHandler,
 		authMiddleware,
 		authzMiddleware,
 		strictLimiter,
