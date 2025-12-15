@@ -39,7 +39,9 @@ func (s *ProteksiService) Update(id string, req dto.UpdateProteksiRequest) (*mod
 	if err != nil {
 		return nil, err
 	}
-
+	if req.NilaiProteksi != nil {
+		proteksi.NilaiProteksi = *req.NilaiProteksi
+	}
 	if req.NilaiSubdomain1 != nil {
 		proteksi.NilaiSubdomain1 = *req.NilaiSubdomain1
 	}

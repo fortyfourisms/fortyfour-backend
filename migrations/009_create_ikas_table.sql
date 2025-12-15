@@ -7,11 +7,11 @@ CREATE TABLE ikas (
   id_gulih CHAR(36),
 
   tanggal DATETIME,
-  responden VARCHAR(255),
-  telepon VARCHAR(50),
-  jabatan VARCHAR(255),
-  nilai_kematangan FLOAT,
-  target_nilai FLOAT,
+  responden VARCHAR(255) NOT NULL,
+  telepon VARCHAR(50) NOT NULL,
+  jabatan VARCHAR(255) NOT NULL,
+  nilai_kematangan FLOAT NOT NULL,
+  target_nilai FLOAT NOT NULL,
 
   FOREIGN KEY (id_perusahaan) REFERENCES perusahaan(id),
   FOREIGN KEY (id_identifikasi) REFERENCES identifikasi(id),
