@@ -10,10 +10,123 @@ definitions:
       user:
         $ref: '#/definitions/models.User'
     type: object
+  dto.CreateDeteksiRequest:
+    properties:
+      nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+    type: object
+  dto.CreateGulihRequest:
+    properties:
+      nilai_gulih:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+    type: object
+  dto.CreateIdentifikasiRequest:
+    properties:
+      nilai_identifikasi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+    type: object
+  dto.CreateProteksiRequest:
+    properties:
+      nilai_proteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      nilai_subdomain6:
+        type: number
+    type: object
+  dto.DeteksiResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      updated_at:
+        type: string
+    type: object
   dto.ErrorResponse:
     properties:
       message:
         example: invalid credentials
+        type: string
+    type: object
+  dto.GulihResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      updated_at:
+        type: string
+    type: object
+  dto.IdentifikasiResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      nilai_identiifasi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      updated_at:
         type: string
     type: object
   dto.LoginRequest:
@@ -32,6 +145,29 @@ definitions:
     properties:
       message:
         example: Logged out successfully
+        type: string
+    type: object
+  dto.ProteksiResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      nilai_proteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      nilai_subdomain6:
+        type: number
+      updated_at:
         type: string
     type: object
   dto.RefreshTokenRequest:
@@ -62,6 +198,62 @@ definitions:
         example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
         type: string
     type: object
+  dto.UpdateDeteksiRequest:
+    properties:
+      nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+    type: object
+  dto.UpdateGulihRequest:
+    properties:
+      nilai_gulih:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+    type: object
+  dto.UpdateIdentifikasiRequest:
+    properties:
+      nilai_identifikasi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+    type: object
+  dto.UpdateProteksiRequest:
+    properties:
+      nilai_proteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      nilai_subdomain6:
+        type: number
+    type: object
   models.User:
     properties:
       created_at:
@@ -80,6 +272,363 @@ definitions:
 info:
   contact: {}
 paths:
+  /api/deteksi:
+    get:
+      description: Mengambil seluruh data deteksi
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.DeteksiResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua deteksi
+      tags:
+      - Deteksi
+    post:
+      consumes:
+      - application/json
+      description: Membuat record deteksi
+      parameters:
+      - description: Data deteksi
+        in: body
+        name: deteksi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateDeteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.DeteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah deteksi baru
+      tags:
+      - Deteksi
+  /api/deteksi/{id}:
+    delete:
+      description: Menghapus data deteksi berdasarkan ID
+      parameters:
+      - description: Deteksi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus deteksi
+      tags:
+      - Deteksi
+    get:
+      description: Mengambil satu data deteksi
+      parameters:
+      - description: Deteksi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.DeteksiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil deteksi berdasarkan ID
+      tags:
+      - Deteksi
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data deteksi berdasarkan ID
+      parameters:
+      - description: Deteksi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: deteksi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateDeteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.DeteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update deteksi
+      tags:
+      - Deteksi
+  /api/gulih:
+    get:
+      description: Mengambil seluruh data gulih
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.GulihResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua gulih
+      tags:
+      - Gulih
+    post:
+      consumes:
+      - application/json
+      description: Membuat record gulih
+      parameters:
+      - description: Data gulih
+        in: body
+        name: deteksi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateGulihRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.GulihResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah gulih baru
+      tags:
+      - Gulih
+  /api/gulih/{id}:
+    delete:
+      description: Menghapus data gulih berdasarkan ID
+      parameters:
+      - description: Gulih ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus gulih
+      tags:
+      - Gulih
+    get:
+      description: Mengambil satu data gulih
+      parameters:
+      - description: Gulih ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.GulihResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil gulih berdasarkan ID
+      tags:
+      - Gulih
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data gulih berdasarkan ID
+      parameters:
+      - description: Gulih ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: deteksi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateGulihRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.DeteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update gulih
+      tags:
+      - Gulih
+  /api/identifikasi:
+    get:
+      description: Mengambil seluruh data identifikasi
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.IdentifikasiResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua identifikasi
+      tags:
+      - Identifikasi
+    post:
+      consumes:
+      - application/json
+      description: Membuat record identifikasi
+      parameters:
+      - description: Data identifikasi
+        in: body
+        name: identifikasi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateIdentifikasiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.IdentifikasiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah identifikasi baru
+      tags:
+      - Identifikasi
+  /api/identifikasi/{id}:
+    delete:
+      description: Menghapus data identifikasi berdasarkan ID
+      parameters:
+      - description: Identifikasi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus identifikasi
+      tags:
+      - Identifikasi
+    get:
+      description: Mengambil satu data identifikasi
+      parameters:
+      - description: Identifikasi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.IdentifikasiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil identifikasi berdasarkan ID
+      tags:
+      - Identifikasi
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data identifikasi berdasarkan ID
+      parameters:
+      - description: Identifikasi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: identifikasi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateIdentifikasiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.IdentifikasiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update identifikasi
+      tags:
+      - Identifikasi
   /api/login:
     post:
       consumes:
@@ -136,6 +685,125 @@ paths:
       summary: Logout user
       tags:
       - Auth
+  /api/proteksi:
+    get:
+      description: Mengambil seluruh data proteksi
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ProteksiResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua proteksi
+      tags:
+      - Proteksi
+    post:
+      consumes:
+      - application/json
+      description: Membuat record proteksi
+      parameters:
+      - description: Data proteksi
+        in: body
+        name: proteksi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateProteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ProteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah proteksi baru
+      tags:
+      - Proteksi
+  /api/proteksi/{id}:
+    delete:
+      description: Menghapus data proteksi berdasarkan ID
+      parameters:
+      - description: Proteksi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus proteksi
+      tags:
+      - Proteksi
+    get:
+      description: Mengambil satu data proteksi
+      parameters:
+      - description: Proteksi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProteksiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil proteksi berdasarkan ID
+      tags:
+      - Proteksi
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data proteksi berdasarkan ID
+      parameters:
+      - description: Proteksi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: proteksi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateProteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update proteksi
+      tags:
+      - Proteksi
   /api/refresh:
     post:
       consumes:
