@@ -55,6 +55,8 @@ func main() {
 	gulihRepo := repository.NewGulihRepository(db)
 	ikasRepo := repository.NewIkasRepository(db)
 	csirtRepo := repository.NewCsirtRepository(db)
+	sdmCsirtRepo := repository.NewSdmCsirtRepository(db)
+	seCsirtRepo := repository.NewSeCsirtRepository(db)
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
@@ -69,6 +71,8 @@ func main() {
 	gulihService := services.NewGulihService(gulihRepo)
 	ikasService := services.NewIkasService(ikasRepo)
 	csirtService := services.NewCsirtService(csirtRepo)
+	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo)
+	seCsirtService := services.NewSeCsirtService(seCsirtRepo)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
@@ -84,6 +88,8 @@ func main() {
 	gulihHandler := handlers.NewGulihHandler(gulihService)
 	ikasHandler := handlers.NewIkasHandler(ikasService)
 	csirtHandler := handlers.NewCsirtHandler(csirtService)
+	sdmCsirtHandler := handlers.NewSdmCsirtHandler(sdmCsirtService)
+	seCsirtHandler := handlers.NewSeCsirtHandler(seCsirtService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
@@ -112,6 +118,8 @@ func main() {
 		moderateLimiter,
 		lenientLimiter,
 		csirtHandler,
+		sdmCsirtHandler,
+		seCsirtHandler,
 	)
 
 	// Start server

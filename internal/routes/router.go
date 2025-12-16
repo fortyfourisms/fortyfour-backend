@@ -34,6 +34,8 @@ func InitRouter(
 	moderateLimiter *middleware.RateLimiter,
 	lenientLimiter *middleware.RateLimiter,
 	csirtH *handlers.CsirtHandler,
+	sdmCsirtH *handlers.SdmCsirtHandler,
+    seCsirtH *handlers.SeCsirtHandler,
 ) *http.ServeMux {
 	mux := http.NewServeMux()
 
@@ -88,6 +90,14 @@ func InitRouter(
 	// Route CSIRT
 	mux.HandleFunc("/api/csirt", authM.Authenticate(utils.AdaptHandler(csirtH)))
 	mux.HandleFunc("/api/csirt/", authM.Authenticate(utils.AdaptHandler(csirtH)))
+
+	// Route SDM_CSIRT
+    mux.HandleFunc("/api/sdm_csirt", authM.Authenticate(utils.AdaptHandler(sdmCsirtH)))
+    mux.HandleFunc("/api/sdm_csirt/", authM.Authenticate(utils.AdaptHandler(sdmCsirtH)))
+
+    // Route SE_CSIRT
+    mux.HandleFunc("/api/se_csirt", authM.Authenticate(utils.AdaptHandler(seCsirtH)))
+    mux.HandleFunc("/api/se_csirt/", authM.Authenticate(utils.AdaptHandler(seCsirtH)))
 
 	return mux
 }
