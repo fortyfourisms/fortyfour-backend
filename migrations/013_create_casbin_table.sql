@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS casbin_rule (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    ptype VARCHAR(100),
+    v0 VARCHAR(100),
+    v1 VARCHAR(100),
+    v2 VARCHAR(100),
+    v3 VARCHAR(100),
+    v4 VARCHAR(100),
+    v5 VARCHAR(100),
+    INDEX idx_ptype_v0_v1 (ptype, v0, v1)
+);

@@ -13,7 +13,6 @@ import (
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/pkg/cache"
 	"fortyfour-backend/pkg/database"
-	"fortyfour-backend/pkg/rbac"
 )
 
 func main() {
@@ -44,11 +43,12 @@ func main() {
 	}
 	defer redisClient.Close()
 
-	enforcer, err := rbac.NewEnforcer("./model.conf", "./policy.csv")
+	// Initialize Casbin Service with GORM Adapter
+	casbinService, err := services.NewCasbinService(cfg.Database.GetDSN(), cfg.CasbinModelPath)
 	if err != nil {
-		log.Fatal("Failed to initialize Casbin enforcer:", err)
+		log.Fatal("Failed to initialize Casbin:", err)
 	}
-	log.Println("Casbin RBAC initialized successfully")
+	log.Println("Casbin RBAC initialized successfully with GORM adapter")
 
 	// Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
@@ -91,10 +91,11 @@ func main() {
 	gulihHandler := handlers.NewGulihHandler(gulihService)
 	ikasHandler := handlers.NewIkasHandler(ikasService)
 	roleHandler := handlers.NewRoleHandler(roleService)
+	casbinHandler := handlers.NewCasbinHandler(casbinService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
-	authzMiddleware := middleware.NewAuthorizationMiddleware(enforcer)
+	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
 
 	// Initialize rate limiters with different configurations
 	rateLimitConfigs := middleware.GetRateLimitConfigs()
@@ -116,8 +117,9 @@ func main() {
 		ikasHandler,
 		proteksiHandler,
 		roleHandler,
+		casbinHandler,
 		authMiddleware,
-		authzMiddleware,
+		casbinMiddleware,
 		strictLimiter,
 		moderateLimiter,
 		lenientLimiter,
