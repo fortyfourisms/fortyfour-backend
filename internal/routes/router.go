@@ -1,11 +1,22 @@
 package routes
 
 import (
+	"encoding/json"
 	"fortyfour-backend/internal/handlers"
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/utils"
 	"net/http"
+	"time"
 )
+
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"status":    "healthy",
+		"timestamp": time.Now().Format(time.RFC3339),
+	})
+}
 
 func InitRouter(
 	authH *handlers.AuthHandler,
@@ -25,6 +36,9 @@ func InitRouter(
 	csirtH *handlers.CsirtHandler,
 ) *http.ServeMux {
 	mux := http.NewServeMux()
+
+	// In main():
+	mux.HandleFunc("/api/health", healthHandler)
 
 	// Routes Auth
 	mux.HandleFunc("/api/register", strictLimiter.LimitByIP(authH.Register))
