@@ -44,6 +44,9 @@ func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Cs
 	if req.WebCsirt != nil {
 		c.WebCsirt = *req.WebCsirt
 	}
+	if req.PhotoCsirt != nil {
+		c.PhotoCsirt = *req.PhotoCsirt
+	}
 	if req.FileRFC2350 != nil {
 		c.FileRFC2350 = *req.FileRFC2350
 	}

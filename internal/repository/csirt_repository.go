@@ -17,12 +17,13 @@ func NewCsirtRepository(db *sql.DB) *CsirtRepository {
 func (r *CsirtRepository) Create(req dto.CreateCsirtRequest, id string) error {
 	_, err := r.db.Exec(`
 		INSERT INTO csirt (
-			id, id_perusahaan, nama_csirt, web_csirt, file_rfc2350, file_public_key_pgp
-		) VALUES (?, ?, ?, ?, ?, ?)`,
+			id, id_perusahaan, nama_csirt, web_csirt, photo_csirt, file_rfc2350, file_public_key_pgp
+		) VALUES (?, ?, ?, ?, ?, ?, ?)`,
 		id,
 		req.IdPerusahaan,
 		req.NamaCsirt,
 		req.WebCsirt,
+		req.PhotoCsirt,
 		req.FileRFC2350,
 		req.FilePublicKeyPGP,
 	)
@@ -31,7 +32,7 @@ func (r *CsirtRepository) Create(req dto.CreateCsirtRequest, id string) error {
 
 func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 	rows, err := r.db.Query(`
-		SELECT id, id_perusahaan, nama_csirt, web_csirt, file_rfc2350, file_public_key_pgp
+		SELECT id, id_perusahaan, nama_csirt, web_csirt, photo_csirt, file_rfc2350, file_public_key_pgp
 		FROM csirt
 	`)
 	if err != nil {
@@ -47,6 +48,7 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 			&c.IdPerusahaan,
 			&c.NamaCsirt,
 			&c.WebCsirt,
+			&c.PhotoCsirt,
 			&c.FileRFC2350,
 			&c.FilePublicKeyPGP,
 		)
@@ -57,7 +59,7 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 
 func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 	row := r.db.QueryRow(`
-		SELECT id, id_perusahaan, nama_csirt, web_csirt, file_rfc2350, file_public_key_pgp
+		SELECT id, id_perusahaan, nama_csirt, web_csirt, photo_csirt, file_rfc2350, file_public_key_pgp
 		FROM csirt WHERE id = ?`, id)
 
 	var c models.Csirt
@@ -66,6 +68,7 @@ func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 		&c.IdPerusahaan,
 		&c.NamaCsirt,
 		&c.WebCsirt,
+		&c.PhotoCsirt,
 		&c.FileRFC2350,
 		&c.FilePublicKeyPGP,
 	)
@@ -80,11 +83,13 @@ func (r *CsirtRepository) Update(id string, c models.Csirt) error {
 		UPDATE csirt SET
 			nama_csirt=?,
 			web_csirt=?,
+			photo_csirt=?,
 			file_rfc2350=?,
 			file_public_key_pgp=?
 		WHERE id=?`,
 		c.NamaCsirt,
 		c.WebCsirt,
+		c.PhotoCsirt,
 		c.FileRFC2350,
 		c.FilePublicKeyPGP,
 		id,

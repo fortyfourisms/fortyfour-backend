@@ -62,7 +62,6 @@ func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, id string) {
 }
 
 func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
-	// wajib untuk form-data
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		utils.RespondError(w, 400, "Gagal membaca form-data")
 		return
@@ -74,7 +73,13 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		WebCsirt:     r.FormValue("web_csirt"),
 	}
 
-	// Upload RFC2350
+	photoPath, err := saveUploadedFile(r, "photo_csirt", "uploads/csirt_photo")
+	if err != nil {
+		utils.RespondError(w, 400, err.Error())
+		return
+	}
+	req.PhotoCsirt = photoPath
+
 	rfcPath, err := saveUploadedFile(r, "file_rfc2350", "uploads/rfc2350")
 	if err != nil {
 		utils.RespondError(w, 400, err.Error())
@@ -82,7 +87,6 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	req.FileRFC2350 = rfcPath
 
-	// Upload Public Key PGP
 	pgpPath, err := saveUploadedFile(r, "file_public_key_pgp", "uploads/pgp")
 	if err != nil {
 		utils.RespondError(w, 400, err.Error())
@@ -112,6 +116,10 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 	}
 	if v := r.FormValue("web_csirt"); v != "" {
 		req.WebCsirt = &v
+	}
+
+	if path, err := saveUploadedFile(r, "photo_csirt", "uploads/csirt_photo"); err == nil && path != "" {
+		req.PhotoCsirt = &path
 	}
 
 	if path, err := saveUploadedFile(r, "file_rfc2350", "uploads/rfc2350"); err == nil && path != "" {
