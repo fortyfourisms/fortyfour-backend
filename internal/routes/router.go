@@ -6,12 +6,9 @@ import (
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/utils"
 	"net/http"
-<<<<<<< HEAD
 		httpSwagger "github.com/swaggo/http-swagger"
 	_ "fortyfour-backend/docs"
-=======
 	"time"
->>>>>>> origin/main
 )
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {

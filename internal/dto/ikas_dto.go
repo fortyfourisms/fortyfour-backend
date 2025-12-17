@@ -27,3 +27,17 @@ type UpdateIkasRequest struct {
 	IDDeteksi       *string  `json:"id_deteksi,omitempty"`
 	IDGulih         *string  `json:"id_gulih,omitempty"`
 }
+
+type IkasResponse struct {
+	IDPerusahaan    string  `json:"id_perusahaan"`
+	Tanggal         string  `json:"tanggal"`
+	Responden       string  `json:"responden"`
+	Telepon         string  `json:"telepon"`
+	Jabatan         string  `json:"jabatan"`
+	NilaiKematangan float64 `json:"nilai_kematangan"`
+	TargetNilai     float64 `json:"target_nilai"`
+	IDIdentifikasi  string  `json:"id_identifikasi"`
+	IDProteksi      string  `json:"id_proteksi"`
+	IDDeteksi       string  `json:"id_deteksi"`
+	IDGulih         string  `json:"id_gulih"`
+}

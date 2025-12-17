@@ -75,6 +75,14 @@ func (h *PerusahaanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetAllPerusahaan godoc
+// @Summary      List semua perusahaan
+// @Description  Mengambil seluruh data perusahaan
+// @Tags         Perusahaan
+// @Produce      json
+// @Success      200  {array}  dto.PerusahaanResponse
+// @Failure      500  {object} dto.ErrorResponse
+// @Router       /api/perusahaan [get]
 func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -84,6 +92,15 @@ func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, _ *http.Request)
 	utils.RespondJSON(w, 200, data)
 }
 
+// GetPerusahaanByID godoc
+// @Summary      Ambil perusahaan berdasarkan ID
+// @Description  Mengambil satu data perusahaan
+// @Tags         Perusahaan
+// @Produce      json
+// @Param        id   path      string  true  "Perusahaan ID"
+// @Success      200  {object} dto.PerusahaanResponse
+// @Failure      404  {object} dto.ErrorResponse
+// @Router       /api/perusahaan/{id} [get]
 func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -93,6 +110,16 @@ func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, _ *http.Request
 	utils.RespondJSON(w, 200, data)
 }
 
+// CreatePerusahaan godoc
+// @Summary      Tambah perusahaan baru
+// @Description  Membuat record perusahaan
+// @Tags         Perusahaan
+// @Accept       json
+// @Produce      json
+// @Param        perusahaan body dto.CreatePerusahaanRequest true "Data perusahaan"
+// @Success      201  {object} dto.DeteksiResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/perusahaan [post]
 func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
 		utils.RespondError(w, 400, "Gagal membaca form data")
@@ -118,6 +145,17 @@ func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request)
 	utils.RespondJSON(w, 201, resp)
 }
 
+// UpdatePerusahaan godoc
+// @Summary      Update perusahaan
+// @Description  Mengubah data perusahaan berdasarkan ID
+// @Tags         Perusahaan
+// @Accept       json
+// @Produce      json
+// @Param        id      path      string  true  "Perusahaan ID"
+// @Param        perusahaan body      dto.UpdatePerusahaanRequest true "Data update"
+// @Success      200  {object} dto.PerusahaanResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/perusahaan/{id} [put]
 func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
 		utils.RespondError(w, 400, "Gagal membaca form data")
@@ -145,6 +183,15 @@ func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request,
 	utils.RespondJSON(w, 200, resp)
 }
 
+// DeletePerusahaan godoc
+// @Summary      Hapus perusahaan
+// @Description  Menghapus data perusahaan berdasarkan ID
+// @Tags         Perusahaan
+// @Produce      json
+// @Param        id  path  string  true  "Perusahaan ID"
+// @Success      200  {object} dto.MessageResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/perusahaan/{id} [delete]
 func (h *PerusahaanHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	// Hapus file photo sebelum delete record
 	h.deleteOldPhoto(id)

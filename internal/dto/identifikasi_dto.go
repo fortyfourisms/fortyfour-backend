@@ -26,6 +26,4 @@ type IdentifikasiResponse struct {
 	NilaiSubdomain3 	float64 `json:"nilai_subdomain3"`
 	NilaiSubdomain4		float64	`json:"nilai_subdomain4"`
 	NilaiSubdomain5		float64	`json:"nilai_subdomain5"`
-	CreatedAt       	string  `json:"created_at"`
-	UpdatedAt       	string  `json:"updated_at"`
 }

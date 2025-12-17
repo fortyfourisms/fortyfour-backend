@@ -23,6 +23,4 @@ type GulihResponse struct {
 	NilaiSubdomain2 float64 `json:"nilai_subdomain2"`
 	NilaiSubdomain3 float64 `json:"nilai_subdomain3"`
 	NilaiSubdomain4	float64	`json:"nilai_subdomain4"`
-	CreatedAt       string  `json:"created_at"`
-	UpdatedAt       string  `json:"updated_at"`
 }

@@ -51,6 +51,14 @@ func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetAllPIC godoc
+// @Summary      List semua pic_perusahaan
+// @Description  Mengambil seluruh data pic_perusahaan
+// @Tags         PIC
+// @Produce      json
+// @Success      200  {array}  dto.PICResponse
+// @Failure      500  {object} dto.ErrorResponse
+// @Router       /api/pic [get]
 func (h *PICHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -60,6 +68,15 @@ func (h *PICHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	utils.RespondJSON(w, 200, data)
 }
 
+// GetPICByID godoc
+// @Summary      Ambil pic_perusahaan berdasarkan ID
+// @Description  Mengambil satu data pic_perusahaan
+// @Tags         PIC
+// @Produce      json
+// @Param        id   path      string  true  "PIC ID"
+// @Success      200  {object} dto.PICResponse
+// @Failure      404  {object} dto.ErrorResponse
+// @Router       /api/pic/{id} [get]
 func (h *PICHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -69,6 +86,16 @@ func (h *PICHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id st
 	utils.RespondJSON(w, 200, data)
 }
 
+// CreatePIC godoc
+// @Summary      Tambah pic_perusahaan baru
+// @Description  Membuat record pic_perusahaan
+// @Tags         PIC
+// @Accept       json
+// @Produce      json
+// @Param        pic body dto.CreatePICRequest true "Data pic perusahaan"
+// @Success      201  {object} dto.PICResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/pic [post]
 func (h *PICHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreatePICRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -85,6 +112,17 @@ func (h *PICHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 201, resp)
 }
 
+// UpdatePIC godoc
+// @Summary      Update pic_perusahaan
+// @Description  Mengubah data pic_perusahaan berdasarkan ID
+// @Tags         PIC
+// @Accept       json
+// @Produce      json
+// @Param        id      path      string  true  "PIC ID"
+// @Param        pic body      dto.UpdatePICRequest true "Data update"
+// @Success      200  {object} dto.PICResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/pic/{id} [put]
 func (h *PICHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdatePICRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -101,6 +139,15 @@ func (h *PICHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id str
 	utils.RespondJSON(w, 200, resp)
 }
 
+// DeletePIC godoc
+// @Summary      Hapus pic_perusahaan
+// @Description  Menghapus data pic perusahaan berdasarkan ID
+// @Tags         PIC
+// @Produce      json
+// @Param        id  path  string  true  "PIC ID"
+// @Success      200  {object} dto.MessageResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/pic/{id} [delete]
 func (h *PICHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())

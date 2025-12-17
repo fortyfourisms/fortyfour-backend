@@ -20,6 +20,4 @@ type DeteksiResponse struct {
 	NilaiSubdomain1 float64 `json:"nilai_subdomain1"`
 	NilaiSubdomain2 float64 `json:"nilai_subdomain2"`
 	NilaiSubdomain3 float64 `json:"nilai_subdomain3"`
-	CreatedAt       string  `json:"created_at"`
-	UpdatedAt       string  `json:"updated_at"`
 }

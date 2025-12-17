@@ -29,6 +29,4 @@ type ProteksiResponse struct {
 	NilaiSubdomain4 float64 `json:"nilai_subdomain4"`
 	NilaiSubdomain5 float64 `json:"nilai_subdomain5"`
 	NilaiSubdomain6 float64 `json:"nilai_subdomain6"`
-	CreatedAt       string  `json:"created_at"`
-	UpdatedAt       string  `json:"updated_at"`
 }

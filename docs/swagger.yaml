@@ -49,6 +49,62 @@ definitions:
       nilai_subdomain5:
         type: number
     type: object
+  dto.CreateIkasRequest:
+    properties:
+      id_deteksi:
+        type: string
+      id_gulih:
+        type: string
+      id_identifikasi:
+        type: string
+      id_perusahaan:
+        type: string
+      id_proteksi:
+        type: string
+      jabatan:
+        type: string
+      nilai_kematangan:
+        type: number
+      responden:
+        type: string
+      tanggal:
+        type: string
+      target_nilai:
+        type: number
+      telepon:
+        type: string
+    type: object
+  dto.CreateJabatanRequest:
+    properties:
+      nama_jabatan:
+        type: string
+    type: object
+  dto.CreatePICRequest:
+    properties:
+      id_perusahaan:
+        type: string
+      nama:
+        type: string
+      telepon:
+        type: string
+    type: object
+  dto.CreatePerusahaanRequest:
+    properties:
+      alamat:
+        type: string
+      email:
+        type: string
+      nama_perusahaan:
+        type: string
+      photo:
+        type: string
+      sektor:
+        type: string
+      telepon:
+        type: string
+      website:
+        type: string
+    type: object
   dto.CreateProteksiRequest:
     properties:
       nilai_proteksi:
@@ -68,8 +124,6 @@ definitions:
     type: object
   dto.DeteksiResponse:
     properties:
-      created_at:
-        type: string
       id:
         type: string
       nilai_deteksi:
@@ -80,8 +134,6 @@ definitions:
         type: number
       nilai_subdomain3:
         type: number
-      updated_at:
-        type: string
     type: object
   dto.ErrorResponse:
     properties:
@@ -91,8 +143,6 @@ definitions:
     type: object
   dto.GulihResponse:
     properties:
-      created_at:
-        type: string
       id:
         type: string
       nilai_deteksi:
@@ -105,13 +155,9 @@ definitions:
         type: number
       nilai_subdomain4:
         type: number
-      updated_at:
-        type: string
     type: object
   dto.IdentifikasiResponse:
     properties:
-      created_at:
-        type: string
       id:
         type: string
       nilai_identiifasi:
@@ -126,6 +172,40 @@ definitions:
         type: number
       nilai_subdomain5:
         type: number
+    type: object
+  dto.IkasResponse:
+    properties:
+      id_deteksi:
+        type: string
+      id_gulih:
+        type: string
+      id_identifikasi:
+        type: string
+      id_perusahaan:
+        type: string
+      id_proteksi:
+        type: string
+      jabatan:
+        type: string
+      nilai_kematangan:
+        type: number
+      responden:
+        type: string
+      tanggal:
+        type: string
+      target_nilai:
+        type: number
+      telepon:
+        type: string
+    type: object
+  dto.JabatanResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      nama_jabatan:
+        type: string
       updated_at:
         type: string
     type: object
@@ -147,10 +227,46 @@ definitions:
         example: Logged out successfully
         type: string
     type: object
-  dto.ProteksiResponse:
+  dto.PICResponse:
     properties:
       created_at:
         type: string
+      id:
+        type: string
+      id_perusahaan:
+        type: string
+      nama:
+        type: string
+      telepon:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.PerusahaanResponse:
+    properties:
+      alamat:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      nama_perusahaan:
+        type: string
+      photo:
+        type: string
+      sektor:
+        type: string
+      telepon:
+        type: string
+      updated_at:
+        type: string
+      website:
+        type: string
+    type: object
+  dto.ProteksiResponse:
+    properties:
       id:
         type: string
       nilai_proteksi:
@@ -167,8 +283,6 @@ definitions:
         type: number
       nilai_subdomain6:
         type: number
-      updated_at:
-        type: string
     type: object
   dto.RefreshTokenRequest:
     properties:
@@ -236,6 +350,62 @@ definitions:
         type: number
       nilai_subdomain5:
         type: number
+    type: object
+  dto.UpdateIkasRequest:
+    properties:
+      id_deteksi:
+        type: string
+      id_gulih:
+        type: string
+      id_identifikasi:
+        type: string
+      id_perusahaan:
+        type: string
+      id_proteksi:
+        type: string
+      jabatan:
+        type: string
+      nilai_kematangan:
+        type: number
+      responden:
+        type: string
+      tanggal:
+        type: string
+      target_nilai:
+        type: number
+      telepon:
+        type: string
+    type: object
+  dto.UpdateJabatanRequest:
+    properties:
+      nama_jabatan:
+        type: string
+    type: object
+  dto.UpdatePICRequest:
+    properties:
+      id_perusahaan:
+        type: string
+      nama:
+        type: string
+      telepon:
+        type: string
+    type: object
+  dto.UpdatePerusahaanRequest:
+    properties:
+      alamat:
+        type: string
+      email:
+        type: string
+      nama_perusahaan:
+        type: string
+      photo:
+        type: string
+      sektor:
+        type: string
+      telepon:
+        type: string
+      website:
+        type: string
     type: object
   dto.UpdateProteksiRequest:
     properties:
@@ -629,6 +799,244 @@ paths:
       summary: Update identifikasi
       tags:
       - Identifikasi
+  /api/ikas:
+    get:
+      description: Mengambil seluruh data deteksi
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.IkasResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua ikas
+      tags:
+      - Ikas
+    post:
+      consumes:
+      - application/json
+      description: Membuat record ikas
+      parameters:
+      - description: Data ikas
+        in: body
+        name: ikas
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateIkasRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.IkasResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah ikas baru
+      tags:
+      - Ikas
+  /api/ikas/{id}:
+    delete:
+      description: Menghapus data ikas berdasarkan ID
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus ikas
+      tags:
+      - Ikas
+    get:
+      description: Mengambil satu data ikas
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.IkasResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil ikas berdasarkan ID
+      tags:
+      - Ikas
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data ikas berdasarkan ID
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: ikas
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateIkasRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.IkasResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update ikas
+      tags:
+      - Ikas
+  /api/jabatan:
+    get:
+      description: Mengambil seluruh data jabatan
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.JabatanResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua jabatan
+      tags:
+      - Jabatan
+    post:
+      consumes:
+      - application/json
+      description: Membuat record jabatan
+      parameters:
+      - description: Data jabatan
+        in: body
+        name: jabatan
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateJabatanRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.JabatanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah jabatan baru
+      tags:
+      - Jabatan
+  /api/jabatan/{id}:
+    delete:
+      description: Menghapus data jabatan berdasarkan ID
+      parameters:
+      - description: Jabatan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus jabatan
+      tags:
+      - Jabatan
+    get:
+      description: Mengambil satu data jabatan
+      parameters:
+      - description: Jabatan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.JabatanResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil jabatan berdasarkan ID
+      tags:
+      - Jabatan
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data jabatan berdasarkan ID
+      parameters:
+      - description: Jabatan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: jabatan
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateJabatanRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.JabatanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update jabatan
+      tags:
+      - Jabatan
   /api/login:
     post:
       consumes:
@@ -685,6 +1093,244 @@ paths:
       summary: Logout user
       tags:
       - Auth
+  /api/perusahaan:
+    get:
+      description: Mengambil seluruh data perusahaan
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PerusahaanResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua perusahaan
+      tags:
+      - Perusahaan
+    post:
+      consumes:
+      - application/json
+      description: Membuat record perusahaan
+      parameters:
+      - description: Data perusahaan
+        in: body
+        name: perusahaan
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePerusahaanRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.DeteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah perusahaan baru
+      tags:
+      - Perusahaan
+  /api/perusahaan/{id}:
+    delete:
+      description: Menghapus data perusahaan berdasarkan ID
+      parameters:
+      - description: Perusahaan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus perusahaan
+      tags:
+      - Perusahaan
+    get:
+      description: Mengambil satu data perusahaan
+      parameters:
+      - description: Perusahaan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PerusahaanResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil perusahaan berdasarkan ID
+      tags:
+      - Perusahaan
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data perusahaan berdasarkan ID
+      parameters:
+      - description: Perusahaan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: perusahaan
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePerusahaanRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PerusahaanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update perusahaan
+      tags:
+      - Perusahaan
+  /api/pic:
+    get:
+      description: Mengambil seluruh data pic_perusahaan
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PICResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua pic_perusahaan
+      tags:
+      - PIC
+    post:
+      consumes:
+      - application/json
+      description: Membuat record pic_perusahaan
+      parameters:
+      - description: Data pic perusahaan
+        in: body
+        name: pic
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePICRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.PICResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah pic_perusahaan baru
+      tags:
+      - PIC
+  /api/pic/{id}:
+    delete:
+      description: Menghapus data pic perusahaan berdasarkan ID
+      parameters:
+      - description: PIC ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus pic_perusahaan
+      tags:
+      - PIC
+    get:
+      description: Mengambil satu data pic_perusahaan
+      parameters:
+      - description: PIC ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PICResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil pic_perusahaan berdasarkan ID
+      tags:
+      - PIC
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data pic_perusahaan berdasarkan ID
+      parameters:
+      - description: PIC ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: pic
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePICRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PICResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update pic_perusahaan
+      tags:
+      - PIC
   /api/proteksi:
     get:
       description: Mengambil seluruh data proteksi
