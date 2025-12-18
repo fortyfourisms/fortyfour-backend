@@ -1,4 +1,3 @@
-// internal/services/casbin_service.go
 package services
 
 import (
@@ -16,12 +15,27 @@ type CasbinService struct {
 	enforcer *casbin.Enforcer
 }
 
+// BulkAddResult contains the result of bulk add operation
+type BulkAddResult struct {
+	Added    []models.CasbinPolicy `json:"added"`
+	Existing []models.CasbinPolicy `json:"existing"`
+}
+
 // NewCasbinService creates a new Casbin service with GORM adapter
 func NewCasbinService(dsn, modelPath string) (*CasbinService, error) {
 	// Initialize GORM
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
+	}
+
+	// Clean up invalid policies before initializing casbin
+	log.Println("Cleaning up invalid policies...")
+	result := db.Exec("DELETE FROM casbin_rule WHERE v0 = '' OR v1 = '' OR v2 = '' OR v0 IS NULL OR v1 IS NULL OR v2 IS NULL")
+	if result.Error != nil {
+		log.Printf("Warning: failed to clean invalid policies: %v", result.Error)
+	} else if result.RowsAffected > 0 {
+		log.Printf("Cleaned up %d invalid policy records", result.RowsAffected)
 	}
 
 	// Initialize GORM Adapter
@@ -83,6 +97,22 @@ func (s *CasbinService) Enforce(role, resource, action string) (bool, error) {
 
 // AddPolicy adds a new permission and saves to database
 func (s *CasbinService) AddPolicy(role, resource, action string) (bool, error) {
+	// Validate input
+	if role == "" || resource == "" || action == "" {
+		return false, fmt.Errorf("role, resource, and action cannot be empty")
+	}
+
+	// Check if policy already exists first
+	hasPolicy, err := s.enforcer.HasPolicy([]string{role, resource, action})
+	if err != nil {
+		return false, fmt.Errorf("failed to check policy existence: %w", err)
+	}
+
+	if hasPolicy {
+		return false, nil // Policy already exists, return false without error
+	}
+
+	// Add the policy
 	added, err := s.enforcer.AddPolicy(role, resource, action)
 	if err != nil {
 		return false, fmt.Errorf("failed to add policy: %w", err)
@@ -97,7 +127,7 @@ func (s *CasbinService) AddPolicy(role, resource, action string) (bool, error) {
 	return added, nil
 }
 
-// AddPolicies adds multiple policies at once
+// AddPolicies adds multiple policies at once (legacy method)
 func (s *CasbinService) AddPolicies(policies [][]string) (bool, error) {
 	added, err := s.enforcer.AddPolicies(policies)
 	if err != nil {
@@ -111,6 +141,70 @@ func (s *CasbinService) AddPolicies(policies [][]string) (bool, error) {
 	}
 
 	return added, nil
+}
+
+// BulkAddPolicies adds multiple policies and returns detailed result
+func (s *CasbinService) BulkAddPolicies(policies [][]string) (*BulkAddResult, error) {
+	result := &BulkAddResult{
+		Added:    []models.CasbinPolicy{},
+		Existing: []models.CasbinPolicy{},
+	}
+
+	// Check each policy individually
+	for _, policy := range policies {
+		if len(policy) < 3 {
+			continue
+		}
+
+		role := policy[0]
+		resource := policy[1]
+		action := policy[2]
+
+		// Check if policy already exists
+		hasPolicy, err := s.enforcer.HasPolicy(policy)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check policy existence (%s, %s, %s): %w", role, resource, action, err)
+		}
+
+		if hasPolicy {
+			// Policy already exists
+			result.Existing = append(result.Existing, models.CasbinPolicy{
+				Role:     role,
+				Resource: resource,
+				Action:   action,
+			})
+		} else {
+			// Try to add the policy
+			added, err := s.enforcer.AddPolicy(role, resource, action)
+			if err != nil {
+				return nil, fmt.Errorf("failed to add policy (%s, %s, %s): %w", role, resource, action, err)
+			}
+
+			if added {
+				result.Added = append(result.Added, models.CasbinPolicy{
+					Role:     role,
+					Resource: resource,
+					Action:   action,
+				})
+			} else {
+				// In case AddPolicy returns false without error
+				result.Existing = append(result.Existing, models.CasbinPolicy{
+					Role:     role,
+					Resource: resource,
+					Action:   action,
+				})
+			}
+		}
+	}
+
+	// Save to database if any policies were added
+	if len(result.Added) > 0 {
+		if err := s.enforcer.SavePolicy(); err != nil {
+			return nil, fmt.Errorf("failed to save policies: %w", err)
+		}
+	}
+
+	return result, nil
 }
 
 // RemovePolicy removes a permission

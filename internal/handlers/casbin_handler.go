@@ -42,6 +42,12 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate request
+	if req.Role == "" || req.Resource == "" || req.Action == "" {
+		utils.RespondError(w, http.StatusBadRequest, "Role, resource, and action are required")
+		return
+	}
+
 	added, err := h.casbinService.AddPolicy(req.Role, req.Resource, req.Action)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
@@ -49,10 +55,7 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !added {
-		utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-			"message": "Policy already exists",
-			"added":   false,
-		})
+		utils.RespondError(w, http.StatusConflict, "Policy already exists")
 		return
 	}
 
@@ -69,7 +72,6 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 			"resource": req.Resource,
 			"action":   req.Action,
 		},
-		"added": true,
 	})
 }
 
@@ -100,22 +102,51 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 		policies = append(policies, []string{req.Role, p.Resource, p.Action})
 	}
 
-	added, err := h.casbinService.AddPolicies(policies)
+	result, err := h.casbinService.BulkAddPolicies(policies)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	h.sseService.NotifyCreate("policy.bulk", map[string]any{
-		"role":  req.Role,
-		"count": len(req.Policies),
-	}, userID)
+	// Jika semua data sudah ada, return conflict error
+	if len(result.Added) == 0 && len(result.Existing) > 0 {
+		utils.RespondJSON(w, http.StatusConflict, map[string]interface{}{
+			"message":  "All policies already exist",
+			"role":     req.Role,
+			"existing": result.Existing,
+			"total":    len(req.Policies),
+			"added":    0,
+		})
+		return
+	}
 
-	utils.RespondJSON(w, http.StatusCreated, map[string]interface{}{
-		"message": "Bulk policies added successfully",
-		"role":    req.Role,
-		"count":   len(req.Policies),
-		"added":   added,
+	// Jika ada yang berhasil ditambahkan, kirim notifikasi
+	if len(result.Added) > 0 {
+		h.sseService.NotifyCreate("policy.bulk", map[string]any{
+			"role":  req.Role,
+			"count": len(result.Added),
+		}, userID)
+	}
+
+	statusCode := http.StatusCreated
+	message := "Bulk policies added successfully"
+
+	// Jika ada yang sudah exist, ubah status dan message
+	if len(result.Existing) > 0 {
+		statusCode = http.StatusPartialContent
+		message = "Bulk policies partially added"
+	}
+
+	utils.RespondJSON(w, statusCode, map[string]interface{}{
+		"message":  message,
+		"role":     req.Role,
+		"added":    result.Added,
+		"existing": result.Existing,
+		"summary": map[string]int{
+			"total":    len(req.Policies),
+			"added":    len(result.Added),
+			"existing": len(result.Existing),
+		},
 	})
 }
 
