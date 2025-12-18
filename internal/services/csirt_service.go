@@ -24,12 +24,12 @@ func (s *CsirtService) Create(req dto.CreateCsirtRequest) (*models.Csirt, error)
 	return s.repo.GetByID(id)
 }
 
-func (s *CsirtService) GetAll() ([]models.Csirt, error) {
-	return s.repo.GetAll()
+func (s *CsirtService) GetAll() ([]dto.CsirtResponse, error) {
+	return s.repo.GetAllWithPerusahaan()
 }
 
-func (s *CsirtService) GetByID(id string) (*models.Csirt, error) {
-	return s.repo.GetByID(id)
+func (s *CsirtService) GetByID(id string) (*dto.CsirtResponse, error) {
+	return s.repo.GetByIDWithPerusahaan(id)
 }
 
 func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error) {

@@ -16,3 +16,13 @@ type UpdateCsirtRequest struct {
 	FileRFC2350      *string `json:"file_rfc2350,omitempty"`
 	FilePublicKeyPGP *string `json:"file_public_key_pgp,omitempty"`
 }
+
+type CsirtResponse struct {
+	ID               string             `json:"id"`
+	NamaCsirt        string             `json:"nama_csirt"`
+	WebCsirt         string             `json:"web_csirt"`
+	PhotoCsirt       string             `json:"photo_csirt"`
+	FileRFC2350      string             `json:"file_rfc2350"`
+	FilePublicKeyPGP string             `json:"file_public_key_pgp"`
+	Perusahaan       PerusahaanResponse `json:"perusahaan"`
+}
