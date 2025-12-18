@@ -11,11 +11,15 @@ import (
 )
 
 type PICHandler struct {
-	service *services.PICService
+	service    *services.PICService
+	sseService *services.SSEService
 }
 
-func NewPICHandler(service *services.PICService) *PICHandler {
-	return &PICHandler{service: service}
+func NewPICHandler(service *services.PICService, sseService *services.SSEService) *PICHandler {
+	return &PICHandler{
+		service:    service,
+		sseService: sseService,
+	}
 }
 
 func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -82,6 +86,13 @@ func (h *PICHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// SSE Notif Create
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyCreate("pic", resp, userID)
+
 	utils.RespondJSON(w, 201, resp)
 }
 
@@ -98,14 +109,28 @@ func (h *PICHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id str
 		return
 	}
 
+	// SSE Notif Update
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyUpdate("pic", resp, userID)
+
 	utils.RespondJSON(w, 200, resp)
 }
 
-func (h *PICHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *PICHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
+
+	// SSE Notif Delete
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyDelete("perusahaan", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }

@@ -87,7 +87,7 @@ func main() {
 	uploadPath := "./uploads"
 	os.MkdirAll(uploadPath, os.ModePerm)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
-	picHandler := handlers.NewPICHandler(picService)
+	picHandler := handlers.NewPICHandler(picService, sseService)
 	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
 	jabatanHandler := handlers.NewJabatanHandler(jabatanService)
 	proteksiHandler := handlers.NewProteksiHandler(proteksiService)
