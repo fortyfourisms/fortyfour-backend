@@ -1183,14 +1183,14 @@ const docTemplate = `{
         },
         "/api/pic": {
             "get": {
-                "description": "Mengambil seluruh data pic_perusahaan",
+                "description": "Mengambil seluruh data pic perusahaan",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "PIC"
                 ],
-                "summary": "List semua pic_perusahaan",
+                "summary": "List semua pic perusahaan",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1210,7 +1210,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Membuat record pic_perusahaan",
+                "description": "Membuat record pic perusahaan",
                 "consumes": [
                     "application/json"
                 ],
@@ -1220,7 +1220,7 @@ const docTemplate = `{
                 "tags": [
                     "PIC"
                 ],
-                "summary": "Tambah pic_perusahaan baru",
+                "summary": "Tambah pic perusahaan baru",
                 "parameters": [
                     {
                         "description": "Data pic perusahaan",
@@ -1250,14 +1250,14 @@ const docTemplate = `{
         },
         "/api/pic/{id}": {
             "get": {
-                "description": "Mengambil satu data pic_perusahaan",
+                "description": "Mengambil satu data pic perusahaan",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "PIC"
                 ],
-                "summary": "Ambil pic_perusahaan berdasarkan ID",
+                "summary": "Ambil pic perusahaan berdasarkan ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -1283,7 +1283,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Mengubah data pic_perusahaan berdasarkan ID",
+                "description": "Mengubah data pic perusahaan berdasarkan ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -1293,7 +1293,7 @@ const docTemplate = `{
                 "tags": [
                     "PIC"
                 ],
-                "summary": "Update pic_perusahaan",
+                "summary": "Update pic perusahaan",
                 "parameters": [
                     {
                         "type": "string",
@@ -1335,7 +1335,7 @@ const docTemplate = `{
                 "tags": [
                     "PIC"
                 ],
-                "summary": "Hapus pic_perusahaan",
+                "summary": "Hapus pic perusahaan",
                 "parameters": [
                     {
                         "type": "string",

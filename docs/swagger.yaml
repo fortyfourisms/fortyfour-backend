@@ -1214,7 +1214,7 @@ paths:
       - Perusahaan
   /api/pic:
     get:
-      description: Mengambil seluruh data pic_perusahaan
+      description: Mengambil seluruh data pic perusahaan
       produces:
       - application/json
       responses:
@@ -1228,13 +1228,13 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: List semua pic_perusahaan
+      summary: List semua pic perusahaan
       tags:
       - PIC
     post:
       consumes:
       - application/json
-      description: Membuat record pic_perusahaan
+      description: Membuat record pic perusahaan
       parameters:
       - description: Data pic perusahaan
         in: body
@@ -1253,7 +1253,7 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: Tambah pic_perusahaan baru
+      summary: Tambah pic perusahaan baru
       tags:
       - PIC
   /api/pic/{id}:
@@ -1276,11 +1276,11 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: Hapus pic_perusahaan
+      summary: Hapus pic perusahaan
       tags:
       - PIC
     get:
-      description: Mengambil satu data pic_perusahaan
+      description: Mengambil satu data pic perusahaan
       parameters:
       - description: PIC ID
         in: path
@@ -1298,13 +1298,13 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: Ambil pic_perusahaan berdasarkan ID
+      summary: Ambil pic perusahaan berdasarkan ID
       tags:
       - PIC
     put:
       consumes:
       - application/json
-      description: Mengubah data pic_perusahaan berdasarkan ID
+      description: Mengubah data pic perusahaan berdasarkan ID
       parameters:
       - description: PIC ID
         in: path
@@ -1328,7 +1328,7 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: Update pic_perusahaan
+      summary: Update pic perusahaan
       tags:
       - PIC
   /api/proteksi:
