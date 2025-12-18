@@ -31,6 +31,7 @@ func InitRouter(
 	proteksiH *handlers.ProteksiHandler,
 	roleH *handlers.RoleHandler,
 	casbinH *handlers.CasbinHandler,
+	sseH *handlers.SSEHandler,
 	authM *middleware.AuthMiddleware,
 	casbinM *middleware.CasbinMiddleware,
 	strictLimiter *middleware.RateLimiter,
@@ -54,6 +55,10 @@ func InitRouter(
 	mux.HandleFunc("/api/casbin/policies/bulk", authM.Authenticate(casbinH.BulkAddPolicies))
 	mux.HandleFunc("/api/casbin/policies/remove", authM.Authenticate(casbinH.RemovePolicy))
 	mux.HandleFunc("/api/casbin/permissions", authM.Authenticate(casbinH.GetRolePermissions))
+
+	// SSE Routes
+	mux.HandleFunc("/api/events", authM.Authenticate(sseH.HandleSSE))
+	mux.HandleFunc("/api/events/stats", authM.Authenticate(sseH.GetStats))
 
 	// Routes Posts
 	mux.HandleFunc("/api/posts", authM.Authenticate(casbinM.Authorize(postH.GetPosts)))

@@ -50,6 +50,10 @@ func main() {
 	}
 	log.Println("Casbin RBAC initialized successfully with GORM adapter")
 
+	// Initialize SSE Service
+	sseService := services.NewSSEService()
+	log.Println("SSE Service initialized successfully")
+
 	// Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
 	postRepo := repository.NewPostRepository(db)
@@ -82,7 +86,7 @@ func main() {
 	postHandler := handlers.NewPostHandler(postService)
 	uploadPath := "./uploads"
 	os.MkdirAll(uploadPath, os.ModePerm)
-	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath)
+	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
 	picHandler := handlers.NewPICHandler(picService)
 	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
 	jabatanHandler := handlers.NewJabatanHandler(jabatanService)
@@ -92,6 +96,7 @@ func main() {
 	ikasHandler := handlers.NewIkasHandler(ikasService)
 	roleHandler := handlers.NewRoleHandler(roleService)
 	casbinHandler := handlers.NewCasbinHandler(casbinService)
+	sseHandler := handlers.NewSSEHandler(sseService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
@@ -118,6 +123,7 @@ func main() {
 		proteksiHandler,
 		roleHandler,
 		casbinHandler,
+		sseHandler,
 		authMiddleware,
 		casbinMiddleware,
 		strictLimiter,
@@ -131,6 +137,7 @@ func main() {
 	log.Println("  - Auth endpoints: 5 requests/minute per IP")
 	log.Println("  - Public posts: 1000 requests/minute per IP")
 	log.Println("  - Protected posts: 100 requests/minute per user")
+	log.Println("SSE endpoint available at /api/events")
 
 	log.Fatal(http.ListenAndServe(cfg.Port, mux))
 }
