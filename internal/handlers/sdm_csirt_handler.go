@@ -84,7 +84,7 @@ func (h *SdmCsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *SdmCsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
-    var req dto.SdmCsirtResponse
+    var req dto.UpdateSdmCsirtRequest
     if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
         utils.RespondError(w, 400, err.Error())
         return

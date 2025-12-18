@@ -32,55 +32,104 @@ func (r *SdmCsirtRepository) Create(req dto.CreateSdmCsirtRequest, id string) er
 }
 
 func (r *SdmCsirtRepository) GetAll() ([]dto.SdmCsirtResponse, error) {
-    rows, err := r.db.Query(`
-        SELECT id, id_csirt, nama_personel, jabatan_csirt, jabatan_perusahaan, skill, sertifikasi, created_at, updated_at
-        FROM sdm_csirt
-    `)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	rows, err := r.db.Query(`
+		SELECT 
+			s.id,
+			s.nama_personel,
+			s.jabatan_csirt,
+			s.jabatan_perusahaan,
+			s.skill,
+			s.sertifikasi,
+			s.created_at,
+			s.updated_at,
 
-    res := []dto.SdmCsirtResponse{}
-    for rows.Next() {
-        var s dto.SdmCsirtResponse
-        rows.Scan(
-            &s.ID,
-            &s.IdCsirt,
-            &s.NamaPersonel,
-            &s.JabatanCsirt,
-            &s.JabatanPerusahaan,
-            &s.Skill,
-            &s.Sertifikasi,
-            &s.CreatedAt,
-            &s.UpdatedAt,
-        )
-        res = append(res, s)
-    }
-    return res, nil
+			c.id,
+			c.nama_csirt,
+			c.web_csirt
+		FROM sdm_csirt s
+		JOIN csirt c ON s.id_csirt = c.id
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var res []dto.SdmCsirtResponse
+
+	for rows.Next() {
+		var s dto.SdmCsirtResponse
+		var c dto.CsirtMiniResponse
+
+		err := rows.Scan(
+			&s.ID,
+			&s.NamaPersonel,
+			&s.JabatanCsirt,
+			&s.JabatanPerusahaan,
+			&s.Skill,
+			&s.Sertifikasi,
+			&s.CreatedAt,
+			&s.UpdatedAt,
+
+			&c.ID,
+			&c.NamaCsirt,
+			&c.WebCsirt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		s.Csirt = &c
+		res = append(res, s)
+	}
+
+	return res, nil
 }
+
 
 func (r *SdmCsirtRepository) GetByID(id string) (*dto.SdmCsirtResponse, error) {
-    var s dto.SdmCsirtResponse
-    row := r.db.QueryRow(`
-        SELECT id, id_csirt, nama_personel, jabatan_csirt, jabatan_perusahaan, skill, sertifikasi, created_at, updated_at
-        FROM sdm_csirt WHERE id=?
-    `, id)
-    if err := row.Scan(
-        &s.ID,
-        &s.IdCsirt,
-        &s.NamaPersonel,
-        &s.JabatanCsirt,
-        &s.JabatanPerusahaan,
-        &s.Skill,
-        &s.Sertifikasi,
-        &s.CreatedAt,
-        &s.UpdatedAt,
-    ); err != nil {
-        return nil, err
-    }
-    return &s, nil
+	var s dto.SdmCsirtResponse
+	var c dto.CsirtMiniResponse
+
+	row := r.db.QueryRow(`
+		SELECT 
+			s.id,
+			s.nama_personel,
+			s.jabatan_csirt,
+			s.jabatan_perusahaan,
+			s.skill,
+			s.sertifikasi,
+			s.created_at,
+			s.updated_at,
+
+			c.id,
+			c.nama_csirt,
+			c.web_csirt
+		FROM sdm_csirt s
+		JOIN csirt c ON s.id_csirt = c.id
+		WHERE s.id = ?
+	`, id)
+
+	if err := row.Scan(
+		&s.ID,
+		&s.NamaPersonel,
+		&s.JabatanCsirt,
+		&s.JabatanPerusahaan,
+		&s.Skill,
+		&s.Sertifikasi,
+		&s.CreatedAt,
+		&s.UpdatedAt,
+
+		&c.ID,
+		&c.NamaCsirt,
+		&c.WebCsirt,
+	); err != nil {
+		return nil, err
+	}
+
+	s.Csirt = &c
+	return &s, nil
 }
+
 
 func (r *SdmCsirtRepository) Update(id string, s dto.SdmCsirtResponse) error {
     _, err := r.db.Exec(`
