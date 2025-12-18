@@ -10,11 +10,15 @@ import (
 )
 
 type IdentifikasiHandler struct {
-	service *services.IdentifikasiService
+	service    *services.IdentifikasiService
+	sseService *services.SSEService
 }
 
-func NewIdentifikasiHandler(service *services.IdentifikasiService) *IdentifikasiHandler {
-	return &IdentifikasiHandler{service: service}
+func NewIdentifikasiHandler(service *services.IdentifikasiService, sseService *services.SSEService) *IdentifikasiHandler {
+	return &IdentifikasiHandler{
+		service:    service,
+		sseService: sseService,
+	}
 }
 
 func (h *IdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -63,6 +67,13 @@ func (h *IdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// SSE Notif Create
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyCreate("identifikasi", resp, userID)
+
 	utils.RespondJSON(w, 201, resp)
 }
 
@@ -99,14 +110,28 @@ func (h *IdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// SSE Notif Update
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyUpdate("identifikasi", resp, userID)
+
 	utils.RespondJSON(w, 200, resp)
 }
 
-func (h *IdentifikasiHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *IdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
+
+	// SSE Notif Delete
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyDelete("identifikasi", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }

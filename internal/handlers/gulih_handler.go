@@ -11,11 +11,15 @@ import (
 )
 
 type GulihHandler struct {
-	service *services.GulihService
+	service    *services.GulihService
+	sseService *services.SSEService
 }
 
-func NewGulihHandler(service *services.GulihService) *GulihHandler {
-	return &GulihHandler{service: service}
+func NewGulihHandler(service *services.GulihService, sseService *services.SSEService) *GulihHandler {
+	return &GulihHandler{
+		service:    service,
+		sseService: sseService,
+	}
 }
 
 func (h *GulihHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -82,6 +86,13 @@ func (h *GulihHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// SSE Notif Create
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyCreate("gulih", resp, userID)
+
 	utils.RespondJSON(w, 201, resp)
 }
 
@@ -98,14 +109,28 @@ func (h *GulihHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 		return
 	}
 
+	// SSE Notif Update
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyUpdate("gulih", resp, userID)
+
 	utils.RespondJSON(w, 200, resp)
 }
 
-func (h *GulihHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *GulihHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
+
+	// SSE Notif Delete
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyDelete("gulih", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }

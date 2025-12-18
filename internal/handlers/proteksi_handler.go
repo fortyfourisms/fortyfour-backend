@@ -11,11 +11,15 @@ import (
 )
 
 type ProteksiHandler struct {
-	service *services.ProteksiService
+	service    *services.ProteksiService
+	sseService *services.SSEService
 }
 
-func NewProteksiHandler(service *services.ProteksiService) *ProteksiHandler {
-	return &ProteksiHandler{service: service}
+func NewProteksiHandler(service *services.ProteksiService, sseService *services.SSEService) *ProteksiHandler {
+	return &ProteksiHandler{
+		service:    service,
+		sseService: sseService,
+	}
 }
 
 func (h *ProteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -82,6 +86,13 @@ func (h *ProteksiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// SSE Notif Create
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyCreate("proteksi", resp, userID)
+
 	utils.RespondJSON(w, 201, resp)
 }
 
@@ -98,14 +109,28 @@ func (h *ProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 
+	// SSE Notif Update
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyUpdate("proteksi", resp, userID)
+
 	utils.RespondJSON(w, 200, resp)
 }
 
-func (h *ProteksiHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *ProteksiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
+
+	// SSE Notif Delete
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyDelete("proteksi", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }

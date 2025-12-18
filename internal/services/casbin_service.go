@@ -42,7 +42,6 @@ func NewCasbinService(dsn, modelPath string) (*CasbinService, error) {
 	}
 
 	// Check if policies exist, if not add defaults
-	// PERBAIKAN: GetPolicy() mengembalikan 2 nilai ([][]string, error)
 	allPolicies, err := enforcer.GetPolicy()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get policies: %w", err)
@@ -132,7 +131,6 @@ func (s *CasbinService) RemovePolicy(role, resource, action string) (bool, error
 
 // GetRolePermissions gets all permissions for a specific role
 func (s *CasbinService) GetRolePermissions(role string) []models.CasbinPolicy {
-	// PERBAIKAN: GetFilteredPolicy() mengembalikan 2 nilai ([][]string, error)
 	filteredPolicies, err := s.enforcer.GetFilteredPolicy(0, role)
 	if err != nil {
 		log.Printf("Error getting filtered policy: %v", err)
@@ -155,7 +153,6 @@ func (s *CasbinService) GetRolePermissions(role string) []models.CasbinPolicy {
 
 // GetAllPolicies gets all policies
 func (s *CasbinService) GetAllPolicies() []models.CasbinPolicy {
-	// PERBAIKAN: GetPolicy() mengembalikan 2 nilai ([][]string, error)
 	allPolicies, err := s.enforcer.GetPolicy()
 	if err != nil {
 		log.Printf("Error getting all policies: %v", err)

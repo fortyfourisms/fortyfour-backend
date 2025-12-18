@@ -10,11 +10,13 @@ import (
 
 type CasbinHandler struct {
 	casbinService *services.CasbinService
+	sseService    *services.SSEService
 }
 
-func NewCasbinHandler(casbinService *services.CasbinService) *CasbinHandler {
+func NewCasbinHandler(casbinService *services.CasbinService, sseService *services.SSEService) *CasbinHandler {
 	return &CasbinHandler{
 		casbinService: casbinService,
+		sseService:    sseService,
 	}
 }
 
@@ -26,7 +28,9 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Only admin can manage policies
-	userRole := r.Header.Get("X-User-Role")
+	userID := r.Context().Value("user_id").(string)
+	userRole := r.Context().Value("role").(string)
+
 	if userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")
 		return
@@ -52,6 +56,12 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.sseService.NotifyCreate("policy", map[string]any{
+		"role":     req.Role,
+		"resource": req.Resource,
+		"action":   req.Action,
+	}, userID)
+
 	utils.RespondJSON(w, http.StatusCreated, map[string]interface{}{
 		"message": "Policy added successfully",
 		"policy": map[string]string{
@@ -70,7 +80,9 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	userRole := r.Header.Get("X-User-Role")
+	userID := r.Context().Value("user_id").(string)
+	userRole := r.Context().Value("role").(string)
+
 	if userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")
 		return
@@ -94,6 +106,11 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	h.sseService.NotifyCreate("policy.bulk", map[string]any{
+		"role":  req.Role,
+		"count": len(req.Policies),
+	}, userID)
+
 	utils.RespondJSON(w, http.StatusCreated, map[string]interface{}{
 		"message": "Bulk policies added successfully",
 		"role":    req.Role,
@@ -109,7 +126,9 @@ func (h *CasbinHandler) RemovePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userRole := r.Header.Get("X-User-Role")
+	userID := r.Context().Value("user_id").(string)
+	userRole := r.Context().Value("role").(string)
+
 	if userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")
 		return
@@ -131,6 +150,12 @@ func (h *CasbinHandler) RemovePolicy(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusNotFound, "Policy not found")
 		return
 	}
+
+	h.sseService.NotifyDelete("policy", map[string]any{
+		"role":     req.Role,
+		"resource": req.Resource,
+		"action":   req.Action,
+	}, userID)
 
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
 		"message": "Policy removed successfully",

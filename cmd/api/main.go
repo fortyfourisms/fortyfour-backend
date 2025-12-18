@@ -83,19 +83,19 @@ func main() {
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
-	postHandler := handlers.NewPostHandler(postService)
+	postHandler := handlers.NewPostHandler(postService, sseService)
 	uploadPath := "./uploads"
 	os.MkdirAll(uploadPath, os.ModePerm)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
 	picHandler := handlers.NewPICHandler(picService, sseService)
-	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
-	jabatanHandler := handlers.NewJabatanHandler(jabatanService)
-	proteksiHandler := handlers.NewProteksiHandler(proteksiService)
-	deteksiHandler := handlers.NewDeteksiHandler(deteksiService)
-	gulihHandler := handlers.NewGulihHandler(gulihService)
-	ikasHandler := handlers.NewIkasHandler(ikasService)
-	roleHandler := handlers.NewRoleHandler(roleService)
-	casbinHandler := handlers.NewCasbinHandler(casbinService)
+	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService, sseService)
+	jabatanHandler := handlers.NewJabatanHandler(jabatanService, sseService)
+	proteksiHandler := handlers.NewProteksiHandler(proteksiService, sseService)
+	deteksiHandler := handlers.NewDeteksiHandler(deteksiService, sseService)
+	gulihHandler := handlers.NewGulihHandler(gulihService, sseService)
+	ikasHandler := handlers.NewIkasHandler(ikasService, sseService)
+	roleHandler := handlers.NewRoleHandler(roleService, sseService)
+	casbinHandler := handlers.NewCasbinHandler(casbinService, sseService)
 	sseHandler := handlers.NewSSEHandler(sseService)
 
 	// Initialize Middleware

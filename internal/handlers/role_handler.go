@@ -11,11 +11,15 @@ import (
 )
 
 type RoleHandler struct {
-	service *services.RoleService
+	service    *services.RoleService
+	sseService *services.SSEService
 }
 
-func NewRoleHandler(service *services.RoleService) *RoleHandler {
-	return &RoleHandler{service: service}
+func NewRoleHandler(service *services.RoleService, sseService *services.SSEService) *RoleHandler {
+	return &RoleHandler{
+		service:    service,
+		sseService: sseService,
+	}
 }
 
 func (h *RoleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -81,6 +85,14 @@ func (h *RoleHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
+
+	// SSE Notif Create
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyCreate("role", resp, userID)
+
 	utils.RespondJSON(w, 201, resp)
 }
 
@@ -96,13 +108,29 @@ func (h *RoleHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
+
+	// SSE Notif Update
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyUpdate("role", resp, userID)
+
 	utils.RespondJSON(w, 200, resp)
 }
 
-func (h *RoleHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *RoleHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
+
+	// SSE Notif Delete
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyDelete("role", id, userID)
+
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }

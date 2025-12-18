@@ -11,11 +11,15 @@ import (
 )
 
 type JabatanHandler struct {
-	service *services.JabatanService
+	service    *services.JabatanService
+	sseService *services.SSEService
 }
 
-func NewJabatanHandler(service *services.JabatanService) *JabatanHandler {
-	return &JabatanHandler{service: service}
+func NewJabatanHandler(service *services.JabatanService, sseService *services.SSEService) *JabatanHandler {
+	return &JabatanHandler{
+		service:    service,
+		sseService: sseService,
+	}
 }
 
 func (h *JabatanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -82,6 +86,13 @@ func (h *JabatanHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// SSE Notif Create
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyCreate("jabatan", resp, userID)
+
 	utils.RespondJSON(w, 201, resp)
 }
 
@@ -98,14 +109,28 @@ func (h *JabatanHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id
 		return
 	}
 
+	// SSE Notif Update
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyUpdate("jabatan", resp, userID)
+
 	utils.RespondJSON(w, 200, resp)
 }
 
-func (h *JabatanHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *JabatanHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
+
+	// SSE Notif Update
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyUpdate("jabatan", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }
