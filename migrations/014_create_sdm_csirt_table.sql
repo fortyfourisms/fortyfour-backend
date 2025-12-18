@@ -1,6 +1,6 @@
 CREATE TABLE sdm_csirt (
-  id VARCHAR(36) PRIMARY KEY,
-  id_csirt VARCHAR(36),
+  id CHAR(36) PRIMARY KEY,
+  id_csirt CHAR(36),
   nama_personel VARCHAR(255),
   jabatan_csirt VARCHAR(255),
   jabatan_perusahaan VARCHAR(255),
