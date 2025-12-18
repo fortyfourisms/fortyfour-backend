@@ -52,8 +52,8 @@ func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllPIC godoc
-// @Summary      List semua pic_perusahaan
-// @Description  Mengambil seluruh data pic_perusahaan
+// @Summary      List semua pic perusahaan
+// @Description  Mengambil seluruh data pic perusahaan
 // @Tags         PIC
 // @Produce      json
 // @Success      200  {array}  dto.PICResponse
@@ -69,8 +69,8 @@ func (h *PICHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 }
 
 // GetPICByID godoc
-// @Summary      Ambil pic_perusahaan berdasarkan ID
-// @Description  Mengambil satu data pic_perusahaan
+// @Summary      Ambil pic perusahaan berdasarkan ID
+// @Description  Mengambil satu data pic perusahaan
 // @Tags         PIC
 // @Produce      json
 // @Param        id   path      string  true  "PIC ID"
@@ -87,8 +87,8 @@ func (h *PICHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id st
 }
 
 // CreatePIC godoc
-// @Summary      Tambah pic_perusahaan baru
-// @Description  Membuat record pic_perusahaan
+// @Summary      Tambah pic perusahaan baru
+// @Description  Membuat record pic perusahaan
 // @Tags         PIC
 // @Accept       json
 // @Produce      json
@@ -113,8 +113,8 @@ func (h *PICHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdatePIC godoc
-// @Summary      Update pic_perusahaan
-// @Description  Mengubah data pic_perusahaan berdasarkan ID
+// @Summary      Update pic perusahaan
+// @Description  Mengubah data pic perusahaan berdasarkan ID
 // @Tags         PIC
 // @Accept       json
 // @Produce      json
@@ -140,7 +140,7 @@ func (h *PICHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id str
 }
 
 // DeletePIC godoc
-// @Summary      Hapus pic_perusahaan
+// @Summary      Hapus pic perusahaan
 // @Description  Menghapus data pic perusahaan berdasarkan ID
 // @Tags         PIC
 // @Produce      json
