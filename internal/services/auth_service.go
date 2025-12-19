@@ -1,4 +1,3 @@
-// services/auth_service.go
 package services
 
 import (
@@ -22,7 +21,7 @@ func NewAuthService(userRepo repository.UserRepositoryInterface, tokenService *T
 }
 
 // Register creates a new user and returns token pair
-func (s *AuthService) Register(username, password, email string, idJabatan ...string) (*models.User, *models.TokenPair, error) {
+func (s *AuthService) Register(username, password, email string, roleID *string, idJabatan *string) (*models.User, *models.TokenPair, error) {
 	if username == "" || password == "" || email == "" {
 		return nil, nil, errors.New("all fields are required")
 	}
@@ -37,21 +36,25 @@ func (s *AuthService) Register(username, password, email string, idJabatan ...st
 	}
 
 	user := &models.User{
-		Username: username,
-		Password: string(hashedPassword),
-		Email:    email,
-	}
-
-	if len(idJabatan) > 0 {
-		user.IDJabatan = &idJabatan[0]
+		Username:  username,
+		Password:  string(hashedPassword),
+		Email:     email,
+		RoleID:    roleID,
+		IDJabatan: idJabatan,
 	}
 
 	if err := s.userRepo.Create(user); err != nil {
 		return nil, nil, err
 	}
 
-	// Generate token pair
-	tokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username)
+	// Fetch user kembali untuk mendapatkan role_name
+	user, err = s.userRepo.FindByID(user.ID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Generate token pair with role
+	tokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -70,7 +73,8 @@ func (s *AuthService) Login(username, password string) (*models.User, *models.To
 		return nil, nil, errors.New("invalid credentials")
 	}
 
-	tokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username)
+	// Generate token pair with role
+	tokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
 	if err != nil {
 		return nil, nil, err
 	}

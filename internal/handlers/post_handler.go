@@ -12,10 +12,14 @@ import (
 
 type PostHandler struct {
 	postService *services.PostService
+	sseService  *services.SSEService
 }
 
-func NewPostHandler(postService *services.PostService) *PostHandler {
-	return &PostHandler{postService: postService}
+func NewPostHandler(postService *services.PostService, sseService *services.SSEService) *PostHandler {
+	return &PostHandler{
+		postService: postService,
+		sseService:  sseService,
+	}
 }
 
 func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +28,7 @@ func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Header.Get("X-User-ID") // UUID STRING
+	userID := r.Context().Value("user_id").(string)
 	if userID == "" {
 		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
 		return
@@ -41,6 +45,13 @@ func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
+	// SSE Notif Create
+	h.sseService.NotifyCreate(
+		"post", // resource
+		post,   // payload
+		userID, // actor
+	)
 
 	utils.RespondJSON(w, http.StatusCreated, post)
 }
@@ -91,7 +102,7 @@ func (h *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Header.Get("X-User-ID")
+	userID := r.Context().Value("user_id").(string)
 	if userID == "" {
 		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
 		return
@@ -125,6 +136,13 @@ func (h *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// SSE Notif Update
+	h.sseService.NotifyUpdate(
+		"post", // resource
+		post,   // payload
+		userID, // actor
+	)
+
 	utils.RespondJSON(w, http.StatusOK, post)
 }
 
@@ -134,7 +152,7 @@ func (h *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Header.Get("X-User-ID") // UUID
+	userID := r.Context().Value("user_id").(string)
 	if userID == "" {
 		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
 		return
@@ -160,6 +178,13 @@ func (h *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
+	// SSE Notif Delete
+	h.sseService.NotifyDelete(
+		"post", // resource
+		id,     // payload
+		userID, // actor
+	)
 
 	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": "Post deleted successfully"})
 }

@@ -1,12 +1,16 @@
 package config
 
-import "os"
+import (
+	"os"
+	"strconv"
+)
 
 type Config struct {
-	Port      string
-	JWTSecret string
-	Database  DatabaseConfig
-	Redis     RedisConfig
+	Port            string
+	JWTSecret       string
+	Database        DatabaseConfig
+	Redis           RedisConfig
+	CasbinModelPath string
 }
 
 type DatabaseConfig struct {
@@ -27,7 +31,7 @@ type RedisConfig struct {
 func Load() *Config {
 	return &Config{
 		Port:      getEnv("PORT", ":8080"),
-		JWTSecret: getEnv("JWT_SECRET", "your-secret-key-change-in-production"),
+		JWTSecret: getEnv("JWT_SECRET", "your-secret-key"),
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnv("DB_PORT", "3306"),
@@ -39,14 +43,29 @@ func Load() *Config {
 			Host:     getEnv("REDIS_HOST", "localhost"),
 			Port:     getEnv("REDIS_PORT", "6379"),
 			Password: getEnv("REDIS_PASSWORD", ""),
-			DB:       0,
+			DB:       getEnvAsInt("REDIS_DB", 0),
 		},
+		CasbinModelPath: getEnv("CASBIN_MODEL_PATH", "./casbin_model.conf"),
 	}
 }
 
-func getEnv(key, defaultValue string) string {
+// GetDSN returns MySQL DSN for GORM
+func (d *DatabaseConfig) GetDSN() string {
+	return d.User + ":" + d.Password + "@tcp(" + d.Host + ":" + d.Port + ")/" + d.DBName + "?charset=utf8mb4&parseTime=True&loc=Local"
+}
+
+func getEnv(key, fallback string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
 	}
-	return defaultValue
+	return fallback
+}
+
+func getEnvAsInt(key string, fallback int) int {
+	if value := os.Getenv(key); value != "" {
+		if intVal, err := strconv.Atoi(value); err == nil {
+			return intVal
+		}
+	}
+	return fallback
 }

@@ -43,6 +43,17 @@ func main() {
 	}
 	defer redisClient.Close()
 
+	// Initialize Casbin Service with GORM Adapter
+	casbinService, err := services.NewCasbinService(cfg.Database.GetDSN(), cfg.CasbinModelPath)
+	if err != nil {
+		log.Fatal("Failed to initialize Casbin:", err)
+	}
+	log.Println("Casbin RBAC initialized successfully with GORM adapter")
+
+	// Initialize SSE Service
+	sseService := services.NewSSEService()
+	log.Println("SSE Service initialized successfully")
+
 	// Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
 	postRepo := repository.NewPostRepository(db)
@@ -54,6 +65,7 @@ func main() {
 	deteksiRepo := repository.NewDeteksiRepository(db)
 	gulihRepo := repository.NewGulihRepository(db)
 	ikasRepo := repository.NewIkasRepository(db)
+	roleRepo := repository.NewRoleRepository(db)
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
@@ -67,23 +79,28 @@ func main() {
 	deteksiService := services.NewDeteksiService(deteksiRepo)
 	gulihService := services.NewGulihService(gulihRepo)
 	ikasService := services.NewIkasService(ikasRepo)
+	roleService := services.NewRoleService(roleRepo)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
-	postHandler := handlers.NewPostHandler(postService)
+	postHandler := handlers.NewPostHandler(postService, sseService)
 	uploadPath := "./uploads"
 	os.MkdirAll(uploadPath, os.ModePerm)
-	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath)
-	picHandler := handlers.NewPICHandler(picService)
-	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
-	jabatanHandler := handlers.NewJabatanHandler(jabatanService)
-	proteksiHandler := handlers.NewProteksiHandler(proteksiService)
-	deteksiHandler := handlers.NewDeteksiHandler(deteksiService)
-	gulihHandler := handlers.NewGulihHandler(gulihService)
-	ikasHandler := handlers.NewIkasHandler(ikasService)
+	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
+	picHandler := handlers.NewPICHandler(picService, sseService)
+	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService, sseService)
+	jabatanHandler := handlers.NewJabatanHandler(jabatanService, sseService)
+	proteksiHandler := handlers.NewProteksiHandler(proteksiService, sseService)
+	deteksiHandler := handlers.NewDeteksiHandler(deteksiService, sseService)
+	gulihHandler := handlers.NewGulihHandler(gulihService, sseService)
+	ikasHandler := handlers.NewIkasHandler(ikasService, sseService)
+	roleHandler := handlers.NewRoleHandler(roleService, sseService)
+	casbinHandler := handlers.NewCasbinHandler(casbinService, sseService)
+	sseHandler := handlers.NewSSEHandler(sseService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
+	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
 
 	// Initialize rate limiters with different configurations
 	rateLimitConfigs := middleware.GetRateLimitConfigs()
@@ -104,7 +121,11 @@ func main() {
 		gulihHandler,
 		ikasHandler,
 		proteksiHandler,
+		roleHandler,
+		casbinHandler,
+		sseHandler,
 		authMiddleware,
+		casbinMiddleware,
 		strictLimiter,
 		moderateLimiter,
 		lenientLimiter,
@@ -116,6 +137,7 @@ func main() {
 	log.Println("  - Auth endpoints: 5 requests/minute per IP")
 	log.Println("  - Public posts: 1000 requests/minute per IP")
 	log.Println("  - Protected posts: 100 requests/minute per user")
+	log.Println("SSE endpoint available at /api/events")
 
 	log.Fatal(http.ListenAndServe(cfg.Port, mux))
 }

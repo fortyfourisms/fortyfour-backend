@@ -1,6 +1,8 @@
 package services
 
 import (
+	"encoding/json"
+	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/testhelpers"
 	"testing"
 	"time"
@@ -12,7 +14,7 @@ func TestTokenService_GenerateTokenPair_Success(t *testing.T) {
 	service := NewTokenService(redis, "test-secret")
 
 	// Act
-	tokens, err := service.GenerateTokenPair("1", "testuser")
+	tokens, err := service.GenerateTokenPair("1", "testuser", "admin")
 
 	// Assert
 	if err != nil {
@@ -40,6 +42,29 @@ func TestTokenService_GenerateTokenPair_Success(t *testing.T) {
 	if !exists {
 		t.Error("expected refresh token to be stored in Redis")
 	}
+
+	// Verify token data in Redis contains role
+	data, err := redis.Get(key)
+	if err != nil {
+		t.Fatalf("error getting token data: %v", err)
+	}
+
+	var tokenData models.RefreshTokenData
+	if err := json.Unmarshal([]byte(data), &tokenData); err != nil {
+		t.Fatalf("error unmarshaling token data: %v", err)
+	}
+
+	if tokenData.UserID != "1" {
+		t.Errorf("expected userID '1', got '%s'", tokenData.UserID)
+	}
+
+	if tokenData.Username != "testuser" {
+		t.Errorf("expected username 'testuser', got '%s'", tokenData.Username)
+	}
+
+	if tokenData.Role != "admin" {
+		t.Errorf("expected role 'admin', got '%s'", tokenData.Role)
+	}
 }
 
 func TestTokenService_RefreshAccessToken_Success(t *testing.T) {
@@ -48,7 +73,7 @@ func TestTokenService_RefreshAccessToken_Success(t *testing.T) {
 	service := NewTokenService(redis, "test-secret")
 
 	// Generate initial token pair
-	initialTokens, _ := service.GenerateTokenPair("1", "testuser")
+	initialTokens, _ := service.GenerateTokenPair("1", "testuser", "admin")
 
 	// Wait a moment to ensure new token is different
 	time.Sleep(10 * time.Millisecond)
@@ -94,7 +119,7 @@ func TestTokenService_RevokeRefreshToken_Success(t *testing.T) {
 	service := NewTokenService(redis, "test-secret")
 
 	// Generate token pair
-	tokens, _ := service.GenerateTokenPair("1", "testuser")
+	tokens, _ := service.GenerateTokenPair("1", "testuser", "admin")
 
 	// Act
 	err := service.RevokeRefreshToken(tokens.RefreshToken)
