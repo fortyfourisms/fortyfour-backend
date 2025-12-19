@@ -3,6 +3,7 @@ CREATE TABLE csirt (
     id_perusahaan CHAR(36) NOT NULL,
     nama_csirt VARCHAR(255) NOT NULL,
     web_csirt VARCHAR(255),
+    telepon_csirt VARCHAR(50),
     photo_csirt varchar(255) DEFAULT NULL,
     file_rfc2350 VARCHAR(255),
     file_public_key_pgp VARCHAR(255),

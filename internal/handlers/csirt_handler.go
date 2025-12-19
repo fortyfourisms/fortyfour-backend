@@ -71,6 +71,7 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		IdPerusahaan: r.FormValue("id_perusahaan"),
 		NamaCsirt:    r.FormValue("nama_csirt"),
 		WebCsirt:     r.FormValue("web_csirt"),
+		TeleponCsirt: r.FormValue("telepon_csirt"),
 	}
 
 	photoPath, err := saveUploadedFile(r, "photo_csirt", "uploads/csirt_photo")
@@ -116,6 +117,9 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 	}
 	if v := r.FormValue("web_csirt"); v != "" {
 		req.WebCsirt = &v
+	}
+	if v := r.FormValue("telepon_csirt"); v != "" {
+    req.TeleponCsirt = &v
 	}
 
 	if path, err := saveUploadedFile(r, "photo_csirt", "uploads/csirt_photo"); err == nil && path != "" {

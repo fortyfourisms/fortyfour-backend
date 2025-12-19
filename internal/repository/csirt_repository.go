@@ -22,13 +22,14 @@ CREATE
 func (r *CsirtRepository) Create(req dto.CreateCsirtRequest, id string) error {
 	_, err := r.db.Exec(`
 		INSERT INTO csirt (
-			id, id_perusahaan, nama_csirt, web_csirt,
+			id, id_perusahaan, nama_csirt, web_csirt, telepon_csirt,
 			photo_csirt, file_rfc2350, file_public_key_pgp
-		) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
 		req.IdPerusahaan,
 		req.NamaCsirt,
 		req.WebCsirt,
+		req.TeleponCsirt,
 		req.PhotoCsirt,
 		req.FileRFC2350,
 		req.FilePublicKeyPGP,
@@ -43,7 +44,7 @@ GET ALL
 */
 func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 	rows, err := r.db.Query(`
-		SELECT id, id_perusahaan, nama_csirt, web_csirt,
+		SELECT id, id_perusahaan, nama_csirt, web_csirt, telepon_csirt,
 		       photo_csirt, file_rfc2350, file_public_key_pgp
 		FROM csirt
 	`)
@@ -60,6 +61,7 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 			&c.IdPerusahaan,
 			&c.NamaCsirt,
 			&c.WebCsirt,
+			&c.TeleponCsirt,
 			&c.PhotoCsirt,
 			&c.FileRFC2350,
 			&c.FilePublicKeyPGP,
@@ -79,7 +81,7 @@ GET BY ID
 */
 func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 	row := r.db.QueryRow(`
-		SELECT id, id_perusahaan, nama_csirt, web_csirt,
+		SELECT id, id_perusahaan, nama_csirt, web_csirt, telepon_csirt,
 		       photo_csirt, file_rfc2350, file_public_key_pgp
 		FROM csirt WHERE id = ?`, id)
 
@@ -89,6 +91,7 @@ func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 		&c.IdPerusahaan,
 		&c.NamaCsirt,
 		&c.WebCsirt,
+		&c.TeleponCsirt,
 		&c.PhotoCsirt,
 		&c.FileRFC2350,
 		&c.FilePublicKeyPGP,
@@ -107,8 +110,8 @@ GET ALL + PERUSAHAAN
 func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
 	rows, err := r.db.Query(`
 		SELECT 
-			c.id, c.nama_csirt, c.web_csirt, c.photo_csirt,
-			c.file_rfc2350, c.file_public_key_pgp,
+			c.id, c.nama_csirt, c.web_csirt, c.telepon_csirt, 
+			c.photo_csirt, c.file_rfc2350, c.file_public_key_pgp,
 			p.id, p.photo, p.nama_perusahaan, p.sektor,
 			p.alamat, p.telepon, p.email, p.website,
 			p.created_at, p.updated_at
@@ -130,6 +133,7 @@ func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
 			&csirt.ID,
 			&csirt.NamaCsirt,
 			&csirt.WebCsirt,
+			&csirt.TeleponCsirt,
 			&csirt.PhotoCsirt,
 			&csirt.FileRFC2350,
 			&csirt.FilePublicKeyPGP,
@@ -163,8 +167,8 @@ GET BY ID + PERUSAHAAN
 func (r *CsirtRepository) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, error) {
 	row := r.db.QueryRow(`
 		SELECT 
-			c.id, c.nama_csirt, c.web_csirt, c.photo_csirt,
-			c.file_rfc2350, c.file_public_key_pgp,
+			c.id, c.nama_csirt, c.web_csirt, c.telepon_csirt, 
+			c.photo_csirt, c.file_rfc2350, c.file_public_key_pgp,
 			p.id, p.photo, p.nama_perusahaan, p.sektor,
 			p.alamat, p.telepon, p.email, p.website,
 			p.created_at, p.updated_at
@@ -180,6 +184,7 @@ func (r *CsirtRepository) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, 
 		&csirt.ID,
 		&csirt.NamaCsirt,
 		&csirt.WebCsirt,
+		&csirt.TeleponCsirt,
 		&csirt.PhotoCsirt,
 		&csirt.FileRFC2350,
 		&csirt.FilePublicKeyPGP,
@@ -212,12 +217,14 @@ func (r *CsirtRepository) Update(id string, c models.Csirt) error {
 		UPDATE csirt SET
 			nama_csirt = ?,
 			web_csirt = ?,
+			telepon_csirt = ?,
 			photo_csirt = ?,
 			file_rfc2350 = ?,
 			file_public_key_pgp = ?
 		WHERE id = ?`,
 		c.NamaCsirt,
 		c.WebCsirt,
+		c.TeleponCsirt,
 		c.PhotoCsirt,
 		c.FileRFC2350,
 		c.FilePublicKeyPGP,
