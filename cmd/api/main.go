@@ -65,6 +65,9 @@ func main() {
 	deteksiRepo := repository.NewDeteksiRepository(db)
 	gulihRepo := repository.NewGulihRepository(db)
 	ikasRepo := repository.NewIkasRepository(db)
+	csirtRepo := repository.NewCsirtRepository(db)
+	sdmCsirtRepo := repository.NewSdmCsirtRepository(db)
+	seCsirtRepo := repository.NewSeCsirtRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
 
 	// Initialize services
@@ -79,6 +82,9 @@ func main() {
 	deteksiService := services.NewDeteksiService(deteksiRepo)
 	gulihService := services.NewGulihService(gulihRepo)
 	ikasService := services.NewIkasService(ikasRepo)
+	csirtService := services.NewCsirtService(csirtRepo)
+	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo)
+	seCsirtService := services.NewSeCsirtService(seCsirtRepo)
 	roleService := services.NewRoleService(roleRepo)
 
 	// Initialize Handlers
@@ -86,14 +92,17 @@ func main() {
 	postHandler := handlers.NewPostHandler(postService, sseService)
 	uploadPath := "./uploads"
 	os.MkdirAll(uploadPath, os.ModePerm)
-	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
-	picHandler := handlers.NewPICHandler(picService, sseService)
-	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService, sseService)
-	jabatanHandler := handlers.NewJabatanHandler(jabatanService, sseService)
-	proteksiHandler := handlers.NewProteksiHandler(proteksiService, sseService)
-	deteksiHandler := handlers.NewDeteksiHandler(deteksiService, sseService)
-	gulihHandler := handlers.NewGulihHandler(gulihService, sseService)
-	ikasHandler := handlers.NewIkasHandler(ikasService, sseService)
+	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath)
+	picHandler := handlers.NewPICHandler(picService)
+	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
+	jabatanHandler := handlers.NewJabatanHandler(jabatanService)
+	proteksiHandler := handlers.NewProteksiHandler(proteksiService)
+	deteksiHandler := handlers.NewDeteksiHandler(deteksiService)
+	gulihHandler := handlers.NewGulihHandler(gulihService)
+	ikasHandler := handlers.NewIkasHandler(ikasService)
+	csirtHandler := handlers.NewCsirtHandler(csirtService)
+	sdmCsirtHandler := handlers.NewSdmCsirtHandler(sdmCsirtService)
+	seCsirtHandler := handlers.NewSeCsirtHandler(seCsirtService)
 	roleHandler := handlers.NewRoleHandler(roleService, sseService)
 	casbinHandler := handlers.NewCasbinHandler(casbinService, sseService)
 	sseHandler := handlers.NewSSEHandler(sseService)
@@ -129,6 +138,9 @@ func main() {
 		strictLimiter,
 		moderateLimiter,
 		lenientLimiter,
+		csirtHandler,
+		sdmCsirtHandler,
+		seCsirtHandler,
 	)
 
 	// Start server

@@ -2,18 +2,19 @@ package services
 
 import (
 	"errors"
+	"strings"
+
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/repository"
-	"strings"
 
 	"github.com/google/uuid"
 )
 
 type JabatanService struct {
-	repo *repository.JabatanRepository
+	repo repository.JabatanRepositoryInterface
 }
 
-func NewJabatanService(repo *repository.JabatanRepository) *JabatanService {
+func NewJabatanService(repo repository.JabatanRepositoryInterface) *JabatanService {
 	return &JabatanService{repo: repo}
 }
 
@@ -23,9 +24,11 @@ func (s *JabatanService) Create(req dto.CreateJabatanRequest) (*dto.JabatanRespo
 	}
 
 	id := uuid.New().String()
+
 	if err := s.repo.Create(req, id); err != nil {
 		return nil, err
 	}
+
 	return s.repo.GetByID(id)
 }
 

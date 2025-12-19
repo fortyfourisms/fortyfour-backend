@@ -1,6 +1,9 @@
 package repository
 
-import "fortyfour-backend/internal/models"
+import (
+	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/models"
+)
 
 // UserRepositoryInterface defines methods for user data access
 type UserRepositoryInterface interface {
@@ -19,4 +22,13 @@ type PostRepositoryInterface interface {
 	FindByAuthorID(authorID string) ([]*models.Post, error)
 	Update(post *models.Post) error
 	Delete(id int) error
+}
+
+// JabatanRepositoryInterface defines methods for jabatan data access
+type JabatanRepositoryInterface interface {
+	Create(req dto.CreateJabatanRequest, id string) error
+	GetAll() ([]dto.JabatanResponse, error)
+	GetByID(id string) (*dto.JabatanResponse, error)
+	Update(id string, jabatan dto.JabatanResponse) error
+	Delete(id string) error
 }
