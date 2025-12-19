@@ -43,6 +43,17 @@ func main() {
 	}
 	defer redisClient.Close()
 
+	// Initialize Casbin Service with GORM Adapter
+	casbinService, err := services.NewCasbinService(cfg.Database.GetDSN(), cfg.CasbinModelPath)
+	if err != nil {
+		log.Fatal("Failed to initialize Casbin:", err)
+	}
+	log.Println("Casbin RBAC initialized successfully with GORM adapter")
+
+	// Initialize SSE Service
+	sseService := services.NewSSEService()
+	log.Println("SSE Service initialized successfully")
+
 	// Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
 	postRepo := repository.NewPostRepository(db)
@@ -57,6 +68,7 @@ func main() {
 	csirtRepo := repository.NewCsirtRepository(db)
 	sdmCsirtRepo := repository.NewSdmCsirtRepository(db)
 	seCsirtRepo := repository.NewSeCsirtRepository(db)
+	roleRepo := repository.NewRoleRepository(db)
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
@@ -73,10 +85,11 @@ func main() {
 	csirtService := services.NewCsirtService(csirtRepo)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo)
 	seCsirtService := services.NewSeCsirtService(seCsirtRepo)
+	roleService := services.NewRoleService(roleRepo)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
-	postHandler := handlers.NewPostHandler(postService)
+	postHandler := handlers.NewPostHandler(postService, sseService)
 	uploadPath := "./uploads"
 	os.MkdirAll(uploadPath, os.ModePerm)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath)
@@ -90,9 +103,13 @@ func main() {
 	csirtHandler := handlers.NewCsirtHandler(csirtService)
 	sdmCsirtHandler := handlers.NewSdmCsirtHandler(sdmCsirtService)
 	seCsirtHandler := handlers.NewSeCsirtHandler(seCsirtService)
+	roleHandler := handlers.NewRoleHandler(roleService, sseService)
+	casbinHandler := handlers.NewCasbinHandler(casbinService, sseService)
+	sseHandler := handlers.NewSSEHandler(sseService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
+	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
 
 	// Initialize rate limiters with different configurations
 	rateLimitConfigs := middleware.GetRateLimitConfigs()
@@ -113,7 +130,11 @@ func main() {
 		gulihHandler,
 		ikasHandler,
 		proteksiHandler,
+		roleHandler,
+		casbinHandler,
+		sseHandler,
 		authMiddleware,
+		casbinMiddleware,
 		strictLimiter,
 		moderateLimiter,
 		lenientLimiter,
@@ -128,6 +149,7 @@ func main() {
 	log.Println("  - Auth endpoints: 5 requests/minute per IP")
 	log.Println("  - Public posts: 1000 requests/minute per IP")
 	log.Println("  - Protected posts: 100 requests/minute per user")
+	log.Println("SSE endpoint available at /api/events")
 
 	log.Fatal(http.ListenAndServe(cfg.Port, mux))
 }

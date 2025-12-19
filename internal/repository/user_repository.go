@@ -18,55 +18,92 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 
 func (r *UserRepository) Create(user *models.User) error {
 	if user.ID == "" {
-		user.ID = uuid.New().String() // <- generate UUID
+		user.ID = uuid.New().String()
 	}
 
-	query := `INSERT INTO users (id, username, password, email, id_jabatan) VALUES (?, ?, ?, ?, ?)`
-	_, err := r.db.Exec(query, user.ID, user.Username, user.Password, user.Email, user.IDJabatan)
+	// Jika role_id tidak diisi, set default ke 'user'
+	if user.RoleID == nil || *user.RoleID == "" {
+		var defaultRoleID string
+		err := r.db.QueryRow("SELECT id FROM roles WHERE name = 'user'").Scan(&defaultRoleID)
+		if err == nil {
+			user.RoleID = &defaultRoleID
+		}
+	}
+
+	query := `INSERT INTO users (id, username, password, email, role_id, id_jabatan) VALUES (?, ?, ?, ?, ?, ?)`
+	_, err := r.db.Exec(query, user.ID, user.Username, user.Password, user.Email, user.RoleID, user.IDJabatan)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
+
 func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
-	query := `SELECT id, username, password, email, id_jabatan, created_at, updated_at 
-	          FROM users WHERE username = ?`
+	query := `
+		SELECT u.id, u.username, u.password, u.email, u.role_id, r.name as role_name, u.id_jabatan, u.created_at, u.updated_at 
+		FROM users u
+		LEFT JOIN roles r ON u.role_id = r.id
+		WHERE u.username = ?
+	`
 
 	user := &models.User{}
+	var roleID sql.NullString
+	var roleName sql.NullString
+
 	err := r.db.QueryRow(query, username).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Password,
 		&user.Email,
+		&roleID,
+		&roleName,
 		&user.IDJabatan,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
+
 	if err == sql.ErrNoRows {
 		return nil, errors.New("user not found")
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if roleID.Valid {
+		user.RoleID = &roleID.String
+	}
+	if roleName.Valid {
+		user.RoleName = roleName.String
 	}
 
 	return user, nil
 }
 
 func (r *UserRepository) FindByID(id string) (*models.User, error) {
-	query := `SELECT id, username, password, email, id_jabatan, created_at, updated_at 
-	          FROM users WHERE id = ?`
+	query := `
+		SELECT u.id, u.username, u.password, u.email, u.role_id, r.name as role_name, u.id_jabatan, u.created_at, u.updated_at 
+		FROM users u
+		LEFT JOIN roles r ON u.role_id = r.id
+		WHERE u.id = ?
+	`
 
 	user := &models.User{}
+	var roleID sql.NullString
+	var roleName sql.NullString
+
 	err := r.db.QueryRow(query, id).Scan(
 		&user.ID,
 		&user.Username,
 		&user.Password,
 		&user.Email,
+		&roleID,
+		&roleName,
 		&user.IDJabatan,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
+
 	if err == sql.ErrNoRows {
 		return nil, errors.New("user not found")
 	}
@@ -74,12 +111,19 @@ func (r *UserRepository) FindByID(id string) (*models.User, error) {
 		return nil, err
 	}
 
+	if roleID.Valid {
+		user.RoleID = &roleID.String
+	}
+	if roleName.Valid {
+		user.RoleName = roleName.String
+	}
+
 	return user, nil
 }
 
 func (r *UserRepository) Update(user *models.User) error {
-	query := `UPDATE users SET username = ?, email = ?, id_jabatan = ? WHERE id = ?`
-	_, err := r.db.Exec(query, user.Username, user.Email, user.IDJabatan, user.ID)
+	query := `UPDATE users SET username = ?, email = ?, role_id = ?, id_jabatan = ? WHERE id = ?`
+	_, err := r.db.Exec(query, user.Username, user.Email, user.RoleID, user.IDJabatan, user.ID)
 	return err
 }
 

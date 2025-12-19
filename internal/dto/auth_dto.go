@@ -1,12 +1,14 @@
+// internal/dto/auth_dto.go
 package dto
 
 import "fortyfour-backend/internal/models"
 
 type RegisterRequest struct {
-	Username  string `json:"username"`
-	Password  string `json:"password"`
-	Email     string `json:"email"`
-	IDJabatan string `json:"id_jabatan"`
+	Username  string  `json:"username"`
+	Password  string  `json:"password"`
+	Email     string  `json:"email"`
+	RoleID    *string `json:"role_id,omitempty"`
+	IDJabatan *string `json:"id_jabatan,omitempty"`
 }
 
 type LoginRequest struct {

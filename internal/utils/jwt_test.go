@@ -9,9 +9,10 @@ func TestGenerateToken_Success(t *testing.T) {
 	userID := "1"
 	username := "testuser"
 	secret := "test-secret"
+	roles := "user roles"
 	expiresAt := time.Now().Add(15 * time.Minute)
 
-	token, expiry, err := GenerateAccessToken(userID, username, secret)
+	token, expiry, err := GenerateAccessToken(userID, username, secret, roles)
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
@@ -30,8 +31,9 @@ func TestVerifyToken_Success(t *testing.T) {
 	userID := "1"
 	username := "testuser"
 	secret := "test-secret"
+	roles := "user roles"
 
-	token, _, _ := GenerateAccessToken(userID, username, secret)
+	token, _, _ := GenerateAccessToken(userID, username, secret, roles)
 
 	claims, err := VerifyToken(token, secret)
 
@@ -63,9 +65,10 @@ func TestVerifyToken_WrongSecret(t *testing.T) {
 	userID := "1"
 	username := "testuser"
 	secret := "test-secret"
+	roles := "user roles"
 	wrongSecret := "wrong-secret"
 
-	token, _, _ := GenerateAccessToken(userID, username, secret)
+	token, _, _ := GenerateAccessToken(userID, username, secret, roles)
 
 	_, err := VerifyToken(token, wrongSecret)
 

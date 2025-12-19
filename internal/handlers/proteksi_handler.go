@@ -11,11 +11,15 @@ import (
 )
 
 type ProteksiHandler struct {
-	service *services.ProteksiService
+	service    *services.ProteksiService
+	sseService *services.SSEService
 }
 
-func NewProteksiHandler(service *services.ProteksiService) *ProteksiHandler {
-	return &ProteksiHandler{service: service}
+func NewProteksiHandler(service *services.ProteksiService, sseService *services.SSEService) *ProteksiHandler {
+	return &ProteksiHandler{
+		service:    service,
+		sseService: sseService,
+	}
 }
 
 func (h *ProteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +55,7 @@ func (h *ProteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *ProteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+func (h *ProteksiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
 		utils.RespondError(w, 500, err.Error())
@@ -60,7 +64,7 @@ func (h *ProteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 200, data)
 }
 
-func (h *ProteksiHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
+func (h *ProteksiHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
 		utils.RespondError(w, 404, "Data tidak ditemukan")
@@ -82,6 +86,13 @@ func (h *ProteksiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// SSE Notif Create
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyCreate("proteksi", resp, userID)
+
 	utils.RespondJSON(w, 201, resp)
 }
 
@@ -98,6 +109,13 @@ func (h *ProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 
+	// SSE Notif Update
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyUpdate("proteksi", resp, userID)
+
 	utils.RespondJSON(w, 200, resp)
 }
 
@@ -106,6 +124,13 @@ func (h *ProteksiHandler) handleDelete(w http.ResponseWriter, r *http.Request, i
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
+
+	// SSE Notif Delete
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyDelete("proteksi", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }

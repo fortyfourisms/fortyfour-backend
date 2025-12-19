@@ -11,11 +11,15 @@ import (
 )
 
 type PICHandler struct {
-	service *services.PICService
+	service    *services.PICService
+	sseService *services.SSEService
 }
 
-func NewPICHandler(service *services.PICService) *PICHandler {
-	return &PICHandler{service: service}
+func NewPICHandler(service *services.PICService, sseService *services.SSEService) *PICHandler {
+	return &PICHandler{
+		service:    service,
+		sseService: sseService,
+	}
 }
 
 func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +55,7 @@ func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *PICHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+func (h *PICHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
 		utils.RespondError(w, 500, err.Error())
@@ -60,7 +64,7 @@ func (h *PICHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 200, data)
 }
 
-func (h *PICHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
+func (h *PICHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
 		utils.RespondError(w, 404, "Data tidak ditemukan")
@@ -82,6 +86,13 @@ func (h *PICHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// SSE Notif Create
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyCreate("pic", resp, userID)
+
 	utils.RespondJSON(w, 201, resp)
 }
 
@@ -98,6 +109,13 @@ func (h *PICHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id str
 		return
 	}
 
+	// SSE Notif Update
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyUpdate("pic", resp, userID)
+
 	utils.RespondJSON(w, 200, resp)
 }
 
@@ -106,6 +124,13 @@ func (h *PICHandler) handleDelete(w http.ResponseWriter, r *http.Request, id str
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
+
+	// SSE Notif Delete
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyDelete("perusahaan", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }

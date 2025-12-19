@@ -1,3 +1,4 @@
+// File: internal/handlers/role_handler.go
 package handlers
 
 import (
@@ -9,20 +10,20 @@ import (
 	"strings"
 )
 
-type IdentifikasiHandler struct {
-	service    *services.IdentifikasiService
+type RoleHandler struct {
+	service    *services.RoleService
 	sseService *services.SSEService
 }
 
-func NewIdentifikasiHandler(service *services.IdentifikasiService, sseService *services.SSEService) *IdentifikasiHandler {
-	return &IdentifikasiHandler{
+func NewRoleHandler(service *services.RoleService, sseService *services.SSEService) *RoleHandler {
+	return &RoleHandler{
 		service:    service,
 		sseService: sseService,
 	}
 }
 
-func (h *IdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/api/identifikasi"), "/")
+func (h *RoleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	id := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/api/role"), "/")
 
 	switch r.Method {
 	case http.MethodGet:
@@ -54,8 +55,26 @@ func (h *IdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (h *IdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
-	var req dto.CreateIdentifikasiRequest
+func (h *RoleHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
+	data, err := h.service.GetAll()
+	if err != nil {
+		utils.RespondError(w, 500, err.Error())
+		return
+	}
+	utils.RespondJSON(w, 200, data)
+}
+
+func (h *RoleHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
+	data, err := h.service.GetByID(id)
+	if err != nil {
+		utils.RespondError(w, 404, "Data tidak ditemukan")
+		return
+	}
+	utils.RespondJSON(w, 200, data)
+}
+
+func (h *RoleHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
+	var req dto.CreateRoleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, 400, "Invalid request body")
 		return
@@ -72,33 +91,13 @@ func (h *IdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 	if uid := r.Context().Value("user_id"); uid != nil {
 		userID = uid.(string)
 	}
-	h.sseService.NotifyCreate("identifikasi", resp, userID)
+	h.sseService.NotifyCreate("role", resp, userID)
 
 	utils.RespondJSON(w, 201, resp)
 }
 
-func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
-	data, err := h.service.GetAll()
-	if err != nil {
-		utils.RespondError(w, 500, err.Error())
-		return
-	}
-
-	utils.RespondJSON(w, 200, data)
-}
-
-func (h *IdentifikasiHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
-	data, err := h.service.GetByID(id)
-	if err != nil {
-		utils.RespondError(w, 404, "Data tidak ditemukan")
-		return
-	}
-
-	utils.RespondJSON(w, 200, data)
-}
-
-func (h *IdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
-	var req dto.UpdateIdentifikasiRequest
+func (h *RoleHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
+	var req dto.UpdateRoleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, 400, "Invalid request body")
 		return
@@ -115,12 +114,12 @@ func (h *IdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 	if uid := r.Context().Value("user_id"); uid != nil {
 		userID = uid.(string)
 	}
-	h.sseService.NotifyUpdate("identifikasi", resp, userID)
+	h.sseService.NotifyUpdate("role", resp, userID)
 
 	utils.RespondJSON(w, 200, resp)
 }
 
-func (h *IdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+func (h *RoleHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())
 		return
@@ -131,7 +130,7 @@ func (h *IdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http.Reques
 	if uid := r.Context().Value("user_id"); uid != nil {
 		userID = uid.(string)
 	}
-	h.sseService.NotifyDelete("identifikasi", id, userID)
+	h.sseService.NotifyDelete("role", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }
