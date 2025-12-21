@@ -11,11 +11,15 @@ import (
 )
 
 type DeteksiHandler struct {
-	service *services.DeteksiService
+	service    *services.DeteksiService
+	sseService *services.SSEService
 }
 
-func NewDeteksiHandler(service *services.DeteksiService) *DeteksiHandler {
-	return &DeteksiHandler{service: service}
+func NewDeteksiHandler(service *services.DeteksiService, sseService *services.SSEService) *DeteksiHandler {
+	return &DeteksiHandler{
+		service:    service,
+		sseService: sseService,
+	}
 }
 
 func (h *DeteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +74,6 @@ func (h *DeteksiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 
 // GetDeteksiByID godoc
 // @Summary      Ambil deteksi berdasarkan ID
-// @Description  Mengambil satu data deteksi
 // @Tags         Deteksi
 // @Produce      json
 // @Param        id   path      string  true  "Deteksi ID"
@@ -109,6 +112,13 @@ func (h *DeteksiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// SSE Notif Create
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyCreate("deteksi", resp, userID)
+
 	utils.RespondJSON(w, 201, resp)
 }
 
@@ -136,6 +146,13 @@ func (h *DeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id
 		return
 	}
 
+	// SSE Notif Update
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyUpdate("deteksi", resp, userID)
+
 	utils.RespondJSON(w, 200, resp)
 }
 
@@ -148,11 +165,18 @@ func (h *DeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id
 // @Success      200  {object} dto.MessageResponse
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/deteksi/{id} [delete]
-func (h *DeteksiHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *DeteksiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
+
+	// SSE Notif Delete
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyDelete("deteksi", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }

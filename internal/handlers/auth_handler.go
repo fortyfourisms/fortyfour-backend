@@ -42,7 +42,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, tokens, err := h.authService.Register(req.Username, req.Password, req.Email, req.IDJabatan)
+	user, tokens, err := h.authService.Register(req.Username, req.Password, req.Email, req.RoleID, req.IDJabatan)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return

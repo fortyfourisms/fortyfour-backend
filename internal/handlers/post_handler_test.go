@@ -15,7 +15,7 @@ import (
 func TestPostHandler_CreatePost_Success(t *testing.T) {
 	repo := testhelpers.NewMockPostRepository()
 	service := services.NewPostService(repo)
-	handler := NewPostHandler(service)
+	handler := NewPostHandler(service, services.NewSSEService())
 
 	reqBody := map[string]string{
 		"title":   "Test Post",
@@ -45,7 +45,7 @@ func TestPostHandler_CreatePost_Success(t *testing.T) {
 func TestPostHandler_GetPosts_Success(t *testing.T) {
 	repo := testhelpers.NewMockPostRepository()
 	service := services.NewPostService(repo)
-	handler := NewPostHandler(service)
+	handler := NewPostHandler(service, services.NewSSEService())
 
 	service.CreatePost("Post 1", "Content 1", "1")
 	service.CreatePost("Post 2", "Content 2", "1")
@@ -70,7 +70,7 @@ func TestPostHandler_GetPosts_Success(t *testing.T) {
 func TestPostHandler_UpdatePost_Success(t *testing.T) {
 	repo := testhelpers.NewMockPostRepository()
 	service := services.NewPostService(repo)
-	handler := NewPostHandler(service)
+	handler := NewPostHandler(service, services.NewSSEService())
 
 	created, _ := service.CreatePost("Original", "Original Content", "1")
 

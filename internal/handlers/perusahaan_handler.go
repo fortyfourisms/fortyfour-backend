@@ -33,12 +33,14 @@ const (
 type PerusahaanHandler struct {
 	service    *services.PerusahaanService
 	uploadPath string
+	sseService *services.SSEService
 }
 
-func NewPerusahaanHandler(service *services.PerusahaanService, uploadPath string) *PerusahaanHandler {
+func NewPerusahaanHandler(service *services.PerusahaanService, uploadPath string, sseService *services.SSEService) *PerusahaanHandler {
 	return &PerusahaanHandler{
 		service:    service,
 		uploadPath: uploadPath,
+		sseService: sseService,
 	}
 }
 
@@ -142,6 +144,13 @@ func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// SSE Notif Create
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyCreate("perusahaan", resp, userID)
+
 	utils.RespondJSON(w, 201, resp)
 }
 
@@ -180,6 +189,13 @@ func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
+	// SSE Notif Update
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyUpdate("perusahaan", resp, userID)
+
 	utils.RespondJSON(w, 200, resp)
 }
 
@@ -192,7 +208,7 @@ func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request,
 // @Success      200  {object} dto.MessageResponse
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/perusahaan/{id} [delete]
-func (h *PerusahaanHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *PerusahaanHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	// Hapus file photo sebelum delete record
 	h.deleteOldPhoto(id)
 
@@ -200,6 +216,13 @@ func (h *PerusahaanHandler) handleDelete(w http.ResponseWriter, _ *http.Request,
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
+
+	// SSE Notif Delete
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyDelete("perusahaan", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }

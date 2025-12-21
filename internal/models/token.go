@@ -12,4 +12,5 @@ type RefreshTokenData struct {
 	UserID    string    `json:"user_id"`
 	Username  string    `json:"username"`
 	CreatedAt time.Time `json:"created_at"`
+	Role      string    `json:"role"`
 }
