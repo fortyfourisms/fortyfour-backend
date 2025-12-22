@@ -1804,6 +1804,186 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/sdm_csirt": {
+            "get": {
+                "description": "Mengambil seluruh data sdm csirt",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SDM"
+                ],
+                "summary": "List semua sdm csirt",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.SdmCsirtResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Membuat record sdm csirt",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SDM"
+                ],
+                "summary": "Tambah sdm csirt baru",
+                "parameters": [
+                    {
+                        "description": "Data sdm csirt",
+                        "name": "sdm",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateSdmCsirtRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SdmCsirtResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sdm_csirt/{id}": {
+            "get": {
+                "description": "Mengambil satu data sdm csirt",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SDM"
+                ],
+                "summary": "Ambil sdm csirt berdasarkan ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SDM ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SdmCsirtResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Mengubah data sdm csirt berdasarkan ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SDM"
+                ],
+                "summary": "Update sdm csirt",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SDM ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data update",
+                        "name": "sdm",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateSdmCsirtRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SdmCsirtResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Menghapus data sdm csirt berdasarkan ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SDM"
+                ],
+                "summary": "Hapus sdm csirt",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SDM ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -2010,6 +2190,43 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 50,
                     "minLength": 3
+                }
+            }
+        },
+        "dto.CreateSdmCsirtRequest": {
+            "type": "object",
+            "properties": {
+                "id_csirt": {
+                    "type": "string"
+                },
+                "jabatan_csirt": {
+                    "type": "string"
+                },
+                "jabatan_perusahaan": {
+                    "type": "string"
+                },
+                "nama_personel": {
+                    "type": "string"
+                },
+                "sertifikasi": {
+                    "type": "string"
+                },
+                "skill": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CsirtMiniResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nama_csirt": {
+                    "type": "string"
+                },
+                "web_csirt": {
+                    "type": "string"
                 }
             }
         },
@@ -2309,6 +2526,38 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.SdmCsirtResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "csirt": {
+                    "$ref": "#/definitions/dto.CsirtMiniResponse"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "jabatan_csirt": {
+                    "type": "string"
+                },
+                "jabatan_perusahaan": {
+                    "type": "string"
+                },
+                "nama_personel": {
+                    "type": "string"
+                },
+                "sertifikasi": {
+                    "type": "string"
+                },
+                "skill": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.TokenPair": {
             "type": "object",
             "properties": {
@@ -2509,6 +2758,26 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 50,
                     "minLength": 3
+                }
+            }
+        },
+        "dto.UpdateSdmCsirtRequest": {
+            "type": "object",
+            "properties": {
+                "jabatan_csirt": {
+                    "type": "string"
+                },
+                "jabatan_perusahaan": {
+                    "type": "string"
+                },
+                "nama_personel": {
+                    "type": "string"
+                },
+                "sertifikasi": {
+                    "type": "string"
+                },
+                "skill": {
+                    "type": "string"
                 }
             }
         },

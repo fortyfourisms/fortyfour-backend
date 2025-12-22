@@ -134,6 +134,30 @@ definitions:
     required:
     - name
     type: object
+  dto.CreateSdmCsirtRequest:
+    properties:
+      id_csirt:
+        type: string
+      jabatan_csirt:
+        type: string
+      jabatan_perusahaan:
+        type: string
+      nama_personel:
+        type: string
+      sertifikasi:
+        type: string
+      skill:
+        type: string
+    type: object
+  dto.CsirtMiniResponse:
+    properties:
+      id:
+        type: string
+      nama_csirt:
+        type: string
+      web_csirt:
+        type: string
+    type: object
   dto.DeteksiResponse:
     properties:
       id:
@@ -327,6 +351,27 @@ definitions:
       updated_at:
         type: string
     type: object
+  dto.SdmCsirtResponse:
+    properties:
+      created_at:
+        type: string
+      csirt:
+        $ref: '#/definitions/dto.CsirtMiniResponse'
+      id:
+        type: string
+      jabatan_csirt:
+        type: string
+      jabatan_perusahaan:
+        type: string
+      nama_personel:
+        type: string
+      sertifikasi:
+        type: string
+      skill:
+        type: string
+      updated_at:
+        type: string
+    type: object
   dto.TokenPair:
     properties:
       access_token:
@@ -459,6 +504,19 @@ definitions:
       name:
         maxLength: 50
         minLength: 3
+        type: string
+    type: object
+  dto.UpdateSdmCsirtRequest:
+    properties:
+      jabatan_csirt:
+        type: string
+      jabatan_perusahaan:
+        type: string
+      nama_personel:
+        type: string
+      sertifikasi:
+        type: string
+      skill:
         type: string
     type: object
   models.User:
@@ -1664,4 +1722,123 @@ paths:
       summary: Update role
       tags:
       - Role
+  /api/sdm_csirt:
+    get:
+      description: Mengambil seluruh data sdm csirt
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.SdmCsirtResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua sdm csirt
+      tags:
+      - SDM
+    post:
+      consumes:
+      - application/json
+      description: Membuat record sdm csirt
+      parameters:
+      - description: Data sdm csirt
+        in: body
+        name: sdm
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSdmCsirtRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.SdmCsirtResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah sdm csirt baru
+      tags:
+      - SDM
+  /api/sdm_csirt/{id}:
+    delete:
+      description: Menghapus data sdm csirt berdasarkan ID
+      parameters:
+      - description: SDM ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus sdm csirt
+      tags:
+      - SDM
+    get:
+      description: Mengambil satu data sdm csirt
+      parameters:
+      - description: SDM ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SdmCsirtResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil sdm csirt berdasarkan ID
+      tags:
+      - SDM
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data sdm csirt berdasarkan ID
+      parameters:
+      - description: SDM ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: sdm
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSdmCsirtRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SdmCsirtResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update sdm csirt
+      tags:
+      - SDM
 swagger: "2.0"
