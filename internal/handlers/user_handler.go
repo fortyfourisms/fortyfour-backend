@@ -36,7 +36,6 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/api/users")
 	path = strings.TrimPrefix(path, "/")
 
-	// Check for special endpoints
 	if strings.HasSuffix(path, "/password") {
 		h.handleUpdatePassword(w, r)
 		return
@@ -50,7 +49,6 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Regular CRUD
 	id := path
 	switch r.Method {
 	case http.MethodGet:
