@@ -85,10 +85,12 @@ func main() {
 	csirtService := services.NewCsirtService(csirtRepo)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo)
 	seCsirtService := services.NewSeCsirtService(seCsirtRepo)
+	userService := services.NewUserService(userRepo, "./uploads")
 	roleService := services.NewRoleService(roleRepo)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
+	userHandler := handlers.NewUserHandler(userService, "./uploads", sseService)
 	postHandler := handlers.NewPostHandler(postService, sseService)
 	uploadPath := "./uploads"
 	os.MkdirAll(uploadPath, os.ModePerm)
@@ -121,6 +123,7 @@ func main() {
 	// Setup routes
 	mux := routes.InitRouter(
 		authHandler,
+		userHandler,
 		postHandler,
 		perusahaanHandler,
 		picHandler,
