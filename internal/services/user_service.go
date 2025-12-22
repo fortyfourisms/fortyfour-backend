@@ -4,11 +4,13 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/repository"
+	"fortyfour-backend/internal/validator"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -51,13 +53,28 @@ func (s *UserService) GetByID(id string) (*dto.UserResponse, error) {
 }
 
 func (s *UserService) Create(req dto.CreateUserRequest) (*dto.UserResponse, error) {
+	// Validasi email format
+	if !validator.ValidateEmail(req.Email) {
+		return nil, errors.New("email tidak valid")
+	}
+
+	// Validasi username format
+	if !validator.ValidateUsername(req.Username) {
+		return nil, errors.New("username harus 3-50 karakter")
+	}
+
+	// Validasi password minimal 6 karakter
+	if len(strings.TrimSpace(req.Password)) < 6 {
+		return nil, errors.New("password minimal 6 karakter")
+	}
+
 	// Validate username exists
 	exists, err := s.repo.UsernameExists(req.Username, nil)
 	if err != nil {
 		return nil, err
 	}
 	if exists {
-		return nil, errors.New("username already exists")
+		return nil, errors.New("username sudah digunakan")
 	}
 
 	// Validate email exists
@@ -66,7 +83,7 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*dto.UserResponse, erro
 		return nil, err
 	}
 	if exists {
-		return nil, errors.New("email already exists")
+		return nil, errors.New("email sudah digunakan")
 	}
 
 	// Hash password
@@ -102,26 +119,44 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 
 	// Update username if provided
 	if req.Username != nil {
-		exists, err := s.repo.UsernameExists(*req.Username, &id)
+		trimmed := strings.TrimSpace(*req.Username)
+		if trimmed == "" {
+			return nil, errors.New("username tidak boleh kosong")
+		}
+
+		if !validator.ValidateUsername(trimmed) {
+			return nil, errors.New("username harus 3-50 karakter")
+		}
+
+		exists, err := s.repo.UsernameExists(trimmed, &id)
 		if err != nil {
 			return nil, err
 		}
 		if exists {
-			return nil, errors.New("username already exists")
+			return nil, errors.New("username sudah digunakan")
 		}
-		user.Username = *req.Username
+		user.Username = trimmed
 	}
 
 	// Update email if provided
 	if req.Email != nil {
-		exists, err := s.repo.EmailExists(*req.Email, &id)
+		trimmed := strings.TrimSpace(*req.Email)
+		if trimmed == "" {
+			return nil, errors.New("email tidak boleh kosong")
+		}
+
+		if !validator.ValidateEmail(trimmed) {
+			return nil, errors.New("email tidak valid")
+		}
+
+		exists, err := s.repo.EmailExists(trimmed, &id)
 		if err != nil {
 			return nil, err
 		}
 		if exists {
-			return nil, errors.New("email already exists")
+			return nil, errors.New("email sudah digunakan")
 		}
-		user.Email = *req.Email
+		user.Email = trimmed
 	}
 
 	// Update role and jabatan
@@ -147,6 +182,11 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 }
 
 func (s *UserService) UpdatePassword(id string, req dto.UpdateUserPasswordRequest) error {
+	// Validasi password baru
+	if len(strings.TrimSpace(req.NewPassword)) < 6 {
+		return errors.New("password baru minimal 6 karakter")
+	}
+
 	// Get current password
 	currentPassword, err := s.repo.GetPasswordByID(id)
 	if err != nil {
@@ -155,7 +195,7 @@ func (s *UserService) UpdatePassword(id string, req dto.UpdateUserPasswordReques
 
 	// Verify old password
 	if err := bcrypt.CompareHashAndPassword([]byte(currentPassword), []byte(req.OldPassword)); err != nil {
-		return errors.New("old password is incorrect")
+		return errors.New("password lama tidak sesuai")
 	}
 
 	// Hash new password

@@ -13,6 +13,7 @@ import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
+	"fortyfour-backend/internal/validator"
 
 	"github.com/google/uuid"
 )
@@ -51,7 +52,6 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Regular CRUD
 	id := path
-
 	switch r.Method {
 	case http.MethodGet:
 		if id == "" {
@@ -82,7 +82,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *UserHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+func (h *UserHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
 		utils.RespondError(w, 500, err.Error())
@@ -91,7 +91,7 @@ func (h *UserHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 200, data)
 }
 
-func (h *UserHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
+func (h *UserHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
 		utils.RespondError(w, 404, "User tidak ditemukan")
@@ -104,6 +104,17 @@ func (h *UserHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, 400, "Invalid request body")
+		return
+	}
+
+	// Trim spaces untuk mencegah string kosong
+	req.Username = strings.TrimSpace(req.Username)
+	req.Email = strings.TrimSpace(req.Email)
+	req.Password = strings.TrimSpace(req.Password)
+
+	// Validasi menggunakan validator
+	if err := validator.Validate(req); err != nil {
+		utils.RespondError(w, 400, err.Error())
 		return
 	}
 
@@ -131,6 +142,22 @@ func (h *UserHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 	var req dto.UpdateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, 400, "Invalid request body")
+		return
+	}
+
+	// Trim spaces jika field diisi
+	if req.Username != nil {
+		trimmed := strings.TrimSpace(*req.Username)
+		req.Username = &trimmed
+	}
+	if req.Email != nil {
+		trimmed := strings.TrimSpace(*req.Email)
+		req.Email = &trimmed
+	}
+
+	// Validasi menggunakan validator
+	if err := validator.Validate(req); err != nil {
+		utils.RespondError(w, 400, err.Error())
 		return
 	}
 
@@ -171,6 +198,16 @@ func (h *UserHandler) handleUpdatePassword(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Trim spaces
+	req.OldPassword = strings.TrimSpace(req.OldPassword)
+	req.NewPassword = strings.TrimSpace(req.NewPassword)
+
+	// Validasi
+	if err := validator.Validate(req); err != nil {
+		utils.RespondError(w, 400, err.Error())
+		return
+	}
+
 	if err := h.service.UpdatePassword(id, req); err != nil {
 		utils.RespondError(w, 400, err.Error())
 		return
@@ -190,6 +227,7 @@ func (h *UserHandler) handleUpdateProfilePhoto(w http.ResponseWriter, r *http.Re
 
 	currentUserID := h.getUserID(r)
 	isAdmin := h.isAdmin(r)
+
 	if !isAdmin && currentUserID != id {
 		utils.RespondError(w, 403, "Anda hanya bisa update foto profile sendiri")
 		return
@@ -251,6 +289,7 @@ func (h *UserHandler) handleUpdateBanner(w http.ResponseWriter, r *http.Request)
 
 	currentUserID := h.getUserID(r)
 	isAdmin := h.isAdmin(r)
+
 	if !isAdmin && currentUserID != id {
 		utils.RespondError(w, 403, "Anda hanya bisa update banner sendiri")
 		return
