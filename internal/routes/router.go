@@ -6,6 +6,8 @@ import (
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/utils"
 	"net/http"
+		httpSwagger "github.com/swaggo/http-swagger"
+	_ "fortyfour-backend/docs"
 	"time"
 )
 
@@ -122,6 +124,9 @@ func InitRouter(
 	// Route SE_CSIRT
 	mux.HandleFunc("/api/se_csirt", authM.Authenticate(utils.AdaptHandler(seCsirtH)))
 	mux.HandleFunc("/api/se_csirt/", authM.Authenticate(utils.AdaptHandler(seCsirtH)))
+
+	// Swagger UI
+	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
 	return mux
 }

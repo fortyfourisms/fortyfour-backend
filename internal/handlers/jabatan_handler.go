@@ -55,6 +55,14 @@ func (h *JabatanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetAllJabatan godoc
+// @Summary      List semua jabatan
+// @Description  Mengambil seluruh data jabatan
+// @Tags         Jabatan
+// @Produce      json
+// @Success      200  {array}  dto.JabatanResponse
+// @Failure      500  {object} dto.ErrorResponse
+// @Router       /api/jabatan [get]
 func (h *JabatanHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -64,6 +72,15 @@ func (h *JabatanHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	utils.RespondJSON(w, 200, data)
 }
 
+// GetJabatanByID godoc
+// @Summary      Ambil jabatan berdasarkan ID
+// @Description  Mengambil satu data jabatan
+// @Tags         Jabatan
+// @Produce      json
+// @Param        id   path      string  true  "Jabatan ID"
+// @Success      200  {object} dto.JabatanResponse
+// @Failure      404  {object} dto.ErrorResponse
+// @Router       /api/jabatan/{id} [get]
 func (h *JabatanHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -73,6 +90,16 @@ func (h *JabatanHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, i
 	utils.RespondJSON(w, 200, data)
 }
 
+// CreateJabatan godoc
+// @Summary      Tambah jabatan baru
+// @Description  Membuat record jabatan
+// @Tags         Jabatan
+// @Accept       json
+// @Produce      json
+// @Param        jabatan body dto.CreateJabatanRequest true "Data jabatan"
+// @Success      201  {object} dto.JabatanResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/jabatan [post]
 func (h *JabatanHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateJabatanRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -96,6 +123,17 @@ func (h *JabatanHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 201, resp)
 }
 
+// UpdateJabatan godoc
+// @Summary      Update jabatan
+// @Description  Mengubah data jabatan berdasarkan ID
+// @Tags         Jabatan
+// @Accept       json
+// @Produce      json
+// @Param        id      path      string  true  "Jabatan ID"
+// @Param        jabatan body      dto.UpdateJabatanRequest true "Data update"
+// @Success      200  {object} dto.JabatanResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/jabatan/{id} [put]
 func (h *JabatanHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateJabatanRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -119,6 +157,15 @@ func (h *JabatanHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id
 	utils.RespondJSON(w, 200, resp)
 }
 
+// DeleteJabatan godoc
+// @Summary      Hapus jabatan
+// @Description  Menghapus data jabatan berdasarkan ID
+// @Tags         Jabatan
+// @Produce      json
+// @Param        id  path  string  true  "Jabatan ID"
+// @Success      200  {object} dto.MessageResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/jabatan/{id} [delete]
 func (h *JabatanHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())

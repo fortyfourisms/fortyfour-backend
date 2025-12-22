@@ -24,6 +24,16 @@ func NewAuthHandler(authService *services.AuthService, tokenService *services.To
 	}
 }
 
+// Register godoc
+// @Summary      Register new user
+// @Description  Create account and return JWT tokens
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        register body dto.RegisterRequest true "Registration payload"
+// @Success      201  {object} dto.AuthResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -61,6 +71,17 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Login godoc
+// @Summary      Login user
+// @Description  Authenticate user and return JWT tokens
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        login body dto.LoginRequest true "Login payload"
+// @Success      200  {object} dto.AuthResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Failure      401  {object} dto.ErrorResponse
+// @Router       /api/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -97,6 +118,17 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// RefreshToken godoc
+// @Summary      Refresh access token
+// @Description  Generate new access & refresh token pair
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        refresh body dto.RefreshTokenRequest true "Refresh token payload"
+// @Success      200  {object} dto.TokenPair
+// @Failure      400  {object} dto.ErrorResponse
+// @Failure      401  {object} dto.ErrorResponse
+// @Router       /api/refresh [post]
 func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -131,6 +163,16 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// Logout godoc
+// @Summary      Logout user
+// @Description  Revoke refresh token
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        logout body dto.LogoutRequest true "Logout payload"
+// @Success      200  {object} dto.MessageResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/logout [post]
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")

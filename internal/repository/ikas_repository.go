@@ -2,6 +2,8 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
+
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 )
@@ -41,10 +43,26 @@ func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string) error {
 
 func (r *IkasRepository) GetAll() ([]models.Ikas, error) {
 	rows, err := r.db.Query(`
-		SELECT id, id_perusahaan, tanggal, responden, telepon, jabatan,
-       	nilai_kematangan, target_nilai, id_identifikasi, id_proteksi,
-       	id_deteksi, id_gulih
-		FROM ikas`)
+			SELECT
+				i.id,
+				i.tanggal,
+				i.responden,
+				i.telepon,
+				i.jabatan,
+				i.nilai_kematangan,
+				i.target_nilai,
+				per.nama,
+				idn.nilai_identifikasi,
+				p.nilai_proteksi,
+				d.nilai_deteksi,
+				g.nilai_gulih
+
+			FROM ikas i
+			JOIN perusahaan per	  ON per.id = i.id_perusahaan
+			JOIN identifikasi idn ON idn.id = i.id_identifikasi
+			JOIN proteksi p       ON p.id = i.id_proteksi
+			JOIN deteksi d        ON d.id = i.id_deteksi
+			JOIN gulih g          ON g.id = i.id_gulih`)
 	if err != nil {
 		return nil, err
 	}
@@ -80,11 +98,27 @@ func (r *IkasRepository) GetAll() ([]models.Ikas, error) {
 
 func (r *IkasRepository) GetByID(id string) (*models.Ikas, error) {
 	rows := r.db.QueryRow(`
-		SELECT id, id_perusahaan, tanggal, responden, telepon, jabatan,
-      	nilai_kematangan, target_nilai, id_identifikasi, id_proteksi,
-       	id_deteksi, id_gulih
-		FROM ikas
-		WHERE id = ?`, id)
+			SELECT
+				i.id,
+				i.tanggal,
+				i.responden,
+				i.telepon,
+				i.jabatan,
+				i.nilai_kematangan,
+				i.target_nilai,
+				per.nama,
+				idn.nilai_identifikasi,
+				p.nilai_proteksi,
+				d.nilai_deteksi,
+				g.nilai_gulih
+
+			FROM ikas i
+			JOIN perusahaan per	  ON per.id = i.id_perusahaan
+			JOIN identifikasi idn ON idn.id = i.id_identifikasi
+			JOIN proteksi p       ON p.id = i.id_proteksi
+			JOIN deteksi d        ON d.id = i.id_deteksi
+			JOIN gulih g          ON g.id = i.id_gulih
+			WHERE i.id = ?`, id)
 
 	var i models.Ikas
 	err := rows.Scan(
@@ -136,13 +170,20 @@ func (r *IkasRepository) Update(id string, i models.Ikas) error {
 		i.IDProteksi,
 		i.IDDeteksi,
 		i.IDGulih,
-		i.ID,
 	)
 
 	return err
 }
 
 func (r *IkasRepository) Delete(id string) error {
-	_, err := r.db.Exec(`DELETE FROM ikas WHERE id=?`, id)
-	return err
+		res, err := r.db.Exec(`DELETE FROM ikas WHERE id=?`, id)
+		if err != nil {
+			return err
+		}
+
+		rows, _ := res.RowsAffected()
+		if rows == 0 {
+			return errors.New("data tidak ditemukan")
+		}
+	return nil
 }

@@ -1,0 +1,2018 @@
+definitions:
+  dto.AuthResponse:
+    properties:
+      access_token:
+        type: string
+      expires_at:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
+  dto.CreateDeteksiRequest:
+    properties:
+      nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+    type: object
+  dto.CreateGulihRequest:
+    properties:
+      nilai_gulih:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+    type: object
+  dto.CreateIdentifikasiRequest:
+    properties:
+      nilai_identifikasi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+    type: object
+  dto.CreateIkasRequest:
+    properties:
+      id_deteksi:
+        type: string
+      id_gulih:
+        type: string
+      id_identifikasi:
+        type: string
+      id_perusahaan:
+        type: string
+      id_proteksi:
+        type: string
+      jabatan:
+        type: string
+      nilai_kematangan:
+        type: number
+      responden:
+        type: string
+      tanggal:
+        type: string
+      target_nilai:
+        type: number
+      telepon:
+        type: string
+    type: object
+  dto.CreateJabatanRequest:
+    properties:
+      nama_jabatan:
+        type: string
+    type: object
+  dto.CreatePICRequest:
+    properties:
+      id_perusahaan:
+        type: string
+      nama:
+        type: string
+      telepon:
+        type: string
+    type: object
+  dto.CreatePerusahaanRequest:
+    properties:
+      alamat:
+        type: string
+      email:
+        type: string
+      nama_perusahaan:
+        type: string
+      photo:
+        type: string
+      sektor:
+        type: string
+      telepon:
+        type: string
+      website:
+        type: string
+    type: object
+  dto.CreateProteksiRequest:
+    properties:
+      nilai_proteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      nilai_subdomain6:
+        type: number
+    type: object
+  dto.CreateRoleRequest:
+    properties:
+      description:
+        maxLength: 255
+        type: string
+      name:
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - name
+    type: object
+  dto.CreateSdmCsirtRequest:
+    properties:
+      id_csirt:
+        type: string
+      jabatan_csirt:
+        type: string
+      jabatan_perusahaan:
+        type: string
+      nama_personel:
+        type: string
+      sertifikasi:
+        type: string
+      skill:
+        type: string
+    type: object
+  dto.CreateSeCsirtRequest:
+    properties:
+      as_number_se:
+        type: string
+      fitur_se:
+        type: string
+      id_csirt:
+        type: string
+      ip_se:
+        type: string
+      kategori_se:
+        type: string
+      nama_se:
+        type: string
+      pengelola_se:
+        type: string
+    type: object
+  dto.CsirtMiniResponse:
+    properties:
+      id:
+        type: string
+      nama_csirt:
+        type: string
+      web_csirt:
+        type: string
+    type: object
+  dto.DeteksiResponse:
+    properties:
+      id:
+        type: string
+      nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+    type: object
+  dto.ErrorResponse:
+    properties:
+      message:
+        example: invalid credentials
+        type: string
+    type: object
+  dto.GulihResponse:
+    properties:
+      id:
+        type: string
+      nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+    type: object
+  dto.IdentifikasiResponse:
+    properties:
+      id:
+        type: string
+      nilai_identiifasi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+    type: object
+  dto.IkasResponse:
+    properties:
+      id_deteksi:
+        type: string
+      id_gulih:
+        type: string
+      id_identifikasi:
+        type: string
+      id_perusahaan:
+        type: string
+      id_proteksi:
+        type: string
+      jabatan:
+        type: string
+      nilai_kematangan:
+        type: number
+      responden:
+        type: string
+      tanggal:
+        type: string
+      target_nilai:
+        type: number
+      telepon:
+        type: string
+    type: object
+  dto.JabatanResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      nama_jabatan:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.LogoutRequest:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  dto.MessageResponse:
+    properties:
+      message:
+        example: Logged out successfully
+        type: string
+    type: object
+  dto.PICResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      id_perusahaan:
+        type: string
+      nama:
+        type: string
+      telepon:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.PerusahaanResponse:
+    properties:
+      alamat:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      nama_perusahaan:
+        type: string
+      photo:
+        type: string
+      sektor:
+        type: string
+      telepon:
+        type: string
+      updated_at:
+        type: string
+      website:
+        type: string
+    type: object
+  dto.ProteksiResponse:
+    properties:
+      id:
+        type: string
+      nilai_proteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      nilai_subdomain6:
+        type: number
+    type: object
+  dto.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      id_jabatan:
+        type: string
+      password:
+        type: string
+      role_id:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.RoleResponse:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.SdmCsirtResponse:
+    properties:
+      created_at:
+        type: string
+      csirt:
+        $ref: '#/definitions/dto.CsirtMiniResponse'
+      id:
+        type: string
+      jabatan_csirt:
+        type: string
+      jabatan_perusahaan:
+        type: string
+      nama_personel:
+        type: string
+      sertifikasi:
+        type: string
+      skill:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.SeCsirtResponse:
+    properties:
+      as_number_se:
+        type: string
+      created_at:
+        type: string
+      fitur_se:
+        type: string
+      id:
+        type: string
+      id_csirt:
+        type: string
+      ip_se:
+        type: string
+      kategori_se:
+        type: string
+      nama_se:
+        type: string
+      pengelola_se:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.TokenPair:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+      expires_at:
+        example: "2025-12-15T15:04:05+07:00"
+        type: string
+      refresh_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        type: string
+    type: object
+  dto.UpdateDeteksiRequest:
+    properties:
+      nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+    type: object
+  dto.UpdateGulihRequest:
+    properties:
+      nilai_gulih:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+    type: object
+  dto.UpdateIdentifikasiRequest:
+    properties:
+      nilai_identifikasi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+    type: object
+  dto.UpdateIkasRequest:
+    properties:
+      id_deteksi:
+        type: string
+      id_gulih:
+        type: string
+      id_identifikasi:
+        type: string
+      id_perusahaan:
+        type: string
+      id_proteksi:
+        type: string
+      jabatan:
+        type: string
+      nilai_kematangan:
+        type: number
+      responden:
+        type: string
+      tanggal:
+        type: string
+      target_nilai:
+        type: number
+      telepon:
+        type: string
+    type: object
+  dto.UpdateJabatanRequest:
+    properties:
+      nama_jabatan:
+        type: string
+    type: object
+  dto.UpdatePICRequest:
+    properties:
+      id_perusahaan:
+        type: string
+      nama:
+        type: string
+      telepon:
+        type: string
+    type: object
+  dto.UpdatePerusahaanRequest:
+    properties:
+      alamat:
+        type: string
+      email:
+        type: string
+      nama_perusahaan:
+        type: string
+      photo:
+        type: string
+      sektor:
+        type: string
+      telepon:
+        type: string
+      website:
+        type: string
+    type: object
+  dto.UpdateProteksiRequest:
+    properties:
+      nilai_proteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      nilai_subdomain6:
+        type: number
+    type: object
+  dto.UpdateRoleRequest:
+    properties:
+      description:
+        maxLength: 255
+        type: string
+      name:
+        maxLength: 50
+        minLength: 3
+        type: string
+    type: object
+  dto.UpdateSdmCsirtRequest:
+    properties:
+      jabatan_csirt:
+        type: string
+      jabatan_perusahaan:
+        type: string
+      nama_personel:
+        type: string
+      sertifikasi:
+        type: string
+      skill:
+        type: string
+    type: object
+  dto.UpdateSeCsirtRequest:
+    properties:
+      as_number_se:
+        type: string
+      fitur_se:
+        type: string
+      ip_se:
+        type: string
+      kategori_se:
+        type: string
+      nama_se:
+        type: string
+      pengelola_se:
+        type: string
+    type: object
+  models.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      id_jabatan:
+        type: string
+      role_id:
+        type: string
+      role_name:
+        type: string
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/deteksi:
+    get:
+      description: Mengambil seluruh data deteksi
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.DeteksiResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua deteksi
+      tags:
+      - Deteksi
+    post:
+      consumes:
+      - application/json
+      description: Membuat record deteksi
+      parameters:
+      - description: Data deteksi
+        in: body
+        name: deteksi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateDeteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.DeteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah deteksi baru
+      tags:
+      - Deteksi
+  /api/deteksi/{id}:
+    delete:
+      description: Menghapus data deteksi berdasarkan ID
+      parameters:
+      - description: Deteksi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus deteksi
+      tags:
+      - Deteksi
+    get:
+      parameters:
+      - description: Deteksi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.DeteksiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil deteksi berdasarkan ID
+      tags:
+      - Deteksi
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data deteksi berdasarkan ID
+      parameters:
+      - description: Deteksi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: deteksi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateDeteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.DeteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update deteksi
+      tags:
+      - Deteksi
+  /api/gulih:
+    get:
+      description: Mengambil seluruh data gulih
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.GulihResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua gulih
+      tags:
+      - Gulih
+    post:
+      consumes:
+      - application/json
+      description: Membuat record gulih
+      parameters:
+      - description: Data gulih
+        in: body
+        name: deteksi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateGulihRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.GulihResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah gulih baru
+      tags:
+      - Gulih
+  /api/gulih/{id}:
+    delete:
+      description: Menghapus data gulih berdasarkan ID
+      parameters:
+      - description: Gulih ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus gulih
+      tags:
+      - Gulih
+    get:
+      parameters:
+      - description: Gulih ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.GulihResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil gulih berdasarkan ID
+      tags:
+      - Gulih
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data gulih berdasarkan ID
+      parameters:
+      - description: Gulih ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: deteksi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateGulihRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.DeteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update gulih
+      tags:
+      - Gulih
+  /api/identifikasi:
+    get:
+      description: Mengambil seluruh data identifikasi
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.IdentifikasiResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua identifikasi
+      tags:
+      - Identifikasi
+    post:
+      consumes:
+      - application/json
+      description: Membuat record identifikasi
+      parameters:
+      - description: Data identifikasi
+        in: body
+        name: identifikasi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateIdentifikasiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.IdentifikasiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah identifikasi baru
+      tags:
+      - Identifikasi
+  /api/identifikasi/{id}:
+    delete:
+      description: Menghapus data identifikasi berdasarkan ID
+      parameters:
+      - description: Identifikasi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus identifikasi
+      tags:
+      - Identifikasi
+    get:
+      description: Mengambil satu data identifikasi
+      parameters:
+      - description: Identifikasi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.IdentifikasiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil identifikasi berdasarkan ID
+      tags:
+      - Identifikasi
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data identifikasi berdasarkan ID
+      parameters:
+      - description: Identifikasi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: identifikasi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateIdentifikasiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.IdentifikasiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update identifikasi
+      tags:
+      - Identifikasi
+  /api/ikas:
+    get:
+      description: Mengambil seluruh data deteksi
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.IkasResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua ikas
+      tags:
+      - Ikas
+    post:
+      consumes:
+      - application/json
+      description: Membuat record ikas
+      parameters:
+      - description: Data ikas
+        in: body
+        name: ikas
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateIkasRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.IkasResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah ikas baru
+      tags:
+      - Ikas
+  /api/ikas/{id}:
+    delete:
+      description: Menghapus data ikas berdasarkan ID
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus ikas
+      tags:
+      - Ikas
+    get:
+      description: Mengambil satu data ikas
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.IkasResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil ikas berdasarkan ID
+      tags:
+      - Ikas
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data ikas berdasarkan ID
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: ikas
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateIkasRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.IkasResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update ikas
+      tags:
+      - Ikas
+  /api/jabatan:
+    get:
+      description: Mengambil seluruh data jabatan
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.JabatanResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua jabatan
+      tags:
+      - Jabatan
+    post:
+      consumes:
+      - application/json
+      description: Membuat record jabatan
+      parameters:
+      - description: Data jabatan
+        in: body
+        name: jabatan
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateJabatanRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.JabatanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah jabatan baru
+      tags:
+      - Jabatan
+  /api/jabatan/{id}:
+    delete:
+      description: Menghapus data jabatan berdasarkan ID
+      parameters:
+      - description: Jabatan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus jabatan
+      tags:
+      - Jabatan
+    get:
+      description: Mengambil satu data jabatan
+      parameters:
+      - description: Jabatan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.JabatanResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil jabatan berdasarkan ID
+      tags:
+      - Jabatan
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data jabatan berdasarkan ID
+      parameters:
+      - description: Jabatan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: jabatan
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateJabatanRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.JabatanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update jabatan
+      tags:
+      - Jabatan
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT tokens
+      parameters:
+      - description: Login payload
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Login user
+      tags:
+      - Auth
+  /api/logout:
+    post:
+      consumes:
+      - application/json
+      description: Revoke refresh token
+      parameters:
+      - description: Logout payload
+        in: body
+        name: logout
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LogoutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Logout user
+      tags:
+      - Auth
+  /api/perusahaan:
+    get:
+      description: Mengambil seluruh data perusahaan
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PerusahaanResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua perusahaan
+      tags:
+      - Perusahaan
+    post:
+      consumes:
+      - application/json
+      description: Membuat record perusahaan
+      parameters:
+      - description: Data perusahaan
+        in: body
+        name: perusahaan
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePerusahaanRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.DeteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah perusahaan baru
+      tags:
+      - Perusahaan
+  /api/perusahaan/{id}:
+    delete:
+      description: Menghapus data perusahaan berdasarkan ID
+      parameters:
+      - description: Perusahaan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus perusahaan
+      tags:
+      - Perusahaan
+    get:
+      description: Mengambil satu data perusahaan
+      parameters:
+      - description: Perusahaan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PerusahaanResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil perusahaan berdasarkan ID
+      tags:
+      - Perusahaan
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data perusahaan berdasarkan ID
+      parameters:
+      - description: Perusahaan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: perusahaan
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePerusahaanRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PerusahaanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update perusahaan
+      tags:
+      - Perusahaan
+  /api/pic:
+    get:
+      description: Mengambil seluruh data pic perusahaan
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PICResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua pic perusahaan
+      tags:
+      - PIC
+    post:
+      consumes:
+      - application/json
+      description: Membuat record pic perusahaan
+      parameters:
+      - description: Data pic perusahaan
+        in: body
+        name: pic
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePICRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.PICResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah pic perusahaan baru
+      tags:
+      - PIC
+  /api/pic/{id}:
+    delete:
+      description: Menghapus data pic perusahaan berdasarkan ID
+      parameters:
+      - description: PIC ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus pic perusahaan
+      tags:
+      - PIC
+    get:
+      description: Mengambil satu data pic perusahaan
+      parameters:
+      - description: PIC ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PICResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil pic perusahaan berdasarkan ID
+      tags:
+      - PIC
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data pic perusahaan berdasarkan ID
+      parameters:
+      - description: PIC ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: pic
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePICRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PICResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update pic perusahaan
+      tags:
+      - PIC
+  /api/proteksi:
+    get:
+      description: Mengambil seluruh data proteksi
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ProteksiResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua proteksi
+      tags:
+      - Proteksi
+    post:
+      consumes:
+      - application/json
+      description: Membuat record proteksi
+      parameters:
+      - description: Data proteksi
+        in: body
+        name: proteksi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateProteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ProteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah proteksi baru
+      tags:
+      - Proteksi
+  /api/proteksi/{id}:
+    delete:
+      description: Menghapus data proteksi berdasarkan ID
+      parameters:
+      - description: Proteksi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus proteksi
+      tags:
+      - Proteksi
+    get:
+      description: Mengambil satu data proteksi
+      parameters:
+      - description: Proteksi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProteksiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil proteksi berdasarkan ID
+      tags:
+      - Proteksi
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data proteksi berdasarkan ID
+      parameters:
+      - description: Proteksi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: proteksi
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateProteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ProteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update proteksi
+      tags:
+      - Proteksi
+  /api/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Generate new access & refresh token pair
+      parameters:
+      - description: Refresh token payload
+        in: body
+        name: refresh
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.TokenPair'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Refresh access token
+      tags:
+      - Auth
+  /api/register:
+    post:
+      consumes:
+      - application/json
+      description: Create account and return JWT tokens
+      parameters:
+      - description: Registration payload
+        in: body
+        name: register
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Register new user
+      tags:
+      - Auth
+  /api/role:
+    get:
+      description: Mengambil seluruh data role
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.RoleResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua role
+      tags:
+      - Role
+    post:
+      consumes:
+      - application/json
+      description: Membuat record role
+      parameters:
+      - description: Data role
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.RoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah role baru
+      tags:
+      - Role
+  /api/role/{id}:
+    delete:
+      description: Menghapus data role berdasarkan ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus role
+      tags:
+      - Role
+    get:
+      description: Mengambil satu data role
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.RoleResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil role berdasarkan ID
+      tags:
+      - Role
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data role berdasarkan ID
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.RoleResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update role
+      tags:
+      - Role
+  /api/sdm_csirt:
+    get:
+      description: Mengambil seluruh data sdm csirt
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.SdmCsirtResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua sdm csirt
+      tags:
+      - SDM
+    post:
+      consumes:
+      - application/json
+      description: Membuat record sdm csirt
+      parameters:
+      - description: Data sdm csirt
+        in: body
+        name: sdm
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSdmCsirtRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.SdmCsirtResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah sdm csirt baru
+      tags:
+      - SDM
+  /api/sdm_csirt/{id}:
+    delete:
+      description: Menghapus data sdm csirt berdasarkan ID
+      parameters:
+      - description: SDM ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus sdm csirt
+      tags:
+      - SDM
+    get:
+      description: Mengambil satu data sdm csirt
+      parameters:
+      - description: SDM ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SdmCsirtResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil sdm csirt berdasarkan ID
+      tags:
+      - SDM
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data sdm csirt berdasarkan ID
+      parameters:
+      - description: SDM ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: sdm
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSdmCsirtRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SdmCsirtResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update sdm csirt
+      tags:
+      - SDM
+  /api/se_csirt:
+    get:
+      description: Mengambil seluruh data se csirt
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.SeCsirtResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua se csirt
+      tags:
+      - SE
+    post:
+      consumes:
+      - application/json
+      description: Membuat record se csirt
+      parameters:
+      - description: Data se csirt
+        in: body
+        name: se
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSeCsirtRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.SeCsirtResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah se csirt baru
+      tags:
+      - SE
+  /api/se_csirt/{id}:
+    delete:
+      description: Menghapus data se csirt berdasarkan ID
+      parameters:
+      - description: SE ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus se csirt
+      tags:
+      - SE
+    get:
+      description: Mengambil satu data se csirt
+      parameters:
+      - description: SE ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SeCsirtResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil se csirt berdasarkan ID
+      tags:
+      - SE
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data se csirt berdasarkan ID
+      parameters:
+      - description: SE ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: se
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSeCsirtRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SeCsirtResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update se csirt
+      tags:
+      - SE
+swagger: "2.0"

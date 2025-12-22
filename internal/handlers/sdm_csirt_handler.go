@@ -51,6 +51,14 @@ func (h *SdmCsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+// GetAllSDM godoc
+// @Summary      List semua sdm csirt
+// @Description  Mengambil seluruh data sdm csirt
+// @Tags         SDM
+// @Produce      json
+// @Success      200  {array}  dto.SdmCsirtResponse
+// @Failure      500  {object} dto.ErrorResponse
+// @Router       /api/sdm_csirt [get]
 func (h *SdmCsirtHandler) handleGetAll(w http.ResponseWriter) {
     data, err := h.service.GetAll()
     if err != nil {
@@ -60,6 +68,15 @@ func (h *SdmCsirtHandler) handleGetAll(w http.ResponseWriter) {
     utils.RespondJSON(w, 200, data)
 }
 
+// GetSDMByID godoc
+// @Summary      Ambil sdm csirt berdasarkan ID
+// @Description  Mengambil satu data sdm csirt
+// @Tags         SDM
+// @Produce      json
+// @Param        id   path      string  true  "SDM ID"
+// @Success      200  {object} dto.SdmCsirtResponse
+// @Failure      404  {object} dto.ErrorResponse
+// @Router       /api/sdm_csirt/{id} [get]
 func (h *SdmCsirtHandler) handleGetByID(w http.ResponseWriter, id string) {
     data, err := h.service.GetByID(id)
     if err != nil {
@@ -69,6 +86,16 @@ func (h *SdmCsirtHandler) handleGetByID(w http.ResponseWriter, id string) {
     utils.RespondJSON(w, 200, data)
 }
 
+// CreateSDM godoc
+// @Summary      Tambah sdm csirt baru
+// @Description  Membuat record sdm csirt
+// @Tags         SDM
+// @Accept       json
+// @Produce      json
+// @Param        sdm body dto.CreateSdmCsirtRequest true "Data sdm csirt"
+// @Success      201  {object} dto.SdmCsirtResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/sdm_csirt [post]
 func (h *SdmCsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
     var req dto.CreateSdmCsirtRequest
     if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -83,6 +110,17 @@ func (h *SdmCsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
     utils.RespondJSON(w, 200, map[string]string{"id": id})
 }
 
+// UpdateSDM godoc
+// @Summary      Update sdm csirt
+// @Description  Mengubah data sdm csirt berdasarkan ID
+// @Tags         SDM
+// @Accept       json
+// @Produce      json
+// @Param        id      path      string  true  "SDM ID"
+// @Param        sdm body      dto.UpdateSdmCsirtRequest true "Data update"
+// @Success      200  {object} dto.SdmCsirtResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/sdm_csirt/{id} [put]
 func (h *SdmCsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
     var req dto.UpdateSdmCsirtRequest
     if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -96,7 +134,16 @@ func (h *SdmCsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
     utils.RespondJSON(w, 200, map[string]string{"message": "Update success"})
 }
 
-func (h *SdmCsirtHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+// DeleteSDM godoc
+// @Summary      Hapus sdm csirt
+// @Description  Menghapus data sdm csirt berdasarkan ID
+// @Tags         SDM
+// @Produce      json
+// @Param        id  path  string  true  "SDM ID"
+// @Success      200  {object} dto.MessageResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/sdm_csirt/{id} [delete]
+func (h *SdmCsirtHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
     if err := h.service.Delete(id); err != nil {
         utils.RespondError(w, 400, err.Error())
         return

@@ -55,6 +55,14 @@ func (h *RoleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetAllRole godoc
+// @Summary      List semua role
+// @Description  Mengambil seluruh data role
+// @Tags         Role
+// @Produce      json
+// @Success      200  {array}  dto.RoleResponse
+// @Failure      500  {object} dto.ErrorResponse
+// @Router       /api/role [get]
 func (h *RoleHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -64,6 +72,15 @@ func (h *RoleHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	utils.RespondJSON(w, 200, data)
 }
 
+// GetRoleByID godoc
+// @Summary      Ambil role berdasarkan ID
+// @Description  Mengambil satu data role
+// @Tags         Role
+// @Produce      json
+// @Param        id   path      string  true  "Role ID"
+// @Success      200  {object} dto.RoleResponse
+// @Failure      404  {object} dto.ErrorResponse
+// @Router       /api/role/{id} [get]
 func (h *RoleHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -73,6 +90,16 @@ func (h *RoleHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id s
 	utils.RespondJSON(w, 200, data)
 }
 
+// CreateRole godoc
+// @Summary      Tambah role baru
+// @Description  Membuat record role
+// @Tags         Role
+// @Accept       json
+// @Produce      json
+// @Param        role body dto.CreateRoleRequest true "Data role"
+// @Success      201  {object} dto.RoleResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/role [post]
 func (h *RoleHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateRoleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -96,6 +123,17 @@ func (h *RoleHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 201, resp)
 }
 
+// UpdateRole godoc
+// @Summary      Update role
+// @Description  Mengubah data role berdasarkan ID
+// @Tags         Role
+// @Accept       json
+// @Produce      json
+// @Param        id      path      string  true  "Role ID"
+// @Param        role body      dto.UpdateRoleRequest true "Data update"
+// @Success      200  {object} dto.RoleResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/role/{id} [put]
 func (h *RoleHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateRoleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -119,6 +157,15 @@ func (h *RoleHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 	utils.RespondJSON(w, 200, resp)
 }
 
+// DeleteRole godoc
+// @Summary      Hapus role
+// @Description  Menghapus data role berdasarkan ID
+// @Tags         Role
+// @Produce      json
+// @Param        id  path  string  true  "Role ID"
+// @Success      200  {object} dto.MessageResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/role/{id} [delete]
 func (h *RoleHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())
