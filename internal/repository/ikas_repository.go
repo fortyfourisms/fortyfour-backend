@@ -47,14 +47,18 @@ func (r *IkasRepository) GetAll() ([]models.Ikas, error) {
 				i.id,
 				i.tanggal,
 				i.responden,
+				i.telepon,
 				i.jabatan,
-
+				i.nilai_kematangan,
+				i.target_nilai,
+				per.nama,
 				idn.nilai_identifikasi,
 				p.nilai_proteksi,
 				d.nilai_deteksi,
 				g.nilai_gulih
 
 			FROM ikas i
+			JOIN perusahaan per	  ON per.id = i.id_perusahaan
 			JOIN identifikasi idn ON idn.id = i.id_identifikasi
 			JOIN proteksi p       ON p.id = i.id_proteksi
 			JOIN deteksi d        ON d.id = i.id_deteksi
@@ -98,14 +102,18 @@ func (r *IkasRepository) GetByID(id string) (*models.Ikas, error) {
 				i.id,
 				i.tanggal,
 				i.responden,
+				i.telepon,
 				i.jabatan,
-
+				i.nilai_kematangan,
+				i.target_nilai,
+				per.nama,
 				idn.nilai_identifikasi,
 				p.nilai_proteksi,
 				d.nilai_deteksi,
 				g.nilai_gulih
 
 			FROM ikas i
+			JOIN perusahaan per	  ON per.id = i.id_perusahaan
 			JOIN identifikasi idn ON idn.id = i.id_identifikasi
 			JOIN proteksi p       ON p.id = i.id_proteksi
 			JOIN deteksi d        ON d.id = i.id_deteksi
@@ -162,7 +170,6 @@ func (r *IkasRepository) Update(id string, i models.Ikas) error {
 		i.IDProteksi,
 		i.IDDeteksi,
 		i.IDGulih,
-		id,
 	)
 
 	return err
