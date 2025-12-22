@@ -2,9 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
+	"strings"
+
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
+	"fortyfour-backend/internal/validator"
+
 	"net/http"
 )
 
@@ -29,6 +33,17 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req dto.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Trim spaces untuk mencegah string kosong
+	req.Username = strings.TrimSpace(req.Username)
+	req.Email = strings.TrimSpace(req.Email)
+	req.Password = strings.TrimSpace(req.Password)
+
+	// Validasi menggunakan validator
+	if err := validator.Validate(req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -58,6 +73,16 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Trim spaces untuk mencegah string kosong
+	req.Username = strings.TrimSpace(req.Username)
+	req.Password = strings.TrimSpace(req.Password)
+
+	// Validasi menggunakan validator
+	if err := validator.Validate(req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	user, tokens, err := h.authService.Login(req.Username, req.Password)
 	if err != nil {
 		utils.RespondError(w, http.StatusUnauthorized, err.Error())
@@ -84,6 +109,15 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Trim spaces
+	req.RefreshToken = strings.TrimSpace(req.RefreshToken)
+
+	// Validasi menggunakan validator
+	if err := validator.Validate(req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
 	tokens, err := h.tokenService.RefreshAccessToken(req.RefreshToken)
 	if err != nil {
 		utils.RespondError(w, http.StatusUnauthorized, err.Error())
@@ -106,6 +140,15 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	var req dto.LogoutRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Trim spaces
+	req.RefreshToken = strings.TrimSpace(req.RefreshToken)
+
+	// Validasi menggunakan validator
+	if err := validator.Validate(req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
