@@ -29,3 +29,17 @@ type CsirtResponse struct {
 	FilePublicKeyPGP string             `json:"file_public_key_pgp"`
 	Perusahaan       PerusahaanResponse `json:"perusahaan"`
 }
+
+/*
+========================================
+
+	MINI RESPONSE (DIPAKAI SDM & SE)
+
+========================================
+*/
+type CsirtMiniResponse struct {
+	ID           string  `json:"id"`
+	NamaCsirt    string  `json:"nama_csirt"`
+	WebCsirt     *string `json:"web_csirt,omitempty"`
+	TeleponCsirt *string `json:"telepon_csirt,omitempty"`
+}

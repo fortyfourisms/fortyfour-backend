@@ -1,12 +1,5 @@
 package dto
 
-// MINI response untuk relasi (nested)
-type CsirtMiniResponse struct {
-	ID        string `json:"id"`
-	NamaCsirt string `json:"nama_csirt"`
-	WebCsirt  string `json:"web_csirt"`
-}
-
 type CreateSdmCsirtRequest struct {
 	IdCsirt           *string `json:"id_csirt,omitempty"`
 	NamaPersonel      *string `json:"nama_personel,omitempty"`
@@ -24,7 +17,6 @@ type UpdateSdmCsirtRequest struct {
 	Sertifikasi       *string `json:"sertifikasi,omitempty"`
 }
 
-// RESPONSE dengan nested CSIRT
 type SdmCsirtResponse struct {
 	ID                string             `json:"id"`
 	NamaPersonel      string             `json:"nama_personel"`
