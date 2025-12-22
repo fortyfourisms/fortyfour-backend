@@ -39,18 +39,22 @@ func (r *UserRepository) Create(user *models.User) error {
 	return nil
 }
 
-// UPDATE QUERY DI FindByID yang sudah ada:
 func (r *UserRepository) FindByID(id string) (*models.User, error) {
 	query := `
-        SELECT u.id, u.username, u.password, u.email, u.role_id, r.name as role_name, 
-               u.id_jabatan, u.foto_profile, u.banner, u.created_at, u.updated_at 
+        SELECT u.id, u.username, u.password, u.email, 
+               u.role_id, r.name as role_name, 
+               u.id_jabatan, j.nama_jabatan as jabatan_name,
+               u.foto_profile, u.banner, u.created_at, u.updated_at 
         FROM users u
         LEFT JOIN roles r ON u.role_id = r.id
+        LEFT JOIN jabatan j ON u.id_jabatan = j.id
         WHERE u.id = ?
     `
 	user := &models.User{}
 	var roleID sql.NullString
 	var roleName sql.NullString
+	var idJabatan sql.NullString
+	var jabatanName sql.NullString
 	var fotoProfile sql.NullString
 	var banner sql.NullString
 
@@ -61,7 +65,8 @@ func (r *UserRepository) FindByID(id string) (*models.User, error) {
 		&user.Email,
 		&roleID,
 		&roleName,
-		&user.IDJabatan,
+		&idJabatan,
+		&jabatanName,
 		&fotoProfile,
 		&banner,
 		&user.CreatedAt,
@@ -80,6 +85,12 @@ func (r *UserRepository) FindByID(id string) (*models.User, error) {
 	}
 	if roleName.Valid {
 		user.RoleName = roleName.String
+	}
+	if idJabatan.Valid {
+		user.IDJabatan = &idJabatan.String
+	}
+	if jabatanName.Valid {
+		user.JabatanName = &jabatanName.String
 	}
 	if fotoProfile.Valid {
 		user.FotoProfile = &fotoProfile.String
@@ -91,18 +102,22 @@ func (r *UserRepository) FindByID(id string) (*models.User, error) {
 	return user, nil
 }
 
-// UPDATE QUERY DI FindByUsername yang sudah ada:
 func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
 	query := `
-        SELECT u.id, u.username, u.password, u.email, u.role_id, r.name as role_name, 
-               u.id_jabatan, u.foto_profile, u.banner, u.created_at, u.updated_at 
+        SELECT u.id, u.username, u.password, u.email, 
+               u.role_id, r.name as role_name, 
+               u.id_jabatan, j.nama_jabatan as jabatan_name,
+               u.foto_profile, u.banner, u.created_at, u.updated_at 
         FROM users u
         LEFT JOIN roles r ON u.role_id = r.id
+        LEFT JOIN jabatan j ON u.id_jabatan = j.id
         WHERE u.username = ?
     `
 	user := &models.User{}
 	var roleID sql.NullString
 	var roleName sql.NullString
+	var idJabatan sql.NullString
+	var jabatanName sql.NullString
 	var fotoProfile sql.NullString
 	var banner sql.NullString
 
@@ -113,7 +128,8 @@ func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
 		&user.Email,
 		&roleID,
 		&roleName,
-		&user.IDJabatan,
+		&idJabatan,
+		&jabatanName,
 		&fotoProfile,
 		&banner,
 		&user.CreatedAt,
@@ -132,6 +148,12 @@ func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
 	}
 	if roleName.Valid {
 		user.RoleName = roleName.String
+	}
+	if idJabatan.Valid {
+		user.IDJabatan = &idJabatan.String
+	}
+	if jabatanName.Valid {
+		user.JabatanName = &jabatanName.String
 	}
 	if fotoProfile.Valid {
 		user.FotoProfile = &fotoProfile.String
@@ -157,10 +179,13 @@ func (r *UserRepository) Delete(id string) error {
 
 func (r *UserRepository) FindAll() ([]models.User, error) {
 	query := `
-        SELECT u.id, u.username, u.email, u.role_id, r.name as role_name, u.id_jabatan, 
+        SELECT u.id, u.username, u.email, 
+               u.role_id, r.name as role_name, 
+               u.id_jabatan, j.nama_jabatan as jabatan_name,
                u.foto_profile, u.banner, u.created_at, u.updated_at 
         FROM users u
         LEFT JOIN roles r ON u.role_id = r.id
+        LEFT JOIN jabatan j ON u.id_jabatan = j.id
         ORDER BY u.created_at DESC
     `
 
@@ -175,14 +200,23 @@ func (r *UserRepository) FindAll() ([]models.User, error) {
 		var user models.User
 		var roleID sql.NullString
 		var roleName sql.NullString
+		var idJabatan sql.NullString
+		var jabatanName sql.NullString
 		var fotoProfile sql.NullString
 		var banner sql.NullString
 
 		err := rows.Scan(
-			&user.ID, &user.Username, &user.Email,
-			&roleID, &roleName, &user.IDJabatan,
-			&fotoProfile, &banner,
-			&user.CreatedAt, &user.UpdatedAt,
+			&user.ID,
+			&user.Username,
+			&user.Email,
+			&roleID,
+			&roleName,
+			&idJabatan,
+			&jabatanName,
+			&fotoProfile,
+			&banner,
+			&user.CreatedAt,
+			&user.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -193,6 +227,12 @@ func (r *UserRepository) FindAll() ([]models.User, error) {
 		}
 		if roleName.Valid {
 			user.RoleName = roleName.String
+		}
+		if idJabatan.Valid {
+			user.IDJabatan = &idJabatan.String
+		}
+		if jabatanName.Valid {
+			user.JabatanName = &jabatanName.String
 		}
 		if fotoProfile.Valid {
 			user.FotoProfile = &fotoProfile.String

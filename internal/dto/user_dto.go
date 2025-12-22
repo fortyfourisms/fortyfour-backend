@@ -27,6 +27,7 @@ type UserResponse struct {
 	RoleID      *string `json:"role_id"`
 	RoleName    string  `json:"role_name"`
 	IDJabatan   *string `json:"id_jabatan"`
+	JabatanName *string `json:"jabatan_name"`
 	FotoProfile *string `json:"foto_profile"`
 	Banner      *string `json:"banner"`
 	CreatedAt   string  `json:"created_at"`

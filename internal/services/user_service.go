@@ -290,6 +290,7 @@ func (s *UserService) toResponse(user *models.User) dto.UserResponse {
 		RoleID:      user.RoleID,
 		RoleName:    user.RoleName,
 		IDJabatan:   user.IDJabatan,
+		JabatanName: user.JabatanName,
 		FotoProfile: user.FotoProfile,
 		Banner:      user.Banner,
 		CreatedAt:   user.CreatedAt.Format(time.RFC3339),
