@@ -20,6 +20,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 
 func InitRouter(
 	authH *handlers.AuthHandler,
+	userHandler *handlers.UserHandler,
 	postH *handlers.PostHandler,
 	perusahaanH *handlers.PerusahaanHandler,
 	picH *handlers.PICHandler,
@@ -39,7 +40,7 @@ func InitRouter(
 	lenientLimiter *middleware.RateLimiter,
 	csirtH *handlers.CsirtHandler,
 	sdmCsirtH *handlers.SdmCsirtHandler,
-    seCsirtH *handlers.SeCsirtHandler,
+	seCsirtH *handlers.SeCsirtHandler,
 ) *http.ServeMux {
 	mux := http.NewServeMux()
 
@@ -51,6 +52,10 @@ func InitRouter(
 	mux.HandleFunc("/api/login", strictLimiter.LimitByIP(authH.Login))
 	mux.HandleFunc("/api/refresh", strictLimiter.LimitByIP(authH.RefreshToken))
 	mux.HandleFunc("/api/logout", authH.Logout)
+
+	// Routes Users
+	mux.HandleFunc("/api/users", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(userHandler)))))
+	mux.HandleFunc("/api/users/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(userHandler)))))
 
 	// Routes Casbin Management (only admin)
 	mux.HandleFunc("/api/casbin/policies", authM.Authenticate(casbinH.GetAllPolicies))
@@ -111,12 +116,12 @@ func InitRouter(
 	mux.HandleFunc("/api/csirt/", authM.Authenticate(utils.AdaptHandler(csirtH)))
 
 	// Route SDM_CSIRT
-    mux.HandleFunc("/api/sdm_csirt", authM.Authenticate(utils.AdaptHandler(sdmCsirtH)))
-    mux.HandleFunc("/api/sdm_csirt/", authM.Authenticate(utils.AdaptHandler(sdmCsirtH)))
+	mux.HandleFunc("/api/sdm_csirt", authM.Authenticate(utils.AdaptHandler(sdmCsirtH)))
+	mux.HandleFunc("/api/sdm_csirt/", authM.Authenticate(utils.AdaptHandler(sdmCsirtH)))
 
-    // Route SE_CSIRT
-    mux.HandleFunc("/api/se_csirt", authM.Authenticate(utils.AdaptHandler(seCsirtH)))
-    mux.HandleFunc("/api/se_csirt/", authM.Authenticate(utils.AdaptHandler(seCsirtH)))
+	// Route SE_CSIRT
+	mux.HandleFunc("/api/se_csirt", authM.Authenticate(utils.AdaptHandler(seCsirtH)))
+	mux.HandleFunc("/api/se_csirt/", authM.Authenticate(utils.AdaptHandler(seCsirtH)))
 
 	return mux
 }

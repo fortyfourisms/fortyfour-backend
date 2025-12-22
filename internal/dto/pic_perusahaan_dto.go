@@ -13,10 +13,17 @@ type UpdatePICRequest struct {
 }
 
 type PICResponse struct {
-	ID           string `json:"id"`
-	Nama         string `json:"nama"`
-	Telepon      string `json:"telepon"`
-	IDPerusahaan string `json:"id_perusahaan"`
-	CreatedAt    string `json:"created_at"`
-	UpdatedAt    string `json:"updated_at"`
+	ID         string           `json:"id"`
+	Nama       string           `json:"nama"`
+	Telepon    string           `json:"telepon"`
+	CreatedAt  string           `json:"created_at"`
+	UpdatedAt  string           `json:"updated_at"`
+	Perusahaan *PerusahaanInPIC `json:"perusahaan,omitempty"`
+}
+
+// Struct baru untuk data perusahaan di dalam PIC
+type PerusahaanInPIC struct {
+	ID             string `json:"id"`
+	NamaPerusahaan string `json:"nama_perusahaan"`
+	// Tambahkan field lain jika diperlukan
 }
