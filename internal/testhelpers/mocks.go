@@ -237,6 +237,37 @@ func (m *MockPostRepository) Delete(id int) error {
 	return nil
 }
 
+func (m *MockUserRepository) EmailExists(email string, excludeID *string) (bool, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	for _, user := range m.users {
+		if user.Email == email {
+			if excludeID != nil && user.ID == *excludeID {
+				continue
+			}
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (m *MockUserRepository) UsernameExists(username string, excludeID *string) (bool, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	user, exists := m.users[username]
+	if !exists {
+		return false, nil
+	}
+
+	if excludeID != nil && user.ID == *excludeID {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 // ============================================================
 // Test Data Factories
 // ============================================================
