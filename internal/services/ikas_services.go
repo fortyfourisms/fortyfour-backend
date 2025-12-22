@@ -40,7 +40,7 @@ func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*models.Ikas
 		return nil, err
 	}
 
-	// Update hanya field yang dikirim (non-nil)
+	// Update 
 	if req.IDPerusahaan != nil {
 		ikas.IDPerusahaan = *req.IDPerusahaan
 	}

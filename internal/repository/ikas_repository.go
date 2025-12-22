@@ -43,22 +43,22 @@ func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string) error {
 
 func (r *IkasRepository) GetAll() ([]models.Ikas, error) {
 	rows, err := r.db.Query(`
-				SELECT
-					i.id,
-					i.tanggal,
-					i.responden,
-					i.jabatan,
+			SELECT
+				i.id,
+				i.tanggal,
+				i.responden,
+				i.jabatan,
 
-					idn.nilai_identifikasi,
-					p.nilai_proteksi,
-					d.nilai_deteksi,
-					g.nilai_gulih
+				idn.nilai_identifikasi,
+				p.nilai_proteksi,
+				d.nilai_deteksi,
+				g.nilai_gulih
 
-				FROM ikas i
-				JOIN identifikasi idn ON idn.id = i.id_identifikasi
-				JOIN proteksi p       ON p.id = i.id_proteksi
-				JOIN deteksi d        ON d.id = i.id_deteksi
-				JOIN gulih g          ON g.id = i.id_gulih`)
+			FROM ikas i
+			JOIN identifikasi idn ON idn.id = i.id_identifikasi
+			JOIN proteksi p       ON p.id = i.id_proteksi
+			JOIN deteksi d        ON d.id = i.id_deteksi
+			JOIN gulih g          ON g.id = i.id_gulih`)
 	if err != nil {
 		return nil, err
 	}
@@ -94,11 +94,23 @@ func (r *IkasRepository) GetAll() ([]models.Ikas, error) {
 
 func (r *IkasRepository) GetByID(id string) (*models.Ikas, error) {
 	rows := r.db.QueryRow(`
-		SELECT id, id_perusahaan, tanggal, responden, telepon, jabatan,
-      	nilai_kematangan, target_nilai, id_identifikasi, id_proteksi,
-       	id_deteksi, id_gulih
-		FROM ikas
-		WHERE id = ?`, id)
+			SELECT
+				i.id,
+				i.tanggal,
+				i.responden,
+				i.jabatan,
+
+				idn.nilai_identifikasi,
+				p.nilai_proteksi,
+				d.nilai_deteksi,
+				g.nilai_gulih
+
+			FROM ikas i
+			JOIN identifikasi idn ON idn.id = i.id_identifikasi
+			JOIN proteksi p       ON p.id = i.id_proteksi
+			JOIN deteksi d        ON d.id = i.id_deteksi
+			JOIN gulih g          ON g.id = i.id_gulih
+			WHERE i.id = ?`, id)
 
 	var i models.Ikas
 	err := rows.Scan(
