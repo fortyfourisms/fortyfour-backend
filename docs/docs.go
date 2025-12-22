@@ -1984,6 +1984,186 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/se_csirt": {
+            "get": {
+                "description": "Mengambil seluruh data se csirt",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SE"
+                ],
+                "summary": "List semua se csirt",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.SeCsirtResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Membuat record se csirt",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SE"
+                ],
+                "summary": "Tambah se csirt baru",
+                "parameters": [
+                    {
+                        "description": "Data se csirt",
+                        "name": "se",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateSeCsirtRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SeCsirtResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/se_csirt/{id}": {
+            "get": {
+                "description": "Mengambil satu data se csirt",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SE"
+                ],
+                "summary": "Ambil se csirt berdasarkan ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SE ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SeCsirtResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Mengubah data se csirt berdasarkan ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SE"
+                ],
+                "summary": "Update se csirt",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SE ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data update",
+                        "name": "se",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateSeCsirtRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SeCsirtResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Menghapus data se csirt berdasarkan ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SE"
+                ],
+                "summary": "Hapus se csirt",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SE ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -2212,6 +2392,32 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "skill": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateSeCsirtRequest": {
+            "type": "object",
+            "properties": {
+                "as_number_se": {
+                    "type": "string"
+                },
+                "fitur_se": {
+                    "type": "string"
+                },
+                "id_csirt": {
+                    "type": "string"
+                },
+                "ip_se": {
+                    "type": "string"
+                },
+                "kategori_se": {
+                    "type": "string"
+                },
+                "nama_se": {
+                    "type": "string"
+                },
+                "pengelola_se": {
                     "type": "string"
                 }
             }
@@ -2558,6 +2764,41 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.SeCsirtResponse": {
+            "type": "object",
+            "properties": {
+                "as_number_se": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "fitur_se": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "id_csirt": {
+                    "type": "string"
+                },
+                "ip_se": {
+                    "type": "string"
+                },
+                "kategori_se": {
+                    "type": "string"
+                },
+                "nama_se": {
+                    "type": "string"
+                },
+                "pengelola_se": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.TokenPair": {
             "type": "object",
             "properties": {
@@ -2777,6 +3018,29 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "skill": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateSeCsirtRequest": {
+            "type": "object",
+            "properties": {
+                "as_number_se": {
+                    "type": "string"
+                },
+                "fitur_se": {
+                    "type": "string"
+                },
+                "ip_se": {
+                    "type": "string"
+                },
+                "kategori_se": {
+                    "type": "string"
+                },
+                "nama_se": {
+                    "type": "string"
+                },
+                "pengelola_se": {
                     "type": "string"
                 }
             }

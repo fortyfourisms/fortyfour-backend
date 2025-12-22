@@ -149,6 +149,23 @@ definitions:
       skill:
         type: string
     type: object
+  dto.CreateSeCsirtRequest:
+    properties:
+      as_number_se:
+        type: string
+      fitur_se:
+        type: string
+      id_csirt:
+        type: string
+      ip_se:
+        type: string
+      kategori_se:
+        type: string
+      nama_se:
+        type: string
+      pengelola_se:
+        type: string
+    type: object
   dto.CsirtMiniResponse:
     properties:
       id:
@@ -372,6 +389,29 @@ definitions:
       updated_at:
         type: string
     type: object
+  dto.SeCsirtResponse:
+    properties:
+      as_number_se:
+        type: string
+      created_at:
+        type: string
+      fitur_se:
+        type: string
+      id:
+        type: string
+      id_csirt:
+        type: string
+      ip_se:
+        type: string
+      kategori_se:
+        type: string
+      nama_se:
+        type: string
+      pengelola_se:
+        type: string
+      updated_at:
+        type: string
+    type: object
   dto.TokenPair:
     properties:
       access_token:
@@ -517,6 +557,21 @@ definitions:
       sertifikasi:
         type: string
       skill:
+        type: string
+    type: object
+  dto.UpdateSeCsirtRequest:
+    properties:
+      as_number_se:
+        type: string
+      fitur_se:
+        type: string
+      ip_se:
+        type: string
+      kategori_se:
+        type: string
+      nama_se:
+        type: string
+      pengelola_se:
         type: string
     type: object
   models.User:
@@ -1841,4 +1896,123 @@ paths:
       summary: Update sdm csirt
       tags:
       - SDM
+  /api/se_csirt:
+    get:
+      description: Mengambil seluruh data se csirt
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.SeCsirtResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: List semua se csirt
+      tags:
+      - SE
+    post:
+      consumes:
+      - application/json
+      description: Membuat record se csirt
+      parameters:
+      - description: Data se csirt
+        in: body
+        name: se
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSeCsirtRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.SeCsirtResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Tambah se csirt baru
+      tags:
+      - SE
+  /api/se_csirt/{id}:
+    delete:
+      description: Menghapus data se csirt berdasarkan ID
+      parameters:
+      - description: SE ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Hapus se csirt
+      tags:
+      - SE
+    get:
+      description: Mengambil satu data se csirt
+      parameters:
+      - description: SE ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SeCsirtResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Ambil se csirt berdasarkan ID
+      tags:
+      - SE
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data se csirt berdasarkan ID
+      parameters:
+      - description: SE ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: se
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSeCsirtRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SeCsirtResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update se csirt
+      tags:
+      - SE
 swagger: "2.0"
