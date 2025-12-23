@@ -55,6 +55,14 @@ func (h *ProteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetAllProteksi godoc
+// @Summary      List semua proteksi
+// @Description  Mengambil seluruh data proteksi
+// @Tags         Proteksi
+// @Produce      json
+// @Success      200  {array}  dto.ProteksiResponse
+// @Failure      500  {object} dto.ErrorResponse
+// @Router       /api/proteksi [get]
 func (h *ProteksiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -64,6 +72,15 @@ func (h *ProteksiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	utils.RespondJSON(w, 200, data)
 }
 
+// GetProteksiByID godoc
+// @Summary      Ambil proteksi berdasarkan ID
+// @Description  Mengambil satu data proteksi
+// @Tags         Proteksi
+// @Produce      json
+// @Param        id   path      string  true  "Proteksi ID"
+// @Success      200  {object} dto.ProteksiResponse
+// @Failure      404  {object} dto.ErrorResponse
+// @Router       /api/proteksi/{id} [get]
 func (h *ProteksiHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -73,6 +90,16 @@ func (h *ProteksiHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, 
 	utils.RespondJSON(w, 200, data)
 }
 
+// CreateProteksi godoc
+// @Summary      Tambah proteksi baru
+// @Description  Membuat record proteksi
+// @Tags         Proteksi
+// @Accept       json
+// @Produce      json
+// @Param        proteksi body dto.CreateProteksiRequest true "Data proteksi"
+// @Success      201  {object} dto.ProteksiResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/proteksi [post]
 func (h *ProteksiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateProteksiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -96,6 +123,17 @@ func (h *ProteksiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 201, resp)
 }
 
+// UpdateProteksi godoc
+// @Summary      Update proteksi
+// @Description  Mengubah data proteksi berdasarkan ID
+// @Tags         Proteksi
+// @Accept       json
+// @Produce      json
+// @Param        id      path      string  true  "Proteksi ID"
+// @Param        proteksi body      dto.UpdateProteksiRequest true "Data update"
+// @Success      200  {object} dto.ProteksiResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/proteksi/{id} [put]
 func (h *ProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateProteksiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -119,6 +157,15 @@ func (h *ProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 	utils.RespondJSON(w, 200, resp)
 }
 
+// DeleteProteksi godoc
+// @Summary      Hapus proteksi
+// @Description  Menghapus data proteksi berdasarkan ID
+// @Tags         Proteksi
+// @Produce      json
+// @Param        id  path  string  true  "Proteksi ID"
+// @Success      200  {object} dto.MessageResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/proteksi/{id} [delete]
 func (h *ProteksiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())

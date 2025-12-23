@@ -55,6 +55,14 @@ func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetAllIkas godoc
+// @Summary      List semua ikas
+// @Description  Mengambil seluruh data deteksi
+// @Tags         Ikas
+// @Produce      json
+// @Success      200  {array}  dto.IkasResponse
+// @Failure      500  {object} dto.ErrorResponse
+// @Router       /api/ikas [get]
 func (h *IkasHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -64,6 +72,15 @@ func (h *IkasHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	utils.RespondJSON(w, 200, data)
 }
 
+// GetIkasByID godoc
+// @Summary      Ambil ikas berdasarkan ID
+// @Description  Mengambil satu data ikas
+// @Tags         Ikas
+// @Produce      json
+// @Param        id   path      string  true  "Ikas ID"
+// @Success      200  {object} dto.IkasResponse
+// @Failure      404  {object} dto.ErrorResponse
+// @Router       /api/ikas/{id} [get]
 func (h *IkasHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -73,6 +90,16 @@ func (h *IkasHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id s
 	utils.RespondJSON(w, 200, data)
 }
 
+// CreateIkas godoc
+// @Summary      Tambah ikas baru
+// @Description  Membuat record ikas
+// @Tags         Ikas
+// @Accept       json
+// @Produce      json
+// @Param        ikas body dto.CreateIkasRequest true "Data ikas"
+// @Success      201  {object} dto.IkasResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/ikas [post]
 func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateIkasRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -96,6 +123,17 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 201, resp)
 }
 
+// UpdateIkas godoc
+// @Summary      Update ikas
+// @Description  Mengubah data ikas berdasarkan ID
+// @Tags         Ikas
+// @Accept       json
+// @Produce      json
+// @Param        id      path      string  true  "Ikas ID"
+// @Param        ikas body      dto.UpdateIkasRequest true "Data update"
+// @Success      200  {object} dto.IkasResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/ikas/{id} [put]
 func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateIkasRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -119,6 +157,15 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 	utils.RespondJSON(w, 200, resp)
 }
 
+// DeleteIkas godoc
+// @Summary      Hapus ikas
+// @Description  Menghapus data ikas berdasarkan ID
+// @Tags         Ikas
+// @Produce      json
+// @Param        id  path  string  true  "Ikas ID"
+// @Success      200  {object} dto.MessageResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/ikas/{id} [delete]
 func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())

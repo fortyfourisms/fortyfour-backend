@@ -1,5 +1,8 @@
 # fortyfour-backend
 
+Before start development, run this command
+`go mod tidy`
+
 Development mode
 `go run cmd/api/main.go`
 

@@ -45,26 +45,16 @@ func (s *PICService) GetByID(id string) (*dto.PICResponse, error) {
 }
 
 func (s *PICService) Update(id string, req dto.UpdatePICRequest) (*dto.PICResponse, error) {
-	existing, err := s.repo.GetByID(id)
+	if err := s.repo.Update(id, req); err != nil {
+		return nil, err
+	}
+
+	updated, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	if req.Nama != nil {
-		existing.Nama = *req.Nama
-	}
-	if req.Telepon != nil {
-		existing.Telepon = *req.Telepon
-	}
-	if req.IDPerusahaan != nil {
-		existing.IDPerusahaan = *req.IDPerusahaan
-	}
-
-	if err := s.repo.Update(id, *existing); err != nil {
-		return nil, err
-	}
-
-	return existing, nil
+	return updated, nil
 }
 
 func (s *PICService) Delete(id string) error {
