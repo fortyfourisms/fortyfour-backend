@@ -8,6 +8,8 @@ import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
+
+	"github.com/google/uuid"
 )
 
 type IkasHandler struct {
@@ -57,7 +59,7 @@ func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // GetAllIkas godoc
 // @Summary      List semua ikas
-// @Description  Mengambil seluruh data deteksi
+// @Description  Mengambil seluruh data ikas
 // @Tags         Ikas
 // @Produce      json
 // @Success      200  {array}  dto.IkasResponse
@@ -107,9 +109,19 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.service.Create(req)
-	if err != nil {
+	// Generate UUID untuk ID baru
+	newID := uuid.New().String()
+
+	// Create dengan ID
+	if err := h.service.Create(req, newID); err != nil {
 		utils.RespondError(w, 400, err.Error())
+		return
+	}
+
+	// Ambil data yang baru dibuat (dengan JOIN)
+	resp, err := h.service.GetByID(newID)
+	if err != nil {
+		utils.RespondError(w, 500, "Data berhasil dibuat tapi gagal diambil")
 		return
 	}
 
