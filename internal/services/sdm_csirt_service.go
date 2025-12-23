@@ -8,55 +8,51 @@ import (
 )
 
 type SdmCsirtService struct {
-    repo *repository.SdmCsirtRepository
+	repo *repository.SdmCsirtRepository
 }
 
 func NewSdmCsirtService(repo *repository.SdmCsirtRepository) *SdmCsirtService {
-    return &SdmCsirtService{repo: repo}
+	return &SdmCsirtService{repo: repo}
 }
 
 func (s *SdmCsirtService) Create(req dto.CreateSdmCsirtRequest) (string, error) {
-    id := uuid.New().String()
-    if err := s.repo.Create(req, id); err != nil {
-        return "", err
-    }
-    return id, nil
+	id := uuid.New().String()
+	return id, s.repo.Create(req, id)
 }
 
 func (s *SdmCsirtService) GetAll() ([]dto.SdmCsirtResponse, error) {
-    return s.repo.GetAll()
+	return s.repo.GetAll()
 }
 
 func (s *SdmCsirtService) GetByID(id string) (*dto.SdmCsirtResponse, error) {
-    return s.repo.GetByID(id)
+	return s.repo.GetByID(id)
 }
 
 func (s *SdmCsirtService) Update(id string, req dto.UpdateSdmCsirtRequest) error {
-    existing, err := s.repo.GetByID(id)
-    if err != nil {
-        return err
-    }
+	existing, err := s.repo.GetByID(id)
+	if err != nil {
+		return err
+	}
 
-    if req.NamaPersonel != nil {
-        existing.NamaPersonel = *req.NamaPersonel
-    }
-    if req.JabatanCsirt != nil {
-        existing.JabatanCsirt = *req.JabatanCsirt
-    }
-    if req.JabatanPerusahaan != nil {
-        existing.JabatanPerusahaan = *req.JabatanPerusahaan
-    }
-    if req.Skill != nil {
-        existing.Skill = *req.Skill
-    }
-    if req.Sertifikasi != nil {
-        existing.Sertifikasi = *req.Sertifikasi
-    }
+	if req.NamaPersonel != nil {
+		existing.NamaPersonel = *req.NamaPersonel
+	}
+	if req.JabatanCsirt != nil {
+		existing.JabatanCsirt = *req.JabatanCsirt
+	}
+	if req.JabatanPerusahaan != nil {
+		existing.JabatanPerusahaan = *req.JabatanPerusahaan
+	}
+	if req.Skill != nil {
+		existing.Skill = *req.Skill
+	}
+	if req.Sertifikasi != nil {
+		existing.Sertifikasi = *req.Sertifikasi
+	}
 
-    return s.repo.Update(id, *existing)
+	return s.repo.Update(id, *existing)
 }
 
-
 func (s *SdmCsirtService) Delete(id string) error {
-    return s.repo.Delete(id)
+	return s.repo.Delete(id)
 }
