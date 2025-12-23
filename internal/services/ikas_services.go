@@ -2,10 +2,7 @@ package services
 
 import (
 	"fortyfour-backend/internal/dto"
-	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/repository"
-
-	"github.com/google/uuid"
 )
 
 type IkasService struct {
@@ -16,70 +13,31 @@ func NewIkasService(repo *repository.IkasRepository) *IkasService {
 	return &IkasService{repo: repo}
 }
 
-func (s *IkasService) Create(req dto.CreateIkasRequest) (*models.Ikas, error) {
-	id := uuid.New().String()
-
-	if err := s.repo.Create(req, id); err != nil {
-		return nil, err
-	}
-
-	return s.repo.GetByID(id)
+func (s *IkasService) Create(req dto.CreateIkasRequest, id string) error {
+	return s.repo.Create(req, id)
 }
 
-func (s *IkasService) GetAll() ([]models.Ikas, error) {
+func (s *IkasService) GetAll() ([]dto.IkasResponse, error) {
 	return s.repo.GetAll()
 }
 
-func (s *IkasService) GetByID(id string) (*models.Ikas, error) {
+func (s *IkasService) GetByID(id string) (*dto.IkasResponse, error) {
 	return s.repo.GetByID(id)
 }
 
-func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*models.Ikas, error) {
-	ikas, err := s.repo.GetByID(id)
+func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*dto.IkasResponse, error) {
+	// Update data
+	if err := s.repo.Update(id, req); err != nil {
+		return nil, err
+	}
+
+	// Ambil data terbaru dengan JOIN
+	updated, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	// Update 
-	if req.IDPerusahaan != nil {
-		ikas.IDPerusahaan = *req.IDPerusahaan
-	}
-	if req.Tanggal != nil {
-		ikas.Tanggal = *req.Tanggal
-	}
-	if req.Responden != nil {
-		ikas.Responden = *req.Responden
-	}
-	if req.Telepon != nil {
-		ikas.Telepon = *req.Telepon
-	}
-	if req.Jabatan != nil {
-		ikas.Jabatan = *req.Jabatan
-	}
-	if req.NilaiKematangan != nil {
-		ikas.NilaiKematangan = *req.NilaiKematangan
-	}
-	if req.TargetNilai != nil {
-		ikas.TargetNilai = *req.TargetNilai
-	}
-	if req.IDIdentifikasi != nil {
-		ikas.IDIdentifikasi = *req.IDIdentifikasi
-	}
-	if req.IDProteksi != nil {
-		ikas.IDProteksi = *req.IDProteksi
-	}
-	if req.IDDeteksi != nil {
-		ikas.IDDeteksi = *req.IDDeteksi
-	}
-	if req.IDGulih != nil {
-		ikas.IDGulih = *req.IDGulih
-	}
-
-	if err := s.repo.Update(id, *ikas); err != nil {
-		return nil, err
-	}
-
-	return ikas, nil
+	return updated, nil
 }
 
 func (s *IkasService) Delete(id string) error {
