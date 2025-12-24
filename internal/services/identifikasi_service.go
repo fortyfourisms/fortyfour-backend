@@ -9,10 +9,10 @@ import (
 )
 
 type IdentifikasiService struct {
-	repo *repository.IdentifikasiRepository
+	repo repository.IdentifikasiRepositoryInterface
 }
 
-func NewIdentifikasiService(repo *repository.IdentifikasiRepository) *IdentifikasiService {
+func NewIdentifikasiService(repo repository.IdentifikasiRepositoryInterface) *IdentifikasiService {
 	return &IdentifikasiService{repo: repo}
 }
 

@@ -10,10 +10,10 @@ import (
 )
 
 type PICService struct {
-	repo *repository.PICRepository
+	repo repository.PICRepositoryInterface
 }
 
-func NewPICService(repo *repository.PICRepository) *PICService {
+func NewPICService(repo repository.PICRepositoryInterface) *PICService {
 	return &PICService{repo: repo}
 }
 

@@ -9,10 +9,10 @@ import (
 )
 
 type DeteksiService struct {
-	repo *repository.DeteksiRepository
+	repo repository.DeteksiRepositoryInterface
 }
 
-func NewDeteksiService(repo *repository.DeteksiRepository) *DeteksiService {
+func NewDeteksiService(repo repository.DeteksiRepositoryInterface) *DeteksiService {
 	return &DeteksiService{repo: repo}
 }
 
