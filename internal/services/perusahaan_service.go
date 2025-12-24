@@ -21,12 +21,13 @@ var validSektors = []string{
 }
 
 type PerusahaanService struct {
-	repo *repository.PerusahaanRepository
+	repo repository.PerusahaanRepositoryInterface
 }
 
-func NewPerusahaanService(repo *repository.PerusahaanRepository) *PerusahaanService {
+func NewPerusahaanService(repo repository.PerusahaanRepositoryInterface) *PerusahaanService {
 	return &PerusahaanService{repo: repo}
 }
+
 
 func (s *PerusahaanService) Create(req dto.CreatePerusahaanRequest) (*dto.PerusahaanResponse, error) {
 
