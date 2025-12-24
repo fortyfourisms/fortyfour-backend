@@ -9,10 +9,10 @@ import (
 )
 
 type GulihService struct {
-	repo *repository.GulihRepository
+	repo repository.GulihRepositoryInterface
 }
 
-func NewGulihService(repo *repository.GulihRepository) *GulihService {
+func NewGulihService(repo repository.GulihRepositoryInterface) *GulihService {
 	return &GulihService{repo: repo}
 }
 
