@@ -9,10 +9,10 @@ import (
 )
 
 type ProteksiService struct {
-	repo *repository.ProteksiRepository
+	repo repository.ProteksiRepositoryInterface
 }
 
-func NewProteksiService(repo *repository.ProteksiRepository) *ProteksiService {
+func NewProteksiService(repo repository.ProteksiRepositoryInterface) *ProteksiService {
 	return &ProteksiService{repo: repo}
 }
 
