@@ -15,6 +15,186 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/csirt": {
+            "get": {
+                "description": "Mengambil seluruh data csirt",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Csirt"
+                ],
+                "summary": "List semua csirt",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.CsirtResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Membuat record csirt",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Csirt"
+                ],
+                "summary": "Tambah csirt baru",
+                "parameters": [
+                    {
+                        "description": "Data csirt",
+                        "name": "csirt",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateCsirtRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CsirtResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/csirt/{id}": {
+            "get": {
+                "description": "Mengambil satu data csirt",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Csirt"
+                ],
+                "summary": "Ambil csirt berdasarkan ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Csirt ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CsirtResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Mengubah data csirt berdasarkan ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Csirt"
+                ],
+                "summary": "Update csirt",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Csirt ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data update",
+                        "name": "csirt",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateCsirtRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CsirtResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Menghapus data csirt berdasarkan ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Csirt"
+                ],
+                "summary": "Hapus csirt",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Csirt ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/deteksi": {
             "get": {
                 "description": "Mengambil seluruh data deteksi",
@@ -555,7 +735,7 @@ const docTemplate = `{
         },
         "/api/ikas": {
             "get": {
-                "description": "Mengambil seluruh data deteksi",
+                "description": "Mengambil seluruh data ikas",
                 "produces": [
                     "application/json"
                 ],
@@ -2184,6 +2364,32 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateCsirtRequest": {
+            "type": "object",
+            "properties": {
+                "file_public_key_pgp": {
+                    "type": "string"
+                },
+                "file_rfc2350": {
+                    "type": "string"
+                },
+                "id_perusahaan": {
+                    "type": "string"
+                },
+                "nama_csirt": {
+                    "type": "string"
+                },
+                "photo_csirt": {
+                    "type": "string"
+                },
+                "telepon_csirt": {
+                    "type": "string"
+                },
+                "web_csirt": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.CreateDeteksiRequest": {
             "type": "object",
             "properties": {
@@ -2431,8 +2637,51 @@ const docTemplate = `{
                 "nama_csirt": {
                     "type": "string"
                 },
+                "telepon_csirt": {
+                    "type": "string"
+                },
                 "web_csirt": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.CsirtResponse": {
+            "type": "object",
+            "properties": {
+                "file_public_key_pgp": {
+                    "type": "string"
+                },
+                "file_rfc2350": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "nama_csirt": {
+                    "type": "string"
+                },
+                "perusahaan": {
+                    "$ref": "#/definitions/dto.PerusahaanResponse"
+                },
+                "photo_csirt": {
+                    "type": "string"
+                },
+                "telepon_csirt": {
+                    "type": "string"
+                },
+                "web_csirt": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.DeteksiInIkas": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nilai_deteksi": {
+                    "type": "number"
                 }
             }
         },
@@ -2465,6 +2714,17 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.GulihInIkas": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nilai_gulih": {
+                    "type": "number"
+                }
+            }
+        },
         "dto.GulihResponse": {
             "type": "object",
             "properties": {
@@ -2484,6 +2744,17 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "nilai_subdomain4": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.IdentifikasiInIkas": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nilai_identifikasi": {
                     "type": "number"
                 }
             }
@@ -2517,26 +2788,29 @@ const docTemplate = `{
         "dto.IkasResponse": {
             "type": "object",
             "properties": {
-                "id_deteksi": {
+                "deteksi": {
+                    "$ref": "#/definitions/dto.DeteksiInIkas"
+                },
+                "gulih": {
+                    "$ref": "#/definitions/dto.GulihInIkas"
+                },
+                "id": {
                     "type": "string"
                 },
-                "id_gulih": {
-                    "type": "string"
-                },
-                "id_identifikasi": {
-                    "type": "string"
-                },
-                "id_perusahaan": {
-                    "type": "string"
-                },
-                "id_proteksi": {
-                    "type": "string"
+                "identifikasi": {
+                    "$ref": "#/definitions/dto.IdentifikasiInIkas"
                 },
                 "jabatan": {
                     "type": "string"
                 },
                 "nilai_kematangan": {
                     "type": "number"
+                },
+                "perusahaan": {
+                    "$ref": "#/definitions/dto.PerusahaanInIkas"
+                },
+                "proteksi": {
+                    "$ref": "#/definitions/dto.ProteksiInIkas"
                 },
                 "responden": {
                     "type": "string"
@@ -2571,6 +2845,10 @@ const docTemplate = `{
         },
         "dto.LoginRequest": {
             "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
             "properties": {
                 "password": {
                     "type": "string"
@@ -2582,6 +2860,9 @@ const docTemplate = `{
         },
         "dto.LogoutRequest": {
             "type": "object",
+            "required": [
+                "refresh_token"
+            ],
             "properties": {
                 "refresh_token": {
                     "type": "string"
@@ -2606,16 +2887,38 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "id_perusahaan": {
-                    "type": "string"
-                },
                 "nama": {
                     "type": "string"
+                },
+                "perusahaan": {
+                    "$ref": "#/definitions/dto.PerusahaanInPIC"
                 },
                 "telepon": {
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PerusahaanInIkas": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nama_perusahaan": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PerusahaanInPIC": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nama_perusahaan": {
                     "type": "string"
                 }
             }
@@ -2655,6 +2958,17 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ProteksiInIkas": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nilai_proteksi": {
+                    "type": "number"
+                }
+            }
+        },
         "dto.ProteksiResponse": {
             "type": "object",
             "properties": {
@@ -2686,6 +3000,9 @@ const docTemplate = `{
         },
         "dto.RefreshTokenRequest": {
             "type": "object",
+            "required": [
+                "refresh_token"
+            ],
             "properties": {
                 "refresh_token": {
                     "type": "string"
@@ -2694,6 +3011,11 @@ const docTemplate = `{
         },
         "dto.RegisterRequest": {
             "type": "object",
+            "required": [
+                "email",
+                "password",
+                "username"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -2702,13 +3024,16 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 6
                 },
                 "role_id": {
                     "type": "string"
                 },
                 "username": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 3
                 }
             }
         },
@@ -2773,13 +3098,13 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "csirt": {
+                    "$ref": "#/definitions/dto.CsirtMiniResponse"
+                },
                 "fitur_se": {
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
-                },
-                "id_csirt": {
                     "type": "string"
                 },
                 "ip_se": {
@@ -2813,6 +3138,29 @@ const docTemplate = `{
                 "refresh_token": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
+        "dto.UpdateCsirtRequest": {
+            "type": "object",
+            "properties": {
+                "file_public_key_pgp": {
+                    "type": "string"
+                },
+                "file_rfc2350": {
+                    "type": "string"
+                },
+                "nama_csirt": {
+                    "type": "string"
+                },
+                "photo_csirt": {
+                    "type": "string"
+                },
+                "telepon_csirt": {
+                    "type": "string"
+                },
+                "web_csirt": {
+                    "type": "string"
                 }
             }
         },
@@ -3048,16 +3396,25 @@ const docTemplate = `{
         "models.User": {
             "type": "object",
             "properties": {
+                "banner": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
                 "email": {
                     "type": "string"
                 },
+                "foto_profile": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
                 "id_jabatan": {
+                    "type": "string"
+                },
+                "jabatan_name": {
                     "type": "string"
                 },
                 "role_id": {

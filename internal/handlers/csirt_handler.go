@@ -43,6 +43,14 @@ func (h *CsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetAllCsirt godoc
+// @Summary      List semua csirt
+// @Description  Mengambil seluruh data csirt
+// @Tags         Csirt
+// @Produce      json
+// @Success      200  {array}  dto.CsirtResponse
+// @Failure      500  {object} dto.ErrorResponse
+// @Router       /api/csirt [get]
 func (h *CsirtHandler) handleGetAll(w http.ResponseWriter) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -52,6 +60,15 @@ func (h *CsirtHandler) handleGetAll(w http.ResponseWriter) {
 	utils.RespondJSON(w, 200, data)
 }
 
+// GetCsirtByID godoc
+// @Summary      Ambil csirt berdasarkan ID
+// @Description  Mengambil satu data csirt
+// @Tags         Csirt
+// @Produce      json
+// @Param        id   path      string  true  "Csirt ID"
+// @Success      200  {object} dto.CsirtResponse
+// @Failure      404  {object} dto.ErrorResponse
+// @Router       /api/csirt/{id} [get]
 func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -61,6 +78,16 @@ func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, id string) {
 	utils.RespondJSON(w, 200, data)
 }
 
+// CreateCsirt godoc
+// @Summary      Tambah csirt baru
+// @Description  Membuat record csirt
+// @Tags         Csirt
+// @Accept       json
+// @Produce      json
+// @Param        csirt body dto.CreateCsirtRequest true "Data csirt"
+// @Success      201  {object} dto.CsirtResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/csirt [post]
 func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		utils.RespondError(w, 400, "Gagal membaca form-data")
@@ -104,6 +131,17 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 201, resp)
 }
 
+// UpdateCsirt godoc
+// @Summary      Update csirt
+// @Description  Mengubah data csirt berdasarkan ID
+// @Tags         Csirt
+// @Accept       json
+// @Produce      json
+// @Param        id      path      string  true  "Csirt ID"
+// @Param        csirt body      dto.UpdateCsirtRequest true "Data update"
+// @Success      200  {object} dto.CsirtResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/csirt/{id} [put]
 func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		utils.RespondError(w, 400, "Gagal membaca form-data")
@@ -143,6 +181,15 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 	utils.RespondJSON(w, 200, resp)
 }
 
+// DeleteCsirt godoc
+// @Summary      Hapus csirt
+// @Description  Menghapus data csirt berdasarkan ID
+// @Tags         Csirt
+// @Produce      json
+// @Param        id  path  string  true  "Csirt ID"
+// @Success      200  {object} dto.MessageResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/csirt/{id} [delete]
 func (h *CsirtHandler) handleDelete(w http.ResponseWriter, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, 400, err.Error())
