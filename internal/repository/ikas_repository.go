@@ -14,12 +14,84 @@ func NewIkasRepository(db *sql.DB) *IkasRepository {
 	return &IkasRepository{db: db}
 }
 
-func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string) error {
+// Tambahkan method baru di IkasRepository
+
+func (r *IkasRepository) CreateIdentifikasi(id string, data *dto.CreateIdentifikasiData) (float64, error) {
+	// Hitung rata-rata
+	nilaiIdentifikasi := (data.NilaiSubdomain1 + data.NilaiSubdomain2 +
+		data.NilaiSubdomain3 + data.NilaiSubdomain4 + data.NilaiSubdomain5) / 5.0
+
+	query := `INSERT INTO identifikasi 
+		(id, nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, 
+		nilai_subdomain3, nilai_subdomain4, nilai_subdomain5)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`
+
+	_, err := r.db.Exec(query, id, nilaiIdentifikasi,
+		data.NilaiSubdomain1, data.NilaiSubdomain2, data.NilaiSubdomain3,
+		data.NilaiSubdomain4, data.NilaiSubdomain5)
+
+	return nilaiIdentifikasi, err
+}
+
+func (r *IkasRepository) CreateProteksi(id string, data *dto.CreateProteksiData) (float64, error) {
+	// Hitung rata-rata
+	nilaiProteksi := (data.NilaiSubdomain1 + data.NilaiSubdomain2 +
+		data.NilaiSubdomain3 + data.NilaiSubdomain4 +
+		data.NilaiSubdomain5 + data.NilaiSubdomain6) / 6.0
+
+	query := `INSERT INTO proteksi 
+		(id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
+		nilai_subdomain3, nilai_subdomain4, nilai_subdomain5, nilai_subdomain6)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+
+	_, err := r.db.Exec(query, id, nilaiProteksi,
+		data.NilaiSubdomain1, data.NilaiSubdomain2, data.NilaiSubdomain3,
+		data.NilaiSubdomain4, data.NilaiSubdomain5, data.NilaiSubdomain6)
+
+	return nilaiProteksi, err
+}
+
+func (r *IkasRepository) CreateDeteksi(id string, data *dto.CreateDeteksiData) (float64, error) {
+	// Hitung rata-rata
+	nilaiDeteksi := (data.NilaiSubdomain1 + data.NilaiSubdomain2 +
+		data.NilaiSubdomain3) / 3.0
+
+	query := `INSERT INTO deteksi 
+		(id, nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3)
+		VALUES (?, ?, ?, ?, ?)`
+
+	_, err := r.db.Exec(query, id, nilaiDeteksi,
+		data.NilaiSubdomain1, data.NilaiSubdomain2, data.NilaiSubdomain3)
+
+	return nilaiDeteksi, err
+}
+
+func (r *IkasRepository) CreateGulih(id string, data *dto.CreateGulihData) (float64, error) {
+	// Hitung rata-rata
+	nilaiGulih := (data.NilaiSubdomain1 + data.NilaiSubdomain2 +
+		data.NilaiSubdomain3 + data.NilaiSubdomain4) / 4.0
+
+	query := `INSERT INTO gulih 
+		(id, nilai_gulih, nilai_subdomain1, nilai_subdomain2, 
+		nilai_subdomain3, nilai_subdomain4)
+		VALUES (?, ?, ?, ?, ?, ?)`
+
+	_, err := r.db.Exec(query, id, nilaiGulih,
+		data.NilaiSubdomain1, data.NilaiSubdomain2,
+		data.NilaiSubdomain3, data.NilaiSubdomain4)
+
+	return nilaiGulih, err
+}
+
+// Update method Create untuk menerima nilai_kematangan
+func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string, nilaiKematangan float64,
+	idIden, idProt, idDet, idGul string) error {
+
 	query := `INSERT INTO ikas
-				(id, id_perusahaan, tanggal, responden, telepon, jabatan,
-				nilai_kematangan, target_nilai, id_identifikasi, id_proteksi,
-				id_deteksi, id_gulih)
-				VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		(id, id_perusahaan, tanggal, responden, telepon, jabatan,
+		nilai_kematangan, target_nilai, id_identifikasi, id_proteksi,
+		id_deteksi, id_gulih)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	_, err := r.db.Exec(query,
 		id,
@@ -28,12 +100,12 @@ func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string) error {
 		req.Responden,
 		req.Telepon,
 		req.Jabatan,
-		req.NilaiKematangan,
+		nilaiKematangan,
 		req.TargetNilai,
-		req.IDIdentifikasi,
-		req.IDProteksi,
-		req.IDDeteksi,
-		req.IDGulih,
+		idIden,
+		idProt,
+		idDet,
+		idGul,
 	)
 
 	return err
@@ -159,48 +231,48 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			i.Identifikasi = &dto.IdentifikasiInIkas{
 				ID:                idenID.String,
 				NilaiIdentifikasi: idenNilai.Float64,
-				// NilaiSubdomain1:   idenSub1.Float64,
-				// NilaiSubdomain2:   idenSub2.Float64,
-				// NilaiSubdomain3:   idenSub3.Float64,
-				// NilaiSubdomain4:   idenSub4.Float64,
-				// NilaiSubdomain5:   idenSub5.Float64,
+				NilaiSubdomain1:   idenSub1.Float64,
+				NilaiSubdomain2:   idenSub2.Float64,
+				NilaiSubdomain3:   idenSub3.Float64,
+				NilaiSubdomain4:   idenSub4.Float64,
+				NilaiSubdomain5:   idenSub5.Float64,
 			}
 		}
 
 		// Map proteksi
 		if protID.Valid {
 			i.Proteksi = &dto.ProteksiInIkas{
-				ID:            protID.String,
-				NilaiProteksi: protNilai.Float64,
-				// NilaiSubdomain1: protSub1.Float64,
-				// NilaiSubdomain2: protSub2.Float64,
-				// NilaiSubdomain3: protSub3.Float64,
-				// NilaiSubdomain4: protSub4.Float64,
-				// NilaiSubdomain5: protSub5.Float64,
-				// NilaiSubdomain6: protSub6.Float64,
+				ID:              protID.String,
+				NilaiProteksi:   protNilai.Float64,
+				NilaiSubdomain1: protSub1.Float64,
+				NilaiSubdomain2: protSub2.Float64,
+				NilaiSubdomain3: protSub3.Float64,
+				NilaiSubdomain4: protSub4.Float64,
+				NilaiSubdomain5: protSub5.Float64,
+				NilaiSubdomain6: protSub6.Float64,
 			}
 		}
 
 		// Map deteksi
 		if detID.Valid {
 			i.Deteksi = &dto.DeteksiInIkas{
-				ID:           detID.String,
-				NilaiDeteksi: detNilai.Float64,
-				// NilaiSubdomain1: detSub1.Float64,
-				// NilaiSubdomain2: detSub2.Float64,
-				// NilaiSubdomain3: detSub3.Float64,
+				ID:              detID.String,
+				NilaiDeteksi:    detNilai.Float64,
+				NilaiSubdomain1: detSub1.Float64,
+				NilaiSubdomain2: detSub2.Float64,
+				NilaiSubdomain3: detSub3.Float64,
 			}
 		}
 
 		// Map gulih
 		if gulihID.Valid {
 			i.Gulih = &dto.GulihInIkas{
-				ID:         gulihID.String,
-				NilaiGulih: gulihNilai.Float64,
-				// NilaiSubdomain1: gulihSub1.Float64,
-				// NilaiSubdomain2: gulihSub2.Float64,
-				// NilaiSubdomain3: gulihSub3.Float64,
-				// NilaiSubdomain4: gulihSub4.Float64,
+				ID:              gulihID.String,
+				NilaiGulih:      gulihNilai.Float64,
+				NilaiSubdomain1: gulihSub1.Float64,
+				NilaiSubdomain2: gulihSub2.Float64,
+				NilaiSubdomain3: gulihSub3.Float64,
+				NilaiSubdomain4: gulihSub4.Float64,
 			}
 		}
 
@@ -324,48 +396,48 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 		i.Identifikasi = &dto.IdentifikasiInIkas{
 			ID:                idenID.String,
 			NilaiIdentifikasi: idenNilai.Float64,
-			// NilaiSubdomain1:   idenSub1.Float64,
-			// NilaiSubdomain2:   idenSub2.Float64,
-			// NilaiSubdomain3:   idenSub3.Float64,
-			// NilaiSubdomain4:   idenSub4.Float64,
-			// NilaiSubdomain5:   idenSub5.Float64,
+			NilaiSubdomain1:   idenSub1.Float64,
+			NilaiSubdomain2:   idenSub2.Float64,
+			NilaiSubdomain3:   idenSub3.Float64,
+			NilaiSubdomain4:   idenSub4.Float64,
+			NilaiSubdomain5:   idenSub5.Float64,
 		}
 	}
 
 	// Map proteksi
 	if protID.Valid {
 		i.Proteksi = &dto.ProteksiInIkas{
-			ID:            protID.String,
-			NilaiProteksi: protNilai.Float64,
-			// NilaiSubdomain1: protSub1.Float64,
-			// NilaiSubdomain2: protSub2.Float64,
-			// NilaiSubdomain3: protSub3.Float64,
-			// NilaiSubdomain4: protSub4.Float64,
-			// NilaiSubdomain5: protSub5.Float64,
-			// NilaiSubdomain6: protSub6.Float64,
+			ID:              protID.String,
+			NilaiProteksi:   protNilai.Float64,
+			NilaiSubdomain1: protSub1.Float64,
+			NilaiSubdomain2: protSub2.Float64,
+			NilaiSubdomain3: protSub3.Float64,
+			NilaiSubdomain4: protSub4.Float64,
+			NilaiSubdomain5: protSub5.Float64,
+			NilaiSubdomain6: protSub6.Float64,
 		}
 	}
 
 	// Map deteksi
 	if detID.Valid {
 		i.Deteksi = &dto.DeteksiInIkas{
-			ID:           detID.String,
-			NilaiDeteksi: detNilai.Float64,
-			// NilaiSubdomain1: detSub1.Float64,
-			// NilaiSubdomain2: detSub2.Float64,
-			// NilaiSubdomain3: detSub3.Float64,
+			ID:              detID.String,
+			NilaiDeteksi:    detNilai.Float64,
+			NilaiSubdomain1: detSub1.Float64,
+			NilaiSubdomain2: detSub2.Float64,
+			NilaiSubdomain3: detSub3.Float64,
 		}
 	}
 
 	// Map gulih
 	if gulihID.Valid {
 		i.Gulih = &dto.GulihInIkas{
-			ID:         gulihID.String,
-			NilaiGulih: gulihNilai.Float64,
-			// NilaiSubdomain1: gulihSub1.Float64,
-			// NilaiSubdomain2: gulihSub2.Float64,
-			// NilaiSubdomain3: gulihSub3.Float64,
-			// NilaiSubdomain4: gulihSub4.Float64,
+			ID:              gulihID.String,
+			NilaiGulih:      gulihNilai.Float64,
+			NilaiSubdomain1: gulihSub1.Float64,
+			NilaiSubdomain2: gulihSub2.Float64,
+			NilaiSubdomain3: gulihSub3.Float64,
+			NilaiSubdomain4: gulihSub4.Float64,
 		}
 	}
 
