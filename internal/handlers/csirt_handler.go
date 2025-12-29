@@ -45,7 +45,7 @@ func (h *CsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // GetAllCsirt godoc
 // @Summary      List semua csirt
-// @Description  Mengambil seluruh data csirt
+// @Description  Ambil seluruh data csirt
 // @Tags         Csirt
 // @Produce      json
 // @Success      200  {array}  dto.CsirtResponse
