@@ -14,8 +14,6 @@ func NewIkasRepository(db *sql.DB) *IkasRepository {
 	return &IkasRepository{db: db}
 }
 
-// Tambahkan method baru di IkasRepository
-
 func (r *IkasRepository) CreateIdentifikasi(id string, data *dto.CreateIdentifikasiData) (float64, error) {
 	// Hitung rata-rata
 	nilaiIdentifikasi := (data.NilaiSubdomain1 + data.NilaiSubdomain2 +
@@ -504,6 +502,216 @@ func (r *IkasRepository) Update(id string, req dto.UpdateIkasRequest) error {
 
 	_, err := r.db.Exec(query, args...)
 	return err
+}
+
+func (r *IkasRepository) UpdateIdentifikasi(id string, data *dto.UpdateIdentifikasiData) (float64, error) {
+	query := "UPDATE identifikasi SET "
+	args := []interface{}{}
+	updates := []string{}
+
+	if data.NilaiSubdomain1 != nil {
+		updates = append(updates, "nilai_subdomain1=?")
+		args = append(args, *data.NilaiSubdomain1)
+	}
+	if data.NilaiSubdomain2 != nil {
+		updates = append(updates, "nilai_subdomain2=?")
+		args = append(args, *data.NilaiSubdomain2)
+	}
+	if data.NilaiSubdomain3 != nil {
+		updates = append(updates, "nilai_subdomain3=?")
+		args = append(args, *data.NilaiSubdomain3)
+	}
+	if data.NilaiSubdomain4 != nil {
+		updates = append(updates, "nilai_subdomain4=?")
+		args = append(args, *data.NilaiSubdomain4)
+	}
+	if data.NilaiSubdomain5 != nil {
+		updates = append(updates, "nilai_subdomain5=?")
+		args = append(args, *data.NilaiSubdomain5)
+	}
+
+	if len(updates) == 0 {
+		return 0, nil
+	}
+
+	query += strings.Join(updates, ", ")
+	query += " WHERE id=?"
+	args = append(args, id)
+
+	_, err := r.db.Exec(query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	// Hitung ulang rata-rata
+	var sub1, sub2, sub3, sub4, sub5 float64
+	err = r.db.QueryRow(`SELECT nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, 
+		nilai_subdomain4, nilai_subdomain5 FROM identifikasi WHERE id=?`, id).
+		Scan(&sub1, &sub2, &sub3, &sub4, &sub5)
+	if err != nil {
+		return 0, err
+	}
+
+	nilaiIdentifikasi := (sub1 + sub2 + sub3 + sub4 + sub5) / 5.0
+
+	// Update nilai_identifikasi
+	_, err = r.db.Exec(`UPDATE identifikasi SET nilai_identifikasi=? WHERE id=?`, nilaiIdentifikasi, id)
+	return nilaiIdentifikasi, err
+}
+
+func (r *IkasRepository) UpdateProteksi(id string, data *dto.UpdateProteksiData) (float64, error) {
+	query := "UPDATE proteksi SET "
+	args := []interface{}{}
+	updates := []string{}
+
+	if data.NilaiSubdomain1 != nil {
+		updates = append(updates, "nilai_subdomain1=?")
+		args = append(args, *data.NilaiSubdomain1)
+	}
+	if data.NilaiSubdomain2 != nil {
+		updates = append(updates, "nilai_subdomain2=?")
+		args = append(args, *data.NilaiSubdomain2)
+	}
+	if data.NilaiSubdomain3 != nil {
+		updates = append(updates, "nilai_subdomain3=?")
+		args = append(args, *data.NilaiSubdomain3)
+	}
+	if data.NilaiSubdomain4 != nil {
+		updates = append(updates, "nilai_subdomain4=?")
+		args = append(args, *data.NilaiSubdomain4)
+	}
+	if data.NilaiSubdomain5 != nil {
+		updates = append(updates, "nilai_subdomain5=?")
+		args = append(args, *data.NilaiSubdomain5)
+	}
+	if data.NilaiSubdomain6 != nil {
+		updates = append(updates, "nilai_subdomain6=?")
+		args = append(args, *data.NilaiSubdomain6)
+	}
+
+	if len(updates) == 0 {
+		return 0, nil
+	}
+
+	query += strings.Join(updates, ", ")
+	query += " WHERE id=?"
+	args = append(args, id)
+
+	_, err := r.db.Exec(query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	// Hitung ulang rata-rata
+	var sub1, sub2, sub3, sub4, sub5, sub6 float64
+	err = r.db.QueryRow(`SELECT nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, 
+		nilai_subdomain4, nilai_subdomain5, nilai_subdomain6 FROM proteksi WHERE id=?`, id).
+		Scan(&sub1, &sub2, &sub3, &sub4, &sub5, &sub6)
+	if err != nil {
+		return 0, err
+	}
+
+	nilaiProteksi := (sub1 + sub2 + sub3 + sub4 + sub5 + sub6) / 6.0
+
+	// Update nilai_proteksi
+	_, err = r.db.Exec(`UPDATE proteksi SET nilai_proteksi=? WHERE id=?`, nilaiProteksi, id)
+	return nilaiProteksi, err
+}
+
+func (r *IkasRepository) UpdateDeteksi(id string, data *dto.UpdateDeteksiData) (float64, error) {
+	query := "UPDATE deteksi SET "
+	args := []interface{}{}
+	updates := []string{}
+
+	if data.NilaiSubdomain1 != nil {
+		updates = append(updates, "nilai_subdomain1=?")
+		args = append(args, *data.NilaiSubdomain1)
+	}
+	if data.NilaiSubdomain2 != nil {
+		updates = append(updates, "nilai_subdomain2=?")
+		args = append(args, *data.NilaiSubdomain2)
+	}
+	if data.NilaiSubdomain3 != nil {
+		updates = append(updates, "nilai_subdomain3=?")
+		args = append(args, *data.NilaiSubdomain3)
+	}
+
+	if len(updates) == 0 {
+		return 0, nil
+	}
+
+	query += strings.Join(updates, ", ")
+	query += " WHERE id=?"
+	args = append(args, id)
+
+	_, err := r.db.Exec(query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	// Hitung ulang rata-rata
+	var sub1, sub2, sub3 float64
+	err = r.db.QueryRow(`SELECT nilai_subdomain1, nilai_subdomain2, nilai_subdomain3 
+		FROM deteksi WHERE id=?`, id).Scan(&sub1, &sub2, &sub3)
+	if err != nil {
+		return 0, err
+	}
+
+	nilaiDeteksi := (sub1 + sub2 + sub3) / 3.0
+
+	// Update nilai_deteksi
+	_, err = r.db.Exec(`UPDATE deteksi SET nilai_deteksi=? WHERE id=?`, nilaiDeteksi, id)
+	return nilaiDeteksi, err
+}
+
+func (r *IkasRepository) UpdateGulih(id string, data *dto.UpdateGulihData) (float64, error) {
+	query := "UPDATE gulih SET "
+	args := []interface{}{}
+	updates := []string{}
+
+	if data.NilaiSubdomain1 != nil {
+		updates = append(updates, "nilai_subdomain1=?")
+		args = append(args, *data.NilaiSubdomain1)
+	}
+	if data.NilaiSubdomain2 != nil {
+		updates = append(updates, "nilai_subdomain2=?")
+		args = append(args, *data.NilaiSubdomain2)
+	}
+	if data.NilaiSubdomain3 != nil {
+		updates = append(updates, "nilai_subdomain3=?")
+		args = append(args, *data.NilaiSubdomain3)
+	}
+	if data.NilaiSubdomain4 != nil {
+		updates = append(updates, "nilai_subdomain4=?")
+		args = append(args, *data.NilaiSubdomain4)
+	}
+
+	if len(updates) == 0 {
+		return 0, nil
+	}
+
+	query += strings.Join(updates, ", ")
+	query += " WHERE id=?"
+	args = append(args, id)
+
+	_, err := r.db.Exec(query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	// Hitung ulang rata-rata
+	var sub1, sub2, sub3, sub4 float64
+	err = r.db.QueryRow(`SELECT nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, 
+		nilai_subdomain4 FROM gulih WHERE id=?`, id).Scan(&sub1, &sub2, &sub3, &sub4)
+	if err != nil {
+		return 0, err
+	}
+
+	nilaiGulih := (sub1 + sub2 + sub3 + sub4) / 4.0
+
+	// Update nilai_gulih
+	_, err = r.db.Exec(`UPDATE gulih SET nilai_gulih=? WHERE id=?`, nilaiGulih, id)
+	return nilaiGulih, err
 }
 
 func (r *IkasRepository) Delete(id string) error {

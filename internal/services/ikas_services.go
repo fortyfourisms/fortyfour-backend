@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/repository"
 
@@ -83,7 +84,82 @@ func (s *IkasService) GetByID(id string) (*dto.IkasResponse, error) {
 }
 
 func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*dto.IkasResponse, error) {
-	// Update data
+	// Ambil data existing untuk mendapatkan ID nested tables
+	existing, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	var needRecalculateKematangan bool
+	var nilaiIden, nilaiProt, nilaiDet, nilaiGul float64
+
+	// Update Identifikasi jika ada data
+	if req.Identifikasi != nil {
+		if existing.Identifikasi == nil {
+			return nil, errors.New("identifikasi record not found for this ikas")
+		}
+		nilai, err := s.repo.UpdateIdentifikasi(existing.Identifikasi.ID, req.Identifikasi)
+		if err != nil {
+			return nil, err
+		}
+		nilaiIden = nilai
+		needRecalculateKematangan = true
+	} else if existing.Identifikasi != nil {
+		nilaiIden = existing.Identifikasi.NilaiIdentifikasi
+	}
+
+	// Update Proteksi jika ada data
+	if req.Proteksi != nil {
+		if existing.Proteksi == nil {
+			return nil, errors.New("proteksi record not found for this ikas")
+		}
+		nilai, err := s.repo.UpdateProteksi(existing.Proteksi.ID, req.Proteksi)
+		if err != nil {
+			return nil, err
+		}
+		nilaiProt = nilai
+		needRecalculateKematangan = true
+	} else if existing.Proteksi != nil {
+		nilaiProt = existing.Proteksi.NilaiProteksi
+	}
+
+	// Update Deteksi jika ada data
+	if req.Deteksi != nil {
+		if existing.Deteksi == nil {
+			return nil, errors.New("deteksi record not found for this ikas")
+		}
+		nilai, err := s.repo.UpdateDeteksi(existing.Deteksi.ID, req.Deteksi)
+		if err != nil {
+			return nil, err
+		}
+		nilaiDet = nilai
+		needRecalculateKematangan = true
+	} else if existing.Deteksi != nil {
+		nilaiDet = existing.Deteksi.NilaiDeteksi
+	}
+
+	// Update Gulih jika ada data
+	if req.Gulih != nil {
+		if existing.Gulih == nil {
+			return nil, errors.New("gulih record not found for this ikas")
+		}
+		nilai, err := s.repo.UpdateGulih(existing.Gulih.ID, req.Gulih)
+		if err != nil {
+			return nil, err
+		}
+		nilaiGul = nilai
+		needRecalculateKematangan = true
+	} else if existing.Gulih != nil {
+		nilaiGul = existing.Gulih.NilaiGulih
+	}
+
+	// Recalculate nilai_kematangan jika ada perubahan pada nested data
+	if needRecalculateKematangan {
+		nilaiKematangan := (nilaiIden + nilaiProt + nilaiDet + nilaiGul) / 4.0
+		req.NilaiKematangan = &nilaiKematangan
+	}
+
+	// Update data IKAS utama
 	if err := s.repo.Update(id, req); err != nil {
 		return nil, err
 	}

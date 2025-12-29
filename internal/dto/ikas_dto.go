@@ -33,6 +33,12 @@ type UpdateIkasRequest struct {
 	IDProteksi      *string  `json:"id_proteksi,omitempty"`
 	IDDeteksi       *string  `json:"id_deteksi,omitempty"`
 	IDGulih         *string  `json:"id_gulih,omitempty"`
+
+	// Nested data untuk update subdomain
+	Identifikasi *UpdateIdentifikasiData `json:"identifikasi,omitempty"`
+	Proteksi     *UpdateProteksiData     `json:"proteksi,omitempty"`
+	Deteksi      *UpdateDeteksiData      `json:"deteksi,omitempty"`
+	Gulih        *UpdateGulihData        `json:"gulih,omitempty"`
 }
 
 // Response dengan nested objects
@@ -124,4 +130,35 @@ type CreateGulihData struct {
 	NilaiSubdomain2 float64 `json:"nilai_subdomain2"`
 	NilaiSubdomain3 float64 `json:"nilai_subdomain3"`
 	NilaiSubdomain4 float64 `json:"nilai_subdomain4"`
+}
+
+// Struct untuk update nested data
+type UpdateIdentifikasiData struct {
+	NilaiSubdomain1 *float64 `json:"nilai_subdomain1,omitempty"`
+	NilaiSubdomain2 *float64 `json:"nilai_subdomain2,omitempty"`
+	NilaiSubdomain3 *float64 `json:"nilai_subdomain3,omitempty"`
+	NilaiSubdomain4 *float64 `json:"nilai_subdomain4,omitempty"`
+	NilaiSubdomain5 *float64 `json:"nilai_subdomain5,omitempty"`
+}
+
+type UpdateProteksiData struct {
+	NilaiSubdomain1 *float64 `json:"nilai_subdomain1,omitempty"`
+	NilaiSubdomain2 *float64 `json:"nilai_subdomain2,omitempty"`
+	NilaiSubdomain3 *float64 `json:"nilai_subdomain3,omitempty"`
+	NilaiSubdomain4 *float64 `json:"nilai_subdomain4,omitempty"`
+	NilaiSubdomain5 *float64 `json:"nilai_subdomain5,omitempty"`
+	NilaiSubdomain6 *float64 `json:"nilai_subdomain6,omitempty"`
+}
+
+type UpdateDeteksiData struct {
+	NilaiSubdomain1 *float64 `json:"nilai_subdomain1,omitempty"`
+	NilaiSubdomain2 *float64 `json:"nilai_subdomain2,omitempty"`
+	NilaiSubdomain3 *float64 `json:"nilai_subdomain3,omitempty"`
+}
+
+type UpdateGulihData struct {
+	NilaiSubdomain1 *float64 `json:"nilai_subdomain1,omitempty"`
+	NilaiSubdomain2 *float64 `json:"nilai_subdomain2,omitempty"`
+	NilaiSubdomain3 *float64 `json:"nilai_subdomain3,omitempty"`
+	NilaiSubdomain4 *float64 `json:"nilai_subdomain4,omitempty"`
 }
