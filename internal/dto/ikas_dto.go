@@ -43,18 +43,19 @@ type UpdateIkasRequest struct {
 
 // Response dengan nested objects
 type IkasResponse struct {
-	ID              string              `json:"id"`
-	Tanggal         string              `json:"tanggal"`
-	Responden       string              `json:"responden"`
-	Telepon         string              `json:"telepon"`
-	Jabatan         string              `json:"jabatan"`
-	NilaiKematangan float64             `json:"nilai_kematangan"`
-	TargetNilai     float64             `json:"target_nilai"`
-	Perusahaan      *PerusahaanInIkas   `json:"perusahaan,omitempty"`
-	Identifikasi    *IdentifikasiInIkas `json:"identifikasi,omitempty"`
-	Proteksi        *ProteksiInIkas     `json:"proteksi,omitempty"`
-	Deteksi         *DeteksiInIkas      `json:"deteksi,omitempty"`
-	Gulih           *GulihInIkas        `json:"gulih,omitempty"`
+	ID                              string              `json:"id"`
+	Tanggal                         string              `json:"tanggal"`
+	Responden                       string              `json:"responden"`
+	Telepon                         string              `json:"telepon"`
+	Jabatan                         string              `json:"jabatan"`
+	NilaiKematangan                 float64             `json:"nilai_kematangan"`
+	KategoriKematanganKeamananSiber string              `json:"kategori_kematangan_keamanan_siber"`
+	TargetNilai                     float64             `json:"target_nilai"`
+	Perusahaan                      *PerusahaanInIkas   `json:"perusahaan,omitempty"`
+	Identifikasi                    *IdentifikasiInIkas `json:"identifikasi,omitempty"`
+	Proteksi                        *ProteksiInIkas     `json:"proteksi,omitempty"`
+	Deteksi                         *DeteksiInIkas      `json:"deteksi,omitempty"`
+	Gulih                           *GulihInIkas        `json:"gulih,omitempty"`
 }
 
 // Nested structs untuk foreign keys
@@ -64,41 +65,45 @@ type PerusahaanInIkas struct {
 }
 
 type IdentifikasiInIkas struct {
-	ID                string  `json:"id"`
-	NilaiIdentifikasi float64 `json:"nilai_identifikasi"`
-	NilaiSubdomain1   float64 `json:"nilai_subdomain1"`
-	NilaiSubdomain2   float64 `json:"nilai_subdomain2"`
-	NilaiSubdomain3   float64 `json:"nilai_subdomain3"`
-	NilaiSubdomain4   float64 `json:"nilai_subdomain4"`
-	NilaiSubdomain5   float64 `json:"nilai_subdomain5"`
+	ID                              string  `json:"id"`
+	NilaiIdentifikasi               float64 `json:"nilai_identifikasi"`
+	KategoriTingkatKematanganDomain string  `json:"kategori_tingkat_kematangan_domain"`
+	NilaiSubdomain1                 float64 `json:"nilai_subdomain1"`
+	NilaiSubdomain2                 float64 `json:"nilai_subdomain2"`
+	NilaiSubdomain3                 float64 `json:"nilai_subdomain3"`
+	NilaiSubdomain4                 float64 `json:"nilai_subdomain4"`
+	NilaiSubdomain5                 float64 `json:"nilai_subdomain5"`
 }
 
 type ProteksiInIkas struct {
-	ID              string  `json:"id"`
-	NilaiProteksi   float64 `json:"nilai_proteksi"`
-	NilaiSubdomain1 float64 `json:"nilai_subdomain1"`
-	NilaiSubdomain2 float64 `json:"nilai_subdomain2"`
-	NilaiSubdomain3 float64 `json:"nilai_subdomain3"`
-	NilaiSubdomain4 float64 `json:"nilai_subdomain4"`
-	NilaiSubdomain5 float64 `json:"nilai_subdomain5"`
-	NilaiSubdomain6 float64 `json:"nilai_subdomain6"`
+	ID                              string  `json:"id"`
+	NilaiProteksi                   float64 `json:"nilai_proteksi"`
+	KategoriTingkatKematanganDomain string  `json:"kategori_tingkat_kematangan_domain"`
+	NilaiSubdomain1                 float64 `json:"nilai_subdomain1"`
+	NilaiSubdomain2                 float64 `json:"nilai_subdomain2"`
+	NilaiSubdomain3                 float64 `json:"nilai_subdomain3"`
+	NilaiSubdomain4                 float64 `json:"nilai_subdomain4"`
+	NilaiSubdomain5                 float64 `json:"nilai_subdomain5"`
+	NilaiSubdomain6                 float64 `json:"nilai_subdomain6"`
 }
 
 type DeteksiInIkas struct {
-	ID              string  `json:"id"`
-	NilaiDeteksi    float64 `json:"nilai_deteksi"`
-	NilaiSubdomain1 float64 `json:"nilai_subdomain1"`
-	NilaiSubdomain2 float64 `json:"nilai_subdomain2"`
-	NilaiSubdomain3 float64 `json:"nilai_subdomain3"`
+	ID                              string  `json:"id"`
+	NilaiDeteksi                    float64 `json:"nilai_deteksi"`
+	KategoriTingkatKematanganDomain string  `json:"kategori_tingkat_kematangan_domain"`
+	NilaiSubdomain1                 float64 `json:"nilai_subdomain1"`
+	NilaiSubdomain2                 float64 `json:"nilai_subdomain2"`
+	NilaiSubdomain3                 float64 `json:"nilai_subdomain3"`
 }
 
 type GulihInIkas struct {
-	ID              string  `json:"id"`
-	NilaiGulih      float64 `json:"nilai_gulih"`
-	NilaiSubdomain1 float64 `json:"nilai_subdomain1"`
-	NilaiSubdomain2 float64 `json:"nilai_subdomain2"`
-	NilaiSubdomain3 float64 `json:"nilai_subdomain3"`
-	NilaiSubdomain4 float64 `json:"nilai_subdomain4"`
+	ID                              string  `json:"id"`
+	NilaiGulih                      float64 `json:"nilai_gulih"`
+	KategoriTingkatKematanganDomain string  `json:"kategori_tingkat_kematangan_domain"`
+	NilaiSubdomain1                 float64 `json:"nilai_subdomain1"`
+	NilaiSubdomain2                 float64 `json:"nilai_subdomain2"`
+	NilaiSubdomain3                 float64 `json:"nilai_subdomain3"`
+	NilaiSubdomain4                 float64 `json:"nilai_subdomain4"`
 }
 
 // Tambahkan struct baru untuk nested create

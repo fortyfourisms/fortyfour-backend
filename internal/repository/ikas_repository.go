@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/utils"
 	"strings"
 )
 
@@ -216,6 +217,9 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			continue
 		}
 
+		// Set kategori kematangan keamanan siber
+		i.KategoriKematanganKeamananSiber = utils.GetKategoriTingkatKematangan(i.NilaiKematangan)
+
 		// Map perusahaan
 		if perusahaanID.Valid && perusahaanNama.Valid {
 			i.Perusahaan = &dto.PerusahaanInIkas{
@@ -227,50 +231,54 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 		// Map identifikasi
 		if idenID.Valid {
 			i.Identifikasi = &dto.IdentifikasiInIkas{
-				ID:                idenID.String,
-				NilaiIdentifikasi: idenNilai.Float64,
-				NilaiSubdomain1:   idenSub1.Float64,
-				NilaiSubdomain2:   idenSub2.Float64,
-				NilaiSubdomain3:   idenSub3.Float64,
-				NilaiSubdomain4:   idenSub4.Float64,
-				NilaiSubdomain5:   idenSub5.Float64,
+				ID:                              idenID.String,
+				NilaiIdentifikasi:               idenNilai.Float64,
+				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(idenNilai.Float64),
+				NilaiSubdomain1:                 idenSub1.Float64,
+				NilaiSubdomain2:                 idenSub2.Float64,
+				NilaiSubdomain3:                 idenSub3.Float64,
+				NilaiSubdomain4:                 idenSub4.Float64,
+				NilaiSubdomain5:                 idenSub5.Float64,
 			}
 		}
 
 		// Map proteksi
 		if protID.Valid {
 			i.Proteksi = &dto.ProteksiInIkas{
-				ID:              protID.String,
-				NilaiProteksi:   protNilai.Float64,
-				NilaiSubdomain1: protSub1.Float64,
-				NilaiSubdomain2: protSub2.Float64,
-				NilaiSubdomain3: protSub3.Float64,
-				NilaiSubdomain4: protSub4.Float64,
-				NilaiSubdomain5: protSub5.Float64,
-				NilaiSubdomain6: protSub6.Float64,
+				ID:                              protID.String,
+				NilaiProteksi:                   protNilai.Float64,
+				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(protNilai.Float64),
+				NilaiSubdomain1:                 protSub1.Float64,
+				NilaiSubdomain2:                 protSub2.Float64,
+				NilaiSubdomain3:                 protSub3.Float64,
+				NilaiSubdomain4:                 protSub4.Float64,
+				NilaiSubdomain5:                 protSub5.Float64,
+				NilaiSubdomain6:                 protSub6.Float64,
 			}
 		}
 
 		// Map deteksi
 		if detID.Valid {
 			i.Deteksi = &dto.DeteksiInIkas{
-				ID:              detID.String,
-				NilaiDeteksi:    detNilai.Float64,
-				NilaiSubdomain1: detSub1.Float64,
-				NilaiSubdomain2: detSub2.Float64,
-				NilaiSubdomain3: detSub3.Float64,
+				ID:                              detID.String,
+				NilaiDeteksi:                    detNilai.Float64,
+				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(detNilai.Float64),
+				NilaiSubdomain1:                 detSub1.Float64,
+				NilaiSubdomain2:                 detSub2.Float64,
+				NilaiSubdomain3:                 detSub3.Float64,
 			}
 		}
 
 		// Map gulih
 		if gulihID.Valid {
 			i.Gulih = &dto.GulihInIkas{
-				ID:              gulihID.String,
-				NilaiGulih:      gulihNilai.Float64,
-				NilaiSubdomain1: gulihSub1.Float64,
-				NilaiSubdomain2: gulihSub2.Float64,
-				NilaiSubdomain3: gulihSub3.Float64,
-				NilaiSubdomain4: gulihSub4.Float64,
+				ID:                              gulihID.String,
+				NilaiGulih:                      gulihNilai.Float64,
+				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(gulihNilai.Float64),
+				NilaiSubdomain1:                 gulihSub1.Float64,
+				NilaiSubdomain2:                 gulihSub2.Float64,
+				NilaiSubdomain3:                 gulihSub3.Float64,
+				NilaiSubdomain4:                 gulihSub4.Float64,
 			}
 		}
 
@@ -381,6 +389,9 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 		return nil, err
 	}
 
+	// Set kategori kematangan keamanan siber
+	i.KategoriKematanganKeamananSiber = utils.GetKategoriTingkatKematangan(i.NilaiKematangan)
+
 	// Map perusahaan
 	if perusahaanID.Valid && perusahaanNama.Valid {
 		i.Perusahaan = &dto.PerusahaanInIkas{
@@ -392,50 +403,54 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	// Map identifikasi
 	if idenID.Valid {
 		i.Identifikasi = &dto.IdentifikasiInIkas{
-			ID:                idenID.String,
-			NilaiIdentifikasi: idenNilai.Float64,
-			NilaiSubdomain1:   idenSub1.Float64,
-			NilaiSubdomain2:   idenSub2.Float64,
-			NilaiSubdomain3:   idenSub3.Float64,
-			NilaiSubdomain4:   idenSub4.Float64,
-			NilaiSubdomain5:   idenSub5.Float64,
+			ID:                              idenID.String,
+			NilaiIdentifikasi:               idenNilai.Float64,
+			KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(idenNilai.Float64),
+			NilaiSubdomain1:                 idenSub1.Float64,
+			NilaiSubdomain2:                 idenSub2.Float64,
+			NilaiSubdomain3:                 idenSub3.Float64,
+			NilaiSubdomain4:                 idenSub4.Float64,
+			NilaiSubdomain5:                 idenSub5.Float64,
 		}
 	}
 
 	// Map proteksi
 	if protID.Valid {
 		i.Proteksi = &dto.ProteksiInIkas{
-			ID:              protID.String,
-			NilaiProteksi:   protNilai.Float64,
-			NilaiSubdomain1: protSub1.Float64,
-			NilaiSubdomain2: protSub2.Float64,
-			NilaiSubdomain3: protSub3.Float64,
-			NilaiSubdomain4: protSub4.Float64,
-			NilaiSubdomain5: protSub5.Float64,
-			NilaiSubdomain6: protSub6.Float64,
+			ID:                              protID.String,
+			NilaiProteksi:                   protNilai.Float64,
+			KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(protNilai.Float64),
+			NilaiSubdomain1:                 protSub1.Float64,
+			NilaiSubdomain2:                 protSub2.Float64,
+			NilaiSubdomain3:                 protSub3.Float64,
+			NilaiSubdomain4:                 protSub4.Float64,
+			NilaiSubdomain5:                 protSub5.Float64,
+			NilaiSubdomain6:                 protSub6.Float64,
 		}
 	}
 
 	// Map deteksi
 	if detID.Valid {
 		i.Deteksi = &dto.DeteksiInIkas{
-			ID:              detID.String,
-			NilaiDeteksi:    detNilai.Float64,
-			NilaiSubdomain1: detSub1.Float64,
-			NilaiSubdomain2: detSub2.Float64,
-			NilaiSubdomain3: detSub3.Float64,
+			ID:                              detID.String,
+			NilaiDeteksi:                    detNilai.Float64,
+			KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(detNilai.Float64),
+			NilaiSubdomain1:                 detSub1.Float64,
+			NilaiSubdomain2:                 detSub2.Float64,
+			NilaiSubdomain3:                 detSub3.Float64,
 		}
 	}
 
 	// Map gulih
 	if gulihID.Valid {
 		i.Gulih = &dto.GulihInIkas{
-			ID:              gulihID.String,
-			NilaiGulih:      gulihNilai.Float64,
-			NilaiSubdomain1: gulihSub1.Float64,
-			NilaiSubdomain2: gulihSub2.Float64,
-			NilaiSubdomain3: gulihSub3.Float64,
-			NilaiSubdomain4: gulihSub4.Float64,
+			ID:                              gulihID.String,
+			NilaiGulih:                      gulihNilai.Float64,
+			KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(gulihNilai.Float64),
+			NilaiSubdomain1:                 gulihSub1.Float64,
+			NilaiSubdomain2:                 gulihSub2.Float64,
+			NilaiSubdomain3:                 gulihSub3.Float64,
+			NilaiSubdomain4:                 gulihSub4.Float64,
 		}
 	}
 
