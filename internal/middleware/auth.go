@@ -39,7 +39,7 @@ func (m *AuthMiddleware) Authenticate(next http.HandlerFunc) http.HandlerFunc {
 		UserIDString := claims.UserID
 		r.Header.Set("X-User-ID", UserIDString)
 		r.Header.Set("X-Username", claims.Username)
-		r.Header.Set("X-User-Role", claims.Role) // TAMBAHKAN INI - PENTING untuk Casbin
+		r.Header.Set("X-User-Role", claims.Role)
 
 		// Set ke context juga
 		ctx := context.WithValue(r.Context(), "user_id", UserIDString)
