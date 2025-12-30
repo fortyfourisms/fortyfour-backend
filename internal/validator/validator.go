@@ -206,6 +206,8 @@ var commonPasswordRoots = []string{
 	"system",
 	"test",
 	"superadmin",
+	"123",
+	"aaa",
 }
 
 type PasswordValidationConfig struct {
