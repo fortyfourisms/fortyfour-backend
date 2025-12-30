@@ -88,3 +88,9 @@ type GulihRepositoryInterface interface {
 	Update(id string, gulih models.Gulih) error
 	Delete(id string) error
 }
+
+// SektorRepositoryInterface
+type SektorRepositoryInterface interface {
+	GetAll() ([]dto.SektorResponse, error)
+	GetByID(id string) (*dto.SektorResponse, error)
+}

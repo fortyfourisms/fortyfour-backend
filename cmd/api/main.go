@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	_ "fortyfour-backend/docs"
 	"fortyfour-backend/internal/config"
 	"fortyfour-backend/internal/handlers"
 	"fortyfour-backend/internal/middleware"
@@ -13,7 +14,6 @@ import (
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/pkg/cache"
 	"fortyfour-backend/pkg/database"
-	_ "fortyfour-backend/docs"
 )
 
 func main() {
@@ -70,6 +70,7 @@ func main() {
 	sdmCsirtRepo := repository.NewSdmCsirtRepository(db)
 	seCsirtRepo := repository.NewSeCsirtRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
+	sektorRepo := repository.NewSektorRepository(db)
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
@@ -88,6 +89,7 @@ func main() {
 	seCsirtService := services.NewSeCsirtService(seCsirtRepo)
 	userService := services.NewUserService(userRepo, "./uploads")
 	roleService := services.NewRoleService(roleRepo)
+	sektorService := services.NewSektorService(sektorRepo)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
@@ -109,6 +111,7 @@ func main() {
 	roleHandler := handlers.NewRoleHandler(roleService, sseService)
 	casbinHandler := handlers.NewCasbinHandler(casbinService, sseService)
 	sseHandler := handlers.NewSSEHandler(sseService)
+	sektorHandler := handlers.NewSektorHandler(sektorService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
@@ -145,6 +148,7 @@ func main() {
 		csirtHandler,
 		sdmCsirtHandler,
 		seCsirtHandler,
+		sektorHandler,
 	)
 
 	// Start server
