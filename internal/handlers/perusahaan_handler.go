@@ -119,7 +119,7 @@ func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, _ *http.Request
 // @Accept       json
 // @Produce      json
 // @Param        perusahaan body dto.CreatePerusahaanRequest true "Data perusahaan"
-// @Success      201  {object} dto.DeteksiResponse
+// @Success      201  {object} dto.PerusahaanResponse
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/perusahaan [post]
 func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
@@ -251,10 +251,11 @@ func (h *PerusahaanHandler) deleteOldPhoto(id string) {
 	}
 }
 
+// UBAH INI: Ganti "sektor" menjadi "id_sub_sektor"
 func (h *PerusahaanHandler) parseCreateForm(form *multipart.Form) dto.CreatePerusahaanRequest {
 	return dto.CreatePerusahaanRequest{
 		NamaPerusahaan: getFormValue(form, "nama_perusahaan"),
-		Sektor:         getFormValue(form, "sektor"),
+		IDSubSektor:    getFormValue(form, "id_sub_sektor"), // Changed from Sektor
 		Alamat:         getFormValue(form, "alamat"),
 		Telepon:        getFormValue(form, "telepon"),
 		Email:          getFormValue(form, "email"),
@@ -262,10 +263,11 @@ func (h *PerusahaanHandler) parseCreateForm(form *multipart.Form) dto.CreatePeru
 	}
 }
 
+// UBAH INI: Ganti "sektor" menjadi "id_sub_sektor"
 func (h *PerusahaanHandler) parseUpdateForm(form *multipart.Form) dto.UpdatePerusahaanRequest {
 	return dto.UpdatePerusahaanRequest{
 		NamaPerusahaan: getFormValue(form, "nama_perusahaan"),
-		Sektor:         getFormValue(form, "sektor"),
+		IDSubSektor:    getFormValue(form, "id_sub_sektor"), // Changed from Sektor
 		Alamat:         getFormValue(form, "alamat"),
 		Telepon:        getFormValue(form, "telepon"),
 		Email:          getFormValue(form, "email"),

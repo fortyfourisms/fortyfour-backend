@@ -77,7 +77,7 @@ func main() {
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
 	authService := services.NewAuthService(userRepo, tokenService)
 	postService := services.NewPostService(postRepo)
-	perusahaanService := services.NewPerusahaanService(perusahaanRepo)
+	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo)
 	picService := services.NewPICService(picRepo)
 	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
 	jabatanService := services.NewJabatanService(jabatanRepo)

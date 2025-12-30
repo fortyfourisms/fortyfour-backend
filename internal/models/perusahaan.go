@@ -4,7 +4,7 @@ type Perusahaan struct {
 	ID             string `json:"id"`
 	Photo          string `json:"photo"`
 	NamaPerusahaan string `json:"nama_perusahaan"`
-	Sektor         string `json:"sektor"`
+	IDSubSektor    string `json:"id_sub_sektor"` // Changed from Sektor to IDSubSektor
 	Alamat         string `json:"alamat"`
 	Telepon        string `json:"telepon"`
 	Email          string `json:"email"`

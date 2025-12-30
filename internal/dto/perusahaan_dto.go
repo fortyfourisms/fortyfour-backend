@@ -3,7 +3,7 @@ package dto
 type CreatePerusahaanRequest struct {
 	Photo          *string `json:"photo,omitempty"`
 	NamaPerusahaan *string `json:"nama_perusahaan,omitempty"`
-	Sektor         *string `json:"sektor,omitempty"`
+	IDSubSektor    *string `json:"id_sub_sektor,omitempty"` // Changed from Sektor
 	Alamat         *string `json:"alamat,omitempty"`
 	Telepon        *string `json:"telepon,omitempty"`
 	Email          *string `json:"email,omitempty"`
@@ -13,7 +13,7 @@ type CreatePerusahaanRequest struct {
 type UpdatePerusahaanRequest struct {
 	Photo          *string `json:"photo,omitempty"`
 	NamaPerusahaan *string `json:"nama_perusahaan,omitempty"`
-	Sektor         *string `json:"sektor,omitempty"`
+	IDSubSektor    *string `json:"id_sub_sektor,omitempty"` // Changed from Sektor
 	Alamat         *string `json:"alamat,omitempty"`
 	Telepon        *string `json:"telepon,omitempty"`
 	Email          *string `json:"email,omitempty"`
@@ -21,14 +21,14 @@ type UpdatePerusahaanRequest struct {
 }
 
 type PerusahaanResponse struct {
-	ID             string `json:"id"`
-	Photo          string `json:"photo"`
-	NamaPerusahaan string `json:"nama_perusahaan"`
-	Sektor         string `json:"sektor"`
-	Alamat         string `json:"alamat"`
-	Telepon        string `json:"telepon"`
-	Email          string `json:"email"`
-	Website        string `json:"website"`
-	CreatedAt      string `json:"created_at"`
-	UpdatedAt      string `json:"updated_at"`
+	ID             string             `json:"id"`
+	Photo          string             `json:"photo"`
+	NamaPerusahaan string             `json:"nama_perusahaan"`
+	SubSektor      *SubSektorResponse `json:"sub_sektor,omitempty"` // Added untuk response lengkap
+	Alamat         string             `json:"alamat"`
+	Telepon        string             `json:"telepon"`
+	Email          string             `json:"email"`
+	Website        string             `json:"website"`
+	CreatedAt      string             `json:"created_at"`
+	UpdatedAt      string             `json:"updated_at"`
 }
