@@ -71,6 +71,7 @@ func main() {
 	seCsirtRepo := repository.NewSeCsirtRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
 	sektorRepo := repository.NewSektorRepository(db)
+	subSektorRepo := repository.NewSubSektorRepository(db)
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
@@ -90,6 +91,7 @@ func main() {
 	userService := services.NewUserService(userRepo, "./uploads")
 	roleService := services.NewRoleService(roleRepo)
 	sektorService := services.NewSektorService(sektorRepo)
+	subSektorService := services.NewSubSektorService(subSektorRepo)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
@@ -112,6 +114,7 @@ func main() {
 	casbinHandler := handlers.NewCasbinHandler(casbinService, sseService)
 	sseHandler := handlers.NewSSEHandler(sseService)
 	sektorHandler := handlers.NewSektorHandler(sektorService)
+	subSektorHandler := handlers.NewSubSektorHandler(subSektorService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
@@ -149,6 +152,7 @@ func main() {
 		sdmCsirtHandler,
 		seCsirtHandler,
 		sektorHandler,
+		subSektorHandler,
 	)
 
 	// Start server

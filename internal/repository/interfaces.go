@@ -94,3 +94,10 @@ type SektorRepositoryInterface interface {
 	GetAll() ([]dto.SektorResponse, error)
 	GetByID(id string) (*dto.SektorResponse, error)
 }
+
+// SubSektorRepositoryInterface
+type SubSektorRepositoryInterface interface {
+	GetAll() ([]dto.SubSektorResponse, error)
+	GetByID(id string) (*dto.SubSektorResponse, error)
+	GetBySektorID(sektorID string) ([]dto.SubSektorResponse, error)
+}
