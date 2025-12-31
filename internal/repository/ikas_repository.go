@@ -1,10 +1,17 @@
 package repository
 
 import (
+	"bytes"
 	"database/sql"
+	"errors"
+	"fmt"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/utils"
+	"strconv"
 	"strings"
+	"time"
+
+	"github.com/xuri/excelize/v2"
 )
 
 type IkasRepository struct {
@@ -732,4 +739,287 @@ func (r *IkasRepository) UpdateGulih(id string, data *dto.UpdateGulihData) (floa
 func (r *IkasRepository) Delete(id string) error {
 	_, err := r.db.Exec(`DELETE FROM ikas WHERE id=?`, id)
 	return err
+}
+
+func parseMultipleDateFormats(dateStr string) (time.Time, error) {
+	// Daftar format yang didukung
+	formats := []string{
+		"02-01-2006", // DD-MM-YYYY
+		"02/01/2006", // DD/MM/YYYY
+		"02-01-06",   // DD-MM-YY
+		"02/01/06",   // DD/MM/YY
+		"2006-01-02", // YYYY-MM-DD (ISO)
+		"01-02-2006", // MM-DD-YYYY
+		"01/02/2006", // MM/DD/YYYY
+		"01-02-06",   // MM-DD-YY
+		"01/02/06",   // MM/DD/YY
+		"2006/01/02", // YYYY/MM/DD
+	}
+
+	var lastErr error
+	for _, format := range formats {
+		if t, err := time.Parse(format, dateStr); err == nil {
+			return t, nil
+		} else {
+			lastErr = err
+		}
+	}
+
+	return time.Time{}, lastErr
+}
+
+// ParseExcelForImport membaca file Excel dari sheet 2 dan sheet 7
+func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRequest, error) {
+	f, err := excelize.OpenReader(bytes.NewReader(fileData))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	sheets := f.GetSheetList()
+
+	// Validasi jumlah sheet
+	if len(sheets) < 2 {
+		return nil, errors.New("file Excel tidak memiliki sheet ke-2")
+	}
+	if len(sheets) < 7 {
+		return nil, errors.New("file Excel tidak memiliki sheet ke-7")
+	}
+
+	sheet2 := sheets[1] // Sheet ke-2 (index 1)
+	sheet7 := sheets[6] // Sheet ke-7 (index 6)
+
+	// Helper function untuk ambil nilai cell sebagai string
+	getCellString := func(sheetName, cell string) (string, error) {
+		val, err := f.GetCellValue(sheetName, cell)
+		if err != nil {
+			return "", err
+		}
+		return strings.TrimSpace(val), nil
+	}
+
+	// Helper function untuk ambil nilai cell sebagai float
+	getCellFloat := func(sheetName, cell string) (float64, error) {
+		val, err := f.GetCellValue(sheetName, cell)
+		if err != nil {
+			return 0, err
+		}
+		val = strings.TrimSpace(val)
+		if val == "" {
+			return 0, fmt.Errorf("cell %s kosong", cell)
+		}
+		floatVal, err := strconv.ParseFloat(val, 64)
+		if err != nil {
+			return 0, fmt.Errorf("gagal parse cell %s: %v", cell, err)
+		}
+		return floatVal, nil
+	}
+
+	// ===== AMBIL DATA DARI SHEET 2 =====
+
+	// Nama Perusahaan dari D4
+	namaPerusahaan, err := getCellString(sheet2, "D4")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca nama perusahaan (Sheet 2, D4): %v", err)
+	}
+	if namaPerusahaan == "" {
+		return nil, errors.New("nama perusahaan (Sheet 2, D4) tidak boleh kosong")
+	}
+
+	// Cari ID Perusahaan berdasarkan nama
+	idPerusahaan, err := r.FindPerusahaanByName(namaPerusahaan)
+	if err != nil {
+		return nil, fmt.Errorf("error mencari perusahaan: %v", err)
+	}
+	if idPerusahaan == "" {
+		return nil, fmt.Errorf("perusahaan dengan nama '%s' tidak ditemukan di database", namaPerusahaan)
+	}
+
+	// Telepon dari D10
+	telepon, err := getCellString(sheet2, "D10")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca telepon (Sheet 2, D10): %v", err)
+	}
+
+	// Responden dari D11
+	responden, err := getCellString(sheet2, "D11")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca responden (Sheet 2, D11): %v", err)
+	}
+
+	// Jabatan dari D12
+	jabatan, err := getCellString(sheet2, "D12")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca jabatan (Sheet 2, D12): %v", err)
+	}
+
+	// Tanggal dari D18
+	tanggalStr, err := getCellString(sheet2, "D18")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca tanggal (Sheet 2, D18): %v", err)
+	}
+
+	// Parse tanggal - support multiple format
+	var tanggal string
+	if tanggalStr != "" {
+		// Coba parse sebagai Excel date number dulu
+		if excelDate, err := strconv.ParseFloat(tanggalStr, 64); err == nil {
+			// Convert Excel date to time.Time
+			parsedTime, err := excelize.ExcelDateToTime(excelDate, false)
+			if err == nil {
+				tanggal = parsedTime.Format("2006-01-02") // Format MySQL
+			}
+		} else {
+			// Bukan number, coba parse berbagai format string
+			parsedTime, err := parseMultipleDateFormats(tanggalStr)
+			if err == nil {
+				tanggal = parsedTime.Format("2006-01-02") // Format MySQL
+			} else {
+				return nil, fmt.Errorf("format tanggal tidak valid (Sheet 2, D18): %s. Gunakan format DD-MM-YYYY, DD/MM/YYYY, atau YYYY-MM-DD", tanggalStr)
+			}
+		}
+	} else {
+		return nil, errors.New("tanggal (Sheet 2, D18) tidak boleh kosong")
+	}
+	// ===== AMBIL DATA DARI SHEET 7 =====
+
+	// Target Nilai dari D4
+	targetNilai, err := getCellFloat(sheet7, "D4")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca target_nilai (Sheet 7, D4): %v", err)
+	}
+
+	// IDENTIFIKASI
+	idenSub1, err := getCellFloat(sheet7, "E5")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca identifikasi subdomain1 (Sheet 7, E5): %v", err)
+	}
+	idenSub2, err := getCellFloat(sheet7, "E6")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca identifikasi subdomain2 (Sheet 7, E6): %v", err)
+	}
+	idenSub3, err := getCellFloat(sheet7, "E7")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca identifikasi subdomain3 (Sheet 7, E7): %v", err)
+	}
+	idenSub4, err := getCellFloat(sheet7, "E8")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca identifikasi subdomain4 (Sheet 7, E8): %v", err)
+	}
+	idenSub5, err := getCellFloat(sheet7, "E9")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca identifikasi subdomain5 (Sheet 7, E9): %v", err)
+	}
+
+	// PROTEKSI
+	protSub1, err := getCellFloat(sheet7, "E10")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca proteksi subdomain1 (Sheet 7, E10): %v", err)
+	}
+	protSub2, err := getCellFloat(sheet7, "E11")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca proteksi subdomain2 (Sheet 7, E11): %v", err)
+	}
+	protSub3, err := getCellFloat(sheet7, "E12")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca proteksi subdomain3 (Sheet 7, E12): %v", err)
+	}
+	protSub4, err := getCellFloat(sheet7, "E13")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca proteksi subdomain4 (Sheet 7, E13): %v", err)
+	}
+	protSub5, err := getCellFloat(sheet7, "E14")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca proteksi subdomain5 (Sheet 7, E14): %v", err)
+	}
+	protSub6, err := getCellFloat(sheet7, "E15")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca proteksi subdomain6 (Sheet 7, E15): %v", err)
+	}
+
+	// DETEKSI
+	detSub1, err := getCellFloat(sheet7, "E16")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca deteksi subdomain1 (Sheet 7, E16): %v", err)
+	}
+	detSub2, err := getCellFloat(sheet7, "E17")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca deteksi subdomain2 (Sheet 7, E17): %v", err)
+	}
+	detSub3, err := getCellFloat(sheet7, "E18")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca deteksi subdomain3 (Sheet 7, E18): %v", err)
+	}
+
+	// GULIH
+	gulihSub1, err := getCellFloat(sheet7, "E19")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca gulih subdomain1 (Sheet 7, E19): %v", err)
+	}
+	gulihSub2, err := getCellFloat(sheet7, "E20")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca gulih subdomain2 (Sheet 7, E20): %v", err)
+	}
+	gulihSub3, err := getCellFloat(sheet7, "E21")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca gulih subdomain3 (Sheet 7, E21): %v", err)
+	}
+	gulihSub4, err := getCellFloat(sheet7, "E22")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca gulih subdomain4 (Sheet 7, E22): %v", err)
+	}
+
+	// Construct CreateIkasRequest dengan semua data
+	req := &dto.CreateIkasRequest{
+		IDPerusahaan: idPerusahaan,
+		Tanggal:      tanggal,
+		Responden:    responden,
+		Telepon:      telepon,
+		Jabatan:      jabatan,
+		TargetNilai:  targetNilai,
+		Identifikasi: &dto.CreateIdentifikasiData{
+			NilaiSubdomain1: idenSub1,
+			NilaiSubdomain2: idenSub2,
+			NilaiSubdomain3: idenSub3,
+			NilaiSubdomain4: idenSub4,
+			NilaiSubdomain5: idenSub5,
+		},
+		Proteksi: &dto.CreateProteksiData{
+			NilaiSubdomain1: protSub1,
+			NilaiSubdomain2: protSub2,
+			NilaiSubdomain3: protSub3,
+			NilaiSubdomain4: protSub4,
+			NilaiSubdomain5: protSub5,
+			NilaiSubdomain6: protSub6,
+		},
+		Deteksi: &dto.CreateDeteksiData{
+			NilaiSubdomain1: detSub1,
+			NilaiSubdomain2: detSub2,
+			NilaiSubdomain3: detSub3,
+		},
+		Gulih: &dto.CreateGulihData{
+			NilaiSubdomain1: gulihSub1,
+			NilaiSubdomain2: gulihSub2,
+			NilaiSubdomain3: gulihSub3,
+			NilaiSubdomain4: gulihSub4,
+		},
+	}
+
+	return req, nil
+}
+
+// FindPerusahaanByName mencari ID perusahaan berdasarkan nama (case-insensitive, exact match)
+func (r *IkasRepository) FindPerusahaanByName(namaPerusahaan string) (string, error) {
+	var id string
+	query := `SELECT id FROM perusahaan WHERE LOWER(TRIM(nama_perusahaan)) = LOWER(TRIM(?))`
+
+	err := r.db.QueryRow(query, namaPerusahaan).Scan(&id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", nil
+		}
+		return "", err
+	}
+
+	return id, nil
 }

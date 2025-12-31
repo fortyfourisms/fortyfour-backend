@@ -176,3 +176,27 @@ func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*dto.IkasRes
 func (s *IkasService) Delete(id string) error {
 	return s.repo.Delete(id)
 }
+
+func (s *IkasService) ImportFromExcel(fileData []byte) (*dto.IkasResponse, error) {
+	// Parse Excel - semua data sudah diambil dari Excel
+	excelData, err := s.repo.ParseExcelForImport(fileData)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate ID baru
+	newID := uuid.New().String()
+
+	// Create menggunakan service Create yang sudah ada
+	if err := s.Create(*excelData, newID); err != nil {
+		return nil, err
+	}
+
+	// Ambil data yang baru dibuat
+	resp, err := s.GetByID(newID)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
