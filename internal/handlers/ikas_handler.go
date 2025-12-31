@@ -228,12 +228,18 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Ambil file dari form
-	file, _, err := r.FormFile("file")
+	file, header, err := r.FormFile("file")
 	if err != nil {
 		utils.RespondError(w, 400, "File 'file' tidak ditemukan")
 		return
 	}
 	defer file.Close()
+
+	// Validasi extension
+	if !strings.HasSuffix(strings.ToLower(header.Filename), ".xlsx") {
+		utils.RespondError(w, 400, "File harus berformat .xlsx")
+		return
+	}
 
 	// Baca file ke memory
 	fileBytes, err := io.ReadAll(file)
@@ -242,24 +248,8 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Ambil data dari form fields
-	baseReq := dto.ImportIkasRequest{
-		IDPerusahaan: r.FormValue("id_perusahaan"),
-		Tanggal:      r.FormValue("tanggal"),
-		Responden:    r.FormValue("responden"),
-		Telepon:      r.FormValue("telepon"),
-		Jabatan:      r.FormValue("jabatan"),
-	}
-
-	// Validasi required fields
-	if baseReq.IDPerusahaan == "" || baseReq.Tanggal == "" ||
-		baseReq.Responden == "" || baseReq.Telepon == "" || baseReq.Jabatan == "" {
-		utils.RespondError(w, 400, "Field id_perusahaan, tanggal, responden, telepon, dan jabatan wajib diisi")
-		return
-	}
-
-	// Import data
-	resp, err := h.service.ImportFromExcel(fileBytes, baseReq)
+	// Import data - semua data diambil dari Excel
+	resp, err := h.service.ImportFromExcel(fileBytes)
 	if err != nil {
 		response := dto.ImportIkasResponse{
 			Success: false,

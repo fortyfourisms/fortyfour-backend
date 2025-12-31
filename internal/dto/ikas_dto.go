@@ -169,14 +169,6 @@ type UpdateGulihData struct {
 }
 
 // Import Excel
-type ImportIkasRequest struct {
-	IDPerusahaan string `json:"id_perusahaan"`
-	Tanggal      string `json:"tanggal"`
-	Responden    string `json:"responden"`
-	Telepon      string `json:"telepon"`
-	Jabatan      string `json:"jabatan"`
-}
-
 type ImportIkasResponse struct {
 	Success bool          `json:"success"`
 	Message string        `json:"message"`

@@ -177,19 +177,12 @@ func (s *IkasService) Delete(id string) error {
 	return s.repo.Delete(id)
 }
 
-func (s *IkasService) ImportFromExcel(fileData []byte, baseReq dto.ImportIkasRequest) (*dto.IkasResponse, error) {
-	// Parse Excel untuk mendapatkan data subdomain
+func (s *IkasService) ImportFromExcel(fileData []byte) (*dto.IkasResponse, error) {
+	// Parse Excel - semua data sudah diambil dari Excel
 	excelData, err := s.repo.ParseExcelForImport(fileData)
 	if err != nil {
 		return nil, err
 	}
-
-	// Gabungkan data dari Excel dengan data dari request body
-	excelData.IDPerusahaan = baseReq.IDPerusahaan
-	excelData.Tanggal = baseReq.Tanggal
-	excelData.Responden = baseReq.Responden
-	excelData.Telepon = baseReq.Telepon
-	excelData.Jabatan = baseReq.Jabatan
 
 	// Generate ID baru
 	newID := uuid.New().String()
