@@ -69,7 +69,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload gosec report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: gosec-report
           path: gosec-report.json
@@ -137,7 +137,7 @@ jobs:
           name: codecov-umbrella
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: |
