@@ -167,3 +167,19 @@ type UpdateGulihData struct {
 	NilaiSubdomain3 *float64 `json:"nilai_subdomain3,omitempty"`
 	NilaiSubdomain4 *float64 `json:"nilai_subdomain4,omitempty"`
 }
+
+// Import Excel
+type ImportIkasRequest struct {
+	IDPerusahaan string `json:"id_perusahaan"`
+	Tanggal      string `json:"tanggal"`
+	Responden    string `json:"responden"`
+	Telepon      string `json:"telepon"`
+	Jabatan      string `json:"jabatan"`
+}
+
+type ImportIkasResponse struct {
+	Success bool          `json:"success"`
+	Message string        `json:"message"`
+	Data    *IkasResponse `json:"data,omitempty"`
+	Errors  []string      `json:"errors,omitempty"`
+}

@@ -1,10 +1,16 @@
 package repository
 
 import (
+	"bytes"
 	"database/sql"
+	"errors"
+	"fmt"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/utils"
+	"strconv"
 	"strings"
+
+	"github.com/xuri/excelize/v2"
 )
 
 type IkasRepository struct {
@@ -732,4 +738,153 @@ func (r *IkasRepository) UpdateGulih(id string, data *dto.UpdateGulihData) (floa
 func (r *IkasRepository) Delete(id string) error {
 	_, err := r.db.Exec(`DELETE FROM ikas WHERE id=?`, id)
 	return err
+}
+
+// ParseExcelForImport membaca file Excel dan mengekstrak data dari sheet ke-7
+func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRequest, error) {
+	f, err := excelize.OpenReader(bytes.NewReader(fileData))
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	// Ambil sheet ke-7 (index dimulai dari 0, jadi index 6)
+	sheets := f.GetSheetList()
+	if len(sheets) < 7 {
+		return nil, errors.New("file Excel tidak memiliki sheet ke-7")
+	}
+
+	sheetName := sheets[6] // Sheet ke-7
+
+	// Helper function untuk ambil nilai cell sebagai float
+	getCellFloat := func(cell string) (float64, error) {
+		val, err := f.GetCellValue(sheetName, cell)
+		if err != nil {
+			return 0, err
+		}
+		floatVal, err := strconv.ParseFloat(val, 64)
+		if err != nil {
+			return 0, fmt.Errorf("gagal parse cell %s: %v", cell, err)
+		}
+		return floatVal, nil
+	}
+
+	// Ambil Target Nilai dari D4
+	targetNilai, err := getCellFloat("D4")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca target_nilai (D4): %v", err)
+	}
+
+	// IDENTIFIKASI
+	idenSub1, err := getCellFloat("E5")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca identifikasi subdomain1 (E5): %v", err)
+	}
+	idenSub2, err := getCellFloat("E6")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca identifikasi subdomain2 (E6): %v", err)
+	}
+	idenSub3, err := getCellFloat("E7")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca identifikasi subdomain3 (E7): %v", err)
+	}
+	idenSub4, err := getCellFloat("E8")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca identifikasi subdomain4 (E8): %v", err)
+	}
+	idenSub5, err := getCellFloat("E9")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca identifikasi subdomain5 (E9): %v", err)
+	}
+
+	// PROTEKSI
+	protSub1, err := getCellFloat("E10")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca proteksi subdomain1 (E10): %v", err)
+	}
+	protSub2, err := getCellFloat("E11")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca proteksi subdomain2 (E11): %v", err)
+	}
+	protSub3, err := getCellFloat("E12")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca proteksi subdomain3 (E12): %v", err)
+	}
+	protSub4, err := getCellFloat("E13")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca proteksi subdomain4 (E13): %v", err)
+	}
+	protSub5, err := getCellFloat("E14")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca proteksi subdomain5 (E14): %v", err)
+	}
+	protSub6, err := getCellFloat("E15")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca proteksi subdomain6 (E15): %v", err)
+	}
+
+	// DETEKSI
+	detSub1, err := getCellFloat("E16")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca deteksi subdomain1 (E16): %v", err)
+	}
+	detSub2, err := getCellFloat("E17")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca deteksi subdomain2 (E17): %v", err)
+	}
+	detSub3, err := getCellFloat("E18")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca deteksi subdomain3 (E18): %v", err)
+	}
+
+	// GULIH
+	gulihSub1, err := getCellFloat("E19")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca gulih subdomain1 (E19): %v", err)
+	}
+	gulihSub2, err := getCellFloat("E20")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca gulih subdomain2 (E20): %v", err)
+	}
+	gulihSub3, err := getCellFloat("E21")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca gulih subdomain3 (E21): %v", err)
+	}
+	gulihSub4, err := getCellFloat("E22")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca gulih subdomain4 (E22): %v", err)
+	}
+
+	// Construct CreateIkasRequest dengan nested objects
+	req := &dto.CreateIkasRequest{
+		TargetNilai: targetNilai,
+		Identifikasi: &dto.CreateIdentifikasiData{
+			NilaiSubdomain1: idenSub1,
+			NilaiSubdomain2: idenSub2,
+			NilaiSubdomain3: idenSub3,
+			NilaiSubdomain4: idenSub4,
+			NilaiSubdomain5: idenSub5,
+		},
+		Proteksi: &dto.CreateProteksiData{
+			NilaiSubdomain1: protSub1,
+			NilaiSubdomain2: protSub2,
+			NilaiSubdomain3: protSub3,
+			NilaiSubdomain4: protSub4,
+			NilaiSubdomain5: protSub5,
+			NilaiSubdomain6: protSub6,
+		},
+		Deteksi: &dto.CreateDeteksiData{
+			NilaiSubdomain1: detSub1,
+			NilaiSubdomain2: detSub2,
+			NilaiSubdomain3: detSub3,
+		},
+		Gulih: &dto.CreateGulihData{
+			NilaiSubdomain1: gulihSub1,
+			NilaiSubdomain2: gulihSub2,
+			NilaiSubdomain3: gulihSub3,
+			NilaiSubdomain4: gulihSub4,
+		},
+	}
+
+	return req, nil
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 
@@ -25,7 +26,15 @@ func NewIkasHandler(service *services.IkasService, sseService *services.SSEServi
 }
 
 func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/api/ikas"), "/")
+	path := strings.TrimPrefix(r.URL.Path, "/api/ikas")
+
+	// Handle import endpoint
+	if path == "/import" && r.Method == http.MethodPost {
+		h.handleImport(w, r)
+		return
+	}
+
+	id := strings.TrimPrefix(path, "/")
 
 	switch r.Method {
 	case http.MethodGet:
@@ -192,4 +201,88 @@ func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 	h.sseService.NotifyDelete("ikas", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
+}
+
+// Tambahkan method baru di struct IkasHandler
+
+// ImportIkas godoc
+// @Summary      Import IKAS dari Excel
+// @Description  Import data IKAS dari file Excel (sheet ke-7)
+// @Tags         Ikas
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        file formData file true "File Excel (.xlsx)"
+// @Param        id_perusahaan formData string true "ID Perusahaan"
+// @Param        tanggal formData string true "Tanggal (YYYY-MM-DD)"
+// @Param        responden formData string true "Nama Responden"
+// @Param        telepon formData string true "Nomor Telepon"
+// @Param        jabatan formData string true "Jabatan"
+// @Success      201  {object} dto.ImportIkasResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/ikas/import [post]
+func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
+	// Parse multipart form (max 10MB)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		utils.RespondError(w, 400, "Gagal parse form data")
+		return
+	}
+
+	// Ambil file dari form
+	file, _, err := r.FormFile("file")
+	if err != nil {
+		utils.RespondError(w, 400, "File 'file' tidak ditemukan")
+		return
+	}
+	defer file.Close()
+
+	// Baca file ke memory
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		utils.RespondError(w, 400, "Gagal membaca file")
+		return
+	}
+
+	// Ambil data dari form fields
+	baseReq := dto.ImportIkasRequest{
+		IDPerusahaan: r.FormValue("id_perusahaan"),
+		Tanggal:      r.FormValue("tanggal"),
+		Responden:    r.FormValue("responden"),
+		Telepon:      r.FormValue("telepon"),
+		Jabatan:      r.FormValue("jabatan"),
+	}
+
+	// Validasi required fields
+	if baseReq.IDPerusahaan == "" || baseReq.Tanggal == "" ||
+		baseReq.Responden == "" || baseReq.Telepon == "" || baseReq.Jabatan == "" {
+		utils.RespondError(w, 400, "Field id_perusahaan, tanggal, responden, telepon, dan jabatan wajib diisi")
+		return
+	}
+
+	// Import data
+	resp, err := h.service.ImportFromExcel(fileBytes, baseReq)
+	if err != nil {
+		response := dto.ImportIkasResponse{
+			Success: false,
+			Message: "Import gagal",
+			Errors:  []string{err.Error()},
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	// SSE Notif Create
+	userID := ""
+	if uid := r.Context().Value("user_id"); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyCreate("ikas", resp, userID)
+
+	// Success response
+	response := dto.ImportIkasResponse{
+		Success: true,
+		Message: "Import berhasil",
+		Data:    resp,
+	}
+	utils.RespondJSON(w, 201, response)
 }
