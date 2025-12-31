@@ -2,13 +2,14 @@ package routes
 
 import (
 	"encoding/json"
+	_ "fortyfour-backend/docs"
 	"fortyfour-backend/internal/handlers"
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/utils"
 	"net/http"
-		httpSwagger "github.com/swaggo/http-swagger"
-	_ "fortyfour-backend/docs"
 	"time"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {

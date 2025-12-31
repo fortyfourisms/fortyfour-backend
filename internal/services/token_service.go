@@ -1,4 +1,3 @@
-// internal/services/token_service.go
 package services
 
 import (

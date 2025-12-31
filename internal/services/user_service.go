@@ -33,12 +33,10 @@ func (s *UserService) GetAll() ([]dto.UserResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	responses := make([]dto.UserResponse, len(users))
 	for i, user := range users {
 		responses[i] = s.toResponse(&user)
 	}
-
 	return responses, nil
 }
 
@@ -47,7 +45,6 @@ func (s *UserService) GetByID(id string) (*dto.UserResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	response := s.toResponse(user)
 	return &response, nil
 }
@@ -63,9 +60,12 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*dto.UserResponse, erro
 		return nil, errors.New("username harus 3-50 karakter")
 	}
 
-	// Validasi password minimal 6 karakter
-	if len(strings.TrimSpace(req.Password)) < 6 {
-		return nil, errors.New("password minimal 6 karakter")
+	// Validasi password dengan kriteria ketat
+	config := validator.DefaultPasswordConfig()
+	personalInfo := []string{req.Username, req.Email}
+
+	if err := validator.ValidatePassword(req.Password, config, personalInfo...); err != nil {
+		return nil, err
 	}
 
 	// Validate username exists
@@ -123,11 +123,9 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 		if trimmed == "" {
 			return nil, errors.New("username tidak boleh kosong")
 		}
-
 		if !validator.ValidateUsername(trimmed) {
 			return nil, errors.New("username harus 3-50 karakter")
 		}
-
 		exists, err := s.repo.UsernameExists(trimmed, &id)
 		if err != nil {
 			return nil, err
@@ -144,11 +142,9 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 		if trimmed == "" {
 			return nil, errors.New("email tidak boleh kosong")
 		}
-
 		if !validator.ValidateEmail(trimmed) {
 			return nil, errors.New("email tidak valid")
 		}
-
 		exists, err := s.repo.EmailExists(trimmed, &id)
 		if err != nil {
 			return nil, err
@@ -182,12 +178,17 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 }
 
 func (s *UserService) UpdatePassword(id string, req dto.UpdateUserPasswordRequest) error {
-	// Validasi password baru
-	if len(strings.TrimSpace(req.NewPassword)) < 6 {
-		return errors.New("password baru minimal 6 karakter")
+	// Validasi konfirmasi password baru
+	if req.NewPassword != req.ConfirmNewPassword {
+		return errors.New("konfirmasi password baru tidak cocok")
 	}
 
-	// Get current password
+	// Get current user data and password
+	user, err := s.repo.FindByID(id)
+	if err != nil {
+		return errors.New("user tidak ditemukan")
+	}
+
 	currentPassword, err := s.repo.GetPasswordByID(id)
 	if err != nil {
 		return err
@@ -196,6 +197,14 @@ func (s *UserService) UpdatePassword(id string, req dto.UpdateUserPasswordReques
 	// Verify old password
 	if err := bcrypt.CompareHashAndPassword([]byte(currentPassword), []byte(req.OldPassword)); err != nil {
 		return errors.New("password lama tidak sesuai")
+	}
+
+	// Validasi password baru dengan kriteria ketat
+	config := validator.DefaultPasswordConfig()
+	personalInfo := []string{user.Username, user.Email}
+
+	if err := validator.ValidateNewPassword(req.NewPassword, req.OldPassword, config, personalInfo...); err != nil {
+		return err
 	}
 
 	// Hash new password
