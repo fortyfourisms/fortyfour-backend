@@ -42,7 +42,7 @@ func TestVerifyToken_Success(t *testing.T) {
 	}
 
 	if claims.UserID != userID {
-		t.Errorf("expected UserID %d, got %d", userID, claims.UserID)
+		t.Errorf("expected UserID %s, got %s", userID, claims.UserID)
 	}
 
 	if claims.Username != username {
