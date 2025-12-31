@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 
+	_ "fortyfour-backend/docs"
 	"fortyfour-backend/internal/config"
 	"fortyfour-backend/internal/handlers"
 	"fortyfour-backend/internal/middleware"
@@ -13,7 +14,6 @@ import (
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/pkg/cache"
 	"fortyfour-backend/pkg/database"
-	_ "fortyfour-backend/docs"
 )
 
 func main() {

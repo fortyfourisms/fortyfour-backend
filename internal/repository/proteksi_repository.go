@@ -16,7 +16,7 @@ func NewProteksiRepository(db *sql.DB) *ProteksiRepository {
 
 func (r *ProteksiRepository) Create(req dto.CreateProteksiRequest, id string) error {
 	// Hitung nilai_proteksi (rata-rata dari 6 subdomain)
-	nilaiProteksi := (req.NilaiSubdomain1 + req.NilaiSubdomain2 + 
+	nilaiProteksi := (req.NilaiSubdomain1 + req.NilaiSubdomain2 +
 		req.NilaiSubdomain3 + req.NilaiSubdomain4 + req.NilaiSubdomain5 + req.NilaiSubdomain6) / 6.0
 
 	query := `INSERT INTO proteksi (id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 

@@ -28,7 +28,6 @@ func NewPerusahaanService(repo repository.PerusahaanRepositoryInterface) *Perusa
 	return &PerusahaanService{repo: repo}
 }
 
-
 func (s *PerusahaanService) Create(req dto.CreatePerusahaanRequest) (*dto.PerusahaanResponse, error) {
 
 	// Validasi nama perusahaan
