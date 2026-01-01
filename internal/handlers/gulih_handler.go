@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 )
@@ -114,7 +115,7 @@ func (h *GulihHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	// SSE Notif Create
 	userID := ""
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
 	h.sseService.NotifyCreate("gulih", resp, userID)
@@ -148,7 +149,7 @@ func (h *GulihHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 
 	// SSE Notif Update
 	userID := ""
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
 	h.sseService.NotifyUpdate("gulih", resp, userID)
@@ -173,7 +174,7 @@ func (h *GulihHandler) handleDelete(w http.ResponseWriter, r *http.Request, id s
 
 	// SSE Notif Delete
 	userID := ""
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
 	h.sseService.NotifyDelete("gulih", id, userID)

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 )
@@ -115,7 +116,7 @@ func (h *ProteksiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	// SSE Notif Create
 	userID := ""
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
 	h.sseService.NotifyCreate("proteksi", resp, userID)
@@ -149,7 +150,7 @@ func (h *ProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 
 	// SSE Notif Update
 	userID := ""
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
 	h.sseService.NotifyUpdate("proteksi", resp, userID)
@@ -174,7 +175,7 @@ func (h *ProteksiHandler) handleDelete(w http.ResponseWriter, r *http.Request, i
 
 	// SSE Notif Delete
 	userID := ""
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
 	h.sseService.NotifyDelete("proteksi", id, userID)

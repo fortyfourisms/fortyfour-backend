@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"log"
@@ -28,7 +29,7 @@ func (h *PostHandler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Context().Value("user_id").(string)
+	userID := r.Context().Value(middleware.UserIDKey).(string)
 	if userID == "" {
 		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
 		return
@@ -102,7 +103,7 @@ func (h *PostHandler) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Context().Value("user_id").(string)
+	userID := r.Context().Value(middleware.UserIDKey).(string)
 	if userID == "" {
 		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
 		return
@@ -152,7 +153,7 @@ func (h *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Context().Value("user_id").(string)
+	userID := r.Context().Value(middleware.UserIDKey).(string)
 	if userID == "" {
 		utils.RespondError(w, http.StatusUnauthorized, "Missing user ID")
 		return

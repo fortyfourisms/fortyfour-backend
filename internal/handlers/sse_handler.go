@@ -5,6 +5,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"log"
 	"net/http"
@@ -35,7 +36,7 @@ func (h *SSEHandler) HandleSSE(w http.ResponseWriter, r *http.Request) {
 
 	// Get user ID from context (set by auth middleware)
 	userID := ""
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
 

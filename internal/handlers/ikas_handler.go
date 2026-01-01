@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 
@@ -136,7 +137,7 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	// SSE Notif Create
 	userID := ""
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
 	h.sseService.NotifyCreate("ikas", resp, userID)
@@ -170,7 +171,7 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 
 	// SSE Notif Update
 	userID := ""
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
 	h.sseService.NotifyUpdate("ikas", resp, userID)
@@ -195,7 +196,7 @@ func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 
 	// SSE Notif Delete
 	userID := ""
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
 	h.sseService.NotifyDelete("ikas", id, userID)
@@ -263,7 +264,7 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 
 	// SSE Notif Create
 	userID := ""
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
 	h.sseService.NotifyCreate("ikas", resp, userID)

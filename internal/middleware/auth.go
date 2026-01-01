@@ -12,6 +12,18 @@ type AuthMiddleware struct {
 	jwtSecret string
 }
 
+type contextKey struct {
+	name string
+}
+
+// Struct pointer as key
+// Avoiding collisions in Go context keys
+var (
+	UserIDKey = &contextKey{"user-id"}
+	Username  = &contextKey{"username"}
+	Role      = &contextKey{"role"}
+)
+
 func NewAuthMiddleware(jwtSecret string) *AuthMiddleware {
 	return &AuthMiddleware{jwtSecret: jwtSecret}
 }
@@ -42,9 +54,9 @@ func (m *AuthMiddleware) Authenticate(next http.HandlerFunc) http.HandlerFunc {
 		r.Header.Set("X-User-Role", claims.Role)
 
 		// Set ke context juga
-		ctx := context.WithValue(r.Context(), "user_id", UserIDString)
-		ctx = context.WithValue(ctx, "username", claims.Username)
-		ctx = context.WithValue(ctx, "role", claims.Role)
+		ctx := context.WithValue(r.Context(), UserIDKey, UserIDString)
+		ctx = context.WithValue(ctx, Username, claims.Username)
+		ctx = context.WithValue(ctx, Role, claims.Role)
 
 		next(w, r.WithContext(ctx))
 	}
