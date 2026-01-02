@@ -55,16 +55,16 @@ func TestRateLimiter_LimitByIP_Exceeded(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodGet, "/api/test", nil)
 	req.RemoteAddr = "127.0.0.1:12345"
-	w := httptest.NewRecorder()
+	// w := httptest.NewRecorder()
 
 	// Make requests up to the limit
 	for i := 0; i < 5; i++ {
-		w = httptest.NewRecorder()
+		w := httptest.NewRecorder()
 		handler(w, req)
 	}
 
 	// This should be rate limited
-	w = httptest.NewRecorder()
+	w := httptest.NewRecorder()
 	handler(w, req)
 
 	if w.Code != http.StatusTooManyRequests {
