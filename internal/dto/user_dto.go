@@ -2,7 +2,7 @@ package dto
 
 type CreateUserRequest struct {
 	Username  string  `json:"username" validate:"required,min=3,max=50"`
-	Password  string  `json:"password" validate:"required,min=6"`
+	Password  string  `json:"password" validate:"required,min=8"`
 	Email     string  `json:"email" validate:"required,email"`
 	RoleID    *string `json:"role_id"`
 	IDJabatan *string `json:"id_jabatan"`
@@ -16,8 +16,9 @@ type UpdateUserRequest struct {
 }
 
 type UpdateUserPasswordRequest struct {
-	OldPassword string `json:"old_password" validate:"required,min=6"`
-	NewPassword string `json:"new_password" validate:"required,min=6"`
+	OldPassword        string `json:"old_password" validate:"required,min=8"`
+	NewPassword        string `json:"new_password" validate:"required,min=8"`
+	ConfirmNewPassword string `json:"confirm_new_password" validate:"required,min=8,eqfield=NewPassword"`
 }
 
 type UserResponse struct {

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/internal/validator"
@@ -356,14 +357,14 @@ func (h *UserHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 }
 
 func (h *UserHandler) getUserID(r *http.Request) string {
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		return uid.(string)
 	}
 	return ""
 }
 
 func (h *UserHandler) isAdmin(r *http.Request) bool {
-	if role := r.Context().Value("role"); role != nil {
+	if role := r.Context().Value(middleware.Role); role != nil {
 		return role.(string) == "admin"
 	}
 	return false

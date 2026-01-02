@@ -20,7 +20,7 @@ func NewAuthorizationMiddleware(enforcer *casbin.Enforcer) *AuthorizationMiddlew
 func (m *AuthorizationMiddleware) Authorize(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Get role from context (set by AuthMiddleware)
-		role, ok := r.Context().Value("role").(string)
+		role, ok := r.Context().Value(Role).(string)
 		if !ok || role == "" {
 			http.Error(w, "Forbidden: No role found", http.StatusForbidden)
 			return

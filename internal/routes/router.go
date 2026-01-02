@@ -24,7 +24,6 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 func InitRouter(
 	authH *handlers.AuthHandler,
 	userHandler *handlers.UserHandler,
-	postH *handlers.PostHandler,
 	perusahaanH *handlers.PerusahaanHandler,
 	picH *handlers.PICHandler,
 	jabatanH *handlers.JabatanHandler,
@@ -72,13 +71,6 @@ func InitRouter(
 	// SSE Routes
 	mux.HandleFunc("/api/events", authM.Authenticate(sseH.HandleSSE))
 	mux.HandleFunc("/api/events/stats", authM.Authenticate(sseH.GetStats))
-
-	// Routes Posts
-	mux.HandleFunc("/api/posts", authM.Authenticate(casbinM.Authorize(postH.GetPosts)))
-	mux.HandleFunc("/api/posts/single", authM.Authenticate(casbinM.Authorize(postH.GetPost)))
-	mux.HandleFunc("/api/posts/create", authM.Authenticate(casbinM.Authorize(postH.CreatePost)))
-	mux.HandleFunc("/api/posts/update", authM.Authenticate(casbinM.Authorize(postH.UpdatePost)))
-	mux.HandleFunc("/api/posts/delete", authM.Authenticate(casbinM.Authorize(postH.DeletePost)))
 
 	// Route Perusahaan
 	mux.HandleFunc("/api/perusahaan", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))))

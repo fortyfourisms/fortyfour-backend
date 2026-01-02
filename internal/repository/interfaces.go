@@ -10,14 +10,14 @@ type UserRepositoryInterface interface {
 	Create(user *models.User) error
 	FindByUsername(username string) (*models.User, error)
 	FindByID(id string) (*models.User, error)
-	Update(user *models.User) error
-	Delete(id string) error
-	EmailExists(email string, excludeID *string) (bool, error)
-	UsernameExists(username string, excludeID *string) (bool, error)
 	FindAll() ([]models.User, error)
+	Update(user *models.User) error
 	UpdateWithPhoto(user *models.User) error
 	UpdatePassword(id, hashedPassword string) error
 	GetPasswordByID(id string) (string, error)
+	Delete(id string) error
+	EmailExists(email string, excludeID *string) (bool, error)
+	UsernameExists(username string, excludeID *string) (bool, error)
 }
 
 // PostRepositoryInterface defines methods for post data access

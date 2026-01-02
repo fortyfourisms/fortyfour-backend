@@ -18,7 +18,12 @@ test:
 
 test-coverage:
 	go test -v -coverprofile=coverage.out ./...
-	go tool cover -html=coverage.out
+	go tool cover -func=coverage.out | tail -1
+	go tool cover -html=coverage.out -o coverage.html
+
+test-coverage-minimal:
+	go test -v -coverprofile=coverage.out ./...
+	go tool cover -func=coverage.out
 
 migrate-up:
 	mysql -u root -p myapp_db < migrations/001_create_users_table.sql

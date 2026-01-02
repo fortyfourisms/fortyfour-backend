@@ -57,7 +57,6 @@ func main() {
 
 	// Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
-	postRepo := repository.NewPostRepository(db)
 	perusahaanRepo := repository.NewPerusahaanRepository(db)
 	picRepo := repository.NewPICRepository(db)
 	identifikasiRepo := repository.NewIdentifikasiRepository(db)
@@ -76,7 +75,6 @@ func main() {
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
 	authService := services.NewAuthService(userRepo, tokenService)
-	postService := services.NewPostService(postRepo)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo)
 	picService := services.NewPICService(picRepo)
 	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
@@ -96,7 +94,6 @@ func main() {
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
 	userHandler := handlers.NewUserHandler(userService, "./uploads", sseService)
-	postHandler := handlers.NewPostHandler(postService, sseService)
 	uploadPath := "./uploads"
 	os.MkdirAll(uploadPath, os.ModePerm)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
@@ -131,7 +128,6 @@ func main() {
 	mux := routes.InitRouter(
 		authHandler,
 		userHandler,
-		postHandler,
 		perusahaanHandler,
 		picHandler,
 		jabatanHandler,

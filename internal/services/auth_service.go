@@ -51,9 +51,18 @@ func (s *AuthService) Register(username, password, email string, roleID *string,
 		return nil, nil, errors.New("username harus 3-50 karakter")
 	}
 
-	// Validasi panjang password
-	if len(password) < 6 {
-		return nil, nil, errors.New("password minimal 6 karakter")
+	// ===== VALIDASI PASSWORD =====
+	personalInfo := []string{
+		username,
+		email,
+	}
+
+	// Gunakan konfigurasi default (strict)
+	config := validator.DefaultPasswordConfig()
+
+	// Validasi password dengan semua kriteria keamanan
+	if err := validator.ValidatePassword(password, config, personalInfo...); err != nil {
+		return nil, nil, err
 	}
 
 	// Check if username already exists

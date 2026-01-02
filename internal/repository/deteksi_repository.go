@@ -17,7 +17,7 @@ func NewDeteksiRepository(db *sql.DB) *DeteksiRepository {
 func (r *DeteksiRepository) Create(req dto.CreateDeteksiRequest, id string) error {
 	// Hitung nilai_deteksi (rata-rata dari 3 subdomain)
 	NilaiDeteksi := (req.NilaiSubdomain1 + req.NilaiSubdomain2 + req.NilaiSubdomain3) / 3.0
-	
+
 	query := `INSERT INTO deteksi (id, nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3) 
 			  VALUES (?, ?, ?, ?, ?)`
 

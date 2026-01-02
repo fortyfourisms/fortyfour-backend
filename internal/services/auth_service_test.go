@@ -1,23 +1,119 @@
 package services
 
 import (
+	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/testhelpers"
 	"testing"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
+// Skeleton tests dari main
+func TestNewAuthService(t *testing.T) {
+	tests := []struct {
+		name         string
+		userRepo     repository.UserRepositoryInterface
+		tokenService *TokenService
+		want         *AuthService
+	}{
+		{
+			name:         "create new auth service",
+			userRepo:     testhelpers.NewMockUserRepository(),
+			tokenService: NewTokenService(testhelpers.NewMockRedisClient(), "test-secret"),
+			want:         nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := NewAuthService(tt.userRepo, tt.tokenService)
+			if got == nil {
+				t.Errorf("NewAuthService() returned nil")
+			}
+		})
+	}
+}
+
+/*
+=====================================
+ TEST REGISTER
+=====================================
+*/
+
+func TestAuthService_Register(t *testing.T) {
+	tests := []struct {
+		name      string
+		username  string
+		password  string
+		email     string
+		roleID    *string
+		idJabatan *string
+		wantErr   bool
+		errMsg    string
+	}{
+		{
+			name:     "empty username",
+			username: "",
+			password: "MySecureP@ssw0rd2024!",
+			email:    "test@example.com",
+			wantErr:  true,
+			errMsg:   "username wajib diisi",
+		},
+		{
+			name:     "empty password",
+			username: "testuser",
+			password: "",
+			email:    "test@example.com",
+			wantErr:  true,
+			errMsg:   "password wajib diisi",
+		},
+		{
+			name:     "empty email",
+			username: "testuser",
+			password: "MySecureP@ssw0rd2024!",
+			email:    "",
+			wantErr:  true,
+			errMsg:   "email wajib diisi",
+		},
+		{
+			name:     "all empty",
+			username: "",
+			password: "",
+			email:    "",
+			wantErr:  true,
+			errMsg:   "username wajib diisi",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			userRepo := testhelpers.NewMockUserRepository()
+			redis := testhelpers.NewMockRedisClient()
+			tokenService := NewTokenService(redis, "test-secret")
+			s := NewAuthService(userRepo, tokenService)
+			
+			_, _, gotErr := s.Register(tt.username, tt.password, tt.email, tt.roleID, tt.idJabatan)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("Register() failed: %v", gotErr)
+				} else if gotErr.Error() != tt.errMsg {
+					t.Errorf("expected '%s' error, got '%s'", tt.errMsg, gotErr.Error())
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("Register() succeeded unexpectedly")
+			}
+		})
+	}
+}
+
 func TestAuthService_Register_Success(t *testing.T) {
-	// Arrange
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret")
 	authService := NewAuthService(userRepo, tokenService)
 
-	// Act
-	user, tokens, err := authService.Register("testuser", "password123", "test@example.com", nil, nil)
+	user, tokens, err := authService.Register("testuser", "MySecureP@ssw0rd2024!", "test@example.com", nil, nil)
 
-	// Assert
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -47,14 +143,13 @@ func TestAuthService_Register_Success(t *testing.T) {
 	}
 
 	// Verify password is hashed
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte("password123"))
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte("MySecureP@ssw0rd2024!"))
 	if err != nil {
 		t.Error("password should be hashed correctly")
 	}
 }
 
 func TestAuthService_Register_WithRoleAndJabatan(t *testing.T) {
-	// Arrange
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret")
@@ -63,10 +158,8 @@ func TestAuthService_Register_WithRoleAndJabatan(t *testing.T) {
 	roleID := "role-123"
 	idJabatan := "jabatan-456"
 
-	// Act
-	user, tokens, err := authService.Register("testuser", "password123", "test@example.com", &roleID, &idJabatan)
+	user, tokens, err := authService.Register("testuser", "MySecureP@ssw0rd2024!", "test@example.com", &roleID, &idJabatan)
 
-	// Assert
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -88,56 +181,16 @@ func TestAuthService_Register_WithRoleAndJabatan(t *testing.T) {
 	}
 }
 
-func TestAuthService_Register_EmptyFields(t *testing.T) {
-	// Arrange
-	userRepo := testhelpers.NewMockUserRepository()
-	redis := testhelpers.NewMockRedisClient()
-	tokenService := NewTokenService(redis, "test-secret")
-	authService := NewAuthService(userRepo, tokenService)
-
-	tests := []struct {
-		name     string
-		username string
-		password string
-		email    string
-		wantErr  string
-	}{
-		{"empty username", "", "password123", "test@example.com", "username wajib diisi"},
-		{"empty password", "testuser", "", "test@example.com", "password wajib diisi"},
-		{"empty email", "testuser", "password123", "", "email wajib diisi"},
-		{"all empty", "", "", "", "username wajib diisi"}, // Yang pertama dicek adalah username
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Act
-			_, _, err := authService.Register(tt.username, tt.password, tt.email, nil, nil)
-
-			// Assert
-			if err == nil {
-				t.Fatal("expected error for empty fields")
-			}
-
-			if err.Error() != tt.wantErr {
-				t.Errorf("expected '%s' error, got '%s'", tt.wantErr, err.Error())
-			}
-		})
-	}
-}
-
 func TestAuthService_Register_DuplicateUsername(t *testing.T) {
-	// Arrange
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret")
 	authService := NewAuthService(userRepo, tokenService)
 
-	authService.Register("testuser", "password123", "test@example.com", nil, nil)
+	authService.Register("testuser", "MySecureP@ssw0rd2024!", "test@example.com", nil, nil)
 
-	// Act
-	_, _, err := authService.Register("testuser", "newpassword", "another@example.com", nil, nil)
+	_, _, err := authService.Register("testuser", "DifferentSecureP@ss2024!", "another@example.com", nil, nil)
 
-	// Assert
 	if err == nil {
 		t.Fatal("expected error for duplicate username")
 	}
@@ -147,19 +200,52 @@ func TestAuthService_Register_DuplicateUsername(t *testing.T) {
 	}
 }
 
+/*
+=====================================
+ TEST LOGIN
+=====================================
+*/
+
+func TestAuthService_Login(t *testing.T) {
+	tests := []struct {
+		name     string
+		username string
+		password string
+		wantErr  bool
+	}{
+		// Placeholder untuk kompatibilitas dengan struktur main
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			userRepo := testhelpers.NewMockUserRepository()
+			redis := testhelpers.NewMockRedisClient()
+			tokenService := NewTokenService(redis, "test-secret")
+			s := NewAuthService(userRepo, tokenService)
+			
+			_, _, gotErr := s.Login(tt.username, tt.password)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("Login() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("Login() succeeded unexpectedly")
+			}
+		})
+	}
+}
+
 func TestAuthService_Login_Success(t *testing.T) {
-	// Arrange
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret")
 	authService := NewAuthService(userRepo, tokenService)
 
-	authService.Register("testuser", "password123", "test@example.com", nil, nil)
+	authService.Register("testuser", "MySecureP@ssw0rd2024!", "test@example.com", nil, nil)
 
-	// Act
-	user, tokens, err := authService.Login("testuser", "password123")
+	user, tokens, err := authService.Login("testuser", "MySecureP@ssw0rd2024!")
 
-	// Assert
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
@@ -186,18 +272,15 @@ func TestAuthService_Login_Success(t *testing.T) {
 }
 
 func TestAuthService_Login_InvalidUsername(t *testing.T) {
-	// Arrange
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret")
 	authService := NewAuthService(userRepo, tokenService)
 
-	authService.Register("testuser", "password123", "test@example.com", nil, nil)
+	authService.Register("testuser", "MySecureP@ssw0rd2024!", "test@example.com", nil, nil)
 
-	// Act
-	_, _, err := authService.Login("nonexistent", "password123")
+	_, _, err := authService.Login("nonexistent", "MySecureP@ssw0rd2024!")
 
-	// Assert
 	if err == nil {
 		t.Fatal("expected error for invalid username")
 	}
@@ -208,18 +291,15 @@ func TestAuthService_Login_InvalidUsername(t *testing.T) {
 }
 
 func TestAuthService_Login_InvalidPassword(t *testing.T) {
-	// Arrange
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret")
 	authService := NewAuthService(userRepo, tokenService)
 
-	authService.Register("testuser", "password123", "test@example.com", nil, nil)
+	authService.Register("testuser", "MySecureP@ssw0rd2024!", "test@example.com", nil, nil)
 
-	// Act
-	_, _, err := authService.Login("testuser", "wrongpassword")
+	_, _, err := authService.Login("testuser", "WrongP@ssword!")
 
-	// Assert
 	if err == nil {
 		t.Fatal("expected error for invalid password")
 	}
@@ -230,7 +310,6 @@ func TestAuthService_Login_InvalidPassword(t *testing.T) {
 }
 
 func TestAuthService_Login_WithRoleName(t *testing.T) {
-	// Arrange
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret")
@@ -238,33 +317,23 @@ func TestAuthService_Login_WithRoleName(t *testing.T) {
 
 	roleID := "role-123"
 	
-	// Register dengan roleID
-	user, _, err := authService.Register("testuser", "password123", "test@example.com", &roleID, nil)
+	user, _, err := authService.Register("testuser", "MySecureP@ssw0rd2024!", "test@example.com", &roleID, nil)
 	if err != nil {
 		t.Fatalf("registration failed: %v", err)
 	}
 
-	// Manually set RoleName di mock (karena mock repository mungkin tidak auto-populate)
-	// Pastikan FindByUsername di mock return user dengan RoleName
 	if user.RoleID != nil {
-		user.RoleName = "Admin" // Set role name manually untuk test
+		user.RoleName = "Admin"
 	}
 
-	// Act
-	loginUser, tokens, err := authService.Login("testuser", "password123")
+	loginUser, tokens, err := authService.Login("testuser", "MySecureP@ssw0rd2024!")
 
-	// Assert
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	// Cek apakah RoleName ada (bisa kosong kalau mock tidak implement join ke tabel role)
-	// Jika mock tidak support auto-populate RoleName, test ini perlu disesuaikan
-	// atau skip dengan log
 	if loginUser.RoleName == "" {
 		t.Log("Note: RoleName is empty - this might be expected if mock doesn't populate role relationships")
-		// Atau bisa t.Error jika expect RoleName harus ada
-		// t.Error("expected roleName to be populated after login")
 	}
 
 	if tokens == nil {
@@ -272,22 +341,63 @@ func TestAuthService_Login_WithRoleName(t *testing.T) {
 	}
 }
 
+/*
+=====================================
+ TEST LOGOUT
+=====================================
+*/
+
+func TestAuthService_Logout(t *testing.T) {
+	tests := []struct {
+		name         string
+		refreshToken string
+		wantErr      bool
+	}{
+		// Placeholder untuk kompatibilitas dengan struktur main
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			userRepo := testhelpers.NewMockUserRepository()
+			redis := testhelpers.NewMockRedisClient()
+			tokenService := NewTokenService(redis, "test-secret")
+			s := NewAuthService(userRepo, tokenService)
+			
+			gotErr := s.Logout(tt.refreshToken)
+			if gotErr != nil {
+				if !tt.wantErr {
+					t.Errorf("Logout() failed: %v", gotErr)
+				}
+				return
+			}
+			if tt.wantErr {
+				t.Fatal("Logout() succeeded unexpectedly")
+			}
+		})
+	}
+}
+
 func TestAuthService_Logout_Success(t *testing.T) {
-	// Arrange
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret")
 	authService := NewAuthService(userRepo, tokenService)
 
 	// Register and get tokens
-	_, tokens, _ := authService.Register("testuser", "password123", "test@example.com", nil, nil)
+	_, tokens, err := authService.Register("testuser", "MySecureP@ssw0rd2024!", "test@example.com", nil, nil)
+	if err != nil {
+		t.Fatalf("registration failed: %v", err)
+	}
 
-	// Act
-	err := authService.Logout(tokens.RefreshToken)
+	if tokens == nil {
+		t.Fatal("expected tokens to be returned from registration")
+	}
+
+	// Act - Logout
+	err = authService.Logout(tokens.RefreshToken)
 
 	// Assert
 	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
+		t.Fatalf("expected no error during logout, got %v", err)
 	}
 
 	// Verify token is revoked
@@ -298,17 +408,12 @@ func TestAuthService_Logout_Success(t *testing.T) {
 }
 
 func TestAuthService_Logout_InvalidToken(t *testing.T) {
-	// Arrange
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret")
 	authService := NewAuthService(userRepo, tokenService)
 
-	// Act
 	err := authService.Logout("invalid-token")
 
-	// Assert - tergantung implementasi RevokeRefreshToken
-	// bisa error atau tidak error jika token tidak ada
-	// sesuaikan dengan behavior yang diharapkan
-	_ = err // untuk saat ini kita terima hasil apapun
+	_ = err // Accept any result for invalid token
 }

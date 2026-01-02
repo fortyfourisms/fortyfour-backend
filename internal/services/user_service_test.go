@@ -3,139 +3,18 @@ package services
 import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/testhelpers"
+	"os"
 	"testing"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-/*
-=====================================
- TEST CREATE USER
-=====================================
-*/
-
-func TestUserService_Create_Success(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
-
-	req := dto.CreateUserRequest{
-		Username: "alice",
-		Password: "password123",
-		Email:    "alice@example.com",
-	}
-
-	resp, err := service.Create(req)
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-	if resp == nil {
-		t.Fatal("expected response, got nil")
-	}
-	if resp.Username != "alice" {
-		t.Errorf("expected username 'alice', got '%s'", resp.Username)
-	}
-	if resp.Email != "alice@example.com" {
-		t.Errorf("expected email 'alice@example.com', got '%s'", resp.Email)
-	}
-
-	// verify password is hashed in repo
-	user, err := repo.FindByUsername("alice")
-	if err != nil {
-		t.Fatalf("expected user in repo, got error %v", err)
-	}
-	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte("password123")) != nil {
-		t.Error("expected stored password to match provided password after hashing")
-	}
-}
-
-func TestUserService_Create_InvalidEmail(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
-
-	req := dto.CreateUserRequest{
-		Username: "bob",
-		Password: "password123",
-		Email:    "not-an-email",
-	}
-
-	_, err := service.Create(req)
-	if err == nil {
-		t.Fatal("expected error for invalid email")
-	}
-	if err.Error() != "email tidak valid" {
-		t.Errorf("expected 'email tidak valid', got '%s'", err.Error())
-	}
-}
-
-func TestUserService_Create_InvalidUsername(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
-
-	// Username terlalu pendek (< 3 karakter)
-	req := dto.CreateUserRequest{
-		Username: "ab",
-		Password: "password123",
-		Email:    "test@example.com",
-	}
-
-	_, err := service.Create(req)
-	if err == nil {
-		t.Fatal("expected error for invalid username")
-	}
-	if err.Error() != "username harus 3-50 karakter" {
-		t.Errorf("expected 'username harus 3-50 karakter', got '%s'", err.Error())
-	}
-}
-
-func TestUserService_Create_InvalidPassword(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
-
-	// Password terlalu pendek (< 6 karakter)
-	req := dto.CreateUserRequest{
-		Username: "testuser",
-		Password: "12345",
-		Email:    "test@example.com",
-	}
-
-	_, err := service.Create(req)
-	if err == nil {
-		t.Fatal("expected error for invalid password")
-	}
-	if err.Error() != "password minimal 6 karakter" {
-		t.Errorf("expected 'password minimal 6 karakter', got '%s'", err.Error())
-	}
-}
-
-func TestUserService_Create_DuplicateUsernameOrEmail(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
-
-	req := dto.CreateUserRequest{Username: "carol", Password: "password123", Email: "carol@example.com"}
-	_, err := service.Create(req)
-	if err != nil {
-		t.Fatalf("setup create failed: %v", err)
-	}
-
-	// duplicate username
-	dup := dto.CreateUserRequest{Username: "carol", Password: "newpass123", Email: "other@example.com"}
-	_, err = service.Create(dup)
-	if err == nil {
-		t.Fatal("expected error for duplicate username")
-	}
-	if err.Error() != "username sudah digunakan" {
-		t.Errorf("expected 'username sudah digunakan', got '%s'", err.Error())
-	}
-
-	// duplicate email
-	dupEmail := dto.CreateUserRequest{Username: "other", Password: "newpass123", Email: "carol@example.com"}
-	_, err = service.Create(dupEmail)
-	if err == nil {
-		t.Fatal("expected error for duplicate email")
-	}
-	if err.Error() != "email sudah digunakan" {
-		t.Errorf("expected 'email sudah digunakan', got '%s'", err.Error())
-	}
+func setupUserService() (*UserService, *testhelpers.MockUserRepository) {
+	mockRepo := testhelpers.NewMockUserRepository()
+	uploadPath := "./test_uploads"
+	os.MkdirAll(uploadPath, os.ModePerm)
+	service := NewUserService(mockRepo, uploadPath)
+	return service, mockRepo
 }
 
 /*
@@ -145,37 +24,25 @@ func TestUserService_Create_DuplicateUsernameOrEmail(t *testing.T) {
 */
 
 func TestUserService_GetAll_Success(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
+	service, mockRepo := setupUserService()
 
-	// Create beberapa user
-	users := []dto.CreateUserRequest{
-		{Username: "user1", Password: "password1", Email: "user1@example.com"},
-		{Username: "user2", Password: "password2", Email: "user2@example.com"},
-		{Username: "user3", Password: "password3", Email: "user3@example.com"},
-	}
+	user1 := testhelpers.CreateTestUser("id1", "user1", "user1@test.com")
+	user2 := testhelpers.CreateTestUser("id2", "user2", "user2@test.com")
+	mockRepo.Create(user1)
+	mockRepo.Create(user2)
 
-	for _, req := range users {
-		_, err := service.Create(req)
-		if err != nil {
-			t.Fatalf("failed to create user: %v", err)
-		}
-	}
-
-	// Get all users
 	result, err := service.GetAll()
+
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-
-	if len(result) != 3 {
-		t.Errorf("expected 3 users, got %d", len(result))
+	if len(result) != 2 {
+		t.Errorf("expected 2 users, got %d", len(result))
 	}
 }
 
 func TestUserService_GetAll_EmptyResult(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
+	service, _ := setupUserService()
 
 	result, err := service.GetAll()
 	if err != nil {
@@ -194,41 +61,167 @@ func TestUserService_GetAll_EmptyResult(t *testing.T) {
 */
 
 func TestUserService_GetByID_Success(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
+	service, mockRepo := setupUserService()
 
-	// Create user
-	req := dto.CreateUserRequest{
-		Username: "testuser",
-		Password: "password123",
-		Email:    "test@example.com",
-	}
-	created, err := service.Create(req)
-	if err != nil {
-		t.Fatalf("setup create failed: %v", err)
-	}
+	user := testhelpers.CreateTestUser("test-id", "testuser", "test@test.com")
+	mockRepo.Create(user)
 
-	// Get by ID
-	result, err := service.GetByID(created.ID)
+	result, err := service.GetByID("test-id")
+
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-
-	if result.ID != created.ID {
-		t.Errorf("expected ID '%s', got '%s'", created.ID, result.ID)
+	if result == nil {
+		t.Fatal("expected result, got nil")
 	}
-	if result.Username != "testuser" {
-		t.Errorf("expected username 'testuser', got '%s'", result.Username)
+	if result.ID != "test-id" {
+		t.Errorf("expected ID 'test-id', got '%s'", result.ID)
 	}
 }
 
 func TestUserService_GetByID_NotFound(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
+	service, _ := setupUserService()
 
-	_, err := service.GetByID("non-existent-id")
+	_, err := service.GetByID("nonexistent")
+
 	if err == nil {
-		t.Fatal("expected error for non-existent user")
+		t.Error("expected error for nonexistent user")
+	}
+}
+
+/*
+=====================================
+ TEST CREATE USER
+=====================================
+*/
+
+func TestUserService_Create_Success(t *testing.T) {
+	service, _ := setupUserService()
+
+	req := dto.CreateUserRequest{
+		Username: "newuser",
+		Password: "MySecureP@ssw0rd2024!",
+		Email:    "newuser@test.com",
+	}
+
+	result, err := service.Create(req)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected result, got nil")
+	}
+	if result.Username != "newuser" {
+		t.Errorf("expected username 'newuser', got '%s'", result.Username)
+	}
+	if result.Email != "newuser@test.com" {
+		t.Errorf("expected email 'newuser@test.com', got '%s'", result.Email)
+	}
+
+	// verify password is hashed
+	user, _ := service.repo.FindByUsername("newuser")
+	if bcrypt.CompareHashAndPassword([]byte(user.Password), []byte("MySecureP@ssw0rd2024!")) != nil {
+		t.Error("expected stored password to match provided password after hashing")
+	}
+}
+
+func TestUserService_Create_InvalidEmail(t *testing.T) {
+	service, _ := setupUserService()
+
+	req := dto.CreateUserRequest{
+		Username: "testuser",
+		Password: "MySecureP@ssw0rd2024!",
+		Email:    "not-an-email",
+	}
+
+	_, err := service.Create(req)
+	if err == nil {
+		t.Fatal("expected error for invalid email")
+	}
+	if err.Error() != "email tidak valid" {
+		t.Errorf("expected 'email tidak valid', got '%s'", err.Error())
+	}
+}
+
+func TestUserService_Create_InvalidUsername(t *testing.T) {
+	service, _ := setupUserService()
+
+	req := dto.CreateUserRequest{
+		Username: "ab", // < 3 karakter
+		Password: "MySecureP@ssw0rd2024!",
+		Email:    "test@example.com",
+	}
+
+	_, err := service.Create(req)
+	if err == nil {
+		t.Fatal("expected error for invalid username")
+	}
+	if err.Error() != "username harus 3-50 karakter" {
+		t.Errorf("expected 'username harus 3-50 karakter', got '%s'", err.Error())
+	}
+}
+
+func TestUserService_Create_InvalidPassword(t *testing.T) {
+	service, _ := setupUserService()
+
+	req := dto.CreateUserRequest{
+		Username: "testuser",
+		Password: "12345", // terlalu pendek
+		Email:    "test@example.com",
+	}
+
+	_, err := service.Create(req)
+	if err == nil {
+		t.Fatal("expected error for invalid password")
+	}
+	// Sesuaikan dengan error message yang sebenarnya
+	if err.Error() != "password minimal 8 karakter" {
+		t.Errorf("expected 'password minimal 8 karakter', got '%s'", err.Error())
+	}
+}
+
+func TestUserService_Create_DuplicateUsername(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("id1", "existinguser", "existing@test.com")
+	mockRepo.Create(user)
+
+	req := dto.CreateUserRequest{
+		Username: "existinguser",
+		Password: "MySecureP@ssw0rd2024!",
+		Email:    "new@test.com",
+	}
+
+	_, err := service.Create(req)
+
+	if err == nil {
+		t.Error("expected error for duplicate username")
+	}
+	if err.Error() != "username sudah digunakan" {
+		t.Errorf("expected 'username sudah digunakan', got '%s'", err.Error())
+	}
+}
+
+func TestUserService_Create_DuplicateEmail(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("id1", "user1", "existing@test.com")
+	mockRepo.Create(user)
+
+	req := dto.CreateUserRequest{
+		Username: "newuser",
+		Password: "MySecureP@ssw0rd2024!",
+		Email:    "existing@test.com",
+	}
+
+	_, err := service.Create(req)
+
+	if err == nil {
+		t.Error("expected error for duplicate email")
+	}
+	if err.Error() != "email sudah digunakan" {
+		t.Errorf("expected 'email sudah digunakan', got '%s'", err.Error())
 	}
 }
 
@@ -238,36 +231,44 @@ func TestUserService_GetByID_NotFound(t *testing.T) {
 =====================================
 */
 
-func TestUserService_Update_Success_And_Conflict(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
+func TestUserService_Update_Success(t *testing.T) {
+	service, mockRepo := setupUserService()
 
-	// create two users (usernames must be >=3 chars)
-	a := dto.CreateUserRequest{Username: "user1", Password: "password1", Email: "u1@example.com"}
-	b := dto.CreateUserRequest{Username: "user2", Password: "password2", Email: "u2@example.com"}
-	ra, err := service.Create(a)
-	if err != nil {
-		t.Fatalf("create a failed: %v", err)
-	}
-	rb, err := service.Create(b)
-	if err != nil {
-		t.Fatalf("create b failed: %v", err)
+	user := testhelpers.CreateTestUser("test-id", "olduser", "old@test.com")
+	mockRepo.Create(user)
+
+	newUsername := "newuser"
+	newEmail := "new@test.com"
+	req := dto.UpdateUserRequest{
+		Username: &newUsername,
+		Email:    &newEmail,
 	}
 
-	// update a's username to new value
-	newUsername := "user1-new"
-	updateReq := dto.UpdateUserRequest{Username: &newUsername}
-	updated, err := service.Update(ra.ID, updateReq)
+	result, err := service.Update("test-id", req)
+
 	if err != nil {
-		t.Fatalf("expected update success, got %v", err)
+		t.Fatalf("expected no error, got %v", err)
 	}
-	if updated.Username != newUsername {
-		t.Errorf("expected username '%s', got '%s'", newUsername, updated.Username)
+	if result.Username != "newuser" {
+		t.Errorf("expected username 'newuser', got '%s'", result.Username)
 	}
+	if result.Email != "new@test.com" {
+		t.Errorf("expected email 'new@test.com', got '%s'", result.Email)
+	}
+}
+
+func TestUserService_Update_Conflict(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	// create two users
+	a := testhelpers.CreateTestUser("id-a", "user1", "u1@example.com")
+	b := testhelpers.CreateTestUser("id-b", "user2", "u2@example.com")
+	mockRepo.Create(a)
+	mockRepo.Create(b)
 
 	// try to update a to use b's username -> conflict
-	conflictReq := dto.UpdateUserRequest{Username: &rb.Username}
-	_, err = service.Update(ra.ID, conflictReq)
+	conflictReq := dto.UpdateUserRequest{Username: &b.Username}
+	_, err := service.Update(a.ID, conflictReq)
 	if err == nil {
 		t.Fatal("expected error for username already used")
 	}
@@ -277,20 +278,14 @@ func TestUserService_Update_Success_And_Conflict(t *testing.T) {
 }
 
 func TestUserService_Update_InvalidUsername(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
+	service, mockRepo := setupUserService()
 
-	// Create user
-	req := dto.CreateUserRequest{Username: "testuser", Password: "password123", Email: "test@example.com"}
-	created, err := service.Create(req)
-	if err != nil {
-		t.Fatalf("setup failed: %v", err)
-	}
+	user := testhelpers.CreateTestUser("test-id", "testuser", "test@example.com")
+	mockRepo.Create(user)
 
-	// Update dengan username invalid (terlalu pendek)
 	invalidUsername := "ab"
 	updateReq := dto.UpdateUserRequest{Username: &invalidUsername}
-	_, err = service.Update(created.ID, updateReq)
+	_, err := service.Update("test-id", updateReq)
 	if err == nil {
 		t.Fatal("expected error for invalid username")
 	}
@@ -300,20 +295,14 @@ func TestUserService_Update_InvalidUsername(t *testing.T) {
 }
 
 func TestUserService_Update_InvalidEmail(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
+	service, mockRepo := setupUserService()
 
-	// Create user
-	req := dto.CreateUserRequest{Username: "testuser", Password: "password123", Email: "test@example.com"}
-	created, err := service.Create(req)
-	if err != nil {
-		t.Fatalf("setup failed: %v", err)
-	}
+	user := testhelpers.CreateTestUser("test-id", "testuser", "test@example.com")
+	mockRepo.Create(user)
 
-	// Update dengan email invalid
 	invalidEmail := "not-an-email"
 	updateReq := dto.UpdateUserRequest{Email: &invalidEmail}
-	_, err = service.Update(created.ID, updateReq)
+	_, err := service.Update("test-id", updateReq)
 	if err == nil {
 		t.Fatal("expected error for invalid email")
 	}
@@ -329,56 +318,54 @@ func TestUserService_Update_InvalidEmail(t *testing.T) {
 */
 
 func TestUserService_UpdatePassword_Success(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
+	service, mockRepo := setupUserService()
 
-	// Create user
-	req := dto.CreateUserRequest{Username: "testuser", Password: "oldpassword", Email: "test@example.com"}
-	created, err := service.Create(req)
-	if err != nil {
-		t.Fatalf("setup failed: %v", err)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("OldP@ssword123!"), bcrypt.DefaultCost)
+	user := testhelpers.CreateTestUser("test-id", "testuser", "test@test.com")
+	user.Password = string(hashedPassword)
+	mockRepo.Create(user)
+
+	req := dto.UpdateUserPasswordRequest{
+		OldPassword:        "OldP@ssword123!",
+		NewPassword:        "NewP@ssword456!",
+		ConfirmNewPassword: "NewP@ssword456!",
 	}
 
-	// Update password
-	updateReq := dto.UpdateUserPasswordRequest{
-		OldPassword: "oldpassword",
-		NewPassword: "newpassword123",
-	}
-	err = service.UpdatePassword(created.ID, updateReq)
+	err := service.UpdatePassword("test-id", req)
+
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
 	// Verify password changed
-	password, err := repo.GetPasswordByID(created.ID)
+	password, err := mockRepo.GetPasswordByID("test-id")
 	if err != nil {
 		t.Fatalf("failed to get password: %v", err)
 	}
 
-	if bcrypt.CompareHashAndPassword([]byte(password), []byte("newpassword123")) != nil {
+	if bcrypt.CompareHashAndPassword([]byte(password), []byte("NewP@ssword456!")) != nil {
 		t.Error("expected password to be updated")
 	}
 }
 
 func TestUserService_UpdatePassword_WrongOldPassword(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
+	service, mockRepo := setupUserService()
 
-	// Create user
-	req := dto.CreateUserRequest{Username: "testuser", Password: "oldpassword", Email: "test@example.com"}
-	created, err := service.Create(req)
-	if err != nil {
-		t.Fatalf("setup failed: %v", err)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("CorrectP@ssword123!"), bcrypt.DefaultCost)
+	user := testhelpers.CreateTestUser("test-id", "testuser", "test@test.com")
+	user.Password = string(hashedPassword)
+	mockRepo.Create(user)
+
+	req := dto.UpdateUserPasswordRequest{
+		OldPassword:        "WrongP@ssword123!",
+		NewPassword:        "NewP@ssword456!",
+		ConfirmNewPassword: "NewP@ssword456!",
 	}
 
-	// Update password dengan old password salah
-	updateReq := dto.UpdateUserPasswordRequest{
-		OldPassword: "wrongpassword",
-		NewPassword: "newpassword123",
-	}
-	err = service.UpdatePassword(created.ID, updateReq)
+	err := service.UpdatePassword("test-id", req)
+
 	if err == nil {
-		t.Fatal("expected error for wrong old password")
+		t.Error("expected error for wrong old password")
 	}
 	if err.Error() != "password lama tidak sesuai" {
 		t.Errorf("expected 'password lama tidak sesuai', got '%s'", err.Error())
@@ -386,27 +373,25 @@ func TestUserService_UpdatePassword_WrongOldPassword(t *testing.T) {
 }
 
 func TestUserService_UpdatePassword_TooShort(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
+	service, mockRepo := setupUserService()
 
-	// Create user
-	req := dto.CreateUserRequest{Username: "testuser", Password: "oldpassword", Email: "test@example.com"}
-	created, err := service.Create(req)
-	if err != nil {
-		t.Fatalf("setup failed: %v", err)
-	}
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("OldP@ssword123!"), bcrypt.DefaultCost)
+	user := testhelpers.CreateTestUser("test-id", "testuser", "test@example.com")
+	user.Password = string(hashedPassword)
+	mockRepo.Create(user)
 
-	// Update password dengan new password terlalu pendek
-	updateReq := dto.UpdateUserPasswordRequest{
-		OldPassword: "oldpassword",
-		NewPassword: "12345", // < 6 karakter
+	req := dto.UpdateUserPasswordRequest{
+		OldPassword:        "OldP@ssword123!",
+		NewPassword:        "Short1!", // kurang dari 8 karakter
+		ConfirmNewPassword: "Short1!",
 	}
-	err = service.UpdatePassword(created.ID, updateReq)
+	err := service.UpdatePassword("test-id", req)
 	if err == nil {
 		t.Fatal("expected error for password too short")
 	}
-	if err.Error() != "password baru minimal 6 karakter" {
-		t.Errorf("expected 'password baru minimal 6 karakter', got '%s'", err.Error())
+	// Sesuaikan dengan validasi yang ada
+	if err.Error() != "password minimal 8 karakter" {
+		t.Errorf("expected 'password minimal 8 karakter', got '%s'", err.Error())
 	}
 }
 
@@ -416,29 +401,31 @@ func TestUserService_UpdatePassword_TooShort(t *testing.T) {
 =====================================
 */
 
-func TestUserService_Delete_Success_And_NotFound(t *testing.T) {
-	repo := testhelpers.NewMockUserRepository()
-	service := NewUserService(repo, "./uploads")
+func TestUserService_Delete_Success(t *testing.T) {
+	service, mockRepo := setupUserService()
 
-	req := dto.CreateUserRequest{Username: "todelete", Password: "password", Email: "td@example.com"}
-	created, err := service.Create(req)
+	user := testhelpers.CreateTestUser("test-id", "testuser", "test@test.com")
+	mockRepo.Create(user)
+
+	err := service.Delete("test-id")
+
 	if err != nil {
-		t.Fatalf("setup create failed: %v", err)
+		t.Fatalf("expected no error, got %v", err)
 	}
 
-	// delete
-	if err := service.Delete(created.ID); err != nil {
-		t.Fatalf("expected delete success, got %v", err)
-	}
-
-	// ensure gone
-	_, err = repo.FindByID(created.ID)
+	// Verify it was deleted
+	_, err = mockRepo.FindByID("test-id")
 	if err == nil {
-		t.Fatal("expected user to be deleted from repo")
+		t.Error("user should be deleted")
 	}
+}
 
-	// delete non-existent
-	if err := service.Delete("nope"); err == nil {
-		t.Fatal("expected error when deleting non-existent user")
+func TestUserService_Delete_NotFound(t *testing.T) {
+	service, _ := setupUserService()
+
+	err := service.Delete("nonexistent-id")
+
+	if err == nil {
+		t.Error("expected error for nonexistent user")
 	}
 }
