@@ -45,7 +45,7 @@ func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Cs
 		c.WebCsirt = *req.WebCsirt
 	}
 	if req.TeleponCsirt != nil {
-    c.TeleponCsirt = req.TeleponCsirt
+		c.TeleponCsirt = req.TeleponCsirt
 	}
 	if req.PhotoCsirt != nil {
 		c.PhotoCsirt = *req.PhotoCsirt

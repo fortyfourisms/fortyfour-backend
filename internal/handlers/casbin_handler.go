@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"net/http"
@@ -28,8 +29,8 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Only admin can manage policies
-	userID := r.Context().Value("user_id").(string)
-	userRole := r.Context().Value("role").(string)
+	userID := r.Context().Value(middleware.UserIDKey).(string)
+	userRole := r.Context().Value(middleware.Role).(string)
 
 	if userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")
@@ -82,8 +83,8 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	userID := r.Context().Value("user_id").(string)
-	userRole := r.Context().Value("role").(string)
+	userID := r.Context().Value(middleware.UserIDKey).(string)
+	userRole := r.Context().Value(middleware.Role).(string)
 
 	if userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")
@@ -157,8 +158,8 @@ func (h *CasbinHandler) RemovePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Context().Value("user_id").(string)
-	userRole := r.Context().Value("role").(string)
+	userID := r.Context().Value(middleware.UserIDKey).(string)
+	userRole := r.Context().Value(middleware.Role).(string)
 
 	if userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")

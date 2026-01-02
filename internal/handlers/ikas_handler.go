@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 
@@ -25,7 +27,15 @@ func NewIkasHandler(service *services.IkasService, sseService *services.SSEServi
 }
 
 func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/api/ikas"), "/")
+	path := strings.TrimPrefix(r.URL.Path, "/api/ikas")
+
+	// Handle import endpoint
+	if path == "/import" && r.Method == http.MethodPost {
+		h.handleImport(w, r)
+		return
+	}
+
+	id := strings.TrimPrefix(path, "/")
 
 	switch r.Method {
 	case http.MethodGet:
@@ -127,7 +137,7 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	// SSE Notif Create
 	userID := ""
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
 	h.sseService.NotifyCreate("ikas", resp, userID)
@@ -161,7 +171,7 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 
 	// SSE Notif Update
 	userID := ""
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
 	h.sseService.NotifyUpdate("ikas", resp, userID)
@@ -186,10 +196,84 @@ func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 
 	// SSE Notif Delete
 	userID := ""
-	if uid := r.Context().Value("user_id"); uid != nil {
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
 	h.sseService.NotifyDelete("ikas", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
+}
+
+// Tambahkan method baru di struct IkasHandler
+
+// ImportIkas godoc
+// @Summary      Import IKAS dari Excel
+// @Description  Import data IKAS dari file Excel (sheet ke-7)
+// @Tags         Ikas
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        file formData file true "File Excel (.xlsx)"
+// @Param        id_perusahaan formData string true "ID Perusahaan"
+// @Param        tanggal formData string true "Tanggal (YYYY-MM-DD)"
+// @Param        responden formData string true "Nama Responden"
+// @Param        telepon formData string true "Nomor Telepon"
+// @Param        jabatan formData string true "Jabatan"
+// @Success      201  {object} dto.ImportIkasResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/ikas/import [post]
+func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
+	// Parse multipart form (max 10MB)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		utils.RespondError(w, 400, "Gagal parse form data")
+		return
+	}
+
+	// Ambil file dari form
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		utils.RespondError(w, 400, "File 'file' tidak ditemukan")
+		return
+	}
+	defer file.Close()
+
+	// Validasi extension
+	if !strings.HasSuffix(strings.ToLower(header.Filename), ".xlsx") {
+		utils.RespondError(w, 400, "File harus berformat .xlsx")
+		return
+	}
+
+	// Baca file ke memory
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		utils.RespondError(w, 400, "Gagal membaca file")
+		return
+	}
+
+	// Import data - semua data diambil dari Excel
+	resp, err := h.service.ImportFromExcel(fileBytes)
+	if err != nil {
+		response := dto.ImportIkasResponse{
+			Success: false,
+			Message: "Import gagal",
+			Errors:  []string{err.Error()},
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	// SSE Notif Create
+	userID := ""
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyCreate("ikas", resp, userID)
+
+	// Success response
+	response := dto.ImportIkasResponse{
+		Success: true,
+		Message: "Import berhasil",
+		Data:    resp,
+	}
+	utils.RespondJSON(w, 201, response)
 }

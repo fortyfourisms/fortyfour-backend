@@ -1,7 +1,7 @@
 package dto
 
 type CreateProteksiRequest struct {
-	NilaiProteksi	float64 `json:"nilai_proteksi"`
+	NilaiProteksi   float64 `json:"nilai_proteksi"`
 	NilaiSubdomain1 float64 `json:"nilai_subdomain1"`
 	NilaiSubdomain2 float64 `json:"nilai_subdomain2"`
 	NilaiSubdomain3 float64 `json:"nilai_subdomain3"`
@@ -11,7 +11,7 @@ type CreateProteksiRequest struct {
 }
 
 type UpdateProteksiRequest struct {
-	NilaiProteksi	*float64 `json:"nilai_proteksi,omitempty"`
+	NilaiProteksi   *float64 `json:"nilai_proteksi,omitempty"`
 	NilaiSubdomain1 *float64 `json:"nilai_subdomain1,omitempty"`
 	NilaiSubdomain2 *float64 `json:"nilai_subdomain2,omitempty"`
 	NilaiSubdomain3 *float64 `json:"nilai_subdomain3,omitempty"`
@@ -22,7 +22,7 @@ type UpdateProteksiRequest struct {
 
 type ProteksiResponse struct {
 	ID              string  `json:"id"`
-	NilaiProteksi    float64 `json:"nilai_proteksi"`
+	NilaiProteksi   float64 `json:"nilai_proteksi"`
 	NilaiSubdomain1 float64 `json:"nilai_subdomain1"`
 	NilaiSubdomain2 float64 `json:"nilai_subdomain2"`
 	NilaiSubdomain3 float64 `json:"nilai_subdomain3"`

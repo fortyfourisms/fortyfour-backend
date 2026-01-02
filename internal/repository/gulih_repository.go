@@ -16,13 +16,13 @@ func NewGulihRepository(db *sql.DB) *GulihRepository {
 
 func (r *GulihRepository) Create(req dto.CreateGulihRequest, id string) error {
 	// Hitung nilai_gulih (rata-rata dari 4 subdomain)
-	NilaiGulih := (req.NilaiSubdomain1 + req.NilaiSubdomain2 + 
+	NilaiGulih := (req.NilaiSubdomain1 + req.NilaiSubdomain2 +
 		req.NilaiSubdomain3 + req.NilaiSubdomain4) / 4.0
-	
-	query :=	`INSERT INTO gulih 
+
+	query := `INSERT INTO gulih 
 		(id, nilai_gulih, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4)
 		VALUES (?, ?, ?, ?, ?, ?)`
-		
+
 	_, err := r.db.Exec(query,
 		id,
 		NilaiGulih,
