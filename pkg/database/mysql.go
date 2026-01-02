@@ -10,11 +10,15 @@ import (
 )
 
 type Config struct {
-	Host     string
-	Port     string
-	User     string
-	Password string
-	DBName   string
+	Host            string
+	Port            string
+	User            string
+	Password        string
+	DBName          string
+	Charset         string
+	MaxOpenConns    int
+	MaxIdleConns    int
+	ConnMaxLifetime time.Duration
 }
 
 func NewMySQLConnection(cfg Config) (*sql.DB, error) {
