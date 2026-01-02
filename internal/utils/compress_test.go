@@ -10,4 +10,3 @@ func TestTimeNowUnix(t *testing.T) {
 		t.Error("expected positive unix timestamp")
 	}
 }
-

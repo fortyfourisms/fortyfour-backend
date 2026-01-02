@@ -69,4 +69,3 @@ func TestCasbinMiddleware_Authorize_InsufficientPermissions(t *testing.T) {
 		t.Errorf("expected status 403, got %d", w.Code)
 	}
 }
-

@@ -59,7 +59,7 @@ func TestAuthMiddleware_Authenticate_InvalidToken(t *testing.T) {
 
 func TestAuthMiddleware_Authenticate_ValidToken(t *testing.T) {
 	middleware := NewAuthMiddleware("test-secret")
-	
+
 	// Generate a valid token
 	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", "test-secret")
 	if err != nil {
@@ -90,7 +90,7 @@ func TestAuthMiddleware_Authenticate_ValidToken(t *testing.T) {
 
 func TestAuthMiddleware_Authenticate_ContextValues(t *testing.T) {
 	middleware := NewAuthMiddleware("test-secret")
-	
+
 	// Generate a valid token
 	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", "test-secret")
 	if err != nil {
@@ -136,4 +136,3 @@ func TestAuthMiddleware_Authenticate_ContextValues(t *testing.T) {
 		t.Errorf("expected status 200, got %d", w.Code)
 	}
 }
-

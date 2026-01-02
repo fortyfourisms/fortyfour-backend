@@ -124,4 +124,3 @@ func TestRateLimiter_NewRateLimiter_Defaults(t *testing.T) {
 		t.Error("expected default KeyPrefix to be set")
 	}
 }
-

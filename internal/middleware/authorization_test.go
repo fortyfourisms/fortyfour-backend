@@ -95,4 +95,3 @@ func TestAuthorizationMiddleware_extractResourcePath(t *testing.T) {
 		})
 	}
 }
-

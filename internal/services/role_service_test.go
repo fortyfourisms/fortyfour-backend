@@ -214,4 +214,3 @@ func TestRoleService_Delete_NotFound(t *testing.T) {
 		t.Error("expected error for nonexistent role")
 	}
 }
-

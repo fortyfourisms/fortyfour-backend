@@ -197,4 +197,3 @@ func TestProteksiHandler_ServeHTTP(t *testing.T) {
 		})
 	}
 }
-

@@ -40,9 +40,9 @@ func TestDeteksiHandler_handleGetByID(t *testing.T) {
 
 	mockRepo.Create(dto.CreateDeteksiRequest{
 		NilaiDeteksi:    4.2,
-		NilaiSubdomain1:   4.0,
-		NilaiSubdomain2:   4.5,
-		NilaiSubdomain3:   4.1,
+		NilaiSubdomain1: 4.0,
+		NilaiSubdomain2: 4.5,
+		NilaiSubdomain3: 4.1,
 	}, "test-id")
 
 	req := httptest.NewRequest(http.MethodGet, "/api/deteksi/test-id", nil)
@@ -185,4 +185,3 @@ func TestDeteksiHandler_ServeHTTP(t *testing.T) {
 		})
 	}
 }
-

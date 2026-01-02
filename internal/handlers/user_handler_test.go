@@ -132,7 +132,7 @@ func TestUserHandler_handleUpdate(t *testing.T) {
 		ID:        "test-id",
 		Username:  "testuser",
 		Email:     "test@example.com",
-		CreatedAt:  time.Now(),
+		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
 	mockRepo.Create(user)
@@ -349,4 +349,3 @@ func TestUserHandler_isValidImageType(t *testing.T) {
 func stringPtr(s string) *string {
 	return &s
 }
-

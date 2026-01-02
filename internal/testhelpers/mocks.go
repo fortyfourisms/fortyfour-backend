@@ -609,8 +609,8 @@ func (m *MockDeteksiRepository) Create(req dto.CreateDeteksiRequest, id string) 
 	defer m.mu.Unlock()
 
 	m.deteksis[id] = &models.Deteksi{
-		ID:            id,
-		NilaiDeteksi:  req.NilaiDeteksi,
+		ID:              id,
+		NilaiDeteksi:    req.NilaiDeteksi,
 		NilaiSubdomain1: req.NilaiSubdomain1,
 		NilaiSubdomain2: req.NilaiSubdomain2,
 		NilaiSubdomain3: req.NilaiSubdomain3,
@@ -682,8 +682,8 @@ func (m *MockGulihRepository) Create(req dto.CreateGulihRequest, id string) erro
 	defer m.mu.Unlock()
 
 	m.gulihs[id] = &models.Gulih{
-		ID:          id,
-		NilaiGulih:  req.NilaiGulih,
+		ID:              id,
+		NilaiGulih:      req.NilaiGulih,
 		NilaiSubdomain1: req.NilaiSubdomain1,
 		NilaiSubdomain2: req.NilaiSubdomain2,
 		NilaiSubdomain3: req.NilaiSubdomain3,
@@ -756,8 +756,8 @@ func (m *MockProteksiRepository) Create(req dto.CreateProteksiRequest, id string
 	defer m.mu.Unlock()
 
 	m.proteksis[id] = &models.Proteksi{
-		ID:            id,
-		NilaiProteksi: req.NilaiProteksi,
+		ID:              id,
+		NilaiProteksi:   req.NilaiProteksi,
 		NilaiSubdomain1: req.NilaiSubdomain1,
 		NilaiSubdomain2: req.NilaiSubdomain2,
 		NilaiSubdomain3: req.NilaiSubdomain3,
@@ -842,10 +842,10 @@ func (m *MockPICRepository) Create(req dto.CreatePICRequest, id string) error {
 
 	m.pics[id] = &dto.PICResponse{
 		ID:        id,
-		Nama:       nama,
+		Nama:      nama,
 		Telepon:   telepon,
-		CreatedAt:  time.Now().Format("2006-01-02 15:04:05"),
-		UpdatedAt:  time.Now().Format("2006-01-02 15:04:05"),
+		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+		UpdatedAt: time.Now().Format("2006-01-02 15:04:05"),
 	}
 	return nil
 }

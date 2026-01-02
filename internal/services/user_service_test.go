@@ -208,4 +208,3 @@ func TestUserService_Delete_Success(t *testing.T) {
 		t.Error("user should be deleted")
 	}
 }
-

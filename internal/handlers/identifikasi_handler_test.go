@@ -214,4 +214,3 @@ func TestIdentifikasiHandler_ServeHTTP(t *testing.T) {
 func floatPtr(f float64) *float64 {
 	return &f
 }
-
