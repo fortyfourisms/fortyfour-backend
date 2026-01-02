@@ -17,11 +17,11 @@ import (
 )
 
 type UserService struct {
-	repo       *repository.UserRepository
+	repo       repository.UserRepositoryInterface
 	uploadPath string
 }
 
-func NewUserService(repo *repository.UserRepository, uploadPath string) *UserService {
+func NewUserService(repo repository.UserRepositoryInterface, uploadPath string) *UserService {
 	return &UserService{
 		repo:       repo,
 		uploadPath: uploadPath,

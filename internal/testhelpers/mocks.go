@@ -132,11 +132,17 @@ func (m *MockUserRepository) Update(user *models.User) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if _, exists := m.users[user.Username]; !exists {
-		return errors.New("user not found")
+	for uname, u := range m.users {
+		if u.ID == user.ID {
+			// if username changed, rekey map
+			if uname != user.Username {
+				delete(m.users, uname)
+			}
+			m.users[user.Username] = user
+			return nil
+		}
 	}
-	m.users[user.Username] = user
-	return nil
+	return errors.New("user not found")
 }
 
 func (m *MockUserRepository) Delete(id string) error {
@@ -266,6 +272,61 @@ func (m *MockUserRepository) UsernameExists(username string, excludeID *string) 
 	}
 
 	return true, nil
+}
+
+func (m *MockUserRepository) FindAll() ([]models.User, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	users := make([]models.User, 0, len(m.users))
+	for _, u := range m.users {
+		users = append(users, *u)
+	}
+	return users, nil
+}
+
+func (m *MockUserRepository) UpdateWithPhoto(user *models.User) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for username, u := range m.users {
+		if u.ID == user.ID {
+			user.CreatedAt = u.CreatedAt
+			user.UpdatedAt = time.Now()
+			// If username changed, rekey map
+			if username != user.Username {
+				delete(m.users, username)
+			}
+			m.users[user.Username] = user
+			return nil
+		}
+	}
+	return errors.New("user not found")
+}
+
+func (m *MockUserRepository) UpdatePassword(id, hashedPassword string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for _, u := range m.users {
+		if u.ID == id {
+			u.Password = hashedPassword
+			return nil
+		}
+	}
+	return errors.New("user not found")
+}
+
+func (m *MockUserRepository) GetPasswordByID(id string) (string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	for _, u := range m.users {
+		if u.ID == id {
+			return u.Password, nil
+		}
+	}
+	return "", errors.New("user not found")
 }
 
 // ============================================================
