@@ -141,3 +141,12 @@ type CsirtRepositoryInterface interface {
 	Update(id string, csirt models.Csirt) error
 	Delete(id string) error
 }
+
+// SdmCsirtRepositoryInterface
+type SdmCsirtRepositoryInterface interface {
+	Create(req dto.CreateSdmCsirtRequest, id string) error
+	GetAll() ([]dto.SdmCsirtResponse, error)
+	GetByID(id string) (*dto.SdmCsirtResponse, error)
+	Update(id string, req dto.SdmCsirtResponse) error
+	Delete(id string) error
+}
