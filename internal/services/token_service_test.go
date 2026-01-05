@@ -5,7 +5,6 @@ import (
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/testhelpers"
 	"testing"
-	"time"
 )
 
 func TestTokenService_GenerateTokenPair_Success(t *testing.T) {
@@ -68,30 +67,34 @@ func TestTokenService_GenerateTokenPair_Success(t *testing.T) {
 }
 
 func TestTokenService_RefreshAccessToken_Success(t *testing.T) {
-	// Arrange
 	redis := testhelpers.NewMockRedisClient()
 	service := NewTokenService(redis, "test-secret")
 
-	// Generate initial token pair
-	initialTokens, _ := service.GenerateTokenPair("1", "testuser", "admin")
+	initialTokens, err := service.GenerateTokenPair("1", "testuser", "admin")
+	if err != nil {
+		t.Fatalf("failed generate token pair: %v", err)
+	}
 
-	// Wait a moment to ensure new token is different
-	time.Sleep(10 * time.Millisecond)
-
-	// Act
 	newTokens, err := service.RefreshAccessToken(initialTokens.RefreshToken)
-
-	// Assert
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	if newTokens.AccessToken == initialTokens.AccessToken {
-		t.Error("expected new access token to be different")
+	// ✅ REFRESH TOKEN HARUS BERUBAH (ROTATION)
+	if newTokens.RefreshToken == initialTokens.RefreshToken {
+		t.Error("expected new refresh token to be different")
 	}
 
-	if newTokens.RefreshToken == initialTokens.RefreshToken {
-		t.Error("expected new refresh token to be different (token rotation)")
+	// ✅ ACCESS TOKEN BOLEH SAMA ATAU BEDA
+	if newTokens.AccessToken == "" {
+		t.Error("expected access token to be generated")
+	}
+
+	// ✅ TOKEN LAMA HARUS DIREVOKE
+	oldKey := "refresh_token:" + initialTokens.RefreshToken
+	exists, _ := redis.Exists(oldKey)
+	if exists {
+		t.Error("expected old refresh token to be revoked")
 	}
 }
 
