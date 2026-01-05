@@ -81,6 +81,14 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetAllUsers godoc
+// @Summary      List semua user
+// @Description  Mengambil seluruh data user (admin only)
+// @Tags         User
+// @Produce      json
+// @Success      200  {array}  dto.UserResponse
+// @Failure      500  {object} dto.ErrorResponse
+// @Router       /api/users [get]
 func (h *UserHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -90,6 +98,15 @@ func (h *UserHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	utils.RespondJSON(w, 200, data)
 }
 
+// GetUserByID godoc
+// @Summary      Ambil user berdasarkan ID
+// @Description  Mengambil satu data user
+// @Tags         User
+// @Produce      json
+// @Param        id   path      string  true  "User ID"
+// @Success      200  {object} dto.UserResponse
+// @Failure      404  {object} dto.ErrorResponse
+// @Router       /api/users/{id} [get]
 func (h *UserHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -99,6 +116,16 @@ func (h *UserHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id s
 	utils.RespondJSON(w, 200, data)
 }
 
+// CreateUser godoc
+// @Summary      Tambah user baru
+// @Description  Membuat account user (admin only)
+// @Tags         User
+// @Accept       json
+// @Produce      json
+// @Param        user body dto.CreateUserRequest true "Data user"
+// @Success      201  {object} dto.UserResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/users [post]
 func (h *UserHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -129,6 +156,18 @@ func (h *UserHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 201, resp)
 }
 
+// UpdateUser godoc
+// @Summary      Update user
+// @Description  Mengubah data user (own/admin)
+// @Tags         User
+// @Accept       json
+// @Produce      json
+// @Param        id   path      string  true  "User ID"
+// @Param        user body dto.UpdateUserRequest true "Data update"
+// @Success      200  {object} dto.UserResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Failure      403  {object} dto.ErrorResponse
+// @Router       /api/users/{id} [put]
 func (h *UserHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	currentUserID := h.getUserID(r)
 	isAdmin := h.isAdmin(r)
@@ -339,6 +378,15 @@ func (h *UserHandler) handleUpdateBanner(w http.ResponseWriter, r *http.Request)
 	utils.RespondJSON(w, 200, resp)
 }
 
+// DeleteUser godoc
+// @Summary      Hapus user
+// @Description  Menghapus data user (admin only)
+// @Tags         User
+// @Param        id  path  string  true  "User ID"
+// @Success      200  {object} dto.MessageResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Failure      403  {object} dto.ErrorResponse
+// @Router       /api/users/{id} [delete]
 func (h *UserHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if !h.isAdmin(r) {
 		utils.RespondError(w, 403, "Hanya admin yang bisa menghapus user")
