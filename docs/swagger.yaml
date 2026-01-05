@@ -27,6 +27,15 @@ definitions:
       web_csirt:
         type: string
     type: object
+  dto.CreateDeteksiData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+    type: object
   dto.CreateDeteksiRequest:
     properties:
       nilai_deteksi:
@@ -36,6 +45,17 @@ definitions:
       nilai_subdomain2:
         type: number
       nilai_subdomain3:
+        type: number
+    type: object
+  dto.CreateGulihData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
         type: number
     type: object
   dto.CreateGulihRequest:
@@ -49,6 +69,19 @@ definitions:
       nilai_subdomain3:
         type: number
       nilai_subdomain4:
+        type: number
+    type: object
+  dto.CreateIdentifikasiData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
         type: number
     type: object
   dto.CreateIdentifikasiRequest:
@@ -68,20 +101,29 @@ definitions:
     type: object
   dto.CreateIkasRequest:
     properties:
+      deteksi:
+        $ref: '#/definitions/dto.CreateDeteksiData'
+      gulih:
+        $ref: '#/definitions/dto.CreateGulihData'
       id_deteksi:
         type: string
       id_gulih:
         type: string
       id_identifikasi:
+        description: ID manual (backward compatibility)
         type: string
       id_perusahaan:
         type: string
       id_proteksi:
         type: string
+      identifikasi:
+        allOf:
+        - $ref: '#/definitions/dto.CreateIdentifikasiData'
+        description: Nested data untuk auto-create
       jabatan:
         type: string
-      nilai_kematangan:
-        type: number
+      proteksi:
+        $ref: '#/definitions/dto.CreateProteksiData'
       responden:
         type: string
       tanggal:
@@ -121,6 +163,21 @@ definitions:
         type: string
       website:
         type: string
+    type: object
+  dto.CreateProteksiData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      nilai_subdomain6:
+        type: number
     type: object
   dto.CreateProteksiRequest:
     properties:
@@ -217,7 +274,15 @@ definitions:
     properties:
       id:
         type: string
+      kategori_tingkat_kematangan_domain:
+        type: string
       nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
         type: number
     type: object
   dto.DeteksiResponse:
@@ -243,7 +308,17 @@ definitions:
     properties:
       id:
         type: string
+      kategori_tingkat_kematangan_domain:
+        type: string
       nilai_gulih:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
         type: number
     type: object
   dto.GulihResponse:
@@ -265,7 +340,19 @@ definitions:
     properties:
       id:
         type: string
+      kategori_tingkat_kematangan_domain:
+        type: string
       nilai_identifikasi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
         type: number
     type: object
   dto.IdentifikasiResponse:
@@ -297,6 +384,8 @@ definitions:
         $ref: '#/definitions/dto.IdentifikasiInIkas'
       jabatan:
         type: string
+      kategori_kematangan_keamanan_siber:
+        type: string
       nilai_kematangan:
         type: number
       perusahaan:
@@ -311,6 +400,19 @@ definitions:
         type: number
       telepon:
         type: string
+    type: object
+  dto.ImportIkasResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.IkasResponse'
+      errors:
+        items:
+          type: string
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
     type: object
   dto.JabatanResponse:
     properties:
@@ -402,7 +504,21 @@ definitions:
     properties:
       id:
         type: string
+      kategori_tingkat_kematangan_domain:
+        type: string
       nilai_proteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      nilai_subdomain6:
         type: number
     type: object
   dto.ProteksiResponse:
@@ -438,7 +554,7 @@ definitions:
       id_jabatan:
         type: string
       password:
-        minLength: 6
+        minLength: 8
         type: string
       role_id:
         type: string
@@ -535,6 +651,15 @@ definitions:
       web_csirt:
         type: string
     type: object
+  dto.UpdateDeteksiData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+    type: object
   dto.UpdateDeteksiRequest:
     properties:
       nilai_deteksi:
@@ -544,6 +669,17 @@ definitions:
       nilai_subdomain2:
         type: number
       nilai_subdomain3:
+        type: number
+    type: object
+  dto.UpdateGulihData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
         type: number
     type: object
   dto.UpdateGulihRequest:
@@ -557,6 +693,19 @@ definitions:
       nilai_subdomain3:
         type: number
       nilai_subdomain4:
+        type: number
+    type: object
+  dto.UpdateIdentifikasiData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
         type: number
     type: object
   dto.UpdateIdentifikasiRequest:
@@ -576,6 +725,10 @@ definitions:
     type: object
   dto.UpdateIkasRequest:
     properties:
+      deteksi:
+        $ref: '#/definitions/dto.UpdateDeteksiData'
+      gulih:
+        $ref: '#/definitions/dto.UpdateGulihData'
       id_deteksi:
         type: string
       id_gulih:
@@ -586,10 +739,16 @@ definitions:
         type: string
       id_proteksi:
         type: string
+      identifikasi:
+        allOf:
+        - $ref: '#/definitions/dto.UpdateIdentifikasiData'
+        description: Nested data untuk update subdomain
       jabatan:
         type: string
       nilai_kematangan:
         type: number
+      proteksi:
+        $ref: '#/definitions/dto.UpdateProteksiData'
       responden:
         type: string
       tanggal:
@@ -629,6 +788,21 @@ definitions:
         type: string
       website:
         type: string
+    type: object
+  dto.UpdateProteksiData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      nilai_subdomain6:
+        type: number
     type: object
   dto.UpdateProteksiRequest:
     properties:
@@ -715,7 +889,7 @@ info:
 paths:
   /api/csirt:
     get:
-      description: Mengambil seluruh data csirt
+      description: Ambil seluruh data csirt
       produces:
       - application/json
       responses:
@@ -1304,6 +1478,56 @@ paths:
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Update ikas
+      tags:
+      - Ikas
+  /api/ikas/import:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Import data IKAS dari file Excel (sheet ke-7)
+      parameters:
+      - description: File Excel (.xlsx)
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: ID Perusahaan
+        in: formData
+        name: id_perusahaan
+        required: true
+        type: string
+      - description: Tanggal (YYYY-MM-DD)
+        in: formData
+        name: tanggal
+        required: true
+        type: string
+      - description: Nama Responden
+        in: formData
+        name: responden
+        required: true
+        type: string
+      - description: Nomor Telepon
+        in: formData
+        name: telepon
+        required: true
+        type: string
+      - description: Jabatan
+        in: formData
+        name: jabatan
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ImportIkasResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Import IKAS dari Excel
       tags:
       - Ikas
   /api/jabatan:

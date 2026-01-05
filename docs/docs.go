@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/api/csirt": {
             "get": {
-                "description": "Mengambil seluruh data csirt",
+                "description": "Ambil seluruh data csirt",
                 "produces": [
                     "application/json"
                 ],
@@ -789,6 +789,79 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/dto.IkasResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ikas/import": {
+            "post": {
+                "description": "Import data IKAS dari file Excel (sheet ke-7)",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Ikas"
+                ],
+                "summary": "Import IKAS dari Excel",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "File Excel (.xlsx)",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID Perusahaan",
+                        "name": "id_perusahaan",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tanggal (YYYY-MM-DD)",
+                        "name": "tanggal",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Nama Responden",
+                        "name": "responden",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Nomor Telepon",
+                        "name": "telepon",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Jabatan",
+                        "name": "jabatan",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ImportIkasResponse"
                         }
                     },
                     "400": {
@@ -2390,6 +2463,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateDeteksiData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                }
+            }
+        },
         "dto.CreateDeteksiRequest": {
             "type": "object",
             "properties": {
@@ -2403,6 +2490,23 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "nilai_subdomain3": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.CreateGulihData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
                     "type": "number"
                 }
             }
@@ -2423,6 +2527,26 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "nilai_subdomain4": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.CreateIdentifikasiData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
                     "type": "number"
                 }
             }
@@ -2453,6 +2577,12 @@ const docTemplate = `{
         "dto.CreateIkasRequest": {
             "type": "object",
             "properties": {
+                "deteksi": {
+                    "$ref": "#/definitions/dto.CreateDeteksiData"
+                },
+                "gulih": {
+                    "$ref": "#/definitions/dto.CreateGulihData"
+                },
                 "id_deteksi": {
                     "type": "string"
                 },
@@ -2460,6 +2590,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id_identifikasi": {
+                    "description": "ID manual (backward compatibility)",
                     "type": "string"
                 },
                 "id_perusahaan": {
@@ -2468,11 +2599,19 @@ const docTemplate = `{
                 "id_proteksi": {
                     "type": "string"
                 },
+                "identifikasi": {
+                    "description": "Nested data untuk auto-create",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.CreateIdentifikasiData"
+                        }
+                    ]
+                },
                 "jabatan": {
                     "type": "string"
                 },
-                "nilai_kematangan": {
-                    "type": "number"
+                "proteksi": {
+                    "$ref": "#/definitions/dto.CreateProteksiData"
                 },
                 "responden": {
                     "type": "string"
@@ -2533,6 +2672,29 @@ const docTemplate = `{
                 },
                 "website": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.CreateProteksiData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
+                    "type": "number"
+                },
+                "nilai_subdomain6": {
+                    "type": "number"
                 }
             }
         },
@@ -2680,7 +2842,19 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "kategori_tingkat_kematangan_domain": {
+                    "type": "string"
+                },
                 "nilai_deteksi": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
                     "type": "number"
                 }
             }
@@ -2720,7 +2894,22 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "kategori_tingkat_kematangan_domain": {
+                    "type": "string"
+                },
                 "nilai_gulih": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
                     "type": "number"
                 }
             }
@@ -2754,7 +2943,25 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "kategori_tingkat_kematangan_domain": {
+                    "type": "string"
+                },
                 "nilai_identifikasi": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
                     "type": "number"
                 }
             }
@@ -2803,6 +3010,9 @@ const docTemplate = `{
                 "jabatan": {
                     "type": "string"
                 },
+                "kategori_kematangan_keamanan_siber": {
+                    "type": "string"
+                },
                 "nilai_kematangan": {
                     "type": "number"
                 },
@@ -2823,6 +3033,26 @@ const docTemplate = `{
                 },
                 "telepon": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.ImportIkasResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.IkasResponse"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         },
@@ -2964,7 +3194,28 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "kategori_tingkat_kematangan_domain": {
+                    "type": "string"
+                },
                 "nilai_proteksi": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
+                    "type": "number"
+                },
+                "nilai_subdomain6": {
                     "type": "number"
                 }
             }
@@ -3025,7 +3276,7 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string",
-                    "minLength": 6
+                    "minLength": 8
                 },
                 "role_id": {
                     "type": "string"
@@ -3164,6 +3415,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UpdateDeteksiData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                }
+            }
+        },
         "dto.UpdateDeteksiRequest": {
             "type": "object",
             "properties": {
@@ -3177,6 +3442,23 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "nilai_subdomain3": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.UpdateGulihData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
                     "type": "number"
                 }
             }
@@ -3197,6 +3479,26 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "nilai_subdomain4": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.UpdateIdentifikasiData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
                     "type": "number"
                 }
             }
@@ -3227,6 +3529,12 @@ const docTemplate = `{
         "dto.UpdateIkasRequest": {
             "type": "object",
             "properties": {
+                "deteksi": {
+                    "$ref": "#/definitions/dto.UpdateDeteksiData"
+                },
+                "gulih": {
+                    "$ref": "#/definitions/dto.UpdateGulihData"
+                },
                 "id_deteksi": {
                     "type": "string"
                 },
@@ -3242,11 +3550,22 @@ const docTemplate = `{
                 "id_proteksi": {
                     "type": "string"
                 },
+                "identifikasi": {
+                    "description": "Nested data untuk update subdomain",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.UpdateIdentifikasiData"
+                        }
+                    ]
+                },
                 "jabatan": {
                     "type": "string"
                 },
                 "nilai_kematangan": {
                     "type": "number"
+                },
+                "proteksi": {
+                    "$ref": "#/definitions/dto.UpdateProteksiData"
                 },
                 "responden": {
                     "type": "string"
@@ -3307,6 +3626,29 @@ const docTemplate = `{
                 },
                 "website": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.UpdateProteksiData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
+                    "type": "number"
+                },
+                "nilai_subdomain6": {
+                    "type": "number"
                 }
             }
         },
