@@ -90,7 +90,7 @@ func (m *MockRedisClient) Clear() {
 // ============================================================
 
 type MockUserRepository struct {
-	users map[string]*models.User
+	users map[string]*models.User // KEY = ID
 	mu    sync.RWMutex
 }
 
@@ -103,27 +103,37 @@ func NewMockUserRepository() *MockUserRepository {
 func (m *MockUserRepository) Create(user *models.User) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.users[user.Username] = user
-	return nil
-}
 
-func (m *MockUserRepository) FindByUsername(username string) (*models.User, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	user, exists := m.users[username]
-	if !exists {
-		return nil, errors.New("user not found")
+	for _, u := range m.users {
+		if u.Username == user.Username {
+			return errors.New("username already exists")
+		}
+		if u.Email == user.Email {
+			return errors.New("email already exists")
+		}
 	}
-	return user, nil
+
+	m.users[user.ID] = user
+	return nil
 }
 
 func (m *MockUserRepository) FindByID(id string) (*models.User, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
+	user, exists := m.users[id]
+	if !exists {
+		return nil, errors.New("user not found")
+	}
+	return user, nil
+}
+
+func (m *MockUserRepository) FindByUsername(username string) (*models.User, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
 	for _, user := range m.users {
-		if user.ID == id {
+		if user.Username == username {
 			return user, nil
 		}
 	}
@@ -134,10 +144,11 @@ func (m *MockUserRepository) Update(user *models.User) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if _, exists := m.users[user.Username]; !exists {
+	if _, exists := m.users[user.ID]; !exists {
 		return errors.New("user not found")
 	}
-	m.users[user.Username] = user
+
+	m.users[user.ID] = user
 	return nil
 }
 
@@ -145,13 +156,12 @@ func (m *MockUserRepository) Delete(id string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	for username, user := range m.users {
-		if user.ID == id {
-			delete(m.users, username)
-			return nil
-		}
+	if _, exists := m.users[id]; !exists {
+		return errors.New("user not found")
 	}
-	return errors.New("user not found")
+
+	delete(m.users, id)
+	return nil
 }
 
 // ============================================================
