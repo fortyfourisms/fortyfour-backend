@@ -131,3 +131,13 @@ type IkasRepositoryInterface interface {
 	//HELPER
 	FindPerusahaanByName(namaPerusahaan string) (string, error)
 }
+
+// CsirtRepositoryInterface
+type CsirtRepositoryInterface interface {
+	Create(req dto.CreateCsirtRequest, id string) error
+	GetByID(id string) (*models.Csirt, error)
+	GetAllWithPerusahaan() ([]dto.CsirtResponse, error)
+	GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, error)
+	Update(id string, csirt models.Csirt) error
+	Delete(id string) error
+}
