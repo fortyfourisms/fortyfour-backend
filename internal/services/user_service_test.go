@@ -69,7 +69,7 @@ func TestUserService_Create_Success(t *testing.T) {
 
 	req := dto.CreateUserRequest{
 		Username: "newuser",
-		Password: "Password123!",
+		Password: "P@sjord13!",
 		Email:    "newuser@test.com",
 	}
 
@@ -151,15 +151,15 @@ func TestUserService_UpdatePassword_Success(t *testing.T) {
 	service, mockRepo := setupUserService()
 
 	// Create user with hashed password
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("OldPassword123!"), bcrypt.DefaultCost)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("Corr3tB4e!"), bcrypt.DefaultCost)
 	user := testhelpers.CreateTestUser("test-id", "testuser", "test@test.com")
 	user.Password = string(hashedPassword)
 	mockRepo.Create(user)
 
 	req := dto.UpdateUserPasswordRequest{
-		OldPassword:        "OldPassword123!",
-		NewPassword:        "NewPassword123!",
-		ConfirmNewPassword: "NewPassword123!",
+		OldPassword:        "Corr3tB4e!",
+		NewPassword:        "Corr3tB4e!!",
+		ConfirmNewPassword: "Corr3tB4e!!",
 	}
 
 	err := service.UpdatePassword("test-id", req)
@@ -172,15 +172,15 @@ func TestUserService_UpdatePassword_Success(t *testing.T) {
 func TestUserService_UpdatePassword_WrongOldPassword(t *testing.T) {
 	service, mockRepo := setupUserService()
 
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("CorrectPassword123!"), bcrypt.DefaultCost)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("Corr3tB4e!"), bcrypt.DefaultCost)
 	user := testhelpers.CreateTestUser("test-id", "testuser", "test@test.com")
 	user.Password = string(hashedPassword)
 	mockRepo.Create(user)
 
 	req := dto.UpdateUserPasswordRequest{
-		OldPassword:        "WrongPassword123!",
-		NewPassword:        "NewPassword123!",
-		ConfirmNewPassword: "NewPassword123!",
+		OldPassword:        "Corr3tB4e!!",
+		NewPassword:        "Corr3tB4e#!",
+		ConfirmNewPassword: "Corr3tB4e#!",
 	}
 
 	err := service.UpdatePassword("test-id", req)
