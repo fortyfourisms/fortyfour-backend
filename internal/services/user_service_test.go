@@ -65,7 +65,7 @@ func TestUserService_Create_Success(t *testing.T) {
 
 	req := dto.CreateUserRequest{
 		Username: "newuser",
-		Password: "S3cuRe#Pass_2026!",
+		Password: "P@sjord13!",
 		Email:    "newuser@test.com",
 	}
 
@@ -144,16 +144,16 @@ func TestUserService_Update_Success(t *testing.T) {
 func TestUserService_UpdatePassword_Success(t *testing.T) {
 	service, mockRepo := setupUserService()
 
-	hashed, _ := bcrypt.GenerateFromPassword([]byte("Old#Strong_2026!"), bcrypt.DefaultCost)
-	user := testhelpers.CreateTestUser("test-id", "user", "user@test.com")
-	user.Password = string(hashed)
-
-	_ = mockRepo.Create(user)
+	// Create user with hashed password
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("Corr3tB4e!"), bcrypt.DefaultCost)
+	user := testhelpers.CreateTestUser("test-id", "testuser", "test@test.com")
+	user.Password = string(hashedPassword)
+	mockRepo.Create(user)
 
 	req := dto.UpdateUserPasswordRequest{
-		OldPassword:        "Old#Strong_2026!",
-		NewPassword:        "Un1que#New_Pass2026!",
-		ConfirmNewPassword: "Un1que#New_Pass2026!",
+		OldPassword:        "Corr3tB4e!",
+		NewPassword:        "Corr3tB4e!!",
+		ConfirmNewPassword: "Corr3tB4e!!",
 	}
 
 	err := service.UpdatePassword("test-id", req)
@@ -164,16 +164,15 @@ func TestUserService_UpdatePassword_Success(t *testing.T) {
 func TestUserService_UpdatePassword_WrongOldPassword(t *testing.T) {
 	service, mockRepo := setupUserService()
 
-	hashed, _ := bcrypt.GenerateFromPassword([]byte("Correct#Pass_2026!"), bcrypt.DefaultCost)
-	user := testhelpers.CreateTestUser("test-id", "user", "user@test.com")
-	user.Password = string(hashed)
-
-	_ = mockRepo.Create(user)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("Corr3tB4e!"), bcrypt.DefaultCost)
+	user := testhelpers.CreateTestUser("test-id", "testuser", "test@test.com")
+	user.Password = string(hashedPassword)
+	mockRepo.Create(user)
 
 	req := dto.UpdateUserPasswordRequest{
-		OldPassword:        "WrongPassword!",
-		NewPassword:        "Un1que#New_Pass2026!",
-		ConfirmNewPassword: "Un1que#New_Pass2026!",
+		OldPassword:        "Corr3tB4e!!",
+		NewPassword:        "Corr3tB4e#!",
+		ConfirmNewPassword: "Corr3tB4e#!",
 	}
 
 	err := service.UpdatePassword("test-id", req)

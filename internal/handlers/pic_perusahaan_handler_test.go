@@ -72,7 +72,7 @@ func TestPICHandler_handleCreate(t *testing.T) {
 	reqBody := dto.CreatePICRequest{
 		Nama:         stringPtr("New PIC"),
 		Telepon:      stringPtr("081234567890"),
-		IDPerusahaan: stringPtr("perusahaan-1"),
+		IDPerusahaan: stringPtr("123e4567-e89b-12d3-a456-426614174000"),
 	}
 	body, _ := json.Marshal(reqBody)
 

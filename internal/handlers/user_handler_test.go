@@ -15,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -92,7 +93,7 @@ func TestUserHandler_handleCreate(t *testing.T) {
 
 	reqBody := dto.CreateUserRequest{
 		Username: "newuser",
-		Password: "R4nd0m!Pass#2025",
+		Password: "P@sJ0rd121!",
 		Email:    "newuser@example.com",
 		RoleID:   strPtr("role-user"),
 	}
@@ -139,8 +140,9 @@ func TestUserHandler_handleUpdate(t *testing.T) {
 
 	// Create test user
 	user := &models.User{
-		ID:        "test-id",
+		ID:        "id1",
 		Username:  "testuser",
+		Password:  "P@sJ0rd121!",
 		Email:     "test@example.com",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -153,18 +155,17 @@ func TestUserHandler_handleUpdate(t *testing.T) {
 	}
 	body, _ := json.Marshal(updateReq)
 
-	req := httptest.NewRequest(http.MethodPut, "/api/users/test-id", bytes.NewBuffer(body))
+	req := httptest.NewRequest(http.MethodPut, "/api/users/id1", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
-	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-id")
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "user-1")
 	ctx = context.WithValue(ctx, middleware.Role, "admin")
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	handler.handleUpdate(w, req, "test-id")
+	handler.handleUpdate(w, req, "id1")
 
-	if w.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", w.Code)
-	}
+	// Assert
+	assert.Equal(t, http.StatusOK, w.Code, "Response body: %s", w.Body.String())
 }
 
 func TestUserHandler_handleUpdate_Unauthorized(t *testing.T) {
@@ -203,7 +204,7 @@ func TestUserHandler_handleUpdatePassword(t *testing.T) {
 	handler, mockRepo, _ := setupUserHandler()
 
 	// Create test user with hashed password
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("0ld!Pass#2023"), bcrypt.DefaultCost)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("OldPassword123!"), bcrypt.DefaultCost)
 	user := &models.User{
 		ID:        "test-id",
 		Username:  "testuser",
@@ -215,9 +216,9 @@ func TestUserHandler_handleUpdatePassword(t *testing.T) {
 	mockRepo.Create(user)
 
 	updateReq := dto.UpdateUserPasswordRequest{
-		OldPassword:        "0ld!Pass#2023",
-		NewPassword:        "N3w@Strong$Pass2025",
-		ConfirmNewPassword: "N3w@Strong$Pass2025",
+		OldPassword:        "OldPassword123!",
+		NewPassword:        "NewPassword123!",
+		ConfirmNewPassword: "NewPassword123!",
 	}
 	body, _ := json.Marshal(updateReq)
 

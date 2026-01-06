@@ -20,16 +20,6 @@ type UserRepositoryInterface interface {
 	UsernameExists(username string, excludeID *string) (bool, error)
 }
 
-// PostRepositoryInterface defines methods for post data access
-type PostRepositoryInterface interface {
-	Create(post *models.Post) error
-	FindAll() ([]*models.Post, error)
-	FindByID(id int) (*models.Post, error)
-	FindByAuthorID(authorID string) ([]*models.Post, error)
-	Update(post *models.Post) error
-	Delete(id int) error
-}
-
 // JabatanRepositoryInterface defines methods for jabatan data access
 type JabatanRepositoryInterface interface {
 	Create(req dto.CreateJabatanRequest, id string) error
