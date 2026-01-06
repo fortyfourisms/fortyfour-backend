@@ -163,6 +163,7 @@ jobs:
     name: Build Docker Image
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       packages: write
     needs: test
 
@@ -178,7 +179,7 @@ jobs:
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.G_TOKEN }}
 
       - name: Extract metadata
         id: meta
@@ -260,7 +261,7 @@ jobs:
             cd ~/myapp
             
             # Login to GitHub Container Registry
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+            echo ${{ secrets.G_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
             
             # Pull latest image
             docker pull ${{ env.REGISTRY }}/${{ github.repository }}:${{ github.sha }}
