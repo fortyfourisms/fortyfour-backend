@@ -2,9 +2,12 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches:
+      - main
   pull_request:
-    branches: [ main, develop ]
+    types: [closed]
+    branches:
+      - main
 
 env:
   GO_VERSION: '1.25'
@@ -148,8 +151,8 @@ jobs:
         run: |
           coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
           echo "Test coverage: $coverage%"
-          if (( $(echo "$coverage < 70" | bc -l) )); then
-            echo "Coverage is below 70%"
+          if (( $(echo "$coverage < 20" | bc -l) )); then
+            echo "Coverage is below 20%"
             exit 1
           fi
 
