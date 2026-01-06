@@ -204,7 +204,7 @@ func TestUserHandler_handleUpdatePassword(t *testing.T) {
 	handler, mockRepo, _ := setupUserHandler()
 
 	// Create test user with hashed password
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("OldPassword123!"), bcrypt.DefaultCost)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("0ld!Pass#2023"), bcrypt.DefaultCost)
 	user := &models.User{
 		ID:        "test-id",
 		Username:  "testuser",
@@ -216,18 +216,25 @@ func TestUserHandler_handleUpdatePassword(t *testing.T) {
 	mockRepo.Create(user)
 
 	updateReq := dto.UpdateUserPasswordRequest{
-		OldPassword:        "OldPassword123!",
-		NewPassword:        "NewPassword123!",
-		ConfirmNewPassword: "NewPassword123!",
+		OldPassword:        "0ld!Pass#2023",
+		NewPassword:        "N3w@Strong$Pass2025",
+		ConfirmNewPassword: "N3w@Strong$Pass2025",
 	}
 	body, _ := json.Marshal(updateReq)
 
-	req := httptest.NewRequest(http.MethodPut, "/api/users/test-id/password", bytes.NewBuffer(body))
+	req := httptest.NewRequest(
+		http.MethodPut,
+		"/api/users/test-id/password",
+		bytes.NewBuffer(body),
+	)
 	req.Header.Set("Content-Type", "application/json")
-	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-id")
-	req = req.WithContext(ctx)
-	w := httptest.NewRecorder()
 
+	// Set context userID & role
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-id")
+	ctx = context.WithValue(ctx, middleware.Role, "user")
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
 	handler.handleUpdatePassword(w, req)
 
 	if w.Code != http.StatusOK {
