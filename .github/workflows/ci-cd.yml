@@ -312,6 +312,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # Wait for image to propagate in registry
+      - name: Wait for image propagation
+        run: |
+          echo "Waiting 15 seconds for image to be available in registry..."
+          sleep 15
+
       - name: Create deployment directory structure
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -355,30 +361,55 @@ jobs:
             echo "Actor: ${ACTOR}"
             
             # Login to GitHub Container Registry
+            echo "Logging in to ${REGISTRY}..."
             echo "${G_TOKEN}" | docker login ${REGISTRY} -u ${ACTOR} --password-stdin
+            
+            if [ $? -ne 0 ]; then
+              echo "❌ Failed to login to registry!"
+              exit 1
+            fi
+            
+            echo "✅ Login successful"
             
             if [ -z "${IMAGE_TAG}" ]; then
               echo "❌ IMAGE_TAG is empty!"
               exit 1
             fi
             
-            # Pull the exact image
-            echo "Pulling image: ${IMAGE_TAG}"
-            if ! docker pull "${IMAGE_TAG}"; then
-              echo "❌ Failed to pull image: ${IMAGE_TAG}"
-              echo ""
-              echo "Available images in registry:"
-              docker search ${REGISTRY}/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') || true
-              echo ""
-              echo "Local images:"
-              docker images | grep "$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" || echo "None"
-              exit 1
-            fi
+            # Convert to lowercase (GHCR requires lowercase)
+            IMAGE_TAG_LOWER=$(echo "${IMAGE_TAG}" | tr '[:upper:]' '[:lower:]')
+            echo "Using lowercase image tag: ${IMAGE_TAG_LOWER}"
             
-            echo "✅ Successfully pulled: ${IMAGE_TAG}"
+            # Pull the exact image with retry
+            echo "Pulling image: ${IMAGE_TAG_LOWER}"
+            RETRIES=3
+            for i in $(seq 1 $RETRIES); do
+              echo "Attempt $i/$RETRIES..."
+              if docker pull "${IMAGE_TAG_LOWER}"; then
+                echo "✅ Successfully pulled: ${IMAGE_TAG_LOWER}"
+                break
+              else
+                echo "❌ Pull attempt $i failed"
+                if [ $i -eq $RETRIES ]; then
+                  echo ""
+                  echo "=== Debugging Information ==="
+                  echo "Failed to pull: ${IMAGE_TAG_LOWER}"
+                  echo ""
+                  echo "Attempting to list available tags..."
+                  # Try to list what's actually available
+                  docker images | grep "$(echo ${IMAGE_TAG_LOWER} | cut -d: -f1)" || echo "No matching images found locally"
+                  echo ""
+                  echo "Registry info:"
+                  echo "Registry: ${REGISTRY}"
+                  echo "Repository: $(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')"
+                  exit 1
+                fi
+                sleep 5
+              fi
+            done
             
             # Tag as latest for docker-compose
-            docker tag "${IMAGE_TAG}" myapp:latest
+            docker tag "${IMAGE_TAG_LOWER}" myapp:latest
             
             # Stop and remove old containers
             echo "Stopping old containers..."
