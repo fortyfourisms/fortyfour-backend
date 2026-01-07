@@ -8,10 +8,10 @@ import (
 )
 
 type SubSektorHandler struct {
-	service *services.SubSektorService
+	service services.SubSektorServiceInterface
 }
 
-func NewSubSektorHandler(service *services.SubSektorService) *SubSektorHandler {
+func NewSubSektorHandler(service services.SubSektorServiceInterface) *SubSektorHandler {
 	return &SubSektorHandler{service: service}
 }
 

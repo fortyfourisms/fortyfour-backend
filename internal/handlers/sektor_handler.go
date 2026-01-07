@@ -8,10 +8,10 @@ import (
 )
 
 type SektorHandler struct {
-	service *services.SektorService
+	service services.SektorServiceInterface
 }
 
-func NewSektorHandler(service *services.SektorService) *SektorHandler {
+func NewSektorHandler(service services.SektorServiceInterface) *SektorHandler {
 	return &SektorHandler{service: service}
 }
 
