@@ -11,10 +11,10 @@ import (
 )
 
 type SeCsirtHandler struct {
-	service *services.SeCsirtService
+	service services.SeCsirtServiceInterface
 }
 
-func NewSeCsirtHandler(service *services.SeCsirtService) *SeCsirtHandler {
+func NewSeCsirtHandler(service services.SeCsirtServiceInterface) *SeCsirtHandler {
 	return &SeCsirtHandler{service: service}
 }
 
