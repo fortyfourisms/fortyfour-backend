@@ -7,6 +7,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type SeCsirtServiceInterface interface {
+	Create(req dto.CreateSeCsirtRequest) (string, error)
+	GetAll() ([]dto.SeCsirtResponse, error)
+	GetByID(id string) (*dto.SeCsirtResponse, error)
+	Update(id string, req dto.UpdateSeCsirtRequest) error
+	Delete(id string) error
+}
+
 type SeCsirtService struct {
 	repo *repository.SeCsirtRepository
 }

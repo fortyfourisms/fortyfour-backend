@@ -17,6 +17,12 @@ const (
 	EventDelete = "delete"
 )
 
+type SSEServiceInterface interface {
+	NotifyCreate(resource string, data interface{}, userID string)
+	NotifyUpdate(resource string, data interface{}, userID string)
+	NotifyDelete(resource string, id interface{}, userID string)
+}
+
 // SSEEvent represents a Server-Sent Event
 type SSEEvent struct {
 	Type      string      `json:"type"`

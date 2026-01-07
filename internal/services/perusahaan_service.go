@@ -9,6 +9,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type PerusahaanServiceInterface interface {
+	GetAll() ([]dto.PerusahaanResponse, error)
+	GetByID(id string) (*dto.PerusahaanResponse, error)
+	Create(req dto.CreatePerusahaanRequest) (*dto.PerusahaanResponse, error)
+	Update(id string, req dto.UpdatePerusahaanRequest) (*dto.PerusahaanResponse, error)
+	Delete(id string) error
+}
+
 type PerusahaanService struct {
 	repo          repository.PerusahaanRepositoryInterface
 	subSektorRepo repository.SubSektorRepositoryInterface

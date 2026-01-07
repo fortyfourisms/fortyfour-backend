@@ -5,6 +5,11 @@ import (
 	"fortyfour-backend/internal/repository"
 )
 
+type SektorServiceInterface interface {
+	GetAll() ([]dto.SektorResponse, error)
+	GetByID(id string) (*dto.SektorResponse, error)
+}
+
 type SektorService struct {
 	repo repository.SektorRepositoryInterface
 }

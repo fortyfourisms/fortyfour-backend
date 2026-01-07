@@ -5,6 +5,12 @@ import (
 	"fortyfour-backend/internal/repository"
 )
 
+type SubSektorServiceInterface interface {
+	GetAll() ([]dto.SubSektorResponse, error)
+	GetByID(id string) (*dto.SubSektorResponse, error)
+	GetBySektorID(sektorID string) ([]dto.SubSektorResponse, error)
+}
+
 type SubSektorService struct {
 	repo repository.SubSektorRepositoryInterface
 }
