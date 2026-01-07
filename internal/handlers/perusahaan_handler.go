@@ -32,12 +32,16 @@ const (
 )
 
 type PerusahaanHandler struct {
-	service    *services.PerusahaanService
+	service    services.PerusahaanServiceInterface
 	uploadPath string
-	sseService *services.SSEService
+	sseService services.SSEServiceInterface
 }
 
-func NewPerusahaanHandler(service *services.PerusahaanService, uploadPath string, sseService *services.SSEService) *PerusahaanHandler {
+func NewPerusahaanHandler(
+	service services.PerusahaanServiceInterface,
+	uploadPath string,
+	sseService services.SSEServiceInterface,
+) *PerusahaanHandler {
 	return &PerusahaanHandler{
 		service:    service,
 		uploadPath: uploadPath,
