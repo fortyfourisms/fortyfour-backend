@@ -11,10 +11,10 @@ import (
 )
 
 type SdmCsirtHandler struct {
-	service *services.SdmCsirtService
+	service services.SdmCsirtServiceInterface
 }
 
-func NewSdmCsirtHandler(service *services.SdmCsirtService) *SdmCsirtHandler {
+func NewSdmCsirtHandler(service services.SdmCsirtServiceInterface) *SdmCsirtHandler {
 	return &SdmCsirtHandler{service: service}
 }
 
