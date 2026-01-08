@@ -17,7 +17,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
+          go-version: '1.25'
 
       - name: Update dependencies
         run: |
@@ -30,7 +30,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.G_TOKEN }}
           commit-message: 'chore: update go dependencies'
           title: 'Update Go Dependencies'
           body: |
