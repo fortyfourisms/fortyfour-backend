@@ -82,3 +82,23 @@ type GulihRepositoryInterface interface {
 	Update(id string, gulih models.Gulih) error
 	Delete(id string) error
 }
+
+//IkasRepositoryInterface
+type IkasRepositoryInterface interface {
+	Create(req dto.CreateIkasRequest, id string, nilaiKematangan float64,
+			idIdentifikasi, idProteksi, idDeteksi, idGulih string) error
+	GetAll() ([]dto.IkasResponse, error)
+	GetByID(id string) (*dto.IkasResponse, error)
+	Update(id string, req dto.UpdateIkasRequest) error
+	Delete(id string) error
+	ImportFromExcel(raw []byte) (*dto.IkasResponse, error)
+	ParseExcelForImport(raw []byte) (*dto.CreateIkasRequest, error)
+	CreateIdentifikasi(id string, data *dto.CreateIdentifikasiData) (float64, error)
+	CreateProteksi(id string, data *dto.CreateProteksiData) (float64, error)
+	CreateDeteksi(id string, data *dto.CreateDeteksiData) (float64, error)
+	CreateGulih(id string, data *dto.CreateGulihData) (float64, error)
+	UpdateIdentifikasi(id string, data *dto.UpdateIdentifikasiData) (float64, error)
+	UpdateProteksi(id string, data *dto.UpdateProteksiData) (float64, error)
+	UpdateDeteksi(id string, data *dto.UpdateDeteksiData) (float64, error)
+	UpdateGulih(id string, data *dto.UpdateGulihData) (float64, error)
+}

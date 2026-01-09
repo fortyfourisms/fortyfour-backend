@@ -6,6 +6,7 @@ import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/pkg/cache"
+	"fortyfour-backend/internal/repository"
 	"sync"
 	"time"
 )
@@ -981,3 +982,140 @@ func (m *MockPerusahaanRepository) Delete(id string) error {
 	delete(m.perusahaans, id)
 	return nil
 }
+
+// ============================================================
+// Mock IKAS Repository
+// ============================================================
+type MockIkasRepository struct {
+	data map[string]*dto.IkasResponse
+	mu   sync.RWMutex
+}
+
+func NewMockIkasRepository() *MockIkasRepository {
+	return &MockIkasRepository{data: make(map[string]*dto.IkasResponse)}
+}
+
+func (m *MockIkasRepository) Create(req dto.CreateIkasRequest, id string,
+	nilaiKematangan float64, idIden, idProt, idDet, idGul string) error {
+
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.data[id] = &dto.IkasResponse{
+		ID:              id,
+		Tanggal:         req.Tanggal,
+		Responden:       req.Responden,
+		Telepon:         req.Telepon,
+		Jabatan:         req.Jabatan,
+		NilaiKematangan: nilaiKematangan,
+		TargetNilai:     req.TargetNilai,
+		Perusahaan: &dto.PerusahaanInIkas{
+			ID:             req.IDPerusahaan,
+			NamaPerusahaan: "PT Stub",
+		},
+	}
+	return nil
+}
+
+func (m *MockIkasRepository) GetAll() ([]dto.IkasResponse, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	list := make([]dto.IkasResponse, 0, len(m.data))
+	for _, v := range m.data {
+		list = append(list, *v)
+	}
+	return list, nil
+}
+
+func (m *MockIkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	v, ok := m.data[id]
+	if !ok {
+		return nil, errors.New("ikas not found")
+	}
+	return v, nil
+}
+
+func (m *MockIkasRepository) Update(id string, req dto.UpdateIkasRequest) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	v, ok := m.data[id]
+	if !ok {
+		return errors.New("ikas not found")
+	}
+	if req.Tanggal != nil {
+		v.Tanggal = *req.Tanggal
+	}
+	if req.Responden != nil {
+		v.Responden = *req.Responden
+	}
+	if req.Telepon != nil {
+		v.Telepon = *req.Telepon
+	}
+	if req.Jabatan != nil {
+		v.Jabatan = *req.Jabatan
+	}
+	if req.NilaiKematangan != nil {
+		v.NilaiKematangan = *req.NilaiKematangan
+	}
+	if req.TargetNilai != nil {
+		v.TargetNilai = *req.TargetNilai
+	}
+	return nil
+}
+
+func (m *MockIkasRepository) Delete(id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, ok := m.data[id]; !ok {
+		return errors.New("ikas not found")
+	}
+	delete(m.data, id)
+	return nil
+}
+
+func (m *MockIkasRepository) ImportFromExcel(raw []byte) (*dto.IkasResponse, error) {
+	return &dto.IkasResponse{ID: "imp-1", Responden: "Import-1"}, nil
+}
+
+func (m *MockIkasRepository) ParseExcelForImport(raw []byte) (*dto.CreateIkasRequest, error) {
+	return &dto.CreateIkasRequest{
+		IDPerusahaan: "p-excel",
+		Tanggal:      "2025-06-01",
+		Responden:    "Excel",
+		Telepon:      "081111",
+		Jabatan:      "Staff",
+		TargetNilai:  5.0,
+	}, nil
+}
+
+// ------- stub nested create (return 0) -------
+func (m *MockIkasRepository) CreateIdentifikasi(id string, data *dto.CreateIdentifikasiData) (float64, error) {
+	return 0, nil
+}
+func (m *MockIkasRepository) CreateProteksi(id string, data *dto.CreateProteksiData) (float64, error) {
+	return 0, nil
+}
+func (m *MockIkasRepository) CreateDeteksi(id string, data *dto.CreateDeteksiData) (float64, error) {
+	return 0, nil
+}
+func (m *MockIkasRepository) CreateGulih(id string, data *dto.CreateGulihData) (float64, error) {
+	return 0, nil
+}
+
+// ------- stub nested update (return 0) -------
+func (m *MockIkasRepository) UpdateIdentifikasi(id string, data *dto.UpdateIdentifikasiData) (float64, error) {
+	return 0, nil
+}
+func (m *MockIkasRepository) UpdateProteksi(id string, data *dto.UpdateProteksiData) (float64, error) {
+	return 0, nil
+}
+func (m *MockIkasRepository) UpdateDeteksi(id string, data *dto.UpdateDeteksiData) (float64, error) {
+	return 0, nil
+}
+func (m *MockIkasRepository) UpdateGulih(id string, data *dto.UpdateGulihData) (float64, error) {
+	return 0, nil
+}
+
+// compiler check
+var _ repository.IkasRepositoryInterface = (*MockIkasRepository)(nil)
