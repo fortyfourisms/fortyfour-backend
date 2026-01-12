@@ -10,7 +10,7 @@ on:
       - main
 
 env:
-  GO_VERSION: '1.25'
+  GO_VERSION: '1.25.5'
   DOCKER_IMAGE: fourtyfour
   REGISTRY: ghcr.io
 
@@ -330,37 +330,6 @@ jobs:
           script: |
             mkdir -p ~/myapp
             mkdir -p ~/myapp/migrations
-
-      - name: Set environment variables on VPS
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          port: ${{ secrets.VPS_PORT }}
-          script: |
-            # Create secure environment file
-            sudo mkdir -p /etc/fortyfour-backend
-            
-            sudo tee /etc/fortyfour-backend/environment > /dev/null << 'EOF'
-            DB_HOST=db
-            DB_PORT=3306
-            DB_USER=${{ secrets.DB_USER }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_NAME=${{ secrets.DB_NAME }}
-            REDIS_HOST=redis
-            REDIS_PORT=6379
-            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
-            APP_ENV=production
-            APP_PORT=8080
-            JWT_SECRET=${{ secrets.JWT_SECRET }}
-            JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
-            EOF
-            
-            sudo chmod 600 /etc/fortyfour-backend/environment
-            sudo chown $USER:$USER /etc/fortyfour-backend/environment
-            
-            echo "✅ Environment variables configured"
 
       - name: Copy files to VPS
         uses: appleboy/scp-action@v0.1.4
