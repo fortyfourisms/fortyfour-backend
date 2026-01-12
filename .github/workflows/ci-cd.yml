@@ -391,47 +391,7 @@ jobs:
             
             # Pull the exact image with retry
             echo "Pulling image: ${IMAGE_TAG_LOWER}"
-            RETRIES=5
-            RETRY_DELAY=10
-            
-            for i in $(seq 1 $RETRIES); do
-              echo "Pull attempt $i/$RETRIES..."
-              
-              if docker pull "${IMAGE_TAG_LOWER}"; then
-                echo "✅ Successfully pulled: ${IMAGE_TAG_LOWER}"
-                PULL_SUCCESS=true
-                break
-              else
-                echo "❌ Pull attempt $i failed"
-                
-                if [ $i -lt $RETRIES ]; then
-                  echo "Waiting ${RETRY_DELAY} seconds before retry..."
-                  sleep $RETRY_DELAY
-                else
-                  echo ""
-                  echo "=== Pull Failed After $RETRIES Attempts ==="
-                  echo "Image: ${IMAGE_TAG_LOWER}"
-                  echo ""
-                  echo "Possible causes:"
-                  echo "1. Image not yet available in registry (propagation delay)"
-                  echo "2. Network connectivity issues"
-                  echo "3. Authentication problems"
-                  echo ""
-                  echo "Debug info:"
-                  echo "Registry: ${REGISTRY}"
-                  echo "Repository: $(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')"
-                  echo ""
-                  echo "Checking local images:"
-                  docker images | head -20
-                  exit 1
-                fi
-              fi
-            done
-            
-            if [ -z "$PULL_SUCCESS" ]; then
-              echo "❌ Failed to pull image after all retries"
-              exit 1
-            fi
+            docker pull "${IMAGE_TAG_LOWER}"
             
             # Tag as latest for docker-compose
             docker tag "${IMAGE_TAG_LOWER}" myapp:latest
