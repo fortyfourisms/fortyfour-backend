@@ -331,6 +331,37 @@ jobs:
             mkdir -p ~/myapp
             mkdir -p ~/myapp/migrations
 
+      - name: Set environment variables on VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            # Create secure environment file
+            sudo mkdir -p /etc/fortyfour-backend
+            
+            sudo tee /etc/fortyfour-backend/environment > /dev/null << 'EOF'
+            DB_HOST=db
+            DB_PORT=3306
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_NAME=${{ secrets.DB_NAME }}
+            REDIS_HOST=redis
+            REDIS_PORT=6379
+            REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+            APP_ENV=production
+            APP_PORT=8080
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            JWT_REFRESH_SECRET=${{ secrets.JWT_REFRESH_SECRET }}
+            EOF
+            
+            sudo chmod 600 /etc/fortyfour-backend/environment
+            sudo chown $USER:$USER /etc/fortyfour-backend/environment
+            
+            echo "✅ Environment variables configured"
+
       - name: Copy files to VPS
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -338,7 +369,7 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          source: "docker-compose.yml,migrations/*"
+          source: "Dockerfile,docker-compose.yml,migrations/*"
           target: ~/myapp
 
       - name: Deploy to VPS
@@ -366,6 +397,14 @@ jobs:
             echo "Registry: ${REGISTRY}"
             echo "Actor: ${ACTOR}"
             echo "Using first tag: ${FIRST_TAG}"
+            
+            # Load environment variables from system config
+            if [ -f /etc/fortyfour-backend/environment ]; then
+              export $(cat /etc/fortyfour-backend/environment | xargs)
+              echo "✅ Environment variables loaded"
+            else
+              echo "⚠️  Warning: Environment file not found, using defaults"
+            fi
             
             # Logout first to clear any cached credentials
             docker logout ${REGISTRY} 2>/dev/null || true
@@ -443,11 +482,11 @@ jobs:
             
             # Stop and remove old containers
             echo "Stopping old containers..."
-            docker compose down || true
+            docker-compose down || true
             
             # Start new containers
             echo "Starting new containers..."
-            docker compose up -d
+            docker-compose up -d
             
             # Clean up old images (keep last 3)
             echo "Cleaning up old images..."
@@ -470,7 +509,7 @@ jobs:
                 echo "❌ Health check failed after 60 seconds!"
                 echo ""
                 echo "Container logs:"
-                docker compose logs --tail=100
+                docker-compose logs --tail=100
                 exit 1
               fi
             done
