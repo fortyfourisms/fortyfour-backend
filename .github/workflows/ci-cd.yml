@@ -482,11 +482,11 @@ jobs:
             
             # Stop and remove old containers
             echo "Stopping old containers..."
-            docker-compose down || true
+            docker compose down || true
             
             # Start new containers
             echo "Starting new containers..."
-            docker-compose up -d
+            docker compose up -d
             
             # Clean up old images (keep last 3)
             echo "Cleaning up old images..."
@@ -509,7 +509,7 @@ jobs:
                 echo "❌ Health check failed after 60 seconds!"
                 echo ""
                 echo "Container logs:"
-                docker-compose logs --tail=100
+                docker compose logs --tail=100
                 exit 1
               fi
             done
