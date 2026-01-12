@@ -338,7 +338,7 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          source: "Dockerfile,docker-compose.yml,migrations/*"
+          source: "go.mod,go.sum,Dockerfile,docker-compose.yml,migrations/*"
           target: ~/myapp
 
       - name: Deploy to VPS
