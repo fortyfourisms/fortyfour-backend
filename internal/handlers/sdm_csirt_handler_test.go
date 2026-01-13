@@ -12,7 +12,7 @@ import (
 )
 
 //
-// MOCK SERVICE (implements services.SdmCsirtServiceInterface)
+// MOCK SERVICE
 //
 
 type mockSdmCsirtService struct {

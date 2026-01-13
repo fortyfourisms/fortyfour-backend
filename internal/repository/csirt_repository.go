@@ -106,7 +106,6 @@ func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 ========================
 GET ALL + PERUSAHAAN
 ========================
-UPDATED: Join dengan sub_sektor dan sektor
 */
 func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
 	rows, err := r.db.Query(`
@@ -186,7 +185,6 @@ func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
 ========================
 GET BY ID + PERUSAHAAN
 ========================
-UPDATED: Join dengan sub_sektor dan sektor
 */
 func (r *CsirtRepository) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, error) {
 	row := r.db.QueryRow(`

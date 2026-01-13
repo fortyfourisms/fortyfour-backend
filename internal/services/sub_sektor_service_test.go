@@ -14,7 +14,6 @@ import (
 =====================================
 */
 
-// UBAH NAMA INI: tambahkan prefix "standalone"
 type mockSubSektorRepositoryStandalone struct {
 	GetAllFn        func() ([]dto.SubSektorResponse, error)
 	GetByIDFn       func(id string) (*dto.SubSektorResponse, error)
@@ -68,7 +67,6 @@ func TestGetAllSubSektor_Success(t *testing.T) {
 		},
 	}
 
-	// UBAH INI: gunakan mockSubSektorRepositoryStandalone
 	repo := &mockSubSektorRepositoryStandalone{
 		GetAllFn: func() ([]dto.SubSektorResponse, error) {
 			return expectedSubSektor, nil

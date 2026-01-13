@@ -1,4 +1,3 @@
-// internal/utils/jwt.go
 package utils
 
 import (
@@ -24,7 +23,7 @@ func GenerateAccessToken(userID string, username, role, secret string) (string, 
 	claims := Claims{
 		UserID:   userID,
 		Username: username,
-		Role:     role, // TAMBAH INI
+		Role:     role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expiresAt),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

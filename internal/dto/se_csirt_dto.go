@@ -1,6 +1,6 @@
 package dto
 
-// Create request (wajib di awal)
+// Create request
 type CreateSeCsirtRequest struct {
 	IdCsirt     *string `json:"id_csirt,omitempty"`
 	NamaSe      *string `json:"nama_se,omitempty"`
@@ -11,7 +11,7 @@ type CreateSeCsirtRequest struct {
 	KategoriSe  *string `json:"kategori_se,omitempty"`
 }
 
-// Update request (partial)
+// Update request
 type UpdateSeCsirtRequest struct {
 	NamaSe      *string `json:"nama_se,omitempty"`
 	IpSe        *string `json:"ip_se,omitempty"`
@@ -21,7 +21,7 @@ type UpdateSeCsirtRequest struct {
 	KategoriSe  *string `json:"kategori_se,omitempty"`
 }
 
-// Response dengan nested CSIRT (POLA SDM)
+// Response dengan nested CSIRT
 type SeCsirtResponse struct {
 	ID         string             `json:"id"`
 	NamaSe     string             `json:"nama_se"`

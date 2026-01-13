@@ -256,7 +256,6 @@ func (h *PerusahaanHandler) deleteOldPhoto(id string) {
 	}
 }
 
-// UBAH INI: Ganti "sektor" menjadi "id_sub_sektor"
 func (h *PerusahaanHandler) parseCreateForm(form *multipart.Form) dto.CreatePerusahaanRequest {
 	return dto.CreatePerusahaanRequest{
 		NamaPerusahaan: getFormValue(form, "nama_perusahaan"),
@@ -268,7 +267,6 @@ func (h *PerusahaanHandler) parseCreateForm(form *multipart.Form) dto.CreatePeru
 	}
 }
 
-// UBAH INI: Ganti "sektor" menjadi "id_sub_sektor"
 func (h *PerusahaanHandler) parseUpdateForm(form *multipart.Form) dto.UpdatePerusahaanRequest {
 	return dto.UpdatePerusahaanRequest{
 		NamaPerusahaan: getFormValue(form, "nama_perusahaan"),
