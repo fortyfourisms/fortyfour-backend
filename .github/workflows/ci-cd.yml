@@ -328,8 +328,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            mkdir -p ~/myapp
-            mkdir -p ~/myapp/migrations
+            mkdir -p ~/fortyfour-backend
+            mkdir -p ~/fortyfour-backend/migrations
 
       - name: Copy files to VPS
         uses: appleboy/scp-action@v0.1.4
@@ -338,8 +338,8 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          source: "go.mod,go.sum,Dockerfile,docker-compose.yml,migrations/*"
-          target: ~/myapp
+          source: "docker-compose.yml,migrations/*"
+          target: ~/fortyfour-backend
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.0
@@ -355,7 +355,7 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           envs: IMAGE_TAG,G_TOKEN,ACTOR,REGISTRY
           script: |
-            cd ~/myapp
+            cd ~/fortyfour-backend
             
             echo "=== Deployment Info ==="
             echo "Received IMAGE_TAG: ${IMAGE_TAG}"
@@ -445,9 +445,16 @@ jobs:
               echo "❌ Failed to pull image after all retries"
               exit 1
             fi
+
+            # Update docker-compose.yml to use the pulled image
+            sed -i "s|image:.*|image: ${IMAGE_TAG_LOWER}|g" docker-compose.yml
+            
+            # Verify the change
+            echo "Updated docker-compose.yml:"
+            grep "image:" docker-compose.yml
             
             # Tag as latest for docker-compose
-            docker tag "${IMAGE_TAG_LOWER}" myapp:latest
+            docker tag "${IMAGE_TAG_LOWER}" fortyfour-backend:latest
             
             # Stop and remove old containers
             echo "Stopping old containers..."

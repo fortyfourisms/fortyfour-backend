@@ -1,16 +1,15 @@
 services:
   # Go Application
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: myapp_api
+    image: ghcr.io/fortyfourisms/fortyfour-backend:latest
+    container_name: fortyfour-backend
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     environment:
       PORT: ${PORT:-:8080}
       JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       
       # Host MySQL connection (use host.docker.internal or host IP)
       # DB_HOST: host.docker.internal  # For Docker Desktop
@@ -45,7 +44,7 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: myapp_redis
+    container_name: fortyfour-backend_redis
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -71,7 +70,7 @@ services:
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
-    container_name: myapp_nginx
+    container_name: fortyfour-backend_nginx
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
