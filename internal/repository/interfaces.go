@@ -20,6 +20,11 @@ type UserRepositoryInterface interface {
 	UsernameExists(username string, excludeID *string) (bool, error)
 }
 
+type TokenRepositoryInterface interface {
+	GenerateTokenPair(userID, username, role string) (*models.TokenPair, error)
+	RevokeRefreshToken(refreshToken string) error
+}
+
 // JabatanRepositoryInterface defines methods for jabatan data access
 type JabatanRepositoryInterface interface {
 	Create(req dto.CreateJabatanRequest, id string) error

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/pkg/cache"
 	"time"
@@ -21,6 +22,8 @@ func NewTokenService(redis cache.RedisInterface, jwtSecret string) *TokenService
 		jwtSecret: jwtSecret,
 	}
 }
+
+var _ repository.TokenRepositoryInterface = (*TokenService)(nil)
 
 // GenerateTokenPair creates access & refresh tokens
 func (s *TokenService) GenerateTokenPair(userID, username, role string) (*models.TokenPair, error) {
