@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"net/http"
+
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
-	"net/http"
 )
 
 type CasbinHandler struct {
@@ -21,6 +22,20 @@ func NewCasbinHandler(casbinService *services.CasbinService, sseService *service
 	}
 }
 
+// ===== helper (UNTUK TEST) =====
+
+func getUserFromContext(r *http.Request) (userID string, role string, ok bool) {
+	uid, uidOk := r.Context().Value(middleware.UserIDKey).(string)
+	rle, roleOk := r.Context().Value(middleware.Role).(string)
+
+	if !uidOk || !roleOk {
+		return "", "", false
+	}
+	return uid, rle, true
+}
+
+// ===== HANDLERS =====
+
 // AddPolicy adds a single permission
 func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -28,11 +43,8 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Only admin can manage policies
-	userID := r.Context().Value(middleware.UserIDKey).(string)
-	userRole := r.Context().Value(middleware.Role).(string)
-
-	if userRole != "admin" {
+	userID, userRole, ok := getUserFromContext(r)
+	if ok && userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")
 		return
 	}
@@ -43,7 +55,6 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate request
 	if req.Role == "" || req.Resource == "" || req.Action == "" {
 		utils.RespondError(w, http.StatusBadRequest, "Role, resource, and action are required")
 		return
@@ -60,11 +71,13 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.sseService.NotifyCreate("policy", map[string]any{
-		"role":     req.Role,
-		"resource": req.Resource,
-		"action":   req.Action,
-	}, userID)
+	if h.sseService != nil && ok {
+		h.sseService.NotifyCreate("policy", map[string]any{
+			"role":     req.Role,
+			"resource": req.Resource,
+			"action":   req.Action,
+		}, userID)
+	}
 
 	utils.RespondJSON(w, http.StatusCreated, map[string]interface{}{
 		"message": "Policy added successfully",
@@ -76,17 +89,15 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// BulkAddPolicies adds multiple policies at once
+// BulkAddPolicies adds multiple policies
 func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
-	userID := r.Context().Value(middleware.UserIDKey).(string)
-	userRole := r.Context().Value(middleware.Role).(string)
-
-	if userRole != "admin" {
+	userID, userRole, ok := getUserFromContext(r)
+	if ok && userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")
 		return
 	}
@@ -97,7 +108,6 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Convert to casbin format [][]string
 	var policies [][]string
 	for _, p := range req.Policies {
 		policies = append(policies, []string{req.Role, p.Resource, p.Action})
@@ -109,7 +119,6 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Jika semua data sudah ada, return conflict error
 	if len(result.Added) == 0 && len(result.Existing) > 0 {
 		utils.RespondJSON(w, http.StatusConflict, map[string]interface{}{
 			"message":  "All policies already exist",
@@ -121,33 +130,25 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Jika ada yang berhasil ditambahkan, kirim notifikasi
-	if len(result.Added) > 0 {
+	if h.sseService != nil && ok && len(result.Added) > 0 {
 		h.sseService.NotifyCreate("policy.bulk", map[string]any{
 			"role":  req.Role,
 			"count": len(result.Added),
 		}, userID)
 	}
 
-	statusCode := http.StatusCreated
+	status := http.StatusCreated
 	message := "Bulk policies added successfully"
-
-	// Jika ada yang sudah exist, ubah status dan message
 	if len(result.Existing) > 0 {
-		statusCode = http.StatusPartialContent
+		status = http.StatusPartialContent
 		message = "Bulk policies partially added"
 	}
 
-	utils.RespondJSON(w, statusCode, map[string]interface{}{
+	utils.RespondJSON(w, status, map[string]interface{}{
 		"message":  message,
 		"role":     req.Role,
 		"added":    result.Added,
 		"existing": result.Existing,
-		"summary": map[string]int{
-			"total":    len(req.Policies),
-			"added":    len(result.Added),
-			"existing": len(result.Existing),
-		},
 	})
 }
 
@@ -158,10 +159,8 @@ func (h *CasbinHandler) RemovePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Context().Value(middleware.UserIDKey).(string)
-	userRole := r.Context().Value(middleware.Role).(string)
-
-	if userRole != "admin" {
+	userID, userRole, ok := getUserFromContext(r)
+	if ok && userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")
 		return
 	}
@@ -183,11 +182,13 @@ func (h *CasbinHandler) RemovePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.sseService.NotifyDelete("policy", map[string]any{
-		"role":     req.Role,
-		"resource": req.Resource,
-		"action":   req.Action,
-	}, userID)
+	if h.sseService != nil && ok {
+		h.sseService.NotifyDelete("policy", map[string]any{
+			"role":     req.Role,
+			"resource": req.Resource,
+			"action":   req.Action,
+		}, userID)
+	}
 
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
 		"message": "Policy removed successfully",
@@ -210,7 +211,7 @@ func (h *CasbinHandler) GetAllPolicies(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetRolePermissions returns permissions for a specific role
+// GetRolePermissions returns permissions for a role
 func (h *CasbinHandler) GetRolePermissions(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -223,11 +224,11 @@ func (h *CasbinHandler) GetRolePermissions(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	permissions := h.casbinService.GetRolePermissions(role)
+	perms := h.casbinService.GetRolePermissions(role)
 
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
 		"role":        role,
-		"permissions": permissions,
-		"count":       len(permissions),
+		"permissions": perms,
+		"count":       len(perms),
 	})
 }
