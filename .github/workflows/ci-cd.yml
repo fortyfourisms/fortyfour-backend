@@ -445,13 +445,6 @@ jobs:
               echo "❌ Failed to pull image after all retries"
               exit 1
             fi
-
-            # Update docker-compose.yml to use the pulled image
-            sed -i "s|image:.*|image: ${IMAGE_TAG_LOWER}|g" docker-compose.yml
-            
-            # Verify the change
-            echo "Updated docker-compose.yml:"
-            grep "image:" docker-compose.yml
             
             # Tag as latest for docker-compose
             docker tag "${IMAGE_TAG_LOWER}" fortyfour-backend:latest

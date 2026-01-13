@@ -43,8 +43,8 @@ services:
 
   # Redis Cache
   redis:
-    image: redis:7-alpine
-    container_name: fortyfour-backend_redis
+    image: redis:8.4-alpine
+    container_name: fortyfour-redis
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
@@ -52,25 +52,21 @@ services:
       - redis_data:/data
     networks:
       - app-network
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-redispass}
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
-    command: >
-      redis-server
-      --requirepass ${REDIS_PASSWORD}
-      --maxmemory 512mb
-      --maxmemory-policy allkeys-lru
-      --save 60 1
-      --loglevel warning
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redispass} --maxmemory 512mb --maxmemory-policy allkeys-lru --save 60 1 --loglevel warning
     expose:
       - "6379"
 
   # Nginx Reverse Proxy
   nginx:
-    image: nginx:alpine
-    container_name: fortyfour-backend_nginx
+    image: nginx:1.29.4-alpine
+    container_name: fortyfour-nginx
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
