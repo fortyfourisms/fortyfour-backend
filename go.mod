@@ -6,7 +6,7 @@ require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/alicebob/miniredis/v2 v2.35.0
 	github.com/casbin/casbin/v2 v2.100.0
-	github.com/casbin/gorm-adapter/v3 v3.25.0
+	github.com/casbin/gorm-adapter/v3 v3.32.0
 	github.com/go-playground/validator/v10 v10.30.0
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
