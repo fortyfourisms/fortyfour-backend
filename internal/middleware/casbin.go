@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin/v3"
 )
 
 type CasbinMiddleware struct {

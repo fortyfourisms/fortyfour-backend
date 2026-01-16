@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin/v3"
 )
 
 func setupAuthorizationMiddleware() (*AuthorizationMiddleware, *casbin.Enforcer) {
