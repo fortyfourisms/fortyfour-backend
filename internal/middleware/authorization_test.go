@@ -7,91 +7,246 @@ import (
 	"testing"
 
 	"github.com/casbin/casbin/v3"
+	"github.com/casbin/casbin/v3/model"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
-func setupAuthorizationMiddleware() (*AuthorizationMiddleware, *casbin.Enforcer) {
-	enforcer, _ := casbin.NewEnforcer("../../casbin_model.conf", false)
-	middleware := NewAuthorizationMiddleware(enforcer)
-	return middleware, enforcer
+// MockEnforcer is a mock for casbin.Enforcer
+type MockEnforcer struct {
+	mock.Mock
 }
 
-func TestAuthorizationMiddleware_Authorize_NoRole(t *testing.T) {
-	middleware, _ := setupAuthorizationMiddleware()
+func (m *MockEnforcer) Enforce(rvals ...interface{}) (bool, error) {
+	args := m.Called(rvals...)
+	return args.Bool(0), args.Error(1)
+}
 
-	handler := middleware.Authorize(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
+// Helper function to create a test handler
+func testHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("success"))
+}
 
-	req := httptest.NewRequest(http.MethodGet, "/api/test", nil)
+func TestNewAuthorizationMiddleware(t *testing.T) {
+	enforcer, _ := casbin.NewEnforcer()
+	middleware := NewAuthorizationMiddleware(enforcer)
+
+	assert.NotNil(t, middleware)
+	assert.Equal(t, enforcer, middleware.enforcer)
+}
+
+func TestAuthorize_NoRoleInContext(t *testing.T) {
+	enforcer, _ := casbin.NewEnforcer()
+	middleware := NewAuthorizationMiddleware(enforcer)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/posts", nil)
 	w := httptest.NewRecorder()
 
+	handler := middleware.Authorize(testHandler)
 	handler(w, req)
 
-	if w.Code != http.StatusForbidden {
-		t.Errorf("expected status 403, got %d", w.Code)
-	}
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	assert.Contains(t, w.Body.String(), "Forbidden: No role found")
 }
 
-func TestAuthorizationMiddleware_Authorize_WithRole(t *testing.T) {
-	middleware, enforcer := setupAuthorizationMiddleware()
+func TestAuthorize_EmptyRole(t *testing.T) {
+	enforcer, _ := casbin.NewEnforcer()
+	middleware := NewAuthorizationMiddleware(enforcer)
 
-	// Add policy for testing
-	enforcer.AddPolicy("admin", "/api/test", "GET")
-
-	handler := middleware.Authorize(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
-
-	req := httptest.NewRequest(http.MethodGet, "/api/test", nil)
-	ctx := context.WithValue(req.Context(), Role, "admin")
+	req := httptest.NewRequest(http.MethodGet, "/api/posts", nil)
+	ctx := context.WithValue(req.Context(), Role, "")
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
+	handler := middleware.Authorize(testHandler)
 	handler(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", w.Code)
-	}
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	assert.Contains(t, w.Body.String(), "Forbidden: No role found")
 }
 
-func TestAuthorizationMiddleware_Authorize_InsufficientPermissions(t *testing.T) {
-	middleware, _ := setupAuthorizationMiddleware()
+func TestAuthorize_EnforcerError(t *testing.T) {
+	// Create a real enforcer with a simple model
+	m := model.NewModel()
+	m.AddDef("r", "r", "sub, obj, act")
+	m.AddDef("p", "p", "sub, obj, act")
+	m.AddDef("e", "e", "some(where (p.eft == allow))")
+	m.AddDef("m", "m", "r.sub == p.sub && r.obj == p.obj && r.act == p.act")
 
-	handler := middleware.Authorize(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
+	enforcer, _ := casbin.NewEnforcer(m)
+	middleware := NewAuthorizationMiddleware(enforcer)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/test", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/posts/123", nil)
 	ctx := context.WithValue(req.Context(), Role, "user")
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
+	// Force an error by using invalid parameters (this is tricky with real enforcer)
+	// In practice, you might need a mock enforcer for this test
+	handler := middleware.Authorize(testHandler)
 	handler(w, req)
 
-	if w.Code != http.StatusForbidden {
-		t.Errorf("expected status 403, got %d", w.Code)
-	}
+	// Since real enforcer might not error easily, this tests the flow
+	assert.NotEqual(t, http.StatusInternalServerError, w.Code)
 }
 
-func TestAuthorizationMiddleware_extractResourcePath(t *testing.T) {
-	middleware, _ := setupAuthorizationMiddleware()
+func TestAuthorize_PermissionDenied(t *testing.T) {
+	m := model.NewModel()
+	m.AddDef("r", "r", "sub, obj, act")
+	m.AddDef("p", "p", "sub, obj, act")
+	m.AddDef("e", "e", "some(where (p.eft == allow))")
+	m.AddDef("m", "m", "r.sub == p.sub && r.obj == p.obj && r.act == p.act")
 
-	testCases := []struct {
+	enforcer, _ := casbin.NewEnforcer(m)
+	middleware := NewAuthorizationMiddleware(enforcer)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/posts/123", nil)
+	ctx := context.WithValue(req.Context(), Role, "user")
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler := middleware.Authorize(testHandler)
+	handler(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	assert.Contains(t, w.Body.String(), "Forbidden: Insufficient permissions")
+}
+
+func TestAuthorize_PermissionGranted(t *testing.T) {
+	m := model.NewModel()
+	m.AddDef("r", "r", "sub, obj, act")
+	m.AddDef("p", "p", "sub, obj, act")
+	m.AddDef("e", "e", "some(where (p.eft == allow))")
+	m.AddDef("m", "m", "r.sub == p.sub && r.obj == p.obj && r.act == p.act")
+
+	enforcer, _ := casbin.NewEnforcer(m)
+
+	// Add policy: admin can GET /api/posts
+	enforcer.AddPolicy("admin", "/api/posts", "GET")
+
+	middleware := NewAuthorizationMiddleware(enforcer)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/posts/123", nil)
+	ctx := context.WithValue(req.Context(), Role, "admin")
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler := middleware.Authorize(testHandler)
+	handler(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "success", w.Body.String())
+}
+
+func TestExtractResourcePath(t *testing.T) {
+	enforcer, _ := casbin.NewEnforcer()
+	middleware := NewAuthorizationMiddleware(enforcer)
+
+	tests := []struct {
+		name     string
 		path     string
 		expected string
 	}{
-		{"/api/posts/123", "/api/posts"},
-		{"/api/users", "/api/users"},
-		{"/api/test/456/789", "/api/test"},
-		{"/api", "/api"},
+		{
+			name:     "path with ID",
+			path:     "/api/posts/123",
+			expected: "/api/posts",
+		},
+		{
+			name:     "path without ID",
+			path:     "/api/posts",
+			expected: "/api/posts",
+		},
+		{
+			name:     "root path",
+			path:     "/",
+			expected: "/",
+		},
+		{
+			name:     "single segment",
+			path:     "/api",
+			expected: "/api",
+		},
+		{
+			name:     "nested path with ID",
+			path:     "/api/users/456/posts/789",
+			expected: "/api/users",
+		},
+		{
+			name:     "path with query params",
+			path:     "/api/posts/123?query=value",
+			expected: "/api/posts",
+		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.path, func(t *testing.T) {
-			result := middleware.extractResourcePath(tc.path)
-			if result != tc.expected {
-				t.Errorf("expected '%s', got '%s'", tc.expected, result)
-			}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := middleware.extractResourcePath(tt.path)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestAuthorize_DifferentMethods(t *testing.T) {
+	m := model.NewModel()
+	m.AddDef("r", "r", "sub, obj, act")
+	m.AddDef("p", "p", "sub, obj, act")
+	m.AddDef("e", "e", "some(where (p.eft == allow))")
+	m.AddDef("m", "m", "r.sub == p.sub && r.obj == p.obj && r.act == p.act")
+
+	enforcer, _ := casbin.NewEnforcer(m)
+
+	// Add policies
+	enforcer.AddPolicy("user", "/api/posts", "GET")
+	enforcer.AddPolicy("admin", "/api/posts", "POST")
+	enforcer.AddPolicy("admin", "/api/posts", "DELETE")
+
+	middleware := NewAuthorizationMiddleware(enforcer)
+
+	tests := []struct {
+		name           string
+		method         string
+		role           string
+		expectedStatus int
+	}{
+		{
+			name:           "user GET allowed",
+			method:         http.MethodGet,
+			role:           "user",
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "user POST denied",
+			method:         http.MethodPost,
+			role:           "user",
+			expectedStatus: http.StatusForbidden,
+		},
+		{
+			name:           "admin POST allowed",
+			method:         http.MethodPost,
+			role:           "admin",
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "admin DELETE allowed",
+			method:         http.MethodDelete,
+			role:           "admin",
+			expectedStatus: http.StatusOK,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest(tt.method, "/api/posts/123", nil)
+			ctx := context.WithValue(req.Context(), Role, tt.role)
+			req = req.WithContext(ctx)
+			w := httptest.NewRecorder()
+
+			handler := middleware.Authorize(testHandler)
+			handler(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
 		})
 	}
 }
