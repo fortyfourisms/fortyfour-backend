@@ -27,7 +27,13 @@ RUN addgroup -g 1000 appgroup && \
 
 WORKDIR /app
 
+# Copy the binary
 COPY --from=builder /build/app .
+
+# Copy the casbin directory with configuration files
+COPY --from=builder /build/casbin ./casbin
+
+# Copy the timezone
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
 RUN chown -R appuser:appgroup /app
