@@ -45,7 +45,7 @@ func Load() *Config {
 			Password: getEnv("REDIS_PASSWORD", ""),
 			DB:       getEnvAsInt("REDIS_DB", 0),
 		},
-		CasbinModelPath: getEnv("CASBIN_MODEL_PATH", "./casbin_model.conf"),
+		CasbinModelPath: getEnv("CASBIN_MODEL_PATH", "./casbin/casbin_model.conf"),
 	}
 }
 

@@ -6,7 +6,7 @@ RUN adduser -D -g '' appuser
 
 WORKDIR /build
 
-COPY go.mod go.sum casbin_model.conf ./
+COPY go.mod go.sum ./
 RUN go mod download
 RUN go mod verify
 
