@@ -12,19 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Mock utils.RespondError for testing
-// You'll need to replace this with your actual utils package path
-var mockRespondError = func(w http.ResponseWriter, statusCode int, message string) {
-	w.WriteHeader(statusCode)
-	w.Write([]byte(message))
-}
-
-// Replace the actual utils.RespondError with mock for testing
-func init() {
-	// This assumes your utils package has a way to inject the function
-	// If not, you may need to refactor to use dependency injection
-}
-
 // Helper function to create a test handler
 func casbinTestHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
