@@ -71,6 +71,7 @@ func main() {
 	roleRepo := repository.NewRoleRepository(db)
 	sektorRepo := repository.NewSektorRepository(db)
 	subSektorRepo := repository.NewSubSektorRepository(db)
+	seRepo := repository.NewSERepository(db)
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
@@ -90,6 +91,7 @@ func main() {
 	roleService := services.NewRoleService(roleRepo)
 	sektorService := services.NewSektorService(sektorRepo)
 	subSektorService := services.NewSubSektorService(subSektorRepo)
+	seService := services.NewSEService(seRepo)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
@@ -112,7 +114,8 @@ func main() {
 	sseHandler := handlers.NewSSEHandler(sseService)
 	sektorHandler := handlers.NewSektorHandler(sektorService)
 	subSektorHandler := handlers.NewSubSektorHandler(subSektorService)
-
+	seHandler := handlers.NewSEHandler(seService, sseService)
+	
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
 	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
@@ -149,6 +152,7 @@ func main() {
 		seCsirtHandler,
 		sektorHandler,
 		subSektorHandler,
+		seHandler,
 	)
 
 	// Start server

@@ -45,6 +45,7 @@ func InitRouter(
 	seCsirtH *handlers.SeCsirtHandler,
 	sektorH *handlers.SektorHandler,
 	subsectorH *handlers.SubSektorHandler,
+	seH *handlers.SEHandler,
 ) *http.ServeMux {
 	mux := http.NewServeMux()
 
@@ -127,6 +128,10 @@ func InitRouter(
 	// Route SubSektor
 	mux.HandleFunc("/api/sub_sektor", authM.Authenticate(utils.AdaptHandler(subsectorH)))
 	mux.HandleFunc("/api/sub_sektor/", authM.Authenticate(utils.AdaptHandler(subsectorH)))
+
+	// Route SE
+	mux.HandleFunc("/api/se", authM.Authenticate(utils.AdaptHandler(seH)))
+	mux.HandleFunc("/api/se/", authM.Authenticate(utils.AdaptHandler(seH)))
 
 	// Swagger UI
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)

@@ -105,3 +105,11 @@ type SubSektorRepositoryInterface interface {
 	GetByID(id string) (*dto.SubSektorResponse, error)
 	GetBySektorID(sektorID string) ([]dto.SubSektorResponse, error)
 }
+// SERepositoryInterface
+type SERepositoryInterface interface {
+	Create(req dto.CreateSERequest, id string, totalBobot int, kategori string) error
+	GetAll() ([]dto.SEResponse, error)
+	GetByID(id string) (*dto.SEResponse, error)
+	Update(id string, req dto.UpdateSERequest, totalBobot int, kategori string) error
+	Delete(id string) error
+}
