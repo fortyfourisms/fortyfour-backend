@@ -519,7 +519,7 @@ jobs:
 
       - name: Test health endpoint
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.VPS_HOST }}:8080/api/health)
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.SITE_URL }}/api/health)
           if [ $response -ne 200 ]; then
             echo "❌ Health check failed with status: $response"
             exit 1
@@ -529,7 +529,7 @@ jobs:
       - name: Test API endpoints
         run: |
           # Test posts endpoint
-          response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.VPS_HOST }}:8080/api/posts)
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.SITE_URL }}/api/login)
           if [ $response -ne 200 ] && [ $response -ne 401 ]; then
             echo "❌ Posts endpoint failed with status: $response"
             exit 1
