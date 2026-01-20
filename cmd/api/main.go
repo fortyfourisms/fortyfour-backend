@@ -14,6 +14,8 @@ import (
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/pkg/cache"
 	"fortyfour-backend/pkg/database"
+
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -143,6 +145,15 @@ func main() {
 		seCsirtHandler,
 	)
 
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173", "https://admin.kssindustri.site", "https://fortyfouris.netlify.app"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+	})
+
+	mCors := c.Handler(mux)
+
 	// Start server
 	log.Printf("Server starting on %s", cfg.Port)
 	log.Println("Rate limiting enabled:")
@@ -151,5 +162,5 @@ func main() {
 	log.Println("  - Protected posts: 100 requests/minute per user")
 	log.Println("SSE endpoint available at /api/events")
 
-	log.Fatal(http.ListenAndServe(cfg.Port, mux))
+	log.Fatal(http.ListenAndServe(cfg.Port, mCors))
 }

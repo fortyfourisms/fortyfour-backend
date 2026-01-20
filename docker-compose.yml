@@ -7,7 +7,7 @@ services:
     security_opt:
       - no-new-privileges:true
     environment:
-      PORT: ${APP_PORT:-:8080}
+      PORT: ":8080"
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       
@@ -38,8 +38,8 @@ services:
       retries: 3
       start_period: 40s
     # Only expose to internal network (Nginx will handle external traffic)
-    expose:
-      - "8080"
+    ports:
+      - 8080:8080
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
