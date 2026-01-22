@@ -529,7 +529,7 @@ jobs:
       - name: Test API endpoints
         run: |
           # Test posts endpoint
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.SITE_URL }}/api/login)
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.SITE_URL }}/api/jabatan)
           if [ $response -ne 200 ] && [ $response -ne 401 ]; then
             echo "❌ Posts endpoint failed with status: $response"
             exit 1

@@ -5,6 +5,8 @@ import (
 	"fortyfour-backend/pkg/cache"
 	"net/http"
 	"time"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 // TokenBucketLimiter implements token bucket algorithm
@@ -35,6 +37,7 @@ func (tbl *TokenBucketLimiter) Limit(next http.HandlerFunc) http.HandlerFunc {
 		// Check if token available
 		allowed, err := tbl.consumeToken(key)
 		if err != nil || !allowed {
+			rollbar.Error(err)
 			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 			return
 		}
@@ -48,6 +51,7 @@ func (tbl *TokenBucketLimiter) consumeToken(key string) (bool, error) {
 	// countStr, err := tbl.redis.Get(key)
 	_, err := tbl.redis.Get(key)
 	if err != nil {
+		rollbar.Error(err)
 		// Initialize bucket
 		tbl.redis.Set(key, "1", tbl.refillInterval)
 		return true, nil

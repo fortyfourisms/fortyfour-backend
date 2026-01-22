@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/casbin/casbin/v3"
+	"github.com/rollbar/rollbar-go"
 )
 
 type AuthorizationMiddleware struct {
@@ -22,6 +23,7 @@ func (m *AuthorizationMiddleware) Authorize(next http.HandlerFunc) http.HandlerF
 		// Get role from context (set by AuthMiddleware)
 		role, ok := r.Context().Value(Role).(string)
 		if !ok || role == "" {
+			rollbar.Error(ok)
 			http.Error(w, "Forbidden: No role found", http.StatusForbidden)
 			return
 		}
@@ -33,6 +35,7 @@ func (m *AuthorizationMiddleware) Authorize(next http.HandlerFunc) http.HandlerF
 		// Check permission using Casbin
 		allowed, err := m.enforcer.Enforce(role, obj, act)
 		if err != nil {
+			rollbar.Error(err)
 			http.Error(w, "Authorization error", http.StatusInternalServerError)
 			return
 		}

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/casbin/casbin/v3"
+	"github.com/rollbar/rollbar-go"
 )
 
 type CasbinMiddleware struct {
@@ -36,6 +37,7 @@ func (m *CasbinMiddleware) Authorize(next http.HandlerFunc) http.HandlerFunc {
 		allowed, err := m.enforcer.Enforce(role, resource, action)
 		if err != nil {
 			log.Printf("Casbin enforce error: %v", err)
+			rollbar.Error(err)
 			utils.RespondError(w, http.StatusInternalServerError, "Authorization check failed")
 			return
 		}

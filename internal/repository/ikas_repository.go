@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rollbar/rollbar-go"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -165,6 +166,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 
 	rows, err := r.db.Query(query)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -221,6 +223,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			&gulihSub4,
 		)
 		if err != nil {
+			rollbar.Error(err)
 			continue
 		}
 
@@ -393,6 +396,7 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 		&gulihSub4,
 	)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -562,6 +566,7 @@ func (r *IkasRepository) UpdateIdentifikasi(id string, data *dto.UpdateIdentifik
 
 	_, err := r.db.Exec(query, args...)
 	if err != nil {
+		rollbar.Error(err)
 		return 0, err
 	}
 
@@ -571,6 +576,7 @@ func (r *IkasRepository) UpdateIdentifikasi(id string, data *dto.UpdateIdentifik
 		nilai_subdomain4, nilai_subdomain5 FROM identifikasi WHERE id=?`, id).
 		Scan(&sub1, &sub2, &sub3, &sub4, &sub5)
 	if err != nil {
+		rollbar.Error(err)
 		return 0, err
 	}
 
@@ -621,6 +627,7 @@ func (r *IkasRepository) UpdateProteksi(id string, data *dto.UpdateProteksiData)
 
 	_, err := r.db.Exec(query, args...)
 	if err != nil {
+		rollbar.Error(err)
 		return 0, err
 	}
 
@@ -630,6 +637,7 @@ func (r *IkasRepository) UpdateProteksi(id string, data *dto.UpdateProteksiData)
 		nilai_subdomain4, nilai_subdomain5, nilai_subdomain6 FROM proteksi WHERE id=?`, id).
 		Scan(&sub1, &sub2, &sub3, &sub4, &sub5, &sub6)
 	if err != nil {
+		rollbar.Error(err)
 		return 0, err
 	}
 
@@ -668,6 +676,7 @@ func (r *IkasRepository) UpdateDeteksi(id string, data *dto.UpdateDeteksiData) (
 
 	_, err := r.db.Exec(query, args...)
 	if err != nil {
+		rollbar.Error(err)
 		return 0, err
 	}
 
@@ -676,6 +685,7 @@ func (r *IkasRepository) UpdateDeteksi(id string, data *dto.UpdateDeteksiData) (
 	err = r.db.QueryRow(`SELECT nilai_subdomain1, nilai_subdomain2, nilai_subdomain3 
 		FROM deteksi WHERE id=?`, id).Scan(&sub1, &sub2, &sub3)
 	if err != nil {
+		rollbar.Error(err)
 		return 0, err
 	}
 
@@ -718,6 +728,7 @@ func (r *IkasRepository) UpdateGulih(id string, data *dto.UpdateGulihData) (floa
 
 	_, err := r.db.Exec(query, args...)
 	if err != nil {
+		rollbar.Error(err)
 		return 0, err
 	}
 
@@ -726,6 +737,7 @@ func (r *IkasRepository) UpdateGulih(id string, data *dto.UpdateGulihData) (floa
 	err = r.db.QueryRow(`SELECT nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, 
 		nilai_subdomain4 FROM gulih WHERE id=?`, id).Scan(&sub1, &sub2, &sub3, &sub4)
 	if err != nil {
+		rollbar.Error(err)
 		return 0, err
 	}
 
@@ -761,6 +773,7 @@ func parseMultipleDateFormats(dateStr string) (time.Time, error) {
 		if t, err := time.Parse(format, dateStr); err == nil {
 			return t, nil
 		} else {
+			rollbar.Error(err)
 			lastErr = err
 		}
 	}
@@ -772,6 +785,7 @@ func parseMultipleDateFormats(dateStr string) (time.Time, error) {
 func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRequest, error) {
 	f, err := excelize.OpenReader(bytes.NewReader(fileData))
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	defer f.Close()
@@ -793,6 +807,7 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRe
 	getCellString := func(sheetName, cell string) (string, error) {
 		val, err := f.GetCellValue(sheetName, cell)
 		if err != nil {
+			rollbar.Error(err)
 			return "", err
 		}
 		return strings.TrimSpace(val), nil
@@ -802,6 +817,7 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRe
 	getCellFloat := func(sheetName, cell string) (float64, error) {
 		val, err := f.GetCellValue(sheetName, cell)
 		if err != nil {
+			rollbar.Error(err)
 			return 0, err
 		}
 		val = strings.TrimSpace(val)
@@ -810,6 +826,7 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRe
 		}
 		floatVal, err := strconv.ParseFloat(val, 64)
 		if err != nil {
+			rollbar.Error(err)
 			return 0, fmt.Errorf("gagal parse cell %s: %v", cell, err)
 		}
 		return floatVal, nil
@@ -820,6 +837,7 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRe
 	// Nama Perusahaan dari D4
 	namaPerusahaan, err := getCellString(sheet2, "D4")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca nama perusahaan (Sheet 2, D4): %v", err)
 	}
 	if namaPerusahaan == "" {
@@ -829,6 +847,7 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRe
 	// Cari ID Perusahaan berdasarkan nama
 	idPerusahaan, err := r.FindPerusahaanByName(namaPerusahaan)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error mencari perusahaan: %v", err)
 	}
 	if idPerusahaan == "" {
@@ -838,24 +857,28 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRe
 	// Telepon dari D10
 	telepon, err := getCellString(sheet2, "D10")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca telepon (Sheet 2, D10): %v", err)
 	}
 
 	// Responden dari D11
 	responden, err := getCellString(sheet2, "D11")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca responden (Sheet 2, D11): %v", err)
 	}
 
 	// Jabatan dari D12
 	jabatan, err := getCellString(sheet2, "D12")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca jabatan (Sheet 2, D12): %v", err)
 	}
 
 	// Tanggal dari D18
 	tanggalStr, err := getCellString(sheet2, "D18")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca tanggal (Sheet 2, D18): %v", err)
 	}
 
@@ -886,86 +909,105 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRe
 	// Target Nilai dari D4
 	targetNilai, err := getCellFloat(sheet7, "D4")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca target_nilai (Sheet 7, D4): %v", err)
 	}
 
 	// IDENTIFIKASI
 	idenSub1, err := getCellFloat(sheet7, "E5")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca identifikasi subdomain1 (Sheet 7, E5): %v", err)
 	}
 	idenSub2, err := getCellFloat(sheet7, "E6")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca identifikasi subdomain2 (Sheet 7, E6): %v", err)
 	}
 	idenSub3, err := getCellFloat(sheet7, "E7")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca identifikasi subdomain3 (Sheet 7, E7): %v", err)
 	}
 	idenSub4, err := getCellFloat(sheet7, "E8")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca identifikasi subdomain4 (Sheet 7, E8): %v", err)
 	}
 	idenSub5, err := getCellFloat(sheet7, "E9")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca identifikasi subdomain5 (Sheet 7, E9): %v", err)
 	}
 
 	// PROTEKSI
 	protSub1, err := getCellFloat(sheet7, "E10")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca proteksi subdomain1 (Sheet 7, E10): %v", err)
 	}
 	protSub2, err := getCellFloat(sheet7, "E11")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca proteksi subdomain2 (Sheet 7, E11): %v", err)
 	}
 	protSub3, err := getCellFloat(sheet7, "E12")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca proteksi subdomain3 (Sheet 7, E12): %v", err)
 	}
 	protSub4, err := getCellFloat(sheet7, "E13")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca proteksi subdomain4 (Sheet 7, E13): %v", err)
 	}
 	protSub5, err := getCellFloat(sheet7, "E14")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca proteksi subdomain5 (Sheet 7, E14): %v", err)
 	}
 	protSub6, err := getCellFloat(sheet7, "E15")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca proteksi subdomain6 (Sheet 7, E15): %v", err)
 	}
 
 	// DETEKSI
 	detSub1, err := getCellFloat(sheet7, "E16")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca deteksi subdomain1 (Sheet 7, E16): %v", err)
 	}
 	detSub2, err := getCellFloat(sheet7, "E17")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca deteksi subdomain2 (Sheet 7, E17): %v", err)
 	}
 	detSub3, err := getCellFloat(sheet7, "E18")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca deteksi subdomain3 (Sheet 7, E18): %v", err)
 	}
 
 	// GULIH
 	gulihSub1, err := getCellFloat(sheet7, "E19")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca gulih subdomain1 (Sheet 7, E19): %v", err)
 	}
 	gulihSub2, err := getCellFloat(sheet7, "E20")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca gulih subdomain2 (Sheet 7, E20): %v", err)
 	}
 	gulihSub3, err := getCellFloat(sheet7, "E21")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca gulih subdomain3 (Sheet 7, E21): %v", err)
 	}
 	gulihSub4, err := getCellFloat(sheet7, "E22")
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error membaca gulih subdomain4 (Sheet 7, E22): %v", err)
 	}
 

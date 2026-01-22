@@ -8,6 +8,8 @@ import (
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/pkg/cache"
 	"time"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type TokenService struct {
@@ -26,11 +28,13 @@ func NewTokenService(redis cache.RedisInterface, jwtSecret string) *TokenService
 func (s *TokenService) GenerateTokenPair(userID, username, role string) (*models.TokenPair, error) {
 	accessToken, expiresAt, err := utils.GenerateAccessToken(userID, username, role, s.jwtSecret)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("failed to generate access token: %w", err)
 	}
 
 	refreshToken, err := utils.GenerateRefreshToken()
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
 	}
 
@@ -43,6 +47,7 @@ func (s *TokenService) GenerateTokenPair(userID, username, role string) (*models
 
 	tokenDataJSON, err := json.Marshal(tokenData)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("failed to marshal refresh token data: %w", err)
 	}
 
@@ -51,6 +56,7 @@ func (s *TokenService) GenerateTokenPair(userID, username, role string) (*models
 		string(tokenDataJSON),
 		7*24*time.Hour,
 	); err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -66,11 +72,13 @@ func (s *TokenService) RefreshAccessToken(refreshToken string) (*models.TokenPai
 	key := fmt.Sprintf("refresh_token:%s", refreshToken)
 	data, err := s.redis.Get(key)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, errors.New("invalid or expired refresh token")
 	}
 
 	var tokenData models.RefreshTokenData
 	if err := json.Unmarshal([]byte(data), &tokenData); err != nil {
+		rollbar.Error(err)
 		return nil, errors.New("invalid token data")
 	}
 

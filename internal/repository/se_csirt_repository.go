@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/utils"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type SeCsirtRepository struct {
@@ -44,6 +46,7 @@ func (r *SeCsirtRepository) GetAll() ([]dto.SeCsirtResponse, error) {
 		ORDER BY se.created_at DESC
 	`)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -115,6 +118,7 @@ func (r *SeCsirtRepository) GetByID(id string) (*dto.SeCsirtResponse, error) {
 	)
 
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 

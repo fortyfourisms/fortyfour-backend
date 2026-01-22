@@ -11,6 +11,7 @@ type Config struct {
 	JWTSecret       string
 	Database        DatabaseConfig
 	Redis           RedisConfig
+	Rollbar         RollbarConfig
 	CasbinModelPath string
 }
 
@@ -27,6 +28,11 @@ type RedisConfig struct {
 	Port     string
 	Password string
 	DB       int
+}
+
+type RollbarConfig struct {
+	Token string
+	Env   string
 }
 
 func Load() *Config {
@@ -48,6 +54,10 @@ func Load() *Config {
 			DB:       getEnvAsInt("REDIS_DB", 0),
 		},
 		CasbinModelPath: getEnv("CASBIN_MODEL_PATH", absPath),
+		Rollbar: RollbarConfig{
+			Token: getEnv("ROLLBAR_TOKEN", ""),
+			Env:   getEnv("ROLLBAR_ENVIRONMENT", "development"),
+		},
 	}
 }
 

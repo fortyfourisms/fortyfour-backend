@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type IdentifikasiRepository struct {
@@ -40,6 +42,7 @@ func (r *IdentifikasiRepository) Create(req dto.CreateIdentifikasiRequest, id st
 func (r *IdentifikasiRepository) GetAll() ([]models.Identifikasi, error) {
 	rows, err := r.db.Query(`SELECT id, nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4, nilai_subdomain5 FROM identifikasi`)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -58,6 +61,7 @@ func (r *IdentifikasiRepository) GetByID(id string) (*models.Identifikasi, error
 	var i models.Identifikasi
 	err := row.Scan(&i.ID, &i.NilaiIdentifikasi, &i.NilaiSubdomain1, &i.NilaiSubdomain2, &i.NilaiSubdomain3, &i.NilaiSubdomain4, &i.NilaiSubdomain5)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	return &i, nil
@@ -75,11 +79,13 @@ func (r *IdentifikasiRepository) Update(id string, i models.Identifikasi) error 
 func (r *IdentifikasiRepository) Delete(id string) error {
 	res, err := r.db.Exec(`DELETE FROM identifikasi WHERE id=?`, id)
 	if err != nil {
+		rollbar.Error(err)
 		return err
 	}
 
 	rows, err := res.RowsAffected()
 	if err != nil {
+		rollbar.Error(err)
 		return err
 	}
 
