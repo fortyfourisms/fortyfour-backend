@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/rollbar/rollbar-go"
 )
 
 type Claims struct {
@@ -41,6 +42,8 @@ func GenerateAccessToken(userID string, username, role, secret string) (string, 
 func GenerateRefreshToken() (string, error) {
 	bytes := make([]byte, 32)
 	if _, err := rand.Read(bytes); err != nil {
+
+		rollbar.Error(err)
 		return "", err
 	}
 	return hex.EncodeToString(bytes), nil
@@ -53,6 +56,7 @@ func VerifyToken(tokenString, secret string) (*Claims, error) {
 	})
 
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 

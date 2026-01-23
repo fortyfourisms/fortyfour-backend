@@ -1,7 +1,6 @@
 package database
 
 import (
-	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -9,6 +8,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/rollbar/rollbar-go"
 )
 
 type Config struct {
@@ -50,6 +50,7 @@ func NewMySQLConnection(cfg Config) (*sql.DB, error) {
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error opening database: %w", err)
 	}
 
@@ -58,11 +59,9 @@ func NewMySQLConnection(cfg Config) (*sql.DB, error) {
 	db.SetMaxIdleConns(5)
 	db.SetConnMaxLifetime(5 * time.Minute)
 
-	// Tes connection
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	if err := db.PingContext(ctx); err != nil {
+	// Test connection
+	if err := db.Ping(); err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("error connecting to database: %w", err)
 	}
 

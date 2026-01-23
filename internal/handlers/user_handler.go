@@ -17,6 +17,7 @@ import (
 	"fortyfour-backend/internal/validator"
 
 	"github.com/google/uuid"
+	"github.com/rollbar/rollbar-go"
 )
 
 type UserHandler struct {
@@ -84,6 +85,7 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *UserHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
@@ -93,6 +95,7 @@ func (h *UserHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 func (h *UserHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 404, "User tidak ditemukan")
 		return
 	}
@@ -102,6 +105,7 @@ func (h *UserHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id s
 func (h *UserHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
@@ -113,12 +117,14 @@ func (h *UserHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	// Validasi menggunakan validator
 	if err := validator.Validate(req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
 
 	resp, err := h.service.Create(req)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -140,6 +146,7 @@ func (h *UserHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 
 	var req dto.UpdateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
@@ -156,6 +163,7 @@ func (h *UserHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 
 	// Validasi menggunakan validator
 	if err := validator.Validate(req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -167,6 +175,7 @@ func (h *UserHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 
 	resp, err := h.service.Update(id, req)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -193,6 +202,7 @@ func (h *UserHandler) handleUpdatePassword(w http.ResponseWriter, r *http.Reques
 
 	var req dto.UpdateUserPasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
@@ -203,11 +213,13 @@ func (h *UserHandler) handleUpdatePassword(w http.ResponseWriter, r *http.Reques
 
 	// Validasi
 	if err := validator.Validate(req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
 
 	if err := h.service.UpdatePassword(id, req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -233,12 +245,14 @@ func (h *UserHandler) handleUpdateProfilePhoto(w http.ResponseWriter, r *http.Re
 	}
 
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "File terlalu besar (max 10MB)")
 		return
 	}
 
 	file, header, err := r.FormFile("profile_photo")
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "File profile_photo wajib diisi")
 		return
 	}
@@ -255,18 +269,21 @@ func (h *UserHandler) handleUpdateProfilePhoto(w http.ResponseWriter, r *http.Re
 
 	dst, err := os.Create(filePath)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 500, "Gagal menyimpan file")
 		return
 	}
 	defer dst.Close()
 
 	if _, err := io.Copy(dst, file); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 500, "Gagal menyimpan file")
 		return
 	}
 
 	resp, err := h.service.UpdateProfilePhoto(id, filename)
 	if err != nil {
+		rollbar.Error(err)
 		os.Remove(filePath)
 		utils.RespondError(w, 400, err.Error())
 		return
@@ -295,12 +312,14 @@ func (h *UserHandler) handleUpdateBanner(w http.ResponseWriter, r *http.Request)
 	}
 
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "File terlalu besar (max 10MB)")
 		return
 	}
 
 	file, header, err := r.FormFile("banner")
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "File banner wajib diisi")
 		return
 	}
@@ -317,18 +336,21 @@ func (h *UserHandler) handleUpdateBanner(w http.ResponseWriter, r *http.Request)
 
 	dst, err := os.Create(filePath)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 500, "Gagal menyimpan file")
 		return
 	}
 	defer dst.Close()
 
 	if _, err := io.Copy(dst, file); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 500, "Gagal menyimpan file")
 		return
 	}
 
 	resp, err := h.service.UpdateBanner(id, filename)
 	if err != nil {
+		rollbar.Error(err)
 		os.Remove(filePath)
 		utils.RespondError(w, 400, err.Error())
 		return
@@ -346,6 +368,7 @@ func (h *UserHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 	}
 
 	if err := h.service.Delete(id); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}

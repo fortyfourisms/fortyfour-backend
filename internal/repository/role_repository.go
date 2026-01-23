@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rollbar/rollbar-go"
 )
 
 type RoleRepository interface {
@@ -68,6 +69,7 @@ func (r *roleRepository) GetByID(ctx context.Context, id string) (*models.Role, 
 	}
 
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -83,6 +85,7 @@ func (r *roleRepository) GetAll(ctx context.Context) ([]*models.Role, error) {
 
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -123,6 +126,7 @@ func (r *roleRepository) Update(ctx context.Context, role *models.Role) error {
 	)
 
 	if err != nil {
+		rollbar.Error(err)
 		return err
 	}
 
@@ -143,11 +147,13 @@ func (r *roleRepository) Delete(ctx context.Context, id string) error {
 
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
+		rollbar.Error(err)
 		return err
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
+		rollbar.Error(err)
 		return err
 	}
 
@@ -179,6 +185,7 @@ func (r *roleRepository) GetByName(ctx context.Context, name string) (*models.Ro
 	}
 
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
