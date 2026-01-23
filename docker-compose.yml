@@ -24,6 +24,9 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      ROLLBAR_TOKEN: ${ROLLBAR_TOKEN}
+      ROLLBAR_STATUS: ${ROLLBAR_STATUS}
       
       ENVIRONMENT: ${ENVIRONMENT:-production}
     networks:

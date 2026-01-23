@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/rs/cors"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -43,7 +44,7 @@ func InitRouter(
 	csirtH *handlers.CsirtHandler,
 	sdmCsirtH *handlers.SdmCsirtHandler,
 	seCsirtH *handlers.SeCsirtHandler,
-) *http.ServeMux {
+) http.Handler {
 	mux := http.NewServeMux()
 
 	// In main():
@@ -121,5 +122,13 @@ func InitRouter(
 	// Swagger UI
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
-	return mux
+	// CORS Configuration
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173", "https://admin.kssindustri.site", "https://fortyfouris.netlify.app"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "Origin", "Accept"},
+		AllowCredentials: true,
+	})
+
+	return c.Handler(mux)
 }
