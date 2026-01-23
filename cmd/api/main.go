@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -22,14 +21,16 @@ import (
 func main() {
 	cfg := config.Load()
 
-	fmt.Println(cfg, cfg.Rollbar.Token, cfg.Rollbar.Env)
 	rollbar.SetToken(cfg.Rollbar.Token)
 	rollbar.SetEnvironment(cfg.Rollbar.Env)
 	// Send a test message
 	rollbar.Info("Rollbar Go SDK initialized successfully!")
 
+	// Ensure all items are sent before the app exits
+	defer rollbar.Wait()
+
 	// call rollbar.Close() before the application exits to flush error message queue
-	// rollbar.Close()
+	rollbar.Close()
 
 	// Initialize MySQL database
 	db, err := database.NewMySQLConnection(database.Config{
@@ -170,7 +171,4 @@ func main() {
 	log.Println("SSE endpoint available at /api/events")
 
 	log.Fatal(http.ListenAndServe(cfg.Port, mux))
-
-	// Ensure all items are sent before the app exits
-	rollbar.Wait()
 }

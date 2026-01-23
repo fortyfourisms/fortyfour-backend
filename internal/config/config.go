@@ -11,8 +11,8 @@ type Config struct {
 	JWTSecret       string
 	Database        DatabaseConfig
 	Redis           RedisConfig
-	Rollbar         RollbarConfig
 	CasbinModelPath string
+	Rollbar         RollbarConfig
 }
 
 type DatabaseConfig struct {
