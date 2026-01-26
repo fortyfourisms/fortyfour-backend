@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/pkg/cache"
 	"time"
@@ -23,6 +24,8 @@ func NewTokenService(redis cache.RedisInterface, jwtSecret string) *TokenService
 		jwtSecret: jwtSecret,
 	}
 }
+
+var _ repository.TokenRepositoryInterface = (*TokenService)(nil)
 
 // GenerateTokenPair creates access & refresh tokens
 func (s *TokenService) GenerateTokenPair(userID, username, role string) (*models.TokenPair, error) {
@@ -70,6 +73,8 @@ func (s *TokenService) GenerateTokenPair(userID, username, role string) (*models
 // RefreshAccessToken validates a refresh token and issues new access token
 func (s *TokenService) RefreshAccessToken(refreshToken string) (*models.TokenPair, error) {
 	key := fmt.Sprintf("refresh_token:%s", refreshToken)
+
+	// 1. Ambil data token lama
 	data, err := s.redis.Get(key)
 	if err != nil {
 		rollbar.Error(err)
@@ -82,8 +87,17 @@ func (s *TokenService) RefreshAccessToken(refreshToken string) (*models.TokenPai
 		return nil, errors.New("invalid token data")
 	}
 
-	// FIX: Tambah parameter role
-	return s.GenerateTokenPair(tokenData.UserID, tokenData.Username, tokenData.Role)
+	// 2. REVOKE refresh token lama
+	if err := s.redis.Delete(key); err != nil {
+		return nil, err
+	}
+
+	// 3. Generate token baru
+	return s.GenerateTokenPair(
+		tokenData.UserID,
+		tokenData.Username,
+		tokenData.Role,
+	)
 }
 
 // RevokeRefreshToken deletes a single refresh token

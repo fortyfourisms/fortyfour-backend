@@ -10,10 +10,10 @@ import (
 )
 
 type IkasService struct {
-	repo *repository.IkasRepository
+	repo repository.IkasRepositoryInterface
 }
 
-func NewIkasService(repo *repository.IkasRepository) *IkasService {
+func NewIkasService(repo repository.IkasRepositoryInterface) *IkasService {
 	return &IkasService{repo: repo}
 }
 

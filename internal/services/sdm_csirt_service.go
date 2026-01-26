@@ -9,10 +9,10 @@ import (
 )
 
 type SdmCsirtService struct {
-	repo *repository.SdmCsirtRepository
+	repo repository.SdmCsirtRepositoryInterface
 }
 
-func NewSdmCsirtService(repo *repository.SdmCsirtRepository) *SdmCsirtService {
+func NewSdmCsirtService(repo repository.SdmCsirtRepositoryInterface) *SdmCsirtService {
 	return &SdmCsirtService{repo: repo}
 }
 

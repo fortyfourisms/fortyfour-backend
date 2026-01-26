@@ -10,10 +10,10 @@ import (
 )
 
 type CsirtService struct {
-	repo *repository.CsirtRepository
+	repo repository.CsirtRepositoryInterface
 }
 
-func NewCsirtService(repo *repository.CsirtRepository) *CsirtService {
+func NewCsirtService(repo repository.CsirtRepositoryInterface) *CsirtService {
 	return &CsirtService{repo: repo}
 }
 

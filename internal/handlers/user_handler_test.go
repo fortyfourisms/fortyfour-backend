@@ -19,6 +19,10 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+func strPtr(s string) *string {
+	return &s
+}
+
 func setupUserHandler() (*UserHandler, *testhelpers.MockUserRepository, *services.SSEService) {
 	mockRepo := testhelpers.NewMockUserRepository()
 	uploadPath := "./test_uploads"
@@ -91,13 +95,19 @@ func TestUserHandler_handleCreate(t *testing.T) {
 		Username: "newuser",
 		Password: "P@sJ0rd121!",
 		Email:    "newuser@example.com",
+		RoleID:   strPtr("role-user"),
 	}
+
 	body, _ := json.Marshal(reqBody)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/users", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
 
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "admin-id")
+	ctx = context.WithValue(ctx, middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
 	handler.handleCreate(w, req)
 
 	if w.Code != http.StatusCreated {
@@ -194,7 +204,7 @@ func TestUserHandler_handleUpdatePassword(t *testing.T) {
 	handler, mockRepo, _ := setupUserHandler()
 
 	// Create test user with hashed password
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("ruj4kBangOj@k"), bcrypt.DefaultCost)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("0ld!Pass#2023"), bcrypt.DefaultCost)
 	user := &models.User{
 		ID:        "test-id",
 		Username:  "testuser",
@@ -206,18 +216,25 @@ func TestUserHandler_handleUpdatePassword(t *testing.T) {
 	mockRepo.Create(user)
 
 	updateReq := dto.UpdateUserPasswordRequest{
-		OldPassword:        "ruj4kBangOj@k",
-		NewPassword:        "ruj4kBangOj@k!",
-		ConfirmNewPassword: "ruj4kBangOj@k!",
+		OldPassword:        "0ld!Pass#2023",
+		NewPassword:        "N3w@Strong$Pass2025",
+		ConfirmNewPassword: "N3w@Strong$Pass2025",
 	}
 	body, _ := json.Marshal(updateReq)
 
-	req := httptest.NewRequest(http.MethodPut, "/api/users/test-id/password", bytes.NewBuffer(body))
+	req := httptest.NewRequest(
+		http.MethodPut,
+		"/api/users/test-id/password",
+		bytes.NewBuffer(body),
+	)
 	req.Header.Set("Content-Type", "application/json")
-	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-id")
-	req = req.WithContext(ctx)
-	w := httptest.NewRecorder()
 
+	// Set context userID & role
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-id")
+	ctx = context.WithValue(ctx, middleware.Role, "user")
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
 	handler.handleUpdatePassword(w, req)
 
 	if w.Code != http.StatusOK {
@@ -226,21 +243,33 @@ func TestUserHandler_handleUpdatePassword(t *testing.T) {
 }
 
 func TestUserHandler_handleUpdatePassword_WrongUser(t *testing.T) {
-	handler, _, _ := setupUserHandler()
+	handler, mockRepo, _ := setupUserHandler()
+
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("0ld!Pass#2023"), bcrypt.DefaultCost)
+	user := &models.User{
+		ID:       "test-id",
+		Password: string(hashedPassword),
+	}
+	mockRepo.Create(user)
 
 	updateReq := dto.UpdateUserPasswordRequest{
-		OldPassword:        "OldPassword123!",
-		NewPassword:        "NewPassword123!",
-		ConfirmNewPassword: "NewPassword123!",
+		OldPassword:        "0ld!Pass#2023",
+		NewPassword:        "N3w@Strong$Pass2025",
+		ConfirmNewPassword: "N3w@Strong$Pass2025",
 	}
 	body, _ := json.Marshal(updateReq)
 
-	req := httptest.NewRequest(http.MethodPut, "/api/users/test-id/password", bytes.NewBuffer(body))
+	req := httptest.NewRequest(
+		http.MethodPut,
+		"/api/users/test-id/password",
+		bytes.NewBuffer(body),
+	)
 	req.Header.Set("Content-Type", "application/json")
+
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "other-user-id")
 	req = req.WithContext(ctx)
-	w := httptest.NewRecorder()
 
+	w := httptest.NewRecorder()
 	handler.handleUpdatePassword(w, req)
 
 	if w.Code != http.StatusForbidden {

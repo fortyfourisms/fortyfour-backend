@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -23,7 +24,23 @@ type Config struct {
 }
 
 func NewMySQLConnection(cfg Config) (*sql.DB, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
+	// Validasi Config
+	if cfg.Host == "" {
+		return nil, errors.New("host is required")
+	}
+	if cfg.Port == "" {
+		return nil, errors.New("port is required")
+	}
+	if cfg.User == "" {
+		return nil, errors.New("user is required")
+	}
+	if cfg.DBName == "" {
+		return nil, errors.New("database name is required")
+	}
+
+	// Dsn
+	dsn := fmt.Sprintf(
+		"%s:%s@tcp(%s:%s)/%s?parseTime=true",
 		cfg.User,
 		cfg.Password,
 		cfg.Host,
@@ -49,5 +66,6 @@ func NewMySQLConnection(cfg Config) (*sql.DB, error) {
 	}
 
 	log.Println("Successfully connected to MySQL database")
+
 	return db, nil
 }

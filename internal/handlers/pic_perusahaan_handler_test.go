@@ -80,8 +80,8 @@ func TestPICHandler_handleCreate(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "user-1")
 	req = req.WithContext(ctx)
-	w := httptest.NewRecorder()
 
+	w := httptest.NewRecorder()
 	handler.handleCreate(w, req)
 
 	if w.Code != http.StatusCreated {

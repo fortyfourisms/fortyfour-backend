@@ -9,10 +9,10 @@ import (
 )
 
 type SeCsirtService struct {
-	repo *repository.SeCsirtRepository
+	repo repository.SeCsirtRepositoryInterface
 }
 
-func NewSeCsirtService(repo *repository.SeCsirtRepository) *SeCsirtService {
+func NewSeCsirtService(repo repository.SeCsirtRepositoryInterface) *SeCsirtService {
 	return &SeCsirtService{repo: repo}
 }
 
