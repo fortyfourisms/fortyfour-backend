@@ -58,6 +58,13 @@ func InitRouter(
 	mux.HandleFunc("/api/refresh", strictLimiter.LimitByIP(authH.RefreshToken))
 	mux.HandleFunc("/api/logout", authH.Logout)
 
+	// MFA endpoints
+	// setup & enable -> protected (require Authorization header)
+	mux.HandleFunc("/api/mfa/setup", authM.Authenticate(authH.SetupMFA))
+	mux.HandleFunc("/api/mfa/enable", authM.Authenticate(authH.EnableMFA))
+	// verify -> public (called with mfa_token)
+	mux.HandleFunc("/api/mfa/verify", strictLimiter.LimitByIP(authH.VerifyMFA))
+
 	// Routes Users
 	mux.HandleFunc("/api/users", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(userHandler)))))
 	mux.HandleFunc("/api/users/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(userHandler)))))

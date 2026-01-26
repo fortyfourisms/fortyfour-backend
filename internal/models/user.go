@@ -15,4 +15,7 @@ type User struct {
 	Banner      *string   `json:"banner"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+
+	MFAEnabled bool    `json:"mfa_enabled"`
+	MFASecret  *string `json:"-"`
 }

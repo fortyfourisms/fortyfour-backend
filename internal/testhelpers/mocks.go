@@ -159,6 +159,21 @@ func (m *MockUserRepository) Delete(id string) error {
 	return errors.New("user not found")
 }
 
+// SetMFA - mock implementation to satisfy interface and tests
+func (m *MockUserRepository) SetMFA(userID string, secret *string, enabled bool) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for _, u := range m.users {
+		if u.ID == userID {
+			u.MFAEnabled = enabled
+			u.MFASecret = secret
+			return nil
+		}
+	}
+	return errors.New("user not found")
+}
+
 // ============================================================
 // Mock Post Repository
 // ============================================================
@@ -584,14 +599,14 @@ func (m *MockIdentifikasiRepository) Update(id string, identifikasi models.Ident
 }
 
 func (m *MockIdentifikasiRepository) Delete(id string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	if _, exists := m.identifikasis[id]; !exists {
-		return errors.New("identifikasi not found")
-	}
-	delete(m.identifikasis, id)
-	return nil
+if _, exists := m.identifikasis[id]; !exists {
+return errors.New("identifikasi not found")
+}
+delete(m.identifikasis, id)
+return nil
 }
 
 // ============================================================
@@ -610,61 +625,61 @@ func NewMockDeteksiRepository() *MockDeteksiRepository {
 }
 
 func (m *MockDeteksiRepository) Create(req dto.CreateDeteksiRequest, id string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	m.deteksis[id] = &models.Deteksi{
-		ID:              id,
-		NilaiDeteksi:    req.NilaiDeteksi,
-		NilaiSubdomain1: req.NilaiSubdomain1,
-		NilaiSubdomain2: req.NilaiSubdomain2,
-		NilaiSubdomain3: req.NilaiSubdomain3,
-	}
-	return nil
+m.deteksis[id] = &models.Deteksi{
+ID:              id,
+NilaiDeteksi:    req.NilaiDeteksi,
+NilaiSubdomain1: req.NilaiSubdomain1,
+NilaiSubdomain2: req.NilaiSubdomain2,
+NilaiSubdomain3: req.NilaiSubdomain3,
+}
+return nil
 }
 
 func (m *MockDeteksiRepository) GetAll() ([]models.Deteksi, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+m.mu.RLock()
+defer m.mu.RUnlock()
 
-	deteksis := make([]models.Deteksi, 0, len(m.deteksis))
-	for _, d := range m.deteksis {
-		deteksis = append(deteksis, *d)
-	}
-	return deteksis, nil
+deteksis := make([]models.Deteksi, 0, len(m.deteksis))
+for _, d := range m.deteksis {
+deteksis = append(deteksis, *d)
+}
+return deteksis, nil
 }
 
 func (m *MockDeteksiRepository) GetByID(id string) (*models.Deteksi, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+m.mu.RLock()
+defer m.mu.RUnlock()
 
-	deteksi, exists := m.deteksis[id]
-	if !exists {
-		return nil, errors.New("deteksi not found")
-	}
-	return deteksi, nil
+deteksi, exists := m.deteksis[id]
+if !exists {
+return nil, errors.New("deteksi not found")
+}
+return deteksi, nil
 }
 
 func (m *MockDeteksiRepository) Update(id string, deteksi models.Deteksi) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	if _, exists := m.deteksis[id]; !exists {
-		return errors.New("deteksi not found")
-	}
-	m.deteksis[id] = &deteksi
-	return nil
+if _, exists := m.deteksis[id]; !exists {
+return errors.New("deteksi not found")
+}
+m.deteksis[id] = &deteksi
+return nil
 }
 
 func (m *MockDeteksiRepository) Delete(id string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	if _, exists := m.deteksis[id]; !exists {
-		return errors.New("deteksi not found")
-	}
-	delete(m.deteksis, id)
-	return nil
+if _, exists := m.deteksis[id]; !exists {
+return errors.New("deteksi not found")
+}
+delete(m.deteksis, id)
+return nil
 }
 
 // ============================================================
@@ -698,47 +713,47 @@ func (m *MockGulihRepository) Create(req dto.CreateGulihRequest, id string) erro
 }
 
 func (m *MockGulihRepository) GetAll() ([]models.Gulih, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+m.mu.RLock()
+defer m.mu.RUnlock()
 
-	gulihs := make([]models.Gulih, 0, len(m.gulihs))
-	for _, g := range m.gulihs {
-		gulihs = append(gulihs, *g)
-	}
-	return gulihs, nil
+gulihs := make([]models.Gulih, 0, len(m.gulihs))
+for _, g := range m.gulihs {
+gulihs = append(gulihs, *g)
+}
+return gulihs, nil
 }
 
 func (m *MockGulihRepository) GetByID(id string) (*models.Gulih, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+m.mu.RLock()
+defer m.mu.RUnlock()
 
-	gulih, exists := m.gulihs[id]
-	if !exists {
-		return nil, errors.New("gulih not found")
-	}
-	return gulih, nil
+gulih, exists := m.gulihs[id]
+if !exists {
+return nil, errors.New("gulih not found")
+}
+return gulih, nil
 }
 
 func (m *MockGulihRepository) Update(id string, gulih models.Gulih) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	if _, exists := m.gulihs[id]; !exists {
-		return errors.New("gulih not found")
-	}
-	m.gulihs[id] = &gulih
-	return nil
+if _, exists := m.gulihs[id]; !exists {
+return errors.New("gulih not found")
+}
+m.gulihs[id] = &gulih
+return nil
 }
 
 func (m *MockGulihRepository) Delete(id string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	if _, exists := m.gulihs[id]; !exists {
-		return errors.New("gulih not found")
-	}
-	delete(m.gulihs, id)
-	return nil
+if _, exists := m.gulihs[id]; !exists {
+return errors.New("gulih not found")
+}
+delete(m.gulihs, id)
+return nil
 }
 
 // ============================================================
@@ -757,64 +772,64 @@ func NewMockProteksiRepository() *MockProteksiRepository {
 }
 
 func (m *MockProteksiRepository) Create(req dto.CreateProteksiRequest, id string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	m.proteksis[id] = &models.Proteksi{
-		ID:              id,
-		NilaiProteksi:   req.NilaiProteksi,
-		NilaiSubdomain1: req.NilaiSubdomain1,
-		NilaiSubdomain2: req.NilaiSubdomain2,
-		NilaiSubdomain3: req.NilaiSubdomain3,
-		NilaiSubdomain4: req.NilaiSubdomain4,
-		NilaiSubdomain5: req.NilaiSubdomain5,
-		NilaiSubdomain6: req.NilaiSubdomain6,
-	}
-	return nil
+m.proteksis[id] = &models.Proteksi{
+ID:              id,
+NilaiProteksi:   req.NilaiProteksi,
+NilaiSubdomain1: req.NilaiSubdomain1,
+NilaiSubdomain2: req.NilaiSubdomain2,
+NilaiSubdomain3: req.NilaiSubdomain3,
+NilaiSubdomain4: req.NilaiSubdomain4,
+NilaiSubdomain5: req.NilaiSubdomain5,
+NilaiSubdomain6: req.NilaiSubdomain6,
+}
+return nil
 }
 
 func (m *MockProteksiRepository) GetAll() ([]models.Proteksi, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+m.mu.RLock()
+defer m.mu.RUnlock()
 
-	proteksis := make([]models.Proteksi, 0, len(m.proteksis))
-	for _, p := range m.proteksis {
-		proteksis = append(proteksis, *p)
-	}
-	return proteksis, nil
+proteksis := make([]models.Proteksi, 0, len(m.proteksis))
+for _, p := range m.proteksis {
+proteksis = append(proteksis, *p)
+}
+return proteksis, nil
 }
 
 func (m *MockProteksiRepository) GetByID(id string) (*models.Proteksi, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+m.mu.RLock()
+defer m.mu.RUnlock()
 
-	proteksi, exists := m.proteksis[id]
-	if !exists {
-		return nil, errors.New("proteksi not found")
-	}
-	return proteksi, nil
+proteksi, exists := m.proteksis[id]
+if !exists {
+return nil, errors.New("proteksi not found")
+}
+return proteksi, nil
 }
 
 func (m *MockProteksiRepository) Update(id string, proteksi models.Proteksi) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	if _, exists := m.proteksis[id]; !exists {
-		return errors.New("proteksi not found")
-	}
-	m.proteksis[id] = &proteksi
-	return nil
+if _, exists := m.proteksis[id]; !exists {
+return errors.New("proteksi not found")
+}
+m.proteksis[id] = &proteksi
+return nil
 }
 
 func (m *MockProteksiRepository) Delete(id string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	if _, exists := m.proteksis[id]; !exists {
-		return errors.New("proteksi not found")
-	}
-	delete(m.proteksis, id)
-	return nil
+if _, exists := m.proteksis[id]; !exists {
+return errors.New("proteksi not found")
+}
+delete(m.proteksis, id)
+return nil
 }
 
 // ============================================================
@@ -833,76 +848,76 @@ func NewMockPICRepository() *MockPICRepository {
 }
 
 func (m *MockPICRepository) Create(req dto.CreatePICRequest, id string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	nama := ""
-	if req.Nama != nil {
-		nama = *req.Nama
-	}
-	telepon := ""
-	if req.Telepon != nil {
-		telepon = *req.Telepon
-	}
+nama := ""
+if req.Nama != nil {
+nama = *req.Nama
+}
+telepon := ""
+if req.Telepon != nil {
+telepon = *req.Telepon
+}
 
-	m.pics[id] = &dto.PICResponse{
-		ID:        id,
-		Nama:      nama,
-		Telepon:   telepon,
-		CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
-		UpdatedAt: time.Now().Format("2006-01-02 15:04:05"),
-	}
-	return nil
+m.pics[id] = &dto.PICResponse{
+ID:        id,
+Nama:      nama,
+Telepon:   telepon,
+CreatedAt: time.Now().Format("2006-01-02 15:04:05"),
+UpdatedAt: time.Now().Format("2006-01-02 15:04:05"),
+}
+return nil
 }
 
 func (m *MockPICRepository) GetAll() ([]dto.PICResponse, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+m.mu.RLock()
+defer m.mu.RUnlock()
 
-	pics := make([]dto.PICResponse, 0, len(m.pics))
-	for _, p := range m.pics {
-		pics = append(pics, *p)
-	}
-	return pics, nil
+pics := make([]dto.PICResponse, 0, len(m.pics))
+for _, p := range m.pics {
+pics = append(pics, *p)
+}
+return pics, nil
 }
 
 func (m *MockPICRepository) GetByID(id string) (*dto.PICResponse, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+m.mu.RLock()
+defer m.mu.RUnlock()
 
-	pic, exists := m.pics[id]
-	if !exists {
-		return nil, errors.New("pic not found")
-	}
-	return pic, nil
+pic, exists := m.pics[id]
+if !exists {
+return nil, errors.New("pic not found")
+}
+return pic, nil
 }
 
 func (m *MockPICRepository) Update(id string, req dto.UpdatePICRequest) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	if _, exists := m.pics[id]; !exists {
-		return errors.New("pic not found")
-	}
-	if req.Nama != nil {
-		m.pics[id].Nama = *req.Nama
-	}
-	if req.Telepon != nil {
-		m.pics[id].Telepon = *req.Telepon
-	}
-	m.pics[id].UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
-	return nil
+if _, exists := m.pics[id]; !exists {
+return errors.New("pic not found")
+}
+if req.Nama != nil {
+m.pics[id].Nama = *req.Nama
+}
+if req.Telepon != nil {
+m.pics[id].Telepon = *req.Telepon
+}
+m.pics[id].UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
+return nil
 }
 
 func (m *MockPICRepository) Delete(id string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	if _, exists := m.pics[id]; !exists {
-		return errors.New("pic not found")
-	}
-	delete(m.pics, id)
-	return nil
+if _, exists := m.pics[id]; !exists {
+return errors.New("pic not found")
+}
+delete(m.pics, id)
+return nil
 }
 
 // ============================================================
@@ -915,74 +930,74 @@ type MockPerusahaanRepository struct {
 }
 
 func NewMockPerusahaanRepository() *MockPerusahaanRepository {
-	return &MockPerusahaanRepository{
-		perusahaans: make(map[string]*dto.PerusahaanResponse),
-	}
+return &MockPerusahaanRepository{
+perusahaans: make(map[string]*dto.PerusahaanResponse),
+}
 }
 
 func (m *MockPerusahaanRepository) Create(req dto.CreatePerusahaanRequest, id string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	nama := ""
-	if req.NamaPerusahaan != nil {
-		nama = *req.NamaPerusahaan
-	}
-	photo := ""
-	if req.Photo != nil {
-		photo = *req.Photo
-	}
+nama := ""
+if req.NamaPerusahaan != nil {
+nama = *req.NamaPerusahaan
+}
+photo := ""
+if req.Photo != nil {
+photo = *req.Photo
+}
 
-	m.perusahaans[id] = &dto.PerusahaanResponse{
-		ID:             id,
-		Photo:          photo,
-		NamaPerusahaan: nama,
-		CreatedAt:      time.Now().Format("2006-01-02 15:04:05"),
-		UpdatedAt:      time.Now().Format("2006-01-02 15:04:05"),
-	}
-	return nil
+m.perusahaans[id] = &dto.PerusahaanResponse{
+ID:             id,
+Photo:          photo,
+NamaPerusahaan: nama,
+CreatedAt:      time.Now().Format("2006-01-02 15:04:05"),
+UpdatedAt:      time.Now().Format("2006-01-02 15:04:05"),
+}
+return nil
 }
 
 func (m *MockPerusahaanRepository) GetAll() ([]dto.PerusahaanResponse, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+m.mu.RLock()
+defer m.mu.RUnlock()
 
-	perusahaans := make([]dto.PerusahaanResponse, 0, len(m.perusahaans))
-	for _, p := range m.perusahaans {
-		perusahaans = append(perusahaans, *p)
-	}
-	return perusahaans, nil
+perusahaans := make([]dto.PerusahaanResponse, 0, len(m.perusahaans))
+for _, p := range m.perusahaans {
+perusahaans = append(perusahaans, *p)
+}
+return perusahaans, nil
 }
 
 func (m *MockPerusahaanRepository) GetByID(id string) (*dto.PerusahaanResponse, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
+m.mu.RLock()
+defer m.mu.RUnlock()
 
-	perusahaan, exists := m.perusahaans[id]
-	if !exists {
-		return nil, errors.New("perusahaan not found")
-	}
-	return perusahaan, nil
+perusahaan, exists := m.perusahaans[id]
+if !exists {
+return nil, errors.New("perusahaan not found")
+}
+return perusahaan, nil
 }
 
 func (m *MockPerusahaanRepository) Update(id string, perusahaan dto.PerusahaanResponse) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	if _, exists := m.perusahaans[id]; !exists {
-		return errors.New("perusahaan not found")
-	}
-	m.perusahaans[id] = &perusahaan
-	return nil
+if _, exists := m.perusahaans[id]; !exists {
+return errors.New("perusahaan not found")
+}
+m.perusahaans[id] = &perusahaan
+return nil
 }
 
 func (m *MockPerusahaanRepository) Delete(id string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+m.mu.Lock()
+defer m.mu.Unlock()
 
-	if _, exists := m.perusahaans[id]; !exists {
-		return errors.New("perusahaan not found")
-	}
-	delete(m.perusahaans, id)
-	return nil
+if _, exists := m.perusahaans[id]; !exists {
+return errors.New("perusahaan not found")
+}
+delete(m.perusahaans, id)
+return nil
 }

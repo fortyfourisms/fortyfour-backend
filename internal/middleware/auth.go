@@ -2,7 +2,6 @@
 package middleware
 
 import (
-	"context"
 	"fortyfour-backend/internal/utils"
 	"net/http"
 	"strings"
@@ -54,9 +53,9 @@ func (m *AuthMiddleware) Authenticate(next http.HandlerFunc) http.HandlerFunc {
 		r.Header.Set("X-User-Role", claims.Role)
 
 		// Set ke context juga
-		ctx := context.WithValue(r.Context(), UserIDKey, UserIDString)
-		ctx = context.WithValue(ctx, Username, claims.Username)
-		ctx = context.WithValue(ctx, Role, claims.Role)
+		ctx := SetUserID(r.Context(), UserIDString)
+		ctx = SetUsername(ctx, claims.Username)
+		ctx = SetRole(ctx, claims.Role)
 
 		next(w, r.WithContext(ctx))
 	}
