@@ -1,37 +1,29 @@
 package database_test
 
 import (
-	"database/sql"
-	"fortyfour-backend/pkg/database"
 	"testing"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestNewMySQLConnection(t *testing.T) {
-	tests := []struct {
-		name string // description of this test case
-		// Named input parameters for target function.
-		cfg     database.Config
-		want    *sql.DB
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, gotErr := database.NewMySQLConnection(tt.cfg)
-			if gotErr != nil {
-				if !tt.wantErr {
-					t.Errorf("NewMySQLConnection() failed: %v", gotErr)
-				}
-				return
-			}
-			if tt.wantErr {
-				t.Fatal("NewMySQLConnection() succeeded unexpectedly")
-			}
-			// TODO: update the condition below to compare got with tt.want.
-			if true {
-				t.Errorf("NewMySQLConnection() = %v, want %v", got, tt.want)
-			}
-		})
-	}
+func TestNewMySQLConnection_MockOnly(t *testing.T) {
+	// Test only the mock behavior
+	db, mock, err := sqlmock.New(sqlmock.MonitorPingsOption(true))
+	assert.NoError(t, err)
+	defer db.Close()
+
+	t.Run("Successful ping", func(t *testing.T) {
+		mock.ExpectPing()
+		err = db.Ping()
+		assert.NoError(t, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("Failed ping", func(t *testing.T) {
+		mock.ExpectPing().WillReturnError(assert.AnError)
+		err = db.Ping()
+		assert.Error(t, err)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
 }

@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/utils"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type PerusahaanRepository struct {
@@ -40,6 +42,7 @@ func (r *PerusahaanRepository) GetAll() ([]dto.PerusahaanResponse, error) {
 		LEFT JOIN sektor s ON ss.id_sektor = s.id
 	`)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -99,6 +102,7 @@ func (r *PerusahaanRepository) GetByID(id string) (*dto.PerusahaanResponse, erro
 		&namaSektor,
 	)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 

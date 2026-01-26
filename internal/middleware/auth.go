@@ -5,6 +5,8 @@ import (
 	"fortyfour-backend/internal/utils"
 	"net/http"
 	"strings"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type AuthMiddleware struct {
@@ -43,6 +45,7 @@ func (m *AuthMiddleware) Authenticate(next http.HandlerFunc) http.HandlerFunc {
 
 		claims, err := utils.VerifyToken(parts[1], m.jwtSecret)
 		if err != nil {
+			rollbar.Error(err)
 			utils.RespondError(w, http.StatusUnauthorized, "Invalid or expired token")
 			return
 		}

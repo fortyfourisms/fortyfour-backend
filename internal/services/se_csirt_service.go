@@ -5,6 +5,7 @@ import (
 	"fortyfour-backend/internal/repository"
 
 	"github.com/google/uuid"
+	"github.com/rollbar/rollbar-go"
 )
 
 type SeCsirtServiceInterface interface {
@@ -16,10 +17,10 @@ type SeCsirtServiceInterface interface {
 }
 
 type SeCsirtService struct {
-	repo *repository.SeCsirtRepository
+	repo repository.SeCsirtRepositoryInterface
 }
 
-func NewSeCsirtService(repo *repository.SeCsirtRepository) *SeCsirtService {
+func NewSeCsirtService(repo repository.SeCsirtRepositoryInterface) *SeCsirtService {
 	return &SeCsirtService{repo: repo}
 }
 
@@ -39,6 +40,7 @@ func (s *SeCsirtService) GetByID(id string) (*dto.SeCsirtResponse, error) {
 func (s *SeCsirtService) Update(id string, req dto.UpdateSeCsirtRequest) error {
 	existing, err := s.repo.GetByID(id)
 	if err != nil {
+		rollbar.Error(err)
 		return err
 	}
 

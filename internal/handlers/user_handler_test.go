@@ -15,8 +15,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func strPtr(s string) *string {
+	return &s
+}
 
 func setupUserHandler() (*UserHandler, *testhelpers.MockUserRepository, *services.SSEService) {
 	mockRepo := testhelpers.NewMockUserRepository()
@@ -88,15 +93,21 @@ func TestUserHandler_handleCreate(t *testing.T) {
 
 	reqBody := dto.CreateUserRequest{
 		Username: "newuser",
-		Password: "Password123!",
+		Password: "P@sJ0rd121!",
 		Email:    "newuser@example.com",
+		RoleID:   strPtr("role-user"),
 	}
+
 	body, _ := json.Marshal(reqBody)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/users", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
 
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "admin-id")
+	ctx = context.WithValue(ctx, middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
 	handler.handleCreate(w, req)
 
 	if w.Code != http.StatusCreated {
@@ -129,8 +140,9 @@ func TestUserHandler_handleUpdate(t *testing.T) {
 
 	// Create test user
 	user := &models.User{
-		ID:        "test-id",
+		ID:        "id1",
 		Username:  "testuser",
+		Password:  "P@sJ0rd121!",
 		Email:     "test@example.com",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -143,18 +155,17 @@ func TestUserHandler_handleUpdate(t *testing.T) {
 	}
 	body, _ := json.Marshal(updateReq)
 
-	req := httptest.NewRequest(http.MethodPut, "/api/users/test-id", bytes.NewBuffer(body))
+	req := httptest.NewRequest(http.MethodPut, "/api/users/id1", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
-	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-id")
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "user-1")
 	ctx = context.WithValue(ctx, middleware.Role, "admin")
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	handler.handleUpdate(w, req, "test-id")
+	handler.handleUpdate(w, req, "id1")
 
-	if w.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", w.Code)
-	}
+	// Assert
+	assert.Equal(t, http.StatusOK, w.Code, "Response body: %s", w.Body.String())
 }
 
 func TestUserHandler_handleUpdate_Unauthorized(t *testing.T) {
@@ -193,7 +204,7 @@ func TestUserHandler_handleUpdatePassword(t *testing.T) {
 	handler, mockRepo, _ := setupUserHandler()
 
 	// Create test user with hashed password
-	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("OldPassword123!"), bcrypt.DefaultCost)
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("0ld!Pass#2023"), bcrypt.DefaultCost)
 	user := &models.User{
 		ID:        "test-id",
 		Username:  "testuser",
@@ -205,18 +216,25 @@ func TestUserHandler_handleUpdatePassword(t *testing.T) {
 	mockRepo.Create(user)
 
 	updateReq := dto.UpdateUserPasswordRequest{
-		OldPassword:        "OldPassword123!",
-		NewPassword:        "NewPassword123!",
-		ConfirmNewPassword: "NewPassword123!",
+		OldPassword:        "0ld!Pass#2023",
+		NewPassword:        "N3w@Strong$Pass2025",
+		ConfirmNewPassword: "N3w@Strong$Pass2025",
 	}
 	body, _ := json.Marshal(updateReq)
 
-	req := httptest.NewRequest(http.MethodPut, "/api/users/test-id/password", bytes.NewBuffer(body))
+	req := httptest.NewRequest(
+		http.MethodPut,
+		"/api/users/test-id/password",
+		bytes.NewBuffer(body),
+	)
 	req.Header.Set("Content-Type", "application/json")
-	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-id")
-	req = req.WithContext(ctx)
-	w := httptest.NewRecorder()
 
+	// Set context userID & role
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-id")
+	ctx = context.WithValue(ctx, middleware.Role, "user")
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
 	handler.handleUpdatePassword(w, req)
 
 	if w.Code != http.StatusOK {
@@ -225,21 +243,33 @@ func TestUserHandler_handleUpdatePassword(t *testing.T) {
 }
 
 func TestUserHandler_handleUpdatePassword_WrongUser(t *testing.T) {
-	handler, _, _ := setupUserHandler()
+	handler, mockRepo, _ := setupUserHandler()
+
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("0ld!Pass#2023"), bcrypt.DefaultCost)
+	user := &models.User{
+		ID:       "test-id",
+		Password: string(hashedPassword),
+	}
+	mockRepo.Create(user)
 
 	updateReq := dto.UpdateUserPasswordRequest{
-		OldPassword:        "OldPassword123!",
-		NewPassword:        "NewPassword123!",
-		ConfirmNewPassword: "NewPassword123!",
+		OldPassword:        "0ld!Pass#2023",
+		NewPassword:        "N3w@Strong$Pass2025",
+		ConfirmNewPassword: "N3w@Strong$Pass2025",
 	}
 	body, _ := json.Marshal(updateReq)
 
-	req := httptest.NewRequest(http.MethodPut, "/api/users/test-id/password", bytes.NewBuffer(body))
+	req := httptest.NewRequest(
+		http.MethodPut,
+		"/api/users/test-id/password",
+		bytes.NewBuffer(body),
+	)
 	req.Header.Set("Content-Type", "application/json")
+
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "other-user-id")
 	req = req.WithContext(ctx)
-	w := httptest.NewRecorder()
 
+	w := httptest.NewRecorder()
 	handler.handleUpdatePassword(w, req)
 
 	if w.Code != http.StatusForbidden {
@@ -301,7 +331,7 @@ func TestUserHandler_ServeHTTP(t *testing.T) {
 		{"GET all", http.MethodGet, "/api/users", http.StatusOK},
 		{"GET by ID", http.MethodGet, "/api/users/test-id", http.StatusNotFound},
 		{"POST create", http.MethodPost, "/api/users", http.StatusBadRequest},
-		{"PUT update", http.MethodPut, "/api/users/test-id", http.StatusBadRequest},
+		{"PUT update", http.MethodPut, "/api/users/test-id", http.StatusForbidden},
 		{"DELETE", http.MethodDelete, "/api/users/test-id", http.StatusForbidden},
 		{"Method not allowed", http.MethodPatch, "/api/users", http.StatusMethodNotAllowed},
 	}

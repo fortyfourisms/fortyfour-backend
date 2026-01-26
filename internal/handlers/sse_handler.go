@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/rollbar/rollbar-go"
 )
 
 type SSEHandler struct {
@@ -71,6 +72,7 @@ func (h *SSEHandler) HandleSSE(w http.ResponseWriter, r *http.Request) {
 				_, err := w.Write([]byte(message))
 				if err != nil {
 					log.Printf("SSE: Error writing to client %s: %v", clientID, err)
+					rollbar.Error(err)
 					return
 				}
 				w.(http.Flusher).Flush()

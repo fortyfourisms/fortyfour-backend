@@ -8,6 +8,8 @@ import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type SdmCsirtHandler struct {
@@ -51,6 +53,7 @@ func (h *SdmCsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *SdmCsirtHandler) handleGetAll(w http.ResponseWriter) {
 	data, err := h.service.GetAll()
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -69,6 +72,7 @@ func (h *SdmCsirtHandler) handleGetAll(w http.ResponseWriter) {
 func (h *SdmCsirtHandler) handleGetByID(w http.ResponseWriter, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 404, err.Error())
 		return
 	}
@@ -91,6 +95,7 @@ func (h *SdmCsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	id, err := h.service.Create(req)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -114,6 +119,7 @@ func (h *SdmCsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 	json.NewDecoder(r.Body).Decode(&req)
 
 	if err := h.service.Update(id, req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -132,6 +138,7 @@ func (h *SdmCsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 // @Router       /api/sdm_csirt/{id} [delete]
 func (h *SdmCsirtHandler) handleDelete(w http.ResponseWriter, id string) {
 	if err := h.service.Delete(id); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}

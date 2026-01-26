@@ -7,6 +7,8 @@ import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/repository"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type RoleService struct {
@@ -23,6 +25,7 @@ func (s *RoleService) Create(req dto.CreateRoleRequest) (*dto.RoleResponse, erro
 	// Check if role name already exists
 	existingRole, err := s.repo.GetByName(ctx, req.Name)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	if existingRole != nil {
@@ -46,6 +49,7 @@ func (s *RoleService) GetByID(id string) (*dto.RoleResponse, error) {
 
 	role, err := s.repo.GetByID(ctx, id)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	if role == nil {
@@ -60,6 +64,7 @@ func (s *RoleService) GetAll() ([]*dto.RoleResponse, error) {
 
 	roles, err := s.repo.GetAll(ctx)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -76,6 +81,7 @@ func (s *RoleService) Update(id string, req dto.UpdateRoleRequest) (*dto.RoleRes
 
 	role, err := s.repo.GetByID(ctx, id)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	if role == nil {
@@ -86,6 +92,7 @@ func (s *RoleService) Update(id string, req dto.UpdateRoleRequest) (*dto.RoleRes
 	if req.Name != "" && req.Name != role.Name {
 		existingRole, err := s.repo.GetByName(ctx, req.Name)
 		if err != nil {
+			rollbar.Error(err)
 			return nil, err
 		}
 		if existingRole != nil {
@@ -100,6 +107,7 @@ func (s *RoleService) Update(id string, req dto.UpdateRoleRequest) (*dto.RoleRes
 
 	if err := s.repo.Update(ctx, role); err != nil {
 		if err == sql.ErrNoRows {
+			rollbar.Error(err)
 			return nil, errors.New("role not found")
 		}
 		return nil, err
@@ -113,6 +121,7 @@ func (s *RoleService) Delete(id string) error {
 
 	err := s.repo.Delete(ctx, id)
 	if err == sql.ErrNoRows {
+		rollbar.Error(err)
 		return errors.New("role not found")
 	}
 	return err

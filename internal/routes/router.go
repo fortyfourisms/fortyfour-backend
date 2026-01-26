@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/rs/cors"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -46,10 +47,10 @@ func InitRouter(
 	sektorH *handlers.SektorHandler,
 	subsectorH *handlers.SubSektorHandler,
 	seH *handlers.SEHandler,
-) *http.ServeMux {
+) http.Handler {
 	mux := http.NewServeMux()
 
-	// In main():
+	// Health check
 	mux.HandleFunc("/api/health", healthHandler)
 
 	// Routes Auth
@@ -97,36 +98,36 @@ func InitRouter(
 	mux.HandleFunc("/api/identifikasi/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(identifikasiH)))))
 
 	// Route Gulih
-	mux.HandleFunc("/api/gulih", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(gulihH))))
-	mux.HandleFunc("/api/gulih/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(gulihH))))
+	mux.HandleFunc("/api/gulih", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(gulihH)))))
+	mux.HandleFunc("/api/gulih/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(gulihH)))))
 
 	// Route Proteksi
-	mux.HandleFunc("/api/proteksi", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(proteksiH))))
-	mux.HandleFunc("/api/proteksi/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(proteksiH))))
+	mux.HandleFunc("/api/proteksi", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(proteksiH)))))
+	mux.HandleFunc("/api/proteksi/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(proteksiH)))))
 
 	// Route Deteksi
-	mux.HandleFunc("/api/deteksi", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(deteksiH))))
-	mux.HandleFunc("/api/deteksi/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(deteksiH))))
+	mux.HandleFunc("/api/deteksi", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(deteksiH)))))
+	mux.HandleFunc("/api/deteksi/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(deteksiH)))))
 
 	// Route Ikas
-	mux.HandleFunc("/api/ikas", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(ikasH))))
-	mux.HandleFunc("/api/ikas/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(ikasH))))
+	mux.HandleFunc("/api/ikas", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(ikasH)))))
+	mux.HandleFunc("/api/ikas/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(ikasH)))))
 
 	// Route Role
 	mux.HandleFunc("/api/role", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(roleH)))))
 	mux.HandleFunc("/api/role/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(roleH)))))
 
 	// Route CSIRT
-	mux.HandleFunc("/api/csirt", authM.Authenticate(utils.AdaptHandler(csirtH)))
-	mux.HandleFunc("/api/csirt/", authM.Authenticate(utils.AdaptHandler(csirtH)))
+	mux.HandleFunc("/api/csirt", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(csirtH)))))
+	mux.HandleFunc("/api/csirt/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(csirtH)))))
 
 	// Route SDM_CSIRT
-	mux.HandleFunc("/api/sdm_csirt", authM.Authenticate(utils.AdaptHandler(sdmCsirtH)))
-	mux.HandleFunc("/api/sdm_csirt/", authM.Authenticate(utils.AdaptHandler(sdmCsirtH)))
+	mux.HandleFunc("/api/sdm_csirt", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
+	mux.HandleFunc("/api/sdm_csirt/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
 
 	// Route SE_CSIRT
-	mux.HandleFunc("/api/se_csirt", authM.Authenticate(utils.AdaptHandler(seCsirtH)))
-	mux.HandleFunc("/api/se_csirt/", authM.Authenticate(utils.AdaptHandler(seCsirtH)))
+	mux.HandleFunc("/api/se_csirt", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(seCsirtH)))))
+	mux.HandleFunc("/api/se_csirt/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(seCsirtH)))))
 
 	// Route Sektor
 	mux.HandleFunc("/api/sektor", authM.Authenticate(utils.AdaptHandler(sektorH)))
@@ -143,5 +144,13 @@ func InitRouter(
 	// Swagger UI
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
-	return mux
+	// CORS Configuration
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:5173", "https://admin.kssindustri.site", "https://fortyfouris.netlify.app"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type", "Origin", "Accept"},
+		AllowCredentials: true,
+	})
+
+	return c.Handler(mux)
 }

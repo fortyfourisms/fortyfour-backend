@@ -21,6 +21,11 @@ type UserRepositoryInterface interface {
 	SetMFA(userID string, secret *string, enabled bool) error
 }
 
+type TokenRepositoryInterface interface {
+	GenerateTokenPair(userID, username, role string) (*models.TokenPair, error)
+	RevokeRefreshToken(refreshToken string) error
+}
+
 // PostRepositoryInterface defines methods for post data access
 type PostRepositoryInterface interface {
 	Create(post *models.Post) error
@@ -94,6 +99,73 @@ type GulihRepositoryInterface interface {
 	Delete(id string) error
 }
 
+// IkasRepositoryInterface
+type IkasRepositoryInterface interface {
+	//CREATE DOMAIN
+	CreateIdentifikasi(id string, data *dto.CreateIdentifikasiData) (float64, error)
+	CreateProteksi(id string, data *dto.CreateProteksiData) (float64, error)
+	CreateDeteksi(id string, data *dto.CreateDeteksiData) (float64, error)
+	CreateGulih(id string, data *dto.CreateGulihData) (float64, error)
+
+	//CREATE IKAS
+	Create(
+		req dto.CreateIkasRequest,
+		id string,
+		nilaiKematangan float64,
+		idIden, idProt, idDet, idGul string,
+	) error
+
+	//READ
+	GetAll() ([]dto.IkasResponse, error)
+	GetByID(id string) (*dto.IkasResponse, error)
+
+	//UPDATE IKAS
+	Update(id string, req dto.UpdateIkasRequest) error
+
+	//UPDATE DOMAIN
+	UpdateIdentifikasi(id string, data *dto.UpdateIdentifikasiData) (float64, error)
+	UpdateProteksi(id string, data *dto.UpdateProteksiData) (float64, error)
+	UpdateDeteksi(id string, data *dto.UpdateDeteksiData) (float64, error)
+	UpdateGulih(id string, data *dto.UpdateGulihData) (float64, error)
+
+	//DELETE
+	Delete(id string) error
+
+	//IMPORT
+	ParseExcelForImport(fileData []byte) (*dto.CreateIkasRequest, error)
+
+	//HELPER
+	FindPerusahaanByName(namaPerusahaan string) (string, error)
+}
+
+// CsirtRepositoryInterface
+type CsirtRepositoryInterface interface {
+	Create(req dto.CreateCsirtRequest, id string) error
+	GetByID(id string) (*models.Csirt, error)
+	GetAllWithPerusahaan() ([]dto.CsirtResponse, error)
+	GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, error)
+	Update(id string, csirt models.Csirt) error
+	Delete(id string) error
+}
+
+// SdmCsirtRepositoryInterface
+type SdmCsirtRepositoryInterface interface {
+	Create(req dto.CreateSdmCsirtRequest, id string) error
+	GetAll() ([]dto.SdmCsirtResponse, error)
+	GetByID(id string) (*dto.SdmCsirtResponse, error)
+	Update(id string, req dto.SdmCsirtResponse) error
+	Delete(id string) error
+}
+
+// SeCsirtRepositoryInterface
+type SeCsirtRepositoryInterface interface {
+	Create(req dto.CreateSeCsirtRequest, id string) error
+	GetAll() ([]dto.SeCsirtResponse, error)
+	GetByID(id string) (*dto.SeCsirtResponse, error)
+	Update(id string, req dto.SeCsirtResponse) error
+	Delete(id string) error
+}
+
 // SektorRepositoryInterface
 type SektorRepositoryInterface interface {
 	GetAll() ([]dto.SektorResponse, error)
@@ -106,6 +178,7 @@ type SubSektorRepositoryInterface interface {
 	GetByID(id string) (*dto.SubSektorResponse, error)
 	GetBySektorID(sektorID string) ([]dto.SubSektorResponse, error)
 }
+
 // SERepositoryInterface
 type SERepositoryInterface interface {
 	Create(req dto.CreateSERequest, id string, totalBobot int, kategori string) error

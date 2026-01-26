@@ -5,9 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/pkg/cache"
 	"time"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type TokenService struct {
@@ -22,15 +25,19 @@ func NewTokenService(redis cache.RedisInterface, jwtSecret string) *TokenService
 	}
 }
 
+var _ repository.TokenRepositoryInterface = (*TokenService)(nil)
+
 // GenerateTokenPair creates access & refresh tokens
 func (s *TokenService) GenerateTokenPair(userID, username, role string) (*models.TokenPair, error) {
 	accessToken, expiresAt, err := utils.GenerateAccessToken(userID, username, role, s.jwtSecret)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("failed to generate access token: %w", err)
 	}
 
 	refreshToken, err := utils.GenerateRefreshToken()
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("failed to generate refresh token: %w", err)
 	}
 
@@ -43,6 +50,7 @@ func (s *TokenService) GenerateTokenPair(userID, username, role string) (*models
 
 	tokenDataJSON, err := json.Marshal(tokenData)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("failed to marshal refresh token data: %w", err)
 	}
 
@@ -51,6 +59,7 @@ func (s *TokenService) GenerateTokenPair(userID, username, role string) (*models
 		string(tokenDataJSON),
 		7*24*time.Hour,
 	); err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -64,18 +73,31 @@ func (s *TokenService) GenerateTokenPair(userID, username, role string) (*models
 // RefreshAccessToken validates a refresh token and issues new access token
 func (s *TokenService) RefreshAccessToken(refreshToken string) (*models.TokenPair, error) {
 	key := fmt.Sprintf("refresh_token:%s", refreshToken)
+
+	// 1. Ambil data token lama
 	data, err := s.redis.Get(key)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, errors.New("invalid or expired refresh token")
 	}
 
 	var tokenData models.RefreshTokenData
 	if err := json.Unmarshal([]byte(data), &tokenData); err != nil {
+		rollbar.Error(err)
 		return nil, errors.New("invalid token data")
 	}
 
-	// FIX: Tambah parameter role
-	return s.GenerateTokenPair(tokenData.UserID, tokenData.Username, tokenData.Role)
+	// 2. REVOKE refresh token lama
+	if err := s.redis.Delete(key); err != nil {
+		return nil, err
+	}
+
+	// 3. Generate token baru
+	return s.GenerateTokenPair(
+		tokenData.UserID,
+		tokenData.Username,
+		tokenData.Role,
+	)
 }
 
 // RevokeRefreshToken deletes a single refresh token

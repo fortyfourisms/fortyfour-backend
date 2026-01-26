@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/rollbar/rollbar-go"
 
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/services"
@@ -47,6 +48,7 @@ func (h *CsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *CsirtHandler) handleGetAll(w http.ResponseWriter) {
 	data, err := h.service.GetAll()
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
@@ -56,6 +58,7 @@ func (h *CsirtHandler) handleGetAll(w http.ResponseWriter) {
 func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 404, "Data tidak ditemukan")
 		return
 	}
@@ -64,6 +67,7 @@ func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, id string) {
 
 func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "Gagal membaca form-data")
 		return
 	}
@@ -77,6 +81,7 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	photoPath, err := saveUploadedFile(r, "photo_csirt", "uploads/csirt_photo")
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -84,6 +89,7 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	rfcPath, err := saveUploadedFile(r, "file_rfc2350", "uploads/rfc2350")
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -91,6 +97,7 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	pgpPath, err := saveUploadedFile(r, "file_public_key_pgp", "uploads/pgp")
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -98,6 +105,7 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.Create(req)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -107,6 +115,7 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "Gagal membaca form-data")
 		return
 	}
@@ -124,19 +133,23 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 	}
 
 	if path, err := saveUploadedFile(r, "photo_csirt", "uploads/csirt_photo"); err == nil && path != "" {
+		rollbar.Error(err)
 		req.PhotoCsirt = &path
 	}
 
 	if path, err := saveUploadedFile(r, "file_rfc2350", "uploads/rfc2350"); err == nil && path != "" {
+		rollbar.Error(err)
 		req.FileRFC2350 = &path
 	}
 
 	if path, err := saveUploadedFile(r, "file_public_key_pgp", "uploads/pgp"); err == nil && path != "" {
+		rollbar.Error(err)
 		req.FilePublicKeyPGP = &path
 	}
 
 	resp, err := h.service.Update(id, req)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -146,6 +159,7 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 
 func (h *CsirtHandler) handleDelete(w http.ResponseWriter, id string) {
 	if err := h.service.Delete(id); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -155,6 +169,7 @@ func (h *CsirtHandler) handleDelete(w http.ResponseWriter, id string) {
 func saveUploadedFile(r *http.Request, fieldName, uploadDir string) (string, error) {
 	file, header, err := r.FormFile(fieldName)
 	if err != nil {
+		rollbar.Error(err)
 		return "", nil
 	}
 	defer file.Close()
@@ -167,11 +182,13 @@ func saveUploadedFile(r *http.Request, fieldName, uploadDir string) (string, err
 
 	dst, err := os.Create(fullPath)
 	if err != nil {
+		rollbar.Error(err)
 		return "", err
 	}
 	defer dst.Close()
 
 	if _, err := io.Copy(dst, file); err != nil {
+		rollbar.Error(err)
 		return "", err
 	}
 

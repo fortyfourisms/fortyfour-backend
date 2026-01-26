@@ -14,10 +14,23 @@ import (
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/pkg/cache"
 	"fortyfour-backend/pkg/database"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 func main() {
 	cfg := config.Load()
+
+	rollbar.SetToken(cfg.Rollbar.Token)
+	rollbar.SetEnvironment(cfg.Rollbar.Env)
+	// Send a test message
+	rollbar.Info("Rollbar Go SDK initialized successfully!")
+
+	// Ensure all items are sent before the app exits
+	defer rollbar.Wait()
+
+	// call rollbar.Close() before the application exits to flush error message queue
+	rollbar.Close()
 
 	// Initialize MySQL database
 	db, err := database.NewMySQLConnection(database.Config{
@@ -29,6 +42,7 @@ func main() {
 	})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
+		rollbar.Error(err)
 	}
 	defer db.Close()
 
@@ -41,6 +55,7 @@ func main() {
 	})
 	if err != nil {
 		log.Fatal("Failed to connect to Redis:", err)
+		rollbar.Error(err)
 	}
 	defer redisClient.Close()
 
@@ -48,12 +63,15 @@ func main() {
 	casbinService, err := services.NewCasbinService(cfg.Database.GetDSN(), cfg.CasbinModelPath)
 	if err != nil {
 		log.Fatal("Failed to initialize Casbin:", err)
+		rollbar.Error(err)
 	}
 	log.Println("Casbin RBAC initialized successfully with GORM adapter")
+	rollbar.Info("Casbin RBAC initialized successfully with GORM adapter")
 
 	// Initialize SSE Service
 	sseService := services.NewSSEService()
 	log.Println("SSE Service initialized successfully")
+	rollbar.Info("SSE Service initialized successfully")
 
 	// Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
@@ -157,6 +175,7 @@ func main() {
 
 	// Start server
 	log.Printf("Server starting on %s", cfg.Port)
+	rollbar.Info("Server starting on %s", cfg.Port)
 	log.Println("Rate limiting enabled:")
 	log.Println("  - Auth endpoints: 5 requests/minute per IP")
 	log.Println("  - Public posts: 1000 requests/minute per IP")

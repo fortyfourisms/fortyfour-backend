@@ -25,10 +25,10 @@ func TestAuthHandler_Register_Success(t *testing.T) {
 	// Arrange
 	handler, _ := setupAuthHandler()
 
-	reqBody := map[string]string{
-		"username": "testuser",
-		"password": "password123",
-		"email":    "test@example.com",
+	reqBody := dto.RegisterRequest{
+		Username: "testuser",
+		Password: "P@sJord121",
+		Email:    "test@example.com",
 	}
 	body, _ := json.Marshal(reqBody)
 
@@ -71,7 +71,7 @@ func TestAuthHandler_Login_Success(t *testing.T) {
 	// Register user first
 	registerBody := map[string]string{
 		"username": "testuser",
-		"password": "password123",
+		"password": "P@ssj0rd121",
 		"email":    "test@example.com",
 	}
 	body, _ := json.Marshal(registerBody)
@@ -83,7 +83,7 @@ func TestAuthHandler_Login_Success(t *testing.T) {
 	// Now login
 	loginBody := map[string]string{
 		"username": "testuser",
-		"password": "password123",
+		"password": "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -117,7 +117,7 @@ func TestAuthHandler_RefreshToken_Success(t *testing.T) {
 	// Register user and get tokens
 	registerBody := map[string]string{
 		"username": "testuser",
-		"password": "password123",
+		"password": "P@ssj0rd121",
 		"email":    "test@example.com",
 	}
 	body, _ := json.Marshal(registerBody)
@@ -186,7 +186,7 @@ func TestAuthHandler_Logout_Success(t *testing.T) {
 	// Register user and get tokens
 	registerBody := map[string]string{
 		"username": "testuser",
-		"password": "password123",
+		"password": "P@ssj0rd121",
 		"email":    "test@example.com",
 	}
 	body, _ := json.Marshal(registerBody)

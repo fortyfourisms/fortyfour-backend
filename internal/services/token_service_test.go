@@ -79,6 +79,7 @@ func TestTokenService_RefreshAccessToken_Success(t *testing.T) {
 	}
 
 	// Wait lebih lama untuk memastikan timestamp berbeda (1 detik)
+	// JWT exp claim rounded ke seconds, jadi perlu delay untuk token berbeda
 	time.Sleep(1 * time.Second)
 
 	// Act
@@ -101,22 +102,28 @@ func TestTokenService_RefreshAccessToken_Success(t *testing.T) {
 		t.Error("expected new refresh token to be generated")
 	}
 
+	// ✅ ACCESS TOKEN: Bisa sama atau beda tergantung timing
 	// JWT tokens bisa sama jika dibuat di detik yang sama karena `exp` claim rounded ke seconds
-	// Jadi cek bahwa token tidak kosong saja, bukan harus berbeda
 	if newTokens.AccessToken == initialTokens.AccessToken {
 		t.Log("Note: Access tokens are the same - this can happen if generated in same second (JWT exp is in seconds)")
 	}
 
-	// Check token rotation jika implementasi service support token rotation
-	if newTokens.RefreshToken == initialTokens.RefreshToken {
-		t.Log("Note: Refresh token not rotated - this is expected if service doesn't implement token rotation")
-		// Atau bisa t.Error jika expect token rotation harus ada
-		// t.Error("expected new refresh token to be different (token rotation)")
+	// ✅ REFRESH TOKEN ROTATION: Check apakah token lama di-revoke
+	oldKey := "refresh_token:" + initialTokens.RefreshToken
+	exists, _ := redis.Exists(oldKey)
+	if exists {
+		t.Error("expected old refresh token to be revoked (token rotation)")
 	}
 
-	_, err = service.RefreshAccessToken(newTokens.RefreshToken)
-	if err != nil {
-		t.Error("expected new refresh token to be usable")
+	// ✅ Check token baru bisa digunakan
+	if newTokens.RefreshToken == initialTokens.RefreshToken {
+		t.Log("Note: Refresh token not rotated - same token reused")
+	} else {
+		// Verify new refresh token is usable
+		_, err = service.RefreshAccessToken(newTokens.RefreshToken)
+		if err != nil {
+			t.Error("expected new refresh token to be usable")
+		}
 	}
 }
 

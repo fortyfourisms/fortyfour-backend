@@ -13,6 +13,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pquerna/otp/totp"
+	"github.com/rollbar/rollbar-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -68,18 +69,25 @@ func (s *AuthService) Register(username, password, email string, roleID *string,
 		return nil, nil, errors.New("username harus 3-50 karakter")
 	}
 
+	// ===== VALIDASI PASSWORD =====
 	personalInfo := []string{username, email}
 	config := validator.DefaultPasswordConfig()
+	
+	// Validasi password dengan semua kriteria keamanan
 	if err := validator.ValidatePassword(password, config, personalInfo...); err != nil {
+		rollbar.Error(err)
 		return nil, nil, err
 	}
 
-	// uniqueness
+	// Check if username already exists
 	if _, err := s.userRepo.FindByUsername(username); err == nil {
 		return nil, nil, errors.New("username sudah digunakan")
 	}
+
+	// Check if email already exists
 	exists, err := s.userRepo.EmailExists(email, nil)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, nil, err
 	}
 	if exists {
@@ -89,6 +97,7 @@ func (s *AuthService) Register(username, password, email string, roleID *string,
 	// hash password
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, nil, err
 	}
 
@@ -101,18 +110,21 @@ func (s *AuthService) Register(username, password, email string, roleID *string,
 	}
 
 	if err := s.userRepo.Create(user); err != nil {
+		rollbar.Error(err)
 		return nil, nil, err
 	}
 
-	// refresh user (to get role_name etc)
+	// Fetch user kembali untuk mendapatkan role_name
 	user, err = s.userRepo.FindByID(user.ID)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, nil, err
 	}
 
-	// Generate token pair via TokenService (assumed returns *models.TokenPair)
+	// Generate token pair with role (returns *models.TokenPair)
 	modelTokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, nil, err
 	}
 
@@ -122,9 +134,11 @@ func (s *AuthService) Register(username, password, email string, roleID *string,
 /* ===================== Login ===================== */
 // Login authenticates a user and returns user + token pair DTO (tokens == nil if MFA required)
 func (s *AuthService) Login(username, password string) (*models.User, *dto.TokenPair, error) {
+	// Trim spaces
 	username = strings.TrimSpace(username)
 	password = strings.TrimSpace(password)
 
+	// Validasi field tidak boleh kosong
 	if username == "" {
 		return nil, nil, errors.New("username wajib diisi")
 	}
@@ -134,10 +148,12 @@ func (s *AuthService) Login(username, password string) (*models.User, *dto.Token
 
 	user, err := s.userRepo.FindByUsername(username)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, nil, errors.New("username atau password salah")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		rollbar.Error(err)
 		return nil, nil, errors.New("username atau password salah")
 	}
 
@@ -146,8 +162,10 @@ func (s *AuthService) Login(username, password string) (*models.User, *dto.Token
 		return user, nil, nil
 	}
 
+	// Generate token pair with role
 	modelTokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, nil, err
 	}
 
@@ -155,11 +173,16 @@ func (s *AuthService) Login(username, password string) (*models.User, *dto.Token
 }
 
 /* ===================== Logout ===================== */
+// Logout revokes a single refresh token
 func (s *AuthService) Logout(refreshToken string) error {
+	// Trim spaces
 	refreshToken = strings.TrimSpace(refreshToken)
+
+	// Validasi token tidak boleh kosong
 	if refreshToken == "" {
 		return errors.New("refresh token wajib diisi")
 	}
+
 	return s.tokenService.RevokeRefreshToken(refreshToken)
 }
 
@@ -169,6 +192,7 @@ func (s *AuthService) Logout(refreshToken string) error {
 func (s *AuthService) SetupMFA(userID string) (string, string, error) {
 	user, err := s.userRepo.FindByID(userID)
 	if err != nil {
+		rollbar.Error(err)
 		return "", "", err
 	}
 
@@ -177,6 +201,7 @@ func (s *AuthService) SetupMFA(userID string) (string, string, error) {
 		AccountName: user.Email,
 	})
 	if err != nil {
+		rollbar.Error(err)
 		return "", "", err
 	}
 
@@ -184,6 +209,7 @@ func (s *AuthService) SetupMFA(userID string) (string, string, error) {
 	redisKey := fmt.Sprintf("mfa_setup:%s", userID)
 
 	if err := s.tokenService.redis.Set(redisKey, secret, 10*time.Minute); err != nil {
+		rollbar.Error(err)
 		return "", "", err
 	}
 
@@ -195,6 +221,7 @@ func (s *AuthService) EnableMFA(userID, code string) error {
 	redisKey := fmt.Sprintf("mfa_setup:%s", userID)
 	secret, err := s.tokenService.redis.Get(redisKey)
 	if err != nil {
+		rollbar.Error(err)
 		return errors.New("mfa setup expired or not found")
 	}
 
@@ -203,6 +230,7 @@ func (s *AuthService) EnableMFA(userID, code string) error {
 	}
 
 	if err := s.userRepo.SetMFA(userID, &secret, true); err != nil {
+		rollbar.Error(err)
 		return err
 	}
 
@@ -216,6 +244,7 @@ func (s *AuthService) CreateMFAPending(userID string) (string, error) {
 	key := fmt.Sprintf("mfa_pending:%s", token)
 
 	if err := s.tokenService.redis.Set(key, userID, 5*time.Minute); err != nil {
+		rollbar.Error(err)
 		return "", err
 	}
 	return token, nil
@@ -226,11 +255,13 @@ func (s *AuthService) VerifyMFA(mfaToken, code string) (*models.User, *dto.Token
 	key := fmt.Sprintf("mfa_pending:%s", mfaToken)
 	userID, err := s.tokenService.redis.Get(key)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, nil, errors.New("invalid or expired mfa token")
 	}
 
 	user, err := s.userRepo.FindByID(userID)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, nil, err
 	}
 
@@ -244,6 +275,7 @@ func (s *AuthService) VerifyMFA(mfaToken, code string) (*models.User, *dto.Token
 
 	modelTokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, nil, err
 	}
 

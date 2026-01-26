@@ -12,7 +12,7 @@ import (
 func setupUserService() (*UserService, *testhelpers.MockUserRepository) {
 	mockRepo := testhelpers.NewMockUserRepository()
 	uploadPath := "./test_uploads"
-	os.MkdirAll(uploadPath, os.ModePerm)
+	_ = os.MkdirAll(uploadPath, os.ModePerm)
 	service := NewUserService(mockRepo, uploadPath)
 	return service, mockRepo
 }
@@ -28,8 +28,8 @@ func TestUserService_GetAll_Success(t *testing.T) {
 
 	user1 := testhelpers.CreateTestUser("id1", "user1", "user1@test.com")
 	user2 := testhelpers.CreateTestUser("id2", "user2", "user2@test.com")
-	mockRepo.Create(user1)
-	mockRepo.Create(user2)
+	_ = mockRepo.Create(user1)
+	_ = mockRepo.Create(user2)
 
 	result, err := service.GetAll()
 
@@ -64,7 +64,7 @@ func TestUserService_GetByID_Success(t *testing.T) {
 	service, mockRepo := setupUserService()
 
 	user := testhelpers.CreateTestUser("test-id", "testuser", "test@test.com")
-	mockRepo.Create(user)
+	_ = mockRepo.Create(user)
 
 	result, err := service.GetByID("test-id")
 
@@ -185,7 +185,7 @@ func TestUserService_Create_DuplicateUsername(t *testing.T) {
 	service, mockRepo := setupUserService()
 
 	user := testhelpers.CreateTestUser("id1", "existinguser", "existing@test.com")
-	mockRepo.Create(user)
+	_ = mockRepo.Create(user)
 
 	req := dto.CreateUserRequest{
 		Username: "existinguser",
@@ -207,7 +207,7 @@ func TestUserService_Create_DuplicateEmail(t *testing.T) {
 	service, mockRepo := setupUserService()
 
 	user := testhelpers.CreateTestUser("id1", "user1", "existing@test.com")
-	mockRepo.Create(user)
+	_ = mockRepo.Create(user)
 
 	req := dto.CreateUserRequest{
 		Username: "newuser",
@@ -235,7 +235,10 @@ func TestUserService_Update_Success(t *testing.T) {
 	service, mockRepo := setupUserService()
 
 	user := testhelpers.CreateTestUser("test-id", "olduser", "old@test.com")
-	mockRepo.Create(user)
+	err := mockRepo.Create(user)
+	if err != nil {
+		t.Fatalf("failed setup user: %v", err)
+	}
 
 	newUsername := "newuser"
 	newEmail := "new@test.com"
@@ -263,8 +266,8 @@ func TestUserService_Update_Conflict(t *testing.T) {
 	// create two users
 	a := testhelpers.CreateTestUser("id-a", "user1", "u1@example.com")
 	b := testhelpers.CreateTestUser("id-b", "user2", "u2@example.com")
-	mockRepo.Create(a)
-	mockRepo.Create(b)
+	_ = mockRepo.Create(a)
+	_ = mockRepo.Create(b)
 
 	// try to update a to use b's username -> conflict
 	conflictReq := dto.UpdateUserRequest{Username: &b.Username}
@@ -281,7 +284,7 @@ func TestUserService_Update_InvalidUsername(t *testing.T) {
 	service, mockRepo := setupUserService()
 
 	user := testhelpers.CreateTestUser("test-id", "testuser", "test@example.com")
-	mockRepo.Create(user)
+	_ = mockRepo.Create(user)
 
 	invalidUsername := "ab"
 	updateReq := dto.UpdateUserRequest{Username: &invalidUsername}
@@ -298,7 +301,7 @@ func TestUserService_Update_InvalidEmail(t *testing.T) {
 	service, mockRepo := setupUserService()
 
 	user := testhelpers.CreateTestUser("test-id", "testuser", "test@example.com")
-	mockRepo.Create(user)
+	_ = mockRepo.Create(user)
 
 	invalidEmail := "not-an-email"
 	updateReq := dto.UpdateUserRequest{Email: &invalidEmail}
@@ -323,7 +326,7 @@ func TestUserService_UpdatePassword_Success(t *testing.T) {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("OldP@ssword123!"), bcrypt.DefaultCost)
 	user := testhelpers.CreateTestUser("test-id", "testuser", "test@test.com")
 	user.Password = string(hashedPassword)
-	mockRepo.Create(user)
+	_ = mockRepo.Create(user)
 
 	req := dto.UpdateUserPasswordRequest{
 		OldPassword:        "OldP@ssword123!",
@@ -354,7 +357,7 @@ func TestUserService_UpdatePassword_WrongOldPassword(t *testing.T) {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("CorrectP@ssword123!"), bcrypt.DefaultCost)
 	user := testhelpers.CreateTestUser("test-id", "testuser", "test@test.com")
 	user.Password = string(hashedPassword)
-	mockRepo.Create(user)
+	_ = mockRepo.Create(user)
 
 	req := dto.UpdateUserPasswordRequest{
 		OldPassword:        "WrongP@ssword123!",
@@ -378,7 +381,7 @@ func TestUserService_UpdatePassword_TooShort(t *testing.T) {
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("OldP@ssword123!"), bcrypt.DefaultCost)
 	user := testhelpers.CreateTestUser("test-id", "testuser", "test@example.com")
 	user.Password = string(hashedPassword)
-	mockRepo.Create(user)
+	_ = mockRepo.Create(user)
 
 	req := dto.UpdateUserPasswordRequest{
 		OldPassword:        "OldP@ssword123!",
@@ -405,7 +408,7 @@ func TestUserService_Delete_Success(t *testing.T) {
 	service, mockRepo := setupUserService()
 
 	user := testhelpers.CreateTestUser("test-id", "testuser", "test@test.com")
-	mockRepo.Create(user)
+	_ = mockRepo.Create(user)
 
 	err := service.Delete("test-id")
 

@@ -70,8 +70,9 @@ func TestPICHandler_handleCreate(t *testing.T) {
 	handler, _, _ := setupPICHandler()
 
 	reqBody := dto.CreatePICRequest{
-		Nama:    stringPtr("New PIC"),
-		Telepon: stringPtr("081234567890"),
+		Nama:         stringPtr("New PIC"),
+		Telepon:      stringPtr("081234567890"),
+		IDPerusahaan: stringPtr("123e4567-e89b-12d3-a456-426614174000"),
 	}
 	body, _ := json.Marshal(reqBody)
 
@@ -79,8 +80,8 @@ func TestPICHandler_handleCreate(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "user-1")
 	req = req.WithContext(ctx)
-	w := httptest.NewRecorder()
 
+	w := httptest.NewRecorder()
 	handler.handleCreate(w, req)
 
 	if w.Code != http.StatusCreated {

@@ -6,6 +6,7 @@ import (
 	"fortyfour-backend/internal/models"
 
 	"github.com/google/uuid"
+	"github.com/rollbar/rollbar-go"
 )
 
 type UserRepository struct {
@@ -48,7 +49,12 @@ func (r *UserRepository) Create(user *models.User) error {
 		user.IDJabatan,
 	)
 
-	return err
+	if err != nil {
+		rollbar.Error(err)
+		return err
+	}
+
+	return nil
 }
 
 func (r *UserRepository) FindByID(id string) (*models.User, error) {
@@ -98,6 +104,7 @@ func (r *UserRepository) FindByID(id string) (*models.User, error) {
 		return nil, errors.New("user not found")
 	}
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -177,6 +184,7 @@ func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
 		return nil, errors.New("user not found")
 	}
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -223,6 +231,9 @@ func (r *UserRepository) Update(user *models.User) error {
 		user.IDJabatan,
 		user.ID,
 	)
+	if err != nil {
+		rollbar.Error(err)
+	}
 	return err
 }
 
@@ -243,6 +254,9 @@ func (r *UserRepository) UpdateWithPhoto(user *models.User) error {
 		user.Banner,
 		user.ID,
 	)
+	if err != nil {
+		rollbar.Error(err)
+	}
 	return err
 }
 
@@ -253,6 +267,9 @@ func (r *UserRepository) UpdatePassword(id, hashedPassword string) error {
 		WHERE id = ?
 	`
 	_, err := r.db.Exec(query, hashedPassword, id)
+	if err != nil {
+		rollbar.Error(err)
+	}
 	return err
 }
 
@@ -264,11 +281,17 @@ func (r *UserRepository) SetMFA(userID string, secret *string, enabled bool) err
 		WHERE id = ?
 	`
 	_, err := r.db.Exec(query, secret, enabled, userID)
+	if err != nil {
+		rollbar.Error(err)
+	}
 	return err
 }
 
 func (r *UserRepository) Delete(id string) error {
 	_, err := r.db.Exec(`DELETE FROM users WHERE id = ?`, id)
+	if err != nil {
+		rollbar.Error(err)
+	}
 	return err
 }
 
@@ -289,6 +312,7 @@ func (r *UserRepository) FindAll() ([]models.User, error) {
 
 	rows, err := r.db.Query(query)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -314,6 +338,7 @@ func (r *UserRepository) FindAll() ([]models.User, error) {
 			&user.UpdatedAt,
 		)
 		if err != nil {
+			rollbar.Error(err)
 			return nil, err
 		}
 
@@ -351,6 +376,9 @@ func (r *UserRepository) GetPasswordByID(id string) (string, error) {
 	if err == sql.ErrNoRows {
 		return "", errors.New("user not found")
 	}
+	if err != nil {
+		rollbar.Error(err)
+	}
 	return password, err
 }
 
@@ -368,7 +396,11 @@ func (r *UserRepository) EmailExists(email string, excludeID *string) (bool, err
 	}
 
 	err := r.db.QueryRow(query, args...).Scan(&count)
-	return count > 0, err
+	if err != nil {
+		rollbar.Error(err)
+		return false, err
+	}
+	return count > 0, nil
 }
 
 func (r *UserRepository) UsernameExists(username string, excludeID *string) (bool, error) {
@@ -385,5 +417,9 @@ func (r *UserRepository) UsernameExists(username string, excludeID *string) (boo
 	}
 
 	err := r.db.QueryRow(query, args...).Scan(&count)
-	return count > 0, err
+	if err != nil {
+		rollbar.Error(err)
+		return false, err
+	}
+	return count > 0, nil
 }

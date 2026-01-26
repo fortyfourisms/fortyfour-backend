@@ -11,6 +11,8 @@ import (
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/internal/validator"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 // AuthHandler handles authentication-related HTTP endpoints.
@@ -39,12 +41,14 @@ func NewAuthHandler(authService *services.AuthService, tokenService *services.To
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	var req dto.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		rollbar.Error(err)
 		return
 	}
 
@@ -56,12 +60,14 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	// Validasi menggunakan validator
 	if err := validator.Validate(req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
 	user, tokens, err := h.authService.Register(req.Username, req.Password, req.Email, req.RoleID, req.IDJabatan)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
@@ -89,12 +95,14 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	var req dto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		rollbar.Error(err)
 		return
 	}
 
@@ -105,12 +113,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Validasi menggunakan validator
 	if err := validator.Validate(req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
 	user, tokens, err := h.authService.Login(req.Username, req.Password)
 	if err != nil {
 		utils.RespondError(w, http.StatusUnauthorized, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
@@ -119,12 +129,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		mfaToken, err := h.authService.CreateMFAPending(user.ID)
 		if err != nil {
 			utils.RespondError(w, http.StatusInternalServerError, "failed to create mfa token")
+			rollbar.Error(err)
 			return
 		}
 		utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
 			"mfa_required": true,
 			"mfa_token":    mfaToken,
-			"message":      "MFA required. Submit code to /api/mfa/verify",
+			"message":      "MFA required. Please verify using your MFA code.",
 		})
 		return
 	}
@@ -138,16 +149,28 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// RefreshToken ...
+// RefreshToken godoc
+// @Summary      Refresh access token
+// @Description  Generate new access & refresh token pair
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        refresh body dto.RefreshTokenRequest true "Refresh token payload"
+// @Success      200  {object} dto.TokenPair
+// @Failure      400  {object} dto.ErrorResponse
+// @Failure      401  {object} dto.ErrorResponse
+// @Router       /api/refresh [post]
 func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	var req dto.RefreshTokenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		rollbar.Error(err)
 		return
 	}
 
@@ -157,6 +180,7 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	// Validasi menggunakan validator
 	if err := validator.Validate(req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
@@ -164,6 +188,7 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	modelTokens, err := h.tokenService.RefreshAccessToken(req.RefreshToken)
 	if err != nil {
 		utils.RespondError(w, http.StatusUnauthorized, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
@@ -181,16 +206,27 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Logout ...
+// Logout godoc
+// @Summary      Logout user
+// @Description  Revoke refresh token
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        logout body dto.LogoutRequest true "Logout payload"
+// @Success      200  {object} dto.MessageResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Router       /api/logout [post]
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	var req dto.LogoutRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		rollbar.Error(err)
 		return
 	}
 
@@ -200,11 +236,13 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	// Validasi menggunakan validator
 	if err := validator.Validate(req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
 	if err := h.authService.Logout(req.RefreshToken); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
@@ -219,6 +257,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -231,6 +270,7 @@ func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
 	uri, secret, err := h.authService.SetupMFA(userID)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
@@ -244,6 +284,7 @@ func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) EnableMFA(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -258,11 +299,13 @@ func (h *AuthHandler) EnableMFA(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "invalid body")
+		rollbar.Error(err)
 		return
 	}
 
 	if err := h.authService.EnableMFA(userID, req.Code); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
@@ -273,6 +316,7 @@ func (h *AuthHandler) EnableMFA(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) VerifyMFA(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
@@ -282,12 +326,14 @@ func (h *AuthHandler) VerifyMFA(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "invalid body")
+		rollbar.Error(err)
 		return
 	}
 
 	user, tokens, err := h.authService.VerifyMFA(req.MFAToken, req.Code)
 	if err != nil {
 		utils.RespondError(w, http.StatusUnauthorized, err.Error())
+		rollbar.Error(err)
 		return
 	}
 

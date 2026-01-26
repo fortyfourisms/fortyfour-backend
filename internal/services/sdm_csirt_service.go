@@ -5,6 +5,7 @@ import (
 	"fortyfour-backend/internal/repository"
 
 	"github.com/google/uuid"
+	"github.com/rollbar/rollbar-go"
 )
 
 type SdmCsirtServiceInterface interface {
@@ -16,10 +17,10 @@ type SdmCsirtServiceInterface interface {
 }
 
 type SdmCsirtService struct {
-	repo *repository.SdmCsirtRepository
+	repo repository.SdmCsirtRepositoryInterface
 }
 
-func NewSdmCsirtService(repo *repository.SdmCsirtRepository) *SdmCsirtService {
+func NewSdmCsirtService(repo repository.SdmCsirtRepositoryInterface) *SdmCsirtService {
 	return &SdmCsirtService{repo: repo}
 }
 
@@ -39,6 +40,7 @@ func (s *SdmCsirtService) GetByID(id string) (*dto.SdmCsirtResponse, error) {
 func (s *SdmCsirtService) Update(id string, req dto.UpdateSdmCsirtRequest) error {
 	existing, err := s.repo.GetByID(id)
 	if err != nil {
+		rollbar.Error(err)
 		return err
 	}
 

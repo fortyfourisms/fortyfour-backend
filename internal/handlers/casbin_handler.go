@@ -8,6 +8,8 @@ import (
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type CasbinHandler struct {
@@ -52,6 +54,7 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 	var req dto.AddPolicyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		rollbar.Error(err)
 		return
 	}
 
@@ -63,6 +66,7 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 	added, err := h.casbinService.AddPolicy(req.Role, req.Resource, req.Action)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
@@ -104,6 +108,7 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 
 	var req dto.BulkAddPolicyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -115,6 +120,7 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 
 	result, err := h.casbinService.BulkAddPolicies(policies)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -167,12 +173,14 @@ func (h *CasbinHandler) RemovePolicy(w http.ResponseWriter, r *http.Request) {
 
 	var req dto.RemovePolicyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	removed, err := h.casbinService.RemovePolicy(req.Role, req.Resource, req.Action)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

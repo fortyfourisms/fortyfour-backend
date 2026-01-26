@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/rollbar/rollbar-go"
 )
 
 type PerusahaanServiceInterface interface {
@@ -49,6 +50,7 @@ func (s *PerusahaanService) Create(req dto.CreatePerusahaanRequest) (*dto.Perusa
 	// Generate ID dan simpan
 	id := uuid.New().String()
 	if err := s.repo.Create(req, id); err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	return s.repo.GetByID(id)
@@ -65,6 +67,7 @@ func (s *PerusahaanService) GetByID(id string) (*dto.PerusahaanResponse, error) 
 func (s *PerusahaanService) Update(id string, req dto.UpdatePerusahaanRequest) (*dto.PerusahaanResponse, error) {
 	perusahaan, err := s.repo.GetByID(id)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -98,6 +101,7 @@ func (s *PerusahaanService) Update(id string, req dto.UpdatePerusahaanRequest) (
 	}
 
 	if err := s.repo.Update(id, *perusahaan); err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
