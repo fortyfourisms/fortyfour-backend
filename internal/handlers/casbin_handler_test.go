@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/casbin/casbin/v2"
-	"github.com/casbin/casbin/v2/model"
+	"github.com/casbin/casbin/v3"
+	"github.com/casbin/casbin/v3/model"
 
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
