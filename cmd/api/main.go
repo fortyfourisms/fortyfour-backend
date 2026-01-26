@@ -12,14 +12,22 @@ import (
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/routes"
 	"fortyfour-backend/internal/services"
+	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/pkg/cache"
 	"fortyfour-backend/pkg/database"
 
+	"github.com/joho/godotenv"
 	"github.com/rollbar/rollbar-go"
 	"github.com/rs/cors"
 )
 
 func main() {
+
+	// Load env
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using system env")
+	}
+
 	cfg := config.Load()
 
 	rollbar.SetToken(cfg.Rollbar.Token)
@@ -71,6 +79,12 @@ func main() {
 	log.Println("SSE Service initialized successfully")
 	rollbar.Info("SSE Service initialized successfully")
 
+	// Initialize Gemini Client
+	if err != nil {
+		log.Fatal("Failed to initialize Gemini client:", err)
+	}
+	log.Println("Gemini client initialized successfully")
+
 	// Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
 	perusahaanRepo := repository.NewPerusahaanRepository(db)
@@ -85,6 +99,10 @@ func main() {
 	sdmCsirtRepo := repository.NewSdmCsirtRepository(db)
 	seCsirtRepo := repository.NewSeCsirtRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
+	repo := repository.NewInMemoryChatRepo()
+
+	// Init utils
+	gemini := utils.NewGeminiClient()
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
@@ -102,6 +120,7 @@ func main() {
 	seCsirtService := services.NewSeCsirtService(seCsirtRepo)
 	userService := services.NewUserService(userRepo, "./uploads")
 	roleService := services.NewRoleService(roleRepo)
+	chatService := services.NewChatService(repo, gemini)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
@@ -122,6 +141,7 @@ func main() {
 	roleHandler := handlers.NewRoleHandler(roleService, sseService)
 	casbinHandler := handlers.NewCasbinHandler(casbinService, sseService)
 	sseHandler := handlers.NewSSEHandler(sseService)
+	chatHandler := handlers.NewChatHandler(chatService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
@@ -157,6 +177,7 @@ func main() {
 		csirtHandler,
 		sdmCsirtHandler,
 		seCsirtHandler,
+		chatHandler,
 	)
 
 	c := cors.New(cors.Options{

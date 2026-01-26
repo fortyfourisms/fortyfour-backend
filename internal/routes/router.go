@@ -43,6 +43,7 @@ func InitRouter(
 	csirtH *handlers.CsirtHandler,
 	sdmCsirtH *handlers.SdmCsirtHandler,
 	seCsirtH *handlers.SeCsirtHandler,
+	chatHandler *handlers.ChatHandler,
 ) *http.ServeMux {
 	mux := http.NewServeMux()
 
@@ -120,6 +121,10 @@ func InitRouter(
 
 	// Swagger UI
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
+
+	// Routes Chat
+	mux.HandleFunc("/api/chat", authM.Authenticate(chatHandler.Stream))
+	mux.HandleFunc("/api/chat/delete-session", authM.Authenticate(chatHandler.DeleteSession))
 
 	return mux
 }
