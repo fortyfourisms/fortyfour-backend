@@ -28,6 +28,15 @@ func NewChatService(
 
 // GetDatabaseSchema: sql generate
 func (s *ChatService) GetDatabaseSchema() (string, error) {
+	// Daftar kolom yang tidak boleh diakses
+	sensitiveColumns := map[string]bool{
+		"id":       true,
+		"password": true,
+		"token":    true,
+		"api_key":  true,
+		"secret":   true,
+	}
+
 	query := `
 		SELECT 
 			TABLE_NAME,
@@ -58,6 +67,11 @@ func (s *ChatService) GetDatabaseSchema() (string, error) {
 			return "", err
 		}
 
+		// skip kolom sensitif
+		if sensitiveColumns[strings.ToLower(columnName)] {
+			continue
+		}
+
 		if tableName != currentTable {
 			if currentTable != "" {
 				schema.WriteString("\n")
@@ -83,19 +97,19 @@ func (s *ChatService) GetDatabaseSchema() (string, error) {
 	return schema.String(), nil
 }
 
-// GenerateSQLQuery - PURE LLM, NO INSTRUCTIONS
+// GenerateSQLQuery LLM
 func (s *ChatService) GenerateSQLQuery(userQuestion string) (string, error) {
 	schema, err := s.GetDatabaseSchema()
 	if err != nil {
 		return "", fmt.Errorf("failed to extract schema: %w", err)
 	}
 
-	// MINIMAL PROMPT - biarkan AI yang nalar sendiri
+	// Prepare LLM prompt for SQL query generation
 	prompt := fmt.Sprintf(`%s
 
-User question (in Indonesian): %s
+		User question (in Indonesian): %s
 
-Generate the SQL query to answer this question. Return ONLY the SQL query without any explanation or markdown formatting.`, schema, userQuestion)
+		Generate the SQL query to answer this question. Return ONLY the SQL query without any explanation or markdown formatting.`, schema, userQuestion)
 
 	sqlQuery, err := s.gemini.Generate(prompt)
 	if err != nil {
@@ -158,10 +172,11 @@ func (s *ChatService) ExecuteQuery(sqlQuery string) ([]map[string]interface{}, e
 		results = append(results, row)
 	}
 
-	return results, nil
+	// filter kolom sensitif sebelum return
+	return s.filterSensitiveColumns(results), nil
 }
 
-// FormatQueryResults - AI format hasil jadi natural language
+// FormatQueryResults
 func (s *ChatService) FormatQueryResults(userQuestion string, results []map[string]interface{}) (string, error) {
 	if len(results) == 0 {
 		return "Tidak ada data yang ditemukan.", nil
@@ -179,13 +194,12 @@ func (s *ChatService) FormatQueryResults(userQuestion string, results []map[stri
 		resultText.WriteString("\n")
 	}
 
-	// MINIMAL PROMPT - biarkan AI yang tau cara format
+	// Build prompt for SQL query generation
 	prompt := fmt.Sprintf(`User asked: "%s"
+			Database returned:
+			%s
 
-Database returned:
-%s
-
-Format this data as a natural, friendly response in Indonesian. Make it conversational and easy to read.`,
+			Format this data as a natural, friendly response in Indonesian. Make it conversational and easy to read.`,
 		userQuestion, resultText.String())
 
 	answer, err := s.gemini.Generate(prompt)
@@ -194,6 +208,32 @@ Format this data as a natural, friendly response in Indonesian. Make it conversa
 	}
 
 	return answer, nil
+}
+
+// filterSensitiveColumns: hapus kolom sensitif dari hasil query
+func (s *ChatService) filterSensitiveColumns(results []map[string]interface{}) []map[string]interface{} {
+	sensitiveColumns := map[string]bool{
+		"id":       true,
+		"password": true,
+		"token":    true,
+		"api_key":  true,
+		"secret":   true,
+	}
+
+	filtered := make([]map[string]interface{}, len(results))
+
+	for i, row := range results {
+		cleanRow := make(map[string]interface{})
+		for key, val := range row {
+			// skip kolom sensitif
+			if !sensitiveColumns[strings.ToLower(key)] {
+				cleanRow[key] = val
+			}
+		}
+		filtered[i] = cleanRow
+	}
+
+	return filtered
 }
 
 func (s *ChatService) Repo() repository.ChatRepository {
