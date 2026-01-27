@@ -19,7 +19,6 @@ func NewChatHandler(s *services.ChatService) *ChatHandler {
 	return &ChatHandler{service: s}
 }
 
-// Stream handles chat with SSE streaming
 func (h *ChatHandler) Stream(w http.ResponseWriter, r *http.Request) {
 	// SSE headers
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -39,46 +38,35 @@ func (h *ChatHandler) Stream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//DETECT INTENT
-	intent := services.DetectIntent(req.Message)
+	log.Printf("User Question: %s", req.Message)
 
-	//GET DATA FROM DB
-	dataContext := h.service.BuildDataContext(intent)
-
-	//GET CHAT HISTORY
-	history, _ := h.service.Repo().GetHistory(req.SessionID)
-
-	//BUILD PROMPT (ANTI HALU)
-	systemPrompt := `
-Kamu adalah chatbot CS internal.
-ATURAN:
-- Jawaban hanya boleh berdasarkan DATA SISTEM
-- Jangan mengarang
-- Jangan gunakan pengetahuan umum
-- Jika data tidak ada, jawab: "Data tidak tersedia di sistem"
-`
-
-	prompt := systemPrompt + "\n\n"
-	prompt += "DATA SISTEM:\n" + dataContext + "\n\n"
-
-	for _, h := range history {
-		prompt += "User: " + h.User + "\n"
-		prompt += "Bot: " + h.Bot + "\n"
-	}
-
-	prompt += "User: " + req.Message + "\n"
-
-	log.Printf("Generating response for session: %s", req.SessionID)
-
-	//GENERATE AI RESPONSE
-	answer, err := h.service.GetGemini().Generate(prompt)
+	// STEP 1: Generate SQL Query
+	sqlQuery, err := h.service.GenerateSQLQuery(req.Message)
 	if err != nil {
-		log.Printf("Gemini error: %v", err)
-		sendSSEError(w, flusher, "Failed to generate response")
+		log.Printf("SQL Generation Error: %v", err)
+		sendSSEError(w, flusher, "Gagal membuat query database")
+		return
+	}
+	log.Printf("Generated SQL: %s", sqlQuery)
+
+	// STEP 2: Execute SQL Query
+	results, err := h.service.ExecuteQuery(sqlQuery)
+	if err != nil {
+		log.Printf("Query Execution Error: %v", err)
+		sendSSEError(w, flusher, "Gagal menjalankan query database")
+		return
+	}
+	log.Printf("Query Results: %d rows", len(results))
+
+	// STEP 3: Format hasil query
+	answer, err := h.service.FormatQueryResults(req.Message, results)
+	if err != nil {
+		log.Printf("Formatting Error: %v", err)
+		sendSSEError(w, flusher, "Gagal memformat jawaban")
 		return
 	}
 
-	//SSE STREAMING (TETAP SAMA)
+	// STEP 4: Stream response word by word
 	words := strings.Fields(answer)
 	fullAnswer := ""
 
@@ -95,21 +83,23 @@ ATURAN:
 		})
 	}
 
+	// Send done event
 	sendSSEEvent(w, flusher, map[string]interface{}{
 		"type":    "done",
 		"content": fullAnswer,
 		"done":    true,
 	})
 
-	//SAVE HISTORY
+	// STEP 5: Save history
 	_ = h.service.Repo().Save(req.SessionID, req.Message, fullAnswer)
+	log.Printf("Saved to history for session: %s", req.SessionID)
 }
 
-// DeleteSession deletes a chat session
 func (h *ChatHandler) DeleteSession(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		SessionID string `json:"session_id"`
 	}
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -120,6 +110,7 @@ func (h *ChatHandler) DeleteSession(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
+
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(map[string]string{
 			"message": fmt.Sprintf("Session %s deleted", req.SessionID),

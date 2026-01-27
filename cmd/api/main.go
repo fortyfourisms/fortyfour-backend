@@ -118,7 +118,7 @@ func main() {
 	seCsirtService := services.NewSeCsirtService(seCsirtRepo)
 	userService := services.NewUserService(userRepo, "./uploads")
 	roleService := services.NewRoleService(roleRepo)
-	chatService := services.NewChatService(chatRepo, perusahaanRepo, geminiClient)
+	chatService := services.NewChatService(chatRepo, geminiClient, db)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
