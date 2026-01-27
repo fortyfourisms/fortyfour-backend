@@ -6,5 +6,5 @@ CREATE TABLE proteksi (
   nilai_subdomain3 float NOT NULL,
   nilai_subdomain4 float NOT NULL,
   nilai_subdomain5 float NOT NULL,
-  nilai_subdomain6 float NOT NULL,
+  nilai_subdomain6 float NOT NULL
 );

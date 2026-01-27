@@ -1,7 +1,3 @@
--- Create database
-CREATE DATABASE IF NOT EXISTS fortyfour;
-USE fortyfour;
-
 CREATE TABLE users (
     id CHAR(36) PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
