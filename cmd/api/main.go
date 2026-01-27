@@ -80,6 +80,7 @@ func main() {
 	rollbar.Info("SSE Service initialized successfully")
 
 	// Initialize Gemini Client
+	geminiClient := utils.NewGeminiClient()
 	if err != nil {
 		log.Fatal("Failed to initialize Gemini client:", err)
 	}
@@ -99,10 +100,7 @@ func main() {
 	sdmCsirtRepo := repository.NewSdmCsirtRepository(db)
 	seCsirtRepo := repository.NewSeCsirtRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
-	repo := repository.NewInMemoryChatRepo()
-
-	// Init utils
-	gemini := utils.NewGeminiClient()
+	chatRepo := repository.NewInMemoryChatRepo()
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
@@ -120,7 +118,7 @@ func main() {
 	seCsirtService := services.NewSeCsirtService(seCsirtRepo)
 	userService := services.NewUserService(userRepo, "./uploads")
 	roleService := services.NewRoleService(roleRepo)
-	chatService := services.NewChatService(repo, gemini)
+	chatService := services.NewChatService(chatRepo, perusahaanRepo, geminiClient)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)

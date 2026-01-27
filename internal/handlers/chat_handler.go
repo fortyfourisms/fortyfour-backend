@@ -21,7 +21,7 @@ func NewChatHandler(s *services.ChatService) *ChatHandler {
 
 // Stream handles chat with SSE streaming
 func (h *ChatHandler) Stream(w http.ResponseWriter, r *http.Request) {
-	// Set SSE headers
+	// SSE headers
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
@@ -39,20 +39,38 @@ func (h *ChatHandler) Stream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get chat history
+	//DETECT INTENT
+	intent := services.DetectIntent(req.Message)
+
+	//GET DATA FROM DB
+	dataContext := h.service.BuildDataContext(intent)
+
+	//GET CHAT HISTORY
 	history, _ := h.service.Repo().GetHistory(req.SessionID)
 
-	// Build prompt
-	prompt := "Kamu adalah chatbot CS.\n\n"
+	//BUILD PROMPT (ANTI HALU)
+	systemPrompt := `
+Kamu adalah chatbot CS internal.
+ATURAN:
+- Jawaban hanya boleh berdasarkan DATA SISTEM
+- Jangan mengarang
+- Jangan gunakan pengetahuan umum
+- Jika data tidak ada, jawab: "Data tidak tersedia di sistem"
+`
+
+	prompt := systemPrompt + "\n\n"
+	prompt += "DATA SISTEM:\n" + dataContext + "\n\n"
+
 	for _, h := range history {
 		prompt += "User: " + h.User + "\n"
 		prompt += "Bot: " + h.Bot + "\n"
 	}
+
 	prompt += "User: " + req.Message + "\n"
 
 	log.Printf("Generating response for session: %s", req.SessionID)
 
-	// Generate response
+	//GENERATE AI RESPONSE
 	answer, err := h.service.GetGemini().Generate(prompt)
 	if err != nil {
 		log.Printf("Gemini error: %v", err)
@@ -60,7 +78,7 @@ func (h *ChatHandler) Stream(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Stream response word by word (simulasi streaming)
+	//SSE STREAMING (TETAP SAMA)
 	words := strings.Fields(answer)
 	fullAnswer := ""
 
@@ -70,27 +88,21 @@ func (h *ChatHandler) Stream(w http.ResponseWriter, r *http.Request) {
 		}
 		fullAnswer += word
 
-		// Send SSE event
-		event := map[string]interface{}{
+		sendSSEEvent(w, flusher, map[string]interface{}{
 			"type":    "chunk",
 			"content": word + " ",
 			"done":    false,
-		}
-		sendSSEEvent(w, flusher, event)
+		})
 	}
 
-	// Send final event
-	finalEvent := map[string]interface{}{
+	sendSSEEvent(w, flusher, map[string]interface{}{
 		"type":    "done",
 		"content": fullAnswer,
 		"done":    true,
-	}
-	sendSSEEvent(w, flusher, finalEvent)
+	})
 
-	// Save to history
+	//SAVE HISTORY
 	_ = h.service.Repo().Save(req.SessionID, req.Message, fullAnswer)
-
-	log.Printf("Response sent for session: %s", req.SessionID)
 }
 
 // DeleteSession deletes a chat session

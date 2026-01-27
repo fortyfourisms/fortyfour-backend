@@ -49,6 +49,41 @@ func (r *PerusahaanRepository) GetAll() ([]dto.PerusahaanResponse, error) {
 	return result, nil
 }
 
+func (r *PerusahaanRepository) GetLatest(limit int) ([]dto.PerusahaanResponse, error) {
+	rows, err := r.db.Query(`
+		SELECT id, photo, nama_perusahaan, sektor, alamat, telepon, email, website, created_at, updated_at
+		FROM perusahaan
+		ORDER BY created_at DESC
+		LIMIT ?
+	`, limit)
+
+	if err != nil {
+		rollbar.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []dto.PerusahaanResponse
+	for rows.Next() {
+		var p dto.PerusahaanResponse
+		rows.Scan(
+			&p.ID,
+			&p.Photo,
+			&p.NamaPerusahaan,
+			&p.Sektor,
+			&p.Alamat,
+			&p.Telepon,
+			&p.Email,
+			&p.Website,
+			&p.CreatedAt,
+			&p.UpdatedAt,
+		)
+		result = append(result, p)
+	}
+
+	return result, nil
+}
+
 func (r *PerusahaanRepository) GetByID(id string) (*dto.PerusahaanResponse, error) {
 	row := r.db.QueryRow(`SELECT id, photo, nama_perusahaan, sektor, alamat, telepon, email, website, created_at, updated_at FROM perusahaan WHERE id=?`, id)
 	var p dto.PerusahaanResponse

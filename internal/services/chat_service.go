@@ -2,48 +2,60 @@ package services
 
 import (
 	"fmt"
-	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/utils"
+	"strings"
 )
 
 type ChatService struct {
-	repo   repository.ChatRepository
-	gemini *utils.GeminiClient
+	repo           repository.ChatRepository
+	perusahaanRepo *repository.PerusahaanRepository
+	gemini         *utils.GeminiClient
 }
 
-func NewChatService(r repository.ChatRepository, g *utils.GeminiClient) *ChatService {
+func NewChatService(
+	r repository.ChatRepository,
+	p *repository.PerusahaanRepository,
+	g *utils.GeminiClient,
+) *ChatService {
 	return &ChatService{
-		repo:   r,
-		gemini: g,
+		repo:           r,
+		perusahaanRepo: p,
+		gemini:         g,
 	}
 }
 
-func (s *ChatService) Chat(req dto.ChatRequest) (string, error) {
-	history, _ := s.repo.GetHistory(req.SessionID)
+// ambil DATA dari DB
+func (s *ChatService) BuildDataContext(intent string) string {
+	switch intent {
 
-	prompt := "Kamu adalah chatbot CS.\n\n"
-	for _, h := range history {
-		prompt += "User: " + h.User + "\n"
-		prompt += "Bot: " + h.Bot + "\n"
+	case "latest_perusahaan":
+		data, err := s.perusahaanRepo.GetLatest(5)
+		if err != nil || len(data) == 0 {
+			return "Data perusahaan tidak tersedia di sistem."
+		}
+
+		var b strings.Builder
+		for _, p := range data {
+			b.WriteString(fmt.Sprintf(
+				"- %s (sektor: %s, dibuat %s)\n",
+				p.NamaPerusahaan,
+				p.Sektor,
+				p.CreatedAt,
+			))
+
+		}
+		return b.String()
+
+	default:
+		return "Data tidak tersedia di sistem."
 	}
-	prompt += "User: " + req.Message + "\n"
-
-	answer, err := s.gemini.Generate(prompt)
-	if err != nil {
-		fmt.Println("Gemini Generate Error:", err)
-		return "", err
-	}
-
-	_ = s.repo.Save(req.SessionID, req.Message, answer)
-	return answer, nil
 }
 
 func (s *ChatService) Repo() repository.ChatRepository {
 	return s.repo
 }
 
-// Expose Gemini client
 func (s *ChatService) GetGemini() *utils.GeminiClient {
 	return s.gemini
 }
