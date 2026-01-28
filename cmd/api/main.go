@@ -90,6 +90,7 @@ func main() {
 	sektorRepo := repository.NewSektorRepository(db)
 	subSektorRepo := repository.NewSubSektorRepository(db)
 	seRepo := repository.NewSERepository(db)
+	dashboardRepo := repository.NewDashboardRepository(db)
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
@@ -110,6 +111,7 @@ func main() {
 	sektorService := services.NewSektorService(sektorRepo)
 	subSektorService := services.NewSubSektorService(subSektorRepo)
 	seService := services.NewSEService(seRepo)
+	dashboardService := services.NewDashboardService(dashboardRepo)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService)
@@ -133,6 +135,7 @@ func main() {
 	sektorHandler := handlers.NewSektorHandler(sektorService)
 	subSektorHandler := handlers.NewSubSektorHandler(subSektorService)
 	seHandler := handlers.NewSEHandler(seService, sseService)
+	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 	
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
@@ -171,6 +174,7 @@ func main() {
 		sektorHandler,
 		subSektorHandler,
 		seHandler,
+		dashboardHandler,
 	)
 
 	// Start server
