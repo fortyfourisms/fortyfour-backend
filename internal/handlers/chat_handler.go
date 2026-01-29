@@ -44,9 +44,53 @@ func (h *ChatHandler) Stream(w http.ResponseWriter, r *http.Request) {
 	sqlQuery, err := h.service.GenerateSQLQuery(req.Message)
 	if err != nil {
 		log.Printf("SQL Generation Error: %v", err)
-		sendSSEError(w, flusher, "Gagal membuat query database")
+
+		// PROTECT AI RESPONSE (NOT ALLOWED OPERATION)
+		safePrompt := fmt.Sprintf(`
+		Pengguna mengajukan permintaan yang berpotensi membahayakan keamanan atau integritas data:
+
+		"%s"
+
+		Tolak permintaan tersebut dengan bahasa Indonesia yang sopan, singkat, dan profesional.
+		JANGAN menyebutkan aturan teknis, jenis query, SQL, database, atau mekanisme internal apa pun.
+		Cukup jelaskan bahwa permintaan tidak dapat diproses demi keamanan dan perlindungan data,
+		lalu arahkan pengguna untuk mengajukan pertanyaan yang bersifat informatif.
+		`, req.Message)
+
+		answer, genErr := h.service.GetGemini().Generate(safePrompt)
+		if genErr != nil || strings.TrimSpace(answer) == "" {
+			answer = "Maaf, permintaan tersebut tidak dapat diproses demi keamanan dan perlindungan data. Silakan ajukan pertanyaan lain yang bersifat informatif."
+		}
+
+		// Stream jawaban AI
+		words := strings.Fields(answer)
+		fullAnswer := ""
+
+		for i, word := range words {
+			if i > 0 {
+				fullAnswer += " "
+			}
+			fullAnswer += word
+
+			sendSSEEvent(w, flusher, map[string]interface{}{
+				"type":    "chunk",
+				"content": word + " ",
+				"done":    false,
+			})
+		}
+
+		sendSSEEvent(w, flusher, map[string]interface{}{
+			"type":    "done",
+			"content": fullAnswer,
+			"done":    true,
+		})
+
+		_ = h.service.Repo().Save(req.SessionID, req.Message, fullAnswer)
+		log.Printf("Saved rejection response for session: %s", req.SessionID)
+
 		return
 	}
+
 	log.Printf("Generated SQL: %s", sqlQuery)
 
 	// STEP 2: Execute SQL Query
@@ -56,6 +100,7 @@ func (h *ChatHandler) Stream(w http.ResponseWriter, r *http.Request) {
 		sendSSEError(w, flusher, "Gagal menjalankan query database")
 		return
 	}
+
 	log.Printf("Query Results: %d rows", len(results))
 
 	// STEP 3: Format hasil query
@@ -83,7 +128,6 @@ func (h *ChatHandler) Stream(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	// Send done event
 	sendSSEEvent(w, flusher, map[string]interface{}{
 		"type":    "done",
 		"content": fullAnswer,
