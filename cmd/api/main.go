@@ -95,7 +95,6 @@ func main() {
 	proteksiRepo := repository.NewProteksiRepository(db)
 	deteksiRepo := repository.NewDeteksiRepository(db)
 	gulihRepo := repository.NewGulihRepository(db)
-	ikasRepo := repository.NewIkasRepository(db)
 	csirtRepo := repository.NewCsirtRepository(db)
 	sdmCsirtRepo := repository.NewSdmCsirtRepository(db)
 	seCsirtRepo := repository.NewSeCsirtRepository(db)
@@ -112,7 +111,6 @@ func main() {
 	proteksiService := services.NewProteksiService(proteksiRepo)
 	deteksiService := services.NewDeteksiService(deteksiRepo)
 	gulihService := services.NewGulihService(gulihRepo)
-	ikasService := services.NewIkasService(ikasRepo)
 	csirtService := services.NewCsirtService(csirtRepo)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo)
 	seCsirtService := services.NewSeCsirtService(seCsirtRepo)
@@ -132,7 +130,6 @@ func main() {
 	proteksiHandler := handlers.NewProteksiHandler(proteksiService, sseService)
 	deteksiHandler := handlers.NewDeteksiHandler(deteksiService, sseService)
 	gulihHandler := handlers.NewGulihHandler(gulihService, sseService)
-	ikasHandler := handlers.NewIkasHandler(ikasService, sseService)
 	csirtHandler := handlers.NewCsirtHandler(csirtService)
 	sdmCsirtHandler := handlers.NewSdmCsirtHandler(sdmCsirtService)
 	seCsirtHandler := handlers.NewSeCsirtHandler(seCsirtService)
@@ -162,7 +159,6 @@ func main() {
 		identifikasiHandler,
 		deteksiHandler,
 		gulihHandler,
-		ikasHandler,
 		proteksiHandler,
 		roleHandler,
 		casbinHandler,

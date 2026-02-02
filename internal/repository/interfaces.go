@@ -88,45 +88,6 @@ type GulihRepositoryInterface interface {
 	Delete(id string) error
 }
 
-// IkasRepositoryInterface
-type IkasRepositoryInterface interface {
-	//CREATE DOMAIN
-	CreateIdentifikasi(id string, data *dto.CreateIdentifikasiData) (float64, error)
-	CreateProteksi(id string, data *dto.CreateProteksiData) (float64, error)
-	CreateDeteksi(id string, data *dto.CreateDeteksiData) (float64, error)
-	CreateGulih(id string, data *dto.CreateGulihData) (float64, error)
-
-	//CREATE IKAS
-	Create(
-		req dto.CreateIkasRequest,
-		id string,
-		nilaiKematangan float64,
-		idIden, idProt, idDet, idGul string,
-	) error
-
-	//READ
-	GetAll() ([]dto.IkasResponse, error)
-	GetByID(id string) (*dto.IkasResponse, error)
-
-	//UPDATE IKAS
-	Update(id string, req dto.UpdateIkasRequest) error
-
-	//UPDATE DOMAIN
-	UpdateIdentifikasi(id string, data *dto.UpdateIdentifikasiData) (float64, error)
-	UpdateProteksi(id string, data *dto.UpdateProteksiData) (float64, error)
-	UpdateDeteksi(id string, data *dto.UpdateDeteksiData) (float64, error)
-	UpdateGulih(id string, data *dto.UpdateGulihData) (float64, error)
-
-	//DELETE
-	Delete(id string) error
-
-	//IMPORT
-	ParseExcelForImport(fileData []byte) (*dto.CreateIkasRequest, error)
-
-	//HELPER
-	FindPerusahaanByName(namaPerusahaan string) (string, error)
-}
-
 // CsirtRepositoryInterface
 type CsirtRepositoryInterface interface {
 	Create(req dto.CreateCsirtRequest, id string) error

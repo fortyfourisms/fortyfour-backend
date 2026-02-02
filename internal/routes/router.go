@@ -30,7 +30,6 @@ func InitRouter(
 	identifikasiH *handlers.IdentifikasiHandler,
 	deteksiH *handlers.DeteksiHandler,
 	gulihH *handlers.GulihHandler,
-	ikasH *handlers.IkasHandler,
 	proteksiH *handlers.ProteksiHandler,
 	roleH *handlers.RoleHandler,
 	casbinH *handlers.CasbinHandler,
@@ -98,10 +97,6 @@ func InitRouter(
 	// Route Deteksi
 	mux.HandleFunc("/api/deteksi", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(deteksiH)))))
 	mux.HandleFunc("/api/deteksi/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(deteksiH)))))
-
-	// Route Ikas
-	mux.HandleFunc("/api/ikas", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(ikasH)))))
-	mux.HandleFunc("/api/ikas/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(ikasH)))))
 
 	// Route Role
 	mux.HandleFunc("/api/role", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(roleH)))))
