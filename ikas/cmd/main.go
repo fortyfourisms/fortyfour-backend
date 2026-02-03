@@ -7,11 +7,13 @@ import (
 	"ikas/internal/repository"
 	"ikas/internal/routes"
 	"ikas/internal/services"
+	"ikas/pkg/cache"
 	"ikas/pkg/database"
 	"log"
 	"net/http"
 
 	"github.com/joho/godotenv"
+	"github.com/rollbar/rollbar-go"
 )
 
 func main() {
@@ -23,7 +25,15 @@ func main() {
 
 	cfg := config.Load()
 
-	// DB
+	rollbar.SetToken(cfg.Rollbar.Token)
+	rollbar.SetEnvironment(cfg.Rollbar.Env)
+	// Send a test message
+	rollbar.Info("Rollbar Go SDK initialized successfully!")
+
+	// call rollbar.Close() before the application exits to flush error message queue
+	// rollbar.Close()
+
+	// Initialize MySQL database
 	db, err := database.NewMySQLConnection(database.Config{
 		Host:     cfg.Database.Host,
 		Port:     cfg.Database.Port,
@@ -35,6 +45,22 @@ func main() {
 		log.Fatal(err)
 	}
 	defer db.Close()
+
+	// Initialize Redis
+	redisClient, err := cache.NewRedisClient(cache.RedisConfig{
+		Host:     cfg.Redis.Host,
+		Port:     cfg.Redis.Port,
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+	if err != nil {
+		log.Println("Failed to connect to Redis:", err)
+		rollbar.Error(err)
+		log.Fatal(err)
+	}
+	log.Println("Redis initialized successfully")
+	rollbar.Info("Redis initialized successfully")
+	defer redisClient.Close()
 
 	// Layering IKAS
 	ikasRepo := repository.NewIkasRepository(db)
