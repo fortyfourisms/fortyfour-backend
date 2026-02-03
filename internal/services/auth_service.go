@@ -335,3 +335,66 @@ func (s *AuthService) VerifyMFA(mfaToken, code string) (*models.User, *dto.Token
 	_ = s.tokenService.redis.Delete(key)
 	return user, mapTokenPairToDTO(modelTokens), nil
 }
+/* ===================== Microsoft-style MFA Methods ===================== */
+
+// Creates a token that allows user to setup MFA (Microsoft-style)
+func (s *AuthService) CreateMFASetupToken(userID string) (string, error) {
+	token := uuid.New().String()
+	key := fmt.Sprintf("mfa_setup_token:%s", token)
+
+	if err := s.tokenService.redis.Set(key, userID, 10*time.Minute); err != nil {
+		rollbar.Error(err)
+		return "", err
+	}
+	return token, nil
+}
+
+// Validates setup token and returns userID
+func (s *AuthService) ValidateMFASetupToken(setupToken string) (string, error) {
+	key := fmt.Sprintf("mfa_setup_token:%s", setupToken)
+	userID, err := s.tokenService.redis.Get(key)
+	if err != nil {
+		rollbar.Error(err)
+		return "", errors.New("invalid or expired setup token")
+	}
+	return userID, nil
+}
+
+// Verify code, enable MFA, and immediately return tokens (Microsoft-style)
+func (s *AuthService) EnableMFAAndLogin(userID, code string) (*models.User, *dto.TokenPair, error) {
+	redisKey := fmt.Sprintf("mfa_setup:%s", userID)
+	secret, err := s.tokenService.redis.Get(redisKey)
+	if err != nil {
+		rollbar.Error(err)
+		return nil, nil, errors.New("mfa setup expired or not found")
+	}
+
+	if !totp.Validate(code, secret) {
+		return nil, nil, errors.New("invalid mfa code")
+	}
+
+	// Enable MFA
+	if err := s.userRepo.SetMFA(userID, &secret, true); err != nil {
+		rollbar.Error(err)
+		return nil, nil, err
+	}
+
+	// Clean up setup data
+	_ = s.tokenService.redis.Delete(redisKey)
+
+	// Get updated user
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		rollbar.Error(err)
+		return nil, nil, err
+	}
+
+	// Generate tokens immediately
+	modelTokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
+	if err != nil {
+		rollbar.Error(err)
+		return nil, nil, err
+	}
+
+	return user, mapTokenPairToDTO(modelTokens), nil
+}

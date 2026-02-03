@@ -88,13 +88,13 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 // Login godoc
 // @Summary      Login user
-// @Description  Authenticate user and return JWT tokens or MFA pending response
+// @Description  Authenticate user and return JWT tokens or MFA setup/verification required response
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
 // @Param        login body dto.LoginRequest true "Login payload"
 // @Success      200  {object} dto.AuthResponse
-// @Success      200  {object} map[string]interface{} "mfa_required response"
+// @Success      200  {object} map[string]interface{} "mfa_setup_required or mfa_required response"
 // @Failure      400  {object} dto.ErrorResponse
 // @Failure      401  {object} dto.ErrorResponse
 // @Router       /api/login [post]
@@ -130,7 +130,24 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Jika tokens == nil & user.MFAEnabled true -> return mfa_required with pending token
+	// Check if MFA is NOT enabled yet
+	if !user.MFAEnabled {
+		// Force user to setup MFA - return mfa_setup_required
+		setupToken, err := h.authService.CreateMFASetupToken(user.ID)
+		if err != nil {
+			utils.RespondError(w, http.StatusInternalServerError, "failed to create setup token")
+			rollbar.Error(err)
+			return
+		}
+		utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
+			"mfa_setup_required": true,
+			"setup_token":        setupToken,
+			"message":            "MFA setup is required. Please setup MFA to continue.",
+		})
+		return
+	}
+
+	// If MFA is enabled, check if tokens are nil (means need MFA verification)
 	if tokens == nil && user != nil && user.MFAEnabled {
 		mfaToken, err := h.authService.CreateMFAPending(user.ID)
 		if err != nil {
@@ -222,7 +239,6 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 // @Success      200  {object} dto.MessageResponse
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/logout [post]
-// UNCHANGED from original
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -258,9 +274,19 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-/* ===================== MFA HANDLERS ===================== */
+/* ===================== MFA HANDLERS (UPDATED FOR MICROSOFT-STYLE) ===================== */
 
-// SetupMFA ...
+// SetupMFA godoc
+// @Summary      Setup MFA
+// @Description  Generate MFA provisioning URI and secret (Microsoft-style: accepts setup_token)
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        setup body map[string]string false "Setup token (for unauthenticated setup)"
+// @Success      200  {object} map[string]string "provisioning_uri and secret"
+// @Failure      400  {object} dto.ErrorResponse
+// @Failure      401  {object} dto.ErrorResponse
+// @Router       /api/mfa/setup [post]
 func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -268,7 +294,30 @@ func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Try to get userID from context (authenticated user) or from setup_token
 	userID := middleware.GetUserID(r.Context())
+	
+	// If no userID from context, check for setup_token in body
+	if userID == "" {
+		var req struct {
+			SetupToken string `json:"setup_token"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			utils.RespondError(w, http.StatusBadRequest, "invalid body")
+			rollbar.Error(err)
+			return
+		}
+
+		// Validate setup token and get userID
+		var err error
+		userID, err = h.authService.ValidateMFASetupToken(req.SetupToken)
+		if err != nil {
+			utils.RespondError(w, http.StatusUnauthorized, "invalid or expired setup token")
+			rollbar.Error(err)
+			return
+		}
+	}
+
 	if userID == "" {
 		utils.RespondError(w, http.StatusUnauthorized, "unauthorized")
 		return
@@ -287,7 +336,17 @@ func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// EnableMFA ...
+// EnableMFA godoc
+// @Summary      Enable MFA
+// @Description  Verify MFA code and enable MFA (Microsoft-style: returns tokens immediately)
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        enable body map[string]string true "MFA code and optional setup_token"
+// @Success      200  {object} dto.AuthResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Failure      401  {object} dto.ErrorResponse
+// @Router       /api/mfa/enable [post]
 func (h *AuthHandler) EnableMFA(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -295,14 +354,12 @@ func (h *AuthHandler) EnableMFA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Try to get userID from context (authenticated user) or from setup_token
 	userID := middleware.GetUserID(r.Context())
-	if userID == "" {
-		utils.RespondError(w, http.StatusUnauthorized, "unauthorized")
-		return
-	}
-
+	
 	var req struct {
-		Code string `json:"code"`
+		Code       string  `json:"code"`
+		SetupToken *string `json:"setup_token,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "invalid body")
@@ -310,16 +367,51 @@ func (h *AuthHandler) EnableMFA(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.authService.EnableMFA(userID, req.Code); err != nil {
+	// If no userID from context but have setup_token, validate it
+	if userID == "" && req.SetupToken != nil {
+		var err error
+		userID, err = h.authService.ValidateMFASetupToken(*req.SetupToken)
+		if err != nil {
+			utils.RespondError(w, http.StatusUnauthorized, "invalid or expired setup token")
+			rollbar.Error(err)
+			return
+		}
+	}
+
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	// Enable MFA and get tokens immediately (Microsoft-style: enable = login)
+	user, tokens, err := h.authService.EnableMFAAndLogin(userID, req.Code)
+	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		rollbar.Error(err)
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": "mfa enabled"})
+	// Return user data and tokens
+	utils.RespondJSON(w, http.StatusOK, dto.AuthResponse{
+		User:         *user,
+		AccessToken:  tokens.AccessToken,
+		RefreshToken: tokens.RefreshToken,
+		ExpiresAt:    tokens.ExpiresAt,
+		Message:      "MFA enabled successfully",
+	})
 }
 
-// VerifyMFA ...
+// VerifyMFA godoc
+// @Summary      Verify MFA
+// @Description  Verify MFA code and return access tokens
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Param        verify body map[string]string true "MFA token and code"
+// @Success      200  {object} dto.AuthResponse
+// @Failure      400  {object} dto.ErrorResponse
+// @Failure      401  {object} dto.ErrorResponse
+// @Router       /api/mfa/verify [post]
 func (h *AuthHandler) VerifyMFA(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")

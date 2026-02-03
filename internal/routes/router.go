@@ -62,8 +62,8 @@ func InitRouter(
 
 	// MFA endpoints
 	// setup & enable -> protected (require Authorization header)
-	mux.HandleFunc("/api/mfa/setup", authM.Authenticate(authH.SetupMFA))
-	mux.HandleFunc("/api/mfa/enable", authM.Authenticate(authH.EnableMFA))
+	mux.HandleFunc("/api/mfa/setup", strictLimiter.LimitByIP(authH.SetupMFA))
+	mux.HandleFunc("/api/mfa/enable", strictLimiter.LimitByIP(authH.EnableMFA))
 	// verify -> public (called with mfa_token)
 	mux.HandleFunc("/api/mfa/verify", strictLimiter.LimitByIP(authH.VerifyMFA))
 
