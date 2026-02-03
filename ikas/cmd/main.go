@@ -62,13 +62,20 @@ func main() {
 	rollbar.Info("Redis initialized successfully")
 	defer redisClient.Close()
 
-	// Layering IKAS
+	// repository
 	ikasRepo := repository.NewIkasRepository(db)
+	ruangLingkupRepo := repository.NewRuangLingkupRepository(db)
+
+	// services
 	ikasService := services.NewIkasService(ikasRepo)
+	ruangLingkupService := services.NewRuangLingkupService(ruangLingkupRepo)
+
+	// handlers
 	ikasHandler := handlers.NewIkasHandler(ikasService)
+	ruangLingkupHandler := handlers.NewRuangLingkupHandler(ruangLingkupService)
 
 	// Router
-	mux := routes.InitRouter(ikasHandler)
+	mux := routes.InitRouter(ikasHandler, ruangLingkupHandler)
 
 	auth := middleware.NewAuthMiddleware(cfg.JWTSecret)
 	handler := auth.Authenticate(mux)

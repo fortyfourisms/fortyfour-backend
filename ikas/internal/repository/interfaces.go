@@ -40,3 +40,22 @@ type IkasRepositoryInterface interface {
 	//HELPER
 	FindPerusahaanByName(namaPerusahaan string) (string, error)
 }
+
+// RuangLingkupRepositoryInterface
+type RuangLingkupRepositoryInterface interface {
+	// CREATE
+	Create(req dto.CreateRuangLingkupRequest, id string) error
+
+	// READ
+	GetAll() ([]dto.RuangLingkupResponse, error)
+	GetByID(id string) (*dto.RuangLingkupResponse, error)
+
+	// UPDATE
+	Update(id string, req dto.UpdateRuangLingkupRequest) error
+
+	// DELETE
+	Delete(id string) error
+
+	// HELPER
+	CheckDuplicateName(nama string, excludeID string) (bool, error)
+}
