@@ -17,20 +17,26 @@ import (
 
 // AuthHandler handles authentication-related HTTP endpoints.
 type AuthHandler struct {
-	authService  *services.AuthService
-	tokenService *services.TokenService
+	authService       *services.AuthService
+	tokenService      *services.TokenService
+	perusahaanService services.PerusahaanServiceInterface
 }
 
-func NewAuthHandler(authService *services.AuthService, tokenService *services.TokenService) *AuthHandler {
+func NewAuthHandler(
+	authService *services.AuthService,
+	tokenService *services.TokenService,
+	perusahaanService services.PerusahaanServiceInterface, 
+) *AuthHandler {
 	return &AuthHandler{
-		authService:  authService,
-		tokenService: tokenService,
+		authService:       authService,
+		tokenService:      tokenService,
+		perusahaanService: perusahaanService, 
 	}
 }
 
 // Register godoc
 // @Summary      Register new user
-// @Description  Create account and return JWT tokens
+// @Description  Create account with optional company creation/selection and return JWT tokens
 // @Tags         Auth
 // @Accept       json
 // @Produce      json
@@ -64,7 +70,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, tokens, err := h.authService.Register(req.Username, req.Password, req.Email, req.RoleID, req.IDJabatan)
+	user, tokens, err := h.authService.Register(req, h.perusahaanService)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		rollbar.Error(err)
@@ -216,6 +222,7 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 // @Success      200  {object} dto.MessageResponse
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/logout [post]
+// UNCHANGED from original
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")

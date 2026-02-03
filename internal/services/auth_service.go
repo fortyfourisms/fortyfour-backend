@@ -46,11 +46,14 @@ func mapTokenPairToDTO(m *models.TokenPair) *dto.TokenPair {
 
 /* ===================== Register ===================== */
 // Register creates a new user and returns token pair DTO
-func (s *AuthService) Register(username, password, email string, roleID *string, idJabatan *string) (*models.User, *dto.TokenPair, error) {
+func (s *AuthService) Register(
+	req dto.RegisterRequest,
+	perusahaanService PerusahaanServiceInterface,
+) (*models.User, *dto.TokenPair, error) {
 	// sanitize
-	username = strings.TrimSpace(username)
-	password = strings.TrimSpace(password)
-	email = strings.TrimSpace(email)
+	username := strings.TrimSpace(req.Username)
+	password := strings.TrimSpace(req.Password)
+	email := strings.TrimSpace(req.Email)
 
 	// validations
 	if username == "" {
@@ -94,6 +97,51 @@ func (s *AuthService) Register(username, password, email string, roleID *string,
 		return nil, nil, errors.New("email sudah digunakan")
 	}
 
+	// Handle company creation/selection logic
+	var idPerusahaan *string
+
+	// Validate empty string for nama_perusahaan
+	var namaPerusahaanTrimmed string
+	if req.NamaPerusahaan != nil {
+		namaPerusahaanTrimmed = strings.TrimSpace(*req.NamaPerusahaan)
+	}
+
+	var idPerusahaanTrimmed string
+	if req.IDPerusahaan != nil {
+		idPerusahaanTrimmed = strings.TrimSpace(*req.IDPerusahaan)
+	}
+
+	// Validate: Cannot provide both nama_perusahaan AND id_perusahaan
+	if namaPerusahaanTrimmed != "" && idPerusahaanTrimmed != "" {
+		return nil, nil, errors.New("tidak bisa mengisi nama_perusahaan dan id_perusahaan bersamaan")
+	}
+
+	// SCENARIO 1: User wants to CREATE new company (+ Add New Company clicked)
+	if namaPerusahaanTrimmed != "" {
+		// Create company with only nama_perusahaan (id_sub_sektor will be NULL)
+		createReq := dto.CreatePerusahaanRequest{
+			NamaPerusahaan: &namaPerusahaanTrimmed,
+			// IDSubSektor is nil - will be NULL in database
+		}
+		
+		perusahaan, err := perusahaanService.Create(createReq)
+		if err != nil {
+			rollbar.Error(err)
+			return nil, nil, fmt.Errorf("gagal membuat perusahaan: %v", err)
+		}
+		idPerusahaan = &perusahaan.ID
+	} else if idPerusahaanTrimmed != "" {
+		// SCENARIO 2: User selects existing company from dropdown
+		// Validate company exists
+		_, err := perusahaanService.GetByID(idPerusahaanTrimmed)
+		if err != nil {
+			rollbar.Error(err)
+			return nil, nil, errors.New("perusahaan tidak ditemukan")
+		}
+		idPerusahaan = &idPerusahaanTrimmed
+	}
+	// SCENARIO 3: Neither provided - user will select company later (id_perusahaan = nil)
+
 	// hash password
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -102,15 +150,20 @@ func (s *AuthService) Register(username, password, email string, roleID *string,
 	}
 
 	user := &models.User{
-		Username:  username,
-		Password:  string(hashed),
-		Email:     email,
-		RoleID:    roleID,
-		IDJabatan: idJabatan,
+		Username:     username,
+		Password:     string(hashed),
+		Email:        email,
+		RoleID:       req.RoleID,
+		IDJabatan:    req.IDJabatan,
+		IDPerusahaan: idPerusahaan,
 	}
 
 	if err := s.userRepo.Create(user); err != nil {
 		rollbar.Error(err)
+		// ROLLBACK: If company was created, delete it
+		if namaPerusahaanTrimmed != "" && idPerusahaan != nil {
+			perusahaanService.Delete(*idPerusahaan)
+		}
 		return nil, nil, err
 	}
 

@@ -8,6 +8,10 @@ type RegisterRequest struct {
 	Email     string  `json:"email" validate:"required,email"`
 	RoleID    *string `json:"role_id,omitempty"`
 	IDJabatan *string `json:"id_jabatan,omitempty"`
+
+	// Added company fields for registration
+	NamaPerusahaan *string `json:"nama_perusahaan,omitempty"` // For creating new company
+	IDPerusahaan   *string `json:"id_perusahaan,omitempty"`   // For selecting existing company
 }
 
 type LoginRequest struct {

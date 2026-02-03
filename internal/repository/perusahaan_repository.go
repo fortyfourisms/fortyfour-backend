@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"fortyfour-backend/internal/dto"
-	"fortyfour-backend/internal/utils"
 
 	"github.com/rollbar/rollbar-go"
 )
@@ -17,17 +16,24 @@ func NewPerusahaanRepository(db *sql.DB) *PerusahaanRepository {
 }
 
 func (r *PerusahaanRepository) Create(req dto.CreatePerusahaanRequest, id string) error {
+	var idSubSektor interface{}
+	if req.IDSubSektor != nil && *req.IDSubSektor != "" {
+		idSubSektor = *req.IDSubSektor
+	} else {
+		idSubSektor = nil
+	}
+
 	_, err := r.db.Exec(`INSERT INTO perusahaan
         (id, photo, nama_perusahaan, id_sub_sektor, alamat, telepon, email, website)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
-		utils.ValueOrEmpty(req.Photo),
-		utils.ValueOrEmpty(req.NamaPerusahaan),
-		utils.ValueOrEmpty(req.IDSubSektor),
-		utils.ValueOrEmpty(req.Alamat),
-		utils.ValueOrEmpty(req.Telepon),
-		utils.ValueOrEmpty(req.Email),
-		utils.ValueOrEmpty(req.Website),
+		valueOrEmpty(req.Photo),
+		valueOrEmpty(req.NamaPerusahaan),
+		idSubSektor,
+		valueOrEmpty(req.Alamat),
+		valueOrEmpty(req.Telepon),
+		valueOrEmpty(req.Email),
+		valueOrEmpty(req.Website),
 	)
 	return err
 }
@@ -122,9 +128,12 @@ func (r *PerusahaanRepository) GetByID(id string) (*dto.PerusahaanResponse, erro
 }
 
 func (r *PerusahaanRepository) Update(id string, p dto.PerusahaanResponse) error {
-	idSubSektor := ""
+	// CHANGED: Handle NULL properly
+	var idSubSektor interface{}
 	if p.SubSektor != nil {
 		idSubSektor = p.SubSektor.ID
+	} else {
+		idSubSektor = nil
 	}
 	
 	_, err := r.db.Exec(`UPDATE perusahaan SET
@@ -138,4 +147,12 @@ func (r *PerusahaanRepository) Update(id string, p dto.PerusahaanResponse) error
 func (r *PerusahaanRepository) Delete(id string) error {
 	_, err := r.db.Exec(`DELETE FROM perusahaan WHERE id=?`, id)
 	return err
+}
+
+// Local helper function (don't use utils.ValueOrEmpty for id_sub_sektor)
+func valueOrEmpty(ptr *string) string {
+	if ptr == nil {
+		return ""
+	}
+	return *ptr
 }

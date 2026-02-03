@@ -114,7 +114,7 @@ func main() {
 	dashboardService := services.NewDashboardService(dashboardRepo)
 
 	// Initialize Handlers
-	authHandler := handlers.NewAuthHandler(authService, tokenService)
+	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService)
 	userHandler := handlers.NewUserHandler(userService, "./uploads", sseService)
 	uploadPath := "./uploads"
 	os.MkdirAll(uploadPath, os.ModePerm)
