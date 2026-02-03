@@ -11,8 +11,8 @@ type Config struct {
 	JWTSecret       string
 	Database        DatabaseConfig
 	Redis           RedisConfig
-	Rollbar         RollbarConfig
 	CasbinModelPath string
+	Rollbar         RollbarConfig
 }
 
 type DatabaseConfig struct {
@@ -56,7 +56,7 @@ func Load() *Config {
 		CasbinModelPath: getEnv("CASBIN_MODEL_PATH", absPath),
 		Rollbar: RollbarConfig{
 			Token: getEnv("ROLLBAR_TOKEN", ""),
-			Env:   getEnv("ROLLBAR_ENVIRONMENT", "development"),
+			Env:   getEnv("ROLLBAR_STATUS", "development"),
 		},
 	}
 }

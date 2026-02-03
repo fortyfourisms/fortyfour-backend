@@ -18,7 +18,6 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/rollbar/rollbar-go"
-	"github.com/rs/cors"
 )
 
 func main() {
@@ -35,8 +34,11 @@ func main() {
 	// Send a test message
 	rollbar.Info("Rollbar Go SDK initialized successfully!")
 
+	// Ensure all items are sent before the app exits
+	defer rollbar.Wait()
+
 	// call rollbar.Close() before the application exits to flush error message queue
-	// rollbar.Close()
+	rollbar.Close()
 
 	// Initialize MySQL database
 	db, err := database.NewMySQLConnection(database.Config{
@@ -174,15 +176,6 @@ func main() {
 		chatHandler,
 	)
 
-	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "https://admin.kssindustri.site", "https://fortyfouris.netlify.app"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"*"},
-		AllowCredentials: true,
-	})
-
-	mCors := c.Handler(mux)
-
 	// Start server
 	log.Printf("Server starting on %s", cfg.Port)
 	rollbar.Info("Server starting on %s", cfg.Port)
@@ -192,8 +185,5 @@ func main() {
 	log.Println("  - Protected posts: 100 requests/minute per user")
 	log.Println("SSE endpoint available at /api/events")
 
-	log.Fatal(http.ListenAndServe(cfg.Port, mCors))
-
-	// Ensure all items are sent before the app exits
-	rollbar.Wait()
+	log.Fatal(http.ListenAndServe(cfg.Port, mux))
 }
