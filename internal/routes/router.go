@@ -43,7 +43,8 @@ func InitRouter(
 	csirtH *handlers.CsirtHandler,
 	sdmCsirtH *handlers.SdmCsirtHandler,
 	seCsirtH *handlers.SeCsirtHandler,
-) *http.ServeMux {
+	chatHandler *handlers.ChatHandler,
+) http.Handler {
 	mux := http.NewServeMux()
 
 	// In main():
