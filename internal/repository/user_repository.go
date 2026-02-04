@@ -6,6 +6,7 @@ import (
 	"fortyfour-backend/internal/models"
 
 	"github.com/google/uuid"
+	"github.com/rollbar/rollbar-go"
 )
 
 type UserRepository struct {
@@ -33,6 +34,7 @@ func (r *UserRepository) Create(user *models.User) error {
 	query := `INSERT INTO users (id, username, password, email, role_id, id_jabatan) VALUES (?, ?, ?, ?, ?, ?)`
 	_, err := r.db.Exec(query, user.ID, user.Username, user.Password, user.Email, user.RoleID, user.IDJabatan)
 	if err != nil {
+		rollbar.Error(err)
 		return err
 	}
 
@@ -77,6 +79,7 @@ func (r *UserRepository) FindByID(id string) (*models.User, error) {
 		return nil, errors.New("user not found")
 	}
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -140,6 +143,7 @@ func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
 		return nil, errors.New("user not found")
 	}
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -191,6 +195,7 @@ func (r *UserRepository) FindAll() ([]models.User, error) {
 
 	rows, err := r.db.Query(query)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -219,6 +224,7 @@ func (r *UserRepository) FindAll() ([]models.User, error) {
 			&user.UpdatedAt,
 		)
 		if err != nil {
+			rollbar.Error(err)
 			return nil, err
 		}
 
@@ -286,6 +292,7 @@ func (r *UserRepository) EmailExists(email string, excludeID *string) (bool, err
 
 	err := r.db.QueryRow(query, args...).Scan(&count)
 	if err != nil {
+		rollbar.Error(err)
 		return false, err
 	}
 
@@ -307,6 +314,7 @@ func (r *UserRepository) UsernameExists(username string, excludeID *string) (boo
 
 	err := r.db.QueryRow(query, args...).Scan(&count)
 	if err != nil {
+		rollbar.Error(err)
 		return false, err
 	}
 

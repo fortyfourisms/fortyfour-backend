@@ -16,3 +16,4 @@ coverage.out
 *.log
 tmp/
 vendor/
+nginx/

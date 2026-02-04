@@ -5,7 +5,7 @@ import (
 	"fortyfour-backend/internal/services"
 	"testing"
 
-	"github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin/v3"
 )
 
 func TestNewCasbinService(t *testing.T) {

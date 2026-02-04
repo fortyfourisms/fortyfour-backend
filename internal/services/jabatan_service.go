@@ -8,6 +8,7 @@ import (
 	"fortyfour-backend/internal/repository"
 
 	"github.com/google/uuid"
+	"github.com/rollbar/rollbar-go"
 )
 
 type JabatanService struct {
@@ -26,6 +27,7 @@ func (s *JabatanService) Create(req dto.CreateJabatanRequest) (*dto.JabatanRespo
 	id := uuid.New().String()
 
 	if err := s.repo.Create(req, id); err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -43,6 +45,7 @@ func (s *JabatanService) GetByID(id string) (*dto.JabatanResponse, error) {
 func (s *JabatanService) Update(id string, req dto.UpdateJabatanRequest) (*dto.JabatanResponse, error) {
 	jabatan, err := s.repo.GetByID(id)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -51,6 +54,7 @@ func (s *JabatanService) Update(id string, req dto.UpdateJabatanRequest) (*dto.J
 	}
 
 	if err := s.repo.Update(id, *jabatan); err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 

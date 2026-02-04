@@ -9,6 +9,8 @@ import (
 	"fortyfour-backend/internal/utils"
 	"net/http"
 	"strings"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type RoleHandler struct {
@@ -67,6 +69,7 @@ func (h *RoleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *RoleHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
@@ -85,6 +88,7 @@ func (h *RoleHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 func (h *RoleHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 404, "Data tidak ditemukan")
 		return
 	}
@@ -104,12 +108,14 @@ func (h *RoleHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id s
 func (h *RoleHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateRoleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
 	resp, err := h.service.Create(req)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -138,12 +144,14 @@ func (h *RoleHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 func (h *RoleHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateRoleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
 	resp, err := h.service.Update(id, req)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -169,6 +177,7 @@ func (h *RoleHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 // @Router       /api/role/{id} [delete]
 func (h *RoleHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}

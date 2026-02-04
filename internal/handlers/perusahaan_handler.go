@@ -22,6 +22,7 @@ import (
 	"fortyfour-backend/internal/utils"
 
 	"github.com/nfnt/resize"
+	"github.com/rollbar/rollbar-go"
 )
 
 const (
@@ -89,6 +90,7 @@ func (h *PerusahaanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
@@ -107,6 +109,7 @@ func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, _ *http.Request)
 func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 404, "Data tidak ditemukan")
 		return
 	}
@@ -125,6 +128,7 @@ func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, _ *http.Request
 // @Router       /api/perusahaan [post]
 func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "Gagal membaca form data")
 		return
 	}
@@ -133,6 +137,7 @@ func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request)
 
 	// Handle file upload jika ada
 	if filename, err := h.processFileUpload(r); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	} else if filename != "" {
@@ -141,6 +146,7 @@ func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request)
 
 	resp, err := h.service.Create(req)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -168,6 +174,7 @@ func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request)
 // @Router       /api/perusahaan/{id} [put]
 func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "Gagal membaca form data")
 		return
 	}
@@ -176,6 +183,7 @@ func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request,
 
 	// Handle file upload jika ada
 	if filename, err := h.processFileUpload(r); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	} else if filename != "" {
@@ -186,6 +194,7 @@ func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request,
 
 	resp, err := h.service.Update(id, req)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -214,6 +223,7 @@ func (h *PerusahaanHandler) handleDelete(w http.ResponseWriter, r *http.Request,
 	h.deleteOldPhoto(id)
 
 	if err := h.service.Delete(id); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -232,6 +242,7 @@ func (h *PerusahaanHandler) handleDelete(w http.ResponseWriter, r *http.Request,
 func (h *PerusahaanHandler) processFileUpload(r *http.Request) (string, error) {
 	file, header, err := r.FormFile("photo")
 	if err != nil {
+		rollbar.Error(err)
 		// Tidak ada file di-upload, bukan error
 		if err == http.ErrMissingFile {
 			return "", nil
@@ -247,6 +258,7 @@ func (h *PerusahaanHandler) processFileUpload(r *http.Request) (string, error) {
 func (h *PerusahaanHandler) deleteOldPhoto(id string) {
 	perusahaan, err := h.service.GetByID(id)
 	if err == nil && perusahaan.Photo != "" {
+		rollbar.Error(err)
 		oldPath := filepath.Join(h.uploadPath, perusahaan.Photo)
 		os.Remove(oldPath) // ignore error
 	}
@@ -277,6 +289,7 @@ func (h *PerusahaanHandler) parseUpdateForm(form *multipart.Form) dto.UpdatePeru
 func (h *PerusahaanHandler) saveUploadedFile(file multipart.File, header *multipart.FileHeader) (string, error) {
 	// Validasi content type
 	if err := h.validateImageFile(header); err != nil {
+		rollbar.Error(err)
 		return "", err
 	}
 
@@ -284,12 +297,14 @@ func (h *PerusahaanHandler) saveUploadedFile(file multipart.File, header *multip
 	buff := &bytes.Buffer{}
 	size, err := io.Copy(buff, file)
 	if err != nil {
+		rollbar.Error(err)
 		return "", fmt.Errorf("gagal membaca file")
 	}
 
 	// Decode dan resize jika perlu
 	img, err := h.processImage(buff.Bytes(), size)
 	if err != nil {
+		rollbar.Error(err)
 		return "", err
 	}
 
@@ -298,6 +313,7 @@ func (h *PerusahaanHandler) saveUploadedFile(file multipart.File, header *multip
 
 	// Simpan file
 	if err := h.saveImageToFile(img, filename); err != nil {
+		rollbar.Error(err)
 		return "", err
 	}
 
@@ -315,6 +331,7 @@ func (h *PerusahaanHandler) validateImageFile(header *multipart.FileHeader) erro
 func (h *PerusahaanHandler) processImage(data []byte, size int64) (image.Image, error) {
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
+		rollbar.Error(err)
 		return nil, fmt.Errorf("gagal decode image")
 	}
 
@@ -336,6 +353,7 @@ func (h *PerusahaanHandler) saveImageToFile(img image.Image, filename string) er
 	outPath := filepath.Join(h.uploadPath, filename)
 	out, err := os.Create(outPath)
 	if err != nil {
+		rollbar.Error(err)
 		return fmt.Errorf("gagal menyimpan file")
 	}
 	defer out.Close()

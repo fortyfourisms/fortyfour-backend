@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func setupIkasHandler() (*IkasHandler, repository.IkasRepositoryInterface, *services.SSEService) {
+func setupIkasHandler() (*IkasHandler, repository.IkasRepoInterface, *services.SSEService) {
 	mockRepo := testhelpers.NewMockIkasRepository()
 	sseSvc := services.NewSSEService()
 	ikasSvc := services.NewIkasService(mockRepo)
@@ -117,7 +117,7 @@ func TestIkasHandler_handleUpdate(t *testing.T) {
 	}, "upd-id", 0, "i-1", "pro-1", "det-1", "g-1")
 
 	update := dto.UpdateIkasRequest{
-		Responden: strPtr("Rudy"),
+		Responden: strPtrIkas("Rudy"),
 		TargetNilai: float64Ptr(4.9),
 	}
 	b, _ := json.Marshal(update)
@@ -185,5 +185,5 @@ func TestIkasHandler_ServeHTTP(t *testing.T) {
 }
 
 /* helper */
-func strPtr(s string) *string    { return &s }
+func strPtrIkas(s string) *string    { return &s }
 func float64Ptr(f float64) *float64 { return &f }

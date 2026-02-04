@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"path/filepath"
 	"strconv"
 )
 
@@ -11,6 +12,7 @@ type Config struct {
 	Database        DatabaseConfig
 	Redis           RedisConfig
 	CasbinModelPath string
+	Rollbar         RollbarConfig
 }
 
 type DatabaseConfig struct {
@@ -28,7 +30,13 @@ type RedisConfig struct {
 	DB       int
 }
 
+type RollbarConfig struct {
+	Token string
+	Env   string
+}
+
 func Load() *Config {
+	absPath, _ := filepath.Abs("casbin/casbin_model.conf")
 	return &Config{
 		Port:      getEnv("PORT", ":8080"),
 		JWTSecret: getEnv("JWT_SECRET", "your-secret-key"),
@@ -45,7 +53,11 @@ func Load() *Config {
 			Password: getEnv("REDIS_PASSWORD", ""),
 			DB:       getEnvAsInt("REDIS_DB", 0),
 		},
-		CasbinModelPath: getEnv("CASBIN_MODEL_PATH", "./casbin_model.conf"),
+		CasbinModelPath: getEnv("CASBIN_MODEL_PATH", absPath),
+		Rollbar: RollbarConfig{
+			Token: getEnv("ROLLBAR_TOKEN", ""),
+			Env:   getEnv("ROLLBAR_STATUS", "development"),
+		},
 	}
 }
 

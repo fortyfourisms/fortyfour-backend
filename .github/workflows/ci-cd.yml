@@ -10,7 +10,7 @@ on:
       - main
 
 env:
-  GO_VERSION: '1.25'
+  GO_VERSION: '1.25.5'
   DOCKER_IMAGE: fourtyfour
   REGISTRY: ghcr.io
 
@@ -306,9 +306,6 @@ jobs:
     name: Deploy to VPS
     runs-on: ubuntu-latest
     needs: build
-    permissions:
-      contents: read
-      packages: read
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
@@ -318,8 +315,10 @@ jobs:
       # Wait for image to propagate in registry
       - name: Wait for image propagation
         run: |
-          echo "Waiting 15 seconds for image to be available in registry..."
-          sleep 15
+          echo "Waiting 20 seconds for image to be fully available in registry..."
+          echo "This ensures the image is ready for VPS to pull"
+          sleep 20
+          echo "✅ Ready to deploy"
 
       - name: Create deployment directory structure
         uses: appleboy/ssh-action@v1.0.0
@@ -329,8 +328,8 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           script: |
-            mkdir -p ~/myapp
-            mkdir -p ~/myapp/migrations
+            mkdir -p ~/fortyfour-backend
+            mkdir -p ~/fortyfour-backend/migrations
 
       - name: Copy files to VPS
         uses: appleboy/scp-action@v0.1.4
@@ -340,7 +339,7 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
           source: "docker-compose.yml,migrations/*"
-          target: ~/myapp
+          target: ~/fortyfour-backend
 
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.0
@@ -356,12 +355,28 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           envs: IMAGE_TAG,G_TOKEN,ACTOR,REGISTRY
           script: |
-            cd ~/myapp
+            cd ~/fortyfour-backend
             
             echo "=== Deployment Info ==="
-            echo "Image to deploy: ${IMAGE_TAG}"
+            echo "Received IMAGE_TAG: ${IMAGE_TAG}"
+            
+            # Extract first tag only (metadata action returns multiple tags separated by newlines)
+            FIRST_TAG=$(echo "${IMAGE_TAG}" | head -n1 | tr -d '\r\n')
+            
             echo "Registry: ${REGISTRY}"
             echo "Actor: ${ACTOR}"
+            echo "Using first tag: ${FIRST_TAG}"
+            
+            # Load environment variables from system config
+            if [ -f /etc/fortyfour-backend/environment ]; then
+              export $(cat /etc/fortyfour-backend/environment | xargs)
+              echo "✅ Environment variables loaded"
+            else
+              echo "⚠️  Warning: Environment file not found, using defaults"
+            fi
+            
+            # Logout first to clear any cached credentials
+            docker logout ${REGISTRY} 2>/dev/null || true
             
             # Login to GitHub Container Registry
             echo "Logging in to ${REGISTRY}..."
@@ -369,58 +384,78 @@ jobs:
             
             if [ $? -ne 0 ]; then
               echo "❌ Failed to login to registry!"
+              echo "Please check:"
+              echo "1. G_TOKEN has 'read:packages' permission"
+              echo "2. Token is valid and not expired"
+              echo "3. Actor (${ACTOR}) has access to the package"
               exit 1
             fi
             
             echo "✅ Login successful"
             
-            if [ -z "${IMAGE_TAG}" ]; then
-              echo "❌ IMAGE_TAG is empty!"
+            if [ -z "${FIRST_TAG}" ]; then
+              echo "❌ IMAGE_TAG is empty or invalid!"
               exit 1
             fi
             
             # Convert to lowercase (GHCR requires lowercase)
-            IMAGE_TAG_LOWER=$(echo "${IMAGE_TAG}" | tr '[:upper:]' '[:lower:]')
-            echo "Using lowercase image tag: ${IMAGE_TAG_LOWER}"
+            IMAGE_TAG_LOWER=$(echo "${FIRST_TAG}" | tr '[:upper:]' '[:lower:]')
+            echo "Final image reference: ${IMAGE_TAG_LOWER}"
             
             # Pull the exact image with retry
             echo "Pulling image: ${IMAGE_TAG_LOWER}"
-            RETRIES=3
+            RETRIES=5
+            RETRY_DELAY=10
+            
             for i in $(seq 1 $RETRIES); do
-              echo "Attempt $i/$RETRIES..."
+              echo "Pull attempt $i/$RETRIES..."
+              
               if docker pull "${IMAGE_TAG_LOWER}"; then
                 echo "✅ Successfully pulled: ${IMAGE_TAG_LOWER}"
+                PULL_SUCCESS=true
                 break
               else
                 echo "❌ Pull attempt $i failed"
-                if [ $i -eq $RETRIES ]; then
+                
+                if [ $i -lt $RETRIES ]; then
+                  echo "Waiting ${RETRY_DELAY} seconds before retry..."
+                  sleep $RETRY_DELAY
+                else
                   echo ""
-                  echo "=== Debugging Information ==="
-                  echo "Failed to pull: ${IMAGE_TAG_LOWER}"
+                  echo "=== Pull Failed After $RETRIES Attempts ==="
+                  echo "Image: ${IMAGE_TAG_LOWER}"
                   echo ""
-                  echo "Attempting to list available tags..."
-                  # Try to list what's actually available
-                  docker images | grep "$(echo ${IMAGE_TAG_LOWER} | cut -d: -f1)" || echo "No matching images found locally"
+                  echo "Possible causes:"
+                  echo "1. Image not yet available in registry (propagation delay)"
+                  echo "2. Network connectivity issues"
+                  echo "3. Authentication problems"
                   echo ""
-                  echo "Registry info:"
+                  echo "Debug info:"
                   echo "Registry: ${REGISTRY}"
                   echo "Repository: $(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')"
+                  echo ""
+                  echo "Checking local images:"
+                  docker images | head -20
                   exit 1
                 fi
-                sleep 5
               fi
             done
             
+            if [ -z "$PULL_SUCCESS" ]; then
+              echo "❌ Failed to pull image after all retries"
+              exit 1
+            fi
+            
             # Tag as latest for docker-compose
-            docker tag "${IMAGE_TAG_LOWER}" myapp:latest
+            docker tag "${IMAGE_TAG_LOWER}" fortyfour-backend:latest
             
             # Stop and remove old containers
             echo "Stopping old containers..."
-            docker-compose down || true
+            docker compose down || true
             
             # Start new containers
             echo "Starting new containers..."
-            docker-compose up -d
+            docker compose up -d
             
             # Clean up old images (keep last 3)
             echo "Cleaning up old images..."
@@ -443,7 +478,7 @@ jobs:
                 echo "❌ Health check failed after 60 seconds!"
                 echo ""
                 echo "Container logs:"
-                docker-compose logs --tail=100
+                docker compose logs --tail=100
                 exit 1
               fi
             done
@@ -455,8 +490,13 @@ jobs:
       - name: Notify deployment success
         if: success()
         run: |
-          echo "✅ Deployment to VPS successful!"
-          echo "Image: ${{ env.REGISTRY }}/${{ github.repository }}:sha-${{ github.sha }}"
+          echo "================================================"
+          echo "✅ DEPLOYMENT SUCCESSFUL!"
+          echo "================================================"
+          echo "Image: ${{ needs.build.outputs.image-tag }}"
+          echo "Deployed to: ${{ secrets.VPS_HOST }}"
+          echo "Time: $(date)"
+          echo "================================================"
 
       - name: Notify deployment failure
         if: failure()
@@ -479,7 +519,7 @@ jobs:
 
       - name: Test health endpoint
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.VPS_HOST }}:8080/api/health)
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.SITE_URL }}/api/health)
           if [ $response -ne 200 ]; then
             echo "❌ Health check failed with status: $response"
             exit 1
@@ -489,7 +529,7 @@ jobs:
       - name: Test API endpoints
         run: |
           # Test posts endpoint
-          response=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.VPS_HOST }}:8080/api/posts)
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.SITE_URL }}/api/jabatan)
           if [ $response -ne 200 ] && [ $response -ne 401 ]; then
             echo "❌ Posts endpoint failed with status: $response"
             exit 1

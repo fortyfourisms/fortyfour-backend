@@ -6,6 +6,7 @@ import (
 	"fortyfour-backend/internal/repository"
 
 	"github.com/google/uuid"
+	"github.com/rollbar/rollbar-go"
 )
 
 type ProteksiService struct {
@@ -20,6 +21,7 @@ func (s *ProteksiService) Create(req dto.CreateProteksiRequest) (*models.Proteks
 	id := uuid.New().String()
 
 	if err := s.repo.Create(req, id); err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -37,6 +39,7 @@ func (s *ProteksiService) GetByID(id string) (*models.Proteksi, error) {
 func (s *ProteksiService) Update(id string, req dto.UpdateProteksiRequest) (*models.Proteksi, error) {
 	proteksi, err := s.repo.GetByID(id)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	if req.NilaiProteksi != nil {
@@ -62,6 +65,7 @@ func (s *ProteksiService) Update(id string, req dto.UpdateProteksiRequest) (*mod
 	}
 
 	if err := s.repo.Update(id, *proteksi); err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 

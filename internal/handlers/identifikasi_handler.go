@@ -8,6 +8,8 @@ import (
 	"fortyfour-backend/internal/utils"
 	"net/http"
 	"strings"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type IdentifikasiHandler struct {
@@ -68,12 +70,14 @@ func (h *IdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 func (h *IdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateIdentifikasiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
 	resp, err := h.service.Create(req)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -99,6 +103,7 @@ func (h *IdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
@@ -118,6 +123,7 @@ func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, _ *http.Reques
 func (h *IdentifikasiHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 404, "Data tidak ditemukan")
 		return
 	}
@@ -138,12 +144,14 @@ func (h *IdentifikasiHandler) handleGetByID(w http.ResponseWriter, _ *http.Reque
 func (h *IdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateIdentifikasiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
 	resp, err := h.service.Update(id, req)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -169,6 +177,7 @@ func (h *IdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 // @Router       /api/identifikasi/{id} [delete]
 func (h *IdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
 		return
 	}

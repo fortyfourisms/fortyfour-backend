@@ -10,6 +10,8 @@ import (
 	"fortyfour-backend/internal/validator"
 
 	"net/http"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type AuthHandler struct {
@@ -37,12 +39,14 @@ func NewAuthHandler(authService *services.AuthService, tokenService *services.To
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	var req dto.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		rollbar.Error(err)
 		return
 	}
 
@@ -54,12 +58,14 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	// Validasi menggunakan validator
 	if err := validator.Validate(req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
 	user, tokens, err := h.authService.Register(req.Username, req.Password, req.Email, req.RoleID, req.IDJabatan)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
@@ -85,12 +91,14 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	var req dto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		rollbar.Error(err)
 		return
 	}
 
@@ -101,12 +109,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Validasi menggunakan validator
 	if err := validator.Validate(req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
 	user, tokens, err := h.authService.Login(req.Username, req.Password)
 	if err != nil {
 		utils.RespondError(w, http.StatusUnauthorized, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
@@ -132,12 +142,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	var req dto.RefreshTokenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		rollbar.Error(err)
 		return
 	}
 
@@ -147,12 +159,14 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	// Validasi menggunakan validator
 	if err := validator.Validate(req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
 	tokens, err := h.tokenService.RefreshAccessToken(req.RefreshToken)
 	if err != nil {
 		utils.RespondError(w, http.StatusUnauthorized, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
@@ -176,12 +190,14 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
+		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
 		return
 	}
 
 	var req dto.LogoutRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		rollbar.Error(err)
 		return
 	}
 
@@ -191,11 +207,13 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	// Validasi menggunakan validator
 	if err := validator.Validate(req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
 	if err := h.authService.Logout(req.RefreshToken); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		rollbar.Error(err)
 		return
 	}
 

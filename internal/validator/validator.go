@@ -7,6 +7,7 @@ import (
 	"unicode"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/rollbar/rollbar-go"
 )
 
 var validate *validator.Validate
@@ -19,6 +20,7 @@ func init() {
 func Validate(data interface{}) error {
 	err := validate.Struct(data)
 	if err != nil {
+		rollbar.Error(err)
 		if validationErrors, ok := err.(validator.ValidationErrors); ok {
 			return formatValidationErrors(validationErrors)
 		}
@@ -47,7 +49,6 @@ func formatValidationErrors(errs validator.ValidationErrors) error {
 			messages = append(messages, fmt.Sprintf("%s tidak valid", field))
 		}
 	}
-
 	return fmt.Errorf("%s", strings.Join(messages, ", "))
 }
 

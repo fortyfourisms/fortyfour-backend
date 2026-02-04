@@ -6,6 +6,7 @@ import (
 	"fortyfour-backend/internal/repository"
 
 	"github.com/google/uuid"
+	"github.com/rollbar/rollbar-go"
 )
 
 type GulihService struct {
@@ -19,6 +20,7 @@ func NewGulihService(repo repository.GulihRepositoryInterface) *GulihService {
 func (s *GulihService) Create(req dto.CreateGulihRequest) (*models.Gulih, error) {
 	id := uuid.New().String()
 	if err := s.repo.Create(req, id); err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 	return s.repo.GetByID(id)
@@ -35,6 +37,7 @@ func (s *GulihService) GetByID(id string) (*models.Gulih, error) {
 func (s *GulihService) Update(id string, req dto.UpdateGulihRequest) (*models.Gulih, error) {
 	gulih, err := s.repo.GetByID(id)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -55,6 +58,7 @@ func (s *GulihService) Update(id string, req dto.UpdateGulihRequest) (*models.Gu
 	}
 
 	if err := s.repo.Update(id, *gulih); err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 

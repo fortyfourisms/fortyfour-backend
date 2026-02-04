@@ -6,13 +6,14 @@ import (
 	"fortyfour-backend/internal/repository"
 
 	"github.com/google/uuid"
+	"github.com/rollbar/rollbar-go"
 )
 
 type IkasService struct {
-	repo repository.IkasRepositoryInterface
+	repo repository.IkasRepoInterface
 }
 
-func NewIkasService(repo repository.IkasRepositoryInterface) *IkasService {
+func NewIkasService(repo repository.IkasRepoInterface) *IkasService {
 	return &IkasService{repo: repo}
 }
 
@@ -27,6 +28,7 @@ func (s *IkasService) Create(req dto.CreateIkasRequest, id string) error {
 		idIdentifikasi = uuid.New().String() // Generate UUID di sini
 		nilaiIden, err = s.repo.CreateIdentifikasi(idIdentifikasi, req.Identifikasi)
 		if err != nil {
+			rollbar.Error(err)
 			return err
 		}
 	} else if req.IDIdentifikasi != "" {
@@ -39,6 +41,7 @@ func (s *IkasService) Create(req dto.CreateIkasRequest, id string) error {
 		idProteksi = uuid.New().String() // Generate UUID di sini
 		nilaiProt, err = s.repo.CreateProteksi(idProteksi, req.Proteksi)
 		if err != nil {
+			rollbar.Error(err)
 			return err
 		}
 	} else if req.IDProteksi != "" {
@@ -50,6 +53,7 @@ func (s *IkasService) Create(req dto.CreateIkasRequest, id string) error {
 		idDeteksi = uuid.New().String() // Generate UUID di sini
 		nilaiDet, err = s.repo.CreateDeteksi(idDeteksi, req.Deteksi)
 		if err != nil {
+			rollbar.Error(err)
 			return err
 		}
 	} else if req.IDDeteksi != "" {
@@ -61,6 +65,7 @@ func (s *IkasService) Create(req dto.CreateIkasRequest, id string) error {
 		idGulih = uuid.New().String() // Generate UUID di sini
 		nilaiGul, err = s.repo.CreateGulih(idGulih, req.Gulih)
 		if err != nil {
+			rollbar.Error(err)
 			return err
 		}
 	} else if req.IDGulih != "" {
@@ -87,6 +92,7 @@ func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*dto.IkasRes
 	// Ambil data existing untuk mendapatkan ID nested tables
 	existing, err := s.repo.GetByID(id)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -100,6 +106,7 @@ func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*dto.IkasRes
 		}
 		nilai, err := s.repo.UpdateIdentifikasi(existing.Identifikasi.ID, req.Identifikasi)
 		if err != nil {
+			rollbar.Error(err)
 			return nil, err
 		}
 		nilaiIden = nilai
@@ -115,6 +122,7 @@ func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*dto.IkasRes
 		}
 		nilai, err := s.repo.UpdateProteksi(existing.Proteksi.ID, req.Proteksi)
 		if err != nil {
+			rollbar.Error(err)
 			return nil, err
 		}
 		nilaiProt = nilai
@@ -130,6 +138,7 @@ func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*dto.IkasRes
 		}
 		nilai, err := s.repo.UpdateDeteksi(existing.Deteksi.ID, req.Deteksi)
 		if err != nil {
+			rollbar.Error(err)
 			return nil, err
 		}
 		nilaiDet = nilai
@@ -145,6 +154,7 @@ func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*dto.IkasRes
 		}
 		nilai, err := s.repo.UpdateGulih(existing.Gulih.ID, req.Gulih)
 		if err != nil {
+			rollbar.Error(err)
 			return nil, err
 		}
 		nilaiGul = nilai
@@ -161,12 +171,14 @@ func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*dto.IkasRes
 
 	// Update data IKAS utama
 	if err := s.repo.Update(id, req); err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
 	// Ambil data terbaru dengan JOIN
 	updated, err := s.repo.GetByID(id)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -181,6 +193,7 @@ func (s *IkasService) ImportFromExcel(fileData []byte) (*dto.IkasResponse, error
 	// Parse Excel - semua data sudah diambil dari Excel
 	excelData, err := s.repo.ParseExcelForImport(fileData)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -189,12 +202,14 @@ func (s *IkasService) ImportFromExcel(fileData []byte) (*dto.IkasResponse, error
 
 	// Create menggunakan service Create yang sudah ada
 	if err := s.Create(*excelData, newID); err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
 	// Ambil data yang baru dibuat
 	resp, err := s.GetByID(newID)
 	if err != nil {
+		rollbar.Error(err)
 		return nil, err
 	}
 
