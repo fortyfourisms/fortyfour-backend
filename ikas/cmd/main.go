@@ -12,16 +12,15 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/joho/godotenv"
 	"github.com/rollbar/rollbar-go"
 )
 
 func main() {
 
 	// Load env
-	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found")
-	}
+	// if err := godotenv.Load(); err != nil {
+	// 	log.Println("No .env file found")
+	// }
 
 	cfg := config.Load()
 
@@ -67,18 +66,21 @@ func main() {
 	ruangLingkupRepo := repository.NewRuangLingkupRepository(db)
 	domainRepo := repository.NewDomainRepository(db)
 	kategoriRepo := repository.NewKategoriRepository(db)
+	subKategoriRepo := repository.NewSubKategoriRepository(db)
 
 	// services
 	ikasService := services.NewIkasService(ikasRepo)
 	ruangLingkupService := services.NewRuangLingkupService(ruangLingkupRepo)
 	domainService := services.NewDomainService(domainRepo)
 	kategoriService := services.NewKategoriService(kategoriRepo)
+	subKategoriService := services.NewSubKategoriService(subKategoriRepo)
 
 	// handlers
 	ikasHandler := handlers.NewIkasHandler(ikasService)
 	ruangLingkupHandler := handlers.NewRuangLingkupHandler(ruangLingkupService)
 	domainHandler := handlers.NewDomainHandler(domainService)
 	kategoriHandler := handlers.NewKategoriHandler(kategoriService)
+	subKategoriHandler := handlers.NewSubKategoriHandler(subKategoriService)
 
 	// Router
 	mux := routes.InitRouter(
@@ -86,6 +88,7 @@ func main() {
 		ruangLingkupHandler,
 		domainHandler,
 		kategoriHandler,
+		subKategoriHandler,
 	)
 
 	auth := middleware.NewAuthMiddleware(cfg.JWTSecret)

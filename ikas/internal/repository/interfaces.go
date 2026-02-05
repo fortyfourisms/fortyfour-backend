@@ -80,3 +80,14 @@ type KategoriRepositoryInterface interface {
 	CheckDuplicateName(domainID string, namaKategori string, excludeID string) (bool, error)
 	CheckDomainExists(domainID string) (bool, error)
 }
+
+// SubKategoriRepositoryInterface
+type SubKategoriRepositoryInterface interface {
+	Create(req dto.CreateSubKategoriRequest, id string) error
+	GetAll() ([]dto.SubKategoriResponse, error)
+	GetByID(id string) (*dto.SubKategoriResponse, error)
+	Update(id string, req dto.UpdateSubKategoriRequest) error
+	Delete(id string) error
+	CheckDuplicateName(kategoriID string, namaSubKategori string, excludeID string) (bool, error)
+	CheckKategoriExists(kategoriID string) (bool, error)
+}

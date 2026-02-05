@@ -10,6 +10,7 @@ func InitRouter(
 	ruangLingkupH *handlers.RuangLingkupHandler,
 	domainH *handlers.DomainHandler,
 	kategoriH *handlers.KategoriHandler,
+	subKategoriH *handlers.SubKategoriHandler,
 ) *http.ServeMux {
 	mux := http.NewServeMux()
 
@@ -24,6 +25,9 @@ func InitRouter(
 
 	mux.Handle("/api/kategori", kategoriH)
 	mux.Handle("/api/kategori/", kategoriH)
+
+	mux.Handle("/api/sub-kategori", subKategoriH)
+	mux.Handle("/api/sub-kategori/", subKategoriH)
 
 	return mux
 }
