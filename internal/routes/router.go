@@ -46,84 +46,81 @@ func InitRouter(
 	chatHandler *handlers.ChatHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
-	apiV1 := http.NewServeMux()
 
 	// In main():
-	apiV1.HandleFunc("/health", healthHandler)
+	mux.HandleFunc("/api/health", healthHandler)
 
 	// Routes Auth
-	apiV1.HandleFunc("/register", strictLimiter.LimitByIP(authH.Register))
-	apiV1.HandleFunc("/login", strictLimiter.LimitByIP(authH.Login))
-	apiV1.HandleFunc("/refresh", strictLimiter.LimitByIP(authH.RefreshToken))
-	apiV1.HandleFunc("/logout", authH.Logout)
+	mux.HandleFunc("/api/register", strictLimiter.LimitByIP(authH.Register))
+	mux.HandleFunc("/api/login", strictLimiter.LimitByIP(authH.Login))
+	mux.HandleFunc("/api/refresh", strictLimiter.LimitByIP(authH.RefreshToken))
+	mux.HandleFunc("/api/logout", authH.Logout)
 
 	// Routes Users
-	apiV1.HandleFunc("/users", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(userHandler)))))
-	apiV1.HandleFunc("/users/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(userHandler)))))
+	mux.HandleFunc("/api/users", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(userHandler)))))
+	mux.HandleFunc("/api/users/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(userHandler)))))
 
 	// Routes Casbin Management (only admin)
-	apiV1.HandleFunc("/casbin/policies", authM.Authenticate(casbinH.GetAllPolicies))
-	apiV1.HandleFunc("/casbin/policies/add", authM.Authenticate(casbinH.AddPolicy))
-	apiV1.HandleFunc("/casbin/policies/bulk", authM.Authenticate(casbinH.BulkAddPolicies))
-	apiV1.HandleFunc("/casbin/policies/remove", authM.Authenticate(casbinH.RemovePolicy))
-	apiV1.HandleFunc("/casbin/permissions", authM.Authenticate(casbinH.GetRolePermissions))
+	mux.HandleFunc("/api/casbin/policies", authM.Authenticate(casbinH.GetAllPolicies))
+	mux.HandleFunc("/api/casbin/policies/add", authM.Authenticate(casbinH.AddPolicy))
+	mux.HandleFunc("/api/casbin/policies/bulk", authM.Authenticate(casbinH.BulkAddPolicies))
+	mux.HandleFunc("/api/casbin/policies/remove", authM.Authenticate(casbinH.RemovePolicy))
+	mux.HandleFunc("/api/casbin/permissions", authM.Authenticate(casbinH.GetRolePermissions))
 
 	// SSE Routes
-	apiV1.HandleFunc("/events", authM.Authenticate(sseH.HandleSSE))
-	apiV1.HandleFunc("/events/stats", authM.Authenticate(sseH.GetStats))
+	mux.HandleFunc("/api/events", authM.Authenticate(sseH.HandleSSE))
+	mux.HandleFunc("/api/events/stats", authM.Authenticate(sseH.GetStats))
 
 	// Route Perusahaan
-	apiV1.HandleFunc("/perusahaan", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))))
-	apiV1.HandleFunc("/perusahaan/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))))
+	mux.HandleFunc("/api/perusahaan", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))))
+	mux.HandleFunc("/api/perusahaan/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))))
 
 	// Route PIC
-	apiV1.HandleFunc("/pic", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(picH)))))
-	apiV1.HandleFunc("/pic/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(picH)))))
+	mux.HandleFunc("/api/pic", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(picH)))))
+	mux.HandleFunc("/api/pic/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(picH)))))
 
 	// Route Jabatan
-	apiV1.HandleFunc("/jabatan", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(jabatanH)))))
-	apiV1.HandleFunc("/jabatan/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(jabatanH)))))
+	mux.HandleFunc("/api/jabatan", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(jabatanH)))))
+	mux.HandleFunc("/api/jabatan/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(jabatanH)))))
 
 	// Route Identifikasi
-	apiV1.HandleFunc("/identifikasi", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(identifikasiH)))))
-	apiV1.HandleFunc("/identifikasi/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(identifikasiH)))))
+	mux.HandleFunc("/api/identifikasi", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(identifikasiH)))))
+	mux.HandleFunc("/api/identifikasi/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(identifikasiH)))))
 
 	// Route Gulih
-	apiV1.HandleFunc("/gulih", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(gulihH)))))
-	apiV1.HandleFunc("/gulih/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(gulihH)))))
+	mux.HandleFunc("/api/gulih", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(gulihH)))))
+	mux.HandleFunc("/api/gulih/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(gulihH)))))
 
 	// Route Proteksi
-	apiV1.HandleFunc("/proteksi", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(proteksiH)))))
-	apiV1.HandleFunc("/proteksi/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(proteksiH)))))
+	mux.HandleFunc("/api/proteksi", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(proteksiH)))))
+	mux.HandleFunc("/api/proteksi/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(proteksiH)))))
 
 	// Route Deteksi
-	apiV1.HandleFunc("/deteksi", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(deteksiH)))))
-	apiV1.HandleFunc("/deteksi/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(deteksiH)))))
+	mux.HandleFunc("/api/deteksi", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(deteksiH)))))
+	mux.HandleFunc("/api/deteksi/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(deteksiH)))))
 
 	// Route Role
-	apiV1.HandleFunc("/role", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(roleH)))))
-	apiV1.HandleFunc("/role/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(roleH)))))
+	mux.HandleFunc("/api/role", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(roleH)))))
+	mux.HandleFunc("/api/role/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(roleH)))))
 
 	// Route CSIRT
-	apiV1.HandleFunc("/csirt", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(csirtH)))))
-	apiV1.HandleFunc("/csirt/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(csirtH)))))
+	mux.HandleFunc("/api/csirt", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(csirtH)))))
+	mux.HandleFunc("/api/csirt/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(csirtH)))))
 
 	// Route SDM_CSIRT
-	apiV1.HandleFunc("/sdm_csirt", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
-	apiV1.HandleFunc("/sdm_csirt/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
+	mux.HandleFunc("/api/sdm_csirt", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
+	mux.HandleFunc("/api/sdm_csirt/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
 
 	// Route SE_CSIRT
-	apiV1.HandleFunc("/se_csirt", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(seCsirtH)))))
-	apiV1.HandleFunc("/se_csirt/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(seCsirtH)))))
+	mux.HandleFunc("/api/se_csirt", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(seCsirtH)))))
+	mux.HandleFunc("/api/se_csirt/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(seCsirtH)))))
 
 	// Routes Chat
-	apiV1.HandleFunc("/chat", authM.Authenticate(chatHandler.Stream))
-	apiV1.HandleFunc("/chat/delete-session", authM.Authenticate(chatHandler.DeleteSession))
+	mux.HandleFunc("/api/chat", authM.Authenticate(chatHandler.Stream))
+	mux.HandleFunc("/api/chat/delete-session", authM.Authenticate(chatHandler.DeleteSession))
 
 	// Swagger UI
-	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
-
-	mux.Handle("/api/", http.StripPrefix("/api", apiV1))
+	mux.HandleFunc("/api/swagger/", httpSwagger.WrapHandler)
 
 	// CORS Configuration
 	c := cors.New(cors.Options{
