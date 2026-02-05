@@ -58,21 +58,22 @@ func (r *DashboardRepository) CountPerSektor(ctx context.Context, from, to *stri
 	return out, nil
 }
 
+// TODO: re-enable ikas summary when ikas table is ready
 // IkasGlobalAgg returns simple ikas aggregate across all data (for summary).
 // If ikas table or columns missing, this returns zeros or an error.
-func (r *DashboardRepository) IkasGlobalAgg(ctx context.Context) (dto.IkasAgg, error) {
-	var out dto.IkasAgg
-	query := `SELECT COUNT(id) as total_ikas, AVG(nilai_kematangan) as avg_nilai_kematangan, AVG(target_nilai) as avg_target_nilai FROM ikas`
-	row := r.db.QueryRowContext(ctx, query)
-	if err := row.Scan(&out.Total, &out.AvgNilaiKematangan, &out.AvgTargetNilai); err != nil {
-		// if no rows, return zero struct
-		if err == sql.ErrNoRows {
-			return out, nil
-		}
-		return out, err
-	}
-	return out, nil
-}
+// func (r *DashboardRepository) IkasGlobalAgg(ctx context.Context) (dto.IkasAgg, error) {
+// 	var out dto.IkasAgg
+// 	query := `SELECT COUNT(id) as total_ikas, AVG(nilai_kematangan) as avg_nilai_kematangan, AVG(target_nilai) as avg_target_nilai FROM ikas`
+// 	row := r.db.QueryRowContext(ctx, query)
+// 	if err := row.Scan(&out.Total, &out.AvgNilaiKematangan, &out.AvgTargetNilai); err != nil {
+// 		// if no rows, return zero struct
+// 		if err == sql.ErrNoRows {
+// 			return out, nil
+// 		}
+// 		return out, err
+// 	}
+// 	return out, nil
+// }
 
 // SeGlobalAgg returns simple se aggregate for summary
 func (r *DashboardRepository) SeGlobalAgg(ctx context.Context) (dto.SeAgg, error) {

@@ -21,17 +21,18 @@ func (s *DashboardService) GetSummary(ctx context.Context, from, to *string) (*d
 	if err != nil {
 		return nil, err
 	}
-	ikasAgg, err := s.repo.IkasGlobalAgg(ctx)
-	if err != nil {
-		return nil, err
-	}
+	// TODO: re-enable ikas summary when ikas table is ready
+	// ikasAgg, err := s.repo.IkasGlobalAgg(ctx)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	seAgg, err := s.repo.SeGlobalAgg(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return &dto.DashboardSummary{
 		Sektor: sectors,
-		Ikas:   ikasAgg,
+		// Ikas:   ikasAgg, // TODO: re-enable ikas summary when ikas table is ready
 		SE:     seAgg,
 	}, nil
 }
