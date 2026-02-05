@@ -25,15 +25,6 @@ func (h *RuangLingkupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	path := strings.TrimPrefix(r.URL.Path, "/api/ruang-lingkup")
 	id := strings.TrimPrefix(path, "/")
 
-	// Validasi ID
-	if id != "" {
-		// Cek panjang dan karakter yang diizinkan untuk UUID
-		if len(id) != 36 {
-			utils.RespondError(w, 400, "Format ID tidak valid")
-			return
-		}
-	}
-
 	switch r.Method {
 	case http.MethodGet:
 		if id == "" {
