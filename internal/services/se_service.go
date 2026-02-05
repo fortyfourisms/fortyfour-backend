@@ -31,19 +31,36 @@ func NewSEService(repo repository.SERepositoryInterface) SEService {
 ======================= */
 
 func (s *seService) Create(req dto.CreateSERequest) (*dto.SEResponse, error) {
-	if req.IDPerusahaan == nil || strings.TrimSpace(*req.IDPerusahaan) == "" {
+	// Validasi ID Perusahaan
+	if strings.TrimSpace(req.IDPerusahaan) == "" {
 		return nil, errors.New("id_perusahaan wajib diisi")
 	}
-	if req.IDSubSektor == nil || strings.TrimSpace(*req.IDSubSektor) == "" {
-		return nil, errors.New("id_sub_sektor wajib diisi")
+
+	// Validasi informasi SE
+	if strings.TrimSpace(req.NamaSE) == "" {
+		return nil, errors.New("nama_se wajib diisi")
+	}
+	if strings.TrimSpace(req.IpSE) == "" {
+		return nil, errors.New("ip_se wajib diisi")
+	}
+	if strings.TrimSpace(req.AsNumberSE) == "" {
+		return nil, errors.New("as_number_se wajib diisi")
+	}
+	if strings.TrimSpace(req.PengelolaSE) == "" {
+		return nil, errors.New("pengelola_se wajib diisi")
 	}
 
+	// Hitung total bobot dan kategori
 	totalBobot, err := hitungTotalBobotCreate(req)
 	if err != nil {
 		return nil, err
 	}
 
 	kategori := hitungKategoriSE(totalBobot)
+	if kategori == "" {
+		return nil, errors.New("total bobot tidak valid untuk kategorisasi")
+	}
+
 	id := uuid.NewString()
 
 	if err := s.repo.Create(req, id, totalBobot, kategori); err != nil {
@@ -77,12 +94,22 @@ func (s *seService) Update(id string, req dto.UpdateSERequest) (*dto.SEResponse,
 		return nil, errors.New("id wajib diisi")
 	}
 
-	totalBobot, err := hitungTotalBobotUpdate(req)
+	// Get existing data untuk kalkulasi ulang
+	existing, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, errors.New("data tidak ditemukan")
+	}
+
+	// Hitung total bobot berdasarkan data yang di-update
+	totalBobot, err := hitungTotalBobotUpdate(req, existing)
 	if err != nil {
 		return nil, err
 	}
 
 	kategori := hitungKategoriSE(totalBobot)
+	if kategori == "" {
+		return nil, errors.New("total bobot tidak valid untuk kategorisasi")
+	}
 
 	if err := s.repo.Update(id, req, totalBobot, kategori); err != nil {
 		return nil, err
@@ -120,37 +147,61 @@ func jawabanKeBobot(jawaban string) (int, error) {
 }
 
 func hitungTotalBobotCreate(req dto.CreateSERequest) (int, error) {
-	qs := []string{
-		req.Q1, req.Q2, req.Q3, req.Q4, req.Q5,
-		req.Q6, req.Q7, req.Q8, req.Q9, req.Q10,
+	karakteristik := []string{
+		req.NilaiInvestasi,
+		req.AnggaranOperasional,
+		req.KepatuhanPeraturan,
+		req.TeknikKriptografi,
+		req.JumlahPengguna,
+		req.DataPribadi,
+		req.KlasifikasiData,
+		req.KekritisanProses,
+		req.DampakKegagalan,
+		req.PotensiKerugiandanDampakNegatif,
 	}
 
 	total := 0
-	for _, q := range qs {
-		bobot, err := jawabanKeBobot(q)
+	for i, k := range karakteristik {
+		bobot, err := jawabanKeBobot(k)
 		if err != nil {
-			return 0, err
+			return 0, errors.New("karakteristik " + string(rune(i+1)) + ": " + err.Error())
 		}
 		total += bobot
 	}
 	return total, nil
 }
 
-func hitungTotalBobotUpdate(req dto.UpdateSERequest) (int, error) {
-	qs := []string{
-		req.Q1, req.Q2, req.Q3, req.Q4, req.Q5,
-		req.Q6, req.Q7, req.Q8, req.Q9, req.Q10,
+func hitungTotalBobotUpdate(req dto.UpdateSERequest, existing *dto.SEResponse) (int, error) {
+	// Gunakan nilai existing jika tidak di-update
+	karakteristik := []string{
+		getStringValue(req.NilaiInvestasi, existing.NilaiInvestasi),
+		getStringValue(req.AnggaranOperasional, existing.AnggaranOperasional),
+		getStringValue(req.KepatuhanPeraturan, existing.KepatuhanPeraturan),
+		getStringValue(req.TeknikKriptografi, existing.TeknikKriptografi),
+		getStringValue(req.JumlahPengguna, existing.JumlahPengguna),
+		getStringValue(req.DataPribadi, existing.DataPribadi),
+		getStringValue(req.KlasifikasiData, existing.KlasifikasiData),
+		getStringValue(req.KekritisanProses, existing.KekritisanProses),
+		getStringValue(req.DampakKegagalan, existing.DampakKegagalan),
+		getStringValue(req.PotensiKerugiandanDampakNegatif, existing.PotensiKerugiandanDampakNegatif),
 	}
 
 	total := 0
-	for _, q := range qs {
-		bobot, err := jawabanKeBobot(q)
+	for i, k := range karakteristik {
+		bobot, err := jawabanKeBobot(k)
 		if err != nil {
-			return 0, err
+			return 0, errors.New("karakteristik " + string(rune(i+1)) + ": " + err.Error())
 		}
 		total += bobot
 	}
 	return total, nil
+}
+
+func getStringValue(newValue *string, existingValue string) string {
+	if newValue != nil {
+		return *newValue
+	}
+	return existingValue
 }
 
 /* =======================

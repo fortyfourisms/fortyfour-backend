@@ -157,14 +157,6 @@ type SdmCsirtRepositoryInterface interface {
 	Delete(id string) error
 }
 
-// SeCsirtRepositoryInterface
-type SeCsirtRepositoryInterface interface {
-	Create(req dto.CreateSeCsirtRequest, id string) error
-	GetAll() ([]dto.SeCsirtResponse, error)
-	GetByID(id string) (*dto.SeCsirtResponse, error)
-	Update(id string, req dto.SeCsirtResponse) error
-	Delete(id string) error
-}
 
 // SektorRepositoryInterface
 type SektorRepositoryInterface interface {

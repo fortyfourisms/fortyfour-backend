@@ -73,7 +73,6 @@ func InitRouter(
 	lenientLimiter *middleware.RateLimiter,
 	csirtH *handlers.CsirtHandler,
 	sdmCsirtH *handlers.SdmCsirtHandler,
-	seCsirtH *handlers.SeCsirtHandler,
 	sektorH *handlers.SektorHandler,
 	subsectorH *handlers.SubSektorHandler,
 	seH *handlers.SEHandler,
@@ -157,10 +156,6 @@ func InitRouter(
 	// Route SDM_CSIRT
 	mux.HandleFunc("/api/sdm_csirt", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
 	mux.HandleFunc("/api/sdm_csirt/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
-
-	// Route SE_CSIRT
-	mux.HandleFunc("/api/se_csirt", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(seCsirtH)))))
-	mux.HandleFunc("/api/se_csirt/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(seCsirtH)))))
 
 	// Route Sektor
 	mux.HandleFunc("/api/sektor", authM.Authenticate(utils.AdaptHandler(sektorH)))

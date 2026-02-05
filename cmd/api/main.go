@@ -85,7 +85,6 @@ func main() {
 	ikasRepo := repository.NewIkasRepository(db)
 	csirtRepo := repository.NewCsirtRepository(db)
 	sdmCsirtRepo := repository.NewSdmCsirtRepository(db)
-	seCsirtRepo := repository.NewSeCsirtRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
 	sektorRepo := repository.NewSektorRepository(db)
 	subSektorRepo := repository.NewSubSektorRepository(db)
@@ -105,7 +104,6 @@ func main() {
 	ikasService := services.NewIkasService(ikasRepo)
 	csirtService := services.NewCsirtService(csirtRepo)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo)
-	seCsirtService := services.NewSeCsirtService(seCsirtRepo)
 	userService := services.NewUserService(userRepo, "./uploads")
 	roleService := services.NewRoleService(roleRepo)
 	sektorService := services.NewSektorService(sektorRepo)
@@ -128,7 +126,6 @@ func main() {
 	ikasHandler := handlers.NewIkasHandler(ikasService, sseService)
 	csirtHandler := handlers.NewCsirtHandler(csirtService)
 	sdmCsirtHandler := handlers.NewSdmCsirtHandler(sdmCsirtService)
-	seCsirtHandler := handlers.NewSeCsirtHandler(seCsirtService)
 	roleHandler := handlers.NewRoleHandler(roleService, sseService)
 	casbinHandler := handlers.NewCasbinHandler(casbinService, sseService)
 	sseHandler := handlers.NewSSEHandler(sseService)
@@ -170,7 +167,6 @@ func main() {
 		lenientLimiter,
 		csirtHandler,
 		sdmCsirtHandler,
-		seCsirtHandler,
 		sektorHandler,
 		subSektorHandler,
 		seHandler,
