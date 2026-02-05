@@ -59,3 +59,13 @@ type RuangLingkupRepositoryInterface interface {
 	// HELPER
 	CheckDuplicateName(nama string, excludeID string) (bool, error)
 }
+
+// DomainRepositoryInterface
+type DomainRepositoryInterface interface {
+	Create(req dto.CreateDomainRequest, id string) error
+	GetAll() ([]dto.DomainResponse, error)
+	GetByID(id string) (*dto.DomainResponse, error)
+	Update(id string, req dto.UpdateDomainRequest) error
+	Delete(id string) error
+	CheckDuplicateName(nama string, excludeID string) (bool, error)
+}

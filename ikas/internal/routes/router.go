@@ -8,6 +8,7 @@ import (
 func InitRouter(
 	ikasH *handlers.IkasHandler,
 	ruangLingkupH *handlers.RuangLingkupHandler,
+	domainH *handlers.DomainHandler,
 ) *http.ServeMux {
 	mux := http.NewServeMux()
 
@@ -16,6 +17,9 @@ func InitRouter(
 
 	mux.Handle("/api/ruang-lingkup", ruangLingkupH)
 	mux.Handle("/api/ruang-lingkup/", ruangLingkupH)
+
+	mux.Handle("/api/domain", domainH)
+	mux.Handle("/api/domain/", domainH)
 
 	return mux
 }
