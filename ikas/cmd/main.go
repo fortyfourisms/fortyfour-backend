@@ -66,19 +66,27 @@ func main() {
 	ikasRepo := repository.NewIkasRepository(db)
 	ruangLingkupRepo := repository.NewRuangLingkupRepository(db)
 	domainRepo := repository.NewDomainRepository(db)
+	kategoriRepo := repository.NewKategoriRepository(db)
 
 	// services
 	ikasService := services.NewIkasService(ikasRepo)
 	ruangLingkupService := services.NewRuangLingkupService(ruangLingkupRepo)
 	domainService := services.NewDomainService(domainRepo)
+	kategoriService := services.NewKategoriService(kategoriRepo)
 
 	// handlers
 	ikasHandler := handlers.NewIkasHandler(ikasService)
 	ruangLingkupHandler := handlers.NewRuangLingkupHandler(ruangLingkupService)
 	domainHandler := handlers.NewDomainHandler(domainService)
+	kategoriHandler := handlers.NewKategoriHandler(kategoriService)
 
 	// Router
-	mux := routes.InitRouter(ikasHandler, ruangLingkupHandler, domainHandler)
+	mux := routes.InitRouter(
+		ikasHandler,
+		ruangLingkupHandler,
+		domainHandler,
+		kategoriHandler,
+	)
 
 	auth := middleware.NewAuthMiddleware(cfg.JWTSecret)
 	handler := auth.Authenticate(mux)

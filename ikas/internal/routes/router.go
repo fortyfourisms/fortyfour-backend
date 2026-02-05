@@ -9,6 +9,7 @@ func InitRouter(
 	ikasH *handlers.IkasHandler,
 	ruangLingkupH *handlers.RuangLingkupHandler,
 	domainH *handlers.DomainHandler,
+	kategoriH *handlers.KategoriHandler,
 ) *http.ServeMux {
 	mux := http.NewServeMux()
 
@@ -20,6 +21,9 @@ func InitRouter(
 
 	mux.Handle("/api/domain", domainH)
 	mux.Handle("/api/domain/", domainH)
+
+	mux.Handle("/api/kategori", kategoriH)
+	mux.Handle("/api/kategori/", kategoriH)
 
 	return mux
 }

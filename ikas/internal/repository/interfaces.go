@@ -69,3 +69,14 @@ type DomainRepositoryInterface interface {
 	Delete(id string) error
 	CheckDuplicateName(nama string, excludeID string) (bool, error)
 }
+
+// KategoriRepositoryInterface
+type KategoriRepositoryInterface interface {
+	Create(req dto.CreateKategoriRequest, id string) error
+	GetAll() ([]dto.KategoriResponse, error)
+	GetByID(id string) (*dto.KategoriResponse, error)
+	Update(id string, req dto.UpdateKategoriRequest) error
+	Delete(id string) error
+	CheckDuplicateName(domainID string, namaKategori string, excludeID string) (bool, error)
+	CheckDomainExists(domainID string) (bool, error)
+}
