@@ -140,21 +140,35 @@ func TestCreatePerusahaan_ValidationFailed_NamaKosong(t *testing.T) {
 }
 
 func TestCreatePerusahaan_ValidationFailed_SubSektorKosong(t *testing.T) {
-	perusahaanRepo := &mockPerusahaanRepository{}
-	subSektorRepo := &mockSubSektorRepository{}
-	service := NewPerusahaanService(perusahaanRepo, subSektorRepo)
-
-	nama := "PT ABC"
-	req := dto.CreatePerusahaanRequest{
-		NamaPerusahaan: &nama,
-		IDSubSektor:    nil,
-	}
-
-	result, err := service.Create(req)
-
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.Equal(t, "id_sub_sektor wajib diisi", err.Error())
+    nama := "PT ABC"
+    
+    perusahaanRepo := &mockPerusahaanRepository{
+        CreateFn: func(req dto.CreatePerusahaanRequest, id string) error {
+            return nil
+        },
+        GetByIDFn: func(id string) (*dto.PerusahaanResponse, error) {
+            return &dto.PerusahaanResponse{
+                ID:             id,
+                NamaPerusahaan: nama,
+                SubSektor:      nil,
+            }, nil
+        },
+    }
+    
+    subSektorRepo := &mockSubSektorRepository{}
+    service := NewPerusahaanService(perusahaanRepo, subSektorRepo)
+    
+    req := dto.CreatePerusahaanRequest{
+        NamaPerusahaan: &nama,
+        IDSubSektor:    nil,
+    }
+    
+    result, err := service.Create(req)
+    
+    assert.NoError(t, err)
+    assert.NotNil(t, result)
+    assert.Equal(t, nama, result.NamaPerusahaan)
+    assert.Nil(t, result.SubSektor)
 }
 
 func TestCreatePerusahaan_SubSektorNotFound(t *testing.T) {

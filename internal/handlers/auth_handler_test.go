@@ -66,49 +66,54 @@ func TestAuthHandler_Register_Success(t *testing.T) {
 }
 
 func TestAuthHandler_Login_Success(t *testing.T) {
-	// Arrange
-	handler, _ := setupAuthHandler()
+    // Arrange
+    handler, _ := setupAuthHandler()
 
-	// Register user first
-	registerBody := map[string]string{
-		"username": "testuser",
-		"password": "P@ssj0rd121",
-		"email":    "test@example.com",
-	}
-	body, _ := json.Marshal(registerBody)
-	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	handler.Register(w, req)
+    // Register first
+    registerBody := map[string]string{
+        "username": "testuser",
+        "password": "P@ssj0rd121",
+        "email":    "test@example.com",
+    }
+    body, _ := json.Marshal(registerBody)
+    req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
+    req.Header.Set("Content-Type", "application/json")
+    w := httptest.NewRecorder()
+    handler.Register(w, req)
 
-	// Now login
-	loginBody := map[string]string{
-		"username": "testuser",
-		"password": "P@ssj0rd121",
-	}
-	body, _ = json.Marshal(loginBody)
-	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	w = httptest.NewRecorder()
+    // Login
+    loginBody := map[string]string{
+        "username": "testuser",
+        "password": "P@ssj0rd121",
+    }
+    body, _ = json.Marshal(loginBody)
+    req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
+    req.Header.Set("Content-Type", "application/json")
+    w = httptest.NewRecorder()
 
-	// Act
-	handler.Login(w, req)
+    // Act
+    handler.Login(w, req)
 
-	// Assert
-	if w.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", w.Code)
-	}
+    // Assert
+    if w.Code != http.StatusOK {
+        t.Errorf("expected status 200, got %d", w.Code)
+    }
 
-	var response dto.AuthResponse
-	json.NewDecoder(w.Body).Decode(&response)
+    var response map[string]interface{}
+    json.NewDecoder(w.Body).Decode(&response)
 
-	if response.AccessToken == "" {
-		t.Error("expected access token in response")
-	}
+    // User baru harus setup MFA dulu
+    if mfaRequired, ok := response["mfa_setup_required"].(bool); !ok || !mfaRequired {
+        t.Error("expected mfa_setup_required in response for new user")
+    }
 
-	if response.RefreshToken == "" {
-		t.Error("expected refresh token in response")
-	}
+    if setupToken, ok := response["setup_token"].(string); !ok || setupToken == "" {
+        t.Error("expected setup_token in response")
+    }
+    
+    if message, ok := response["message"].(string); !ok || message == "" {
+        t.Error("expected message in response")
+    }
 }
 
 func TestAuthHandler_RefreshToken_Success(t *testing.T) {
