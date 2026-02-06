@@ -4,18 +4,34 @@ import (
 	"context"
 
 	"fortyfour-backend/internal/dto"
-	"fortyfour-backend/internal/repository"
 )
 
-type DashboardService struct {
-	repo *repository.DashboardRepository
+/*
+=====================================
+ DASHBOARD REPOSITORY INTERFACE
+=====================================
+*/
+
+type DashboardRepositoryInterface interface {
+	CountPerSektor(ctx context.Context, from, to *string) ([]dto.SectorCount, error)
+	SeGlobalAgg(ctx context.Context) (dto.SeAgg, error)
 }
 
-func NewDashboardService(repo *repository.DashboardRepository) *DashboardService {
+/*
+=====================================
+ DASHBOARD SERVICE
+=====================================
+*/
+
+type DashboardService struct {
+	repo DashboardRepositoryInterface
+}
+
+func NewDashboardService(repo DashboardRepositoryInterface) *DashboardService {
 	return &DashboardService{repo: repo}
 }
 
-// GetSummary returns aggregated summary (sektor counts + ikas + se)
+// GetSummary returns aggregated summary (sektor counts + se)
 func (s *DashboardService) GetSummary(ctx context.Context, from, to *string) (*dto.DashboardSummary, error) {
 	sectors, err := s.repo.CountPerSektor(ctx, from, to)
 	if err != nil {
