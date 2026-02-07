@@ -32,7 +32,7 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 
 	// Only admin can manage policies
 	userID := r.Context().Value(middleware.UserIDKey).(string)
-	userRole := r.Context().Value(middleware.Role).(string)
+	userRole := r.Context().Value(middleware.RoleKey).(string)
 
 	if userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")
@@ -88,7 +88,7 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 	}
 
 	userID := r.Context().Value(middleware.UserIDKey).(string)
-	userRole := r.Context().Value(middleware.Role).(string)
+	userRole := r.Context().Value(middleware.RoleKey).(string)
 
 	if userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")
@@ -165,7 +165,7 @@ func (h *CasbinHandler) RemovePolicy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID := r.Context().Value(middleware.UserIDKey).(string)
-	userRole := r.Context().Value(middleware.Role).(string)
+	userRole := r.Context().Value(middleware.RoleKey).(string)
 
 	if userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")

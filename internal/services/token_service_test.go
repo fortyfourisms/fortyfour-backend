@@ -10,7 +10,7 @@ import (
 func TestTokenService_GenerateTokenPair_Success(t *testing.T) {
 	// Arrange
 	redis := testhelpers.NewMockRedisClient()
-	service := NewTokenService(redis, "test-secret")
+	service := NewTokenService(redis, "test-secret", false, "localhost")
 
 	// Act
 	tokens, err := service.GenerateTokenPair("1", "testuser", "admin")
@@ -68,7 +68,7 @@ func TestTokenService_GenerateTokenPair_Success(t *testing.T) {
 
 func TestTokenService_RefreshAccessToken_Success(t *testing.T) {
 	redis := testhelpers.NewMockRedisClient()
-	service := NewTokenService(redis, "test-secret")
+	service := NewTokenService(redis, "test-secret", false, "localhost")
 
 	initialTokens, err := service.GenerateTokenPair("1", "testuser", "admin")
 	if err != nil {
@@ -100,7 +100,7 @@ func TestTokenService_RefreshAccessToken_Success(t *testing.T) {
 func TestTokenService_RefreshAccessToken_InvalidToken(t *testing.T) {
 	// Arrange
 	redis := testhelpers.NewMockRedisClient()
-	service := NewTokenService(redis, "test-secret")
+	service := NewTokenService(redis, "test-secret", false, "localhost")
 
 	// Act
 	_, err := service.RefreshAccessToken("invalid-token")
@@ -118,7 +118,7 @@ func TestTokenService_RefreshAccessToken_InvalidToken(t *testing.T) {
 func TestTokenService_RevokeRefreshToken_Success(t *testing.T) {
 	// Arrange
 	redis := testhelpers.NewMockRedisClient()
-	service := NewTokenService(redis, "test-secret")
+	service := NewTokenService(redis, "test-secret", false, "localhost")
 
 	// Generate token pair
 	tokens, _ := service.GenerateTokenPair("1", "testuser", "admin")

@@ -2,16 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	"strings"
-
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
-	"fortyfour-backend/internal/validator"
-
 	"net/http"
-
-	"github.com/rollbar/rollbar-go"
 )
 
 type AuthHandler struct {
@@ -26,198 +20,166 @@ func NewAuthHandler(authService *services.AuthService, tokenService *services.To
 	}
 }
 
-// Register godoc
-// @Summary      Register new user
-// @Description  Create account and return JWT tokens
-// @Tags         Auth
-// @Accept       json
-// @Produce      json
-// @Param        register body dto.RegisterRequest true "Registration payload"
-// @Success      201  {object} dto.AuthResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
 	var req dto.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
-		rollbar.Error(err)
 		return
 	}
 
-	// Trim spaces untuk mencegah string kosong
-	req.Username = strings.TrimSpace(req.Username)
-	req.Email = strings.TrimSpace(req.Email)
-	req.Password = strings.TrimSpace(req.Password)
-
-	// Validasi menggunakan validator
-	if err := validator.Validate(req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err.Error())
-		rollbar.Error(err)
-		return
-	}
-
-	user, tokens, err := h.authService.Register(req.Username, req.Password, req.Email, req.RoleID, req.IDJabatan)
+	// Validate user credentials
+	user, err := h.authService.Register(req.Username, req.Password, req.Email, req.RoleID, req.IDJabatan)
 	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err.Error())
-		rollbar.Error(err)
+		utils.RespondError(w, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusCreated, dto.AuthResponse{
-		User:         *user,
-		AccessToken:  tokens.AccessToken,
-		RefreshToken: tokens.RefreshToken,
-		ExpiresAt:    tokens.ExpiresAt.Format("2006-01-02T15:04:05Z07:00"),
-	})
+	// Generate token pair
+	tokens, err := h.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to generate tokens")
+		return
+	}
+
+	// Set secure HTTP-only cookies
+	h.tokenService.SetAuthCookies(w, tokens)
+
+	// Return user info (without tokens in response body)
+	response := map[string]interface{}{
+		"message": "Login successful",
+		"user": map[string]interface{}{
+			"id":       user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+			"role":     user.RoleName,
+		},
+	}
+
+	utils.RespondJSON(w, http.StatusOK, response)
 }
 
-// Login godoc
-// @Summary      Login user
-// @Description  Authenticate user and return JWT tokens
-// @Tags         Auth
-// @Accept       json
-// @Produce      json
-// @Param        login body dto.LoginRequest true "Login payload"
-// @Success      200  {object} dto.AuthResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Failure      401  {object} dto.ErrorResponse
-// @Router       /api/login [post]
+// Login authenticates user and sets secure cookies
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
 	var req dto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
-		rollbar.Error(err)
 		return
 	}
 
-	// Trim spaces untuk mencegah string kosong
-	req.Username = strings.TrimSpace(req.Username)
-	req.Password = strings.TrimSpace(req.Password)
-
-	// Validasi menggunakan validator
-	if err := validator.Validate(req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err.Error())
-		rollbar.Error(err)
-		return
-	}
-
-	user, tokens, err := h.authService.Login(req.Username, req.Password)
+	// Validate user credentials
+	user, err := h.authService.Login(req.Username, req.Password)
 	if err != nil {
-		utils.RespondError(w, http.StatusUnauthorized, err.Error())
-		rollbar.Error(err)
+		utils.RespondError(w, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, dto.AuthResponse{
-		User:         *user,
-		AccessToken:  tokens.AccessToken,
-		RefreshToken: tokens.RefreshToken,
-		ExpiresAt:    tokens.ExpiresAt.Format("2006-01-02T15:04:05Z07:00"),
+	// Generate token pair
+	tokens, err := h.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to generate tokens")
+		return
+	}
+
+	// Set secure HTTP-only cookies
+	h.tokenService.SetAuthCookies(w, tokens)
+
+	// Return user info (without tokens in response body)
+	response := map[string]interface{}{
+		"message": "Login successful",
+		"user": map[string]interface{}{
+			"id":       user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+			"role":     user.RoleName,
+		},
+	}
+
+	utils.RespondJSON(w, http.StatusOK, response)
+}
+
+// Refresh generates new access token using refresh token from cookie
+func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	// Get refresh token from cookie
+	refreshToken, err := h.tokenService.GetRefreshTokenFromCookie(r)
+	if err != nil {
+		utils.RespondError(w, http.StatusUnauthorized, "Refresh token not found")
+		return
+	}
+
+	// Generate new token pair
+	tokens, err := h.tokenService.RefreshAccessToken(refreshToken)
+	if err != nil {
+		utils.RespondError(w, http.StatusUnauthorized, "Invalid or expired refresh token")
+		return
+	}
+
+	// Set new cookies
+	h.tokenService.SetAuthCookies(w, tokens)
+
+	utils.RespondJSON(w, http.StatusOK, map[string]string{
+		"message": "Token refreshed successfully",
 	})
 }
 
-// RefreshToken godoc
-// @Summary      Refresh access token
-// @Description  Generate new access & refresh token pair
-// @Tags         Auth
-// @Accept       json
-// @Produce      json
-// @Param        refresh body dto.RefreshTokenRequest true "Refresh token payload"
-// @Success      200  {object} dto.TokenPair
-// @Failure      400  {object} dto.ErrorResponse
-// @Failure      401  {object} dto.ErrorResponse
-// @Router       /api/refresh [post]
-func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
-	var req dto.RefreshTokenRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
-		rollbar.Error(err)
-		return
-	}
-
-	// Trim spaces
-	req.RefreshToken = strings.TrimSpace(req.RefreshToken)
-
-	// Validasi menggunakan validator
-	if err := validator.Validate(req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err.Error())
-		rollbar.Error(err)
-		return
-	}
-
-	tokens, err := h.tokenService.RefreshAccessToken(req.RefreshToken)
-	if err != nil {
-		utils.RespondError(w, http.StatusUnauthorized, err.Error())
-		rollbar.Error(err)
-		return
-	}
-
-	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"access_token":  tokens.AccessToken,
-		"refresh_token": tokens.RefreshToken,
-		"expires_at":    tokens.ExpiresAt.Format("2006-01-02T15:04:05Z07:00"),
-	})
-}
-
-// Logout godoc
-// @Summary      Logout user
-// @Description  Revoke refresh token
-// @Tags         Auth
-// @Accept       json
-// @Produce      json
-// @Param        logout body dto.LogoutRequest true "Logout payload"
-// @Success      200  {object} dto.MessageResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/logout [post]
+// Logout revokes tokens and clears cookies
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
+	// Get refresh token from cookie to revoke it
+	refreshToken, err := h.tokenService.GetRefreshTokenFromCookie(r)
+	if err == nil {
+		// Revoke the refresh token from Redis
+		h.tokenService.RevokeRefreshToken(refreshToken)
 	}
 
-	var req dto.LogoutRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
-		rollbar.Error(err)
-		return
-	}
-
-	// Trim spaces
-	req.RefreshToken = strings.TrimSpace(req.RefreshToken)
-
-	// Validasi menggunakan validator
-	if err := validator.Validate(req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err.Error())
-		rollbar.Error(err)
-		return
-	}
-
-	if err := h.authService.Logout(req.RefreshToken); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err.Error())
-		rollbar.Error(err)
-		return
-	}
+	// Clear cookies
+	h.tokenService.ClearAuthCookies(w)
 
 	utils.RespondJSON(w, http.StatusOK, map[string]string{
 		"message": "Logged out successfully",
 	})
+}
+
+// LogoutAll revokes all user's refresh tokens across all devices
+func (h *AuthHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
+	// Get user ID from context (set by auth middleware)
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		utils.RespondError(w, http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	// Revoke all user's tokens
+	if err := h.tokenService.RevokeAllUserTokens(userID); err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to logout from all devices")
+		return
+	}
+
+	// Clear current cookies
+	h.tokenService.ClearAuthCookies(w)
+
+	utils.RespondJSON(w, http.StatusOK, map[string]string{
+		"message": "Logged out from all devices successfully",
+	})
+}
+
+// Me returns current user info
+func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
+	// Get user info from context (set by auth middleware)
+	userID, ok := r.Context().Value("user_id").(string)
+	if !ok {
+		utils.RespondError(w, http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	username, _ := r.Context().Value("username").(string)
+	role, _ := r.Context().Value("role").(string)
+
+	response := map[string]interface{}{
+		"user": map[string]interface{}{
+			"id":       userID,
+			"username": username,
+			"role":     role,
+		},
+	}
+
+	utils.RespondJSON(w, http.StatusOK, response)
 }
