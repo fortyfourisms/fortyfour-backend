@@ -107,8 +107,8 @@ func main() {
 	log.Println("IKAS service running on", cfg.Port)
 	log.Println("Rate limiting enabled:")
 	log.Println("  - Auth endpoints: 5 requests/minute per IP")
-	log.Println("  - Public posts: 1000 requests/minute per IP")
-	log.Println("  - Protected posts: 100 requests/minute per user")
+	log.Println("  - Public posts: 60 requests/minute per IP")
+	log.Println("  - Protected posts: 20 requests/minute per user")
 	log.Fatal(http.ListenAndServe(cfg.Port, mux))
 
 }
