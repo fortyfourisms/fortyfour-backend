@@ -9,6 +9,8 @@ import (
 	"fortyfour-backend/pkg/cache"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // ============================================================
@@ -130,6 +132,20 @@ func (m *MockUserRepository) Create(user *models.User) error {
 			return errors.New("email already exists")
 		}
 	}
+	// Generate ID if not provided (simulate database auto-generation)
+	if user.ID == "" {
+		user.ID = uuid.New().String()
+	}
+	
+	// Set timestamps
+	now := time.Now()
+	if user.CreatedAt.IsZero() {
+		user.CreatedAt = now
+	}
+	if user.UpdatedAt.IsZero() {
+		user.UpdatedAt = now
+	}
+
 
 	m.users[user.ID] = user
 	return nil
