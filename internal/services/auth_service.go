@@ -25,7 +25,7 @@ func NewAuthService(userRepo repository.UserRepositoryInterface, tokenService *T
 }
 
 // Register creates a new user and returns token pair
-func (s *AuthService) Register(username, password, email string, roleID *string, idJabatan *string) (*models.User, *models.TokenPair, error) {
+func (s *AuthService) Register(username, password, email string, roleID *string, idJabatan *string) (*models.User, error) {
 	// Trim spaces
 	username = strings.TrimSpace(username)
 	password = strings.TrimSpace(password)
@@ -33,23 +33,23 @@ func (s *AuthService) Register(username, password, email string, roleID *string,
 
 	// Validasi field tidak boleh kosong
 	if username == "" {
-		return nil, nil, errors.New("username wajib diisi")
+		return nil, errors.New("username wajib diisi")
 	}
 	if password == "" {
-		return nil, nil, errors.New("password wajib diisi")
+		return nil, errors.New("password wajib diisi")
 	}
 	if email == "" {
-		return nil, nil, errors.New("email wajib diisi")
+		return nil, errors.New("email wajib diisi")
 	}
 
 	// Validasi format email
 	if !validator.ValidateEmail(email) {
-		return nil, nil, errors.New("email tidak valid")
+		return nil, errors.New("email tidak valid")
 	}
 
 	// Validasi format username
 	if !validator.ValidateUsername(username) {
-		return nil, nil, errors.New("username harus 3-50 karakter")
+		return nil, errors.New("username harus 3-50 karakter")
 	}
 
 	// ===== VALIDASI PASSWORD =====
@@ -64,29 +64,29 @@ func (s *AuthService) Register(username, password, email string, roleID *string,
 	// Validasi password dengan semua kriteria keamanan
 	if err := validator.ValidatePassword(password, config, personalInfo...); err != nil {
 		rollbar.Error(err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Check if username already exists
 	if _, err := s.userRepo.FindByUsername(username); err == nil {
 		rollbar.Error(err)
-		return nil, nil, errors.New("username sudah digunakan")
+		return nil, errors.New("username sudah digunakan")
 	}
 
 	// Check if email already exists
 	exists, err := s.userRepo.EmailExists(email, nil)
 	if err != nil {
 		rollbar.Error(err)
-		return nil, nil, err
+		return nil, err
 	}
 	if exists {
-		return nil, nil, errors.New("email sudah digunakan")
+		return nil, errors.New("email sudah digunakan")
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		rollbar.Error(err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	user := &models.User{
@@ -99,59 +99,59 @@ func (s *AuthService) Register(username, password, email string, roleID *string,
 
 	if err := s.userRepo.Create(user); err != nil {
 		rollbar.Error(err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Fetch user kembali untuk mendapatkan role_name
 	user, err = s.userRepo.FindByID(user.ID)
 	if err != nil {
 		rollbar.Error(err)
-		return nil, nil, err
+		return nil, err
 	}
 
 	// Generate token pair with role
-	tokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
-	if err != nil {
-		rollbar.Error(err)
-		return nil, nil, err
-	}
+	// tokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
+	// if err != nil {
+	// 	rollbar.Error(err)
+	// 	return nil, nil, err
+	// }
 
-	return user, tokens, nil
+	return user, nil
 }
 
 // Login authenticates a user and returns token pair
-func (s *AuthService) Login(username, password string) (*models.User, *models.TokenPair, error) {
+func (s *AuthService) Login(username, password string) (*models.User, error) {
 	// Trim spaces
 	username = strings.TrimSpace(username)
 	password = strings.TrimSpace(password)
 
 	// Validasi field tidak boleh kosong
 	if username == "" {
-		return nil, nil, errors.New("username wajib diisi")
+		return nil, errors.New("username wajib diisi")
 	}
 	if password == "" {
-		return nil, nil, errors.New("password wajib diisi")
+		return nil, errors.New("password wajib diisi")
 	}
 
 	user, err := s.userRepo.FindByUsername(username)
 	if err != nil {
 		rollbar.Error(err)
-		return nil, nil, errors.New("username atau password salah")
+		return nil, errors.New("username atau password salah")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 		rollbar.Error(err)
-		return nil, nil, errors.New("username atau password salah")
+		return nil, errors.New("username atau password salah")
 	}
 
 	// Generate token pair with role
-	tokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
-	if err != nil {
-		rollbar.Error(err)
-		return nil, nil, err
-	}
+	// tokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
+	// if err != nil {
+	// 	rollbar.Error(err)
+	// 	return nil, nil, err
+	// }
 
-	return user, tokens, nil
+	return user, nil
 }
 
 // Logout revokes a single refresh token

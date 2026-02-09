@@ -53,7 +53,7 @@ func InitRouter(
 	// Routes Auth
 	mux.HandleFunc("/api/register", strictLimiter.LimitByIP(authH.Register))
 	mux.HandleFunc("/api/login", strictLimiter.LimitByIP(authH.Login))
-	mux.HandleFunc("/api/refresh", strictLimiter.LimitByIP(authH.RefreshToken))
+	mux.HandleFunc("/api/refresh", strictLimiter.LimitByIP(authH.Refresh))
 	mux.HandleFunc("/api/logout", authH.Logout)
 
 	// Routes Users

@@ -70,6 +70,10 @@ func (m *mockRedis) Close() error {
 	return nil
 }
 
+func (m *mockRedis) Scan(pattern string) ([]string, error) {
+	return []string{}, nil
+}
+
 //
 // =========================
 // MOCK USER REPOSITORY
@@ -146,9 +150,9 @@ func (m *mockUserRepo) UsernameExists(username string, excludeID *string) (bool,
 //
 
 func TestRegister_Success(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret"))
+	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"))
 
-	user, token, err := auth.Register(
+	user, err := auth.Register(
 		"user",
 		"XyZ#91!kLmPq",
 		"user@mail.com",
@@ -156,7 +160,7 @@ func TestRegister_Success(t *testing.T) {
 		nil,
 	)
 
-	if err != nil || user == nil || token == nil {
+	if err != nil || user == nil {
 		t.Fatal("register success expected")
 	}
 }
@@ -165,9 +169,9 @@ func TestRegister_UsernameExists(t *testing.T) {
 	repo := newMockUserRepo()
 	repo.users["user"] = &models.User{Username: "user"}
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret"))
+	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"))
 
-	if _, _, err := auth.Register("user", "XyZ#91!kLmPq", "x@mail.com", nil, nil); err == nil {
+	if _, err := auth.Register("user", "XyZ#91!kLmPq", "x@mail.com", nil, nil); err == nil {
 		t.Fatal("expected username exists error")
 	}
 }
@@ -176,17 +180,17 @@ func TestRegister_EmailExists(t *testing.T) {
 	repo := newMockUserRepo()
 	repo.users["u1"] = &models.User{Email: "mail@test.com"}
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret"))
+	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"))
 
-	if _, _, err := auth.Register("u2", "XyZ#91!kLmPq", "mail@test.com", nil, nil); err == nil {
+	if _, err := auth.Register("u2", "XyZ#91!kLmPq", "mail@test.com", nil, nil); err == nil {
 		t.Fatal("expected email exists error")
 	}
 }
 
 func TestRegister_WeakPassword(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret"))
+	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"))
 
-	if _, _, err := auth.Register("u", "123", "x@mail.com", nil, nil); err == nil {
+	if _, err := auth.Register("u", "123", "x@mail.com", nil, nil); err == nil {
 		t.Fatal("expected weak password error")
 	}
 }
@@ -195,9 +199,9 @@ func TestRegister_CreateError(t *testing.T) {
 	repo := newMockUserRepo()
 	repo.failCreate = true
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret"))
+	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"))
 
-	if _, _, err := auth.Register("u", "XyZ#91!kLmPq", "x@mail.com", nil, nil); err == nil {
+	if _, err := auth.Register("u", "XyZ#91!kLmPq", "x@mail.com", nil, nil); err == nil {
 		t.Fatal("expected create error")
 	}
 }
@@ -219,17 +223,17 @@ func TestLogin_Success(t *testing.T) {
 		RoleName: "admin",
 	}
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret"))
+	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"))
 
-	if u, tkn, err := auth.Login("user", "XyZ#91!kLmPq"); err != nil || u == nil || tkn == nil {
+	if u, err := auth.Login("user", "XyZ#91!kLmPq"); err != nil || u == nil {
 		t.Fatal("login success expected")
 	}
 }
 
 func TestLogin_UserNotFound(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret"))
+	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"))
 
-	if _, _, err := auth.Login("x", "pass"); err == nil {
+	if _, err := auth.Login("x", "pass"); err == nil {
 		t.Fatal("expected user not found")
 	}
 }
@@ -243,25 +247,10 @@ func TestLogin_WrongPassword(t *testing.T) {
 		Password: string(hash),
 	}
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret"))
+	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"))
 
-	if _, _, err := auth.Login("u", "wrong"); err == nil {
+	if _, err := auth.Login("u", "wrong"); err == nil {
 		t.Fatal("expected wrong password error")
-	}
-}
-
-func TestLogin_TokenError(t *testing.T) {
-	repo := newMockUserRepo()
-	redis := newMockRedis()
-	redis.failSet = true
-
-	hash, _ := bcrypt.GenerateFromPassword([]byte("pass"), bcrypt.DefaultCost)
-	repo.users["u"] = &models.User{Username: "u", Password: string(hash)}
-
-	auth := NewAuthService(repo, NewTokenService(redis, "secret"))
-
-	if _, _, err := auth.Login("u", "pass"); err == nil {
-		t.Fatal("expected token error")
 	}
 }
 
@@ -275,7 +264,7 @@ func TestLogout_Success(t *testing.T) {
 	redis := newMockRedis()
 	redis.store["token"] = "x"
 
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(redis, "secret"))
+	auth := NewAuthService(newMockUserRepo(), NewTokenService(redis, "secret", false, "localhost"))
 
 	if err := auth.Logout("token"); err != nil {
 		t.Fatal("logout success expected")
@@ -283,7 +272,7 @@ func TestLogout_Success(t *testing.T) {
 }
 
 func TestLogout_TokenNotExists(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret"))
+	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"))
 
 	if err := auth.Logout("missing"); err != nil {
 		t.Fatal("no error expected for missing token")
@@ -294,7 +283,7 @@ func TestLogout_ExistsError(t *testing.T) {
 	redis := newMockRedis()
 	redis.failExists = true
 
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(redis, "secret"))
+	auth := NewAuthService(newMockUserRepo(), NewTokenService(redis, "secret", false, "localhost"))
 
 	err := auth.Logout("token")
 
@@ -308,7 +297,7 @@ func TestLogout_DeleteError(t *testing.T) {
 	redis.store["token"] = "x"
 	redis.failDelete = true
 
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(redis, "secret"))
+	auth := NewAuthService(newMockUserRepo(), NewTokenService(redis, "secret", false, "localhost"))
 
 	if err := auth.Logout("token"); err == nil {
 		t.Fatal("expected delete error")

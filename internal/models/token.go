@@ -14,3 +14,10 @@ type RefreshTokenData struct {
 	CreatedAt time.Time `json:"created_at"`
 	Role      string    `json:"role"`
 }
+
+type TokenClaims struct {
+	UserID    string `json:"user_id"`
+	Username  string `json:"username"`
+	Role      string `json:"role"`
+	ExpiresAt int64  `json:"exp"`
+}

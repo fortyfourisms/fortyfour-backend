@@ -15,6 +15,7 @@ type RedisInterface interface {
 	Get(key string) (string, error)
 	Delete(key string) error
 	Exists(key string) (bool, error)
+	Scan(pattern string) ([]string, error)
 	Close() error
 }
 
@@ -70,6 +71,19 @@ func (r *RedisClient) Delete(key string) error {
 func (r *RedisClient) Exists(key string) (bool, error) {
 	result, err := r.client.Exists(r.ctx, key).Result()
 	return result > 0, err
+}
+
+// Scan keys
+func (r *RedisClient) Scan(pattern string) ([]string, error) {
+	var keys []string
+	iter := r.client.Scan(r.ctx, 0, pattern, 0).Iterator()
+	for iter.Next(r.ctx) {
+		keys = append(keys, iter.Val())
+	}
+	if err := iter.Err(); err != nil {
+		return nil, err
+	}
+	return keys, nil
 }
 
 // Close closes the Redis connection

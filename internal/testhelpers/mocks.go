@@ -3,6 +3,7 @@ package testhelpers
 import (
 	"context"
 	"errors"
+	"fmt"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/pkg/cache"
@@ -72,6 +73,23 @@ func (m *MockRedisClient) Exists(key string) (bool, error) {
 
 	_, exists := m.data[key]
 	return exists, nil
+}
+
+func (m *MockRedisClient) Scan(pattern string) ([]string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	var keys []string
+	data := m.data[pattern]
+	for _, val := range data {
+		s := fmt.Sprintf("%c", val)
+		keys = append(keys, s)
+	}
+	_, exists := m.data[pattern]
+	if !exists {
+		return nil, errors.New("key not found")
+	}
+	return keys, nil
 }
 
 func (m *MockRedisClient) Close() error {
