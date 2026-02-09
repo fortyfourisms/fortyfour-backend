@@ -82,6 +82,15 @@ func main() {
 	kategoriHandler := handlers.NewKategoriHandler(kategoriService)
 	subKategoriHandler := handlers.NewSubKategoriHandler(subKategoriService)
 
+	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
+
+	// Initialize rate limiters with different configurations
+	rateLimitConfigs := middleware.GetRateLimitConfigs()
+
+	strictLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Strict)
+	moderateLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Moderate)
+	lenientLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Lenient)
+
 	// Router
 	mux := routes.InitRouter(
 		ikasHandler,
@@ -89,11 +98,17 @@ func main() {
 		domainHandler,
 		kategoriHandler,
 		subKategoriHandler,
+		authMiddleware,
+		strictLimiter,
+		moderateLimiter,
+		lenientLimiter,
 	)
 
-	auth := middleware.NewAuthMiddleware(cfg.JWTSecret)
-	handler := auth.Authenticate(mux)
-
 	log.Println("IKAS service running on", cfg.Port)
-	log.Fatal(http.ListenAndServe(cfg.Port, handler))
+	log.Println("Rate limiting enabled:")
+	log.Println("  - Auth endpoints: 5 requests/minute per IP")
+	log.Println("  - Public posts: 1000 requests/minute per IP")
+	log.Println("  - Protected posts: 100 requests/minute per user")
+	log.Fatal(http.ListenAndServe(cfg.Port, mux))
+
 }
