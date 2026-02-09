@@ -2,7 +2,7 @@ package middleware
 
 import "context"
 
-// Reuse the contextKey struct & UserIDKey, Username, Role variables you already have in auth.go
+// Reuse the contextKey struct & UserIDKey, UsernameKey, RoleKey variables from auth.go
 
 // SetUserID menyimpan userID ke context menggunakan UserIDKey yang sama.
 func SetUserID(ctx context.Context, userID string) context.Context {
@@ -22,11 +22,11 @@ func GetUserID(ctx context.Context) string {
 
 // SetUsername / GetUsername
 func SetUsername(ctx context.Context, username string) context.Context {
-	return context.WithValue(ctx, Username, username)
+	return context.WithValue(ctx, UsernameKey, username)
 }
 
 func GetUsername(ctx context.Context) string {
-	if v := ctx.Value(Username); v != nil {
+	if v := ctx.Value(UsernameKey); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}
@@ -36,11 +36,11 @@ func GetUsername(ctx context.Context) string {
 
 // SetRole / GetRole
 func SetRole(ctx context.Context, role string) context.Context {
-	return context.WithValue(ctx, Role, role)
+	return context.WithValue(ctx, RoleKey, role)
 }
 
 func GetRole(ctx context.Context) string {
-	if v := ctx.Value(Role); v != nil {
+	if v := ctx.Value(RoleKey); v != nil {
 		if s, ok := v.(string); ok {
 			return s
 		}

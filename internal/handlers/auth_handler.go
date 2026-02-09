@@ -8,11 +8,10 @@ import (
 
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/middleware"
+	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/internal/validator"
-
-	"github.com/rollbar/rollbar-go"
 )
 
 // AuthHandler handles authentication-related HTTP endpoints.
@@ -25,12 +24,12 @@ type AuthHandler struct {
 func NewAuthHandler(
 	authService *services.AuthService,
 	tokenService *services.TokenService,
-	perusahaanService services.PerusahaanServiceInterface, 
+	perusahaanService services.PerusahaanServiceInterface,
 ) *AuthHandler {
 	return &AuthHandler{
 		authService:       authService,
 		tokenService:      tokenService,
-		perusahaanService: perusahaanService, 
+		perusahaanService: perusahaanService,
 	}
 }
 
@@ -45,16 +44,9 @@ func NewAuthHandler(
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
 	var req dto.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
-		rollbar.Error(err)
 		return
 	}
 
@@ -66,24 +58,40 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	// Validasi menggunakan validator
 	if err := validator.Validate(req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
-		rollbar.Error(err)
 		return
 	}
 
 	user, tokens, err := h.authService.Register(req, h.perusahaanService)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
-		rollbar.Error(err)
 		return
 	}
 
-	// tokens is *dto.TokenPair with ExpiresAt already formatted string
-	utils.RespondJSON(w, http.StatusCreated, dto.AuthResponse{
-		User:         *user,
+	// Convert DTO tokens to models.TokenPair for cookie setting
+	modelTokens := &models.TokenPair{
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
-		ExpiresAt:    tokens.ExpiresAt,
-	})
+	}
+	// Parse ExpiresAt back to time.Time
+	if expiresAt, err := time.Parse(time.RFC3339, tokens.ExpiresAt); err == nil {
+		modelTokens.ExpiresAt = expiresAt
+	}
+
+	// Set secure HTTP-only cookies
+	h.tokenService.SetAuthCookies(w, modelTokens)
+
+	// Return user info (without tokens in response body for security)
+	response := map[string]interface{}{
+		"message": "Registration successful",
+		"user": map[string]interface{}{
+			"id":       user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+			"role":     user.RoleName,
+		},
+	}
+
+	utils.RespondJSON(w, http.StatusCreated, response)
 }
 
 // Login godoc
@@ -99,16 +107,9 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 // @Failure      401  {object} dto.ErrorResponse
 // @Router       /api/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
 	var req dto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
-		rollbar.Error(err)
 		return
 	}
 
@@ -119,14 +120,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	// Validasi menggunakan validator
 	if err := validator.Validate(req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
-		rollbar.Error(err)
 		return
 	}
 
 	user, tokens, err := h.authService.Login(req.Username, req.Password)
 	if err != nil {
 		utils.RespondError(w, http.StatusUnauthorized, err.Error())
-		rollbar.Error(err)
 		return
 	}
 
@@ -136,7 +135,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		setupToken, err := h.authService.CreateMFASetupToken(user.ID)
 		if err != nil {
 			utils.RespondError(w, http.StatusInternalServerError, "failed to create setup token")
-			rollbar.Error(err)
 			return
 		}
 		utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
@@ -152,7 +150,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		mfaToken, err := h.authService.CreateMFAPending(user.ID)
 		if err != nil {
 			utils.RespondError(w, http.StatusInternalServerError, "failed to create mfa token")
-			rollbar.Error(err)
 			return
 		}
 		utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
@@ -163,115 +160,118 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// tokens is *dto.TokenPair with ExpiresAt already formatted string
-	utils.RespondJSON(w, http.StatusOK, dto.AuthResponse{
-		User:         *user,
+	// Convert DTO tokens to models.TokenPair for cookie setting
+	modelTokens := &models.TokenPair{
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
-		ExpiresAt:    tokens.ExpiresAt,
-	})
+	}
+	// Parse ExpiresAt back to time.Time
+	if expiresAt, err := time.Parse(time.RFC3339, tokens.ExpiresAt); err == nil {
+		modelTokens.ExpiresAt = expiresAt
+	}
+
+	// Set secure HTTP-only cookies
+	h.tokenService.SetAuthCookies(w, modelTokens)
+
+	// Return user info (without tokens in response body)
+	response := map[string]interface{}{
+		"message": "Login successful",
+		"user": map[string]interface{}{
+			"id":       user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+			"role":     user.RoleName,
+		},
+	}
+
+	utils.RespondJSON(w, http.StatusOK, response)
 }
 
-// RefreshToken godoc
-// @Summary      Refresh access token
-// @Description  Generate new access & refresh token pair
-// @Tags         Auth
-// @Accept       json
-// @Produce      json
-// @Param        refresh body dto.RefreshTokenRequest true "Refresh token payload"
-// @Success      200  {object} dto.TokenPair
-// @Failure      400  {object} dto.ErrorResponse
-// @Failure      401  {object} dto.ErrorResponse
-// @Router       /api/refresh [post]
-func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
-	var req dto.RefreshTokenRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
-		rollbar.Error(err)
-		return
-	}
-
-	// Trim spaces
-	req.RefreshToken = strings.TrimSpace(req.RefreshToken)
-
-	// Validasi menggunakan validator
-	if err := validator.Validate(req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err.Error())
-		rollbar.Error(err)
-		return
-	}
-
-	// Assume tokenService.RefreshAccessToken returns *models.TokenPair (with time.Time ExpiresAt)
-	modelTokens, err := h.tokenService.RefreshAccessToken(req.RefreshToken)
+// Refresh generates new access token using refresh token from cookie
+func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
+	// Get refresh token from cookie
+	refreshToken, err := h.tokenService.GetRefreshTokenFromCookie(r)
 	if err != nil {
-		utils.RespondError(w, http.StatusUnauthorized, err.Error())
-		rollbar.Error(err)
+		utils.RespondError(w, http.StatusUnauthorized, "Refresh token not found")
 		return
 	}
 
-	// Map to DTO (string ExpiresAt)
-	dtoTokens := dto.TokenPair{
-		AccessToken:  modelTokens.AccessToken,
-		RefreshToken: modelTokens.RefreshToken,
-		ExpiresAt:    modelTokens.ExpiresAt.Format(time.RFC3339),
+	// Generate new token pair
+	tokens, err := h.tokenService.RefreshAccessToken(refreshToken)
+	if err != nil {
+		utils.RespondError(w, http.StatusUnauthorized, "Invalid or expired refresh token")
+		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"access_token":  dtoTokens.AccessToken,
-		"refresh_token": dtoTokens.RefreshToken,
-		"expires_at":    dtoTokens.ExpiresAt,
+	// Set new cookies
+	h.tokenService.SetAuthCookies(w, tokens)
+
+	utils.RespondJSON(w, http.StatusOK, map[string]string{
+		"message": "Token refreshed successfully",
 	})
 }
 
-// Logout godoc
-// @Summary      Logout user
-// @Description  Revoke refresh token
-// @Tags         Auth
-// @Accept       json
-// @Produce      json
-// @Param        logout body dto.LogoutRequest true "Logout payload"
-// @Success      200  {object} dto.MessageResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/logout [post]
+// Logout revokes tokens and clears cookies
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
+	// Get refresh token from cookie to revoke it
+	refreshToken, err := h.tokenService.GetRefreshTokenFromCookie(r)
+	if err == nil {
+		// Revoke the refresh token from Redis
+		h.tokenService.RevokeRefreshToken(refreshToken)
 	}
 
-	var req dto.LogoutRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
-		rollbar.Error(err)
-		return
-	}
-
-	// Trim spaces
-	req.RefreshToken = strings.TrimSpace(req.RefreshToken)
-
-	// Validasi menggunakan validator
-	if err := validator.Validate(req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err.Error())
-		rollbar.Error(err)
-		return
-	}
-
-	if err := h.authService.Logout(req.RefreshToken); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, err.Error())
-		rollbar.Error(err)
-		return
-	}
+	// Clear cookies
+	h.tokenService.ClearAuthCookies(w)
 
 	utils.RespondJSON(w, http.StatusOK, map[string]string{
 		"message": "Logged out successfully",
 	})
+}
+
+// LogoutAll revokes all user's refresh tokens across all devices
+func (h *AuthHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
+	// Get user ID from context (set by auth middleware)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		utils.RespondError(w, http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	// Revoke all user's tokens
+	if err := h.tokenService.RevokeAllUserTokens(userID); err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, "Failed to logout from all devices")
+		return
+	}
+
+	// Clear current cookies
+	h.tokenService.ClearAuthCookies(w)
+
+	utils.RespondJSON(w, http.StatusOK, map[string]string{
+		"message": "Logged out from all devices successfully",
+	})
+}
+
+// Me returns current user info
+func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
+	// Get user info from context (set by auth middleware)
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok {
+		utils.RespondError(w, http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	username, _ := r.Context().Value(middleware.UsernameKey).(string)
+	role, _ := r.Context().Value(middleware.RoleKey).(string)
+
+	response := map[string]interface{}{
+		"user": map[string]interface{}{
+			"id":       userID,
+			"username": username,
+			"role":     role,
+		},
+	}
+
+	utils.RespondJSON(w, http.StatusOK, response)
 }
 
 /* ===================== MFA HANDLERS (UPDATED FOR MICROSOFT-STYLE) ===================== */
@@ -288,15 +288,9 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 // @Failure      401  {object} dto.ErrorResponse
 // @Router       /api/mfa/setup [post]
 func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
 	// Try to get userID from context (authenticated user) or from setup_token
 	userID := middleware.GetUserID(r.Context())
-	
+
 	// If no userID from context, check for setup_token in body
 	if userID == "" {
 		var req struct {
@@ -304,7 +298,6 @@ func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			utils.RespondError(w, http.StatusBadRequest, "invalid body")
-			rollbar.Error(err)
 			return
 		}
 
@@ -313,7 +306,6 @@ func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
 		userID, err = h.authService.ValidateMFASetupToken(req.SetupToken)
 		if err != nil {
 			utils.RespondError(w, http.StatusUnauthorized, "invalid or expired setup token")
-			rollbar.Error(err)
 			return
 		}
 	}
@@ -326,7 +318,6 @@ func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
 	uri, secret, err := h.authService.SetupMFA(userID)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
-		rollbar.Error(err)
 		return
 	}
 
@@ -348,22 +339,15 @@ func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
 // @Failure      401  {object} dto.ErrorResponse
 // @Router       /api/mfa/enable [post]
 func (h *AuthHandler) EnableMFA(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
 	// Try to get userID from context (authenticated user) or from setup_token
 	userID := middleware.GetUserID(r.Context())
-	
+
 	var req struct {
 		Code       string  `json:"code"`
 		SetupToken *string `json:"setup_token,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "invalid body")
-		rollbar.Error(err)
 		return
 	}
 
@@ -373,7 +357,6 @@ func (h *AuthHandler) EnableMFA(w http.ResponseWriter, r *http.Request) {
 		userID, err = h.authService.ValidateMFASetupToken(*req.SetupToken)
 		if err != nil {
 			utils.RespondError(w, http.StatusUnauthorized, "invalid or expired setup token")
-			rollbar.Error(err)
 			return
 		}
 	}
@@ -387,18 +370,34 @@ func (h *AuthHandler) EnableMFA(w http.ResponseWriter, r *http.Request) {
 	user, tokens, err := h.authService.EnableMFAAndLogin(userID, req.Code)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
-		rollbar.Error(err)
 		return
 	}
 
-	// Return user data and tokens
-	utils.RespondJSON(w, http.StatusOK, dto.AuthResponse{
-		User:         *user,
+	// Convert DTO tokens to models.TokenPair for cookie setting
+	modelTokens := &models.TokenPair{
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
-		ExpiresAt:    tokens.ExpiresAt,
-		Message:      "MFA enabled successfully",
-	})
+	}
+	// Parse ExpiresAt back to time.Time
+	if expiresAt, err := time.Parse(time.RFC3339, tokens.ExpiresAt); err == nil {
+		modelTokens.ExpiresAt = expiresAt
+	}
+
+	// Set secure HTTP-only cookies
+	h.tokenService.SetAuthCookies(w, modelTokens)
+
+	// Return user data (without tokens in response body)
+	response := map[string]interface{}{
+		"message": "MFA enabled successfully",
+		"user": map[string]interface{}{
+			"id":       user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+			"role":     user.RoleName,
+		},
+	}
+
+	utils.RespondJSON(w, http.StatusOK, response)
 }
 
 // VerifyMFA godoc
@@ -413,34 +412,44 @@ func (h *AuthHandler) EnableMFA(w http.ResponseWriter, r *http.Request) {
 // @Failure      401  {object} dto.ErrorResponse
 // @Router       /api/mfa/verify [post]
 func (h *AuthHandler) VerifyMFA(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
-		rollbar.Error(w, http.StatusMethodNotAllowed, "Method not allowed")
-		return
-	}
-
 	var req struct {
 		MFAToken string `json:"mfa_token"`
 		Code     string `json:"code"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "invalid body")
-		rollbar.Error(err)
 		return
 	}
 
 	user, tokens, err := h.authService.VerifyMFA(req.MFAToken, req.Code)
 	if err != nil {
 		utils.RespondError(w, http.StatusUnauthorized, err.Error())
-		rollbar.Error(err)
 		return
 	}
 
-	// tokens is *dto.TokenPair with ExpiresAt string
-	utils.RespondJSON(w, http.StatusOK, dto.AuthResponse{
-		User:         *user,
+	// Convert DTO tokens to models.TokenPair for cookie setting
+	modelTokens := &models.TokenPair{
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
-		ExpiresAt:    tokens.ExpiresAt,
-	})
+	}
+	// Parse ExpiresAt back to time.Time
+	if expiresAt, err := time.Parse(time.RFC3339, tokens.ExpiresAt); err == nil {
+		modelTokens.ExpiresAt = expiresAt
+	}
+
+	// Set secure HTTP-only cookies
+	h.tokenService.SetAuthCookies(w, modelTokens)
+
+	// Return user info (without tokens in response body)
+	response := map[string]interface{}{
+		"message": "MFA verification successful",
+		"user": map[string]interface{}{
+			"id":       user.ID,
+			"username": user.Username,
+			"email":    user.Email,
+			"role":     user.RoleName,
+		},
+	}
+
+	utils.RespondJSON(w, http.StatusOK, response)
 }

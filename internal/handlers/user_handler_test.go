@@ -104,7 +104,7 @@ func TestUserHandler_handleCreate(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "admin-id")
-	ctx = context.WithValue(ctx, middleware.Role, "admin")
+	ctx = context.WithValue(ctx, middleware.RoleKey, "admin")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -158,7 +158,7 @@ func TestUserHandler_handleUpdate(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPut, "/api/users/id1", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "user-1")
-	ctx = context.WithValue(ctx, middleware.Role, "admin")
+	ctx = context.WithValue(ctx, middleware.RoleKey, "admin")
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -189,7 +189,7 @@ func TestUserHandler_handleUpdate_Unauthorized(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPut, "/api/users/test-id", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "other-user-id")
-	ctx = context.WithValue(ctx, middleware.Role, "user")
+	ctx = context.WithValue(ctx, middleware.RoleKey, "user")
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -231,7 +231,7 @@ func TestUserHandler_handleUpdatePassword(t *testing.T) {
 
 	// Set context userID & role
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-id")
-	ctx = context.WithValue(ctx, middleware.Role, "user")
+	ctx = context.WithValue(ctx, middleware.RoleKey, "user")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -292,7 +292,7 @@ func TestUserHandler_handleDelete(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/users/test-id", nil)
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "admin-id")
-	ctx = context.WithValue(ctx, middleware.Role, "admin")
+	ctx = context.WithValue(ctx, middleware.RoleKey, "admin")
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -308,7 +308,7 @@ func TestUserHandler_handleDelete_NotAdmin(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/users/test-id", nil)
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "user-id")
-	ctx = context.WithValue(ctx, middleware.Role, "user")
+	ctx = context.WithValue(ctx, middleware.RoleKey, "user")
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 

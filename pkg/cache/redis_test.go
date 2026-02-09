@@ -429,6 +429,42 @@ func TestRedisClient_Expiration(t *testing.T) {
 	})
 }
 
+func TestRedisClient_Scan(t *testing.T) {
+	mr, cfg := setupMiniRedis(t)
+	defer mr.Close()
+
+	client, err := cache.NewRedisClient(cfg)
+	require.NoError(t, err)
+	defer client.Close()
+
+	t.Run("Scan matching keys", func(t *testing.T) {
+		// Setup keys
+		keysToCreate := []string{"test:scan:1", "test:scan:2", "other:key"}
+		for _, k := range keysToCreate {
+			err := client.Set(k, "value", 5*time.Minute)
+			require.NoError(t, err)
+		}
+
+		// Scan for test:scan:*
+		keys, err := client.Scan("test:scan:*")
+		assert.NoError(t, err)
+
+		// Note: Miniredis might return scan results in any order or implementation specific
+		// Scan documentation says it returns keys.
+
+		// We expect 2 keys
+		assert.Len(t, keys, 2)
+		assert.Contains(t, keys, "test:scan:1")
+		assert.Contains(t, keys, "test:scan:2")
+	})
+
+	t.Run("Scan no matching keys", func(t *testing.T) {
+		keys, err := client.Scan("nonexistent:*")
+		assert.NoError(t, err)
+		assert.Empty(t, keys)
+	})
+}
+
 // Test interface compliance
 func TestRedisClient_ImplementsInterface(t *testing.T) {
 	mr, cfg := setupMiniRedis(t)

@@ -55,7 +55,7 @@ func TestAuthorize_EmptyRole(t *testing.T) {
 	middleware := NewAuthorizationMiddleware(enforcer)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/posts", nil)
-	ctx := context.WithValue(req.Context(), Role, "")
+	ctx := context.WithValue(req.Context(), RoleKey, "")
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -78,7 +78,7 @@ func TestAuthorize_EnforcerError(t *testing.T) {
 	middleware := NewAuthorizationMiddleware(enforcer)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/posts/123", nil)
-	ctx := context.WithValue(req.Context(), Role, "user")
+	ctx := context.WithValue(req.Context(), RoleKey, "user")
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -102,7 +102,7 @@ func TestAuthorize_PermissionDenied(t *testing.T) {
 	middleware := NewAuthorizationMiddleware(enforcer)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/posts/123", nil)
-	ctx := context.WithValue(req.Context(), Role, "user")
+	ctx := context.WithValue(req.Context(), RoleKey, "user")
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -128,7 +128,7 @@ func TestAuthorize_PermissionGranted(t *testing.T) {
 	middleware := NewAuthorizationMiddleware(enforcer)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/posts/123", nil)
-	ctx := context.WithValue(req.Context(), Role, "admin")
+	ctx := context.WithValue(req.Context(), RoleKey, "admin")
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -239,7 +239,7 @@ func TestAuthorize_DifferentMethods(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := httptest.NewRequest(tt.method, "/api/posts/123", nil)
-			ctx := context.WithValue(req.Context(), Role, tt.role)
+			ctx := context.WithValue(req.Context(), RoleKey, tt.role)
 			req = req.WithContext(ctx)
 			w := httptest.NewRecorder()
 

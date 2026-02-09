@@ -2,66 +2,86 @@ package utils
 
 import (
 	"crypto/rand"
-	"encoding/hex"
-	"fmt"
+	"encoding/base64"
+	"errors"
+	"fortyfour-backend/internal/models"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/rollbar/rollbar-go"
 )
 
-type Claims struct {
-	UserID   string `json:"user_id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
-	jwt.RegisteredClaims
-}
+func GenerateAccessToken(userID, username, role, secret string) (string, time.Time, error) {
+	expiresAt := time.Now().Add(15 * time.Minute)
 
-// GenerateAccessToken generates a short-lived access token
-func GenerateAccessToken(userID string, username, role, secret string) (string, time.Time, error) {
-	expiresAt := time.Now().Add(1 * time.Hour)
-
-	claims := Claims{
-		UserID:   userID,
-		Username: username,
-		Role:     role,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expiresAt),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
-		},
+	claims := jwt.MapClaims{
+		"user_id":  userID,
+		"username": username,
+		"role":     role,
+		"exp":      expiresAt.Unix(),
+		"iat":      time.Now().Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(secret))
+	if err != nil {
+		return "", time.Time{}, err
+	}
 
-	return tokenString, expiresAt, err
+	return tokenString, expiresAt, nil
 }
 
-// GenerateRefreshToken generates a random refresh token
 func GenerateRefreshToken() (string, error) {
-	bytes := make([]byte, 32)
-	if _, err := rand.Read(bytes); err != nil {
-
-		rollbar.Error(err)
+	b := make([]byte, 32)
+	if _, err := rand.Read(b); err != nil {
 		return "", err
 	}
-	return hex.EncodeToString(bytes), nil
+	return base64.URLEncoding.EncodeToString(b), nil
 }
 
-// VerifyToken verifies and parses a JWT token
-func VerifyToken(tokenString, secret string) (*Claims, error) {
-	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+// ValidateAccessToken validates a JWT token and returns the claims.
+// This version includes safe type assertions to prevent panics from malformed tokens.
+func ValidateAccessToken(tokenString, secret string) (*models.TokenClaims, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
 		return []byte(secret), nil
 	})
 
-	if err != nil {
-		rollbar.Error(err)
-		return nil, err
+	if err != nil || !token.Valid {
+		return nil, errors.New("invalid token")
 	}
 
-	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
-		return claims, nil
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("invalid token claims")
 	}
 
-	return nil, fmt.Errorf("invalid token")
+	// Safe type assertions with validation to prevent panics
+	userID, ok := claims["user_id"].(string)
+	if !ok {
+		return nil, errors.New("invalid user_id claim")
+	}
+
+	username, ok := claims["username"].(string)
+	if !ok {
+		return nil, errors.New("invalid username claim")
+	}
+
+	role, ok := claims["role"].(string)
+	if !ok {
+		return nil, errors.New("invalid role claim")
+	}
+
+	exp, ok := claims["exp"].(float64)
+	if !ok {
+		return nil, errors.New("invalid exp claim")
+	}
+
+	return &models.TokenClaims{
+		UserID:    userID,
+		Username:  username,
+		Role:      role,
+		ExpiresAt: int64(exp),
+	}, nil
 }

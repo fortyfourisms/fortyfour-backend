@@ -90,7 +90,7 @@ func TestCasbinHandler_AddPolicy(t *testing.T) {
 
 	// inject context required by handler
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-user-id")
-	ctx = context.WithValue(ctx, middleware.Role, "admin")
+	ctx = context.WithValue(ctx, middleware.RoleKey, "admin")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -116,7 +116,7 @@ func TestCasbinHandler_AddPolicy_NotAdmin(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-user-id")
-	ctx = context.WithValue(ctx, middleware.Role, "user") // bukan admin
+	ctx = context.WithValue(ctx, middleware.RoleKey, "user") // bukan admin
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -138,7 +138,7 @@ func TestCasbinHandler_AddPolicy_Conflict(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-user-id")
-	ctx = context.WithValue(ctx, middleware.Role, "admin")
+	ctx = context.WithValue(ctx, middleware.RoleKey, "admin")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -166,7 +166,7 @@ func TestCasbinHandler_BulkAddPolicies_NotAdmin(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-user-id")
-	ctx = context.WithValue(ctx, middleware.Role, "user") // bukan admin
+	ctx = context.WithValue(ctx, middleware.RoleKey, "user") // bukan admin
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -193,7 +193,7 @@ func TestCasbinHandler_BulkAddPolicies_AllExisting(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-user-id")
-	ctx = context.WithValue(ctx, middleware.Role, "admin")
+	ctx = context.WithValue(ctx, middleware.RoleKey, "admin")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -221,7 +221,7 @@ func TestCasbinHandler_BulkAddPolicies_Partial(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-user-id")
-	ctx = context.WithValue(ctx, middleware.Role, "admin")
+	ctx = context.WithValue(ctx, middleware.RoleKey, "admin")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -249,7 +249,7 @@ func TestCasbinHandler_RemovePolicy(t *testing.T) {
 
 	// inject context
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-user-id")
-	ctx = context.WithValue(ctx, middleware.Role, "admin")
+	ctx = context.WithValue(ctx, middleware.RoleKey, "admin")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -276,7 +276,7 @@ func TestCasbinHandler_RemovePolicy_NotFound(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-user-id")
-	ctx = context.WithValue(ctx, middleware.Role, "admin")
+	ctx = context.WithValue(ctx, middleware.RoleKey, "admin")
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -297,7 +297,7 @@ func TestCasbinHandler_RemovePolicy_NotAdmin(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-user-id")
-	ctx = context.WithValue(ctx, middleware.Role, "user") // bukan admin
+	ctx = context.WithValue(ctx, middleware.RoleKey, "user") // bukan admin
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()

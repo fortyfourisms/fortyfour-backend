@@ -1,70 +1,70 @@
 package middleware
 
 import (
+	"fortyfour-backend/internal/services"
+	"fortyfour-backend/internal/testhelpers"
 	"fortyfour-backend/internal/utils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestAuthMiddleware_Authenticate_MissingHeader(t *testing.T) {
-	middleware := NewAuthMiddleware("test-secret")
-	handler := middleware.Authenticate(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-	})
+const testJWTSecret = "test-secret"
 
-	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	w := httptest.NewRecorder()
+// createTestTokenService creates a TokenService with mock Redis for testing
+func createTestTokenService() *services.TokenService {
+	mockRedis := testhelpers.NewMockRedisClient()
+	return services.NewTokenService(mockRedis, testJWTSecret, false, "localhost")
+}
 
-	handler(w, req)
-
-	if w.Code != http.StatusUnauthorized {
-		t.Errorf("expected status 401, got %d", w.Code)
+// createAccessTokenCookie creates a cookie with the given access token
+func createAccessTokenCookie(token string) *http.Cookie {
+	return &http.Cookie{
+		Name:  "access_token",
+		Value: token,
 	}
 }
 
-func TestAuthMiddleware_Authenticate_InvalidFormat(t *testing.T) {
-	middleware := NewAuthMiddleware("test-secret")
+func TestAuthMiddleware_Authenticate_MissingCookie(t *testing.T) {
+	tokenService := createTestTokenService()
+	middleware := NewAuthMiddleware(tokenService)
 	handler := middleware.Authenticate(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	req.Header.Set("Authorization", "InvalidFormat")
 	w := httptest.NewRecorder()
 
 	handler(w, req)
 
-	if w.Code != http.StatusUnauthorized {
-		t.Errorf("expected status 401, got %d", w.Code)
-	}
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
 func TestAuthMiddleware_Authenticate_InvalidToken(t *testing.T) {
-	middleware := NewAuthMiddleware("test-secret")
+	tokenService := createTestTokenService()
+	middleware := NewAuthMiddleware(tokenService)
 	handler := middleware.Authenticate(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	req.Header.Set("Authorization", "Bearer invalid-token")
+	req.AddCookie(createAccessTokenCookie("invalid-token"))
 	w := httptest.NewRecorder()
 
 	handler(w, req)
 
-	if w.Code != http.StatusUnauthorized {
-		t.Errorf("expected status 401, got %d", w.Code)
-	}
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
 func TestAuthMiddleware_Authenticate_ValidToken(t *testing.T) {
-	middleware := NewAuthMiddleware("test-secret")
+	tokenService := createTestTokenService()
+	middleware := NewAuthMiddleware(tokenService)
 
 	// Generate a valid token
-	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", "test-secret")
-	if err != nil {
-		t.Fatalf("failed to generate token: %v", err)
-	}
+	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", testJWTSecret)
+	assert.NoError(t, err)
 
 	handler := middleware.Authenticate(func(w http.ResponseWriter, r *http.Request) {
 		// Check if user ID is in context
@@ -78,61 +78,118 @@ func TestAuthMiddleware_Authenticate_ValidToken(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	req.Header.Set("Authorization", "Bearer "+token)
+	req.AddCookie(createAccessTokenCookie(token))
 	w := httptest.NewRecorder()
 
 	handler(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", w.Code)
-	}
+	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestAuthMiddleware_Authenticate_ContextValues(t *testing.T) {
-	middleware := NewAuthMiddleware("test-secret")
+	tokenService := createTestTokenService()
+	middleware := NewAuthMiddleware(tokenService)
 
 	// Generate a valid token
-	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", "test-secret")
-	if err != nil {
-		t.Fatalf("failed to generate token: %v", err)
-	}
+	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", testJWTSecret)
+	assert.NoError(t, err)
 
 	handler := middleware.Authenticate(func(w http.ResponseWriter, r *http.Request) {
 		userID := r.Context().Value(UserIDKey)
-		username := r.Context().Value(Username)
-		role := r.Context().Value(Role)
+		username := r.Context().Value(UsernameKey)
+		role := r.Context().Value(RoleKey)
 
-		if userID != "user-1" {
-			t.Errorf("expected user ID 'user-1', got '%v'", userID)
-		}
-		if username != "testuser" {
-			t.Errorf("expected username 'testuser', got '%v'", username)
-		}
-		if role != "admin" {
-			t.Errorf("expected role 'admin', got '%v'", role)
-		}
+		assert.Equal(t, "user-1", userID)
+		assert.Equal(t, "testuser", username)
+		assert.Equal(t, "admin", role)
 
-		// Check headers
-		if r.Header.Get("X-User-ID") != "user-1" {
-			t.Errorf("expected X-User-ID header 'user-1', got '%s'", r.Header.Get("X-User-ID"))
-		}
-		if r.Header.Get("X-Username") != "testuser" {
-			t.Errorf("expected X-Username header 'testuser', got '%s'", r.Header.Get("X-Username"))
-		}
-		if r.Header.Get("X-User-Role") != "admin" {
-			t.Errorf("expected X-User-Role header 'admin', got '%s'", r.Header.Get("X-User-Role"))
-		}
+		// Check X-User-Role header (the only header set by the middleware)
+		assert.Equal(t, "admin", r.Header.Get("X-User-Role"))
 
 		w.WriteHeader(http.StatusOK)
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	req.Header.Set("Authorization", "Bearer "+token)
+	req.AddCookie(createAccessTokenCookie(token))
 	w := httptest.NewRecorder()
 
 	handler(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", w.Code)
-	}
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestAuthMiddleware_OptionalAuth_WithoutToken(t *testing.T) {
+	tokenService := createTestTokenService()
+	middleware := NewAuthMiddleware(tokenService)
+
+	handler := middleware.OptionalAuth(func(w http.ResponseWriter, r *http.Request) {
+		// Should still pass through without authentication
+		userID := r.Context().Value(UserIDKey)
+		assert.Nil(t, userID)
+		w.WriteHeader(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	w := httptest.NewRecorder()
+
+	handler(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestAuthMiddleware_OptionalAuth_WithValidToken(t *testing.T) {
+	tokenService := createTestTokenService()
+	middleware := NewAuthMiddleware(tokenService)
+
+	// Generate a valid token
+	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "user", testJWTSecret)
+	assert.NoError(t, err)
+
+	handler := middleware.OptionalAuth(func(w http.ResponseWriter, r *http.Request) {
+		userID := r.Context().Value(UserIDKey)
+		username := r.Context().Value(UsernameKey)
+		role := r.Context().Value(RoleKey)
+
+		assert.Equal(t, "user-1", userID)
+		assert.Equal(t, "testuser", username)
+		assert.Equal(t, "user", role)
+
+		w.WriteHeader(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req.AddCookie(createAccessTokenCookie(token))
+	w := httptest.NewRecorder()
+
+	handler(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestAuthMiddleware_OptionalAuth_WithInvalidToken(t *testing.T) {
+	tokenService := createTestTokenService()
+	middleware := NewAuthMiddleware(tokenService)
+
+	handler := middleware.OptionalAuth(func(w http.ResponseWriter, r *http.Request) {
+		// Should still pass through, but without context values
+		userID := r.Context().Value(UserIDKey)
+		assert.Nil(t, userID)
+		w.WriteHeader(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req.AddCookie(createAccessTokenCookie("invalid-token"))
+	w := httptest.NewRecorder()
+
+	handler(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestNewAuthMiddleware(t *testing.T) {
+	tokenService := createTestTokenService()
+	middleware := NewAuthMiddleware(tokenService)
+
+	assert.NotNil(t, middleware)
+	assert.Equal(t, tokenService, middleware.tokenService)
 }
