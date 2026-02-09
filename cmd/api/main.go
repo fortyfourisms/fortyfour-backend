@@ -27,7 +27,7 @@ func main() {
 	rollbar.Info("Rollbar Go SDK initialized successfully!")
 
 	// Ensure all items are sent before the app exits
-	defer rollbar.Wait()
+	rollbar.Wait()
 
 	// call rollbar.Close() before the application exits to flush error message queue
 	rollbar.Close()
@@ -89,7 +89,7 @@ func main() {
 	roleRepo := repository.NewRoleRepository(db)
 
 	// Initialize services
-	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret)
+	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret, true, cfg.Domain)
 	authService := services.NewAuthService(userRepo, tokenService)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo)
 	picService := services.NewPICService(picRepo)
@@ -126,7 +126,7 @@ func main() {
 	sseHandler := handlers.NewSSEHandler(sseService)
 
 	// Initialize Middleware
-	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
+	authMiddleware := middleware.NewAuthMiddleware(tokenService)
 	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
 
 	// Initialize rate limiters with different configurations

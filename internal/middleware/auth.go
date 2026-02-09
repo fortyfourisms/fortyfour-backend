@@ -1,65 +1,94 @@
-// internal/middleware/auth.go
 package middleware
 
 import (
 	"context"
+	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"net/http"
-	"strings"
+)
 
-	"github.com/rollbar/rollbar-go"
+type contextKey string
+
+const (
+	UserIDKey   contextKey = "user_id"
+	UsernameKey contextKey = "username"
+	RoleKey     contextKey = "role"
 )
 
 type AuthMiddleware struct {
-	jwtSecret string
+	tokenService *services.TokenService
 }
 
-type contextKey struct {
-	name string
+func NewAuthMiddleware(tokenService *services.TokenService) *AuthMiddleware {
+	return &AuthMiddleware{
+		tokenService: tokenService,
+	}
 }
 
-// Struct pointer as key
-// Avoiding collisions in Go context keys
-var (
-	UserIDKey = &contextKey{"user-id"}
-	Username  = &contextKey{"username"}
-	Role      = &contextKey{"role"}
-)
-
-func NewAuthMiddleware(jwtSecret string) *AuthMiddleware {
-	return &AuthMiddleware{jwtSecret: jwtSecret}
-}
-
+// Authenticate validates the access token from cookie and sets user context
 func (m *AuthMiddleware) Authenticate(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			utils.RespondError(w, http.StatusUnauthorized, "Missing authorization header")
-			return
-		}
-
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			utils.RespondError(w, http.StatusUnauthorized, "Invalid authorization format")
-			return
-		}
-
-		claims, err := utils.VerifyToken(parts[1], m.jwtSecret)
+		// Get access token from cookie
+		accessToken, err := m.tokenService.GetAccessTokenFromCookie(r)
 		if err != nil {
-			rollbar.Error(err)
+			utils.RespondError(w, http.StatusUnauthorized, "Authentication required")
+			return
+		}
+
+		// Validate access token
+		claims, err := utils.ValidateAccessToken(accessToken, m.tokenService.JWTSecret)
+		if err != nil {
 			utils.RespondError(w, http.StatusUnauthorized, "Invalid or expired token")
 			return
 		}
 
-		UserIDString := claims.UserID
-		r.Header.Set("X-User-ID", UserIDString)
-		r.Header.Set("X-Username", claims.Username)
+		// Set user info in context
+		ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+		ctx = context.WithValue(ctx, UsernameKey, claims.Username)
+		ctx = context.WithValue(ctx, RoleKey, claims.Role)
+
+		// Set role in header for Casbin middleware compatibility
 		r.Header.Set("X-User-Role", claims.Role)
 
-		// Set ke context juga
-		ctx := context.WithValue(r.Context(), UserIDKey, UserIDString)
-		ctx = context.WithValue(ctx, Username, claims.Username)
-		ctx = context.WithValue(ctx, Role, claims.Role)
+		next(w, r.WithContext(ctx))
+	}
+}
+
+// OptionalAuth is similar to Authenticate but doesn't fail if token is missing
+func (m *AuthMiddleware) OptionalAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accessToken, err := m.tokenService.GetAccessTokenFromCookie(r)
+		if err == nil {
+			claims, err := utils.ValidateAccessToken(accessToken, m.tokenService.JWTSecret)
+			if err == nil {
+				ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+				ctx = context.WithValue(ctx, UsernameKey, claims.Username)
+				ctx = context.WithValue(ctx, RoleKey, claims.Role)
+				r.Header.Set("X-User-Role", claims.Role)
+				r = r.WithContext(ctx)
+			}
+		}
+
+		next(w, r)
+	}
+}
+
+// AutoRefresh automatically refreshes the access token if expired
+func (m *AuthMiddleware) AutoRefresh(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		claims, err := m.tokenService.ValidateAndRefreshIfNeeded(w, r)
+		if err != nil {
+			utils.RespondError(w, http.StatusUnauthorized, "Authentication required")
+			return
+		}
+
+		// Set user info in context
+		ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
+		ctx = context.WithValue(ctx, UsernameKey, claims.Username)
+		ctx = context.WithValue(ctx, RoleKey, claims.Role)
+
+		// Set role in header for Casbin middleware compatibility
+		r.Header.Set("X-User-Role", claims.Role)
 
 		next(w, r.WithContext(ctx))
 	}

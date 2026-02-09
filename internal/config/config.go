@@ -9,6 +9,7 @@ import (
 type Config struct {
 	Port            string
 	JWTSecret       string
+	Domain          string
 	Database        DatabaseConfig
 	Redis           RedisConfig
 	CasbinModelPath string
@@ -40,6 +41,7 @@ func Load() *Config {
 	return &Config{
 		Port:      getEnv("PORT", ":8080"),
 		JWTSecret: getEnv("JWT_SECRET", "your-secret-key"),
+		Domain:    getEnv("DOMAIN", "https://admin.kssindustri.site"),
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnv("DB_PORT", "3306"),
@@ -55,8 +57,8 @@ func Load() *Config {
 		},
 		CasbinModelPath: getEnv("CASBIN_MODEL_PATH", absPath),
 		Rollbar: RollbarConfig{
-			Token: getEnv("ROLLBAR_TOKEN", ""),
-			Env:   getEnv("ROLLBAR_STATUS", "development"),
+			Token: getEnv("ROLLBAR_TOKEN", "3644bd3653224db48605d4b55616748e"),
+			Env:   getEnv("ROLLBAR_STATUS", "production"),
 		},
 	}
 }

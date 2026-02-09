@@ -435,7 +435,7 @@ func (h *UserHandler) getUserID(r *http.Request) string {
 }
 
 func (h *UserHandler) isAdmin(r *http.Request) bool {
-	if role := r.Context().Value(middleware.Role); role != nil {
+	if role := r.Context().Value(middleware.RoleKey); role != nil {
 		return role.(string) == "admin"
 	}
 	return false
