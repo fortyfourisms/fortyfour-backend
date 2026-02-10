@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/rollbar/rollbar-go"
 )
 
 type RateLimiterConfig struct {
@@ -48,7 +47,6 @@ func (rl *RateLimiter) LimitByIP(next http.HandlerFunc) http.HandlerFunc {
 
 		allowed, remaining, resetTime, err := rl.checkLimit(key)
 		if err != nil {
-			rollbar.Error(err)
 			// On error, log and allow request (fail open)
 			// In production, you might want to fail closed instead
 			next(w, r)
@@ -84,7 +82,6 @@ func (rl *RateLimiter) LimitByUser(next http.HandlerFunc) http.HandlerFunc {
 
 		allowed, remaining, resetTime, err := rl.checkLimit(key)
 		if err != nil {
-			rollbar.Error(err)
 			next(w, r)
 			return
 		}
@@ -116,7 +113,6 @@ func (rl *RateLimiter) LimitByAPIKey(next http.HandlerFunc) http.HandlerFunc {
 
 		allowed, remaining, resetTime, err := rl.checkLimit(key)
 		if err != nil {
-			rollbar.Error(err)
 			next(w, r)
 			return
 		}
@@ -143,7 +139,6 @@ func (rl *RateLimiter) checkLimit(key string) (allowed bool, remaining int, rese
 	// Get current count
 	countStr, err := rl.redis.Get(key)
 	if err != nil {
-		rollbar.Error(err)
 		// Key doesn't exist, this is the first request
 		count := 1
 		if err := rl.redis.Set(key, strconv.Itoa(count), rl.config.WindowDuration); err != nil {
@@ -155,7 +150,6 @@ func (rl *RateLimiter) checkLimit(key string) (allowed bool, remaining int, rese
 
 	count, err := strconv.Atoi(countStr)
 	if err != nil {
-		rollbar.Error(err)
 		return false, 0, now, err
 	}
 
@@ -168,7 +162,6 @@ func (rl *RateLimiter) checkLimit(key string) (allowed bool, remaining int, rese
 	// Increment counter
 	count++
 	if err := rl.redis.Set(key, strconv.Itoa(count), rl.config.WindowDuration); err != nil {
-		rollbar.Error(err)
 		return false, 0, now, err
 	}
 

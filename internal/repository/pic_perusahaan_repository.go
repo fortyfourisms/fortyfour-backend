@@ -6,7 +6,6 @@ import (
 	"fortyfour-backend/internal/utils"
 	"strings"
 
-	"github.com/rollbar/rollbar-go"
 )
 
 type PICRepository struct {
@@ -66,7 +65,6 @@ func (r *PICRepository) GetAll() ([]dto.PICResponse, error) {
 			&namaPerusahaan,
 		)
 		if err != nil {
-			rollbar.Error(err)
 			continue
 		}
 
@@ -114,7 +112,6 @@ func (r *PICRepository) GetByID(id string) (*dto.PICResponse, error) {
 	)
 
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 

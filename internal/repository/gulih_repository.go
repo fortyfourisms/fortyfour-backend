@@ -5,7 +5,6 @@ import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 
-	"github.com/rollbar/rollbar-go"
 )
 
 type GulihRepository struct {
@@ -41,7 +40,6 @@ func (r *GulihRepository) GetAll() ([]models.Gulih, error) {
 		SELECT id, nilai_gulih, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4
 		FROM gulih`)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -76,7 +74,6 @@ func (r *GulihRepository) GetByID(id string) (*models.Gulih, error) {
 		&g.NilaiSubdomain3,
 		&g.NilaiSubdomain4,
 	); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 

@@ -13,7 +13,6 @@ import (
 	"fortyfour-backend/internal/validator"
 
 	"github.com/google/uuid"
-	"github.com/rollbar/rollbar-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -32,7 +31,6 @@ func NewUserService(repo repository.UserRepositoryInterface, uploadPath string) 
 func (s *UserService) GetAll() ([]dto.UserResponse, error) {
 	users, err := s.repo.FindAll()
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	responses := make([]dto.UserResponse, len(users))
@@ -45,7 +43,6 @@ func (s *UserService) GetAll() ([]dto.UserResponse, error) {
 func (s *UserService) GetByID(id string) (*dto.UserResponse, error) {
 	user, err := s.repo.FindByID(id)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	response := s.toResponse(user)
@@ -68,14 +65,12 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*dto.UserResponse, erro
 	personalInfo := []string{req.Username, req.Email}
 
 	if err := validator.ValidatePassword(req.Password, config, personalInfo...); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
 	// Validate username exists
 	exists, err := s.repo.UsernameExists(req.Username, nil)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	if exists {
@@ -85,7 +80,6 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*dto.UserResponse, erro
 	// Validate email exists
 	exists, err = s.repo.EmailExists(req.Email, nil)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	if exists {
@@ -95,7 +89,6 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*dto.UserResponse, erro
 	// Hash password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -111,7 +104,6 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*dto.UserResponse, erro
 	}
 
 	if err := s.repo.Create(user); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -122,7 +114,6 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*dto.UserResponse, erro
 func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserResponse, error) {
 	user, err := s.repo.FindByID(id)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -137,7 +128,6 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 		}
 		exists, err := s.repo.UsernameExists(trimmed, &id)
 		if err != nil {
-			rollbar.Error(err)
 			return nil, err
 		}
 		if exists {
@@ -157,7 +147,6 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 		}
 		exists, err := s.repo.EmailExists(trimmed, &id)
 		if err != nil {
-			rollbar.Error(err)
 			return nil, err
 		}
 		if exists {
@@ -185,7 +174,6 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 	// Get updated user
 	user, err = s.repo.FindByID(id)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -202,19 +190,16 @@ func (s *UserService) UpdatePassword(id string, req dto.UpdateUserPasswordReques
 	// Get current user data and password
 	user, err := s.repo.FindByID(id)
 	if err != nil {
-		rollbar.Error(err)
 		return errors.New("user tidak ditemukan")
 	}
 
 	currentPassword, err := s.repo.GetPasswordByID(id)
 	if err != nil {
-		rollbar.Error(err)
 		return err
 	}
 
 	// Verify old password
 	if err := bcrypt.CompareHashAndPassword([]byte(currentPassword), []byte(req.OldPassword)); err != nil {
-		rollbar.Error(err)
 		return errors.New("password lama tidak sesuai")
 	}
 
@@ -223,14 +208,12 @@ func (s *UserService) UpdatePassword(id string, req dto.UpdateUserPasswordReques
 	personalInfo := []string{user.Username, user.Email}
 
 	if err := validator.ValidateNewPassword(req.NewPassword, req.OldPassword, config, personalInfo...); err != nil {
-		rollbar.Error(err)
 		return err
 	}
 
 	// Hash new password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
-		rollbar.Error(err)
 		return err
 	}
 
@@ -240,7 +223,6 @@ func (s *UserService) UpdatePassword(id string, req dto.UpdateUserPasswordReques
 func (s *UserService) UpdateProfilePhoto(id string, filename string) (*dto.UserResponse, error) {
 	user, err := s.repo.FindByID(id)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -252,14 +234,12 @@ func (s *UserService) UpdateProfilePhoto(id string, filename string) (*dto.UserR
 
 	user.FotoProfile = &filename
 	if err := s.repo.UpdateWithPhoto(user); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
 	// Get updated user
 	user, err = s.repo.FindByID(id)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -270,7 +250,6 @@ func (s *UserService) UpdateProfilePhoto(id string, filename string) (*dto.UserR
 func (s *UserService) UpdateBanner(id string, filename string) (*dto.UserResponse, error) {
 	user, err := s.repo.FindByID(id)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -282,14 +261,12 @@ func (s *UserService) UpdateBanner(id string, filename string) (*dto.UserRespons
 
 	user.Banner = &filename
 	if err := s.repo.UpdateWithPhoto(user); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
 	// Get updated user
 	user, err = s.repo.FindByID(id)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -300,7 +277,6 @@ func (s *UserService) UpdateBanner(id string, filename string) (*dto.UserRespons
 func (s *UserService) Delete(id string) error {
 	user, err := s.repo.FindByID(id)
 	if err != nil {
-		rollbar.Error(err)
 		return err
 	}
 

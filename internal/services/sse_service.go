@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rollbar/rollbar-go"
 )
 
 // Event types
@@ -401,7 +400,6 @@ func (s *SSEService) GetClientCount() int {
 func FormatSSEMessage(event SSEEvent) string {
 	data, err := json.Marshal(event)
 	if err != nil {
-		rollbar.Error(err)
 		log.Printf("Error marshaling SSE event: %v", err)
 		return ""
 	}

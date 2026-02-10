@@ -5,7 +5,6 @@ import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/utils"
 
-	"github.com/rollbar/rollbar-go"
 )
 
 type PerusahaanRepository struct {
@@ -35,7 +34,6 @@ func (r *PerusahaanRepository) Create(req dto.CreatePerusahaanRequest, id string
 func (r *PerusahaanRepository) GetAll() ([]dto.PerusahaanResponse, error) {
 	rows, err := r.db.Query(`SELECT id, photo, nama_perusahaan, sektor, alamat, telepon, email, website, created_at, updated_at FROM perusahaan`)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -54,7 +52,6 @@ func (r *PerusahaanRepository) GetByID(id string) (*dto.PerusahaanResponse, erro
 	var p dto.PerusahaanResponse
 	err := row.Scan(&p.ID, &p.Photo, &p.NamaPerusahaan, &p.Sektor, &p.Alamat, &p.Telepon, &p.Email, &p.Website, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	return &p, nil
