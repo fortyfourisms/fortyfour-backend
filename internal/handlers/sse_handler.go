@@ -21,7 +21,13 @@ func NewSSEHandler(sseService *services.SSEService) *SSEHandler {
 	}
 }
 
-// HandleSSE handles SSE connections
+// @Summary Server-Sent Events connection
+// @Description Establishes an SSE connection for real-time updates
+// @Tags SSE
+// @Produce text/event-stream
+// @Security BearerAuth
+// @Success 200 {string} string "SSE stream"
+// @Router /api/events [get]
 func (h *SSEHandler) HandleSSE(w http.ResponseWriter, r *http.Request) {
 	// Set SSE headers
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -86,7 +92,13 @@ func (h *SSEHandler) HandleSSE(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GetStats returns SSE statistics
+// @Summary Get SSE statistics
+// @Description Returns SSE connection statistics
+// @Tags SSE
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{}
+// @Router /api/events/stats [get]
 func (h *SSEHandler) GetStats(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/rollbar/rollbar-go"
 )
 
 type PICService struct {
@@ -31,7 +30,6 @@ func (s *PICService) Create(req dto.CreatePICRequest) (*dto.PICResponse, error) 
 	id := uuid.New().String()
 
 	if err := s.repo.Create(req, id); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -48,13 +46,11 @@ func (s *PICService) GetByID(id string) (*dto.PICResponse, error) {
 
 func (s *PICService) Update(id string, req dto.UpdatePICRequest) (*dto.PICResponse, error) {
 	if err := s.repo.Update(id, req); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
 	updated, err := s.repo.GetByID(id)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 

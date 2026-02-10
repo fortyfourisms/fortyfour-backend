@@ -7,6 +7,8 @@ import (
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"net/http"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type CasbinHandler struct {
@@ -33,9 +35,18 @@ func getUserFromContext(r *http.Request) (userID string, role string, ok bool) {
 	return uid, rle, true
 }
 
-// ===== HANDLERS =====
-
-// AddPolicy adds a single permission
+// @Summary Add Casbin policy
+// @Description Menambahkan satu permission policy (admin only)
+// @Tags Casbin
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param policy body dto.AddPolicyRequest true "Policy data"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 409 {object} dto.ErrorResponse
+// @Router /api/casbin/policies/add [post]
 func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -52,6 +63,7 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 	var req dto.AddPolicyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		rollbar.Error(err)
 		return
 	}
 
@@ -64,6 +76,7 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 	added, err := h.casbinService.AddPolicy(req.Role, req.Resource, req.Action)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		rollbar.Error(err)
 		return
 	}
 
@@ -91,7 +104,18 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// BulkAddPolicies adds multiple policies at once
+// @Summary Bulk add Casbin policies
+// @Description Menambahkan banyak permission policies sekaligus (admin only)
+// @Tags Casbin
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param policies body dto.BulkAddPolicyRequest true "Bulk policy data"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 409 {object} dto.ErrorResponse
+// @Router /api/casbin/policies/bulk [post]
 func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -106,6 +130,7 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 
 	var req dto.BulkAddPolicyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
@@ -118,6 +143,7 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 
 	result, err := h.casbinService.BulkAddPolicies(policies)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -164,7 +190,18 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
-// RemovePolicy removes a permission
+// @Summary Remove Casbin policy
+// @Description Menghapus satu permission policy (admin only)
+// @Tags Casbin
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param policy body dto.RemovePolicyRequest true "Policy to remove"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Router /api/casbin/policies/remove [delete]
 func (h *CasbinHandler) RemovePolicy(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -179,12 +216,14 @@ func (h *CasbinHandler) RemovePolicy(w http.ResponseWriter, r *http.Request) {
 
 	var req dto.RemovePolicyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
 
 	removed, err := h.casbinService.RemovePolicy(req.Role, req.Resource, req.Action)
 	if err != nil {
+		rollbar.Error(err)
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -208,7 +247,13 @@ func (h *CasbinHandler) RemovePolicy(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetAllPolicies returns all policies
+// @Summary Get all Casbin policies
+// @Description Mengambil semua permission policies
+// @Tags Casbin
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{}
+// @Router /api/casbin/policies [get]
 func (h *CasbinHandler) GetAllPolicies(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
@@ -223,7 +268,15 @@ func (h *CasbinHandler) GetAllPolicies(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetRolePermissions returns permissions for a specific role
+// @Summary Get role permissions
+// @Description Mengambil permissions untuk role tertentu
+// @Tags Casbin
+// @Produce json
+// @Security BearerAuth
+// @Param role query string true "Role name"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} dto.ErrorResponse
+// @Router /api/casbin/permissions [get]
 func (h *CasbinHandler) GetRolePermissions(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")

@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/utils"
-
-	"github.com/rollbar/rollbar-go"
 )
 
 type SdmCsirtRepository struct {
@@ -43,7 +41,6 @@ func (r *SdmCsirtRepository) GetAll() ([]dto.SdmCsirtResponse, error) {
 		LEFT JOIN csirt c ON s.id_csirt = c.id
 	`)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -113,7 +110,6 @@ func (r *SdmCsirtRepository) GetByID(id string) (*dto.SdmCsirtResponse, error) {
 	)
 
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 

@@ -45,6 +45,14 @@ func (h *CsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary List semua CSIRT
+// @Description Mengambil seluruh data CSIRT
+// @Tags CSIRT
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} dto.CsirtResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/csirt [get]
 func (h *CsirtHandler) handleGetAll(w http.ResponseWriter) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -55,6 +63,15 @@ func (h *CsirtHandler) handleGetAll(w http.ResponseWriter) {
 	utils.RespondJSON(w, 200, data)
 }
 
+// @Summary Ambil CSIRT berdasarkan ID
+// @Description Mengambil satu data CSIRT
+// @Tags CSIRT
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "CSIRT ID"
+// @Success 200 {object} dto.CsirtResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Router /api/csirt/{id} [get]
 func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -65,6 +82,22 @@ func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, id string) {
 	utils.RespondJSON(w, 200, data)
 }
 
+// @Summary Tambah CSIRT baru
+// @Description Membuat record CSIRT baru dengan file upload
+// @Tags CSIRT
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param id_perusahaan formData string true "ID Perusahaan"
+// @Param nama_csirt formData string true "Nama CSIRT"
+// @Param web_csirt formData string false "Website CSIRT"
+// @Param telepon_csirt formData string false "Telepon CSIRT"
+// @Param photo_csirt formData file false "Photo CSIRT"
+// @Param file_rfc2350 formData file false "File RFC2350"
+// @Param file_public_key_pgp formData file false "File Public Key PGP"
+// @Success 201 {object} dto.CsirtResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Router /api/csirt [post]
 func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		rollbar.Error(err)
@@ -113,6 +146,22 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 201, resp)
 }
 
+// @Summary Update CSIRT
+// @Description Mengubah data CSIRT berdasarkan ID
+// @Tags CSIRT
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "CSIRT ID"
+// @Param nama_csirt formData string false "Nama CSIRT"
+// @Param web_csirt formData string false "Website CSIRT"
+// @Param telepon_csirt formData string false "Telepon CSIRT"
+// @Param photo_csirt formData file false "Photo CSIRT"
+// @Param file_rfc2350 formData file false "File RFC2350"
+// @Param file_public_key_pgp formData file false "File Public Key PGP"
+// @Success 200 {object} dto.CsirtResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Router /api/csirt/{id} [put]
 func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		rollbar.Error(err)
@@ -133,17 +182,14 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 	}
 
 	if path, err := saveUploadedFile(r, "photo_csirt", "uploads/csirt_photo"); err == nil && path != "" {
-		rollbar.Error(err)
 		req.PhotoCsirt = &path
 	}
 
 	if path, err := saveUploadedFile(r, "file_rfc2350", "uploads/rfc2350"); err == nil && path != "" {
-		rollbar.Error(err)
 		req.FileRFC2350 = &path
 	}
 
 	if path, err := saveUploadedFile(r, "file_public_key_pgp", "uploads/pgp"); err == nil && path != "" {
-		rollbar.Error(err)
 		req.FilePublicKeyPGP = &path
 	}
 
@@ -157,6 +203,15 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 	utils.RespondJSON(w, 200, resp)
 }
 
+// @Summary Hapus CSIRT
+// @Description Menghapus data CSIRT berdasarkan ID
+// @Tags CSIRT
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "CSIRT ID"
+// @Success 200 {object} dto.MessageResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Router /api/csirt/{id} [delete]
 func (h *CsirtHandler) handleDelete(w http.ResponseWriter, id string) {
 	if err := h.service.Delete(id); err != nil {
 		rollbar.Error(err)
@@ -169,7 +224,6 @@ func (h *CsirtHandler) handleDelete(w http.ResponseWriter, id string) {
 func saveUploadedFile(r *http.Request, fieldName, uploadDir string) (string, error) {
 	file, header, err := r.FormFile(fieldName)
 	if err != nil {
-		rollbar.Error(err)
 		return "", nil
 	}
 	defer file.Close()
@@ -182,13 +236,11 @@ func saveUploadedFile(r *http.Request, fieldName, uploadDir string) (string, err
 
 	dst, err := os.Create(fullPath)
 	if err != nil {
-		rollbar.Error(err)
 		return "", err
 	}
 	defer dst.Close()
 
 	if _, err := io.Copy(dst, file); err != nil {
-		rollbar.Error(err)
 		return "", err
 	}
 

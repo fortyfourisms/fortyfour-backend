@@ -7,7 +7,6 @@ import (
 
 	"github.com/casbin/casbin/v3"
 	gormadapter "github.com/casbin/gorm-adapter/v3"
-	"github.com/rollbar/rollbar-go"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -27,7 +26,6 @@ func NewCasbinService(dsn, modelPath string) (*CasbinService, error) {
 	// Initialize GORM
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		rollbar.Error(err)
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
@@ -47,27 +45,23 @@ func NewCasbinService(dsn, modelPath string) (*CasbinService, error) {
 	// Initialize GORM Adapter
 	adapter, err := gormadapter.NewAdapterByDB(db)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, fmt.Errorf("failed to create casbin adapter: %w", err)
 	}
 
 	// Create enforcer with model file
 	enforcer, err := casbin.NewEnforcer(modelPath, adapter)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, fmt.Errorf("failed to create casbin enforcer: %w", err)
 	}
 
 	// Load policies from database
 	if err := enforcer.LoadPolicy(); err != nil {
-		rollbar.Error(err)
 		return nil, fmt.Errorf("failed to load policy: %w", err)
 	}
 
 	// Check if policies exist, if not add defaults
 	allPolicies, err := enforcer.GetPolicy()
 	if err != nil {
-		rollbar.Error(err)
 		return nil, fmt.Errorf("failed to get policies: %w", err)
 	}
 
@@ -81,13 +75,11 @@ func NewCasbinService(dsn, modelPath string) (*CasbinService, error) {
 
 		added, err := enforcer.AddPolicies(defaultPolicies)
 		if err != nil {
-			rollbar.Error(err)
 			log.Printf("Error adding default policies: %v", err)
 		}
 
 		if added && enforcer.GetAdapter() != nil {
 			if err := enforcer.SavePolicy(); err != nil {
-				rollbar.Error(err)
 				log.Printf("Error saving default policies: %v", err)
 			} else {
 				log.Println("Default policies added successfully")
@@ -131,7 +123,6 @@ func (s *CasbinService) AddPolicy(role, resource, action string) (bool, error) {
 	// Check if policy already exists first
 	hasPolicy, err := s.enforcer.HasPolicy([]string{role, resource, action})
 	if err != nil {
-		rollbar.Error(err)
 		return false, fmt.Errorf("failed to check policy existence: %w", err)
 	}
 
@@ -142,13 +133,11 @@ func (s *CasbinService) AddPolicy(role, resource, action string) (bool, error) {
 	// Add the policy
 	added, err := s.enforcer.AddPolicy(role, resource, action)
 	if err != nil {
-		rollbar.Error(err)
 		return false, fmt.Errorf("failed to add policy: %w", err)
 	}
 
 	if added && s.enforcer.GetAdapter() != nil {
 		if err := s.enforcer.SavePolicy(); err != nil {
-			rollbar.Error(err)
 			return false, fmt.Errorf("failed to save policy: %w", err)
 		}
 	}
@@ -160,13 +149,11 @@ func (s *CasbinService) AddPolicy(role, resource, action string) (bool, error) {
 func (s *CasbinService) AddPolicies(policies [][]string) (bool, error) {
 	added, err := s.enforcer.AddPolicies(policies)
 	if err != nil {
-		rollbar.Error(err)
 		return false, fmt.Errorf("failed to add policies: %w", err)
 	}
 
 	if added && s.enforcer.GetAdapter() != nil {
 		if err := s.enforcer.SavePolicy(); err != nil {
-			rollbar.Error(err)
 			return false, fmt.Errorf("failed to save policies: %w", err)
 		}
 	}
@@ -194,7 +181,6 @@ func (s *CasbinService) BulkAddPolicies(policies [][]string) (*BulkAddResult, er
 		// Check if policy already exists
 		hasPolicy, err := s.enforcer.HasPolicy(policy)
 		if err != nil {
-			rollbar.Error(err)
 			return nil, fmt.Errorf("failed to check policy existence (%s, %s, %s): %w", role, resource, action, err)
 		}
 
@@ -209,7 +195,6 @@ func (s *CasbinService) BulkAddPolicies(policies [][]string) (*BulkAddResult, er
 			// Try to add the policy
 			added, err := s.enforcer.AddPolicy(role, resource, action)
 			if err != nil {
-				rollbar.Error(err)
 				return nil, fmt.Errorf("failed to add policy (%s, %s, %s): %w", role, resource, action, err)
 			}
 
@@ -233,7 +218,6 @@ func (s *CasbinService) BulkAddPolicies(policies [][]string) (*BulkAddResult, er
 	// Save to database if any policies were added
 	if len(result.Added) > 0 && s.enforcer.GetAdapter() != nil {
 		if err := s.enforcer.SavePolicy(); err != nil {
-			rollbar.Error(err)
 			return nil, fmt.Errorf("failed to save policies: %w", err)
 		}
 	}
@@ -245,13 +229,11 @@ func (s *CasbinService) BulkAddPolicies(policies [][]string) (*BulkAddResult, er
 func (s *CasbinService) RemovePolicy(role, resource, action string) (bool, error) {
 	removed, err := s.enforcer.RemovePolicy(role, resource, action)
 	if err != nil {
-		rollbar.Error(err)
 		return false, fmt.Errorf("failed to remove policy: %w", err)
 	}
 
 	if removed && s.enforcer.GetAdapter() != nil {
 		if err := s.enforcer.SavePolicy(); err != nil {
-			rollbar.Error(err)
 			return false, fmt.Errorf("failed to save policy: %w", err)
 		}
 	}
@@ -263,7 +245,6 @@ func (s *CasbinService) RemovePolicy(role, resource, action string) (bool, error
 func (s *CasbinService) GetRolePermissions(role string) []models.CasbinPolicy {
 	filteredPolicies, err := s.enforcer.GetFilteredPolicy(0, role)
 	if err != nil {
-		rollbar.Error(err)
 		log.Printf("Error getting filtered policy: %v", err)
 		return []models.CasbinPolicy{}
 	}
@@ -286,7 +267,6 @@ func (s *CasbinService) GetRolePermissions(role string) []models.CasbinPolicy {
 func (s *CasbinService) GetAllPolicies() []models.CasbinPolicy {
 	allPolicies, err := s.enforcer.GetPolicy()
 	if err != nil {
-		rollbar.Error(err)
 		log.Printf("Error getting all policies: %v", err)
 		return []models.CasbinPolicy{}
 	}

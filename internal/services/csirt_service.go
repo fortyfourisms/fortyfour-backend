@@ -6,7 +6,6 @@ import (
 	"fortyfour-backend/internal/repository"
 
 	"github.com/google/uuid"
-	"github.com/rollbar/rollbar-go"
 )
 
 type CsirtServiceInterface interface {
@@ -28,7 +27,6 @@ func NewCsirtService(repo repository.CsirtRepositoryInterface) *CsirtService {
 func (s *CsirtService) Create(req dto.CreateCsirtRequest) (*models.Csirt, error) {
 	id := uuid.New().String()
 	if err := s.repo.Create(req, id); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	return s.repo.GetByID(id)
@@ -45,7 +43,6 @@ func (s *CsirtService) GetByID(id string) (*dto.CsirtResponse, error) {
 func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error) {
 	c, err := s.repo.GetByID(id)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -69,7 +66,6 @@ func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Cs
 	}
 
 	if err := s.repo.Update(id, *c); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	return c, nil
