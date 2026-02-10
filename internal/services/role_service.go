@@ -8,7 +8,6 @@ import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/repository"
-
 )
 
 type RoleService struct {

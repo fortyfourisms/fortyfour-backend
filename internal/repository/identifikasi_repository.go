@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
-
 )
 
 type IdentifikasiRepository struct {

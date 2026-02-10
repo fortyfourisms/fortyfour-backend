@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/utils"
-
 )
 
 type SeCsirtRepository struct {

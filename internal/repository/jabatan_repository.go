@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"fortyfour-backend/internal/dto"
-
 )
 
 type JabatanRepository struct {

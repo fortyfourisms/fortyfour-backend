@@ -9,7 +9,6 @@ import (
 	"fortyfour-backend/pkg/cache"
 	"net/http"
 	"time"
-
 )
 
 type TokenService struct {

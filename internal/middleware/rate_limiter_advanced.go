@@ -5,7 +5,6 @@ import (
 	"fortyfour-backend/pkg/cache"
 	"net/http"
 	"time"
-
 )
 
 // TokenBucketLimiter implements token bucket algorithm
