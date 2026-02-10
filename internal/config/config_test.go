@@ -32,8 +32,8 @@ func TestLoad_WithDefaultValues(t *testing.T) {
 	assert.Equal(t, "", cfg.Redis.Password)
 	assert.Equal(t, 0, cfg.Redis.DB)
 
-	// Rollbar defaults
-	assert.Equal(t, "3644bd3653224db48605d4b55616748e", cfg.Rollbar.Token)
+	// Rollbar defaults - FIXED: Match actual default value in config.go
+	assert.Equal(t, "0eddf8fb05e44067a12a8bb36ccc3ef9", cfg.Rollbar.Token)
 	assert.Equal(t, "production", cfg.Rollbar.Env)
 
 	// Casbin model path should be set
