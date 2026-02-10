@@ -1,31 +1,28 @@
 definitions:
-  dto.AuthResponse:
+  dto.AddPolicyRequest:
     properties:
-      access_token:
+      action:
         type: string
-      expires_at:
+      resource:
         type: string
-      refresh_token:
+      role:
         type: string
-      user:
-        $ref: '#/definitions/models.User'
+    required:
+    - action
+    - resource
+    - role
     type: object
-  dto.CreateCsirtRequest:
+  dto.BulkAddPolicyRequest:
     properties:
-      file_public_key_pgp:
+      policies:
+        items:
+          $ref: '#/definitions/dto.PolicyDefinition'
+        type: array
+      role:
         type: string
-      file_rfc2350:
-        type: string
-      id_perusahaan:
-        type: string
-      nama_csirt:
-        type: string
-      photo_csirt:
-        type: string
-      telepon_csirt:
-        type: string
-      web_csirt:
-        type: string
+    required:
+    - policies
+    - role
     type: object
   dto.CreateDeteksiData:
     properties:
@@ -445,23 +442,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  dto.LoginRequest:
-    properties:
-      password:
-        type: string
-      username:
-        type: string
-    required:
-    - password
-    - username
-    type: object
-  dto.LogoutRequest:
-    properties:
-      refresh_token:
-        type: string
-    required:
-    - refresh_token
-    type: object
   dto.MessageResponse:
     properties:
       message:
@@ -520,6 +500,16 @@ definitions:
       website:
         type: string
     type: object
+  dto.PolicyDefinition:
+    properties:
+      action:
+        type: string
+      resource:
+        type: string
+    required:
+    - action
+    - resource
+    type: object
   dto.ProteksiInIkas:
     properties:
       id:
@@ -560,32 +550,18 @@ definitions:
       nilai_subdomain6:
         type: number
     type: object
-  dto.RefreshTokenRequest:
+  dto.RemovePolicyRequest:
     properties:
-      refresh_token:
+      action:
+        type: string
+      resource:
+        type: string
+      role:
         type: string
     required:
-    - refresh_token
-    type: object
-  dto.RegisterRequest:
-    properties:
-      email:
-        type: string
-      id_jabatan:
-        type: string
-      password:
-        minLength: 8
-        type: string
-      role_id:
-        type: string
-      username:
-        maxLength: 50
-        minLength: 3
-        type: string
-    required:
-    - email
-    - password
-    - username
+    - action
+    - resource
+    - role
     type: object
   dto.RoleResponse:
     properties:
@@ -642,33 +618,6 @@ definitions:
       pengelola_se:
         type: string
       updated_at:
-        type: string
-    type: object
-  dto.TokenPair:
-    properties:
-      access_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        type: string
-      expires_at:
-        example: "2025-12-15T15:04:05+07:00"
-        type: string
-      refresh_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-        type: string
-    type: object
-  dto.UpdateCsirtRequest:
-    properties:
-      file_public_key_pgp:
-        type: string
-      file_rfc2350:
-        type: string
-      nama_csirt:
-        type: string
-      photo_csirt:
-        type: string
-      telepon_csirt:
-        type: string
-      web_csirt:
         type: string
     type: object
   dto.UpdateDeteksiData:
@@ -879,6 +828,22 @@ definitions:
       pengelola_se:
         type: string
     type: object
+  dto.UpdateUserPasswordRequest:
+    properties:
+      confirm_new_password:
+        minLength: 8
+        type: string
+      new_password:
+        minLength: 8
+        type: string
+      old_password:
+        minLength: 8
+        type: string
+    required:
+    - confirm_new_password
+    - new_password
+    - old_password
+    type: object
   dto.UpdateUserRequest:
     properties:
       email:
@@ -917,37 +882,165 @@ definitions:
       username:
         type: string
     type: object
-  models.User:
-    properties:
-      banner:
-        type: string
-      created_at:
-        type: string
-      email:
-        type: string
-      foto_profile:
-        type: string
-      id:
-        type: string
-      id_jabatan:
-        type: string
-      jabatan_name:
-        type: string
-      role_id:
-        type: string
-      role_name:
-        type: string
-      updated_at:
-        type: string
-      username:
-        type: string
-    type: object
 info:
   contact: {}
 paths:
+  /api/casbin/permissions:
+    get:
+      description: Mengambil permissions untuk role tertentu
+      parameters:
+      - description: Role name
+        in: query
+        name: role
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get role permissions
+      tags:
+      - Casbin
+  /api/casbin/policies:
+    get:
+      description: Mengambil semua permission policies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all Casbin policies
+      tags:
+      - Casbin
+  /api/casbin/policies/add:
+    post:
+      consumes:
+      - application/json
+      description: Menambahkan satu permission policy (admin only)
+      parameters:
+      - description: Policy data
+        in: body
+        name: policy
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AddPolicyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Add Casbin policy
+      tags:
+      - Casbin
+  /api/casbin/policies/bulk:
+    post:
+      consumes:
+      - application/json
+      description: Menambahkan banyak permission policies sekaligus (admin only)
+      parameters:
+      - description: Bulk policy data
+        in: body
+        name: policies
+        required: true
+        schema:
+          $ref: '#/definitions/dto.BulkAddPolicyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Bulk add Casbin policies
+      tags:
+      - Casbin
+  /api/casbin/policies/remove:
+    delete:
+      consumes:
+      - application/json
+      description: Menghapus satu permission policy (admin only)
+      parameters:
+      - description: Policy to remove
+        in: body
+        name: policy
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RemovePolicyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Remove Casbin policy
+      tags:
+      - Casbin
   /api/csirt:
     get:
-      description: Ambil seluruh data csirt
+      description: Mengambil seluruh data CSIRT
       produces:
       - application/json
       responses:
@@ -961,20 +1054,46 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: List semua csirt
+      security:
+      - BearerAuth: []
+      summary: List semua CSIRT
       tags:
-      - Csirt
+      - CSIRT
     post:
       consumes:
-      - application/json
-      description: Membuat record csirt
+      - multipart/form-data
+      description: Membuat record CSIRT baru dengan file upload
       parameters:
-      - description: Data csirt
-        in: body
-        name: csirt
+      - description: ID Perusahaan
+        in: formData
+        name: id_perusahaan
         required: true
-        schema:
-          $ref: '#/definitions/dto.CreateCsirtRequest'
+        type: string
+      - description: Nama CSIRT
+        in: formData
+        name: nama_csirt
+        required: true
+        type: string
+      - description: Website CSIRT
+        in: formData
+        name: web_csirt
+        type: string
+      - description: Telepon CSIRT
+        in: formData
+        name: telepon_csirt
+        type: string
+      - description: Photo CSIRT
+        in: formData
+        name: photo_csirt
+        type: file
+      - description: File RFC2350
+        in: formData
+        name: file_rfc2350
+        type: file
+      - description: File Public Key PGP
+        in: formData
+        name: file_public_key_pgp
+        type: file
       produces:
       - application/json
       responses:
@@ -986,14 +1105,16 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: Tambah csirt baru
+      security:
+      - BearerAuth: []
+      summary: Tambah CSIRT baru
       tags:
-      - Csirt
+      - CSIRT
   /api/csirt/{id}:
     delete:
-      description: Menghapus data csirt berdasarkan ID
+      description: Menghapus data CSIRT berdasarkan ID
       parameters:
-      - description: Csirt ID
+      - description: CSIRT ID
         in: path
         name: id
         required: true
@@ -1009,13 +1130,15 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: Hapus csirt
+      security:
+      - BearerAuth: []
+      summary: Hapus CSIRT
       tags:
-      - Csirt
+      - CSIRT
     get:
-      description: Mengambil satu data csirt
+      description: Mengambil satu data CSIRT
       parameters:
-      - description: Csirt ID
+      - description: CSIRT ID
         in: path
         name: id
         required: true
@@ -1031,25 +1154,45 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: Ambil csirt berdasarkan ID
+      security:
+      - BearerAuth: []
+      summary: Ambil CSIRT berdasarkan ID
       tags:
-      - Csirt
+      - CSIRT
     put:
       consumes:
-      - application/json
-      description: Mengubah data csirt berdasarkan ID
+      - multipart/form-data
+      description: Mengubah data CSIRT berdasarkan ID
       parameters:
-      - description: Csirt ID
+      - description: CSIRT ID
         in: path
         name: id
         required: true
         type: string
-      - description: Data update
-        in: body
-        name: csirt
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UpdateCsirtRequest'
+      - description: Nama CSIRT
+        in: formData
+        name: nama_csirt
+        type: string
+      - description: Website CSIRT
+        in: formData
+        name: web_csirt
+        type: string
+      - description: Telepon CSIRT
+        in: formData
+        name: telepon_csirt
+        type: string
+      - description: Photo CSIRT
+        in: formData
+        name: photo_csirt
+        type: file
+      - description: File RFC2350
+        in: formData
+        name: file_rfc2350
+        type: file
+      - description: File Public Key PGP
+        in: formData
+        name: file_public_key_pgp
+        type: file
       produces:
       - application/json
       responses:
@@ -1061,9 +1204,11 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: Update csirt
+      security:
+      - BearerAuth: []
+      summary: Update CSIRT
       tags:
-      - Csirt
+      - CSIRT
   /api/deteksi:
     get:
       description: Mengambil seluruh data deteksi
@@ -1182,6 +1327,37 @@ paths:
       summary: Update deteksi
       tags:
       - Deteksi
+  /api/events:
+    get:
+      description: Establishes an SSE connection for real-time updates
+      produces:
+      - text/event-stream
+      responses:
+        "200":
+          description: SSE stream
+          schema:
+            type: string
+      security:
+      - BearerAuth: []
+      summary: Server-Sent Events connection
+      tags:
+      - SSE
+  /api/events/stats:
+    get:
+      description: Returns SSE connection statistics
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get SSE statistics
+      tags:
+      - SSE
   /api/gulih:
     get:
       description: Mengambil seluruh data gulih
@@ -1300,6 +1476,21 @@ paths:
       summary: Update gulih
       tags:
       - Gulih
+  /api/health:
+    get:
+      description: Check if the API is running and healthy
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - Health
   /api/identifikasi:
     get:
       description: Mengambil seluruh data identifikasi
@@ -1707,62 +1898,6 @@ paths:
       summary: Update jabatan
       tags:
       - Jabatan
-  /api/login:
-    post:
-      consumes:
-      - application/json
-      description: Authenticate user and return JWT tokens
-      parameters:
-      - description: Login payload
-        in: body
-        name: login
-        required: true
-        schema:
-          $ref: '#/definitions/dto.LoginRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.AuthResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: Login user
-      tags:
-      - Auth
-  /api/logout:
-    post:
-      consumes:
-      - application/json
-      description: Revoke refresh token
-      parameters:
-      - description: Logout payload
-        in: body
-        name: logout
-        required: true
-        schema:
-          $ref: '#/definitions/dto.LogoutRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.MessageResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: Logout user
-      tags:
-      - Auth
   /api/perusahaan:
     get:
       description: Mengambil seluruh data perusahaan
@@ -2120,62 +2255,6 @@ paths:
       summary: Update proteksi
       tags:
       - Proteksi
-  /api/refresh:
-    post:
-      consumes:
-      - application/json
-      description: Generate new access & refresh token pair
-      parameters:
-      - description: Refresh token payload
-        in: body
-        name: refresh
-        required: true
-        schema:
-          $ref: '#/definitions/dto.RefreshTokenRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.TokenPair'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: Refresh access token
-      tags:
-      - Auth
-  /api/register:
-    post:
-      consumes:
-      - application/json
-      description: Create account and return JWT tokens
-      parameters:
-      - description: Registration payload
-        in: body
-        name: register
-        required: true
-        schema:
-          $ref: '#/definitions/dto.RegisterRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/dto.AuthResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      summary: Register new user
-      tags:
-      - Auth
   /api/role:
     get:
       description: Mengambil seluruh data role
@@ -2535,7 +2614,7 @@ paths:
       - SE
   /api/users:
     get:
-      description: Mengambil seluruh data user (admin only)
+      description: Mengambil seluruh data user
       produces:
       - application/json
       responses:
@@ -2549,13 +2628,15 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: List semua user
+      security:
+      - BearerAuth: []
+      summary: List semua users
       tags:
-      - User
+      - Users
     post:
       consumes:
       - application/json
-      description: Membuat account user (admin only)
+      description: Membuat record user baru
       parameters:
       - description: Data user
         in: body
@@ -2574,18 +2655,22 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Tambah user baru
       tags:
-      - User
+      - Users
   /api/users/{id}:
     delete:
-      description: Menghapus data user (admin only)
+      description: Menghapus data user berdasarkan ID (admin only)
       parameters:
       - description: User ID
         in: path
         name: id
         required: true
         type: string
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
@@ -2599,9 +2684,11 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Hapus user
       tags:
-      - User
+      - Users
     get:
       description: Mengambil satu data user
       parameters:
@@ -2621,13 +2708,15 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Ambil user berdasarkan ID
       tags:
-      - User
+      - Users
     put:
       consumes:
       - application/json
-      description: Mengubah data user (own/admin)
+      description: Mengubah data user berdasarkan ID
       parameters:
       - description: User ID
         in: path
@@ -2655,7 +2744,118 @@ paths:
           description: Forbidden
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Update user
       tags:
-      - User
+      - Users
+  /api/users/{id}/banner:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Mengubah banner user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Banner file
+        in: formData
+        name: banner
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update banner user
+      tags:
+      - Users
+  /api/users/{id}/password:
+    put:
+      consumes:
+      - application/json
+      description: Mengubah password user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data password
+        in: body
+        name: password
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update password user
+      tags:
+      - Users
+  /api/users/{id}/profile-photo:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Mengubah foto profile user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Profile photo file
+        in: formData
+        name: profile_photo
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update profile photo user
+      tags:
+      - Users
 swagger: "2.0"

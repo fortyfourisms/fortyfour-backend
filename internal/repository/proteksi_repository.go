@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
-
-	"github.com/rollbar/rollbar-go"
 )
 
 type ProteksiRepository struct {
@@ -47,7 +45,6 @@ func (r *ProteksiRepository) GetAll() ([]models.Proteksi, error) {
 
 	rows, err := r.db.Query(query)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -66,7 +63,6 @@ func (r *ProteksiRepository) GetAll() ([]models.Proteksi, error) {
 			&proteksi.NilaiSubdomain6,
 		)
 		if err != nil {
-			rollbar.Error(err)
 			return nil, err
 		}
 		proteksiList = append(proteksiList, proteksi)
@@ -97,7 +93,6 @@ func (r *ProteksiRepository) GetByID(id string) (*models.Proteksi, error) {
 		return nil, nil
 	}
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 

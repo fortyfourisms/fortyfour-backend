@@ -15,16 +15,262 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/csirt": {
+        "/api/casbin/permissions": {
             "get": {
-                "description": "Ambil seluruh data csirt",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil permissions untuk role tertentu",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Csirt"
+                    "Casbin"
                 ],
-                "summary": "List semua csirt",
+                "summary": "Get role permissions",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Role name",
+                        "name": "role",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/casbin/policies": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil semua permission policies",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Casbin"
+                ],
+                "summary": "Get all Casbin policies",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/casbin/policies/add": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menambahkan satu permission policy (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Casbin"
+                ],
+                "summary": "Add Casbin policy",
+                "parameters": [
+                    {
+                        "description": "Policy data",
+                        "name": "policy",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AddPolicyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/casbin/policies/bulk": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menambahkan banyak permission policies sekaligus (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Casbin"
+                ],
+                "summary": "Bulk add Casbin policies",
+                "parameters": [
+                    {
+                        "description": "Bulk policy data",
+                        "name": "policies",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.BulkAddPolicyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/casbin/policies/remove": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menghapus satu permission policy (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Casbin"
+                ],
+                "summary": "Remove Casbin policy",
+                "parameters": [
+                    {
+                        "description": "Policy to remove",
+                        "name": "policy",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RemovePolicyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/csirt": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil seluruh data CSIRT",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSIRT"
+                ],
+                "summary": "List semua CSIRT",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -44,26 +290,66 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Membuat record csirt",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Membuat record CSIRT baru dengan file upload",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Csirt"
+                    "CSIRT"
                 ],
-                "summary": "Tambah csirt baru",
+                "summary": "Tambah CSIRT baru",
                 "parameters": [
                     {
-                        "description": "Data csirt",
-                        "name": "csirt",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateCsirtRequest"
-                        }
+                        "type": "string",
+                        "description": "ID Perusahaan",
+                        "name": "id_perusahaan",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Nama CSIRT",
+                        "name": "nama_csirt",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Website CSIRT",
+                        "name": "web_csirt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Telepon CSIRT",
+                        "name": "telepon_csirt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Photo CSIRT",
+                        "name": "photo_csirt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File RFC2350",
+                        "name": "file_rfc2350",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File Public Key PGP",
+                        "name": "file_public_key_pgp",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -84,18 +370,23 @@ const docTemplate = `{
         },
         "/api/csirt/{id}": {
             "get": {
-                "description": "Mengambil satu data csirt",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil satu data CSIRT",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Csirt"
+                    "CSIRT"
                 ],
-                "summary": "Ambil csirt berdasarkan ID",
+                "summary": "Ambil CSIRT berdasarkan ID",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Csirt ID",
+                        "description": "CSIRT ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -117,33 +408,65 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Mengubah data csirt berdasarkan ID",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengubah data CSIRT berdasarkan ID",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Csirt"
+                    "CSIRT"
                 ],
-                "summary": "Update csirt",
+                "summary": "Update CSIRT",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Csirt ID",
+                        "description": "CSIRT ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Data update",
-                        "name": "csirt",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateCsirtRequest"
-                        }
+                        "type": "string",
+                        "description": "Nama CSIRT",
+                        "name": "nama_csirt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Website CSIRT",
+                        "name": "web_csirt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Telepon CSIRT",
+                        "name": "telepon_csirt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Photo CSIRT",
+                        "name": "photo_csirt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File RFC2350",
+                        "name": "file_rfc2350",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File Public Key PGP",
+                        "name": "file_public_key_pgp",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -162,18 +485,23 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Menghapus data csirt berdasarkan ID",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menghapus data CSIRT berdasarkan ID",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Csirt"
+                    "CSIRT"
                 ],
-                "summary": "Hapus csirt",
+                "summary": "Hapus CSIRT",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Csirt ID",
+                        "description": "CSIRT ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -374,6 +702,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/events": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Establishes an SSE connection for real-time updates",
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "SSE"
+                ],
+                "summary": "Server-Sent Events connection",
+                "responses": {
+                    "200": {
+                        "description": "SSE stream",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/events/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns SSE connection statistics",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SSE"
+                ],
+                "summary": "Get SSE statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/api/gulih": {
             "get": {
                 "description": "Mengambil seluruh data gulih",
@@ -548,6 +927,29 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/health": {
+            "get": {
+                "description": "Check if the API is running and healthy",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -1166,92 +1568,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/login": {
-            "post": {
-                "description": "Authenticate user and return JWT tokens",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Login user",
-                "parameters": [
-                    {
-                        "description": "Login payload",
-                        "name": "login",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.AuthResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/logout": {
-            "post": {
-                "description": "Revoke refresh token",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Logout user",
-                "parameters": [
-                    {
-                        "description": "Logout payload",
-                        "name": "logout",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.LogoutRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/perusahaan": {
             "get": {
                 "description": "Mengambil seluruh data perusahaan",
@@ -1781,92 +2097,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.MessageResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/refresh": {
-            "post": {
-                "description": "Generate new access \u0026 refresh token pair",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Refresh access token",
-                "parameters": [
-                    {
-                        "description": "Refresh token payload",
-                        "name": "refresh",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.RefreshTokenRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.TokenPair"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/register": {
-            "post": {
-                "description": "Create account and return JWT tokens",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Register new user",
-                "parameters": [
-                    {
-                        "description": "Registration payload",
-                        "name": "register",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.RegisterRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.AuthResponse"
                         }
                     },
                     "400": {
@@ -2420,14 +2650,19 @@ const docTemplate = `{
         },
         "/api/users": {
             "get": {
-                "description": "Mengambil seluruh data user (admin only)",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil seluruh data user",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Users"
                 ],
-                "summary": "List semua user",
+                "summary": "List semua users",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2447,7 +2682,12 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Membuat account user (admin only)",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Membuat record user baru",
                 "consumes": [
                     "application/json"
                 ],
@@ -2455,7 +2695,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Users"
                 ],
                 "summary": "Tambah user baru",
                 "parameters": [
@@ -2487,12 +2727,17 @@ const docTemplate = `{
         },
         "/api/users/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Mengambil satu data user",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Users"
                 ],
                 "summary": "Ambil user berdasarkan ID",
                 "parameters": [
@@ -2520,7 +2765,12 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Mengubah data user (own/admin)",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengubah data user berdasarkan ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -2528,7 +2778,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Users"
                 ],
                 "summary": "Update user",
                 "parameters": [
@@ -2571,9 +2821,17 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Menghapus data user (admin only)",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menghapus data user berdasarkan ID (admin only)",
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
-                    "User"
+                    "Users"
                 ],
                 "summary": "Hapus user",
                 "parameters": [
@@ -2606,48 +2864,212 @@ const docTemplate = `{
                     }
                 }
             }
-        }
-    },
-    "definitions": {
-        "dto.AuthResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "expires_at": {
-                    "type": "string"
-                },
-                "refresh_token": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/models.User"
+        },
+        "/api/users/{id}/banner": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengubah banner user",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update banner user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Banner file",
+                        "name": "banner",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
                 }
             }
         },
-        "dto.CreateCsirtRequest": {
+        "/api/users/{id}/password": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengubah password user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update password user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data password",
+                        "name": "password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.UpdateUserPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/{id}/profile-photo": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengubah foto profile user",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update profile photo user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Profile photo file",
+                        "name": "profile_photo",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.AddPolicyRequest": {
             "type": "object",
+            "required": [
+                "action",
+                "resource",
+                "role"
+            ],
             "properties": {
-                "file_public_key_pgp": {
+                "action": {
                     "type": "string"
                 },
-                "file_rfc2350": {
+                "resource": {
                     "type": "string"
                 },
-                "id_perusahaan": {
+                "role": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.BulkAddPolicyRequest": {
+            "type": "object",
+            "required": [
+                "policies",
+                "role"
+            ],
+            "properties": {
+                "policies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PolicyDefinition"
+                    }
                 },
-                "nama_csirt": {
-                    "type": "string"
-                },
-                "photo_csirt": {
-                    "type": "string"
-                },
-                "telepon_csirt": {
-                    "type": "string"
-                },
-                "web_csirt": {
+                "role": {
                     "type": "string"
                 }
             }
@@ -3290,32 +3712,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.LoginRequest": {
-            "type": "object",
-            "required": [
-                "password",
-                "username"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.LogoutRequest": {
-            "type": "object",
-            "required": [
-                "refresh_token"
-            ],
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.MessageResponse": {
             "type": "object",
             "properties": {
@@ -3405,6 +3801,21 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.PolicyDefinition": {
+            "type": "object",
+            "required": [
+                "action",
+                "resource"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.ProteksiInIkas": {
             "type": "object",
             "properties": {
@@ -3466,42 +3877,22 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.RefreshTokenRequest": {
+        "dto.RemovePolicyRequest": {
             "type": "object",
             "required": [
-                "refresh_token"
+                "action",
+                "resource",
+                "role"
             ],
             "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.RegisterRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password",
-                "username"
-            ],
-            "properties": {
-                "email": {
+                "action": {
                     "type": "string"
                 },
-                "id_jabatan": {
+                "resource": {
                     "type": "string"
                 },
-                "password": {
-                    "type": "string",
-                    "minLength": 8
-                },
-                "role_id": {
+                "role": {
                     "type": "string"
-                },
-                "username": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 3
                 }
             }
         },
@@ -3588,46 +3979,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.TokenPair": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                },
-                "expires_at": {
-                    "type": "string",
-                    "example": "2025-12-15T15:04:05+07:00"
-                },
-                "refresh_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                }
-            }
-        },
-        "dto.UpdateCsirtRequest": {
-            "type": "object",
-            "properties": {
-                "file_public_key_pgp": {
-                    "type": "string"
-                },
-                "file_rfc2350": {
-                    "type": "string"
-                },
-                "nama_csirt": {
-                    "type": "string"
-                },
-                "photo_csirt": {
-                    "type": "string"
-                },
-                "telepon_csirt": {
-                    "type": "string"
-                },
-                "web_csirt": {
                     "type": "string"
                 }
             }
@@ -3952,6 +4303,28 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UpdateUserPasswordRequest": {
+            "type": "object",
+            "required": [
+                "confirm_new_password",
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "confirm_new_password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "new_password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "old_password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
         "dto.UpdateUserRequest": {
             "type": "object",
             "properties": {
@@ -3972,44 +4345,6 @@ const docTemplate = `{
             }
         },
         "dto.UserResponse": {
-            "type": "object",
-            "properties": {
-                "banner": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "foto_profile": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "id_jabatan": {
-                    "type": "string"
-                },
-                "jabatan_name": {
-                    "type": "string"
-                },
-                "role_id": {
-                    "type": "string"
-                },
-                "role_name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.User": {
             "type": "object",
             "properties": {
                 "banner": {

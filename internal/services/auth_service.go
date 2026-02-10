@@ -8,7 +8,6 @@ import (
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/validator"
 
-	"github.com/rollbar/rollbar-go"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -63,20 +62,17 @@ func (s *AuthService) Register(username, password, email string, roleID *string,
 
 	// Validasi password dengan semua kriteria keamanan
 	if err := validator.ValidatePassword(password, config, personalInfo...); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
 	// Check if username already exists
 	if _, err := s.userRepo.FindByUsername(username); err == nil {
-		rollbar.Error(err)
 		return nil, errors.New("username sudah digunakan")
 	}
 
 	// Check if email already exists
 	exists, err := s.userRepo.EmailExists(email, nil)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	if exists {
@@ -85,7 +81,6 @@ func (s *AuthService) Register(username, password, email string, roleID *string,
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -98,14 +93,12 @@ func (s *AuthService) Register(username, password, email string, roleID *string,
 	}
 
 	if err := s.userRepo.Create(user); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
 	// Fetch user kembali untuk mendapatkan role_name
 	user, err = s.userRepo.FindByID(user.ID)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -135,12 +128,10 @@ func (s *AuthService) Login(username, password string) (*models.User, error) {
 
 	user, err := s.userRepo.FindByUsername(username)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, errors.New("username atau password salah")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
-		rollbar.Error(err)
 		return nil, errors.New("username atau password salah")
 	}
 
