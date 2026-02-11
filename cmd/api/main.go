@@ -31,14 +31,14 @@ func main() {
 
 	rollbar.SetToken(cfg.Rollbar.Token)
 	rollbar.SetEnvironment(cfg.Rollbar.Env)
-	// Send a test message
-	rollbar.Info("Rollbar Go SDK initialized successfully!")
 
 	// Ensure all items are sent before the app exits
-	rollbar.Wait()
+	defer rollbar.Wait()
+	// Close Rollbar client when the application exits
+	defer rollbar.Close()
 
-	// call rollbar.Close() before the application exits to flush error message queue
-	rollbar.Close()
+	// Send a test message
+	rollbar.Info("Rollbar Go SDK initialized successfully!")
 
 	// Initialize MySQL database
 	db, err := database.NewMySQLConnection(database.Config{
@@ -49,8 +49,9 @@ func main() {
 		DBName:   cfg.Database.DBName,
 	})
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
 		rollbar.Error(err)
+		rollbar.Wait()
+		log.Fatal("Failed to connect to database:", err)
 	}
 	defer db.Close()
 
@@ -62,16 +63,18 @@ func main() {
 		DB:       cfg.Redis.DB,
 	})
 	if err != nil {
-		log.Fatal("Failed to connect to Redis:", err)
 		rollbar.Error(err)
+		rollbar.Wait()
+		log.Fatal("Failed to connect to Redis:", err)
 	}
 	defer redisClient.Close()
 
 	// Initialize Casbin Service with GORM Adapter
 	casbinService, err := services.NewCasbinService(cfg.Database.GetDSN(), cfg.CasbinModelPath)
 	if err != nil {
-		log.Fatal("Failed to initialize Casbin:", err)
 		rollbar.Error(err)
+		rollbar.Wait()
+		log.Fatal("Failed to initialize Casbin:", err)
 	}
 	log.Println("Casbin RBAC initialized successfully with GORM adapter")
 	rollbar.Info("Casbin RBAC initialized successfully with GORM adapter")

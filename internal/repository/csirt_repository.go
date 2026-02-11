@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
-
-	"github.com/rollbar/rollbar-go"
 )
 
 type CsirtRepository struct {
@@ -51,7 +49,6 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 		FROM csirt
 	`)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -70,7 +67,6 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 			&c.FilePublicKeyPGP,
 		)
 		if err != nil {
-			rollbar.Error(err)
 			return nil, err
 		}
 		result = append(result, c)
@@ -101,7 +97,6 @@ func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 		&c.FilePublicKeyPGP,
 	)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	return &c, nil
@@ -124,7 +119,6 @@ func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
 		JOIN perusahaan p ON c.id_perusahaan = p.id
 	`)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -155,7 +149,6 @@ func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
 			&perusahaan.UpdatedAt,
 		)
 		if err != nil {
-			rollbar.Error(err)
 			return nil, err
 		}
 
@@ -207,7 +200,6 @@ func (r *CsirtRepository) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, 
 		&perusahaan.UpdatedAt,
 	)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 

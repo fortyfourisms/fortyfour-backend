@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
-
-	"github.com/rollbar/rollbar-go"
 )
 
 type DeteksiRepository struct {
@@ -39,7 +37,6 @@ func (r *DeteksiRepository) GetAll() ([]models.Deteksi, error) {
 		FROM deteksi
 	`)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -73,7 +70,6 @@ func (r *DeteksiRepository) GetByID(id string) (*models.Deteksi, error) {
 		&d.NilaiSubdomain3,
 	)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	return &d, nil

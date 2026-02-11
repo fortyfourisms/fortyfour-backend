@@ -15,6 +15,735 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/auth/login": {
+            "post": {
+                "description": "Autentikasi user. Token dikirim via HTTP-only cookies, BUKAN di response body.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login user",
+                "parameters": [
+                    {
+                        "description": "Login credentials",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "message dan user info (tanpa token)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/logout": {
+            "post": {
+                "description": "Revoke refresh token dan hapus cookies autentikasi.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/logout-all": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Revoke semua refresh token user dan hapus cookies.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout dari semua perangkat",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil informasi user yang sedang login.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Get current user info",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/refresh": {
+            "post": {
+                "description": "Refresh access token menggunakan refresh token dari cookie. Token baru dikirim via HTTP-only cookies.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Refresh token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/register": {
+            "post": {
+                "description": "Mendaftarkan user baru. Token dikirim via HTTP-only cookies, BUKAN di response body.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register user baru",
+                "parameters": [
+                    {
+                        "description": "Register data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "message dan user info (tanpa token)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/casbin/permissions": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil permissions untuk role tertentu",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Casbin"
+                ],
+                "summary": "Get role permissions",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Role name",
+                        "name": "role",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/casbin/policies": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil semua permission policies",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Casbin"
+                ],
+                "summary": "Get all Casbin policies",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/casbin/policies/add": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menambahkan satu permission policy (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Casbin"
+                ],
+                "summary": "Add Casbin policy",
+                "parameters": [
+                    {
+                        "description": "Policy data",
+                        "name": "policy",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.AddPolicyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/casbin/policies/bulk": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menambahkan banyak permission policies sekaligus (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Casbin"
+                ],
+                "summary": "Bulk add Casbin policies",
+                "parameters": [
+                    {
+                        "description": "Bulk policy data",
+                        "name": "policies",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.BulkAddPolicyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/casbin/policies/remove": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menghapus satu permission policy (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Casbin"
+                ],
+                "summary": "Remove Casbin policy",
+                "parameters": [
+                    {
+                        "description": "Policy to remove",
+                        "name": "policy",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.RemovePolicyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/csirt": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil seluruh data CSIRT",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSIRT"
+                ],
+                "summary": "List semua CSIRT",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.CsirtResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Membuat record CSIRT baru dengan file upload",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSIRT"
+                ],
+                "summary": "Tambah CSIRT baru",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID Perusahaan",
+                        "name": "id_perusahaan",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Nama CSIRT",
+                        "name": "nama_csirt",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Website CSIRT",
+                        "name": "web_csirt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Telepon CSIRT",
+                        "name": "telepon_csirt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Photo CSIRT",
+                        "name": "photo_csirt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File RFC2350",
+                        "name": "file_rfc2350",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File Public Key PGP",
+                        "name": "file_public_key_pgp",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CsirtResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/csirt/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil satu data CSIRT",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSIRT"
+                ],
+                "summary": "Ambil CSIRT berdasarkan ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "CSIRT ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CsirtResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengubah data CSIRT berdasarkan ID",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSIRT"
+                ],
+                "summary": "Update CSIRT",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "CSIRT ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Nama CSIRT",
+                        "name": "nama_csirt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Website CSIRT",
+                        "name": "web_csirt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Telepon CSIRT",
+                        "name": "telepon_csirt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Photo CSIRT",
+                        "name": "photo_csirt",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File RFC2350",
+                        "name": "file_rfc2350",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File Public Key PGP",
+                        "name": "file_public_key_pgp",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CsirtResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menghapus data CSIRT berdasarkan ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CSIRT"
+                ],
+                "summary": "Hapus CSIRT",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "CSIRT ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/deteksi": {
             "get": {
                 "description": "Mengambil seluruh data deteksi",
@@ -31,14 +760,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.DeteksiResponse"
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.DeteksiResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -62,7 +791,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateDeteksiRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateDeteksiRequest"
                         }
                     }
                 ],
@@ -70,13 +799,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.DeteksiResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.DeteksiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -104,13 +833,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.DeteksiResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.DeteksiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -141,7 +870,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateDeteksiRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateDeteksiRequest"
                         }
                     }
                 ],
@@ -149,13 +878,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.DeteksiResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.DeteksiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -182,13 +911,64 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/events": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Establishes an SSE connection for real-time updates",
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "SSE"
+                ],
+                "summary": "Server-Sent Events connection",
+                "responses": {
+                    "200": {
+                        "description": "SSE stream",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/events/stats": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns SSE connection statistics",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SSE"
+                ],
+                "summary": "Get SSE statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -210,14 +990,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.GulihResponse"
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.GulihResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -241,7 +1021,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateGulihRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateGulihRequest"
                         }
                     }
                 ],
@@ -249,13 +1029,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.GulihResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.GulihResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -283,13 +1063,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.GulihResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.GulihResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -320,7 +1100,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateGulihRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateGulihRequest"
                         }
                     }
                 ],
@@ -328,13 +1108,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.DeteksiResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.DeteksiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -361,13 +1141,36 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/health": {
+            "get": {
+                "description": "Check if the API is running and healthy",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -389,14 +1192,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.IdentifikasiResponse"
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.IdentifikasiResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -420,7 +1223,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateIdentifikasiRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateIdentifikasiRequest"
                         }
                     }
                 ],
@@ -428,13 +1231,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.IdentifikasiResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.IdentifikasiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -463,13 +1266,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.IdentifikasiResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.IdentifikasiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -500,7 +1303,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateIdentifikasiRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateIdentifikasiRequest"
                         }
                     }
                 ],
@@ -508,13 +1311,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.IdentifikasiResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.IdentifikasiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -541,13 +1344,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -555,7 +1358,7 @@ const docTemplate = `{
         },
         "/api/ikas": {
             "get": {
-                "description": "Mengambil seluruh data deteksi",
+                "description": "Mengambil seluruh data ikas",
                 "produces": [
                     "application/json"
                 ],
@@ -569,14 +1372,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.IkasResponse"
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.IkasResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -600,7 +1403,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateIkasRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateIkasRequest"
                         }
                     }
                 ],
@@ -608,13 +1411,86 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.IkasResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.IkasResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/ikas/import": {
+            "post": {
+                "description": "Import data IKAS dari file Excel (sheet ke-7)",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Ikas"
+                ],
+                "summary": "Import IKAS dari Excel",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "File Excel (.xlsx)",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID Perusahaan",
+                        "name": "id_perusahaan",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Tanggal (YYYY-MM-DD)",
+                        "name": "tanggal",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Nama Responden",
+                        "name": "responden",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Nomor Telepon",
+                        "name": "telepon",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Jabatan",
+                        "name": "jabatan",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ImportIkasResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -643,13 +1519,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.IkasResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.IkasResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -680,7 +1556,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateIkasRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateIkasRequest"
                         }
                     }
                 ],
@@ -688,13 +1564,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.IkasResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.IkasResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -721,13 +1597,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -749,14 +1625,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.JabatanResponse"
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.JabatanResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -780,7 +1656,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateJabatanRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateJabatanRequest"
                         }
                     }
                 ],
@@ -788,13 +1664,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.JabatanResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.JabatanResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -823,13 +1699,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.JabatanResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.JabatanResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -860,7 +1736,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateJabatanRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateJabatanRequest"
                         }
                     }
                 ],
@@ -868,13 +1744,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.JabatanResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.JabatanResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -901,99 +1777,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/login": {
-            "post": {
-                "description": "Authenticate user and return JWT tokens",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Login user",
-                "parameters": [
-                    {
-                        "description": "Login payload",
-                        "name": "login",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.AuthResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/logout": {
-            "post": {
-                "description": "Revoke refresh token",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Logout user",
-                "parameters": [
-                    {
-                        "description": "Logout payload",
-                        "name": "logout",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.LogoutRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1015,14 +1805,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.PerusahaanResponse"
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.PerusahaanResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1046,7 +1836,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreatePerusahaanRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreatePerusahaanRequest"
                         }
                     }
                 ],
@@ -1054,13 +1844,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.DeteksiResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.DeteksiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1089,13 +1879,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PerusahaanResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.PerusahaanResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1126,7 +1916,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdatePerusahaanRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdatePerusahaanRequest"
                         }
                     }
                 ],
@@ -1134,13 +1924,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PerusahaanResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.PerusahaanResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1167,13 +1957,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1195,14 +1985,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.PICResponse"
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.PICResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1226,7 +2016,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreatePICRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreatePICRequest"
                         }
                     }
                 ],
@@ -1234,13 +2024,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.PICResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.PICResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1269,13 +2059,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PICResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.PICResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1306,7 +2096,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdatePICRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdatePICRequest"
                         }
                     }
                 ],
@@ -1314,13 +2104,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PICResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.PICResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1347,13 +2137,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1375,14 +2165,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.ProteksiResponse"
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.ProteksiResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1406,7 +2196,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateProteksiRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateProteksiRequest"
                         }
                     }
                 ],
@@ -1414,13 +2204,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.ProteksiResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ProteksiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1449,13 +2239,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.ProteksiResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ProteksiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1486,7 +2276,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateProteksiRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateProteksiRequest"
                         }
                     }
                 ],
@@ -1494,13 +2284,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.ProteksiResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ProteksiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1527,99 +2317,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/refresh": {
-            "post": {
-                "description": "Generate new access \u0026 refresh token pair",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Refresh access token",
-                "parameters": [
-                    {
-                        "description": "Refresh token payload",
-                        "name": "refresh",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.RefreshTokenRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.TokenPair"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/register": {
-            "post": {
-                "description": "Create account and return JWT tokens",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Register new user",
-                "parameters": [
-                    {
-                        "description": "Registration payload",
-                        "name": "register",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.RegisterRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.AuthResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1641,14 +2345,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.RoleResponse"
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.RoleResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1672,7 +2376,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateRoleRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateRoleRequest"
                         }
                     }
                 ],
@@ -1680,13 +2384,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.RoleResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.RoleResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1715,13 +2419,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.RoleResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.RoleResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1752,7 +2456,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateRoleRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateRoleRequest"
                         }
                     }
                 ],
@@ -1760,13 +2464,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.RoleResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.RoleResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1793,13 +2497,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1821,14 +2525,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.SdmCsirtResponse"
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.SdmCsirtResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1852,7 +2556,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateSdmCsirtRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateSdmCsirtRequest"
                         }
                     }
                 ],
@@ -1860,13 +2564,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.SdmCsirtResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SdmCsirtResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1895,13 +2599,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.SdmCsirtResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SdmCsirtResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1932,7 +2636,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateSdmCsirtRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateSdmCsirtRequest"
                         }
                     }
                 ],
@@ -1940,13 +2644,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.SdmCsirtResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SdmCsirtResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1973,13 +2677,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2001,14 +2705,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.SeCsirtResponse"
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.SeCsirtResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2032,7 +2736,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateSeCsirtRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateSeCsirtRequest"
                         }
                     }
                 ],
@@ -2040,13 +2744,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.SeCsirtResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SeCsirtResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2075,13 +2779,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.SeCsirtResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SeCsirtResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2112,7 +2816,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateSeCsirtRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateSeCsirtRequest"
                         }
                     }
                 ],
@@ -2120,13 +2824,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.SeCsirtResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SeCsirtResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2153,13 +2857,400 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil seluruh data user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "List semua users",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.UserResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Membuat record user baru",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Tambah user baru",
+                "parameters": [
+                    {
+                        "description": "Data user",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil satu data user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Ambil user berdasarkan ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UserResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengubah data user berdasarkan ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data update",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menghapus data user berdasarkan ID (admin only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Hapus user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/{id}/banner": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengubah banner user",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update banner user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Banner file",
+                        "name": "banner",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/{id}/password": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengubah password user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update password user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data password",
+                        "name": "password",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateUserPasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/users/{id}/profile-photo": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengubah foto profile user",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update profile photo user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Profile photo file",
+                        "name": "profile_photo",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2167,24 +3258,58 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.AuthResponse": {
+        "fortyfour-backend_internal_dto.AddPolicyRequest": {
             "type": "object",
+            "required": [
+                "action",
+                "resource",
+                "role"
+            ],
             "properties": {
-                "access_token": {
+                "action": {
                     "type": "string"
                 },
-                "expires_at": {
+                "resource": {
                     "type": "string"
                 },
-                "refresh_token": {
+                "role": {
                     "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/models.User"
                 }
             }
         },
-        "dto.CreateDeteksiRequest": {
+        "fortyfour-backend_internal_dto.BulkAddPolicyRequest": {
+            "type": "object",
+            "required": [
+                "policies",
+                "role"
+            ],
+            "properties": {
+                "policies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/fortyfour-backend_internal_dto.PolicyDefinition"
+                    }
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.CreateDeteksiData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.CreateDeteksiRequest": {
             "type": "object",
             "properties": {
                 "nilai_deteksi": {
@@ -2201,7 +3326,24 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateGulihRequest": {
+        "fortyfour-backend_internal_dto.CreateGulihData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.CreateGulihRequest": {
             "type": "object",
             "properties": {
                 "nilai_gulih": {
@@ -2221,7 +3363,27 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateIdentifikasiRequest": {
+        "fortyfour-backend_internal_dto.CreateIdentifikasiData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
+                    "type": "number"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.CreateIdentifikasiRequest": {
             "type": "object",
             "properties": {
                 "nilai_identifikasi": {
@@ -2244,9 +3406,15 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateIkasRequest": {
+        "fortyfour-backend_internal_dto.CreateIkasRequest": {
             "type": "object",
             "properties": {
+                "deteksi": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateDeteksiData"
+                },
+                "gulih": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateGulihData"
+                },
                 "id_deteksi": {
                     "type": "string"
                 },
@@ -2254,6 +3422,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id_identifikasi": {
+                    "description": "ID manual (backward compatibility)",
                     "type": "string"
                 },
                 "id_perusahaan": {
@@ -2262,11 +3431,19 @@ const docTemplate = `{
                 "id_proteksi": {
                     "type": "string"
                 },
+                "identifikasi": {
+                    "description": "Nested data untuk auto-create",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateIdentifikasiData"
+                        }
+                    ]
+                },
                 "jabatan": {
                     "type": "string"
                 },
-                "nilai_kematangan": {
-                    "type": "number"
+                "proteksi": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateProteksiData"
                 },
                 "responden": {
                     "type": "string"
@@ -2282,7 +3459,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateJabatanRequest": {
+        "fortyfour-backend_internal_dto.CreateJabatanRequest": {
             "type": "object",
             "properties": {
                 "nama_jabatan": {
@@ -2290,7 +3467,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreatePICRequest": {
+        "fortyfour-backend_internal_dto.CreatePICRequest": {
             "type": "object",
             "properties": {
                 "id_perusahaan": {
@@ -2304,7 +3481,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreatePerusahaanRequest": {
+        "fortyfour-backend_internal_dto.CreatePerusahaanRequest": {
             "type": "object",
             "properties": {
                 "alamat": {
@@ -2330,7 +3507,30 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateProteksiRequest": {
+        "fortyfour-backend_internal_dto.CreateProteksiData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
+                    "type": "number"
+                },
+                "nilai_subdomain6": {
+                    "type": "number"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.CreateProteksiRequest": {
             "type": "object",
             "properties": {
                 "nilai_proteksi": {
@@ -2356,7 +3556,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateRoleRequest": {
+        "fortyfour-backend_internal_dto.CreateRoleRequest": {
             "type": "object",
             "required": [
                 "name"
@@ -2373,7 +3573,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateSdmCsirtRequest": {
+        "fortyfour-backend_internal_dto.CreateSdmCsirtRequest": {
             "type": "object",
             "properties": {
                 "id_csirt": {
@@ -2396,7 +3596,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateSeCsirtRequest": {
+        "fortyfour-backend_internal_dto.CreateSeCsirtRequest": {
             "type": "object",
             "properties": {
                 "as_number_se": {
@@ -2422,7 +3622,35 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CsirtMiniResponse": {
+        "fortyfour-backend_internal_dto.CreateUserRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id_jabatan": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "role_id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 3
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.CsirtMiniResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -2431,12 +3659,67 @@ const docTemplate = `{
                 "nama_csirt": {
                     "type": "string"
                 },
+                "telepon_csirt": {
+                    "type": "string"
+                },
                 "web_csirt": {
                     "type": "string"
                 }
             }
         },
-        "dto.DeteksiResponse": {
+        "fortyfour-backend_internal_dto.CsirtResponse": {
+            "type": "object",
+            "properties": {
+                "file_public_key_pgp": {
+                    "type": "string"
+                },
+                "file_rfc2350": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "nama_csirt": {
+                    "type": "string"
+                },
+                "perusahaan": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.PerusahaanResponse"
+                },
+                "photo_csirt": {
+                    "type": "string"
+                },
+                "telepon_csirt": {
+                    "type": "string"
+                },
+                "web_csirt": {
+                    "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.DeteksiInIkas": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "kategori_tingkat_kematangan_domain": {
+                    "type": "string"
+                },
+                "nilai_deteksi": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.DeteksiResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -2456,7 +3739,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ErrorResponse": {
+        "fortyfour-backend_internal_dto.ErrorResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -2465,7 +3748,33 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.GulihResponse": {
+        "fortyfour-backend_internal_dto.GulihInIkas": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "kategori_tingkat_kematangan_domain": {
+                    "type": "string"
+                },
+                "nilai_gulih": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.GulihResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -2488,7 +3797,36 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.IdentifikasiResponse": {
+        "fortyfour-backend_internal_dto.IdentifikasiInIkas": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "kategori_tingkat_kematangan_domain": {
+                    "type": "string"
+                },
+                "nilai_identifikasi": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
+                    "type": "number"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.IdentifikasiResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -2514,29 +3852,35 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.IkasResponse": {
+        "fortyfour-backend_internal_dto.IkasResponse": {
             "type": "object",
             "properties": {
-                "id_deteksi": {
+                "deteksi": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.DeteksiInIkas"
+                },
+                "gulih": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.GulihInIkas"
+                },
+                "id": {
                     "type": "string"
                 },
-                "id_gulih": {
-                    "type": "string"
-                },
-                "id_identifikasi": {
-                    "type": "string"
-                },
-                "id_perusahaan": {
-                    "type": "string"
-                },
-                "id_proteksi": {
-                    "type": "string"
+                "identifikasi": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.IdentifikasiInIkas"
                 },
                 "jabatan": {
                     "type": "string"
                 },
+                "kategori_kematangan_keamanan_siber": {
+                    "type": "string"
+                },
                 "nilai_kematangan": {
                     "type": "number"
+                },
+                "perusahaan": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.PerusahaanInIkas"
+                },
+                "proteksi": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.ProteksiInIkas"
                 },
                 "responden": {
                     "type": "string"
@@ -2552,7 +3896,27 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.JabatanResponse": {
+        "fortyfour-backend_internal_dto.ImportIkasResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.IkasResponse"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.JabatanResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -2569,8 +3933,12 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.LoginRequest": {
+        "fortyfour-backend_internal_dto.LoginRequest": {
             "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
             "properties": {
                 "password": {
                     "type": "string"
@@ -2580,15 +3948,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.LogoutRequest": {
-            "type": "object",
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.MessageResponse": {
+        "fortyfour-backend_internal_dto.MessageResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -2597,7 +3957,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.PICResponse": {
+        "fortyfour-backend_internal_dto.PICResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -2606,11 +3966,11 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
-                "id_perusahaan": {
-                    "type": "string"
-                },
                 "nama": {
                     "type": "string"
+                },
+                "perusahaan": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.PerusahaanInPIC"
                 },
                 "telepon": {
                     "type": "string"
@@ -2620,7 +3980,29 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.PerusahaanResponse": {
+        "fortyfour-backend_internal_dto.PerusahaanInIkas": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nama_perusahaan": {
+                    "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.PerusahaanInPIC": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nama_perusahaan": {
+                    "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.PerusahaanResponse": {
             "type": "object",
             "properties": {
                 "alamat": {
@@ -2655,7 +4037,54 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ProteksiResponse": {
+        "fortyfour-backend_internal_dto.PolicyDefinition": {
+            "type": "object",
+            "required": [
+                "action",
+                "resource"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.ProteksiInIkas": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "kategori_tingkat_kematangan_domain": {
+                    "type": "string"
+                },
+                "nilai_proteksi": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
+                    "type": "number"
+                },
+                "nilai_subdomain6": {
+                    "type": "number"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.ProteksiResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -2684,16 +4113,13 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.RefreshTokenRequest": {
+        "fortyfour-backend_internal_dto.RegisterRequest": {
             "type": "object",
-            "properties": {
-                "refresh_token": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.RegisterRequest": {
-            "type": "object",
+            "required": [
+                "email",
+                "password",
+                "username"
+            ],
             "properties": {
                 "email": {
                     "type": "string"
@@ -2702,17 +4128,39 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 8
                 },
                 "role_id": {
                     "type": "string"
                 },
                 "username": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 3
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.RemovePolicyRequest": {
+            "type": "object",
+            "required": [
+                "action",
+                "resource",
+                "role"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                },
+                "role": {
                     "type": "string"
                 }
             }
         },
-        "dto.RoleResponse": {
+        "fortyfour-backend_internal_dto.RoleResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -2732,14 +4180,14 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.SdmCsirtResponse": {
+        "fortyfour-backend_internal_dto.SdmCsirtResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
                     "type": "string"
                 },
                 "csirt": {
-                    "$ref": "#/definitions/dto.CsirtMiniResponse"
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.CsirtMiniResponse"
                 },
                 "id": {
                     "type": "string"
@@ -2764,7 +4212,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.SeCsirtResponse": {
+        "fortyfour-backend_internal_dto.SeCsirtResponse": {
             "type": "object",
             "properties": {
                 "as_number_se": {
@@ -2773,13 +4221,13 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "csirt": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.CsirtMiniResponse"
+                },
                 "fitur_se": {
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
-                },
-                "id_csirt": {
                     "type": "string"
                 },
                 "ip_se": {
@@ -2799,24 +4247,21 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.TokenPair": {
+        "fortyfour-backend_internal_dto.UpdateDeteksiData": {
             "type": "object",
             "properties": {
-                "access_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                "nilai_subdomain1": {
+                    "type": "number"
                 },
-                "expires_at": {
-                    "type": "string",
-                    "example": "2025-12-15T15:04:05+07:00"
+                "nilai_subdomain2": {
+                    "type": "number"
                 },
-                "refresh_token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                "nilai_subdomain3": {
+                    "type": "number"
                 }
             }
         },
-        "dto.UpdateDeteksiRequest": {
+        "fortyfour-backend_internal_dto.UpdateDeteksiRequest": {
             "type": "object",
             "properties": {
                 "nilai_deteksi": {
@@ -2833,7 +4278,24 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateGulihRequest": {
+        "fortyfour-backend_internal_dto.UpdateGulihData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.UpdateGulihRequest": {
             "type": "object",
             "properties": {
                 "nilai_gulih": {
@@ -2853,7 +4315,27 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateIdentifikasiRequest": {
+        "fortyfour-backend_internal_dto.UpdateIdentifikasiData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
+                    "type": "number"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.UpdateIdentifikasiRequest": {
             "type": "object",
             "properties": {
                 "nilai_identifikasi": {
@@ -2876,9 +4358,15 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateIkasRequest": {
+        "fortyfour-backend_internal_dto.UpdateIkasRequest": {
             "type": "object",
             "properties": {
+                "deteksi": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateDeteksiData"
+                },
+                "gulih": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateGulihData"
+                },
                 "id_deteksi": {
                     "type": "string"
                 },
@@ -2894,11 +4382,22 @@ const docTemplate = `{
                 "id_proteksi": {
                     "type": "string"
                 },
+                "identifikasi": {
+                    "description": "Nested data untuk update subdomain",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateIdentifikasiData"
+                        }
+                    ]
+                },
                 "jabatan": {
                     "type": "string"
                 },
                 "nilai_kematangan": {
                     "type": "number"
+                },
+                "proteksi": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateProteksiData"
                 },
                 "responden": {
                     "type": "string"
@@ -2914,7 +4413,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateJabatanRequest": {
+        "fortyfour-backend_internal_dto.UpdateJabatanRequest": {
             "type": "object",
             "properties": {
                 "nama_jabatan": {
@@ -2922,7 +4421,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdatePICRequest": {
+        "fortyfour-backend_internal_dto.UpdatePICRequest": {
             "type": "object",
             "properties": {
                 "id_perusahaan": {
@@ -2936,7 +4435,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdatePerusahaanRequest": {
+        "fortyfour-backend_internal_dto.UpdatePerusahaanRequest": {
             "type": "object",
             "properties": {
                 "alamat": {
@@ -2962,7 +4461,30 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateProteksiRequest": {
+        "fortyfour-backend_internal_dto.UpdateProteksiData": {
+            "type": "object",
+            "properties": {
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
+                    "type": "number"
+                },
+                "nilai_subdomain6": {
+                    "type": "number"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.UpdateProteksiRequest": {
             "type": "object",
             "properties": {
                 "nilai_proteksi": {
@@ -2988,7 +4510,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateRoleRequest": {
+        "fortyfour-backend_internal_dto.UpdateRoleRequest": {
             "type": "object",
             "properties": {
                 "description": {
@@ -3002,7 +4524,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateSdmCsirtRequest": {
+        "fortyfour-backend_internal_dto.UpdateSdmCsirtRequest": {
             "type": "object",
             "properties": {
                 "jabatan_csirt": {
@@ -3022,7 +4544,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateSeCsirtRequest": {
+        "fortyfour-backend_internal_dto.UpdateSeCsirtRequest": {
             "type": "object",
             "properties": {
                 "as_number_se": {
@@ -3045,19 +4567,69 @@ const docTemplate = `{
                 }
             }
         },
-        "models.User": {
+        "fortyfour-backend_internal_dto.UpdateUserPasswordRequest": {
+            "type": "object",
+            "required": [
+                "confirm_new_password",
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "confirm_new_password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "new_password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "old_password": {
+                    "type": "string",
+                    "minLength": 8
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.UpdateUserRequest": {
             "type": "object",
             "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id_jabatan": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 3
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.UserResponse": {
+            "type": "object",
+            "properties": {
+                "banner": {
+                    "type": "string"
+                },
                 "created_at": {
                     "type": "string"
                 },
                 "email": {
                     "type": "string"
                 },
+                "foto_profile": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
                 "id_jabatan": {
+                    "type": "string"
+                },
+                "jabatan_name": {
                     "type": "string"
                 },
                 "role_id": {

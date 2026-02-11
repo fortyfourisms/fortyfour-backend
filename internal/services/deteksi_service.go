@@ -6,7 +6,6 @@ import (
 	"fortyfour-backend/internal/repository"
 
 	"github.com/google/uuid"
-	"github.com/rollbar/rollbar-go"
 )
 
 type DeteksiService struct {
@@ -20,7 +19,6 @@ func NewDeteksiService(repo repository.DeteksiRepositoryInterface) *DeteksiServi
 func (s *DeteksiService) Create(req dto.CreateDeteksiRequest) (*models.Deteksi, error) {
 	id := uuid.New().String()
 	if err := s.repo.Create(req, id); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	return s.repo.GetByID(id)
@@ -37,7 +35,6 @@ func (s *DeteksiService) GetByID(id string) (*models.Deteksi, error) {
 func (s *DeteksiService) Update(id string, req dto.UpdateDeteksiRequest) (*models.Deteksi, error) {
 	d, err := s.repo.GetByID(id)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -55,7 +52,6 @@ func (s *DeteksiService) Update(id string, req dto.UpdateDeteksiRequest) (*model
 	}
 
 	if err := s.repo.Update(id, *d); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 

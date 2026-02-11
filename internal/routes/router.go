@@ -13,6 +13,12 @@ import (
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// @Summary Health check
+// @Description Check if the API is running and healthy
+// @Tags Health
+// @Produce json
+// @Success 200 {object} map[string]string
+// @Router /api/health [get]
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

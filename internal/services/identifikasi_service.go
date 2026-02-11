@@ -6,7 +6,6 @@ import (
 	"fortyfour-backend/internal/repository"
 
 	"github.com/google/uuid"
-	"github.com/rollbar/rollbar-go"
 )
 
 type IdentifikasiService struct {
@@ -20,7 +19,6 @@ func NewIdentifikasiService(repo repository.IdentifikasiRepositoryInterface) *Id
 func (s *IdentifikasiService) Create(req dto.CreateIdentifikasiRequest) (*models.Identifikasi, error) {
 	id := uuid.New().String()
 	if err := s.repo.Create(req, id); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -38,7 +36,6 @@ func (s *IdentifikasiService) GetByID(id string) (*models.Identifikasi, error) {
 func (s *IdentifikasiService) Update(id string, req dto.UpdateIdentifikasiRequest) (*models.Identifikasi, error) {
 	identifikasi, err := s.repo.GetByID(id)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 
@@ -62,7 +59,6 @@ func (s *IdentifikasiService) Update(id string, req dto.UpdateIdentifikasiReques
 	}
 
 	if err := s.repo.Update(id, *identifikasi); err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 

@@ -4,8 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"fortyfour-backend/internal/dto"
-
-	"github.com/rollbar/rollbar-go"
 )
 
 type JabatanRepository struct {
@@ -26,7 +24,6 @@ func (r *JabatanRepository) Create(req dto.CreateJabatanRequest, id string) erro
 func (r *JabatanRepository) GetAll() ([]dto.JabatanResponse, error) {
 	rows, err := r.db.Query(`SELECT id, nama_jabatan, created_at, updated_at FROM jabatan`)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -45,7 +42,6 @@ func (r *JabatanRepository) GetByID(id string) (*dto.JabatanResponse, error) {
 	var j dto.JabatanResponse
 	err := row.Scan(&j.ID, &j.NamaJabatan, &j.CreatedAt, &j.UpdatedAt)
 	if err != nil {
-		rollbar.Error(err)
 		return nil, err
 	}
 	return &j, nil
@@ -61,14 +57,11 @@ func (r *JabatanRepository) Update(id string, req dto.JabatanResponse) error {
 func (r *JabatanRepository) Delete(id string) error {
 	res, err := r.db.Exec(`DELETE FROM jabatan WHERE id=?`, id)
 	if err != nil {
-		rollbar.Error(err)
-		rollbar.Error(err)
 		return err
 	}
 
 	rows, err := res.RowsAffected()
 	if err != nil {
-		rollbar.Error(err)
 		return err
 	}
 
