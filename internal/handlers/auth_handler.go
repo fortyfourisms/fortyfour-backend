@@ -251,7 +251,7 @@ func (h *AuthHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Me returns current user info
+// Returns current user info
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	// Get user info from context (set by auth middleware)
 	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
@@ -274,7 +274,7 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, response)
 }
 
-/* ===================== MFA HANDLERS (UPDATED FOR MICROSOFT-STYLE) ===================== */
+/* ===================== MFA HANDLERS (MICROSOFT-STYLE) ===================== */
 
 // SetupMFA godoc
 // @Summary      Setup MFA

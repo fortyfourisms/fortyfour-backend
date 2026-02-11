@@ -159,7 +159,7 @@ func TestSEService_Create_InvalidKarakteristik(t *testing.T) {
 	service, _ := setupSEService()
 
 	req := createValidSERequest()
-	req.NilaiInvestasi = "X" // Invalid answer
+	req.NilaiInvestasi = "X"
 
 	result, err := service.Create(req)
 
@@ -206,17 +206,16 @@ func TestSEService_Create_KategoriTinggi(t *testing.T) {
 	req := createValidSERequest()
 	// Mix A, B, C untuk total bobot di range 16-34 (Tinggi)
 	// 5A (25) + 3B (6) + 2C (2) = 33 → Tinggi
-	req.NilaiInvestasi = "A"            // 5
-	req.AnggaranOperasional = "A"       // 5
-	req.KepatuhanPeraturan = "A"        // 5
-	req.TeknikKriptografi = "A"         // 5
-	req.JumlahPengguna = "A"            // 5
-	req.DataPribadi = "B"               // 2
-	req.KlasifikasiData = "B"           // 2
-	req.KekritisanProses = "B"          // 2
-	req.DampakKegagalan = "C"           // 1
-	req.PotensiKerugiandanDampakNegatif = "C" // 1
-	// Total = 33 → Tinggi
+	req.NilaiInvestasi = "A"            
+	req.AnggaranOperasional = "A"       
+	req.KepatuhanPeraturan = "A"        
+	req.TeknikKriptografi = "A"         
+	req.JumlahPengguna = "A"            
+	req.DataPribadi = "B"               
+	req.KlasifikasiData = "B"           
+	req.KekritisanProses = "B"          
+	req.DampakKegagalan = "C"           
+	req.PotensiKerugiandanDampakNegatif = "C" 
 
 	expectedResponse := &dto.SEResponse{
 		ID:         "new-se-id",
@@ -251,7 +250,6 @@ func TestSEService_Create_KategoriRendah(t *testing.T) {
 	req.KekritisanProses = "C"
 	req.DampakKegagalan = "C"
 	req.PotensiKerugiandanDampakNegatif = "C"
-	// Total = 10 → Rendah
 
 	expectedResponse := &dto.SEResponse{
 		ID:         "new-se-id",
@@ -470,7 +468,7 @@ func TestSEService_Update_Success_Recategorize(t *testing.T) {
 	updatedResponse := &dto.SEResponse{
 		ID:         "se-123",
 		TotalBobot: 30,
-		KategoriSE: "Tinggi", // Re-categorized
+		KategoriSE: "Tinggi",
 	}
 
 	// First GetByID call returns existing data
@@ -586,16 +584,3 @@ func TestSEService_Delete_RepositoryError(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
-
-/*
-=====================================
- TEST KATEGORISASI EDGE CASES
-=====================================
-*/
-
-// The kategorisasi logic is tested indirectly through Create/Update tests
-// This section documents the kategorisasi boundaries:
-// - Strategis: 35-50 (tested in TestSEService_Create_KategoriStrategis)
-// - Tinggi: 16-34 (tested in TestSEService_Create_KategoriTinggi)
-// - Rendah: 10-15 (tested in TestSEService_Create_KategoriRendah)
-// - Invalid: < 10 or > 50 (cannot occur with valid A/B/C answers)

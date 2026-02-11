@@ -32,7 +32,7 @@ func TestLoad_WithDefaultValues(t *testing.T) {
 	assert.Equal(t, "", cfg.Redis.Password)
 	assert.Equal(t, 0, cfg.Redis.DB)
 
-	// Rollbar defaults - FIXED: Match actual default value in config.go
+	// Rollbar defaults
 	assert.Equal(t, "0eddf8fb05e44067a12a8bb36ccc3ef9", cfg.Rollbar.Token)
 	assert.Equal(t, "production", cfg.Rollbar.Env)
 
@@ -422,7 +422,7 @@ func TestLoad_Idempotency(t *testing.T) {
 }
 
 func TestDatabaseConfig_GetDSN_EmptyFields(t *testing.T) {
-	// Test DSN generation with empty fields (edge case)
+	// Test DSN generation with empty fields
 	config := DatabaseConfig{
 		User:     "",
 		Password: "",

@@ -16,7 +16,6 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-// CHANGED: Updated Create to accept id_perusahaan parameter
 func (r *UserRepository) Create(user *models.User) error {
 	if user.ID == "" {
 		user.ID = uuid.New().String()

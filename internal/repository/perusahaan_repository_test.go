@@ -62,20 +62,20 @@ func TestPerusahaanRepository_Create(t *testing.T) {
 			name: "success - create perusahaan with null id_sub_sektor",
 			req: dto.CreatePerusahaanRequest{
 				NamaPerusahaan: stringPtr("PT XYZ"),
-				IDSubSektor:    nil, // explicitly nil
+				IDSubSektor:    nil,
 			},
 			id: "perusahaan-2",
 			mockFn: func(mock sqlmock.Sqlmock) {
 				mock.ExpectExec("INSERT INTO perusahaan").
 					WithArgs(
 						"perusahaan-2",
-						nil, // photo
+						nil, 
 						"PT XYZ",
-						nil, // id_sub_sektor
-						nil, // alamat
-						nil, // telepon
-						nil, // email
-						nil, // website
+						nil,
+						nil,
+						nil,
+						nil,
+						nil,
 					).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
@@ -94,7 +94,7 @@ func TestPerusahaanRepository_Create(t *testing.T) {
 						"perusahaan-3",
 						nil,
 						"PT Empty SubSektor",
-						nil, // empty string becomes nil
+						nil,
 						nil,
 						nil,
 						nil,
@@ -114,13 +114,13 @@ func TestPerusahaanRepository_Create(t *testing.T) {
 				mock.ExpectExec("INSERT INTO perusahaan").
 					WithArgs(
 						"perusahaan-min",
-						nil,  // photo nil (valueOrNull returns nil for nil pointer)
+						nil,
 						"PT Minimal",
-						nil, // id_sub_sektor nil
-						nil,  // alamat nil (valueOrNull returns nil for nil pointer)
-						nil,  // telepon nil
-						nil,  // email nil
-						nil,  // website nil
+						nil,
+						nil,
+						nil,
+						nil,
+						nil,
 					).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
@@ -434,9 +434,9 @@ func TestPerusahaanRepository_Update(t *testing.T) {
 			mockFn: func(mock sqlmock.Sqlmock) {
 				mock.ExpectExec("UPDATE perusahaan SET").
 					WithArgs(
-						nil,  // empty string becomes nil via stringOrNull
+						nil,
 						"PT XYZ Updated",
-						nil,  // SubSektor nil
+						nil,
 						nil,
 						nil,
 						nil,

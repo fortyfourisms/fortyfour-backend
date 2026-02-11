@@ -264,14 +264,14 @@ func (h *PerusahaanHandler) deleteOldPhoto(id string) {
 	if err == nil && perusahaan.Photo != "" {
 		rollbar.Error(err)
 		oldPath := filepath.Join(h.uploadPath, perusahaan.Photo)
-		os.Remove(oldPath) // ignore error
+		os.Remove(oldPath)
 	}
 }
 
 func (h *PerusahaanHandler) parseCreateForm(form *multipart.Form) dto.CreatePerusahaanRequest {
 	return dto.CreatePerusahaanRequest{
 		NamaPerusahaan: getFormValue(form, "nama_perusahaan"),
-		IDSubSektor:    getFormValue(form, "id_sub_sektor"), // Changed from Sektor
+		IDSubSektor:    getFormValue(form, "id_sub_sektor"),
 		Alamat:         getFormValue(form, "alamat"),
 		Telepon:        getFormValue(form, "telepon"),
 		Email:          getFormValue(form, "email"),
@@ -282,7 +282,7 @@ func (h *PerusahaanHandler) parseCreateForm(form *multipart.Form) dto.CreatePeru
 func (h *PerusahaanHandler) parseUpdateForm(form *multipart.Form) dto.UpdatePerusahaanRequest {
 	return dto.UpdatePerusahaanRequest{
 		NamaPerusahaan: getFormValue(form, "nama_perusahaan"),
-		IDSubSektor:    getFormValue(form, "id_sub_sektor"), // Changed from Sektor
+		IDSubSektor:    getFormValue(form, "id_sub_sektor"),
 		Alamat:         getFormValue(form, "alamat"),
 		Telepon:        getFormValue(form, "telepon"),
 		Email:          getFormValue(form, "email"),

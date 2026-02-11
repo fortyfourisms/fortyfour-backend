@@ -64,7 +64,7 @@ func (m *MockSEService) Delete(id string) error {
 
 /*
 =====================================
- MOCK SSE SERVICE (reuse from previous tests)
+ MOCK SSE SERVICE
 =====================================
 */
 
@@ -434,7 +434,7 @@ func TestSEHandler_Update_Recategorize(t *testing.T) {
 
 	expectedResponse := &dto.SEResponse{
 		ID:         "se-123",
-		TotalBobot: 28, // Changed from 50 to 28
+		TotalBobot: 28,
 		KategoriSE: "Tinggi", // Re-categorized from Strategis to Tinggi
 	}
 

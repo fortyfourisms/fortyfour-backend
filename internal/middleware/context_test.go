@@ -67,7 +67,7 @@ func TestGetUserID_WrongType(t *testing.T) {
 }
 
 func TestGetUserID_NilContext(t *testing.T) {
-	// Although passing nil context is bad practice, our function should handle it gracefully
+	// Although passing nil context is bad practice, our function should handle it
 	// Note: This will panic if not handled, so we test with Background
 	ctx := context.Background()
 

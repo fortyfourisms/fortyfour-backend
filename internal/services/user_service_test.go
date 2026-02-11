@@ -148,7 +148,7 @@ func TestUserService_Create_InvalidUsername(t *testing.T) {
 	service, _ := setupUserService()
 
 	req := dto.CreateUserRequest{
-		Username: "ab", // < 3 karakter
+		Username: "ab",
 		Password: "MySecureP@ssw0rd2024!",
 		Email:    "test@example.com",
 	}
@@ -167,7 +167,7 @@ func TestUserService_Create_InvalidPassword(t *testing.T) {
 
 	req := dto.CreateUserRequest{
 		Username: "testuser",
-		Password: "12345", // terlalu pendek
+		Password: "12345",
 		Email:    "test@example.com",
 	}
 
@@ -385,7 +385,7 @@ func TestUserService_UpdatePassword_TooShort(t *testing.T) {
 
 	req := dto.UpdateUserPasswordRequest{
 		OldPassword:        "OldP@ssword123!",
-		NewPassword:        "Short1!", // kurang dari 8 karakter
+		NewPassword:        "Short1!",
 		ConfirmNewPassword: "Short1!",
 	}
 	err := service.UpdatePassword("test-id", req)
