@@ -20,6 +20,17 @@ func NewAuthHandler(authService *services.AuthService, tokenService *services.To
 	}
 }
 
+// @Summary Register user baru
+// @Description Mendaftarkan user baru. Token dikirim via HTTP-only cookies, BUKAN di response body.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body dto.RegisterRequest true "Register data"
+// @Success 200 {object} map[string]interface{} "message dan user info (tanpa token)"
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req dto.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -58,6 +69,17 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, response)
 }
 
+// @Summary Login user
+// @Description Autentikasi user. Token dikirim via HTTP-only cookies, BUKAN di response body.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body dto.LoginRequest true "Login credentials"
+// @Success 200 {object} map[string]interface{} "message dan user info (tanpa token)"
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/auth/login [post]
 // Login authenticates user and sets secure cookies
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req dto.LoginRequest
@@ -97,6 +119,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, response)
 }
 
+// @Summary Refresh token
+// @Description Refresh access token menggunakan refresh token dari cookie. Token baru dikirim via HTTP-only cookies.
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} dto.MessageResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Router /api/auth/refresh [post]
 // Refresh generates new access token using refresh token from cookie
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	// Get refresh token from cookie
@@ -121,6 +150,12 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// @Summary Logout
+// @Description Revoke refresh token dan hapus cookies autentikasi.
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} dto.MessageResponse
+// @Router /api/auth/logout [post]
 // Logout revokes tokens and clears cookies
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	// Get refresh token from cookie to revoke it
@@ -138,6 +173,15 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// @Summary Logout dari semua perangkat
+// @Description Revoke semua refresh token user dan hapus cookies.
+// @Tags Auth
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.MessageResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/auth/logout-all [post]
 // LogoutAll revokes all user's refresh tokens across all devices
 func (h *AuthHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context (set by auth middleware)
@@ -161,6 +205,14 @@ func (h *AuthHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// @Summary Get current user info
+// @Description Mengambil informasi user yang sedang login.
+// @Tags Auth
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} dto.ErrorResponse
+// @Router /api/auth/me [get]
 // Me returns current user info
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	// Get user info from context (set by auth middleware)
