@@ -33,16 +33,17 @@ func NewAuthHandler(
 	}
 }
 
-// Register godoc
-// @Summary      Register new user
-// @Description  Create account with optional company creation/selection and return JWT tokens
-// @Tags         Auth
-// @Accept       json
-// @Produce      json
-// @Param        register body dto.RegisterRequest true "Registration payload"
-// @Success      201  {object} dto.AuthResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/register [post]
+// @Summary Register user baru
+// @Description Mendaftarkan user baru. Token dikirim via HTTP-only cookies, BUKAN di response body.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body dto.RegisterRequest true "Register data"
+// @Success 201 {object} map[string]interface{} "message dan user info (tanpa token)"
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/auth/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req dto.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -94,18 +95,17 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusCreated, response)
 }
 
-// Login godoc
-// @Summary      Login user
-// @Description  Authenticate user and return JWT tokens or MFA setup/verification required response
-// @Tags         Auth
-// @Accept       json
-// @Produce      json
-// @Param        login body dto.LoginRequest true "Login payload"
-// @Success      200  {object} dto.AuthResponse
-// @Success      200  {object} map[string]interface{} "mfa_setup_required or mfa_required response"
-// @Failure      400  {object} dto.ErrorResponse
-// @Failure      401  {object} dto.ErrorResponse
-// @Router       /api/login [post]
+// @Summary Login user
+// @Description Autentikasi user. Token dikirim via HTTP-only cookies, BUKAN di response body.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body dto.LoginRequest true "Login credentials"
+// @Success 200 {object} map[string]interface{} "message dan user info (tanpa token)"
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/auth/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req dto.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -187,7 +187,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, response)
 }
 
-// Refresh generates new access token using refresh token from cookie
+// @Summary Refresh token
+// @Description Refresh access token menggunakan refresh token dari cookie. Token baru dikirim via HTTP-only cookies.
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} dto.MessageResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Router /api/auth/refresh [post]
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	// Get refresh token from cookie
 	refreshToken, err := h.tokenService.GetRefreshTokenFromCookie(r)
@@ -211,7 +217,12 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Logout revokes tokens and clears cookies
+// @Summary Logout
+// @Description Revoke refresh token dan hapus cookies autentikasi.
+// @Tags Auth
+// @Produce json
+// @Success 200 {object} dto.MessageResponse
+// @Router /api/auth/logout [post]
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	// Get refresh token from cookie to revoke it
 	refreshToken, err := h.tokenService.GetRefreshTokenFromCookie(r)
@@ -228,7 +239,15 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// LogoutAll revokes all user's refresh tokens across all devices
+// @Summary Logout dari semua perangkat
+// @Description Revoke semua refresh token user dan hapus cookies.
+// @Tags Auth
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.MessageResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/auth/logout-all [post]
 func (h *AuthHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context (set by auth middleware)
 	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
@@ -251,7 +270,14 @@ func (h *AuthHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Returns current user info
+// @Summary Get current user info
+// @Description Mengambil informasi user yang sedang login.
+// @Tags Auth
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{}
+// @Failure 401 {object} dto.ErrorResponse
+// @Router /api/auth/me [get]
 func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 	// Get user info from context (set by auth middleware)
 	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
@@ -276,17 +302,16 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 
 /* ===================== MFA HANDLERS (MICROSOFT-STYLE) ===================== */
 
-// SetupMFA godoc
-// @Summary      Setup MFA
-// @Description  Generate MFA provisioning URI and secret (Microsoft-style: accepts setup_token)
-// @Tags         Auth
-// @Accept       json
-// @Produce      json
-// @Param        setup body map[string]string false "Setup token (for unauthenticated setup)"
-// @Success      200  {object} map[string]string "provisioning_uri and secret"
-// @Failure      400  {object} dto.ErrorResponse
-// @Failure      401  {object} dto.ErrorResponse
-// @Router       /api/mfa/setup [post]
+// @Summary Setup MFA
+// @Description Generate MFA provisioning URI and secret (Microsoft-style: accepts setup_token)
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param setup body map[string]string false "Setup token (for unauthenticated setup)"
+// @Success 200 {object} map[string]string "provisioning_uri and secret"
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Router /api/mfa/setup [post]
 func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
 	// Try to get userID from context (authenticated user) or from setup_token
 	userID := middleware.GetUserID(r.Context())
@@ -327,17 +352,16 @@ func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// EnableMFA godoc
-// @Summary      Enable MFA
-// @Description  Verify MFA code and enable MFA (Microsoft-style: returns tokens immediately)
-// @Tags         Auth
-// @Accept       json
-// @Produce      json
-// @Param        enable body map[string]string true "MFA code and optional setup_token"
-// @Success      200  {object} dto.AuthResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Failure      401  {object} dto.ErrorResponse
-// @Router       /api/mfa/enable [post]
+// @Summary Enable MFA
+// @Description Verify MFA code and enable MFA (Microsoft-style: returns tokens immediately)
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param enable body map[string]string true "MFA code and optional setup_token"
+// @Success 200 {object} dto.AuthResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Router /api/mfa/enable [post]
 func (h *AuthHandler) EnableMFA(w http.ResponseWriter, r *http.Request) {
 	// Try to get userID from context (authenticated user) or from setup_token
 	userID := middleware.GetUserID(r.Context())
@@ -400,17 +424,16 @@ func (h *AuthHandler) EnableMFA(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, response)
 }
 
-// VerifyMFA godoc
-// @Summary      Verify MFA
-// @Description  Verify MFA code and return access tokens
-// @Tags         Auth
-// @Accept       json
-// @Produce      json
-// @Param        verify body map[string]string true "MFA token and code"
-// @Success      200  {object} dto.AuthResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Failure      401  {object} dto.ErrorResponse
-// @Router       /api/mfa/verify [post]
+// @Summary Verify MFA
+// @Description Verify MFA code and return access tokens
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param verify body map[string]string true "MFA token and code"
+// @Success 200 {object} dto.AuthResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Router /api/mfa/verify [post]
 func (h *AuthHandler) VerifyMFA(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		MFAToken string `json:"mfa_token"`

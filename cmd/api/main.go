@@ -21,10 +21,6 @@ import (
 func main() {
 	cfg := config.Load()
 
-	// Debug: check what Rollbar token was loaded
-	rawToken := cfg.Rollbar.Token
-	log.Printf("ROLLBAR_TOKEN loaded: len=%d, first4=%q, raw_env=%q", len(rawToken), rawToken[:min(4, len(rawToken))], os.Getenv("ROLLBAR_TOKEN"))
-
 	rollbar.SetToken(cfg.Rollbar.Token)
 	rollbar.SetEnvironment(cfg.Rollbar.Env)
 

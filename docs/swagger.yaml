@@ -442,6 +442,16 @@ definitions:
       updated_at:
         type: string
     type: object
+  fortyfour-backend_internal_dto.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
   fortyfour-backend_internal_dto.MessageResponse:
     properties:
       message:
@@ -549,6 +559,26 @@ definitions:
         type: number
       nilai_subdomain6:
         type: number
+    type: object
+  fortyfour-backend_internal_dto.RegisterRequest:
+    properties:
+      email:
+        type: string
+      id_jabatan:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      role_id:
+        type: string
+      username:
+        maxLength: 50
+        minLength: 3
+        type: string
+    required:
+    - email
+    - password
+    - username
     type: object
   fortyfour-backend_internal_dto.RemovePolicyRequest:
     properties:
@@ -885,6 +915,152 @@ definitions:
 info:
   contact: {}
 paths:
+  /api/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Autentikasi user. Token dikirim via HTTP-only cookies, BUKAN di
+        response body.
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: message dan user info (tanpa token)
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Login user
+      tags:
+      - Auth
+  /api/auth/logout:
+    post:
+      description: Revoke refresh token dan hapus cookies autentikasi.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.MessageResponse'
+      summary: Logout
+      tags:
+      - Auth
+  /api/auth/logout-all:
+    post:
+      description: Revoke semua refresh token user dan hapus cookies.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.MessageResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Logout dari semua perangkat
+      tags:
+      - Auth
+  /api/auth/me:
+    get:
+      description: Mengambil informasi user yang sedang login.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user info
+      tags:
+      - Auth
+  /api/auth/refresh:
+    post:
+      description: Refresh access token menggunakan refresh token dari cookie. Token
+        baru dikirim via HTTP-only cookies.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.MessageResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Refresh token
+      tags:
+      - Auth
+  /api/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Mendaftarkan user baru. Token dikirim via HTTP-only cookies, BUKAN
+        di response body.
+      parameters:
+      - description: Register data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: message dan user info (tanpa token)
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Register user baru
+      tags:
+      - Auth
   /api/casbin/permissions:
     get:
       description: Mengambil permissions untuk role tertentu
