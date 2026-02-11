@@ -12,6 +12,7 @@ type Config struct {
 	Database        DatabaseConfig
 	Redis           RedisConfig
 	Rollbar         RollbarConfig
+	RabbitMQ        RabbitMQConfig
 	CasbinModelPath string
 }
 
@@ -35,6 +36,14 @@ type RollbarConfig struct {
 	Env   string
 }
 
+type RabbitMQConfig struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	Vhost    string
+}
+
 func Load() *Config {
 	absPath, _ := filepath.Abs("casbin/casbin_model.conf")
 	return &Config{
@@ -53,12 +62,23 @@ func Load() *Config {
 			Password: getEnv("REDIS_PASSWORD", ""),
 			DB:       getEnvAsInt("REDIS_DB", 0),
 		},
+		RabbitMQ: RabbitMQConfig{
+			Host:     getEnv("RABBITMQ_HOST", "localhost"),
+			Port:     getEnv("RABBITMQ_PORT", "5672"),
+			User:     getEnv("RABBITMQ_USER", "guest"),
+			Password: getEnv("RABBITMQ_PASSWORD", "guest"),
+			Vhost:    getEnv("RABBITMQ_VHOST", "/"),
+		},
 		CasbinModelPath: getEnv("CASBIN_MODEL_PATH", absPath),
 		Rollbar: RollbarConfig{
 			Token: getEnv("ROLLBAR_TOKEN", ""),
 			Env:   getEnv("ROLLBAR_ENVIRONMENT", "development"),
 		},
 	}
+}
+
+func (r *RabbitMQConfig) GetURL() string {
+	return "amqp://" + r.User + ":" + r.Password + "@" + r.Host + ":" + r.Port + r.Vhost
 }
 
 // GetDSN returns MySQL DSN for GORM

@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"ikas/internal/config"
 	"ikas/internal/handlers"
 	"ikas/internal/middleware"
+	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/routes"
 	"ikas/internal/services"
@@ -11,6 +13,9 @@ import (
 	"ikas/pkg/database"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/rollbar/rollbar-go"
 )
@@ -61,6 +66,38 @@ func main() {
 	rollbar.Info("Redis initialized successfully")
 	defer redisClient.Close()
 
+	// Initialize RabbitMQ
+	rmq, err := rabbitmq.NewRabbitMQ(cfg.RabbitMQ.GetURL())
+	if err != nil {
+		log.Println("Failed to connect to RabbitMQ:", err)
+		rollbar.Error(err)
+		log.Fatal(err)
+	}
+	defer rmq.Close()
+
+	// Setup RabbitMQ infrastructure (exchanges, queues, bindings)
+	if err := rmq.SetupInfrastructure(); err != nil {
+		log.Println("Failed to setup RabbitMQ infrastructure:", err)
+		rollbar.Error(err)
+		log.Fatal(err)
+	}
+	log.Println("RabbitMQ initialized successfully")
+	rollbar.Info("RabbitMQ initialized successfully")
+
+	// Create Producer and Consumer
+	msgProducer := rabbitmq.NewProducer(rmq.GetChannel())
+	msgConsumer := rabbitmq.NewConsumer(rmq.GetChannel())
+
+	// Start consumers in background
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if err := msgConsumer.StartAllConsumers(ctx); err != nil {
+		log.Println("Failed to start consumers:", err)
+		rollbar.Error(err)
+		log.Fatal(err)
+	}
+
 	// repository
 	ikasRepo := repository.NewIkasRepository(db)
 	ruangLingkupRepo := repository.NewRuangLingkupRepository(db)
@@ -69,7 +106,7 @@ func main() {
 	subKategoriRepo := repository.NewSubKategoriRepository(db)
 
 	// services
-	ikasService := services.NewIkasService(ikasRepo)
+	ikasService := services.NewIkasService(ikasRepo, msgProducer)
 	ruangLingkupService := services.NewRuangLingkupService(ruangLingkupRepo)
 	domainService := services.NewDomainService(domainRepo)
 	kategoriService := services.NewKategoriService(kategoriRepo)
@@ -104,11 +141,31 @@ func main() {
 		lenientLimiter,
 	)
 
-	log.Println("IKAS service running on", cfg.Port)
-	log.Println("Rate limiting enabled:")
-	log.Println("  - Auth endpoints: 5 requests/minute per IP")
-	log.Println("  - Public posts: 60 requests/minute per IP")
-	log.Println("  - Protected posts: 20 requests/minute per user")
-	log.Fatal(http.ListenAndServe(cfg.Port, mux))
+	go func() {
+		log.Println("IKAS service running on", cfg.Port)
+		log.Println("Rate limiting enabled:")
+		log.Println("  - Auth endpoints: 5 requests/minute per IP")
+		log.Println("  - Public posts: 60 requests/minute per IP")
+		log.Println("  - Protected posts: 20 requests/minute per user")
+		log.Println("RabbitMQ consumers running:")
+		log.Println("  - ikas.created")
+		log.Println("  - ikas.updated")
+		log.Println("  - ikas.deleted")
+		log.Println("  - ikas.imported")
+		log.Println("  - notifications.email")
+
+		if err := http.ListenAndServe(cfg.Port, mux); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+
+	// Wait for interrupt signal untuk graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Shutting down server...")
+	cancel() // Stop consumers
+	log.Println("Server stopped gracefully")
 
 }
