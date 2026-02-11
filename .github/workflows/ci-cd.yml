@@ -170,6 +170,7 @@ jobs:
     needs: test
     outputs:
       image-tag: ${{ steps.meta.outputs.tags }}
+      image-sha: ${{ steps.sha.outputs.sha_tag }}
 
     steps:
       - name: Checkout code
@@ -192,12 +193,17 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha,prefix=,format=long
+            type=sha,prefix=,format=short
             type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Extract SHA tag
+        id: sha
+        run: |
+          SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-7)
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          SHA_TAG="${{ env.REGISTRY }}/${REPO_LOWER}:${SHA_SHORT}"
+          echo "sha_tag=${SHA_TAG}" >> "$GITHUB_OUTPUT"
+          echo "SHA tag: ${SHA_TAG}"
 
       # Build image locally first for scanning
       - name: Build Docker image locally
@@ -344,7 +350,7 @@ jobs:
       - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.0
         env:
-          IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
+          IMAGE_TAG: ${{ needs.build.outputs.image-sha }}
           G_TOKEN: ${{ secrets.G_TOKEN }}
           ACTOR: ${{ github.actor }}
           REGISTRY: ${{ env.REGISTRY }}
@@ -358,14 +364,9 @@ jobs:
             cd ~/fortyfour-backend
             
             echo "=== Deployment Info ==="
-            echo "Received IMAGE_TAG: ${IMAGE_TAG}"
-            
-            # Extract first tag only (metadata action returns multiple tags separated by newlines)
-            FIRST_TAG=$(echo "${IMAGE_TAG}" | head -n1 | tr -d '\r\n')
-            
+            echo "Image tag: ${IMAGE_TAG}"
             echo "Registry: ${REGISTRY}"
             echo "Actor: ${ACTOR}"
-            echo "Using first tag: ${FIRST_TAG}"
             
             # Load environment variables from system config
             if [ -f /etc/fortyfour-backend/environment ]; then
@@ -393,25 +394,20 @@ jobs:
             
             echo "✅ Login successful"
             
-            if [ -z "${FIRST_TAG}" ]; then
+            if [ -z "${IMAGE_TAG}" ]; then
               echo "❌ IMAGE_TAG is empty or invalid!"
               exit 1
             fi
             
-            # Convert to lowercase (GHCR requires lowercase)
-            IMAGE_TAG_LOWER=$(echo "${FIRST_TAG}" | tr '[:upper:]' '[:lower:]')
-            echo "Final image reference: ${IMAGE_TAG_LOWER}"
-            
-            # Pull the exact image with retry
-            echo "Pulling image: ${IMAGE_TAG_LOWER}"
+            echo "Pulling image: ${IMAGE_TAG}"
             RETRIES=5
             RETRY_DELAY=10
             
             for i in $(seq 1 $RETRIES); do
               echo "Pull attempt $i/$RETRIES..."
               
-              if docker pull "${IMAGE_TAG_LOWER}"; then
-                echo "✅ Successfully pulled: ${IMAGE_TAG_LOWER}"
+              if docker pull "${IMAGE_TAG}"; then
+                echo "✅ Successfully pulled: ${IMAGE_TAG}"
                 PULL_SUCCESS=true
                 break
               else
@@ -423,7 +419,7 @@ jobs:
                 else
                   echo ""
                   echo "=== Pull Failed After $RETRIES Attempts ==="
-                  echo "Image: ${IMAGE_TAG_LOWER}"
+                  echo "Image: ${IMAGE_TAG}"
                   echo ""
                   echo "Possible causes:"
                   echo "1. Image not yet available in registry (propagation delay)"
@@ -445,9 +441,9 @@ jobs:
               echo "❌ Failed to pull image after all retries"
               exit 1
             fi
-            
-            # Tag as latest for docker-compose
-            docker tag "${IMAGE_TAG_LOWER}" fortyfour-backend:latest
+            # Update docker-compose.yml to use the specific image tag
+            echo "Updating docker-compose.yml with image: ${IMAGE_TAG}"
+            sed -i "s|image:.*ghcr.io.*|image: ${IMAGE_TAG}|g" docker-compose.yml
             
             # Stop and remove old containers
             echo "Stopping old containers..."
