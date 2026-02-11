@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/utils"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type PerusahaanRepository struct {
