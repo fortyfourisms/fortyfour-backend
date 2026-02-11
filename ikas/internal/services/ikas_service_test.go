@@ -112,7 +112,7 @@ func (m *mockIkasRepo) ParseExcelForImport(b []byte) (*dto.CreateIkasRequest, er
 
 func TestIkasService_Create_Success(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo)
+	service := NewIkasService(repo, nil)
 
 	req := dto.CreateIkasRequest{
 		IDPerusahaan: "1",
@@ -135,7 +135,7 @@ func TestIkasService_Create_Success(t *testing.T) {
 
 func TestIkasService_Update_Recalculate(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo)
+	service := NewIkasService(repo, nil)
 
 	val := 10.0
 	req := dto.UpdateIkasRequest{
@@ -158,7 +158,7 @@ func TestIkasService_Update_Recalculate(t *testing.T) {
 
 func TestIkasService_ImportFromExcel(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo)
+	service := NewIkasService(repo, nil)
 
 	resp, err := service.ImportFromExcel([]byte("fake excel"))
 
