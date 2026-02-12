@@ -915,7 +915,7 @@ definitions:
 info:
   contact: {}
 paths:
-  /api/auth/login:
+  /api/login:
     post:
       consumes:
       - application/json
@@ -951,7 +951,7 @@ paths:
       summary: Login user
       tags:
       - Auth
-  /api/auth/logout:
+  /api/logout:
     post:
       description: Revoke refresh token dan hapus cookies autentikasi.
       produces:
@@ -964,7 +964,7 @@ paths:
       summary: Logout
       tags:
       - Auth
-  /api/auth/logout-all:
+  /api/logout-all:
     post:
       description: Revoke semua refresh token user dan hapus cookies.
       produces:
@@ -987,7 +987,7 @@ paths:
       summary: Logout dari semua perangkat
       tags:
       - Auth
-  /api/auth/me:
+  /api/me:
     get:
       description: Mengambil informasi user yang sedang login.
       produces:
@@ -1007,7 +1007,7 @@ paths:
       summary: Get current user info
       tags:
       - Auth
-  /api/auth/refresh:
+  /api/refresh:
     post:
       description: Refresh access token menggunakan refresh token dari cookie. Token
         baru dikirim via HTTP-only cookies.
@@ -1025,7 +1025,7 @@ paths:
       summary: Refresh token
       tags:
       - Auth
-  /api/auth/register:
+  /api/register:
     post:
       consumes:
       - application/json

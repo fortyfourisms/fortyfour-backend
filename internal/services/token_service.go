@@ -85,7 +85,7 @@ func (s *TokenService) SetAuthCookies(w http.ResponseWriter, tokens *models.Toke
 	refreshTokenCookie := &http.Cookie{
 		Name:     "refresh_token",
 		Value:    tokens.RefreshToken,
-		Path:     "/api/auth/refresh", // Only send to refresh endpoint
+		Path:     "/api/refresh", // Only send to refresh endpoint
 		Domain:   s.domain,
 		MaxAge:   7 * 24 * 60 * 60, // 7 days
 		HttpOnly: true,
@@ -187,7 +187,7 @@ func (s *TokenService) ClearAuthCookies(w http.ResponseWriter) {
 	refreshTokenCookie := &http.Cookie{
 		Name:     "refresh_token",
 		Value:    "",
-		Path:     "/api/auth/refresh",
+		Path:     "/api/refresh",
 		Domain:   s.domain,
 		MaxAge:   -1,
 		HttpOnly: true,

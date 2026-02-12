@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/auth/login": {
+        "/api/login": {
             "post": {
                 "description": "Autentikasi user. Token dikirim via HTTP-only cookies, BUKAN di response body.",
                 "consumes": [
@@ -68,7 +68,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/auth/logout": {
+        "/api/logout": {
             "post": {
                 "description": "Revoke refresh token dan hapus cookies autentikasi.",
                 "produces": [
@@ -88,7 +88,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/auth/logout-all": {
+        "/api/logout-all": {
             "post": {
                 "security": [
                     {
@@ -125,7 +125,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/auth/me": {
+        "/api/me": {
             "get": {
                 "security": [
                     {
@@ -157,7 +157,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/auth/refresh": {
+        "/api/refresh": {
             "post": {
                 "description": "Refresh access token menggunakan refresh token dari cookie. Token baru dikirim via HTTP-only cookies.",
                 "produces": [
@@ -183,7 +183,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/auth/register": {
+        "/api/register": {
             "post": {
                 "description": "Mendaftarkan user baru. Token dikirim via HTTP-only cookies, BUKAN di response body.",
                 "consumes": [
