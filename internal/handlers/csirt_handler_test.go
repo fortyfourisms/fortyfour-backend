@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
 	"mime/multipart"
@@ -12,6 +13,8 @@ import (
 
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
+
+	"github.com/stretchr/testify/assert"
 )
 
 //
@@ -102,9 +105,13 @@ func TestCsirtHandler_GetAll_Success(t *testing.T) {
 
 	handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", rr.Code)
-	}
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response []dto.CsirtResponse
+	err := json.NewDecoder(rr.Body).Decode(&response)
+	assert.NoError(t, err)
+	assert.Len(t, response, 1)
+	assert.Equal(t, "CSIRT A", response[0].NamaCsirt)
 }
 
 func TestCsirtHandler_GetAll_ServiceError(t *testing.T) {
@@ -121,9 +128,7 @@ func TestCsirtHandler_GetAll_ServiceError(t *testing.T) {
 
 	handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusInternalServerError {
-		t.Fatalf("expected 500, got %d", rr.Code)
-	}
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
 }
 
 //
@@ -147,9 +152,13 @@ func TestCsirtHandler_GetByID_Success(t *testing.T) {
 
 	handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", rr.Code)
-	}
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response dto.CsirtResponse
+	err := json.NewDecoder(rr.Body).Decode(&response)
+	assert.NoError(t, err)
+	assert.Equal(t, "1", response.ID)
+	assert.Equal(t, "CSIRT A", response.NamaCsirt)
 }
 
 func TestCsirtHandler_GetByID_NotFound(t *testing.T) {
@@ -166,14 +175,51 @@ func TestCsirtHandler_GetByID_NotFound(t *testing.T) {
 
 	handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusNotFound {
-		t.Fatalf("expected 404, got %d", rr.Code)
-	}
+	assert.Equal(t, http.StatusNotFound, rr.Code)
 }
 
 //
 // TESTS — CREATE
 //
+
+func TestCsirtHandler_Create_Success(t *testing.T) {
+	mockSvc := &mockCsirtService{
+		CreateFn: func(req dto.CreateCsirtRequest) (*models.Csirt, error) {
+			assert.Equal(t, "CSIRT A", req.NamaCsirt)
+			return &models.Csirt{
+				ID:        "new-id",
+				NamaCsirt: req.NamaCsirt,
+			}, nil
+		},
+	}
+
+	handler := NewCsirtHandler(mockSvc)
+
+	req, cleanup := createMultipartRequest(
+		t,
+		http.MethodPost,
+		"/api/csirt",
+		map[string]string{
+			"nama_csirt":    "CSIRT A",
+			"id_perusahaan": "1",
+		},
+		map[string]string{
+			"photo_csirt": "image.jpg",
+		},
+	)
+	t.Cleanup(cleanup)
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusCreated, rr.Code)
+
+	var response models.Csirt
+	err := json.NewDecoder(rr.Body).Decode(&response)
+	assert.NoError(t, err)
+	assert.Equal(t, "new-id", response.ID)
+	assert.Equal(t, "CSIRT A", response.NamaCsirt)
+}
 
 func TestCsirtHandler_Create_InvalidMultipart(t *testing.T) {
 	mockSvc := &mockCsirtService{}
@@ -186,9 +232,7 @@ func TestCsirtHandler_Create_InvalidMultipart(t *testing.T) {
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400, got %d", rr.Code)
-	}
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
 
 func TestCsirtHandler_Create_ServiceError(t *testing.T) {
@@ -215,14 +259,143 @@ func TestCsirtHandler_Create_ServiceError(t *testing.T) {
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400, got %d", rr.Code)
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+//
+// TESTS — UPDATE
+//
+
+func TestCsirtHandler_Update_Success(t *testing.T) {
+	mockSvc := &mockCsirtService{
+		UpdateFn: func(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error) {
+			assert.Equal(t, "1", id)
+			assert.Equal(t, "CSIRT Updated", *req.NamaCsirt)
+			return &models.Csirt{
+				ID:        id,
+				NamaCsirt: *req.NamaCsirt,
+			}, nil
+		},
 	}
+
+	handler := NewCsirtHandler(mockSvc)
+
+	req, cleanup := createMultipartRequest(
+		t,
+		http.MethodPut,
+		"/api/csirt/1",
+		map[string]string{
+			"nama_csirt": "CSIRT Updated",
+		},
+		nil,
+	)
+	t.Cleanup(cleanup)
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response models.Csirt
+	err := json.NewDecoder(rr.Body).Decode(&response)
+	assert.NoError(t, err)
+	assert.Equal(t, "1", response.ID)
+	assert.Equal(t, "CSIRT Updated", response.NamaCsirt)
+}
+
+func TestCsirtHandler_Update_NotFound(t *testing.T) {
+	mockSvc := &mockCsirtService{
+		UpdateFn: func(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error) {
+			return nil, errors.New("not found")
+		},
+	}
+
+	handler := NewCsirtHandler(mockSvc)
+
+	req, cleanup := createMultipartRequest(
+		t,
+		http.MethodPut,
+		"/api/csirt/999",
+		map[string]string{
+			"nama_csirt": "CSIRT Updated",
+		},
+		nil,
+	)
+	t.Cleanup(cleanup)
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	// Current implementation returns 400 for all errors in Update
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
+func TestCsirtHandler_Update_Error(t *testing.T) {
+	mockSvc := &mockCsirtService{
+		UpdateFn: func(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error) {
+			return nil, errors.New("db error")
+		},
+	}
+
+	handler := NewCsirtHandler(mockSvc)
+
+	req, cleanup := createMultipartRequest(
+		t,
+		http.MethodPut,
+		"/api/csirt/1",
+		map[string]string{
+			"nama_csirt": "CSIRT Updated",
+		},
+		nil,
+	)
+	t.Cleanup(cleanup)
+
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+
+	// Current implementation returns 400 for all errors in Update
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
 
 //
 // TESTS — DELETE
 //
+
+func TestCsirtHandler_Delete_Success(t *testing.T) {
+	mockSvc := &mockCsirtService{
+		DeleteFn: func(id string) error {
+			assert.Equal(t, "1", id)
+			return nil
+		},
+	}
+
+	handler := NewCsirtHandler(mockSvc)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/csirt/1", nil)
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+}
+
+func TestCsirtHandler_Delete_NotFound(t *testing.T) {
+	mockSvc := &mockCsirtService{
+		DeleteFn: func(id string) error {
+			return errors.New("not found")
+		},
+	}
+
+	handler := NewCsirtHandler(mockSvc)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/csirt/999", nil)
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	// Current implementation returns 400 for all errors in Delete
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
 
 func TestCsirtHandler_Delete_ServiceError(t *testing.T) {
 	mockSvc := &mockCsirtService{
@@ -238,9 +411,7 @@ func TestCsirtHandler_Delete_ServiceError(t *testing.T) {
 
 	handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400, got %d", rr.Code)
-	}
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
 
 //
@@ -257,7 +428,5 @@ func TestCsirtHandler_MethodNotAllowed(t *testing.T) {
 
 	handler.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusMethodNotAllowed {
-		t.Fatalf("expected 405, got %d", rr.Code)
-	}
+	assert.Equal(t, http.StatusMethodNotAllowed, rr.Code)
 }
