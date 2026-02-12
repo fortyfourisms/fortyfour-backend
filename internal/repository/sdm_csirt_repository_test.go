@@ -33,7 +33,7 @@ func TestSdmCsirtRepository_Create(t *testing.T) {
 	defer db.Close()
 
 	t.Run("success with all fields", func(t *testing.T) {
-		idCsirt := "csirt-123"
+		idCsirt := "csirt001"
 		namaPersonel := "John Doe"
 		jabatanCsirt := "Security Analyst"
 		jabatanPerusahaan := "IT Manager"
@@ -48,7 +48,7 @@ func TestSdmCsirtRepository_Create(t *testing.T) {
 			Skill:             &skill,
 			Sertifikasi:       &sertifikasi,
 		}
-		id := "sdm-123"
+		id := "sdm001"
 
 		mock.ExpectExec("INSERT INTO sdm_csirt").
 			WithArgs(id, idCsirt, namaPersonel, jabatanCsirt, jabatanPerusahaan, skill, sertifikasi).
@@ -68,7 +68,7 @@ func TestSdmCsirtRepository_Create(t *testing.T) {
 			Skill:             nil,
 			Sertifikasi:       nil,
 		}
-		id := "sdm-123"
+		id := "sdm001"
 
 		// utils.ValueOrEmpty returns empty string for nil pointer
 		// But we need to pass the actual pointer value (nil) to the function
@@ -83,13 +83,13 @@ func TestSdmCsirtRepository_Create(t *testing.T) {
 	})
 
 	t.Run("database error", func(t *testing.T) {
-		idCsirt := "csirt-123"
+		idCsirt := "csirt001"
 		namaPersonel := "John Doe"
 		req := dto.CreateSdmCsirtRequest{
 			IdCsirt:      &idCsirt,
 			NamaPersonel: &namaPersonel,
 		}
-		id := "sdm-123"
+		id := "sdm001"
 
 		mock.ExpectExec("INSERT INTO sdm_csirt").
 			WithArgs(id, &idCsirt, sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).
@@ -108,7 +108,7 @@ func TestSdmCsirtRepository_Create(t *testing.T) {
 			IdCsirt:      &idCsirt,
 			NamaPersonel: &namaPersonel,
 		}
-		id := "sdm-123"
+		id := "sdm001"
 
 		mock.ExpectExec("INSERT INTO sdm_csirt").
 			WithArgs(id, &idCsirt, sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg()).
@@ -135,12 +135,12 @@ func TestSdmCsirtRepository_GetAll(t *testing.T) {
 			"c.id", "c.nama_csirt", "c.web_csirt", "c.telepon_csirt",
 		}).
 			AddRow(
-				"sdm-1", "John Doe", "Security Analyst", "IT Manager",
+				"sdm001", "John Doe", "Security Analyst", "IT Manager",
 				"Cybersecurity", "CISSP", createdAt, updatedAt,
 				"csirt-1", "CSIRT ABC", "https://csirt-abc.com", "021-111",
 			).
 			AddRow(
-				"sdm-2", "Jane Smith", "Incident Responder", "Security Lead",
+				"sdm002", "Jane Smith", "Incident Responder", "Security Lead",
 				"Forensics", "CEH", createdAt, updatedAt,
 				"csirt-2", "CSIRT XYZ", "https://csirt-xyz.com", "021-222",
 			)
@@ -153,7 +153,7 @@ func TestSdmCsirtRepository_GetAll(t *testing.T) {
 		require.Len(t, result, 2)
 		
 		// Check first record
-		assert.Equal(t, "sdm-1", result[0].ID)
+		assert.Equal(t, "sdm001", result[0].ID)
 		assert.Equal(t, "John Doe", result[0].NamaPersonel)
 		assert.Equal(t, "Security Analyst", result[0].JabatanCsirt)
 		assert.Equal(t, "IT Manager", result[0].JabatanPerusahaan)
@@ -170,7 +170,7 @@ func TestSdmCsirtRepository_GetAll(t *testing.T) {
 		assert.Equal(t, "021-111", *result[0].Csirt.TeleponCsirt)
 		
 		// Check second record
-		assert.Equal(t, "sdm-2", result[1].ID)
+		assert.Equal(t, "sdm002", result[1].ID)
 		assert.Equal(t, "Jane Smith", result[1].NamaPersonel)
 		require.NotNil(t, result[1].Csirt)
 		assert.Equal(t, "csirt-2", result[1].Csirt.ID)
@@ -188,7 +188,7 @@ func TestSdmCsirtRepository_GetAll(t *testing.T) {
 			"c.id", "c.nama_csirt", "c.web_csirt", "c.telepon_csirt",
 		}).
 			AddRow(
-				"sdm-1", "John Doe", "Security Analyst", "IT Manager",
+				"sdm001", "John Doe", "Security Analyst", "IT Manager",
 				"Cybersecurity", "CISSP", createdAt, updatedAt,
 				sql.NullString{Valid: false}, // c.id - this is the key one to check
 				"", // c.nama_csirt - empty string for NULL
@@ -203,7 +203,7 @@ func TestSdmCsirtRepository_GetAll(t *testing.T) {
 		assert.NoError(t, err)
 		require.Len(t, result, 1)
 		
-		assert.Equal(t, "sdm-1", result[0].ID)
+		assert.Equal(t, "sdm001", result[0].ID)
 		assert.Equal(t, "John Doe", result[0].NamaPersonel)
 		assert.Nil(t, result[0].Csirt) // Should be nil when csirtID is not valid
 		
@@ -257,7 +257,7 @@ func TestSdmCsirtRepository_GetByID(t *testing.T) {
 	defer db.Close()
 
 	t.Run("success with csirt", func(t *testing.T) {
-		id := "sdm-123"
+		id := "sdm001"
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
 		
@@ -298,7 +298,7 @@ func TestSdmCsirtRepository_GetByID(t *testing.T) {
 	})
 
 	t.Run("success without csirt (null)", func(t *testing.T) {
-		id := "sdm-123"
+		id := "sdm001"
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
 		
@@ -344,7 +344,7 @@ func TestSdmCsirtRepository_GetByID(t *testing.T) {
 	})
 
 	t.Run("scan error", func(t *testing.T) {
-		id := "sdm-123"
+		id := "sdm001"
 		row := sqlmock.NewRows([]string{"id"}).
 			AddRow(id)
 
@@ -359,7 +359,7 @@ func TestSdmCsirtRepository_GetByID(t *testing.T) {
 	})
 
 	t.Run("database error", func(t *testing.T) {
-		id := "sdm-123"
+		id := "sdm001"
 
 		mock.ExpectQuery("SELECT (.+) FROM sdm_csirt s LEFT JOIN csirt c (.+) WHERE s.id = ?").
 			WithArgs(id).
@@ -378,7 +378,7 @@ func TestSdmCsirtRepository_Update(t *testing.T) {
 	defer db.Close()
 
 	t.Run("success", func(t *testing.T) {
-		id := "sdm-123"
+		id := "sdm001"
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
 		
@@ -410,7 +410,7 @@ func TestSdmCsirtRepository_Update(t *testing.T) {
 	})
 
 	t.Run("database error", func(t *testing.T) {
-		id := "sdm-123"
+		id := "sdm001"
 		sdm := dto.SdmCsirtResponse{
 			NamaPersonel: "John Doe Updated",
 		}
@@ -461,7 +461,7 @@ func TestSdmCsirtRepository_Delete(t *testing.T) {
 	defer db.Close()
 
 	t.Run("success", func(t *testing.T) {
-		id := "sdm-123"
+		id := "sdm001"
 
 		mock.ExpectExec("DELETE FROM sdm_csirt WHERE id=\\?").
 			WithArgs(id).
@@ -473,7 +473,7 @@ func TestSdmCsirtRepository_Delete(t *testing.T) {
 	})
 
 	t.Run("database error", func(t *testing.T) {
-		id := "sdm-123"
+		id := "sdm001"
 
 		mock.ExpectExec("DELETE FROM sdm_csirt WHERE id=\\?").
 			WithArgs(id).
@@ -499,7 +499,7 @@ func TestSdmCsirtRepository_Delete(t *testing.T) {
 	})
 
 	t.Run("multiple rows deleted - not checked by function", func(t *testing.T) {
-		id := "sdm-123"
+		id := "sdm001"
 
 		mock.ExpectExec("DELETE FROM sdm_csirt WHERE id=\\?").
 			WithArgs(id).
