@@ -434,7 +434,7 @@ func TestCsirtService_Update_PartialUpdate(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, res)
-	assert.Equal(t, "CSIRT A", res.NamaCsirt) // Nama tetap sama
+	assert.Equal(t, "CSIRT A", res.NamaCsirt)              // Nama tetap sama
 	assert.Equal(t, "https://new.csirt.com", res.WebCsirt) // Web berubah
 }
 

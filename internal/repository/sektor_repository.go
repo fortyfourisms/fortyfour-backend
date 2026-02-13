@@ -28,7 +28,7 @@ func (r *SektorRepository) GetAll() ([]dto.SektorResponse, error) {
 	defer rows.Close()
 
 	sektorMap := make(map[string]*dto.SektorResponse)
-	
+
 	for rows.Next() {
 		var sektorID, namaSektor, createdAt, updatedAt string
 		var subID, namaSubSektor, idSektor, subCreatedAt, subUpdatedAt sql.NullString
@@ -73,7 +73,7 @@ func (r *SektorRepository) GetAll() ([]dto.SektorResponse, error) {
 
 func (r *SektorRepository) GetByID(id string) (*dto.SektorResponse, error) {
 	row := r.db.QueryRow(`SELECT id, nama_sektor, created_at, updated_at FROM sektor WHERE id=?`, id)
-	
+
 	var sektor dto.SektorResponse
 	err := row.Scan(&sektor.ID, &sektor.NamaSektor, &sektor.CreatedAt, &sektor.UpdatedAt)
 	if err != nil {

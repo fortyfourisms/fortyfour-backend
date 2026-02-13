@@ -43,7 +43,7 @@ func createPerusahaanRouter(
 			// Extract path to check if there's an ID
 			path := strings.TrimPrefix(r.URL.Path, "/api/perusahaan")
 			path = strings.TrimPrefix(path, "/")
-			
+
 			// If no ID, allow public access (for register dropdown)
 			if path == "" {
 				// Public access - just call handler directly
@@ -51,7 +51,7 @@ func createPerusahaanRouter(
 				return
 			}
 		}
-		
+
 		// For all other cases (POST, PUT, DELETE, or GET with ID), require authentication
 		authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH))))(w, r)
 	}
@@ -174,7 +174,7 @@ func InitRouter(
 	mux.HandleFunc("/api/se", authM.Authenticate(utils.AdaptHandler(seH)))
 	mux.HandleFunc("/api/se/", authM.Authenticate(utils.AdaptHandler(seH)))
 
-	// Route Dashboard 
+	// Route Dashboard
 	// Summary: counts per sektor + ikas + se
 	mux.HandleFunc("/api/dashboard/summary", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(dashboardH)))))
 

@@ -17,7 +17,7 @@ func NewSubSektorHandler(service services.SubSektorServiceInterface) *SubSektorH
 
 func (h *SubSektorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/api/sub_sektor")
-	
+
 	// Check for /by-sektor/:id route
 	if strings.HasPrefix(path, "/by_sektor/") {
 		sektorID := strings.TrimPrefix(path, "/by_sektor/")

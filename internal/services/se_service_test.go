@@ -65,11 +65,11 @@ func setupSEService() (SEService, *MockSERepository) {
 
 func createValidSERequest() dto.CreateSERequest {
 	return dto.CreateSERequest{
-		IDPerusahaan:                    "perusahaan-123",
-		NamaSE:                          "Sistem Informasi Keuangan",
-		IpSE:                            "192.168.1.1",
-		AsNumberSE:                      "AS12345",
-		PengelolaSE:                     "IT Department",
+		IDPerusahaan: "perusahaan-123",
+		NamaSE:       "Sistem Informasi Keuangan",
+		IpSE:         "192.168.1.1",
+		AsNumberSE:   "AS12345",
+		PengelolaSE:  "IT Department",
 		// Semua A = 10 x 5 = 50 (Strategis)
 		NilaiInvestasi:                  "A",
 		AnggaranOperasional:             "A",
@@ -206,16 +206,16 @@ func TestSEService_Create_KategoriTinggi(t *testing.T) {
 	req := createValidSERequest()
 	// Mix A, B, C untuk total bobot di range 16-34 (Tinggi)
 	// 5A (25) + 3B (6) + 2C (2) = 33 → Tinggi
-	req.NilaiInvestasi = "A"            
-	req.AnggaranOperasional = "A"       
-	req.KepatuhanPeraturan = "A"        
-	req.TeknikKriptografi = "A"         
-	req.JumlahPengguna = "A"            
-	req.DataPribadi = "B"               
-	req.KlasifikasiData = "B"           
-	req.KekritisanProses = "B"          
-	req.DampakKegagalan = "C"           
-	req.PotensiKerugiandanDampakNegatif = "C" 
+	req.NilaiInvestasi = "A"
+	req.AnggaranOperasional = "A"
+	req.KepatuhanPeraturan = "A"
+	req.TeknikKriptografi = "A"
+	req.JumlahPengguna = "A"
+	req.DataPribadi = "B"
+	req.KlasifikasiData = "B"
+	req.KekritisanProses = "B"
+	req.DampakKegagalan = "C"
+	req.PotensiKerugiandanDampakNegatif = "C"
 
 	expectedResponse := &dto.SEResponse{
 		ID:         "new-se-id",
@@ -455,7 +455,7 @@ func TestSEService_Update_Success_Recategorize(t *testing.T) {
 	newKepatuhanPeraturan := "C"
 	newTeknikKriptografi := "C"
 	newJumlahPengguna := "C"
-	
+
 	req := dto.UpdateSERequest{
 		NilaiInvestasi:      &newNilaiInvestasi,
 		AnggaranOperasional: &newAnggaranOperasional,
