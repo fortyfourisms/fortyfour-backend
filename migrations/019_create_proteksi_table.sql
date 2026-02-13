@@ -1,4 +1,4 @@
-CREATE TABLE `proteksi` (
+CREATE TABLE proteksi (
   id char(36) PRIMARY KEY,
   nilai_proteksi float,
   nilai_subdomain1 float NOT NULL,

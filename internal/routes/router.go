@@ -7,6 +7,7 @@ import (
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/utils"
 	"net/http"
+	"strings"
 	"time"
 
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -25,6 +26,35 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		"status":    "healthy",
 		"timestamp": time.Now().Format(time.RFC3339),
 	})
+}
+
+// createPerusahaanRouter creates a custom router for perusahaan endpoints
+// GET /api/perusahaan (no ID) -> public (for register dropdown)
+// All other methods and GET with ID -> authenticated
+func createPerusahaanRouter(
+	perusahaanH *handlers.PerusahaanHandler,
+	authM *middleware.AuthMiddleware,
+	casbinM *middleware.CasbinMiddleware,
+	moderateLimiter *middleware.RateLimiter,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Check if this is GET request for listing all companies (no ID)
+		if r.Method == http.MethodGet {
+			// Extract path to check if there's an ID
+			path := strings.TrimPrefix(r.URL.Path, "/api/perusahaan")
+			path = strings.TrimPrefix(path, "/")
+			
+			// If no ID, allow public access (for register dropdown)
+			if path == "" {
+				// Public access - just call handler directly
+				perusahaanH.ServeHTTP(w, r)
+				return
+			}
+		}
+		
+		// For all other cases (POST, PUT, DELETE, or GET with ID), require authentication
+		authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH))))(w, r)
+	}
 }
 
 func InitRouter(
@@ -48,11 +78,14 @@ func InitRouter(
 	lenientLimiter *middleware.RateLimiter,
 	csirtH *handlers.CsirtHandler,
 	sdmCsirtH *handlers.SdmCsirtHandler,
-	seCsirtH *handlers.SeCsirtHandler,
+	sektorH *handlers.SektorHandler,
+	subsectorH *handlers.SubSektorHandler,
+	seH *handlers.SEHandler,
+	dashboardH *handlers.DashboardHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
-	// In main():
+	// Health check
 	mux.HandleFunc("/api/health", healthHandler)
 
 	// Routes Auth
@@ -60,6 +93,13 @@ func InitRouter(
 	mux.HandleFunc("/api/login", strictLimiter.LimitByIP(authH.Login))
 	mux.HandleFunc("/api/refresh", strictLimiter.LimitByIP(authH.Refresh))
 	mux.HandleFunc("/api/logout", authH.Logout)
+
+	// MFA endpoints
+	// setup & enable -> protected (require Authorization header)
+	mux.HandleFunc("/api/mfa/setup", strictLimiter.LimitByIP(authH.SetupMFA))
+	mux.HandleFunc("/api/mfa/enable", strictLimiter.LimitByIP(authH.EnableMFA))
+	// verify -> public (called with mfa_token)
+	mux.HandleFunc("/api/mfa/verify", strictLimiter.LimitByIP(authH.VerifyMFA))
 
 	// Routes Users
 	mux.HandleFunc("/api/users", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(userHandler)))))
@@ -77,7 +117,9 @@ func InitRouter(
 	mux.HandleFunc("/api/events/stats", authM.Authenticate(sseH.GetStats))
 
 	// Route Perusahaan
-	mux.HandleFunc("/api/perusahaan", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))))
+	// GET /api/perusahaan (list all) -> PUBLIC untuk dropdown register
+	// Other methods & GET with ID -> AUTHENTICATED
+	mux.HandleFunc("/api/perusahaan", createPerusahaanRouter(perusahaanH, authM, casbinM, moderateLimiter))
 	mux.HandleFunc("/api/perusahaan/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))))
 
 	// Route PIC
@@ -120,12 +162,24 @@ func InitRouter(
 	mux.HandleFunc("/api/sdm_csirt", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
 	mux.HandleFunc("/api/sdm_csirt/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
 
-	// Route SE_CSIRT
-	mux.HandleFunc("/api/se_csirt", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(seCsirtH)))))
-	mux.HandleFunc("/api/se_csirt/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(seCsirtH)))))
+	// Route Sektor
+	mux.HandleFunc("/api/sektor", authM.Authenticate(utils.AdaptHandler(sektorH)))
+	mux.HandleFunc("/api/sektor/", authM.Authenticate(utils.AdaptHandler(sektorH)))
+
+	// Route SubSektor
+	mux.HandleFunc("/api/sub_sektor", authM.Authenticate(utils.AdaptHandler(subsectorH)))
+	mux.HandleFunc("/api/sub_sektor/", authM.Authenticate(utils.AdaptHandler(subsectorH)))
+
+	// Route SE
+	mux.HandleFunc("/api/se", authM.Authenticate(utils.AdaptHandler(seH)))
+	mux.HandleFunc("/api/se/", authM.Authenticate(utils.AdaptHandler(seH)))
+
+	// Route Dashboard 
+	// Summary: counts per sektor + ikas + se
+	mux.HandleFunc("/api/dashboard/summary", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(dashboardH)))))
 
 	// Swagger UI
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
-	return mux
+	return (mux)
 }

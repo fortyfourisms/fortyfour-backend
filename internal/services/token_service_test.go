@@ -5,6 +5,7 @@ import (
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/testhelpers"
 	"testing"
+	"time"
 )
 
 func TestTokenService_GenerateTokenPair_Success(t *testing.T) {
@@ -67,33 +68,62 @@ func TestTokenService_GenerateTokenPair_Success(t *testing.T) {
 }
 
 func TestTokenService_RefreshAccessToken_Success(t *testing.T) {
+	// Arrange
 	redis := testhelpers.NewMockRedisClient()
 	service := NewTokenService(redis, "test-secret", false, "localhost")
 
+	// Generate initial token pair
 	initialTokens, err := service.GenerateTokenPair("1", "testuser", "admin")
 	if err != nil {
-		t.Fatalf("failed generate token pair: %v", err)
+		t.Fatalf("failed to generate initial tokens: %v", err)
 	}
 
+	// Wait lebih lama untuk memastikan timestamp berbeda (1 detik)
+	// JWT exp claim rounded ke seconds, jadi perlu delay untuk token berbeda
+	time.Sleep(1 * time.Second)
+
+	// Act
 	newTokens, err := service.RefreshAccessToken(initialTokens.RefreshToken)
+
+	// Assert
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
 
-	// if newTokens.AccessToken == initialTokens.AccessToken {
-	// 	t.Error("expected new access token to be different")
-	// }
-
-	// ✅ ACCESS TOKEN BOLEH SAMA ATAU BEDA
-	if newTokens.AccessToken == "" {
-		t.Error("expected access token to be generated")
+	if newTokens == nil {
+		t.Fatal("expected new tokens to be returned")
 	}
 
-	// ✅ TOKEN LAMA HARUS DIREVOKE
+	if newTokens.AccessToken == "" {
+		t.Error("expected new access token to be generated")
+	}
+
+	if newTokens.RefreshToken == "" {
+		t.Error("expected new refresh token to be generated")
+	}
+
+	// ACCESS TOKEN: Bisa sama atau beda tergantung timing
+	// JWT tokens bisa sama jika dibuat di detik yang sama karena `exp` claim rounded ke seconds
+	if newTokens.AccessToken == initialTokens.AccessToken {
+		t.Log("Note: Access tokens are the same - this can happen if generated in same second (JWT exp is in seconds)")
+	}
+
+	// REFRESH TOKEN ROTATION: Check apakah token lama di-revoke
 	oldKey := "refresh_token:" + initialTokens.RefreshToken
 	exists, _ := redis.Exists(oldKey)
 	if exists {
-		t.Error("expected old refresh token to be revoked")
+		t.Error("expected old refresh token to be revoked (token rotation)")
+	}
+
+	// Check token baru bisa digunakan
+	if newTokens.RefreshToken == initialTokens.RefreshToken {
+		t.Log("Note: Refresh token not rotated - same token reused")
+	} else {
+		// Verify new refresh token is usable
+		_, err = service.RefreshAccessToken(newTokens.RefreshToken)
+		if err != nil {
+			t.Error("expected new refresh token to be usable")
+		}
 	}
 }
 

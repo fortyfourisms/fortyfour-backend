@@ -18,11 +18,22 @@ type UserRepositoryInterface interface {
 	Delete(id string) error
 	EmailExists(email string, excludeID *string) (bool, error)
 	UsernameExists(username string, excludeID *string) (bool, error)
+	SetMFA(userID string, secret *string, enabled bool) error
 }
 
 type TokenRepositoryInterface interface {
 	GenerateTokenPair(userID, username, role string) (*models.TokenPair, error)
 	RevokeRefreshToken(refreshToken string) error
+}
+
+// PostRepositoryInterface defines methods for post data access
+type PostRepositoryInterface interface {
+	Create(post *models.Post) error
+	FindAll() ([]*models.Post, error)
+	FindByID(id int) (*models.Post, error)
+	FindByAuthorID(authorID string) ([]*models.Post, error)
+	Update(post *models.Post) error
+	Delete(id int) error
 }
 
 // JabatanRepositoryInterface defines methods for jabatan data access
@@ -146,11 +157,25 @@ type SdmCsirtRepositoryInterface interface {
 	Delete(id string) error
 }
 
-// SeCsirtRepositoryInterface
-type SeCsirtRepositoryInterface interface {
-	Create(req dto.CreateSeCsirtRequest, id string) error
-	GetAll() ([]dto.SeCsirtResponse, error)
-	GetByID(id string) (*dto.SeCsirtResponse, error)
-	Update(id string, req dto.SeCsirtResponse) error
+
+// SektorRepositoryInterface
+type SektorRepositoryInterface interface {
+	GetAll() ([]dto.SektorResponse, error)
+	GetByID(id string) (*dto.SektorResponse, error)
+}
+
+// SubSektorRepositoryInterface
+type SubSektorRepositoryInterface interface {
+	GetAll() ([]dto.SubSektorResponse, error)
+	GetByID(id string) (*dto.SubSektorResponse, error)
+	GetBySektorID(sektorID string) ([]dto.SubSektorResponse, error)
+}
+
+// SERepositoryInterface
+type SERepositoryInterface interface {
+	Create(req dto.CreateSERequest, id string, totalBobot int, kategori string) error
+	GetAll() ([]dto.SEResponse, error)
+	GetByID(id string) (*dto.SEResponse, error)
+	Update(id string, req dto.UpdateSERequest, totalBobot int, kategori string) error
 	Delete(id string) error
 }

@@ -1,13 +1,9 @@
--- Create database
-CREATE DATABASE IF NOT EXISTS fortyfour;
-USE fortyfour;
-
 CREATE TABLE users (
     id CHAR(36) PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     email VARCHAR(100) NOT NULL,
-    photo VARCHAR(255) DEFAULT NULL,
+    foto_profile VARCHAR(255) DEFAULT NULL,
     banner VARCHAR(255) DEFAULT NULL,
     role_id CHAR(36) DEFAULT NULL,
     id_jabatan CHAR(36) DEFAULT NULL,

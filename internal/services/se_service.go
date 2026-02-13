@@ -1,0 +1,222 @@
+package services
+
+import (
+	"errors"
+	"strings"
+
+	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/repository"
+
+	"github.com/google/uuid"
+)
+
+type SEService interface {
+	Create(req dto.CreateSERequest) (*dto.SEResponse, error)
+	GetAll() ([]dto.SEResponse, error)
+	GetByID(id string) (*dto.SEResponse, error)
+	Update(id string, req dto.UpdateSERequest) (*dto.SEResponse, error)
+	Delete(id string) error
+}
+
+type seService struct {
+	repo repository.SERepositoryInterface
+}
+
+func NewSEService(repo repository.SERepositoryInterface) SEService {
+	return &seService{repo: repo}
+}
+
+/* =======================
+   CREATE
+======================= */
+
+func (s *seService) Create(req dto.CreateSERequest) (*dto.SEResponse, error) {
+	// Validasi ID Perusahaan
+	if strings.TrimSpace(req.IDPerusahaan) == "" {
+		return nil, errors.New("id_perusahaan wajib diisi")
+	}
+
+	// Validasi informasi SE
+	if strings.TrimSpace(req.NamaSE) == "" {
+		return nil, errors.New("nama_se wajib diisi")
+	}
+	if strings.TrimSpace(req.IpSE) == "" {
+		return nil, errors.New("ip_se wajib diisi")
+	}
+	if strings.TrimSpace(req.AsNumberSE) == "" {
+		return nil, errors.New("as_number_se wajib diisi")
+	}
+	if strings.TrimSpace(req.PengelolaSE) == "" {
+		return nil, errors.New("pengelola_se wajib diisi")
+	}
+
+	// Hitung total bobot dan kategori
+	totalBobot, err := hitungTotalBobotCreate(req)
+	if err != nil {
+		return nil, err
+	}
+
+	kategori := hitungKategoriSE(totalBobot)
+	if kategori == "" {
+		return nil, errors.New("total bobot tidak valid untuk kategorisasi")
+	}
+
+	id := uuid.NewString()
+
+	if err := s.repo.Create(req, id, totalBobot, kategori); err != nil {
+		return nil, err
+	}
+
+	return s.repo.GetByID(id)
+}
+
+/* =======================
+   READ
+======================= */
+
+func (s *seService) GetAll() ([]dto.SEResponse, error) {
+	return s.repo.GetAll()
+}
+
+func (s *seService) GetByID(id string) (*dto.SEResponse, error) {
+	if strings.TrimSpace(id) == "" {
+		return nil, errors.New("id wajib diisi")
+	}
+	return s.repo.GetByID(id)
+}
+
+/* =======================
+   UPDATE
+======================= */
+
+func (s *seService) Update(id string, req dto.UpdateSERequest) (*dto.SEResponse, error) {
+	if strings.TrimSpace(id) == "" {
+		return nil, errors.New("id wajib diisi")
+	}
+
+	// Get existing data untuk kalkulasi ulang
+	existing, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, errors.New("data tidak ditemukan")
+	}
+
+	// Hitung total bobot berdasarkan data yang di-update
+	totalBobot, err := hitungTotalBobotUpdate(req, existing)
+	if err != nil {
+		return nil, err
+	}
+
+	kategori := hitungKategoriSE(totalBobot)
+	if kategori == "" {
+		return nil, errors.New("total bobot tidak valid untuk kategorisasi")
+	}
+
+	if err := s.repo.Update(id, req, totalBobot, kategori); err != nil {
+		return nil, err
+	}
+
+	return s.repo.GetByID(id)
+}
+
+/* =======================
+   DELETE
+======================= */
+
+func (s *seService) Delete(id string) error {
+	if strings.TrimSpace(id) == "" {
+		return errors.New("id wajib diisi")
+	}
+	return s.repo.Delete(id)
+}
+
+/* ======================================================
+   HELPER FUNCTIONS (A/B/C → BOBOT)
+====================================================== */
+
+func jawabanKeBobot(jawaban string) (int, error) {
+	switch strings.ToUpper(strings.TrimSpace(jawaban)) {
+	case "A":
+		return 5, nil
+	case "B":
+		return 2, nil
+	case "C":
+		return 1, nil
+	default:
+		return 0, errors.New("jawaban harus A, B, atau C")
+	}
+}
+
+func hitungTotalBobotCreate(req dto.CreateSERequest) (int, error) {
+	karakteristik := []string{
+		req.NilaiInvestasi,
+		req.AnggaranOperasional,
+		req.KepatuhanPeraturan,
+		req.TeknikKriptografi,
+		req.JumlahPengguna,
+		req.DataPribadi,
+		req.KlasifikasiData,
+		req.KekritisanProses,
+		req.DampakKegagalan,
+		req.PotensiKerugiandanDampakNegatif,
+	}
+
+	total := 0
+	for i, k := range karakteristik {
+		bobot, err := jawabanKeBobot(k)
+		if err != nil {
+			return 0, errors.New("karakteristik " + string(rune(i+1)) + ": " + err.Error())
+		}
+		total += bobot
+	}
+	return total, nil
+}
+
+func hitungTotalBobotUpdate(req dto.UpdateSERequest, existing *dto.SEResponse) (int, error) {
+	// Gunakan nilai existing jika tidak di-update
+	karakteristik := []string{
+		getStringValue(req.NilaiInvestasi, existing.NilaiInvestasi),
+		getStringValue(req.AnggaranOperasional, existing.AnggaranOperasional),
+		getStringValue(req.KepatuhanPeraturan, existing.KepatuhanPeraturan),
+		getStringValue(req.TeknikKriptografi, existing.TeknikKriptografi),
+		getStringValue(req.JumlahPengguna, existing.JumlahPengguna),
+		getStringValue(req.DataPribadi, existing.DataPribadi),
+		getStringValue(req.KlasifikasiData, existing.KlasifikasiData),
+		getStringValue(req.KekritisanProses, existing.KekritisanProses),
+		getStringValue(req.DampakKegagalan, existing.DampakKegagalan),
+		getStringValue(req.PotensiKerugiandanDampakNegatif, existing.PotensiKerugiandanDampakNegatif),
+	}
+
+	total := 0
+	for i, k := range karakteristik {
+		bobot, err := jawabanKeBobot(k)
+		if err != nil {
+			return 0, errors.New("karakteristik " + string(rune(i+1)) + ": " + err.Error())
+		}
+		total += bobot
+	}
+	return total, nil
+}
+
+func getStringValue(newValue *string, existingValue string) string {
+	if newValue != nil {
+		return *newValue
+	}
+	return existingValue
+}
+
+/* =======================
+   KATEGORISASI SE
+======================= */
+
+func hitungKategoriSE(totalBobot int) string {
+	switch {
+	case totalBobot >= 35 && totalBobot <= 50:
+		return "Strategis"
+	case totalBobot >= 16 && totalBobot <= 34:
+		return "Tinggi"
+	case totalBobot >= 10 && totalBobot <= 15:
+		return "Rendah"
+	default:
+		return ""
+	}
+}

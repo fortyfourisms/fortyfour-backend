@@ -9,47 +9,42 @@ import (
 	"github.com/google/uuid"
 )
 
-var validSektors = []string{
-	"Teknologi",
-	"Keuangan",
-	"Pendidikan",
-	"Kesehatan",
-	"Manufaktur",
-	"Layanan",
-	"Transportasi",
-	"Lainnya",
+type PerusahaanServiceInterface interface {
+	GetAll() ([]dto.PerusahaanResponse, error)
+	GetByID(id string) (*dto.PerusahaanResponse, error)
+	Create(req dto.CreatePerusahaanRequest) (*dto.PerusahaanResponse, error)
+	Update(id string, req dto.UpdatePerusahaanRequest) (*dto.PerusahaanResponse, error)
+	Delete(id string) error
 }
 
 type PerusahaanService struct {
-	repo repository.PerusahaanRepositoryInterface
+	repo          repository.PerusahaanRepositoryInterface
+	subSektorRepo repository.SubSektorRepositoryInterface
 }
 
-func NewPerusahaanService(repo repository.PerusahaanRepositoryInterface) *PerusahaanService {
-	return &PerusahaanService{repo: repo}
+func NewPerusahaanService(repo repository.PerusahaanRepositoryInterface, subSektorRepo repository.SubSektorRepositoryInterface) *PerusahaanService {
+	return &PerusahaanService{
+		repo:          repo,
+		subSektorRepo: subSektorRepo,
+	}
 }
 
+// Can be called from admin (full data) OR from registration (minimal data)
 func (s *PerusahaanService) Create(req dto.CreatePerusahaanRequest) (*dto.PerusahaanResponse, error) {
-
-	// Validasi nama perusahaan
+	// Validasi nama perusahaan (WAJIB)
 	if req.NamaPerusahaan == nil || strings.TrimSpace(*req.NamaPerusahaan) == "" {
 		return nil, errors.New("nama_perusahaan wajib diisi")
 	}
 
-	// Validasi sektor
-	if req.Sektor == nil || strings.TrimSpace(*req.Sektor) == "" {
-		return nil, errors.New("sektor wajib diisi")
-	}
-
-	isValidSektor := false
-	for _, s := range validSektors {
-		if *req.Sektor == s {
-			isValidSektor = true
-			break
+	// id_sub_sektor now OPTIONAL - only validate if provided
+	if req.IDSubSektor != nil && strings.TrimSpace(*req.IDSubSektor) != "" {
+		// Cek apakah sub sektor exists (hanya jika diisi)
+		_, err := s.subSektorRepo.GetByID(*req.IDSubSektor)
+		if err != nil {
+			return nil, errors.New("sub sektor tidak ditemukan")
 		}
 	}
-	if !isValidSektor {
-		return nil, errors.New("sektor tidak valid")
-	}
+	// If id_sub_sektor is nil or empty, it will be saved as NULL in database
 
 	// Generate ID dan simpan
 	id := uuid.New().String()
@@ -67,6 +62,7 @@ func (s *PerusahaanService) GetByID(id string) (*dto.PerusahaanResponse, error) 
 	return s.repo.GetByID(id)
 }
 
+// Update method - id_sub_sektor also OPTIONAL
 func (s *PerusahaanService) Update(id string, req dto.UpdatePerusahaanRequest) (*dto.PerusahaanResponse, error) {
 	perusahaan, err := s.repo.GetByID(id)
 	if err != nil {
@@ -77,20 +73,19 @@ func (s *PerusahaanService) Update(id string, req dto.UpdatePerusahaanRequest) (
 	if req.NamaPerusahaan != nil {
 		perusahaan.NamaPerusahaan = *req.NamaPerusahaan
 	}
-	if req.Sektor != nil {
-		// Validasi sektor saat update
-		isValidSektor := false
-		for _, s := range validSektors {
-			if *req.Sektor == s {
-				isValidSektor = true
-				break
-			}
+
+	// Only validate id_sub_sektor if provided
+	if req.IDSubSektor != nil && strings.TrimSpace(*req.IDSubSektor) != "" {
+		// Validasi sub sektor saat update (hanya jika diisi)
+		subSektor, err := s.subSektorRepo.GetByID(*req.IDSubSektor)
+		if err != nil {
+			return nil, errors.New("sub sektor tidak ditemukan")
 		}
-		if !isValidSektor {
-			return nil, errors.New("sektor tidak valid")
-		}
-		perusahaan.Sektor = *req.Sektor
+		// Update SubSektor object
+		perusahaan.SubSektor = subSektor
 	}
+	// If id_sub_sektor is nil or empty, keep existing value
+
 	if req.Alamat != nil {
 		perusahaan.Alamat = *req.Alamat
 	}
