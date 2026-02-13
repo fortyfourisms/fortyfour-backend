@@ -112,11 +112,15 @@ func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
 		SELECT 
 			c.id, c.nama_csirt, c.web_csirt, c.telepon_csirt, 
 			c.photo_csirt, c.file_rfc2350, c.file_public_key_pgp,
-			p.id, p.photo, p.nama_perusahaan, p.sektor,
+			p.id, p.photo, p.nama_perusahaan, 
 			p.alamat, p.telepon, p.email, p.website,
-			p.created_at, p.updated_at
+			p.created_at, p.updated_at,
+			ss.id, ss.nama_sub_sektor, ss.id_sektor, ss.created_at, ss.updated_at,
+			s.nama_sektor
 		FROM csirt c
 		JOIN perusahaan p ON c.id_perusahaan = p.id
+		LEFT JOIN sub_sektor ss ON p.id_sub_sektor = ss.id
+		LEFT JOIN sektor s ON ss.id_sektor = s.id
 	`)
 	if err != nil {
 		return nil, err
@@ -128,6 +132,7 @@ func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
 	for rows.Next() {
 		var csirt dto.CsirtResponse
 		var perusahaan dto.PerusahaanResponse
+		var subID, namaSubSektor, idSektor, namaSektor, subCreatedAt, subUpdatedAt sql.NullString
 
 		err := rows.Scan(
 			&csirt.ID,
@@ -140,16 +145,33 @@ func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
 			&perusahaan.ID,
 			&perusahaan.Photo,
 			&perusahaan.NamaPerusahaan,
-			&perusahaan.Sektor,
 			&perusahaan.Alamat,
 			&perusahaan.Telepon,
 			&perusahaan.Email,
 			&perusahaan.Website,
 			&perusahaan.CreatedAt,
 			&perusahaan.UpdatedAt,
+			&subID,
+			&namaSubSektor,
+			&idSektor,
+			&subCreatedAt,
+			&subUpdatedAt,
+			&namaSektor,
 		)
 		if err != nil {
 			return nil, err
+		}
+
+		// Tambahkan info sub sektor jika ada
+		if subID.Valid {
+			perusahaan.SubSektor = &dto.SubSektorResponse{
+				ID:            subID.String,
+				NamaSubSektor: namaSubSektor.String,
+				IDSektor:      idSektor.String,
+				NamaSektor:    namaSektor.String,
+				CreatedAt:     subCreatedAt.String,
+				UpdatedAt:     subUpdatedAt.String,
+			}
 		}
 
 		csirt.Perusahaan = perusahaan
@@ -169,16 +191,21 @@ func (r *CsirtRepository) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, 
 		SELECT 
 			c.id, c.nama_csirt, c.web_csirt, c.telepon_csirt, 
 			c.photo_csirt, c.file_rfc2350, c.file_public_key_pgp,
-			p.id, p.photo, p.nama_perusahaan, p.sektor,
+			p.id, p.photo, p.nama_perusahaan,
 			p.alamat, p.telepon, p.email, p.website,
-			p.created_at, p.updated_at
+			p.created_at, p.updated_at,
+			ss.id, ss.nama_sub_sektor, ss.id_sektor, ss.created_at, ss.updated_at,
+			s.nama_sektor
 		FROM csirt c
 		JOIN perusahaan p ON c.id_perusahaan = p.id
+		LEFT JOIN sub_sektor ss ON p.id_sub_sektor = ss.id
+		LEFT JOIN sektor s ON ss.id_sektor = s.id
 		WHERE c.id = ?
 	`, id)
 
 	var csirt dto.CsirtResponse
 	var perusahaan dto.PerusahaanResponse
+	var subID, namaSubSektor, idSektor, namaSektor, subCreatedAt, subUpdatedAt sql.NullString
 
 	err := row.Scan(
 		&csirt.ID,
@@ -191,16 +218,33 @@ func (r *CsirtRepository) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, 
 		&perusahaan.ID,
 		&perusahaan.Photo,
 		&perusahaan.NamaPerusahaan,
-		&perusahaan.Sektor,
 		&perusahaan.Alamat,
 		&perusahaan.Telepon,
 		&perusahaan.Email,
 		&perusahaan.Website,
 		&perusahaan.CreatedAt,
 		&perusahaan.UpdatedAt,
+		&subID,
+		&namaSubSektor,
+		&idSektor,
+		&subCreatedAt,
+		&subUpdatedAt,
+		&namaSektor,
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// Tambahkan info sub sektor jika ada
+	if subID.Valid {
+		perusahaan.SubSektor = &dto.SubSektorResponse{
+			ID:            subID.String,
+			NamaSubSektor: namaSubSektor.String,
+			IDSektor:      idSektor.String,
+			NamaSektor:    namaSektor.String,
+			CreatedAt:     subCreatedAt.String,
+			UpdatedAt:     subUpdatedAt.String,
+		}
 	}
 
 	csirt.Perusahaan = perusahaan

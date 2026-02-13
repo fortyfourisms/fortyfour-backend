@@ -9,6 +9,8 @@ import (
 	"fortyfour-backend/pkg/cache"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // ============================================================
@@ -108,7 +110,7 @@ func (m *MockRedisClient) Clear() {
 // ============================================================
 
 type MockUserRepository struct {
-	users map[string]*models.User // KEY = ID
+	users map[string]*models.User
 	mu    sync.RWMutex
 }
 
@@ -130,6 +132,20 @@ func (m *MockUserRepository) Create(user *models.User) error {
 			return errors.New("email already exists")
 		}
 	}
+	// Generate ID if not provided (simulate database auto-generation)
+	if user.ID == "" {
+		user.ID = uuid.New().String()
+	}
+	
+	// Set timestamps
+	now := time.Now()
+	if user.CreatedAt.IsZero() {
+		user.CreatedAt = now
+	}
+	if user.UpdatedAt.IsZero() {
+		user.UpdatedAt = now
+	}
+
 
 	m.users[user.ID] = user
 	return nil
@@ -180,6 +196,108 @@ func (m *MockUserRepository) Delete(id string) error {
 
 	delete(m.users, id)
 	return nil
+}
+
+func (m *MockUserRepository) EmailExists(email string, excludeID *string) (bool, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	for _, user := range m.users {
+		if user.Email == email {
+			if excludeID != nil && user.ID == *excludeID {
+				continue
+			}
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (m *MockUserRepository) UsernameExists(username string, excludeID *string) (bool, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	for _, user := range m.users {
+		if user.Username == username {
+			if excludeID != nil && user.ID == *excludeID {
+				continue
+			}
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (m *MockUserRepository) FindAll() ([]models.User, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	users := make([]models.User, 0, len(m.users))
+	for _, user := range m.users {
+		users = append(users, *user)
+	}
+	return users, nil
+}
+
+func (m *MockUserRepository) GetPasswordByID(id string) (string, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	for _, user := range m.users {
+		if user.ID == id {
+			return user.Password, nil
+		}
+	}
+	return "", errors.New("user not found")
+}
+
+func (m *MockUserRepository) UpdateWithPhoto(user *models.User) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// Find user by ID
+	for _, u := range m.users {
+		if u.ID == user.ID {
+			// Update all fields
+			u.Username = user.Username
+			u.Email = user.Email
+			u.RoleID = user.RoleID
+			u.IDJabatan = user.IDJabatan
+			u.FotoProfile = user.FotoProfile
+			u.Banner = user.Banner
+			u.UpdatedAt = user.UpdatedAt
+			return nil
+		}
+	}
+	return errors.New("user not found")
+}
+
+func (m *MockUserRepository) UpdatePassword(id, hashedPassword string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for _, user := range m.users {
+		if user.ID == id {
+			user.Password = hashedPassword
+			return nil
+		}
+	}
+	return errors.New("user not found")
+}
+
+// SetMFA - mock implementation to satisfy interface and tests
+func (m *MockUserRepository) SetMFA(userID string, secret *string, enabled bool) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for _, u := range m.users {
+		if u.ID == userID {
+			u.MFAEnabled = enabled
+			u.MFASecret = secret
+			return nil
+		}
+	}
+	return errors.New("user not found")
 }
 
 // ============================================================
@@ -265,94 +383,6 @@ func (m *MockPostRepository) Delete(id int) error {
 	}
 	delete(m.posts, id)
 	return nil
-}
-
-func (m *MockUserRepository) EmailExists(email string, excludeID *string) (bool, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	for _, user := range m.users {
-		if user.Email == email {
-			if excludeID != nil && user.ID == *excludeID {
-				continue
-			}
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
-func (m *MockUserRepository) UsernameExists(username string, excludeID *string) (bool, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	user, exists := m.users[username]
-	if !exists {
-		return false, nil
-	}
-
-	if excludeID != nil && user.ID == *excludeID {
-		return false, nil
-	}
-
-	return true, nil
-}
-
-func (m *MockUserRepository) FindAll() ([]models.User, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	users := make([]models.User, 0, len(m.users))
-	for _, user := range m.users {
-		users = append(users, *user)
-	}
-	return users, nil
-}
-
-func (m *MockUserRepository) GetPasswordByID(id string) (string, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	for _, user := range m.users {
-		if user.ID == id {
-			return user.Password, nil
-		}
-	}
-	return "", errors.New("user not found")
-}
-
-func (m *MockUserRepository) UpdateWithPhoto(user *models.User) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	// Find user by ID
-	for _, u := range m.users {
-		if u.ID == user.ID {
-			// Update all fields
-			u.Username = user.Username
-			u.Email = user.Email
-			u.RoleID = user.RoleID
-			u.IDJabatan = user.IDJabatan
-			u.FotoProfile = user.FotoProfile
-			u.Banner = user.Banner
-			u.UpdatedAt = user.UpdatedAt
-			return nil
-		}
-	}
-	return errors.New("user not found")
-}
-
-func (m *MockUserRepository) UpdatePassword(id, hashedPassword string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	for _, user := range m.users {
-		if user.ID == id {
-			user.Password = hashedPassword
-			return nil
-		}
-	}
-	return errors.New("user not found")
 }
 
 // ============================================================
@@ -1006,6 +1036,168 @@ func (m *MockPerusahaanRepository) Delete(id string) error {
 	if _, exists := m.perusahaans[id]; !exists {
 		return errors.New("perusahaan not found")
 	}
+	delete(m.perusahaans, id)
+	return nil
+}
+
+// ============================================================
+// Mock Perusahaan Service
+// ============================================================
+type MockPerusahaanService struct {
+	mu          sync.Mutex
+	perusahaans map[string]*dto.PerusahaanResponse
+	nextID      int
+	failCreate  bool
+	failUpdate  bool
+	failDelete  bool
+	failGetByID bool
+	failGetAll  bool
+}
+
+func NewMockPerusahaanService() *MockPerusahaanService {
+	return &MockPerusahaanService{
+		perusahaans: make(map[string]*dto.PerusahaanResponse),
+		nextID:      1,
+	}
+}
+
+func (m *MockPerusahaanService) GetAll() ([]dto.PerusahaanResponse, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.failGetAll {
+		return nil, errors.New("get all failed")
+	}
+
+	result := make([]dto.PerusahaanResponse, 0, len(m.perusahaans))
+	for _, p := range m.perusahaans {
+		result = append(result, *p)
+	}
+	return result, nil
+}
+
+func (m *MockPerusahaanService) GetByID(id string) (*dto.PerusahaanResponse, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.failGetByID {
+		return nil, errors.New("get by id failed")
+	}
+
+	p, exists := m.perusahaans[id]
+	if !exists {
+		return nil, errors.New("perusahaan not found")
+	}
+	return p, nil
+}
+
+func (m *MockPerusahaanService) Create(req dto.CreatePerusahaanRequest) (*dto.PerusahaanResponse, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.failCreate {
+		return nil, errors.New("create failed")
+	}
+
+	id := fmt.Sprintf("perusahaan-%d", m.nextID)
+	m.nextID++
+
+	namaPerusahaan := ""
+	if req.NamaPerusahaan != nil {
+		namaPerusahaan = *req.NamaPerusahaan
+	}
+	
+	alamat := ""
+	if req.Alamat != nil {
+		alamat = *req.Alamat
+	}
+	
+	telepon := ""
+	if req.Telepon != nil {
+		telepon = *req.Telepon
+	}
+	
+	email := ""
+	if req.Email != nil {
+		email = *req.Email
+	}
+	
+	website := ""
+	if req.Website != nil {
+		website = *req.Website
+	}
+	
+	photo := ""
+	if req.Photo != nil {
+		photo = *req.Photo
+	}
+
+	response := &dto.PerusahaanResponse{
+		ID:             id,
+		Photo:          photo,
+		NamaPerusahaan: namaPerusahaan,
+		Alamat:         alamat,
+		Telepon:        telepon,
+		Email:          email,
+		Website:        website,
+		CreatedAt:      time.Now().Format(time.RFC3339),
+		UpdatedAt:      time.Now().Format(time.RFC3339),
+	}
+
+	m.perusahaans[id] = response
+	return response, nil
+}
+
+func (m *MockPerusahaanService) Update(id string, req dto.UpdatePerusahaanRequest) (*dto.PerusahaanResponse, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.failUpdate {
+		return nil, errors.New("update failed")
+	}
+
+	p, exists := m.perusahaans[id]
+	if !exists {
+		return nil, errors.New("perusahaan not found")
+	}
+
+	// Update fields if provided
+	if req.NamaPerusahaan != nil {
+		p.NamaPerusahaan = *req.NamaPerusahaan
+	}
+	if req.Alamat != nil {
+		p.Alamat = *req.Alamat
+	}
+	if req.Telepon != nil {
+		p.Telepon = *req.Telepon
+	}
+	if req.Email != nil {
+		p.Email = *req.Email
+	}
+	if req.Website != nil {
+		p.Website = *req.Website
+	}
+	if req.Photo != nil {
+		p.Photo = *req.Photo
+	}
+	
+	p.UpdatedAt = time.Now().Format(time.RFC3339)
+
+	return p, nil
+}
+
+func (m *MockPerusahaanService) Delete(id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.failDelete {
+		return errors.New("delete failed")
+	}
+
+	if _, exists := m.perusahaans[id]; !exists {
+		return errors.New("perusahaan not found")
+	}
+
 	delete(m.perusahaans, id)
 	return nil
 }

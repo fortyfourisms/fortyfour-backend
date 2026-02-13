@@ -88,13 +88,16 @@ func main() {
 	ikasRepo := repository.NewIkasRepository(db)
 	csirtRepo := repository.NewCsirtRepository(db)
 	sdmCsirtRepo := repository.NewSdmCsirtRepository(db)
-	seCsirtRepo := repository.NewSeCsirtRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
+	sektorRepo := repository.NewSektorRepository(db)
+	subSektorRepo := repository.NewSubSektorRepository(db)
+	seRepo := repository.NewSERepository(db)
+	dashboardRepo := repository.NewDashboardRepository(db)
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret, true, cfg.Domain)
 	authService := services.NewAuthService(userRepo, tokenService)
-	perusahaanService := services.NewPerusahaanService(perusahaanRepo)
+	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo)
 	picService := services.NewPICService(picRepo)
 	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
 	jabatanService := services.NewJabatanService(jabatanRepo)
@@ -104,12 +107,15 @@ func main() {
 	ikasService := services.NewIkasService(ikasRepo)
 	csirtService := services.NewCsirtService(csirtRepo)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo)
-	seCsirtService := services.NewSeCsirtService(seCsirtRepo)
 	userService := services.NewUserService(userRepo, "./uploads")
 	roleService := services.NewRoleService(roleRepo)
+	sektorService := services.NewSektorService(sektorRepo)
+	subSektorService := services.NewSubSektorService(subSektorRepo)
+	seService := services.NewSEService(seRepo)
+	dashboardService := services.NewDashboardService(dashboardRepo)
 
 	// Initialize Handlers
-	authHandler := handlers.NewAuthHandler(authService, tokenService)
+	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService)
 	userHandler := handlers.NewUserHandler(userService, "./uploads", sseService)
 	uploadPath := "./uploads"
 	os.MkdirAll(uploadPath, os.ModePerm)
@@ -123,11 +129,14 @@ func main() {
 	ikasHandler := handlers.NewIkasHandler(ikasService, sseService)
 	csirtHandler := handlers.NewCsirtHandler(csirtService)
 	sdmCsirtHandler := handlers.NewSdmCsirtHandler(sdmCsirtService)
-	seCsirtHandler := handlers.NewSeCsirtHandler(seCsirtService)
 	roleHandler := handlers.NewRoleHandler(roleService, sseService)
 	casbinHandler := handlers.NewCasbinHandler(casbinService, sseService)
 	sseHandler := handlers.NewSSEHandler(sseService)
-
+	sektorHandler := handlers.NewSektorHandler(sektorService)
+	subSektorHandler := handlers.NewSubSektorHandler(subSektorService)
+	seHandler := handlers.NewSEHandler(seService, sseService)
+	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
+	
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(tokenService)
 	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
@@ -161,7 +170,10 @@ func main() {
 		lenientLimiter,
 		csirtHandler,
 		sdmCsirtHandler,
-		seCsirtHandler,
+		sektorHandler,
+		subSektorHandler,
+		seHandler,
+		dashboardHandler,
 	)
 
 	// Start server

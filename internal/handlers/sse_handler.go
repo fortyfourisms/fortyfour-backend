@@ -1,6 +1,3 @@
-// File: internal/handlers/sse_handler.go
-// BUAT FILE BARU INI
-
 package handlers
 
 import (

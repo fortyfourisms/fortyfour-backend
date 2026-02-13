@@ -16,10 +16,11 @@ import (
 )
 
 type CsirtHandler struct {
-	service *services.CsirtService
+	service services.CsirtServiceInterface
 }
 
-func NewCsirtHandler(service *services.CsirtService) *CsirtHandler {
+
+func NewCsirtHandler(service services.CsirtServiceInterface) *CsirtHandler {
 	return &CsirtHandler{service: service}
 }
 

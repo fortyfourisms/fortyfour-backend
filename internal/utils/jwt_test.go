@@ -294,7 +294,7 @@ func TestValidateAccessToken_InvalidToken(t *testing.T) {
 
 func TestValidateAccessToken_ExpiredToken(t *testing.T) {
 	// Create an expired token
-	expiresAt := time.Now().Add(-1 * time.Hour) // Already expired
+	expiresAt := time.Now().Add(-1 * time.Hour)
 
 	claims := jwt.MapClaims{
 		"user_id":  "user123",
