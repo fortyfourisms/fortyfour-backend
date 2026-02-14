@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
-	"image/png"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -136,12 +135,12 @@ func createTestImage(width, height int) []byte {
 	return buf.Bytes()
 }
 
-func createTestImagePNG(width, height int) []byte {
-	img := image.NewRGBA(image.Rect(0, 0, width, height))
-	buf := new(bytes.Buffer)
-	png.Encode(buf, img)
-	return buf.Bytes()
-}
+// func createTestImagePNG(width, height int) []byte {
+// 	img := image.NewRGBA(image.Rect(0, 0, width, height))
+// 	buf := new(bytes.Buffer)
+// 	png.Encode(buf, img)
+// 	return buf.Bytes()
+// }
 
 func setupHandler(t *testing.T) (*handlers.PerusahaanHandler, *mockPerusahaanService, *mockSSEService, string) {
 	mockSvc := new(mockPerusahaanService)
