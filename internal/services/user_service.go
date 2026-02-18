@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/validator"
 
@@ -19,12 +21,14 @@ import (
 type UserService struct {
 	repo       repository.UserRepositoryInterface
 	uploadPath string
+	producer   *rabbitmq.Producer
 }
 
-func NewUserService(repo repository.UserRepositoryInterface, uploadPath string) *UserService {
+func NewUserService(repo repository.UserRepositoryInterface, uploadPath string, producer *rabbitmq.Producer) *UserService {
 	return &UserService{
 		repo:       repo,
 		uploadPath: uploadPath,
+		producer:   producer,
 	}
 }
 
@@ -107,6 +111,16 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*dto.UserResponse, erro
 		return nil, err
 	}
 
+	// Publish UserCreated event
+	if s.producer != nil {
+		go func() {
+			if err := s.producer.PublishUserCreated(context.Background(), user); err != nil {
+				// Log error but don't fail the request
+				// log.Printf("Failed to publish UserCreated event: %v", err)
+			}
+		}()
+	}
+
 	response := s.toResponse(user)
 	return &response, nil
 }
@@ -177,6 +191,15 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 		return nil, err
 	}
 
+	// Publish UserUpdated event
+	if s.producer != nil {
+		go func() {
+			if err := s.producer.PublishUserUpdated(context.Background(), user); err != nil {
+				// Log error
+			}
+		}()
+	}
+
 	response := s.toResponse(user)
 	return &response, nil
 }
@@ -217,7 +240,24 @@ func (s *UserService) UpdatePassword(id string, req dto.UpdateUserPasswordReques
 		return err
 	}
 
-	return s.repo.UpdatePassword(id, string(hashedPassword))
+	if err := s.repo.UpdatePassword(id, string(hashedPassword)); err != nil {
+		return err
+	}
+
+	// Publish UserPasswordUpdated event
+	if s.producer != nil {
+		go func() {
+			event := map[string]string{
+				"id":         id,
+				"updated_at": time.Now().Format(time.RFC3339),
+			}
+			if err := s.producer.PublishUserPasswordUpdated(context.Background(), event); err != nil {
+				// Log error
+			}
+		}()
+	}
+
+	return nil
 }
 
 func (s *UserService) UpdateProfilePhoto(id string, filename string) (*dto.UserResponse, error) {
@@ -292,7 +332,24 @@ func (s *UserService) Delete(id string) error {
 		os.Remove(bannerPath)
 	}
 
-	return s.repo.Delete(id)
+	if err := s.repo.Delete(id); err != nil {
+		return err
+	}
+
+	// Publish UserDeleted event
+	if s.producer != nil {
+		go func() {
+			event := map[string]string{
+				"id":         id,
+				"deleted_at": time.Now().Format(time.RFC3339),
+			}
+			if err := s.producer.PublishUserDeleted(context.Background(), event); err != nil {
+				// Log error
+			}
+		}()
+	}
+
+	return nil
 }
 
 func (s *UserService) toResponse(user *models.User) dto.UserResponse {

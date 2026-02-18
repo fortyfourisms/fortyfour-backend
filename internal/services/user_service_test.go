@@ -13,7 +13,8 @@ func setupUserService() (*UserService, *testhelpers.MockUserRepository) {
 	mockRepo := testhelpers.NewMockUserRepository()
 	uploadPath := "./test_uploads"
 	_ = os.MkdirAll(uploadPath, os.ModePerm)
-	service := NewUserService(mockRepo, uploadPath)
+
+	service := NewUserService(mockRepo, uploadPath, nil)
 	return service, mockRepo
 }
 

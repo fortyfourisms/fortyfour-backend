@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
@@ -9,12 +10,14 @@ import (
 	"fortyfour-backend/internal/config"
 	"fortyfour-backend/internal/handlers"
 	"fortyfour-backend/internal/middleware"
+	usersRmq "fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/routes"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/pkg/cache"
 	"fortyfour-backend/pkg/database"
+	pkgRmq "fortyfour-backend/pkg/rabbitmq"
 
 	"github.com/joho/godotenv"
 	"github.com/rollbar/rollbar-go"
@@ -69,6 +72,47 @@ func main() {
 	}
 	defer redisClient.Close()
 
+	// Initialize RabbitMQ
+	rmq, err := pkgRmq.NewRabbitMQ(cfg.RabbitMQ.GetURL())
+	if err != nil {
+		rollbar.Error(err)
+		rollbar.Wait()
+		log.Fatal("Failed to connect to RabbitMQ:", err)
+	}
+	defer rmq.Close()
+	log.Println("RabbitMQ initialized successfully")
+	rollbar.Info("RabbitMQ initialized successfully")
+
+	// Setup RabbitMQ infrastructure (Users)
+	if err := usersRmq.SetupInfrastructure(rmq); err != nil {
+		log.Println("Failed to setup Users RabbitMQ infrastructure:", err)
+		rollbar.Error(err)
+		log.Fatal(err)
+	}
+
+	log.Println("RabbitMQ infrastructure initialized successfully")
+	rollbar.Info("RabbitMQ infrastructure initialized successfully")
+
+	// Create Shared Producer and Consumer
+	sharedProducer := pkgRmq.NewProducer(rmq.GetChannel())
+	sharedConsumer := pkgRmq.NewConsumer(rmq.GetChannel())
+
+	// Wrap with specific Producer
+	usersProducer := usersRmq.NewProducer(sharedProducer)
+
+	// Wrap with specific Consumer
+	usersConsumer := usersRmq.NewConsumer(sharedConsumer)
+
+	// Start consumers in background
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if err := usersConsumer.StartAllConsumers(ctx); err != nil {
+		log.Println("Failed to start Users consumers:", err)
+		rollbar.Error(err)
+		log.Fatal(err)
+	}
+
 	// Initialize Casbin Service with GORM Adapter
 	casbinService, err := services.NewCasbinService(cfg.Database.GetDSN(), cfg.CasbinModelPath)
 	if err != nil {
@@ -121,7 +165,7 @@ func main() {
 	gulihService := services.NewGulihService(gulihRepo)
 	csirtService := services.NewCsirtService(csirtRepo)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo)
-	userService := services.NewUserService(userRepo, "./uploads")
+	userService := services.NewUserService(userRepo, "./uploads", usersProducer)
 	roleService := services.NewRoleService(roleRepo)
 	chatService := services.NewChatService(chatRepo, geminiClient, db)
 	sektorService := services.NewSektorService(sektorRepo)

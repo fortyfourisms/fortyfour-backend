@@ -5,7 +5,7 @@ import (
 	"ikas/internal/config"
 	"ikas/internal/handlers"
 	"ikas/internal/middleware"
-	"ikas/internal/rabbitmq"
+	internalRmq "ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/routes"
 	"ikas/internal/services"
@@ -16,6 +16,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	pkgRmq "fortyfour-backend/pkg/rabbitmq"
 
 	"github.com/rollbar/rollbar-go"
 )
@@ -66,8 +68,8 @@ func main() {
 	rollbar.Info("Redis initialized successfully")
 	defer redisClient.Close()
 
-	// Initialize RabbitMQ
-	rmq, err := rabbitmq.NewRabbitMQ(cfg.RabbitMQ.GetURL())
+	// Initialize RabbitMQ (Shared Package)
+	rmq, err := pkgRmq.NewRabbitMQ(cfg.RabbitMQ.GetURL())
 	if err != nil {
 		log.Println("Failed to connect to RabbitMQ:", err)
 		rollbar.Error(err)
@@ -75,8 +77,8 @@ func main() {
 	}
 	defer rmq.Close()
 
-	// Setup RabbitMQ infrastructure (exchanges, queues, bindings)
-	if err := rmq.SetupInfrastructure(); err != nil {
+	// Setup RabbitMQ infrastructure (Specific to IKAS)
+	if err := internalRmq.SetupInfrastructure(rmq); err != nil {
 		log.Println("Failed to setup RabbitMQ infrastructure:", err)
 		rollbar.Error(err)
 		log.Fatal(err)
@@ -84,9 +86,13 @@ func main() {
 	log.Println("RabbitMQ initialized successfully")
 	rollbar.Info("RabbitMQ initialized successfully")
 
-	// Create Producer and Consumer
-	msgProducer := rabbitmq.NewProducer(rmq.GetChannel())
-	msgConsumer := rabbitmq.NewConsumer(rmq.GetChannel())
+	// Create Shared Producer and Consumer
+	sharedProducer := pkgRmq.NewProducer(rmq.GetChannel())
+	sharedConsumer := pkgRmq.NewConsumer(rmq.GetChannel())
+
+	// Wrap with IKAS specific Producer and Consumer
+	msgProducer := internalRmq.NewProducer(sharedProducer)
+	msgConsumer := internalRmq.NewConsumer(sharedConsumer)
 
 	// Start consumers in background
 	ctx, cancel := context.WithCancel(context.Background())

@@ -14,6 +14,7 @@ type Config struct {
 	Redis           RedisConfig
 	CasbinModelPath string
 	Rollbar         RollbarConfig
+	RabbitMQ        RabbitMQConfig
 }
 
 type DatabaseConfig struct {
@@ -36,6 +37,18 @@ type RollbarConfig struct {
 	Env   string
 }
 
+type RabbitMQConfig struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	Vhost    string
+}
+
+func (r *RabbitMQConfig) GetURL() string {
+	return "amqp://" + r.User + ":" + r.Password + "@" + r.Host + ":" + r.Port + r.Vhost
+}
+
 func Load() *Config {
 	absPath, _ := filepath.Abs("casbin/casbin_model.conf")
 	return &Config{
@@ -54,6 +67,13 @@ func Load() *Config {
 			Port:     getEnv("REDIS_PORT", "6379"),
 			Password: getEnv("REDIS_PASSWORD", ""),
 			DB:       getEnvAsInt("REDIS_DB", 0),
+		},
+		RabbitMQ: RabbitMQConfig{
+			Host:     getEnv("RABBITMQ_HOST", "localhost"),
+			Port:     getEnv("RABBITMQ_PORT", "5672"),
+			User:     getEnv("RABBITMQ_USER", "guest"),
+			Password: getEnv("RABBITMQ_PASSWORD", "guest"),
+			Vhost:    getEnv("RABBITMQ_VHOST", "/"),
 		},
 		CasbinModelPath: getEnv("CASBIN_MODEL_PATH", absPath),
 		Rollbar: RollbarConfig{
