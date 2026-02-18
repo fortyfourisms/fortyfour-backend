@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 
+	"fortyfour-backend/internal/dto/dto_event"
 	"fortyfour-backend/pkg/rabbitmq"
 )
 
@@ -23,7 +24,7 @@ func NewConsumer(c *rabbitmq.Consumer) *Consumer {
 // ConsumeUserCreated
 func (c *Consumer) ConsumeUserCreated(ctx context.Context) error {
 	return c.Consume(ctx, "users.created", func(ctx context.Context, body []byte) error {
-		var event map[string]interface{}
+		var event dto_event.UserCreatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
 			return err
 		}
@@ -38,7 +39,7 @@ func (c *Consumer) ConsumeUserCreated(ctx context.Context) error {
 // ConsumeUserUpdated
 func (c *Consumer) ConsumeUserUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "users.updated", func(ctx context.Context, body []byte) error {
-		var event map[string]interface{}
+		var event dto_event.UserUpdatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
 			return err
 		}
@@ -53,7 +54,7 @@ func (c *Consumer) ConsumeUserUpdated(ctx context.Context) error {
 // ConsumeUserDeleted
 func (c *Consumer) ConsumeUserDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "users.deleted", func(ctx context.Context, body []byte) error {
-		var event map[string]interface{}
+		var event dto_event.UserDeletedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
 			return err
 		}
@@ -68,7 +69,7 @@ func (c *Consumer) ConsumeUserDeleted(ctx context.Context) error {
 // ConsumeUserPasswordUpdated
 func (c *Consumer) ConsumeUserPasswordUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "users.password_updated", func(ctx context.Context, body []byte) error {
-		var event map[string]interface{}
+		var event dto_event.UserPasswordUpdatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
 			return err
 		}

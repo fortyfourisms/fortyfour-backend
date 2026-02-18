@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/dto/dto_event"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
@@ -114,7 +115,18 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*dto.UserResponse, erro
 	// Publish UserCreated event
 	if s.producer != nil {
 		go func() {
-			if err := s.producer.PublishUserCreated(context.Background(), user); err != nil {
+			roleID := ""
+			if user.RoleID != nil {
+				roleID = *user.RoleID
+			}
+			event := dto_event.UserCreatedEvent{
+				ID:        user.ID,
+				Username:  user.Username,
+				Email:     user.Email,
+				RoleID:    roleID,
+				CreatedAt: user.CreatedAt,
+			}
+			if err := s.producer.PublishUserCreated(context.Background(), event); err != nil {
 				// Log error but don't fail the request
 				// log.Printf("Failed to publish UserCreated event: %v", err)
 			}
@@ -194,7 +206,18 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 	// Publish UserUpdated event
 	if s.producer != nil {
 		go func() {
-			if err := s.producer.PublishUserUpdated(context.Background(), user); err != nil {
+			roleID := ""
+			if user.RoleID != nil {
+				roleID = *user.RoleID
+			}
+			event := dto_event.UserUpdatedEvent{
+				ID:        user.ID,
+				Username:  user.Username,
+				Email:     user.Email,
+				RoleID:    roleID,
+				UpdatedAt: user.UpdatedAt,
+			}
+			if err := s.producer.PublishUserUpdated(context.Background(), event); err != nil {
 				// Log error
 			}
 		}()
@@ -247,9 +270,9 @@ func (s *UserService) UpdatePassword(id string, req dto.UpdateUserPasswordReques
 	// Publish UserPasswordUpdated event
 	if s.producer != nil {
 		go func() {
-			event := map[string]string{
-				"id":         id,
-				"updated_at": time.Now().Format(time.RFC3339),
+			event := dto_event.UserPasswordUpdatedEvent{
+				ID:        id,
+				UpdatedAt: time.Now(),
 			}
 			if err := s.producer.PublishUserPasswordUpdated(context.Background(), event); err != nil {
 				// Log error
@@ -339,9 +362,9 @@ func (s *UserService) Delete(id string) error {
 	// Publish UserDeleted event
 	if s.producer != nil {
 		go func() {
-			event := map[string]string{
-				"id":         id,
-				"deleted_at": time.Now().Format(time.RFC3339),
+			event := dto_event.UserDeletedEvent{
+				ID:        id,
+				DeletedAt: time.Now(),
 			}
 			if err := s.producer.PublishUserDeleted(context.Background(), event); err != nil {
 				// Log error
