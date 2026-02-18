@@ -41,7 +41,7 @@ func (m *MockDashboardRepository) SeGlobalAgg(ctx context.Context) (dto.SeAgg, e
 */
 
 func createServiceWithMockRepo(mockRepo *MockDashboardRepository) *DashboardService {
-	return NewDashboardService(mockRepo)
+	return NewDashboardService(mockRepo, nil)
 }
 
 /*
@@ -240,7 +240,7 @@ func TestDashboardService_GetSummary_SeGlobalAggError(t *testing.T) {
 func TestNewDashboardService(t *testing.T) {
 	mockRepo := new(MockDashboardRepository)
 
-	service := NewDashboardService(mockRepo)
+	service := NewDashboardService(mockRepo, nil)
 
 	assert.NotNil(t, service)
 	assert.NotNil(t, service.repo)

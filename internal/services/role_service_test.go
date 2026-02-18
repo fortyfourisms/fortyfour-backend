@@ -14,7 +14,7 @@ import (
 
 func setupRoleService() (*RoleService, repository.RoleRepository) {
 	mockRepo := testhelpers.NewMockRoleRepository()
-	service := NewRoleService(mockRepo)
+	service := NewRoleService(mockRepo, nil)
 	return service, mockRepo
 }
 

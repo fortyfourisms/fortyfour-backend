@@ -2,8 +2,10 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/pkg/cache"
 )
 
 /*
@@ -25,14 +27,31 @@ type DashboardRepositoryInterface interface {
 
 type DashboardService struct {
 	repo DashboardRepositoryInterface
+	rc   cache.RedisInterface
 }
 
-func NewDashboardService(repo DashboardRepositoryInterface) *DashboardService {
-	return &DashboardService{repo: repo}
+func NewDashboardService(repo DashboardRepositoryInterface, rc cache.RedisInterface) *DashboardService {
+	return &DashboardService{repo: repo, rc: rc}
 }
 
 // GetSummary returns aggregated summary (sektor counts + se)
 func (s *DashboardService) GetSummary(ctx context.Context, from, to *string) (*dto.DashboardSummary, error) {
+	// Key dinamis berdasarkan filter tanggal
+	fromStr := "nil"
+	toStr := "nil"
+	if from != nil {
+		fromStr = *from
+	}
+	if to != nil {
+		toStr = *to
+	}
+	key := fmt.Sprintf("dashboard:summary:%s:%s", fromStr, toStr)
+
+	var result dto.DashboardSummary
+	if cacheGet(s.rc, key, &result) {
+		return &result, nil
+	}
+
 	sectors, err := s.repo.CountPerSektor(ctx, from, to)
 	if err != nil {
 		return nil, err
@@ -46,9 +65,13 @@ func (s *DashboardService) GetSummary(ctx context.Context, from, to *string) (*d
 	if err != nil {
 		return nil, err
 	}
-	return &dto.DashboardSummary{
+
+	summary := &dto.DashboardSummary{
 		Sektor: sectors,
 		// Ikas:   ikasAgg, // TODO: re-enable ikas summary when ikas table is ready
 		SE:     seAgg,
-	}, nil
+	}
+
+	cacheSet(s.rc, key, summary, TTLList)
+	return summary, nil
 }

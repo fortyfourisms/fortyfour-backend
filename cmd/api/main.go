@@ -97,7 +97,7 @@ func main() {
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret, true, cfg.Domain)
 	authService := services.NewAuthService(userRepo, tokenService)
-	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo)
+	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo, redisClient)
 	picService := services.NewPICService(picRepo)
 	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
 	jabatanService := services.NewJabatanService(jabatanRepo, redisClient)
@@ -108,11 +108,11 @@ func main() {
 	csirtService := services.NewCsirtService(csirtRepo)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo)
 	userService := services.NewUserService(userRepo, "./uploads")
-	roleService := services.NewRoleService(roleRepo)
+	roleService := services.NewRoleService(roleRepo, redisClient)
 	sektorService := services.NewSektorService(sektorRepo, redisClient)
 	subSektorService := services.NewSubSektorService(subSektorRepo, redisClient)
 	seService := services.NewSEService(seRepo)
-	dashboardService := services.NewDashboardService(dashboardRepo)
+	dashboardService := services.NewDashboardService(dashboardRepo, redisClient)
 
 	// Initialize Handlers
 	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService)
