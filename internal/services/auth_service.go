@@ -28,9 +28,12 @@ func NewAuthService(userRepo repository.UserRepositoryInterface, tokenService *T
 	}
 }
 
-/* ------------------------------
-   Helper: map models -> dto
-   ------------------------------ */
+/*
+------------------------------
+
+	Helper: map models -> dto
+	------------------------------
+*/
 func mapTokenPairToDTO(m *models.TokenPair) *dto.TokenPair {
 	if m == nil {
 		return nil
@@ -74,7 +77,7 @@ func (s *AuthService) Register(
 	// ===== VALIDASI PASSWORD =====
 	personalInfo := []string{username, email}
 	config := validator.DefaultPasswordConfig()
-	
+
 	// Validasi password dengan semua kriteria keamanan
 	if err := validator.ValidatePassword(password, config, personalInfo...); err != nil {
 		return nil, nil, err
@@ -120,7 +123,7 @@ func (s *AuthService) Register(
 			NamaPerusahaan: &namaPerusahaanTrimmed,
 			// IDSubSektor is nil - will be NULL in database
 		}
-		
+
 		perusahaan, err := perusahaanService.Create(createReq)
 		if err != nil {
 			return nil, nil, fmt.Errorf("gagal membuat perusahaan: %v", err)

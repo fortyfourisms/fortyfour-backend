@@ -136,7 +136,7 @@ func main() {
 	subSektorHandler := handlers.NewSubSektorHandler(subSektorService)
 	seHandler := handlers.NewSEHandler(seService, sseService)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
-	
+
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(tokenService)
 	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())

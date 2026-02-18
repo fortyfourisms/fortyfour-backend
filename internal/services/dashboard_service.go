@@ -49,6 +49,6 @@ func (s *DashboardService) GetSummary(ctx context.Context, from, to *string) (*d
 	return &dto.DashboardSummary{
 		Sektor: sectors,
 		// Ikas:   ikasAgg, // TODO: re-enable ikas summary when ikas table is ready
-		SE:     seAgg,
+		SE: seAgg,
 	}, nil
 }

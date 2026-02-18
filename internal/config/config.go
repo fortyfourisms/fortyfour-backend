@@ -41,7 +41,7 @@ func Load() *Config {
 	return &Config{
 		Port:      getEnv("PORT", ":8080"),
 		JWTSecret: getEnv("JWT_SECRET", "your-secret-key"),
-		Domain:    getEnv("DOMAIN", "https://admin.kssindustri.site"),
+		Domain:    getEnv("DOMAIN", "admin.kssindustri.site"),
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnv("DB_PORT", "3306"),

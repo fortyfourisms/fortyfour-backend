@@ -667,7 +667,6 @@ func TestAuthHandler_EnableMFA_ExpiredSetupToken(t *testing.T) {
 	}
 }
 
-
 func TestAuthHandler_EnableMFA_NoToken(t *testing.T) {
 	// Arrange
 	handler, _ := setupAuthHandler()

@@ -162,7 +162,7 @@ func TestRateLimitConfigs_StrictValues(t *testing.T) {
 
 	// Test exact values for Strict config (to catch unintended changes)
 	strictConfig := configs.Strict
-	
+
 	assert.Equal(t, 5, strictConfig.RequestsPerWindow,
 		"Strict requests per window should be 5")
 	assert.Equal(t, 1*time.Minute, strictConfig.WindowDuration,
@@ -176,7 +176,7 @@ func TestRateLimitConfigs_ModerateValues(t *testing.T) {
 
 	// Test exact values for Moderate config
 	moderateConfig := configs.Moderate
-	
+
 	assert.Equal(t, 100, moderateConfig.RequestsPerWindow,
 		"Moderate requests per window should be 100")
 	assert.Equal(t, 1*time.Minute, moderateConfig.WindowDuration,
@@ -190,7 +190,7 @@ func TestRateLimitConfigs_LenientValues(t *testing.T) {
 
 	// Test exact values for Lenient config
 	lenientConfig := configs.Lenient
-	
+
 	assert.Equal(t, 1000, lenientConfig.RequestsPerWindow,
 		"Lenient requests per window should be 1000")
 	assert.Equal(t, 1*time.Minute, lenientConfig.WindowDuration,

@@ -320,11 +320,11 @@ func TestAuthMiddleware_Authenticate_MultipleCookiesWithSameName(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
-	
+
 	// Add multiple cookies with the same name (first one should be used)
 	req.AddCookie(createAccessTokenCookie(validToken))
 	req.AddCookie(createAccessTokenCookie("invalid-token"))
-	
+
 	w := httptest.NewRecorder()
 
 	handler(w, req)
@@ -390,7 +390,6 @@ func TestAuthMiddleware_Authenticate_ContextValueTypes(t *testing.T) {
 }
 
 // ========== AUTO REFRESH TESTS ==========
-
 
 func TestAuthMiddleware_AutoRefresh_ValidTokenNoRefreshNeeded(t *testing.T) {
 	tokenService := createTestTokenService()
@@ -617,11 +616,11 @@ func TestAuthMiddleware_AutoRefresh_ErrorResponseFormat(t *testing.T) {
 	handler(w, req)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
-	
+
 	// Verify response is JSON
 	contentType := w.Header().Get("Content-Type")
 	assert.Contains(t, contentType, "application/json")
-	
+
 	// Response body should contain error message
 	assert.NotEmpty(t, w.Body.String())
 }

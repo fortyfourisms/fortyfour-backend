@@ -137,7 +137,7 @@ func TestGetAllSektor_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Len(t, result, 3)
-	
+
 	// Verify ILMATE
 	assert.Equal(t, "ILMATE", result[0].NamaSektor)
 	assert.Len(t, result[0].SubSektor, 4)
@@ -145,7 +145,7 @@ func TestGetAllSektor_Success(t *testing.T) {
 	assert.Equal(t, "Permesinan & alat pertanian", result[0].SubSektor[1].NamaSubSektor)
 	assert.Equal(t, "Transportasi, maritim & pertahanan", result[0].SubSektor[2].NamaSubSektor)
 	assert.Equal(t, "Elektronika & telematika", result[0].SubSektor[3].NamaSubSektor)
-	
+
 	// Verify Agro
 	assert.Equal(t, "Agro", result[1].NamaSektor)
 	assert.Len(t, result[1].SubSektor, 4)
@@ -153,7 +153,7 @@ func TestGetAllSektor_Success(t *testing.T) {
 	assert.Equal(t, "Pangan & perikanan", result[1].SubSektor[1].NamaSubSektor)
 	assert.Equal(t, "Minuman, tembakau & bahan penyegar", result[1].SubSektor[2].NamaSubSektor)
 	assert.Equal(t, "Kemurgi, oleokimia & pakan", result[1].SubSektor[3].NamaSubSektor)
-	
+
 	// Verify IKFT
 	assert.Equal(t, "IKFT", result[2].NamaSektor)
 	assert.Len(t, result[2].SubSektor, 4)
@@ -502,7 +502,7 @@ func TestGetAllSektor_VerifySubSektorData(t *testing.T) {
 	// Assert
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
-	
+
 	// Verify sub sektor data lengkap
 	subSektor := result[0].SubSektor[0]
 	assert.Equal(t, "sub-1", subSektor.ID)
@@ -541,13 +541,13 @@ func TestGetAllSektor_VerifyAllThreeSektors(t *testing.T) {
 	// Assert
 	assert.NoError(t, err)
 	assert.Len(t, result, 3)
-	
+
 	// Verify sektor names match master data
 	sektorNames := []string{}
 	for _, sektor := range result {
 		sektorNames = append(sektorNames, sektor.NamaSektor)
 	}
-	
+
 	assert.Contains(t, sektorNames, "ILMATE")
 	assert.Contains(t, sektorNames, "Agro")
 	assert.Contains(t, sektorNames, "IKFT")

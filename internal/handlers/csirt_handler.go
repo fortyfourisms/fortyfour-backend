@@ -19,7 +19,6 @@ type CsirtHandler struct {
 	service services.CsirtServiceInterface
 }
 
-
 func NewCsirtHandler(service services.CsirtServiceInterface) *CsirtHandler {
 	return &CsirtHandler{service: service}
 }

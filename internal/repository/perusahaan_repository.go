@@ -55,12 +55,12 @@ func (r *PerusahaanRepository) GetAll() ([]dto.PerusahaanResponse, error) {
 		var p dto.PerusahaanResponse
 		var photo, alamat, telepon, email, website sql.NullString
 		var subID, namaSubSektor, idSektor, namaSektor, subCreatedAt, subUpdatedAt sql.NullString
-		
+
 		err := rows.Scan(
-			&p.ID, &photo, &p.NamaPerusahaan, 
-			&alamat, &telepon, &email, &website, 
+			&p.ID, &photo, &p.NamaPerusahaan,
+			&alamat, &telepon, &email, &website,
 			&p.CreatedAt, &p.UpdatedAt,
-			&subID, &namaSubSektor, &idSektor, &subCreatedAt, &subUpdatedAt, 
+			&subID, &namaSubSektor, &idSektor, &subCreatedAt, &subUpdatedAt,
 			&namaSektor,
 		)
 		if err != nil {
@@ -100,14 +100,14 @@ func (r *PerusahaanRepository) GetByID(id string) (*dto.PerusahaanResponse, erro
 		LEFT JOIN sektor s ON ss.id_sektor = s.id
 		WHERE p.id=?
 	`, id)
-	
+
 	var p dto.PerusahaanResponse
 	var photo, alamat, telepon, email, website sql.NullString
 	var subID, namaSubSektor, idSektor, namaSektor, subCreatedAt, subUpdatedAt sql.NullString
-	
+
 	err := row.Scan(
-		&p.ID, &photo, &p.NamaPerusahaan, 
-		&alamat, &telepon, &email, &website, 
+		&p.ID, &photo, &p.NamaPerusahaan,
+		&alamat, &telepon, &email, &website,
 		&p.CreatedAt, &p.UpdatedAt,
 		&subID, &namaSubSektor, &idSektor, &subCreatedAt, &subUpdatedAt,
 		&namaSektor,
@@ -144,7 +144,7 @@ func (r *PerusahaanRepository) Update(id string, p dto.PerusahaanResponse) error
 	} else {
 		idSubSektor = nil
 	}
-	
+
 	_, err := r.db.Exec(`UPDATE perusahaan SET
         photo=?, nama_perusahaan=?, id_sub_sektor=?, alamat=?, telepon=?, email=?, website=?, updated_at=CURRENT_TIMESTAMP
         WHERE id=?`,

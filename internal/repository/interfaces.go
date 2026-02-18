@@ -157,7 +157,6 @@ type SdmCsirtRepositoryInterface interface {
 	Delete(id string) error
 }
 
-
 // SektorRepositoryInterface
 type SektorRepositoryInterface interface {
 	GetAll() ([]dto.SektorResponse, error)

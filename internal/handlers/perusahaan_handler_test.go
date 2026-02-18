@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"image"
 	"image/jpeg"
-	"image/png"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -110,12 +109,12 @@ func createMultipartRequest(method, url string, fields map[string]string, files 
 		h := make(textproto.MIMEHeader)
 		h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="test.jpg"`, fieldName))
 		h.Set("Content-Type", "image/jpeg")
-		
+
 		part, err := writer.CreatePart(h)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		_, err = part.Write(fileData)
 		if err != nil {
 			return nil, err
@@ -136,12 +135,12 @@ func createTestImage(width, height int) []byte {
 	return buf.Bytes()
 }
 
-func createTestImagePNG(width, height int) []byte {
-	img := image.NewRGBA(image.Rect(0, 0, width, height))
-	buf := new(bytes.Buffer)
-	png.Encode(buf, img)
-	return buf.Bytes()
-}
+// func createTestImagePNG(width, height int) []byte {
+// 	img := image.NewRGBA(image.Rect(0, 0, width, height))
+// 	buf := new(bytes.Buffer)
+// 	png.Encode(buf, img)
+// 	return buf.Bytes()
+// }
 
 func setupHandler(t *testing.T) (*handlers.PerusahaanHandler, *mockPerusahaanService, *mockSSEService, string) {
 	mockSvc := new(mockPerusahaanService)
@@ -179,7 +178,7 @@ func TestPerusahaanHandler_GetAll_Success(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
-	
+
 	var response []dto.PerusahaanResponse
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -204,7 +203,7 @@ func TestPerusahaanHandler_GetAll_EmptyResult(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
-	
+
 	var response []dto.PerusahaanResponse
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -224,7 +223,7 @@ func TestPerusahaanHandler_GetAll_ServiceError(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -256,7 +255,7 @@ func TestPerusahaanHandler_GetByID_Success(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
-	
+
 	var response dto.PerusahaanResponse
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -278,7 +277,7 @@ func TestPerusahaanHandler_GetByID_NotFound(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusNotFound, rr.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -346,7 +345,7 @@ func TestPerusahaanHandler_Create_Success_MinimalData(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusCreated, rr.Code)
-	
+
 	var response dto.PerusahaanResponse
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -383,11 +382,11 @@ func TestPerusahaanHandler_Create_Success_CompleteData(t *testing.T) {
 		},
 		nil,
 	)
-	
+
 	// Add user context
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "test-user-id")
 	req = req.WithContext(ctx)
-	
+
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)
@@ -425,7 +424,7 @@ func TestPerusahaanHandler_Create_Success_WithPhoto(t *testing.T) {
 			"photo": testImage,
 		},
 	)
-	
+
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)
@@ -456,7 +455,7 @@ func TestPerusahaanHandler_Create_WithIDInURL_ShouldFail(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -477,7 +476,7 @@ func TestPerusahaanHandler_Create_InvalidFormData(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -506,7 +505,7 @@ func TestPerusahaanHandler_Create_ServiceError(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -550,17 +549,17 @@ func TestPerusahaanHandler_Create_InvalidPhotoFormat(t *testing.T) {
 	// Create multipart with non-image content type
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	
+
 	_ = writer.WriteField("nama_perusahaan", "PT Test")
-	
+
 	// Create file part with text/plain content type (not image/*)
 	h := make(textproto.MIMEHeader)
 	h.Set("Content-Disposition", `form-data; name="photo"; filename="test.txt"`)
 	h.Set("Content-Type", "text/plain")
-	
+
 	part, _ := writer.CreatePart(h)
 	part.Write(invalidImage)
-	
+
 	writer.Close()
 
 	req := httptest.NewRequest(http.MethodPost, "/api/perusahaan", body)
@@ -605,7 +604,7 @@ func TestPerusahaanHandler_Update_Success_MinimalData(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
-	
+
 	var response dto.PerusahaanResponse
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -635,10 +634,10 @@ func TestPerusahaanHandler_Update_Success_WithUserContext(t *testing.T) {
 		},
 		nil,
 	)
-	
+
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "user-123")
 	req = req.WithContext(ctx)
-	
+
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)
@@ -687,7 +686,7 @@ func TestPerusahaanHandler_Update_WithNewPhoto(t *testing.T) {
 			"photo": testImage,
 		},
 	)
-	
+
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)
@@ -714,7 +713,7 @@ func TestPerusahaanHandler_Update_WithoutID_ShouldFail(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -758,7 +757,7 @@ func TestPerusahaanHandler_Update_ServiceError(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -788,7 +787,7 @@ func TestPerusahaanHandler_Delete_Success(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusOK, rr.Code)
-	
+
 	var response map[string]string
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -811,7 +810,7 @@ func TestPerusahaanHandler_Delete_Success_WithUserContext(t *testing.T) {
 	req := httptest.NewRequest(http.MethodDelete, "/api/perusahaan/delete-id", nil)
 	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "user-456")
 	req = req.WithContext(ctx)
-	
+
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)
@@ -861,7 +860,7 @@ func TestPerusahaanHandler_Delete_WithoutID_ShouldFail(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -886,7 +885,7 @@ func TestPerusahaanHandler_Delete_ServiceError(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)

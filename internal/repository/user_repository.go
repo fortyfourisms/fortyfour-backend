@@ -73,14 +73,14 @@ func (r *UserRepository) FindByID(id string) (*models.User, error) {
 
 	user := &models.User{}
 	var (
-		roleID        sql.NullString
-		roleName      sql.NullString
-		idJabatan     sql.NullString
-		jabatanName   sql.NullString
-		idPerusahaan  sql.NullString
-		fotoProfile   sql.NullString
-		banner        sql.NullString
-		mfaSecret     sql.NullString
+		roleID       sql.NullString
+		roleName     sql.NullString
+		idJabatan    sql.NullString
+		jabatanName  sql.NullString
+		idPerusahaan sql.NullString
+		fotoProfile  sql.NullString
+		banner       sql.NullString
+		mfaSecret    sql.NullString
 	)
 
 	err := r.db.QueryRow(query, id).Scan(
@@ -159,14 +159,14 @@ func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
 
 	user := &models.User{}
 	var (
-		roleID        sql.NullString
-		roleName      sql.NullString
-		idJabatan     sql.NullString
-		jabatanName   sql.NullString
-		idPerusahaan  sql.NullString
-		fotoProfile   sql.NullString
-		banner        sql.NullString
-		mfaSecret     sql.NullString
+		roleID       sql.NullString
+		roleName     sql.NullString
+		idJabatan    sql.NullString
+		jabatanName  sql.NullString
+		idPerusahaan sql.NullString
+		fotoProfile  sql.NullString
+		banner       sql.NullString
+		mfaSecret    sql.NullString
 	)
 
 	err := r.db.QueryRow(query, username).Scan(
