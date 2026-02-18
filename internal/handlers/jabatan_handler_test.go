@@ -17,7 +17,7 @@ import (
 func setupJabatanHandler() (*JabatanHandler, repository.JabatanRepositoryInterface, *services.SSEService) {
 	mockRepo := testhelpers.NewMockJabatanRepository()
 	sseService := services.NewSSEService()
-	jabatanService := services.NewJabatanService(mockRepo)
+	jabatanService := services.NewJabatanService(mockRepo, nil)
 	handler := NewJabatanHandler(jabatanService, sseService)
 	return handler, mockRepo, sseService
 }

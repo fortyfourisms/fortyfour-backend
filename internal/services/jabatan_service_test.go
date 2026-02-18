@@ -66,7 +66,7 @@ func TestCreateJabatan_Success(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	req := dto.CreateJabatanRequest{
 		NamaJabatan: &nama,
@@ -135,7 +135,7 @@ func TestCreateJabatan_SuccessWithVariousNames(t *testing.T) {
 				},
 			}
 
-			service := NewJabatanService(repo)
+			service := NewJabatanService(repo, nil)
 
 			req := dto.CreateJabatanRequest{
 				NamaJabatan: &tc.namaJabatan,
@@ -164,7 +164,7 @@ func TestCreateJabatan_SuccessWithVariousNames(t *testing.T) {
 func TestCreateJabatan_ValidationFailed_NilName(t *testing.T) {
 	repo := &mockJabatanRepository{}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	req := dto.CreateJabatanRequest{
 		NamaJabatan: nil,
@@ -181,7 +181,7 @@ func TestCreateJabatan_ValidationFailed_EmptyName(t *testing.T) {
 	emptyName := ""
 	repo := &mockJabatanRepository{}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	req := dto.CreateJabatanRequest{
 		NamaJabatan: &emptyName,
@@ -209,7 +209,7 @@ func TestCreateJabatan_ValidationFailed_WhitespaceName(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			repo := &mockJabatanRepository{}
-			service := NewJabatanService(repo)
+			service := NewJabatanService(repo, nil)
 
 			req := dto.CreateJabatanRequest{
 				NamaJabatan: &tc.namaInput,
@@ -239,7 +239,7 @@ func TestCreateJabatan_RepoFailed_CreateError(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	req := dto.CreateJabatanRequest{
 		NamaJabatan: &nama,
@@ -264,7 +264,7 @@ func TestCreateJabatan_RepoFailed_GetByIDError(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	req := dto.CreateJabatanRequest{
 		NamaJabatan: &nama,
@@ -285,7 +285,7 @@ func TestCreateJabatan_DuplicateName(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	req := dto.CreateJabatanRequest{
 		NamaJabatan: &nama,
@@ -323,7 +323,7 @@ func TestGetAllJabatan_Success(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	data, err := service.GetAll()
 
@@ -340,7 +340,7 @@ func TestGetAllJabatan_EmptyResult(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	data, err := service.GetAll()
 
@@ -363,7 +363,7 @@ func TestGetAllJabatan_MultipleRecords(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	data, err := service.GetAll()
 
@@ -384,7 +384,7 @@ func TestGetAllJabatan_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	data, err := service.GetAll()
 
@@ -400,7 +400,7 @@ func TestGetAllJabatan_ConnectionError(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	data, err := service.GetAll()
 
@@ -426,7 +426,7 @@ func TestGetJabatanByID_Success(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	result, err := service.GetByID("123")
 
@@ -455,7 +455,7 @@ func TestGetJabatanByID_DifferentIDs(t *testing.T) {
 				},
 			}
 
-			service := NewJabatanService(repo)
+			service := NewJabatanService(repo, nil)
 
 			result, err := service.GetByID(id)
 
@@ -478,7 +478,7 @@ func TestGetJabatanByID_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	result, err := service.GetByID("invalid-id")
 
@@ -497,7 +497,7 @@ func TestGetJabatanByID_EmptyID(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	result, err := service.GetByID("")
 
@@ -512,7 +512,7 @@ func TestGetJabatanByID_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	result, err := service.GetByID("123")
 
@@ -543,7 +543,7 @@ func TestUpdateJabatan_Success(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	req := dto.UpdateJabatanRequest{
 		NamaJabatan: &newName,
@@ -569,7 +569,7 @@ func TestUpdateJabatan_NoFieldsToUpdate(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	// Empty update request
 	req := dto.UpdateJabatanRequest{}
@@ -607,7 +607,7 @@ func TestUpdateJabatan_DifferentNames(t *testing.T) {
 				},
 			}
 
-			service := NewJabatanService(repo)
+			service := NewJabatanService(repo, nil)
 
 			req := dto.UpdateJabatanRequest{
 				NamaJabatan: &tc.newName,
@@ -640,7 +640,7 @@ func TestUpdateJabatan_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	req := dto.UpdateJabatanRequest{
 		NamaJabatan: &newName,
@@ -668,7 +668,7 @@ func TestUpdateJabatan_RepositoryUpdateFailed(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	req := dto.UpdateJabatanRequest{
 		NamaJabatan: &newName,
@@ -692,7 +692,7 @@ func TestUpdateJabatan_EmptyID(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	req := dto.UpdateJabatanRequest{
 		NamaJabatan: &newName,
@@ -719,7 +719,7 @@ func TestUpdateJabatan_DuplicateName(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	req := dto.UpdateJabatanRequest{
 		NamaJabatan: &duplicateName,
@@ -744,7 +744,7 @@ func TestDeleteJabatan_Success(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	err := service.Delete("123")
 
@@ -765,7 +765,7 @@ func TestDeleteJabatan_MultipleIDs(t *testing.T) {
 				},
 			}
 
-			service := NewJabatanService(repo)
+			service := NewJabatanService(repo, nil)
 
 			err := service.Delete(id)
 
@@ -788,7 +788,7 @@ func TestDeleteJabatan_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	err := service.Delete("invalid-id")
 
@@ -806,7 +806,7 @@ func TestDeleteJabatan_EmptyID(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	err := service.Delete("")
 
@@ -820,7 +820,7 @@ func TestDeleteJabatan_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	err := service.Delete("123")
 
@@ -835,7 +835,7 @@ func TestDeleteJabatan_HasDependencies(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	err := service.Delete("123")
 
@@ -850,7 +850,7 @@ func TestDeleteJabatan_ForeignKeyConstraint(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	err := service.Delete("123")
 
@@ -884,7 +884,7 @@ func TestJabatanService_CreateThenGetByID(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	// Create
 	created, err := service.Create(dto.CreateJabatanRequest{
@@ -930,7 +930,7 @@ func TestJabatanService_CreateUpdateDelete(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	// 1. Create
 	created, err := service.Create(dto.CreateJabatanRequest{NamaJabatan: &nama})
@@ -975,7 +975,7 @@ func TestJabatanService_SpecialCharactersInName(t *testing.T) {
 				},
 			}
 
-			service := NewJabatanService(repo)
+			service := NewJabatanService(repo, nil)
 
 			result, err := service.Create(dto.CreateJabatanRequest{NamaJabatan: &name})
 
@@ -1000,7 +1000,7 @@ func TestJabatanService_VeryLongName(t *testing.T) {
 		},
 	}
 
-	service := NewJabatanService(repo)
+	service := NewJabatanService(repo, nil)
 
 	result, err := service.Create(dto.CreateJabatanRequest{NamaJabatan: &longName})
 
@@ -1030,7 +1030,7 @@ func TestJabatanService_UnicodeCharacters(t *testing.T) {
 				},
 			}
 
-			service := NewJabatanService(repo)
+			service := NewJabatanService(repo, nil)
 
 			result, err := service.Create(dto.CreateJabatanRequest{NamaJabatan: &name})
 

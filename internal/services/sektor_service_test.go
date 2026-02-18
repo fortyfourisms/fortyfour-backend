@@ -128,7 +128,7 @@ func TestGetAllSektor_Success(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetAll()
@@ -171,7 +171,7 @@ func TestGetAllSektor_EmptyResult(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetAll()
@@ -190,7 +190,7 @@ func TestGetAllSektor_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetAll()
@@ -247,7 +247,7 @@ func TestGetSektorByID_Success_ILMATE(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("sektor-1")
@@ -304,7 +304,7 @@ func TestGetSektorByID_Success_Agro(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("sektor-2")
@@ -359,7 +359,7 @@ func TestGetSektorByID_Success_IKFT(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("sektor-3")
@@ -384,7 +384,7 @@ func TestGetSektorByID_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("invalid-id")
@@ -411,7 +411,7 @@ func TestGetSektorByID_WithoutSubSektor(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("sektor-empty")
@@ -431,7 +431,7 @@ func TestGetSektorByID_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("sektor-1")
@@ -459,7 +459,7 @@ func TestGetSektorByID_EmptyID(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("")
@@ -494,7 +494,7 @@ func TestGetAllSektor_VerifySubSektorData(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetAll()
@@ -533,7 +533,7 @@ func TestGetAllSektor_VerifyAllThreeSektors(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetAll()

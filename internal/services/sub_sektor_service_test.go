@@ -148,7 +148,7 @@ func TestGetAllSubSektor_Success(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetAll()
@@ -185,7 +185,7 @@ func TestGetAllSubSektor_EmptyResult(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetAll()
@@ -204,7 +204,7 @@ func TestGetAllSubSektor_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetAll()
@@ -241,7 +241,7 @@ func TestGetSubSektorByID_Success_ILMATE(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("sub-1")
@@ -277,7 +277,7 @@ func TestGetSubSektorByID_Success_Agro(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("sub-5")
@@ -311,7 +311,7 @@ func TestGetSubSektorByID_Success_IKFT(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("sub-9")
@@ -333,7 +333,7 @@ func TestGetSubSektorByID_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("invalid-id")
@@ -355,7 +355,7 @@ func TestGetSubSektorByID_EmptyID(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("")
@@ -373,7 +373,7 @@ func TestGetSubSektorByID_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("sub-1")
@@ -436,7 +436,7 @@ func TestGetSubSektorBySektorID_Success_ILMATE(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetBySektorID("sektor-1")
@@ -503,7 +503,7 @@ func TestGetSubSektorBySektorID_Success_Agro(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetBySektorID("sektor-2")
@@ -568,7 +568,7 @@ func TestGetSubSektorBySektorID_Success_IKFT(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetBySektorID("sektor-3")
@@ -591,7 +591,7 @@ func TestGetSubSektorBySektorID_EmptyResult(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetBySektorID("sektor-empty")
@@ -610,7 +610,7 @@ func TestGetSubSektorBySektorID_InvalidSektorID(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetBySektorID("invalid-sektor-id")
@@ -629,7 +629,7 @@ func TestGetSubSektorBySektorID_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetBySektorID("sektor-1")
@@ -672,7 +672,7 @@ func TestGetSubSektorBySektorID_MultipleSektors(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act & Assert - ILMATE
 	result1, err1 := service.GetBySektorID("sektor-1")
@@ -715,7 +715,7 @@ func TestSubSektor_DataIntegrity(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetAll()
@@ -793,7 +793,7 @@ func TestSubSektor_VerifyMasterDataCompliance(t *testing.T) {
 		},
 	}
 
-	service := NewSubSektorService(repo)
+	service := NewSubSektorService(repo, nil)
 
 	// Test untuk setiap sektor
 	testCases := []struct {
