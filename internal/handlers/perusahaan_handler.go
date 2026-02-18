@@ -33,12 +33,16 @@ const (
 )
 
 type PerusahaanHandler struct {
-	service    *services.PerusahaanService
+	service    services.PerusahaanServiceInterface
 	uploadPath string
-	sseService *services.SSEService
+	sseService services.SSEServiceInterface
 }
 
-func NewPerusahaanHandler(service *services.PerusahaanService, uploadPath string, sseService *services.SSEService) *PerusahaanHandler {
+func NewPerusahaanHandler(
+	service services.PerusahaanServiceInterface,
+	uploadPath string,
+	sseService services.SSEServiceInterface,
+) *PerusahaanHandler {
 	return &PerusahaanHandler{
 		service:    service,
 		uploadPath: uploadPath,
@@ -123,7 +127,7 @@ func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, _ *http.Request
 // @Accept       json
 // @Produce      json
 // @Param        perusahaan body dto.CreatePerusahaanRequest true "Data perusahaan"
-// @Success      201  {object} dto.DeteksiResponse
+// @Success      201  {object} dto.PerusahaanResponse
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/perusahaan [post]
 func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
@@ -260,14 +264,14 @@ func (h *PerusahaanHandler) deleteOldPhoto(id string) {
 	if err == nil && perusahaan.Photo != "" {
 		rollbar.Error(err)
 		oldPath := filepath.Join(h.uploadPath, perusahaan.Photo)
-		os.Remove(oldPath) // ignore error
+		os.Remove(oldPath)
 	}
 }
 
 func (h *PerusahaanHandler) parseCreateForm(form *multipart.Form) dto.CreatePerusahaanRequest {
 	return dto.CreatePerusahaanRequest{
 		NamaPerusahaan: getFormValue(form, "nama_perusahaan"),
-		Sektor:         getFormValue(form, "sektor"),
+		IDSubSektor:    getFormValue(form, "id_sub_sektor"),
 		Alamat:         getFormValue(form, "alamat"),
 		Telepon:        getFormValue(form, "telepon"),
 		Email:          getFormValue(form, "email"),
@@ -278,7 +282,7 @@ func (h *PerusahaanHandler) parseCreateForm(form *multipart.Form) dto.CreatePeru
 func (h *PerusahaanHandler) parseUpdateForm(form *multipart.Form) dto.UpdatePerusahaanRequest {
 	return dto.UpdatePerusahaanRequest{
 		NamaPerusahaan: getFormValue(form, "nama_perusahaan"),
-		Sektor:         getFormValue(form, "sektor"),
+		IDSubSektor:    getFormValue(form, "id_sub_sektor"),
 		Alamat:         getFormValue(form, "alamat"),
 		Telepon:        getFormValue(form, "telepon"),
 		Email:          getFormValue(form, "email"),

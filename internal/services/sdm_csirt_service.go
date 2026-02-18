@@ -7,6 +7,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type SdmCsirtServiceInterface interface {
+	Create(req dto.CreateSdmCsirtRequest) (string, error)
+	GetAll() ([]dto.SdmCsirtResponse, error)
+	GetByID(id string) (*dto.SdmCsirtResponse, error)
+	Update(id string, req dto.UpdateSdmCsirtRequest) error
+	Delete(id string) error
+}
+
 type SdmCsirtService struct {
 	repo repository.SdmCsirtRepositoryInterface
 }

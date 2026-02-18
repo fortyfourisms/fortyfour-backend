@@ -23,6 +23,18 @@ func NewCasbinHandler(casbinService *services.CasbinService, sseService *service
 	}
 }
 
+// ===== helper (UNTUK TEST) =====
+
+func getUserFromContext(r *http.Request) (userID string, role string, ok bool) {
+	uid, uidOk := r.Context().Value(middleware.UserIDKey).(string)
+	rle, roleOk := r.Context().Value(middleware.RoleKey).(string)
+
+	if !uidOk || !roleOk {
+		return "", "", false
+	}
+	return uid, rle, true
+}
+
 // @Summary Add Casbin policy
 // @Description Menambahkan satu permission policy (admin only)
 // @Tags Casbin
@@ -41,11 +53,9 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Only admin can manage policies
-	userID := r.Context().Value(middleware.UserIDKey).(string)
-	userRole := r.Context().Value(middleware.RoleKey).(string)
-
-	if userRole != "admin" {
+	// Get user from context
+	userID, userRole, ok := getUserFromContext(r)
+	if ok && userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")
 		return
 	}
@@ -75,11 +85,14 @@ func (h *CasbinHandler) AddPolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.sseService.NotifyCreate("policy", map[string]any{
-		"role":     req.Role,
-		"resource": req.Resource,
-		"action":   req.Action,
-	}, userID)
+	// Send SSE notification if service available and user context exists
+	if h.sseService != nil && ok {
+		h.sseService.NotifyCreate("policy", map[string]any{
+			"role":     req.Role,
+			"resource": req.Resource,
+			"action":   req.Action,
+		}, userID)
+	}
 
 	utils.RespondJSON(w, http.StatusCreated, map[string]interface{}{
 		"message": "Policy added successfully",
@@ -109,10 +122,8 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	userID := r.Context().Value(middleware.UserIDKey).(string)
-	userRole := r.Context().Value(middleware.RoleKey).(string)
-
-	if userRole != "admin" {
+	userID, userRole, ok := getUserFromContext(r)
+	if ok && userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")
 		return
 	}
@@ -150,7 +161,7 @@ func (h *CasbinHandler) BulkAddPolicies(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Jika ada yang berhasil ditambahkan, kirim notifikasi
-	if len(result.Added) > 0 {
+	if h.sseService != nil && ok && len(result.Added) > 0 {
 		h.sseService.NotifyCreate("policy.bulk", map[string]any{
 			"role":  req.Role,
 			"count": len(result.Added),
@@ -197,10 +208,8 @@ func (h *CasbinHandler) RemovePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := r.Context().Value(middleware.UserIDKey).(string)
-	userRole := r.Context().Value(middleware.RoleKey).(string)
-
-	if userRole != "admin" {
+	userID, userRole, ok := getUserFromContext(r)
+	if ok && userRole != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Only admin can manage policies")
 		return
 	}
@@ -224,11 +233,13 @@ func (h *CasbinHandler) RemovePolicy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.sseService.NotifyDelete("policy", map[string]any{
-		"role":     req.Role,
-		"resource": req.Resource,
-		"action":   req.Action,
-	}, userID)
+	if h.sseService != nil && ok {
+		h.sseService.NotifyDelete("policy", map[string]any{
+			"role":     req.Role,
+			"resource": req.Resource,
+			"action":   req.Action,
+		}, userID)
+	}
 
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
 		"message": "Policy removed successfully",

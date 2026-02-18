@@ -8,6 +8,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type CsirtServiceInterface interface {
+	GetAll() ([]dto.CsirtResponse, error)
+	GetByID(id string) (*dto.CsirtResponse, error)
+	Create(req dto.CreateCsirtRequest) (*models.Csirt, error)
+	Update(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error)
+	Delete(id string) error
+}
+
 type CsirtService struct {
 	repo repository.CsirtRepositoryInterface
 }

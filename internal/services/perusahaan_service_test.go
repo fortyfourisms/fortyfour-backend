@@ -44,15 +44,39 @@ func (m *mockPerusahaanRepository) Delete(id string) error {
 
 /*
 =====================================
+ MOCK SUB SEKTOR REPOSITORY
+=====================================
+*/
+
+type mockSubSektorRepository struct {
+	GetByIDFn       func(id string) (*dto.SubSektorResponse, error)
+	GetAllFn        func() ([]dto.SubSektorResponse, error)
+	GetBySektorIDFn func(sektorID string) ([]dto.SubSektorResponse, error)
+}
+
+func (m *mockSubSektorRepository) GetByID(id string) (*dto.SubSektorResponse, error) {
+	return m.GetByIDFn(id)
+}
+
+func (m *mockSubSektorRepository) GetAll() ([]dto.SubSektorResponse, error) {
+	return m.GetAllFn()
+}
+
+func (m *mockSubSektorRepository) GetBySektorID(sektorID string) ([]dto.SubSektorResponse, error) {
+	return m.GetBySektorIDFn(sektorID)
+}
+
+/*
+=====================================
  TEST CREATE PERUSAHAAN
 =====================================
 */
 
 func TestCreatePerusahaan_Success(t *testing.T) {
 	nama := "PT Teknologi Maju"
-	sektor := "Teknologi"
+	idSubSektor := "sub-sektor-id-123"
 
-	repo := &mockPerusahaanRepository{
+	perusahaanRepo := &mockPerusahaanRepository{
 		CreateFn: func(req dto.CreatePerusahaanRequest, id string) error {
 			return nil
 		},
@@ -60,16 +84,32 @@ func TestCreatePerusahaan_Success(t *testing.T) {
 			return &dto.PerusahaanResponse{
 				ID:             id,
 				NamaPerusahaan: nama,
-				Sektor:         sektor,
+				SubSektor: &dto.SubSektorResponse{
+					ID:            idSubSektor,
+					NamaSubSektor: "Elektronik",
+					IDSektor:      "sektor-id-123",
+					NamaSektor:    "ILMATE",
+				},
 			}, nil
 		},
 	}
 
-	service := NewPerusahaanService(repo)
+	subSektorRepo := &mockSubSektorRepository{
+		GetByIDFn: func(id string) (*dto.SubSektorResponse, error) {
+			return &dto.SubSektorResponse{
+				ID:            idSubSektor,
+				NamaSubSektor: "Elektronik",
+				IDSektor:      "sektor-id-123",
+				NamaSektor:    "ILMATE",
+			}, nil
+		},
+	}
+
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo)
 
 	req := dto.CreatePerusahaanRequest{
 		NamaPerusahaan: &nama,
-		Sektor:         &sektor,
+		IDSubSektor:    &idSubSektor,
 	}
 
 	result, err := service.Create(req)
@@ -77,17 +117,19 @@ func TestCreatePerusahaan_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Equal(t, nama, result.NamaPerusahaan)
-	assert.Equal(t, sektor, result.Sektor)
+	assert.NotNil(t, result.SubSektor)
+	assert.Equal(t, "Elektronik", result.SubSektor.NamaSubSektor)
 }
 
 func TestCreatePerusahaan_ValidationFailed_NamaKosong(t *testing.T) {
-	repo := &mockPerusahaanRepository{}
-	service := NewPerusahaanService(repo)
+	perusahaanRepo := &mockPerusahaanRepository{}
+	subSektorRepo := &mockSubSektorRepository{}
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo)
 
-	sektor := "Teknologi"
+	idSubSektor := "sub-sektor-id-123"
 	req := dto.CreatePerusahaanRequest{
 		NamaPerusahaan: nil,
-		Sektor:         &sektor,
+		IDSubSektor:    &idSubSektor,
 	}
 
 	result, err := service.Create(req)
@@ -97,57 +139,88 @@ func TestCreatePerusahaan_ValidationFailed_NamaKosong(t *testing.T) {
 	assert.Equal(t, "nama_perusahaan wajib diisi", err.Error())
 }
 
-func TestCreatePerusahaan_ValidationFailed_SektorKosong(t *testing.T) {
-	repo := &mockPerusahaanRepository{}
-	service := NewPerusahaanService(repo)
-
+func TestCreatePerusahaan_ValidationFailed_SubSektorKosong(t *testing.T) {
 	nama := "PT ABC"
+
+	perusahaanRepo := &mockPerusahaanRepository{
+		CreateFn: func(req dto.CreatePerusahaanRequest, id string) error {
+			return nil
+		},
+		GetByIDFn: func(id string) (*dto.PerusahaanResponse, error) {
+			return &dto.PerusahaanResponse{
+				ID:             id,
+				NamaPerusahaan: nama,
+				SubSektor:      nil,
+			}, nil
+		},
+	}
+
+	subSektorRepo := &mockSubSektorRepository{}
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo)
+
 	req := dto.CreatePerusahaanRequest{
 		NamaPerusahaan: &nama,
-		Sektor:         nil,
+		IDSubSektor:    nil,
 	}
 
 	result, err := service.Create(req)
 
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.Equal(t, "sektor wajib diisi", err.Error())
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, nama, result.NamaPerusahaan)
+	assert.Nil(t, result.SubSektor)
 }
 
-func TestCreatePerusahaan_InvalidSektor(t *testing.T) {
-	repo := &mockPerusahaanRepository{}
-	service := NewPerusahaanService(repo)
+func TestCreatePerusahaan_SubSektorNotFound(t *testing.T) {
+	perusahaanRepo := &mockPerusahaanRepository{}
+
+	subSektorRepo := &mockSubSektorRepository{
+		GetByIDFn: func(id string) (*dto.SubSektorResponse, error) {
+			return nil, errors.New("not found")
+		},
+	}
+
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo)
 
 	nama := "PT ABC"
-	sektor := "Pertanian"
+	idSubSektor := "invalid-sub-sektor-id"
 
 	req := dto.CreatePerusahaanRequest{
 		NamaPerusahaan: &nama,
-		Sektor:         &sektor,
+		IDSubSektor:    &idSubSektor,
 	}
 
 	result, err := service.Create(req)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.Equal(t, "sektor tidak valid", err.Error())
+	assert.Equal(t, "sub sektor tidak ditemukan", err.Error())
 }
 
 func TestCreatePerusahaan_RepoFailed(t *testing.T) {
 	nama := "PT ABC"
-	sektor := "Teknologi"
+	idSubSektor := "sub-sektor-id-123"
 
-	repo := &mockPerusahaanRepository{
+	perusahaanRepo := &mockPerusahaanRepository{
 		CreateFn: func(req dto.CreatePerusahaanRequest, id string) error {
 			return errors.New("db error")
 		},
 	}
 
-	service := NewPerusahaanService(repo)
+	subSektorRepo := &mockSubSektorRepository{
+		GetByIDFn: func(id string) (*dto.SubSektorResponse, error) {
+			return &dto.SubSektorResponse{
+				ID:            idSubSektor,
+				NamaSubSektor: "Elektronik",
+			}, nil
+		},
+	}
+
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo)
 
 	req := dto.CreatePerusahaanRequest{
 		NamaPerusahaan: &nama,
-		Sektor:         &sektor,
+		IDSubSektor:    &idSubSektor,
 	}
 
 	result, err := service.Create(req)
@@ -163,40 +236,67 @@ func TestCreatePerusahaan_RepoFailed(t *testing.T) {
 */
 
 func TestGetAllPerusahaan_Success(t *testing.T) {
-	repo := &mockPerusahaanRepository{
+	perusahaanRepo := &mockPerusahaanRepository{
 		GetAllFn: func() ([]dto.PerusahaanResponse, error) {
 			return []dto.PerusahaanResponse{
-				{ID: "1", NamaPerusahaan: "PT A", Sektor: "Teknologi"},
-				{ID: "2", NamaPerusahaan: "PT B", Sektor: "Keuangan"},
+				{
+					ID:             "1",
+					NamaPerusahaan: "PT A",
+					SubSektor: &dto.SubSektorResponse{
+						ID:            "sub-1",
+						NamaSubSektor: "Elektronik",
+						NamaSektor:    "ILMATE",
+					},
+				},
+				{
+					ID:             "2",
+					NamaPerusahaan: "PT B",
+					SubSektor: &dto.SubSektorResponse{
+						ID:            "sub-2",
+						NamaSubSektor: "Tekstil",
+						NamaSektor:    "IKFT",
+					},
+				},
 			}, nil
 		},
 	}
 
-	service := NewPerusahaanService(repo)
+	subSektorRepo := &mockSubSektorRepository{}
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo)
 
 	data, err := service.GetAll()
 
 	assert.NoError(t, err)
 	assert.Len(t, data, 2)
+	assert.Equal(t, "Elektronik", data[0].SubSektor.NamaSubSektor)
+	assert.Equal(t, "Tekstil", data[1].SubSektor.NamaSubSektor)
 }
 
 func TestGetPerusahaanByID_Success(t *testing.T) {
-	repo := &mockPerusahaanRepository{
+	perusahaanRepo := &mockPerusahaanRepository{
 		GetByIDFn: func(id string) (*dto.PerusahaanResponse, error) {
 			return &dto.PerusahaanResponse{
 				ID:             id,
 				NamaPerusahaan: "PT A",
-				Sektor:         "Teknologi",
+				SubSektor: &dto.SubSektorResponse{
+					ID:            "sub-1",
+					NamaSubSektor: "Elektronik",
+					IDSektor:      "sektor-1",
+					NamaSektor:    "ILMATE",
+				},
 			}, nil
 		},
 	}
 
-	service := NewPerusahaanService(repo)
+	subSektorRepo := &mockSubSektorRepository{}
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo)
 
 	result, err := service.GetByID("123")
 
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
+	assert.Equal(t, "PT A", result.NamaPerusahaan)
+	assert.Equal(t, "Elektronik", result.SubSektor.NamaSubSektor)
 }
 
 /*
@@ -208,14 +308,18 @@ func TestGetPerusahaanByID_Success(t *testing.T) {
 func TestUpdatePerusahaan_Success(t *testing.T) {
 	oldNama := "PT Lama"
 	newNama := "PT Baru"
-	sektor := "Teknologi"
 
-	repo := &mockPerusahaanRepository{
+	perusahaanRepo := &mockPerusahaanRepository{
 		GetByIDFn: func(id string) (*dto.PerusahaanResponse, error) {
 			return &dto.PerusahaanResponse{
 				ID:             id,
 				NamaPerusahaan: oldNama,
-				Sektor:         sektor,
+				SubSektor: &dto.SubSektorResponse{
+					ID:            "sub-1",
+					NamaSubSektor: "Elektronik",
+					IDSektor:      "sektor-1",
+					NamaSektor:    "ILMATE",
+				},
 			}, nil
 		},
 		UpdateFn: func(id string, perusahaan dto.PerusahaanResponse) error {
@@ -223,7 +327,8 @@ func TestUpdatePerusahaan_Success(t *testing.T) {
 		},
 	}
 
-	service := NewPerusahaanService(repo)
+	subSektorRepo := &mockSubSektorRepository{}
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo)
 
 	req := dto.UpdatePerusahaanRequest{
 		NamaPerusahaan: &newNama,
@@ -233,33 +338,90 @@ func TestUpdatePerusahaan_Success(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, newNama, result.NamaPerusahaan)
-	assert.Equal(t, sektor, result.Sektor)
+	assert.NotNil(t, result.SubSektor)
+	assert.Equal(t, "Elektronik", result.SubSektor.NamaSubSektor)
 }
 
-func TestUpdatePerusahaan_InvalidSektor(t *testing.T) {
-	sektorInvalid := "Pertanian"
+func TestUpdatePerusahaan_UpdateSubSektor_Success(t *testing.T) {
+	oldSubSektorID := "sub-1"
+	newSubSektorID := "sub-2"
 
-	repo := &mockPerusahaanRepository{
+	perusahaanRepo := &mockPerusahaanRepository{
 		GetByIDFn: func(id string) (*dto.PerusahaanResponse, error) {
 			return &dto.PerusahaanResponse{
 				ID:             id,
 				NamaPerusahaan: "PT A",
-				Sektor:         "Teknologi",
+				SubSektor: &dto.SubSektorResponse{
+					ID:            oldSubSektorID,
+					NamaSubSektor: "Elektronik",
+					IDSektor:      "sektor-1",
+					NamaSektor:    "ILMATE",
+				},
+			}, nil
+		},
+		UpdateFn: func(id string, perusahaan dto.PerusahaanResponse) error {
+			return nil
+		},
+	}
+
+	subSektorRepo := &mockSubSektorRepository{
+		GetByIDFn: func(id string) (*dto.SubSektorResponse, error) {
+			return &dto.SubSektorResponse{
+				ID:            newSubSektorID,
+				NamaSubSektor: "Otomotif",
+				IDSektor:      "sektor-1",
+				NamaSektor:    "ILMATE",
 			}, nil
 		},
 	}
 
-	service := NewPerusahaanService(repo)
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo)
 
 	req := dto.UpdatePerusahaanRequest{
-		Sektor: &sektorInvalid,
+		IDSubSektor: &newSubSektorID,
+	}
+
+	result, err := service.Update("123", req)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result.SubSektor)
+	assert.Equal(t, newSubSektorID, result.SubSektor.ID)
+	assert.Equal(t, "Otomotif", result.SubSektor.NamaSubSektor)
+}
+
+func TestUpdatePerusahaan_InvalidSubSektor(t *testing.T) {
+	invalidSubSektorID := "invalid-sub-sektor"
+
+	perusahaanRepo := &mockPerusahaanRepository{
+		GetByIDFn: func(id string) (*dto.PerusahaanResponse, error) {
+			return &dto.PerusahaanResponse{
+				ID:             id,
+				NamaPerusahaan: "PT A",
+				SubSektor: &dto.SubSektorResponse{
+					ID:            "sub-1",
+					NamaSubSektor: "Elektronik",
+				},
+			}, nil
+		},
+	}
+
+	subSektorRepo := &mockSubSektorRepository{
+		GetByIDFn: func(id string) (*dto.SubSektorResponse, error) {
+			return nil, errors.New("not found")
+		},
+	}
+
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo)
+
+	req := dto.UpdatePerusahaanRequest{
+		IDSubSektor: &invalidSubSektorID,
 	}
 
 	result, err := service.Update("123", req)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
-	assert.Equal(t, "sektor tidak valid", err.Error())
+	assert.Equal(t, "sub sektor tidak ditemukan", err.Error())
 }
 
 /*
@@ -269,15 +431,32 @@ func TestUpdatePerusahaan_InvalidSektor(t *testing.T) {
 */
 
 func TestDeletePerusahaan_Success(t *testing.T) {
-	repo := &mockPerusahaanRepository{
+	perusahaanRepo := &mockPerusahaanRepository{
 		DeleteFn: func(id string) error {
 			return nil
 		},
 	}
 
-	service := NewPerusahaanService(repo)
+	subSektorRepo := &mockSubSektorRepository{}
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo)
 
 	err := service.Delete("123")
 
 	assert.NoError(t, err)
+}
+
+func TestDeletePerusahaan_Failed(t *testing.T) {
+	perusahaanRepo := &mockPerusahaanRepository{
+		DeleteFn: func(id string) error {
+			return errors.New("db error")
+		},
+	}
+
+	subSektorRepo := &mockSubSektorRepository{}
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo)
+
+	err := service.Delete("123")
+
+	assert.Error(t, err)
+	assert.Equal(t, "db error", err.Error())
 }

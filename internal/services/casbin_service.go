@@ -31,7 +31,11 @@ func NewCasbinService(dsn, modelPath string) (*CasbinService, error) {
 
 	// Clean up invalid policies before initializing casbin
 	log.Println("Cleaning up invalid policies...")
-	result := db.Exec("DELETE FROM casbin_rule WHERE v0 = '' OR v1 = '' OR v2 = '' OR v0 IS NULL OR v1 IS NULL OR v2 IS NULL")
+	result := db.Exec(`
+		DELETE FROM casbin_rule
+		WHERE v0 = '' OR v1 = '' OR v2 = ''
+		   OR v0 IS NULL OR v1 IS NULL OR v2 IS NULL
+	`)
 	if result.Error != nil {
 		log.Printf("Warning: failed to clean invalid policies: %v", result.Error)
 	} else if result.RowsAffected > 0 {
@@ -69,11 +73,12 @@ func NewCasbinService(dsn, modelPath string) (*CasbinService, error) {
 			{"user", "/api/posts/single", "GET"},
 		}
 
-		success, err := enforcer.AddPolicies(defaultPolicies)
+		added, err := enforcer.AddPolicies(defaultPolicies)
 		if err != nil {
 			log.Printf("Error adding default policies: %v", err)
 		}
-		if success {
+
+		if added && enforcer.GetAdapter() != nil {
 			if err := enforcer.SavePolicy(); err != nil {
 				log.Printf("Error saving default policies: %v", err)
 			} else {
@@ -88,6 +93,19 @@ func NewCasbinService(dsn, modelPath string) (*CasbinService, error) {
 		enforcer: enforcer,
 	}, nil
 }
+
+//
+// ======== TEST SUPPORT ========
+//
+
+// SetEnforcer allows injecting a custom enforcer (for unit tests)
+func (s *CasbinService) SetEnforcer(e *casbin.Enforcer) {
+	s.enforcer = e
+}
+
+//
+// ======== CORE METHODS ========
+//
 
 // Enforce checks if a role has permission
 func (s *CasbinService) Enforce(role, resource, action string) (bool, error) {
@@ -118,7 +136,7 @@ func (s *CasbinService) AddPolicy(role, resource, action string) (bool, error) {
 		return false, fmt.Errorf("failed to add policy: %w", err)
 	}
 
-	if added {
+	if added && s.enforcer.GetAdapter() != nil {
 		if err := s.enforcer.SavePolicy(); err != nil {
 			return false, fmt.Errorf("failed to save policy: %w", err)
 		}
@@ -134,7 +152,7 @@ func (s *CasbinService) AddPolicies(policies [][]string) (bool, error) {
 		return false, fmt.Errorf("failed to add policies: %w", err)
 	}
 
-	if added {
+	if added && s.enforcer.GetAdapter() != nil {
 		if err := s.enforcer.SavePolicy(); err != nil {
 			return false, fmt.Errorf("failed to save policies: %w", err)
 		}
@@ -198,7 +216,7 @@ func (s *CasbinService) BulkAddPolicies(policies [][]string) (*BulkAddResult, er
 	}
 
 	// Save to database if any policies were added
-	if len(result.Added) > 0 {
+	if len(result.Added) > 0 && s.enforcer.GetAdapter() != nil {
 		if err := s.enforcer.SavePolicy(); err != nil {
 			return nil, fmt.Errorf("failed to save policies: %w", err)
 		}
@@ -214,7 +232,7 @@ func (s *CasbinService) RemovePolicy(role, resource, action string) (bool, error
 		return false, fmt.Errorf("failed to remove policy: %w", err)
 	}
 
-	if removed {
+	if removed && s.enforcer.GetAdapter() != nil {
 		if err := s.enforcer.SavePolicy(); err != nil {
 			return false, fmt.Errorf("failed to save policy: %w", err)
 		}

@@ -44,7 +44,7 @@ func (m *mockPICRepository) Delete(id string) error {
 	return m.DeleteFn(id)
 }
 
-// Compile-time check (opsional tapi bagus)
+// Compile-time check
 var _ repository.PICRepositoryInterface = (*mockPICRepository)(nil)
 
 //
