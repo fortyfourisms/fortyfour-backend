@@ -4,7 +4,7 @@ import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/repository"
-
+	"fortyfour-backend/pkg/cache"
 	"github.com/google/uuid"
 )
 
@@ -18,10 +18,11 @@ type CsirtServiceInterface interface {
 
 type CsirtService struct {
 	repo repository.CsirtRepositoryInterface
+	rc   cache.RedisInterface
 }
 
-func NewCsirtService(repo repository.CsirtRepositoryInterface) *CsirtService {
-	return &CsirtService{repo: repo}
+func NewCsirtService(repo repository.CsirtRepositoryInterface, rc cache.RedisInterface) *CsirtService {
+	return &CsirtService{repo: repo, rc: rc}
 }
 
 func (s *CsirtService) Create(req dto.CreateCsirtRequest) (*models.Csirt, error) {
@@ -29,15 +30,48 @@ func (s *CsirtService) Create(req dto.CreateCsirtRequest) (*models.Csirt, error)
 	if err := s.repo.Create(req, id); err != nil {
 		return nil, err
 	}
-	return s.repo.GetByID(id)
+
+	result, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, keyDetail("csirt", id), result, TTLDetail)
+	cacheDelete(s.rc, keyList("csirt"))
+
+	return result, nil
 }
 
 func (s *CsirtService) GetAll() ([]dto.CsirtResponse, error) {
-	return s.repo.GetAllWithPerusahaan()
+	key := keyList("csirt")
+	var result []dto.CsirtResponse
+	if cacheGet(s.rc, key, &result) {
+		return result, nil
+	}
+
+	result, err := s.repo.GetAllWithPerusahaan()
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, result, TTLList)
+	return result, nil
 }
 
 func (s *CsirtService) GetByID(id string) (*dto.CsirtResponse, error) {
-	return s.repo.GetByIDWithPerusahaan(id)
+		key := keyDetail("csirt", id)
+	var result dto.CsirtResponse
+	if cacheGet(s.rc, key, &result) {
+		return &result, nil
+	}
+
+	data, err := s.repo.GetByIDWithPerusahaan(id)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, data, TTLDetail)
+	return data, nil
 }
 
 func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error) {
@@ -68,9 +102,20 @@ func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Cs
 	if err := s.repo.Update(id, *c); err != nil {
 		return nil, err
 	}
+
+	cacheDelete(s.rc, keyDetail("csirt", id))
+	cacheDelete(s.rc, keyList("csirt"))
+
 	return c, nil
 }
 
 func (s *CsirtService) Delete(id string) error {
-	return s.repo.Delete(id)
+		if err := s.repo.Delete(id); err != nil {
+		return err
+	}
+
+	cacheDelete(s.rc, keyDetail("csirt", id))
+	cacheDelete(s.rc, keyList("csirt"))
+
+	return nil
 }
