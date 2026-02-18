@@ -28,7 +28,7 @@ func setupUserHandler() (*UserHandler, *testhelpers.MockUserRepository, *service
 	uploadPath := "./test_uploads"
 	os.MkdirAll(uploadPath, os.ModePerm)
 	sseService := services.NewSSEService()
-	userService := services.NewUserService(mockRepo, uploadPath)
+	userService := services.NewUserService(mockRepo, uploadPath, nil)
 	handler := NewUserHandler(userService, uploadPath, sseService)
 	return handler, mockRepo, sseService
 }
