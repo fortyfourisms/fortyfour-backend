@@ -55,6 +55,12 @@ func (h *PerusahaanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
+		// Handle dropdown endpoint - public, minimal data
+		if id == "dropdown" {
+			h.handleGetDropdown(w, r)
+			return
+		}
+		
 		if id == "" {
 			h.handleGetAll(w, r)
 		} else {
@@ -85,7 +91,7 @@ func (h *PerusahaanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // GetAllPerusahaan godoc
 // @Summary      List semua perusahaan
-// @Description  Mengambil seluruh data perusahaan
+// @Description  Mengambil seluruh data perusahaan (AUTHENTICATED - full data)
 // @Tags         Perusahaan
 // @Produce      json
 // @Success      200  {array}  dto.PerusahaanResponse
@@ -99,6 +105,27 @@ func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, _ *http.Request)
 		return
 	}
 	utils.RespondJSON(w, 200, data)
+}
+
+// GetPerusahaanForDropdown godoc
+// @Summary      List perusahaan untuk dropdown
+// @Description  Data minimal (id, nama) untuk dropdown di halaman register (PUBLIC - no auth)
+// @Tags         Perusahaan
+// @Produce      json
+// @Success      200  {array}  dto.PerusahaanMinimalResponse
+// @Failure      500  {object} dto.ErrorResponse
+// @Router       /api/perusahaan/dropdown [get]
+func (h *PerusahaanHandler) handleGetDropdown(w http.ResponseWriter, _ *http.Request) {
+	data, err := h.service.GetAll()
+	if err != nil {
+		rollbar.Error(err)
+		utils.RespondError(w, 500, err.Error())
+		return
+	}
+	
+	// Convert to minimal response for security
+	minimalData := dto.ConvertToMinimalList(data)
+	utils.RespondJSON(w, 200, minimalData)
 }
 
 // GetPerusahaanByID godoc

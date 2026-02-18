@@ -7,7 +7,6 @@ import (
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/utils"
 	"net/http"
-	"strings"
 	"time"
 
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -26,35 +25,6 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		"status":    "healthy",
 		"timestamp": time.Now().Format(time.RFC3339),
 	})
-}
-
-// createPerusahaanRouter creates a custom router for perusahaan endpoints
-// GET /api/perusahaan (no ID) -> public (for register dropdown)
-// All other methods and GET with ID -> authenticated
-func createPerusahaanRouter(
-	perusahaanH *handlers.PerusahaanHandler,
-	authM *middleware.AuthMiddleware,
-	casbinM *middleware.CasbinMiddleware,
-	moderateLimiter *middleware.RateLimiter,
-) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Check if this is GET request for listing all companies (no ID)
-		if r.Method == http.MethodGet {
-			// Extract path to check if there's an ID
-			path := strings.TrimPrefix(r.URL.Path, "/api/perusahaan")
-			path = strings.TrimPrefix(path, "/")
-			
-			// If no ID, allow public access (for register dropdown)
-			if path == "" {
-				// Public access - just call handler directly
-				perusahaanH.ServeHTTP(w, r)
-				return
-			}
-		}
-		
-		// For all other cases (POST, PUT, DELETE, or GET with ID), require authentication
-		authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH))))(w, r)
-	}
 }
 
 func InitRouter(
@@ -117,9 +87,12 @@ func InitRouter(
 	mux.HandleFunc("/api/events/stats", authM.Authenticate(sseH.GetStats))
 
 	// Route Perusahaan
-	// GET /api/perusahaan (list all) -> PUBLIC untuk dropdown register
+	// GET /api/perusahaan/dropdown -> PUBLIC untuk dropdown register (minimal data: id, nama)
+	mux.HandleFunc("/api/perusahaan/dropdown", moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))
+	
+	// GET /api/perusahaan (list all) -> AUTHENTICATED (full data)
 	// Other methods & GET with ID -> AUTHENTICATED
-	mux.HandleFunc("/api/perusahaan", createPerusahaanRouter(perusahaanH, authM, casbinM, moderateLimiter))
+	mux.HandleFunc("/api/perusahaan", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))))
 	mux.HandleFunc("/api/perusahaan/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))))
 
 	// Route PIC
