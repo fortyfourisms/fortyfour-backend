@@ -130,9 +130,6 @@ func main() {
 
 	// Initialize Gemini Client
 	geminiClient := utils.NewGeminiClient()
-	if err != nil {
-		log.Fatal("Failed to initialize Gemini client:", err)
-	}
 	log.Println("Gemini client initialized successfully")
 
 	// Initialize Repositories
