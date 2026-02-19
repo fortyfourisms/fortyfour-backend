@@ -28,11 +28,20 @@ services:
       ROLLBAR_TOKEN: ${ROLLBAR_TOKEN}
       ROLLBAR_STATUS: ${ROLLBAR_STATUS}
       
+      # RabbitMQ
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+
       ENVIRONMENT: ${ENVIRONMENT:-production}
     networks:
       - app-network
     depends_on:
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/health"]
@@ -68,10 +77,38 @@ services:
     expose:
       - "6379"
 
+  # RabbitMQ Message Broker
+  rabbitmq:
+    image: rabbitmq:4.2.4-management-alpine
+    container_name: fortyfour-rabbitmq
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    expose:
+      - "5672"
+    ports:
+      - "15672:15672"  # Management UI
+
 networks:
   app-network:
     driver: bridge
 
 volumes:
   redis_data:
+    driver: local
+  rabbitmq_data:
     driver: local

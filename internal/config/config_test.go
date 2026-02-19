@@ -17,7 +17,7 @@ func TestLoad_WithDefaultValues(t *testing.T) {
 	assert.NotNil(t, cfg)
 	assert.Equal(t, ":8080", cfg.Port)
 	assert.Equal(t, "your-secret-key", cfg.JWTSecret)
-	assert.Equal(t, "https://admin.kssindustri.site", cfg.Domain)
+	assert.Equal(t, "admin.kssindustri.site", cfg.Domain)
 
 	// Database defaults
 	assert.Equal(t, "localhost", cfg.Database.Host)
@@ -115,7 +115,7 @@ func TestLoad_WithPartialEnvironmentVariables(t *testing.T) {
 	assert.Equal(t, 3, cfg.Redis.DB)
 
 	// Defaults should be used for missing vars
-	assert.Equal(t, "https://admin.kssindustri.site", cfg.Domain)
+	assert.Equal(t, "admin.kssindustri.site", cfg.Domain)
 	assert.Equal(t, "3306", cfg.Database.Port)
 	assert.Equal(t, "root", cfg.Database.User)
 	assert.Equal(t, "localhost", cfg.Redis.Host)
