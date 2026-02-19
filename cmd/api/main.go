@@ -167,7 +167,7 @@ func main() {
 	chatService := services.NewChatService(chatRepo, geminiClient, db)
 	sektorService := services.NewSektorService(sektorRepo)
 	subSektorService := services.NewSubSektorService(subSektorRepo)
-	seService := services.NewSEService(seRepo)
+	seService := services.NewSEService(seRepo, redisClient)
 	dashboardService := services.NewDashboardService(dashboardRepo)
 
 	// Initialize Handlers

@@ -59,7 +59,7 @@ func (m *MockSERepository) Delete(id string) error {
 
 func setupSEService() (SEService, *MockSERepository) {
 	mockRepo := new(MockSERepository)
-	service := NewSEService(mockRepo)
+	service := NewSEService(mockRepo, nil)
 	return service, mockRepo
 }
 
