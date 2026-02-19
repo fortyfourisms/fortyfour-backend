@@ -106,7 +106,7 @@ func main() {
 	gulihService := services.NewGulihService(gulihRepo)
 	ikasService := services.NewIkasService(ikasRepo)
 	csirtService := services.NewCsirtService(csirtRepo, redisClient)
-	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo)
+	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo, redisClient)
 	userService := services.NewUserService(userRepo, "./uploads")
 	roleService := services.NewRoleService(roleRepo)
 	sektorService := services.NewSektorService(sektorRepo)
