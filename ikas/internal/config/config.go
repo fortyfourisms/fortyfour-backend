@@ -78,7 +78,14 @@ func Load() *Config {
 }
 
 func (r *RabbitMQConfig) GetURL() string {
-	return "amqp://" + r.User + ":" + r.Password + "@" + r.Host + ":" + r.Port + r.Vhost
+	vhost := r.Vhost
+	if vhost == "" {
+		vhost = "/"
+	}
+	if vhost[0] != '/' {
+		vhost = "/" + vhost
+	}
+	return "amqp://" + r.User + ":" + r.Password + "@" + r.Host + ":" + r.Port + vhost
 }
 
 // GetDSN returns MySQL DSN for GORM

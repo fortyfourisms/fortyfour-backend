@@ -58,6 +58,13 @@ func main() {
 	}
 	defer db.Close()
 
+	// Run database migrations
+	if err := database.RunMigrations(db, "./migrations"); err != nil {
+		rollbar.Error(err)
+		rollbar.Wait()
+		log.Fatal("Failed to run database migrations:", err)
+	}
+
 	// Initialize Redis
 	redisClient, err := cache.NewRedisClient(cache.RedisConfig{
 		Host:     cfg.Redis.Host,
