@@ -25,5 +25,5 @@ type SeAgg struct {
 type DashboardSummary struct {
 	Sektor []SectorCount `json:"sektor_counts"`
 	// Ikas   IkasAgg       `json:"ikas"` // TODO: re-enable ikas summary when ikas table is ready
-	SE     SeAgg         `json:"kse"`
+	SE SeAgg `json:"kse"`
 }

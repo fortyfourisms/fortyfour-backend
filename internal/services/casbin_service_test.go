@@ -10,7 +10,7 @@ import (
 
 func TestNewCasbinService(t *testing.T) {
 	tests := []struct {
-		name string
+		name      string
 		dsn       string
 		modelPath string
 		want      *services.CasbinService
@@ -40,14 +40,14 @@ func TestNewCasbinService(t *testing.T) {
 
 func TestCasbinService_Enforce(t *testing.T) {
 	tests := []struct {
-		name string
+		name      string
 		dsn       string
 		modelPath string
-		role     string
-		resource string
-		action   string
-		want     bool
-		wantErr  bool
+		role      string
+		resource  string
+		action    string
+		want      bool
+		wantErr   bool
 	}{
 		// TODO: Add test cases.
 	}
@@ -77,14 +77,14 @@ func TestCasbinService_Enforce(t *testing.T) {
 
 func TestCasbinService_AddPolicy(t *testing.T) {
 	tests := []struct {
-		name string
+		name      string
 		dsn       string
 		modelPath string
-		role     string
-		resource string
-		action   string
-		want     bool
-		wantErr  bool
+		role      string
+		resource  string
+		action    string
+		want      bool
+		wantErr   bool
 	}{
 		// TODO: Add test cases.
 	}
@@ -114,12 +114,12 @@ func TestCasbinService_AddPolicy(t *testing.T) {
 
 func TestCasbinService_AddPolicies(t *testing.T) {
 	tests := []struct {
-		name string
+		name      string
 		dsn       string
 		modelPath string
-		policies [][]string
-		want     bool
-		wantErr  bool
+		policies  [][]string
+		want      bool
+		wantErr   bool
 	}{
 		// TODO: Add test cases.
 	}
@@ -149,12 +149,12 @@ func TestCasbinService_AddPolicies(t *testing.T) {
 
 func TestCasbinService_BulkAddPolicies(t *testing.T) {
 	tests := []struct {
-		name string
+		name      string
 		dsn       string
 		modelPath string
-		policies [][]string
-		want     *services.BulkAddResult
-		wantErr  bool
+		policies  [][]string
+		want      *services.BulkAddResult
+		wantErr   bool
 	}{
 		// TODO: Add test cases.
 	}
@@ -184,14 +184,14 @@ func TestCasbinService_BulkAddPolicies(t *testing.T) {
 
 func TestCasbinService_RemovePolicy(t *testing.T) {
 	tests := []struct {
-		name string
+		name      string
 		dsn       string
 		modelPath string
-		role     string
-		resource string
-		action   string
-		want     bool
-		wantErr  bool
+		role      string
+		resource  string
+		action    string
+		want      bool
+		wantErr   bool
 	}{
 		// TODO: Add test cases.
 	}
@@ -221,11 +221,11 @@ func TestCasbinService_RemovePolicy(t *testing.T) {
 
 func TestCasbinService_GetRolePermissions(t *testing.T) {
 	tests := []struct {
-		name string
+		name      string
 		dsn       string
 		modelPath string
-		role string
-		want []models.CasbinPolicy
+		role      string
+		want      []models.CasbinPolicy
 	}{
 		// TODO: Add test cases.
 	}
@@ -246,7 +246,7 @@ func TestCasbinService_GetRolePermissions(t *testing.T) {
 
 func TestCasbinService_GetAllPolicies(t *testing.T) {
 	tests := []struct {
-		name string
+		name      string
 		dsn       string
 		modelPath string
 		want      []models.CasbinPolicy
@@ -270,7 +270,7 @@ func TestCasbinService_GetAllPolicies(t *testing.T) {
 
 func TestCasbinService_ReloadPolicy(t *testing.T) {
 	tests := []struct {
-		name string
+		name      string
 		dsn       string
 		modelPath string
 		wantErr   bool
@@ -299,7 +299,7 @@ func TestCasbinService_ReloadPolicy(t *testing.T) {
 
 func TestCasbinService_GetEnforcer(t *testing.T) {
 	tests := []struct {
-		name string
+		name      string
 		dsn       string
 		modelPath string
 		want      *casbin.Enforcer

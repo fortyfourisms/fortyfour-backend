@@ -349,10 +349,10 @@ func TestDashboardService_GetSummary_DataIntegrity(t *testing.T) {
 	result, err := service.GetSummary(ctx, nil, nil)
 
 	assert.NoError(t, err)
-	
+
 	// Verify data integrity - ThisMonth should not exceed Total
 	for _, sector := range result.Sektor {
-		assert.LessOrEqual(t, sector.ThisMonth, sector.Total, 
+		assert.LessOrEqual(t, sector.ThisMonth, sector.Total,
 			"ThisMonth count should not exceed Total count")
 	}
 

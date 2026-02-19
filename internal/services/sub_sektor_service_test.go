@@ -157,19 +157,19 @@ func TestGetAllSubSektor_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
 	assert.Len(t, result, 12) // Total 12 sub sektor (4 ILMATE + 4 Agro + 4 IKFT)
-	
+
 	// Verify ILMATE sub-sektor
 	assert.Equal(t, "Logam", result[0].NamaSubSektor)
 	assert.Equal(t, "Permesinan & alat pertanian", result[1].NamaSubSektor)
 	assert.Equal(t, "Transportasi, maritim & pertahanan", result[2].NamaSubSektor)
 	assert.Equal(t, "Elektronika & telematika", result[3].NamaSubSektor)
-	
+
 	// Verify Agro sub-sektor
 	assert.Equal(t, "Hasil hutan & perkebunan", result[4].NamaSubSektor)
 	assert.Equal(t, "Pangan & perikanan", result[5].NamaSubSektor)
 	assert.Equal(t, "Minuman, tembakau & bahan penyegar", result[6].NamaSubSektor)
 	assert.Equal(t, "Kemurgi, oleokimia & pakan", result[7].NamaSubSektor)
-	
+
 	// Verify IKFT sub-sektor
 	assert.Equal(t, "Kimia hulu", result[8].NamaSubSektor)
 	assert.Equal(t, "Kimia hilir & farmasi", result[9].NamaSubSektor)
@@ -449,7 +449,7 @@ func TestGetSubSektorBySektorID_Success_ILMATE(t *testing.T) {
 	assert.Equal(t, "Permesinan & alat pertanian", result[1].NamaSubSektor)
 	assert.Equal(t, "Transportasi, maritim & pertahanan", result[2].NamaSubSektor)
 	assert.Equal(t, "Elektronika & telematika", result[3].NamaSubSektor)
-	
+
 	// Verify semua sub sektor punya IDSektor yang sama
 	for _, sub := range result {
 		assert.Equal(t, "sektor-1", sub.IDSektor)
@@ -514,7 +514,7 @@ func TestGetSubSektorBySektorID_Success_Agro(t *testing.T) {
 	assert.Len(t, result, 4)
 	assert.Equal(t, "Hasil hutan & perkebunan", result[0].NamaSubSektor)
 	assert.Equal(t, "Pangan & perikanan", result[1].NamaSubSektor)
-	
+
 	// Verify semua sub sektor punya IDSektor yang sama
 	for _, sub := range result {
 		assert.Equal(t, "sektor-2", sub.IDSektor)
@@ -723,7 +723,7 @@ func TestSubSektor_DataIntegrity(t *testing.T) {
 	// Assert - Verify semua field terisi
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
-	
+
 	subSektor := result[0]
 	assert.NotEmpty(t, subSektor.ID, "ID should not be empty")
 	assert.NotEmpty(t, subSektor.NamaSubSektor, "NamaSubSektor should not be empty")
@@ -808,10 +808,10 @@ func TestSubSektor_VerifyMasterDataCompliance(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run("Verify_"+tc.sektorName, func(t *testing.T) {
 			result, err := service.GetBySektorID(tc.sektorID)
-			
+
 			assert.NoError(t, err)
 			assert.Len(t, result, 4, "Setiap sektor harus punya 4 sub-sektor")
-			
+
 			// Verify nama-nama sub sektor sesuai master data
 			expectedNames := expectedSubSektorNames[tc.sektorName]
 			for i, subSektor := range result {

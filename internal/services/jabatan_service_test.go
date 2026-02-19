@@ -1011,8 +1011,8 @@ func TestJabatanService_VeryLongName(t *testing.T) {
 func TestJabatanService_UnicodeCharacters(t *testing.T) {
 	testCases := []string{
 		"المدير التنفيذي", // Arabic
-		"主管经理",          // Chinese
-		"マネージャー",        // Japanese
+		"主管经理",            // Chinese
+		"マネージャー",          // Japanese
 		"Менеджер",        // Russian
 	}
 

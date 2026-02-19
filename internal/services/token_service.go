@@ -77,7 +77,7 @@ func (s *TokenService) SetAuthCookies(w http.ResponseWriter, tokens *models.Toke
 		MaxAge:   15 * 60, // 15 minutes
 		HttpOnly: true,
 		Secure:   s.isProduction, // Only send over HTTPS in production
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, accessTokenCookie)
 
@@ -90,7 +90,7 @@ func (s *TokenService) SetAuthCookies(w http.ResponseWriter, tokens *models.Toke
 		MaxAge:   7 * 24 * 60 * 60, // 7 days
 		HttpOnly: true,
 		Secure:   s.isProduction,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, refreshTokenCookie)
 }
@@ -179,7 +179,7 @@ func (s *TokenService) ClearAuthCookies(w http.ResponseWriter) {
 		MaxAge:   -1,
 		HttpOnly: true,
 		Secure:   s.isProduction,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, accessTokenCookie)
 
@@ -192,7 +192,7 @@ func (s *TokenService) ClearAuthCookies(w http.ResponseWriter) {
 		MaxAge:   -1,
 		HttpOnly: true,
 		Secure:   s.isProduction,
-		SameSite: http.SameSiteStrictMode,
+		SameSite: http.SameSiteLaxMode,
 	}
 	http.SetCookie(w, refreshTokenCookie)
 }

@@ -721,11 +721,11 @@ func TestUserRepository_FindAll(t *testing.T) {
 
 func TestUserRepository_GetPasswordByID(t *testing.T) {
 	tests := []struct {
-		name     string
-		userID   string
-		mockFn   func(mock sqlmock.Sqlmock)
-		want     string
-		wantErr  bool
+		name    string
+		userID  string
+		mockFn  func(mock sqlmock.Sqlmock)
+		want    string
+		wantErr bool
 	}{
 		{
 			name:   "success - get password",

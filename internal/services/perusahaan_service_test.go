@@ -173,7 +173,7 @@ func TestCreatePerusahaan_ValidationFailed_SubSektorKosong(t *testing.T) {
 
 func TestCreatePerusahaan_SubSektorNotFound(t *testing.T) {
 	perusahaanRepo := &mockPerusahaanRepository{}
-	
+
 	subSektorRepo := &mockSubSektorRepository{
 		GetByIDFn: func(id string) (*dto.SubSektorResponse, error) {
 			return nil, errors.New("not found")

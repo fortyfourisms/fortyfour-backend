@@ -52,7 +52,7 @@ func TestPICHandler_GetAll_Success(t *testing.T) {
 	handler.handleGetAll(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response []dto.PICResponse
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -68,7 +68,7 @@ func TestPICHandler_GetAll_EmptyResult(t *testing.T) {
 	handler.handleGetAll(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response []dto.PICResponse
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -105,7 +105,7 @@ func TestPICHandler_GetByID_Success(t *testing.T) {
 	handler.handleGetByID(w, req, "test-id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response dto.PICResponse
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -122,7 +122,7 @@ func TestPICHandler_GetByID_NotFound(t *testing.T) {
 	handler.handleGetByID(w, req, "nonexistent")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -153,7 +153,7 @@ func TestPICHandler_GetByID_VariousIDFormats(t *testing.T) {
 			handler.handleGetByID(w, req, id)
 
 			assert.Equal(t, http.StatusOK, w.Code)
-			
+
 			var response dto.PICResponse
 			err := json.NewDecoder(w.Body).Decode(&response)
 			assert.NoError(t, err)
@@ -185,7 +185,7 @@ func TestPICHandler_Create_Success_MinimalData(t *testing.T) {
 	handler.handleCreate(w, req)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
-	
+
 	var response dto.PICResponse
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -211,7 +211,7 @@ func TestPICHandler_Create_Success_CompleteData(t *testing.T) {
 	handler.handleCreate(w, req)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
-	
+
 	var response dto.PICResponse
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -247,7 +247,7 @@ func TestPICHandler_Create_InvalidBody(t *testing.T) {
 	handler.handleCreate(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -304,7 +304,7 @@ func TestPICHandler_Create_WithIDInURL_ShouldFail(t *testing.T) {
 	handler.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -376,7 +376,7 @@ func TestPICHandler_Update_Success_PartialUpdate(t *testing.T) {
 	handler.handleUpdate(w, req, "test-id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response dto.PICResponse
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -408,7 +408,7 @@ func TestPICHandler_Update_Success_CompleteUpdate(t *testing.T) {
 	handler.handleUpdate(w, req, "test-id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response dto.PICResponse
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -445,7 +445,7 @@ func TestPICHandler_Update_InvalidBody(t *testing.T) {
 	handler.handleUpdate(w, req, "test-id")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -488,7 +488,7 @@ func TestPICHandler_Update_WithoutID_ShouldFail(t *testing.T) {
 	handler.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -516,7 +516,7 @@ func TestPICHandler_Delete_Success(t *testing.T) {
 	handler.handleDelete(w, req, "test-id")
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	
+
 	var response map[string]string
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -562,7 +562,7 @@ func TestPICHandler_Delete_WithoutID_ShouldFail(t *testing.T) {
 	handler.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	
+
 	var response map[string]interface{}
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
@@ -776,7 +776,7 @@ func TestPICHandler_ConcurrentRequests(t *testing.T) {
 	handler, _, _ := setupPICHandler()
 
 	done := make(chan bool)
-	
+
 	for i := 0; i < 10; i++ {
 		go func(index int) {
 			reqBody := dto.CreatePICRequest{

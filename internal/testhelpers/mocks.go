@@ -136,7 +136,7 @@ func (m *MockUserRepository) Create(user *models.User) error {
 	if user.ID == "" {
 		user.ID = uuid.New().String()
 	}
-	
+
 	// Set timestamps
 	now := time.Now()
 	if user.CreatedAt.IsZero() {
@@ -145,7 +145,6 @@ func (m *MockUserRepository) Create(user *models.User) error {
 	if user.UpdatedAt.IsZero() {
 		user.UpdatedAt = now
 	}
-
 
 	m.users[user.ID] = user
 	return nil
@@ -1106,27 +1105,27 @@ func (m *MockPerusahaanService) Create(req dto.CreatePerusahaanRequest) (*dto.Pe
 	if req.NamaPerusahaan != nil {
 		namaPerusahaan = *req.NamaPerusahaan
 	}
-	
+
 	alamat := ""
 	if req.Alamat != nil {
 		alamat = *req.Alamat
 	}
-	
+
 	telepon := ""
 	if req.Telepon != nil {
 		telepon = *req.Telepon
 	}
-	
+
 	email := ""
 	if req.Email != nil {
 		email = *req.Email
 	}
-	
+
 	website := ""
 	if req.Website != nil {
 		website = *req.Website
 	}
-	
+
 	photo := ""
 	if req.Photo != nil {
 		photo = *req.Photo
@@ -1180,7 +1179,7 @@ func (m *MockPerusahaanService) Update(id string, req dto.UpdatePerusahaanReques
 	if req.Photo != nil {
 		p.Photo = *req.Photo
 	}
-	
+
 	p.UpdatedAt = time.Now().Format(time.RFC3339)
 
 	return p, nil

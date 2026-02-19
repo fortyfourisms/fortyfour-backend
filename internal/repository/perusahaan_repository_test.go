@@ -69,7 +69,7 @@ func TestPerusahaanRepository_Create(t *testing.T) {
 				mock.ExpectExec("INSERT INTO perusahaan").
 					WithArgs(
 						"perusahaan-2",
-						nil, 
+						nil,
 						"PT XYZ",
 						nil,
 						nil,

@@ -17,7 +17,7 @@ func TestLoad_WithDefaultValues(t *testing.T) {
 	assert.NotNil(t, cfg)
 	assert.Equal(t, ":8080", cfg.Port)
 	assert.Equal(t, "your-secret-key", cfg.JWTSecret)
-	assert.Equal(t, "https://admin.kssindustri.site", cfg.Domain)
+	assert.Equal(t, "admin.kssindustri.site", cfg.Domain)
 
 	// Database defaults
 	assert.Equal(t, "localhost", cfg.Database.Host)
@@ -44,20 +44,20 @@ func TestLoad_WithDefaultValues(t *testing.T) {
 func TestLoad_WithEnvironmentVariables(t *testing.T) {
 	// Setup environment variables
 	envVars := map[string]string{
-		"PORT":            ":9090",
-		"JWT_SECRET":      "test-secret-key",
-		"DOMAIN":          "https://test.example.com",
-		"DB_HOST":         "db.example.com",
-		"DB_PORT":         "5432",
-		"DB_USER":         "testuser",
-		"DB_PASSWORD":     "testpass",
-		"DB_NAME":         "testdb",
-		"REDIS_HOST":      "redis.example.com",
-		"REDIS_PORT":      "6380",
-		"REDIS_PASSWORD":  "redispass",
-		"REDIS_DB":        "5",
-		"ROLLBAR_TOKEN":   "test-rollbar-token",
-		"ROLLBAR_STATUS":  "development",
+		"PORT":              ":9090",
+		"JWT_SECRET":        "test-secret-key",
+		"DOMAIN":            "https://test.example.com",
+		"DB_HOST":           "db.example.com",
+		"DB_PORT":           "5432",
+		"DB_USER":           "testuser",
+		"DB_PASSWORD":       "testpass",
+		"DB_NAME":           "testdb",
+		"REDIS_HOST":        "redis.example.com",
+		"REDIS_PORT":        "6380",
+		"REDIS_PASSWORD":    "redispass",
+		"REDIS_DB":          "5",
+		"ROLLBAR_TOKEN":     "test-rollbar-token",
+		"ROLLBAR_STATUS":    "development",
 		"CASBIN_MODEL_PATH": "/custom/path/model.conf",
 	}
 
@@ -115,7 +115,7 @@ func TestLoad_WithPartialEnvironmentVariables(t *testing.T) {
 	assert.Equal(t, 3, cfg.Redis.DB)
 
 	// Defaults should be used for missing vars
-	assert.Equal(t, "https://admin.kssindustri.site", cfg.Domain)
+	assert.Equal(t, "admin.kssindustri.site", cfg.Domain)
 	assert.Equal(t, "3306", cfg.Database.Port)
 	assert.Equal(t, "root", cfg.Database.User)
 	assert.Equal(t, "localhost", cfg.Redis.Host)

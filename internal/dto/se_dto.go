@@ -7,15 +7,15 @@ type CreateSERequest struct {
 	IDCsirt      string `json:"id_csirt" validate:"omitempty,uuid4"`
 
 	// Karakteristik Instansi (A/B/C)
-	NilaiInvestasi             string `json:"nilai_investasi" validate:"required,oneof=A B C"`
-	AnggaranOperasional        string `json:"anggaran_operasional" validate:"required,oneof=A B C"`
-	KepatuhanPeraturan         string `json:"kepatuhan_peraturan" validate:"required,oneof=A B C"`
-	TeknikKriptografi          string `json:"teknik_kriptografi" validate:"required,oneof=A B C"`
-	JumlahPengguna             string `json:"jumlah_pengguna" validate:"required,oneof=A B C"`
-	DataPribadi                string `json:"data_pribadi" validate:"required,oneof=A B C"`
-	KlasifikasiData            string `json:"klasifikasi_data" validate:"required,oneof=A B C"`
-	KekritisanProses           string `json:"kekritisan_proses" validate:"required,oneof=A B C"`
-	DampakKegagalan            string `json:"dampak_kegagalan" validate:"required,oneof=A B C"`
+	NilaiInvestasi                  string `json:"nilai_investasi" validate:"required,oneof=A B C"`
+	AnggaranOperasional             string `json:"anggaran_operasional" validate:"required,oneof=A B C"`
+	KepatuhanPeraturan              string `json:"kepatuhan_peraturan" validate:"required,oneof=A B C"`
+	TeknikKriptografi               string `json:"teknik_kriptografi" validate:"required,oneof=A B C"`
+	JumlahPengguna                  string `json:"jumlah_pengguna" validate:"required,oneof=A B C"`
+	DataPribadi                     string `json:"data_pribadi" validate:"required,oneof=A B C"`
+	KlasifikasiData                 string `json:"klasifikasi_data" validate:"required,oneof=A B C"`
+	KekritisanProses                string `json:"kekritisan_proses" validate:"required,oneof=A B C"`
+	DampakKegagalan                 string `json:"dampak_kegagalan" validate:"required,oneof=A B C"`
 	PotensiKerugiandanDampakNegatif string `json:"potensi_kerugian_dan_dampak_negatif" validate:"required,oneof=A B C"`
 
 	// Informasi SE
@@ -33,15 +33,15 @@ type UpdateSERequest struct {
 	IDCsirt      *string `json:"id_csirt" validate:"omitempty,uuid4"`
 
 	// Karakteristik Instansi (A/B/C)
-	NilaiInvestasi             *string `json:"nilai_investasi" validate:"omitempty,oneof=A B C"`
-	AnggaranOperasional        *string `json:"anggaran_operasional" validate:"omitempty,oneof=A B C"`
-	KepatuhanPeraturan         *string `json:"kepatuhan_peraturan" validate:"omitempty,oneof=A B C"`
-	TeknikKriptografi          *string `json:"teknik_kriptografi" validate:"omitempty,oneof=A B C"`
-	JumlahPengguna             *string `json:"jumlah_pengguna" validate:"omitempty,oneof=A B C"`
-	DataPribadi                *string `json:"data_pribadi" validate:"omitempty,oneof=A B C"`
-	KlasifikasiData            *string `json:"klasifikasi_data" validate:"omitempty,oneof=A B C"`
-	KekritisanProses           *string `json:"kekritisan_proses" validate:"omitempty,oneof=A B C"`
-	DampakKegagalan            *string `json:"dampak_kegagalan" validate:"omitempty,oneof=A B C"`
+	NilaiInvestasi                  *string `json:"nilai_investasi" validate:"omitempty,oneof=A B C"`
+	AnggaranOperasional             *string `json:"anggaran_operasional" validate:"omitempty,oneof=A B C"`
+	KepatuhanPeraturan              *string `json:"kepatuhan_peraturan" validate:"omitempty,oneof=A B C"`
+	TeknikKriptografi               *string `json:"teknik_kriptografi" validate:"omitempty,oneof=A B C"`
+	JumlahPengguna                  *string `json:"jumlah_pengguna" validate:"omitempty,oneof=A B C"`
+	DataPribadi                     *string `json:"data_pribadi" validate:"omitempty,oneof=A B C"`
+	KlasifikasiData                 *string `json:"klasifikasi_data" validate:"omitempty,oneof=A B C"`
+	KekritisanProses                *string `json:"kekritisan_proses" validate:"omitempty,oneof=A B C"`
+	DampakKegagalan                 *string `json:"dampak_kegagalan" validate:"omitempty,oneof=A B C"`
 	PotensiKerugiandanDampakNegatif *string `json:"potensi_kerugian_dan_dampak_negatif" validate:"omitempty,oneof=A B C"`
 
 	// Informasi SE
@@ -60,15 +60,15 @@ type SEResponse struct {
 	IDCsirt      string `json:"id_csirt"`
 
 	// Karakteristik Instansi
-	NilaiInvestasi             string `json:"nilai_investasi"`
-	AnggaranOperasional        string `json:"anggaran_operasional"`
-	KepatuhanPeraturan         string `json:"kepatuhan_peraturan"`
-	TeknikKriptografi          string `json:"teknik_kriptografi"`
-	JumlahPengguna             string `json:"jumlah_pengguna"`
-	DataPribadi                string `json:"data_pribadi"`
-	KlasifikasiData            string `json:"klasifikasi_data"`
-	KekritisanProses           string `json:"kekritisan_proses"`
-	DampakKegagalan            string `json:"dampak_kegagalan"`
+	NilaiInvestasi                  string `json:"nilai_investasi"`
+	AnggaranOperasional             string `json:"anggaran_operasional"`
+	KepatuhanPeraturan              string `json:"kepatuhan_peraturan"`
+	TeknikKriptografi               string `json:"teknik_kriptografi"`
+	JumlahPengguna                  string `json:"jumlah_pengguna"`
+	DataPribadi                     string `json:"data_pribadi"`
+	KlasifikasiData                 string `json:"klasifikasi_data"`
+	KekritisanProses                string `json:"kekritisan_proses"`
+	DampakKegagalan                 string `json:"dampak_kegagalan"`
 	PotensiKerugiandanDampakNegatif string `json:"potensi_kerugian_dan_dampak_negatif"`
 
 	// Informasi SE

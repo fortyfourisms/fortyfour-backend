@@ -27,7 +27,6 @@ func (r *IdentifikasiRepository) Create(req dto.CreateIdentifikasiRequest, id st
 	_, err := r.db.Exec(query,
 		id,
 		NilaiIdentifikasi,
-		req.NilaiIdentifikasi,
 		req.NilaiSubdomain1,
 		req.NilaiSubdomain2,
 		req.NilaiSubdomain3,

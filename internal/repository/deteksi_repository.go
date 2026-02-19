@@ -24,7 +24,6 @@ func (r *DeteksiRepository) Create(req dto.CreateDeteksiRequest, id string) erro
 	_, err := r.db.Exec(query,
 		id,
 		NilaiDeteksi,
-		req.NilaiDeteksi,
 		req.NilaiSubdomain1,
 		req.NilaiSubdomain2,
 		req.NilaiSubdomain3,

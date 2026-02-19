@@ -41,7 +41,7 @@ func (r *SubSektorRepository) GetByID(id string) (*dto.SubSektorResponse, error)
 		JOIN sektor s ON ss.id_sektor = s.id
 		WHERE ss.id=?
 	`, id)
-	
+
 	var sub dto.SubSektorResponse
 	err := row.Scan(&sub.ID, &sub.NamaSubSektor, &sub.IDSektor, &sub.NamaSektor, &sub.CreatedAt, &sub.UpdatedAt)
 	if err != nil {
