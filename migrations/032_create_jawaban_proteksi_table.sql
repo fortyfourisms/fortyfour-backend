@@ -3,6 +3,12 @@ CREATE TABLE jawaban_proteksi (
     pertanyaan_proteksi_id CHAR(36) NOT NULL,
     perusahaan_id CHAR(36) NOT NULL,
     jawaban_proteksi TEXT NOT NULL,
+    evidence TEXT NULL,
+    validasi ENUM('yes', 'no') NULL,
+    keterangan TEXT NULL,
+
+    CONSTRAINT chk_validasi_evidence
+        CHECK (evidence IS NOT NULL OR validasi IS NULL),
 
     CONSTRAINT fk_jawaban_proteksi_pertanyaan
         FOREIGN KEY (pertanyaan_proteksi_id)
