@@ -33,6 +33,9 @@ COPY --from=builder /build/app .
 # Copy the casbin directory with configuration files
 COPY --from=builder /build/casbin ./casbin
 
+# Copy the migrations directory with configuration files
+COPY --from=builder /build/migrations ./migrations
+
 # Copy the timezone
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
