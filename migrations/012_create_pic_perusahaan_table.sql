@@ -1,9 +1,0 @@
-CREATE TABLE pic_perusahaan (
-    id CHAR(36) PRIMARY KEY,
-    nama VARCHAR(255) NOT NULL,
-    telepon VARCHAR(50),
-    id_perusahaan CHAR(36) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_perusahaan) REFERENCES perusahaan(id) ON DELETE CASCADE
-);
