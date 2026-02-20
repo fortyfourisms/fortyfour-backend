@@ -30,6 +30,7 @@ func InitRouter(
 	domainH *handlers.DomainHandler,
 	kategoriH *handlers.KategoriHandler,
 	subKategoriH *handlers.SubKategoriHandler,
+	pertanyaanIdentifikasiH *handlers.PertanyaanIdentifikasiHandler,
 	authM *middleware.AuthMiddleware,
 	strictLimiter *middleware.RateLimiter,
 	moderateLimiter *middleware.RateLimiter,
@@ -53,6 +54,9 @@ func InitRouter(
 
 	mux.Handle("/api/sub-kategori", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(subKategoriH))))
 	mux.Handle("/api/sub-kategori/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(subKategoriH))))
+
+	mux.Handle("/api/pertanyaan-identifikasi", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(pertanyaanIdentifikasiH))))
+	mux.Handle("/api/pertanyaan-identifikasi/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(pertanyaanIdentifikasiH))))
 
 	return mux
 }

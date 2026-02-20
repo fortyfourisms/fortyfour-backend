@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS pertanyaan_identifikasi (
     index3 TEXT,
     index4 TEXT,
     index5 TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_pertanyaan_identifikasi_sub_kategori
         FOREIGN KEY (sub_kategori_id)

@@ -110,6 +110,7 @@ func main() {
 	domainRepo := repository.NewDomainRepository(db)
 	kategoriRepo := repository.NewKategoriRepository(db)
 	subKategoriRepo := repository.NewSubKategoriRepository(db)
+	pertanyaanIdentifikasiRepo := repository.NewPertanyaanIdentifikasiRepository(db)
 
 	// services
 	ikasService := services.NewIkasService(ikasRepo, msgProducer)
@@ -117,6 +118,7 @@ func main() {
 	domainService := services.NewDomainService(domainRepo)
 	kategoriService := services.NewKategoriService(kategoriRepo)
 	subKategoriService := services.NewSubKategoriService(subKategoriRepo)
+	pertanyaanIdentifikasiService := services.NewPertanyaanIdentifikasiService(pertanyaanIdentifikasiRepo)
 
 	// handlers
 	ikasHandler := handlers.NewIkasHandler(ikasService)
@@ -124,6 +126,7 @@ func main() {
 	domainHandler := handlers.NewDomainHandler(domainService)
 	kategoriHandler := handlers.NewKategoriHandler(kategoriService)
 	subKategoriHandler := handlers.NewSubKategoriHandler(subKategoriService)
+	pertanyaanIdentifikasiHandler := handlers.NewPertanyaanIdentifikasiHandler(pertanyaanIdentifikasiService)
 
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
 
@@ -141,6 +144,7 @@ func main() {
 		domainHandler,
 		kategoriHandler,
 		subKategoriHandler,
+		pertanyaanIdentifikasiHandler,
 		authMiddleware,
 		strictLimiter,
 		moderateLimiter,
