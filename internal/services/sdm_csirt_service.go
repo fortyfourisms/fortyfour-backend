@@ -99,7 +99,6 @@ func (s *SdmCsirtService) Update(id string, req dto.UpdateSdmCsirtRequest) error
 		existing.Sertifikasi = *req.Sertifikasi
 	}
 
-	// ✅ FIX UTAMA DI SINI
 	if err := s.repo.Update(id, *existing); err != nil {
 		return err
 	}
