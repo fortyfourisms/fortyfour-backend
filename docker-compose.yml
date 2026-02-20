@@ -1,5 +1,5 @@
 services:
-  # Go Application
+  # Main Auth Service (root)
   app:
     image: ghcr.io/fortyfourisms/fortyfour-backend:latest
     container_name: fortyfour-backend
@@ -11,10 +11,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       
-      # Host MySQL connection (use host.docker.internal or host IP)
-      # DB_HOST: host.docker.internal  # For Docker Desktop
-      # DB_HOST: 172.17.0.1          # For Linux Docker (bridge network gateway)
-      DB_HOST: 154.26.136.33      # Or use actual host IP
+      # Host MySQL connection
+      DB_HOST: 154.26.136.33
       DB_PORT: 3306
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
@@ -33,7 +31,7 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
-      RABBITMQ_VHOST: ${RABBITMQ_VHOST:-/}
+      RABBITMQ_VHOST: /
 
       ENVIRONMENT: ${ENVIRONMENT:-production}
     networks:
@@ -49,13 +47,64 @@ services:
       timeout: 3s
       retries: 3
       start_period: 40s
-    # Only expose to internal network (Nginx will handle external traffic)
     ports:
       - 8080:8080
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  # Redis Cache
+  # IKAS Service (ikas/)
+  ikas:
+    image: ghcr.io/fortyfourisms/fortyfour-ikas:latest
+    container_name: fortyfour-ikas
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      PORT: ":8081"
+      JWT_SECRET: ${JWT_SECRET}
+
+      # Same database
+      DB_HOST: 154.26.136.33
+      DB_PORT: 3306
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+
+      # Redis container
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      ROLLBAR_TOKEN: ${ROLLBAR_TOKEN}
+      ROLLBAR_ENVIRONMENT: ${ROLLBAR_STATUS}
+
+      # RabbitMQ
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_VHOST: /
+
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+    networks:
+      - app-network
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+    ports:
+      - 8081:8081
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Redis Cache (shared between both services)
   redis:
     image: redis:8.4-alpine
     container_name: fortyfour-redis
@@ -77,7 +126,7 @@ services:
     expose:
       - "6379"
 
-  # RabbitMQ Message Broker
+  # RabbitMQ Message Broker (shared between both services)
   rabbitmq:
     image: rabbitmq:4.2.4-management-alpine
     container_name: fortyfour-rabbitmq
@@ -85,9 +134,9 @@ services:
     security_opt:
       - no-new-privileges:true
     environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
-      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST}
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_DEFAULT_VHOST: /
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
