@@ -13,13 +13,6 @@ import (
 )
 
 type IkasService struct {
-<<<<<<< HEAD:internal/services/ikas_services.go
-	repo repository.IkasRepoInterface
-}
-
-func NewIkasService(repo repository.IkasRepoInterface) *IkasService {
-	return &IkasService{repo: repo}
-=======
 	repo     repository.IkasRepositoryInterface
 	producer *rabbitmq.Producer
 }
@@ -29,7 +22,6 @@ func NewIkasService(repo repository.IkasRepositoryInterface, producer *rabbitmq.
 		repo:     repo,
 		producer: producer,
 	}
->>>>>>> origin:ikas/internal/services/ikas_services.go
 }
 
 func (s *IkasService) Create(req dto.CreateIkasRequest, id string) error {
@@ -321,9 +313,6 @@ func (s *IkasService) ImportFromExcel(fileData []byte) (*dto.IkasResponse, error
 	go s.publishIkasImportedEvent(newID, excelData, resp.NilaiKematangan)
 
 	return resp, nil
-<<<<<<< HEAD:internal/services/ikas_services.go
-}
-=======
 }
 
 func (s *IkasService) publishIkasImportedEvent(ikasID string, req *dto.CreateIkasRequest, nilaiKematangan float64) {
@@ -344,4 +333,3 @@ func (s *IkasService) publishIkasImportedEvent(ikasID string, req *dto.CreateIka
 		// rollbar.Error(err)
 	}
 }
->>>>>>> origin:ikas/internal/services/ikas_services.go

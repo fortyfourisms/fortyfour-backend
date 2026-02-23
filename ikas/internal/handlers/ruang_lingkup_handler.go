@@ -193,7 +193,7 @@ func (h *RuangLingkupHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
 //	@Router       /api/ruang-lingkup/{id} [delete]
-func (h *RuangLingkupHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+func (h *RuangLingkupHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		rollbar.Error(err)
 		if err.Error() == "data tidak ditemukan" {

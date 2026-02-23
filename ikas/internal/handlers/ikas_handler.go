@@ -178,7 +178,7 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 // @Success      200  {object} dto.MessageResponse
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/ikas/{id} [delete]
-func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+func (h *IkasHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		rollbar.Error(err)
 		utils.RespondError(w, 400, err.Error())
@@ -249,18 +249,6 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(response)
 		return
 	}
-<<<<<<< HEAD:internal/handlers/ikas_handler.go
-	
-
-	// SSE Notif Create
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
-	h.sseService.NotifyCreate("ikas", resp, userID)
-
-=======
->>>>>>> origin:ikas/internal/handlers/ikas_handler.go
 	// Success response
 	response := dto.ImportIkasResponse{
 		Success: true,

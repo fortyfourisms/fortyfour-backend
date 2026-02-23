@@ -206,7 +206,7 @@ func (h *KategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
 //	@Router       /api/kategori/{id} [delete]
-func (h *KategoriHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+func (h *KategoriHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		rollbar.Error(err)
 		if err.Error() == "data tidak ditemukan" {
