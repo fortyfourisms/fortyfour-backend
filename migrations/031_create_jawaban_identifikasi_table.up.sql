@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS jawaban_identifikasi (
     evidence TEXT NULL,
     validasi ENUM('yes', 'no') NULL,
     keterangan TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     CONSTRAINT chk_validasi_evidence
         CHECK (evidence IS NOT NULL OR validasi IS NULL),
