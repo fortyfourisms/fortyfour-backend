@@ -84,7 +84,7 @@ func Load() *Config {
 		},
 		CasbinModelPath: getEnv("CASBIN_MODEL_PATH", absPath),
 		Rollbar: RollbarConfig{
-			Token: getEnv("ROLLBAR_TOKEN", "0eddf8fb05e44067a12a8bb36ccc3ef9"),
+			Token: getEnv("ROLLBAR_TOKEN", "c6a9dcb23fd948338d37555cb926a617"),
 			Env:   getEnv("ROLLBAR_STATUS", "production"),
 		},
 	}
