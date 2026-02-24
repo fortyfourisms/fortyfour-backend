@@ -10,7 +10,7 @@ import (
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 
-	"github.com/rollbar/rollbar-go"
+	"fortyfour-backend/pkg/logger"
 )
 
 type GulihHandler struct {
@@ -69,7 +69,7 @@ func (h *GulihHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *GulihHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
@@ -87,7 +87,7 @@ func (h *GulihHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 func (h *GulihHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 404, "Data tidak ditemukan")
 		return
 	}
@@ -107,14 +107,14 @@ func (h *GulihHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id 
 func (h *GulihHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateGulihRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
 	resp, err := h.service.Create(req)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -143,14 +143,14 @@ func (h *GulihHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 func (h *GulihHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateGulihRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
 	resp, err := h.service.Update(id, req)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -176,7 +176,7 @@ func (h *GulihHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 // @Router       /api/gulih/{id} [delete]
 func (h *GulihHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, err.Error())
 		return
 	}

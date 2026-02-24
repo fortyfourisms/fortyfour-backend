@@ -8,7 +8,7 @@ import (
 	"ikas/internal/utils"
 
 	"github.com/google/uuid"
-	"github.com/rollbar/rollbar-go"
+	"fortyfour-backend/pkg/logger"
 )
 
 type DomainService struct {
@@ -71,7 +71,7 @@ func (s *DomainService) Create(req dto.CreateDomainRequest) (*dto.DomainResponse
 
 	dup, err := s.repo.CheckDuplicateName(req.NamaDomain, "")
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 	if dup {

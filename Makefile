@@ -1,4 +1,4 @@
-.PHONY: help run test test-coverage migrate-up migrate-down build clean
+.PHONY: help run test test-coverage migrate-up migrate-down build clean swagger swagger-ikas swagger-all
 
 help:
 	@echo "Available commands:"
@@ -9,6 +9,9 @@ help:
 	@echo "  make migrate-down   - Rollback migrations"
 	@echo "  make build          - Build the application"
 	@echo "  make clean          - Clean build artifacts"
+	@echo "  make swagger        - Generate swagger docs for main app"
+	@echo "  make swagger-ikas   - Generate swagger docs for IKAS service"
+	@echo "  make swagger-all    - Generate swagger docs for all services"
 
 run:
 	go run cmd/api/main.go
@@ -38,6 +41,15 @@ build:
 clean:
 	rm -rf bin/
 	rm -f coverage.out
+
+swagger:
+	swag init -g cmd/api/main.go -o docs --parseDependency --parseInternal --exclude ikas
+
+swagger-ikas:
+	cd ikas && swag init -g cmd/main.go -o docs --parseDependency --parseInternal
+
+swagger-all: swagger swagger-ikas
+	@echo "Swagger docs generated for all services"
 
 
 

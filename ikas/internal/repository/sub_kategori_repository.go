@@ -5,7 +5,7 @@ import (
 	"ikas/internal/dto"
 	"strings"
 
-	"github.com/rollbar/rollbar-go"
+	"fortyfour-backend/pkg/logger"
 )
 
 type SubKategoriRepository struct {
@@ -21,7 +21,7 @@ func (r *SubKategoriRepository) Create(req dto.CreateSubKategoriRequest, id stri
 
 	_, err := r.db.Exec(query, id, req.KategoriID, req.NamaSubKategori)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return err
 	}
 
@@ -35,7 +35,7 @@ func (r *SubKategoriRepository) GetAll() ([]dto.SubKategoriResponse, error) {
 
 	rows, err := r.db.Query(query)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 	defer rows.Close()
@@ -45,7 +45,7 @@ func (r *SubKategoriRepository) GetAll() ([]dto.SubKategoriResponse, error) {
 	for rows.Next() {
 		var item dto.SubKategoriResponse
 		if err := rows.Scan(&item.ID, &item.KategoriID, &item.NamaSubKategori, &item.CreatedAt, &item.UpdatedAt); err != nil {
-			rollbar.Error(err)
+			logger.Error(err, "operation failed")
 			continue
 		}
 		result = append(result, item)
@@ -62,7 +62,7 @@ func (r *SubKategoriRepository) GetByID(id string) (*dto.SubKategoriResponse, er
 	var item dto.SubKategoriResponse
 	err := r.db.QueryRow(query, id).Scan(&item.ID, &item.KategoriID, &item.NamaSubKategori, &item.CreatedAt, &item.UpdatedAt)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 
@@ -94,7 +94,7 @@ func (r *SubKategoriRepository) Update(id string, req dto.UpdateSubKategoriReque
 
 	_, err := r.db.Exec(query, args...)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return err
 	}
 
@@ -104,7 +104,7 @@ func (r *SubKategoriRepository) Update(id string, req dto.UpdateSubKategoriReque
 func (r *SubKategoriRepository) Delete(id string) error {
 	_, err := r.db.Exec(`DELETE FROM sub_kategori WHERE id=?`, id)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return err
 	}
 
@@ -126,7 +126,7 @@ func (r *SubKategoriRepository) CheckDuplicateName(kategoriID string, namaSubKat
 
 	err := r.db.QueryRow(query, args...).Scan(&count)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return false, err
 	}
 
@@ -139,7 +139,7 @@ func (r *SubKategoriRepository) CheckKategoriExists(kategoriID string) (bool, er
 	query := `SELECT COUNT(*) FROM kategori WHERE id = ?`
 	err := r.db.QueryRow(query, kategoriID).Scan(&count)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return false, err
 	}
 

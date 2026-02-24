@@ -15,227 +15,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/login": {
-            "post": {
-                "description": "Autentikasi user. Token dikirim via HTTP-only cookies, BUKAN di response body.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Login user",
-                "parameters": [
-                    {
-                        "description": "Login credentials",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.LoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "message dan user info (tanpa token)",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/logout": {
-            "post": {
-                "description": "Revoke refresh token dan hapus cookies autentikasi.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Logout",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/logout-all": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Revoke semua refresh token user dan hapus cookies.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Logout dari semua perangkat",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/me": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Mengambil informasi user yang sedang login.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Get current user info",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/refresh": {
-            "post": {
-                "description": "Refresh access token menggunakan refresh token dari cookie. Token baru dikirim via HTTP-only cookies.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Refresh token",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/register": {
-            "post": {
-                "description": "Mendaftarkan user baru. Token dikirim via HTTP-only cookies, BUKAN di response body.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Register user baru",
-                "parameters": [
-                    {
-                        "description": "Register data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.RegisterRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "message dan user info (tanpa token)",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/casbin/permissions": {
             "get": {
                 "security": [
@@ -1356,259 +1135,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/ikas": {
-            "get": {
-                "description": "Mengambil seluruh data ikas",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "List semua ikas",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/fortyfour-backend_internal_dto.IkasResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Membuat record ikas",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "Tambah ikas baru",
-                "parameters": [
-                    {
-                        "description": "Data ikas",
-                        "name": "ikas",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateIkasRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.IkasResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/ikas/import": {
-            "post": {
-                "description": "Import data IKAS dari file Excel (sheet ke-7)",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "Import IKAS dari Excel",
-                "parameters": [
-                    {
-                        "type": "file",
-                        "description": "File Excel (.xlsx)",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "ID Perusahaan",
-                        "name": "id_perusahaan",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Tanggal (YYYY-MM-DD)",
-                        "name": "tanggal",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Nama Responden",
-                        "name": "responden",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Nomor Telepon",
-                        "name": "telepon",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Jabatan",
-                        "name": "jabatan",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ImportIkasResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/ikas/{id}": {
-            "get": {
-                "description": "Mengambil satu data ikas",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "Ambil ikas berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Ikas ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.IkasResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Mengubah data ikas berdasarkan ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "Update ikas",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Ikas ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data update",
-                        "name": "ikas",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateIkasRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.IkasResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Menghapus data ikas berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "Hapus ikas",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Ikas ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/jabatan": {
             "get": {
                 "description": "Mengambil seluruh data jabatan",
@@ -1789,6 +1315,297 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/login": {
+            "post": {
+                "description": "Autentikasi user. Token dikirim via HTTP-only cookies, BUKAN di response body.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login user",
+                "parameters": [
+                    {
+                        "description": "Login credentials",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "message dan user info (tanpa token)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/logout": {
+            "post": {
+                "description": "Revoke refresh token dan hapus cookies autentikasi.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/logout-all": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Revoke semua refresh token user dan hapus cookies.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout dari semua perangkat",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil informasi user yang sedang login.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Get current user info",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mfa/enable": {
+            "post": {
+                "description": "Verify MFA code and enable MFA (Microsoft-style: returns tokens immediately)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Enable MFA",
+                "parameters": [
+                    {
+                        "description": "MFA code and optional setup_token",
+                        "name": "enable",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.AuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mfa/setup": {
+            "post": {
+                "description": "Generate MFA provisioning URI and secret (Microsoft-style: accepts setup_token)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Setup MFA",
+                "parameters": [
+                    {
+                        "description": "Setup token (for unauthenticated setup)",
+                        "name": "setup",
+                        "in": "body",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "provisioning_uri and secret",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/mfa/verify": {
+            "post": {
+                "description": "Verify MFA code and return access tokens",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verify MFA",
+                "parameters": [
+                    {
+                        "description": "MFA token and code",
+                        "name": "verify",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.AuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/perusahaan": {
             "get": {
                 "description": "Mengambil seluruh data perusahaan",
@@ -1844,7 +1661,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.DeteksiResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.PerusahaanResponse"
                         }
                     },
                     "400": {
@@ -2329,6 +2146,85 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/refresh": {
+            "post": {
+                "description": "Refresh access token menggunakan refresh token dari cookie. Token baru dikirim via HTTP-only cookies.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Refresh token",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/register": {
+            "post": {
+                "description": "Mendaftarkan user baru. Token dikirim via HTTP-only cookies, BUKAN di response body.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register user baru",
+                "parameters": [
+                    {
+                        "description": "Register data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "message dan user info (tanpa token)",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/role": {
             "get": {
                 "description": "Mengambil seluruh data role",
@@ -2689,24 +2585,24 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/se_csirt": {
+        "/api/se": {
             "get": {
-                "description": "Mengambil seluruh data se csirt",
+                "description": "Get all sistem elektronik with kategorisasi",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "SE"
                 ],
-                "summary": "List semua se csirt",
+                "summary": "Get all SE",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/fortyfour-backend_internal_dto.SeCsirtResponse"
-                            }
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SEListResponse"
                         }
                     },
                     "500": {
@@ -2718,7 +2614,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Membuat record se csirt",
+                "description": "Create new sistem elektronik with kategorisasi",
                 "consumes": [
                     "application/json"
                 ],
@@ -2728,15 +2624,15 @@ const docTemplate = `{
                 "tags": [
                     "SE"
                 ],
-                "summary": "Tambah se csirt baru",
+                "summary": "Create SE",
                 "parameters": [
                     {
-                        "description": "Data se csirt",
-                        "name": "se",
+                        "description": "SE Create Request",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateSeCsirtRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateSERequest"
                         }
                     }
                 ],
@@ -2744,7 +2640,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SeCsirtResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SEResponse"
                         }
                     },
                     "400": {
@@ -2756,16 +2652,19 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/se_csirt/{id}": {
+        "/api/se/{id}": {
             "get": {
-                "description": "Mengambil satu data se csirt",
+                "description": "Get sistem elektronik by ID",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "SE"
                 ],
-                "summary": "Ambil se csirt berdasarkan ID",
+                "summary": "Get SE by ID",
                 "parameters": [
                     {
                         "type": "string",
@@ -2779,7 +2678,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SeCsirtResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SEResponse"
                         }
                     },
                     "404": {
@@ -2791,7 +2690,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Mengubah data se csirt berdasarkan ID",
+                "description": "Update sistem elektronik",
                 "consumes": [
                     "application/json"
                 ],
@@ -2801,7 +2700,7 @@ const docTemplate = `{
                 "tags": [
                     "SE"
                 ],
-                "summary": "Update se csirt",
+                "summary": "Update SE",
                 "parameters": [
                     {
                         "type": "string",
@@ -2811,12 +2710,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Data update",
-                        "name": "se",
+                        "description": "SE Update Request",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateSeCsirtRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateSERequest"
                         }
                     }
                 ],
@@ -2824,7 +2723,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SeCsirtResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SEResponse"
                         }
                     },
                     "400": {
@@ -2836,14 +2735,17 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Menghapus data se csirt berdasarkan ID",
+                "description": "Delete sistem elektronik",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "SE"
                 ],
-                "summary": "Hapus se csirt",
+                "summary": "Delete SE",
                 "parameters": [
                     {
                         "type": "string",
@@ -2857,11 +2759,180 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sektor": {
+            "get": {
+                "description": "Mengambil seluruh data sektor beserta sub sektor",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sektor"
+                ],
+                "summary": "List semua sektor",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.SektorResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sektor/{id}": {
+            "get": {
+                "description": "Mengambil satu data sektor beserta sub sektor",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sektor"
+                ],
+                "summary": "Ambil sektor berdasarkan ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sektor ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SektorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sub-sektor": {
+            "get": {
+                "description": "Mengambil seluruh data sub sektor",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SubSektor"
+                ],
+                "summary": "List semua sub sektor",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.SubSektorResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sub-sektor/by-sektor/{id}": {
+            "get": {
+                "description": "Mengambil data sub sektor dalam satu sektor",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SubSektor"
+                ],
+                "summary": "Ambil sub sektor berdasarkan Sektor ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sektor ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.SubSektorResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/sub-sektor/{id}": {
+            "get": {
+                "description": "Mengambil satu data sub sektor",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SubSektor"
+                ],
+                "summary": "Ambil sub sektor berdasarkan ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SubSektor ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SubSektorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
@@ -3277,6 +3348,26 @@ const docTemplate = `{
                 }
             }
         },
+        "fortyfour-backend_internal_dto.AuthResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_models.User"
+                }
+            }
+        },
         "fortyfour-backend_internal_dto.BulkAddPolicyRequest": {
             "type": "object",
             "required": [
@@ -3295,20 +3386,6 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.CreateDeteksiData": {
-            "type": "object",
-            "properties": {
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                }
-            }
-        },
         "fortyfour-backend_internal_dto.CreateDeteksiRequest": {
             "type": "object",
             "properties": {
@@ -3322,23 +3399,6 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "nilai_subdomain3": {
-                    "type": "number"
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.CreateGulihData": {
-            "type": "object",
-            "properties": {
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
                     "type": "number"
                 }
             }
@@ -3363,26 +3423,6 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.CreateIdentifikasiData": {
-            "type": "object",
-            "properties": {
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
-                    "type": "number"
-                },
-                "nilai_subdomain5": {
-                    "type": "number"
-                }
-            }
-        },
         "fortyfour-backend_internal_dto.CreateIdentifikasiRequest": {
             "type": "object",
             "properties": {
@@ -3403,59 +3443,6 @@ const docTemplate = `{
                 },
                 "nilai_subdomain5": {
                     "type": "number"
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.CreateIkasRequest": {
-            "type": "object",
-            "properties": {
-                "deteksi": {
-                    "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateDeteksiData"
-                },
-                "gulih": {
-                    "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateGulihData"
-                },
-                "id_deteksi": {
-                    "type": "string"
-                },
-                "id_gulih": {
-                    "type": "string"
-                },
-                "id_identifikasi": {
-                    "description": "ID manual (backward compatibility)",
-                    "type": "string"
-                },
-                "id_perusahaan": {
-                    "type": "string"
-                },
-                "id_proteksi": {
-                    "type": "string"
-                },
-                "identifikasi": {
-                    "description": "Nested data untuk auto-create",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateIdentifikasiData"
-                        }
-                    ]
-                },
-                "jabatan": {
-                    "type": "string"
-                },
-                "proteksi": {
-                    "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateProteksiData"
-                },
-                "responden": {
-                    "type": "string"
-                },
-                "tanggal": {
-                    "type": "string"
-                },
-                "target_nilai": {
-                    "type": "number"
-                },
-                "telepon": {
-                    "type": "string"
                 }
             }
         },
@@ -3490,13 +3477,13 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "id_sub_sektor": {
+                    "type": "string"
+                },
                 "nama_perusahaan": {
                     "type": "string"
                 },
                 "photo": {
-                    "type": "string"
-                },
-                "sektor": {
                     "type": "string"
                 },
                 "telepon": {
@@ -3504,29 +3491,6 @@ const docTemplate = `{
                 },
                 "website": {
                     "type": "string"
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.CreateProteksiData": {
-            "type": "object",
-            "properties": {
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
-                    "type": "number"
-                },
-                "nilai_subdomain5": {
-                    "type": "number"
-                },
-                "nilai_subdomain6": {
-                    "type": "number"
                 }
             }
         },
@@ -3573,6 +3537,134 @@ const docTemplate = `{
                 }
             }
         },
+        "fortyfour-backend_internal_dto.CreateSERequest": {
+            "type": "object",
+            "required": [
+                "anggaran_operasional",
+                "as_number_se",
+                "dampak_kegagalan",
+                "data_pribadi",
+                "id_perusahaan",
+                "ip_se",
+                "jumlah_pengguna",
+                "kekritisan_proses",
+                "kepatuhan_peraturan",
+                "klasifikasi_data",
+                "nama_se",
+                "nilai_investasi",
+                "pengelola_se",
+                "potensi_kerugian_dan_dampak_negatif",
+                "teknik_kriptografi"
+            ],
+            "properties": {
+                "anggaran_operasional": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "as_number_se": {
+                    "type": "string"
+                },
+                "dampak_kegagalan": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "data_pribadi": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "fitur_se": {
+                    "type": "string"
+                },
+                "id_csirt": {
+                    "type": "string"
+                },
+                "id_perusahaan": {
+                    "type": "string"
+                },
+                "id_sub_sektor": {
+                    "type": "string"
+                },
+                "ip_se": {
+                    "type": "string"
+                },
+                "jumlah_pengguna": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "kekritisan_proses": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "kepatuhan_peraturan": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "klasifikasi_data": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "nama_se": {
+                    "description": "Informasi SE",
+                    "type": "string"
+                },
+                "nilai_investasi": {
+                    "description": "Karakteristik Instansi (A/B/C)",
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "pengelola_se": {
+                    "type": "string"
+                },
+                "potensi_kerugian_dan_dampak_negatif": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "teknik_kriptografi": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                }
+            }
+        },
         "fortyfour-backend_internal_dto.CreateSdmCsirtRequest": {
             "type": "object",
             "properties": {
@@ -3592,32 +3684,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "skill": {
-                    "type": "string"
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.CreateSeCsirtRequest": {
-            "type": "object",
-            "properties": {
-                "as_number_se": {
-                    "type": "string"
-                },
-                "fitur_se": {
-                    "type": "string"
-                },
-                "id_csirt": {
-                    "type": "string"
-                },
-                "ip_se": {
-                    "type": "string"
-                },
-                "kategori_se": {
-                    "type": "string"
-                },
-                "nama_se": {
-                    "type": "string"
-                },
-                "pengelola_se": {
                     "type": "string"
                 }
             }
@@ -3696,29 +3762,6 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.DeteksiInIkas": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "kategori_tingkat_kematangan_domain": {
-                    "type": "string"
-                },
-                "nilai_deteksi": {
-                    "type": "number"
-                },
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                }
-            }
-        },
         "fortyfour-backend_internal_dto.DeteksiResponse": {
             "type": "object",
             "properties": {
@@ -3748,32 +3791,6 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.GulihInIkas": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "kategori_tingkat_kematangan_domain": {
-                    "type": "string"
-                },
-                "nilai_gulih": {
-                    "type": "number"
-                },
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
-                    "type": "number"
-                }
-            }
-        },
         "fortyfour-backend_internal_dto.GulihResponse": {
             "type": "object",
             "properties": {
@@ -3793,35 +3810,6 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "nilai_subdomain4": {
-                    "type": "number"
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.IdentifikasiInIkas": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "kategori_tingkat_kematangan_domain": {
-                    "type": "string"
-                },
-                "nilai_identifikasi": {
-                    "type": "number"
-                },
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
-                    "type": "number"
-                },
-                "nilai_subdomain5": {
                     "type": "number"
                 }
             }
@@ -3849,70 +3837,6 @@ const docTemplate = `{
                 },
                 "nilai_subdomain5": {
                     "type": "number"
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.IkasResponse": {
-            "type": "object",
-            "properties": {
-                "deteksi": {
-                    "$ref": "#/definitions/fortyfour-backend_internal_dto.DeteksiInIkas"
-                },
-                "gulih": {
-                    "$ref": "#/definitions/fortyfour-backend_internal_dto.GulihInIkas"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "identifikasi": {
-                    "$ref": "#/definitions/fortyfour-backend_internal_dto.IdentifikasiInIkas"
-                },
-                "jabatan": {
-                    "type": "string"
-                },
-                "kategori_kematangan_keamanan_siber": {
-                    "type": "string"
-                },
-                "nilai_kematangan": {
-                    "type": "number"
-                },
-                "perusahaan": {
-                    "$ref": "#/definitions/fortyfour-backend_internal_dto.PerusahaanInIkas"
-                },
-                "proteksi": {
-                    "$ref": "#/definitions/fortyfour-backend_internal_dto.ProteksiInIkas"
-                },
-                "responden": {
-                    "type": "string"
-                },
-                "tanggal": {
-                    "type": "string"
-                },
-                "target_nilai": {
-                    "type": "number"
-                },
-                "telepon": {
-                    "type": "string"
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.ImportIkasResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/fortyfour-backend_internal_dto.IkasResponse"
-                },
-                "errors": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
                 }
             }
         },
@@ -3980,7 +3904,7 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.PerusahaanInIkas": {
+        "fortyfour-backend_internal_dto.PerusahaanInPIC": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3991,7 +3915,7 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.PerusahaanInPIC": {
+        "fortyfour-backend_internal_dto.PerusahaanMiniResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -4023,8 +3947,8 @@ const docTemplate = `{
                 "photo": {
                     "type": "string"
                 },
-                "sektor": {
-                    "type": "string"
+                "sub_sektor": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.SubSektorResponse"
                 },
                 "telepon": {
                     "type": "string"
@@ -4049,38 +3973,6 @@ const docTemplate = `{
                 },
                 "resource": {
                     "type": "string"
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.ProteksiInIkas": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "kategori_tingkat_kematangan_domain": {
-                    "type": "string"
-                },
-                "nilai_proteksi": {
-                    "type": "number"
-                },
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
-                    "type": "number"
-                },
-                "nilai_subdomain5": {
-                    "type": "number"
-                },
-                "nilai_subdomain6": {
-                    "type": "number"
                 }
             }
         },
@@ -4125,6 +4017,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id_jabatan": {
+                    "type": "string"
+                },
+                "id_perusahaan": {
+                    "description": "For selecting existing company",
+                    "type": "string"
+                },
+                "nama_perusahaan": {
+                    "description": "Added company fields for registration",
                     "type": "string"
                 },
                 "password": {
@@ -4180,6 +4080,111 @@ const docTemplate = `{
                 }
             }
         },
+        "fortyfour-backend_internal_dto.SEListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/fortyfour-backend_internal_dto.SEResponse"
+                    }
+                },
+                "total_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.SEResponse": {
+            "type": "object",
+            "properties": {
+                "anggaran_operasional": {
+                    "type": "string"
+                },
+                "as_number_se": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "csirt": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.CsirtMiniResponse"
+                },
+                "dampak_kegagalan": {
+                    "type": "string"
+                },
+                "data_pribadi": {
+                    "type": "string"
+                },
+                "fitur_se": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "id_csirt": {
+                    "type": "string"
+                },
+                "id_perusahaan": {
+                    "type": "string"
+                },
+                "id_sub_sektor": {
+                    "type": "string"
+                },
+                "ip_se": {
+                    "type": "string"
+                },
+                "jumlah_pengguna": {
+                    "type": "string"
+                },
+                "kategori_se": {
+                    "type": "string"
+                },
+                "kekritisan_proses": {
+                    "type": "string"
+                },
+                "kepatuhan_peraturan": {
+                    "type": "string"
+                },
+                "klasifikasi_data": {
+                    "type": "string"
+                },
+                "nama_se": {
+                    "description": "Informasi SE",
+                    "type": "string"
+                },
+                "nilai_investasi": {
+                    "description": "Karakteristik Instansi",
+                    "type": "string"
+                },
+                "pengelola_se": {
+                    "type": "string"
+                },
+                "perusahaan": {
+                    "description": "Nested objects",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.PerusahaanMiniResponse"
+                        }
+                    ]
+                },
+                "potensi_kerugian_dan_dampak_negatif": {
+                    "type": "string"
+                },
+                "sub_sektor": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.SubSektorMiniResponse"
+                },
+                "teknik_kriptografi": {
+                    "type": "string"
+                },
+                "total_bobot": {
+                    "description": "Hasil Kalkulasi",
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "fortyfour-backend_internal_dto.SdmCsirtResponse": {
             "type": "object",
             "properties": {
@@ -4212,52 +4217,66 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.SeCsirtResponse": {
+        "fortyfour-backend_internal_dto.SektorResponse": {
             "type": "object",
             "properties": {
-                "as_number_se": {
-                    "type": "string"
-                },
                 "created_at": {
-                    "type": "string"
-                },
-                "csirt": {
-                    "$ref": "#/definitions/fortyfour-backend_internal_dto.CsirtMiniResponse"
-                },
-                "fitur_se": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
-                "ip_se": {
+                "nama_sektor": {
                     "type": "string"
                 },
-                "kategori_se": {
-                    "type": "string"
-                },
-                "nama_se": {
-                    "type": "string"
-                },
-                "pengelola_se": {
-                    "type": "string"
+                "sub_sektor": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/fortyfour-backend_internal_dto.SubSektorResponse"
+                    }
                 },
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "fortyfour-backend_internal_dto.UpdateDeteksiData": {
+        "fortyfour-backend_internal_dto.SubSektorMiniResponse": {
             "type": "object",
             "properties": {
-                "nilai_subdomain1": {
-                    "type": "number"
+                "id": {
+                    "type": "string"
                 },
-                "nilai_subdomain2": {
-                    "type": "number"
+                "id_sektor": {
+                    "type": "string"
                 },
-                "nilai_subdomain3": {
-                    "type": "number"
+                "nama_sektor": {
+                    "type": "string"
+                },
+                "nama_sub_sektor": {
+                    "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.SubSektorResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "id_sektor": {
+                    "type": "string"
+                },
+                "nama_sektor": {
+                    "type": "string"
+                },
+                "nama_sub_sektor": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -4274,23 +4293,6 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "nilai_subdomain3": {
-                    "type": "number"
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.UpdateGulihData": {
-            "type": "object",
-            "properties": {
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
                     "type": "number"
                 }
             }
@@ -4315,26 +4317,6 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.UpdateIdentifikasiData": {
-            "type": "object",
-            "properties": {
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
-                    "type": "number"
-                },
-                "nilai_subdomain5": {
-                    "type": "number"
-                }
-            }
-        },
         "fortyfour-backend_internal_dto.UpdateIdentifikasiRequest": {
             "type": "object",
             "properties": {
@@ -4355,61 +4337,6 @@ const docTemplate = `{
                 },
                 "nilai_subdomain5": {
                     "type": "number"
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.UpdateIkasRequest": {
-            "type": "object",
-            "properties": {
-                "deteksi": {
-                    "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateDeteksiData"
-                },
-                "gulih": {
-                    "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateGulihData"
-                },
-                "id_deteksi": {
-                    "type": "string"
-                },
-                "id_gulih": {
-                    "type": "string"
-                },
-                "id_identifikasi": {
-                    "type": "string"
-                },
-                "id_perusahaan": {
-                    "type": "string"
-                },
-                "id_proteksi": {
-                    "type": "string"
-                },
-                "identifikasi": {
-                    "description": "Nested data untuk update subdomain",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateIdentifikasiData"
-                        }
-                    ]
-                },
-                "jabatan": {
-                    "type": "string"
-                },
-                "nilai_kematangan": {
-                    "type": "number"
-                },
-                "proteksi": {
-                    "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateProteksiData"
-                },
-                "responden": {
-                    "type": "string"
-                },
-                "tanggal": {
-                    "type": "string"
-                },
-                "target_nilai": {
-                    "type": "number"
-                },
-                "telepon": {
-                    "type": "string"
                 }
             }
         },
@@ -4444,13 +4371,13 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "id_sub_sektor": {
+                    "type": "string"
+                },
                 "nama_perusahaan": {
                     "type": "string"
                 },
                 "photo": {
-                    "type": "string"
-                },
-                "sektor": {
                     "type": "string"
                 },
                 "telepon": {
@@ -4458,29 +4385,6 @@ const docTemplate = `{
                 },
                 "website": {
                     "type": "string"
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.UpdateProteksiData": {
-            "type": "object",
-            "properties": {
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
-                    "type": "number"
-                },
-                "nilai_subdomain5": {
-                    "type": "number"
-                },
-                "nilai_subdomain6": {
-                    "type": "number"
                 }
             }
         },
@@ -4524,6 +4428,117 @@ const docTemplate = `{
                 }
             }
         },
+        "fortyfour-backend_internal_dto.UpdateSERequest": {
+            "type": "object",
+            "properties": {
+                "anggaran_operasional": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "as_number_se": {
+                    "type": "string"
+                },
+                "dampak_kegagalan": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "data_pribadi": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "fitur_se": {
+                    "type": "string"
+                },
+                "id_csirt": {
+                    "type": "string"
+                },
+                "id_perusahaan": {
+                    "type": "string"
+                },
+                "id_sub_sektor": {
+                    "type": "string"
+                },
+                "ip_se": {
+                    "type": "string"
+                },
+                "jumlah_pengguna": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "kekritisan_proses": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "kepatuhan_peraturan": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "klasifikasi_data": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "nama_se": {
+                    "description": "Informasi SE",
+                    "type": "string"
+                },
+                "nilai_investasi": {
+                    "description": "Karakteristik Instansi (A/B/C)",
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "pengelola_se": {
+                    "type": "string"
+                },
+                "potensi_kerugian_dan_dampak_negatif": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                },
+                "teknik_kriptografi": {
+                    "type": "string",
+                    "enum": [
+                        "A",
+                        "B",
+                        "C"
+                    ]
+                }
+            }
+        },
         "fortyfour-backend_internal_dto.UpdateSdmCsirtRequest": {
             "type": "object",
             "properties": {
@@ -4540,29 +4555,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "skill": {
-                    "type": "string"
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.UpdateSeCsirtRequest": {
-            "type": "object",
-            "properties": {
-                "as_number_se": {
-                    "type": "string"
-                },
-                "fitur_se": {
-                    "type": "string"
-                },
-                "ip_se": {
-                    "type": "string"
-                },
-                "kategori_se": {
-                    "type": "string"
-                },
-                "nama_se": {
-                    "type": "string"
-                },
-                "pengelola_se": {
                     "type": "string"
                 }
             }
@@ -4645,18 +4637,69 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "fortyfour-backend_internal_models.User": {
+            "type": "object",
+            "properties": {
+                "banner": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "foto_profile": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "id_jabatan": {
+                    "type": "string"
+                },
+                "id_perusahaan": {
+                    "type": "string"
+                },
+                "jabatan_name": {
+                    "type": "string"
+                },
+                "mfa_enabled": {
+                    "type": "boolean"
+                },
+                "role_id": {
+                    "type": "string"
+                },
+                "role_name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8080",
+	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Fortyfour Backend API",
+	Description:      "API documentation for Fortyfour Backend - main auth and management service.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

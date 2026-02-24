@@ -8,7 +8,7 @@ import (
 	"ikas/internal/utils"
 
 	"github.com/google/uuid"
-	"github.com/rollbar/rollbar-go"
+	"fortyfour-backend/pkg/logger"
 )
 
 type SubKategoriService struct {
@@ -123,7 +123,7 @@ func (s *SubKategoriService) Create(req dto.CreateSubKategoriRequest) (*dto.SubK
 	// Cek apakah kategori_id ada di tabel kategori (foreign key validation)
 	kategoriExists, err := s.repo.CheckKategoriExists(req.KategoriID)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 	if !kategoriExists {
@@ -133,7 +133,7 @@ func (s *SubKategoriService) Create(req dto.CreateSubKategoriRequest) (*dto.SubK
 	// Cek duplikasi data (case-insensitive, whitespace-trimmed) dalam kategori yang sama
 	isDuplicate, err := s.repo.CheckDuplicateName(req.KategoriID, req.NamaSubKategori, "")
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 	if isDuplicate {
@@ -144,14 +144,14 @@ func (s *SubKategoriService) Create(req dto.CreateSubKategoriRequest) (*dto.SubK
 	newID := uuid.New().String()
 
 	if err := s.repo.Create(req, newID); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 
 	// Ambil data yang baru dibuat
 	resp, err := s.repo.GetByID(newID)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 
@@ -187,7 +187,7 @@ func (s *SubKategoriService) Update(id string, req dto.UpdateSubKategoriRequest)
 	// Cek apakah data ada
 	existing, err := s.repo.GetByID(id)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		if err == sql.ErrNoRows {
 			return nil, errors.New("data tidak ditemukan")
 		}
@@ -203,7 +203,7 @@ func (s *SubKategoriService) Update(id string, req dto.UpdateSubKategoriRequest)
 	if req.KategoriID != nil {
 		kategoriExists, err := s.repo.CheckKategoriExists(*req.KategoriID)
 		if err != nil {
-			rollbar.Error(err)
+			logger.Error(err, "operation failed")
 			return nil, err
 		}
 		if !kategoriExists {
@@ -221,7 +221,7 @@ func (s *SubKategoriService) Update(id string, req dto.UpdateSubKategoriRequest)
 	if req.NamaSubKategori != nil {
 		isDuplicate, err := s.repo.CheckDuplicateName(checkKategoriID, *req.NamaSubKategori, id)
 		if err != nil {
-			rollbar.Error(err)
+			logger.Error(err, "operation failed")
 			return nil, err
 		}
 		if isDuplicate {
@@ -231,14 +231,14 @@ func (s *SubKategoriService) Update(id string, req dto.UpdateSubKategoriRequest)
 
 	// Update
 	if err := s.repo.Update(id, req); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 
 	// Ambil data terbaru
 	updated, err := s.repo.GetByID(id)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 

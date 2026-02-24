@@ -53,7 +53,7 @@ func (h *SEHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} dto.SEListResponse
-// @Failure 500 {object} utils.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
 // @Router /api/se [get]
 func (h *SEHandler) handleGetAll(w http.ResponseWriter) {
 	data, err := h.service.GetAll()
@@ -71,7 +71,7 @@ func (h *SEHandler) handleGetAll(w http.ResponseWriter) {
 // @Produce json
 // @Param id path string true "SE ID"
 // @Success 200 {object} dto.SEResponse
-// @Failure 404 {object} utils.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
 // @Router /api/se/{id} [get]
 func (h *SEHandler) handleGetByID(w http.ResponseWriter, id string) {
 	data, err := h.service.GetByID(id)
@@ -87,9 +87,9 @@ func (h *SEHandler) handleGetByID(w http.ResponseWriter, id string) {
 // @Tags SE
 // @Accept json
 // @Produce json
-// @Param request body dto.SECreateRequest true "SE Create Request"
+// @Param request body dto.CreateSERequest true "SE Create Request"
 // @Success 201 {object} dto.SEResponse
-// @Failure 400 {object} utils.ErrorResponse
+// @Failure 400 {object} dto.ErrorResponse
 // @Router /api/se [post]
 func (h *SEHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateSERequest
@@ -119,9 +119,9 @@ func (h *SEHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "SE ID"
-// @Param request body dto.SEUpdateRequest true "SE Update Request"
+// @Param request body dto.UpdateSERequest true "SE Update Request"
 // @Success 200 {object} dto.SEResponse
-// @Failure 400 {object} utils.ErrorResponse
+// @Failure 400 {object} dto.ErrorResponse
 // @Router /api/se/{id} [put]
 func (h *SEHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateSERequest
@@ -152,7 +152,7 @@ func (h *SEHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id stri
 // @Produce json
 // @Param id path string true "SE ID"
 // @Success 200 {object} map[string]string
-// @Failure 400 {object} utils.ErrorResponse
+// @Failure 400 {object} dto.ErrorResponse
 // @Router /api/se/{id} [delete]
 func (h *SEHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
