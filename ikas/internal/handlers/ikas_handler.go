@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/google/uuid"
 	"fortyfour-backend/pkg/logger"
+	"github.com/google/uuid"
 )
 
 type IkasHandler struct {

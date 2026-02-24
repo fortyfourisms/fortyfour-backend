@@ -7,8 +7,8 @@ import (
 	"ikas/internal/repository"
 	"ikas/internal/utils"
 
-	"github.com/google/uuid"
 	"fortyfour-backend/pkg/logger"
+	"github.com/google/uuid"
 )
 
 type RuangLingkupService struct {

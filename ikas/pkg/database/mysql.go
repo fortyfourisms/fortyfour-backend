@@ -7,8 +7,8 @@ import (
 	"log"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
 	"fortyfour-backend/pkg/logger"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type Config struct {

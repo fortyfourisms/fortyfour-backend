@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	"fortyfour-backend/pkg/logger"
+	"github.com/redis/go-redis/v9"
 )
 
 // RedisInterface defines the contract for Redis operations

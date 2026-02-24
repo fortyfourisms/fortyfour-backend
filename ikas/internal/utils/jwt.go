@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt/v5"
 	"fortyfour-backend/pkg/logger"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type Claims struct {
