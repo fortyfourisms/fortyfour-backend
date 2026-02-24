@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS jawaban_deteksi (
     id CHAR(36) PRIMARY KEY,
     pertanyaan_deteksi_id CHAR(36) NOT NULL,
     perusahaan_id CHAR(36) NOT NULL,
-    jawaban_deteksi TEXT NOT NULL,
+    jawaban_deteksi DECIMAL(3, 2) NOT NULL,
     evidence TEXT NULL,
     validasi ENUM('yes', 'no') NULL,
     keterangan TEXT NULL,
