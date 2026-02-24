@@ -7,8 +7,8 @@ import (
 	"ikas/internal/repository"
 	"ikas/internal/utils"
 
+	"fortyfour-backend/pkg/logger"
 	"github.com/google/uuid"
-	"github.com/rollbar/rollbar-go"
 )
 
 type RuangLingkupService struct {
@@ -98,7 +98,7 @@ func (s *RuangLingkupService) Create(req dto.CreateRuangLingkupRequest) (*dto.Ru
 	// Cek duplikasi data (case-insensitive, whitespace-trimmed)
 	isDuplicate, err := s.repo.CheckDuplicateName(req.NamaRuangLingkup, "")
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 	if isDuplicate {
@@ -109,14 +109,14 @@ func (s *RuangLingkupService) Create(req dto.CreateRuangLingkupRequest) (*dto.Ru
 	newID := uuid.New().String()
 
 	if err := s.repo.Create(req, newID); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 
 	// Ambil data yang baru dibuat
 	resp, err := s.repo.GetByID(newID)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 
@@ -151,7 +151,7 @@ func (s *RuangLingkupService) Update(id string, req dto.UpdateRuangLingkupReques
 
 	_, err := s.repo.GetByID(id)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		if err == sql.ErrNoRows {
 			return nil, errors.New("data tidak ditemukan")
 		}
@@ -167,7 +167,7 @@ func (s *RuangLingkupService) Update(id string, req dto.UpdateRuangLingkupReques
 	if req.NamaRuangLingkup != nil {
 		isDuplicate, err := s.repo.CheckDuplicateName(*req.NamaRuangLingkup, id)
 		if err != nil {
-			rollbar.Error(err)
+			logger.Error(err, "operation failed")
 			return nil, err
 		}
 		if isDuplicate {
@@ -177,14 +177,14 @@ func (s *RuangLingkupService) Update(id string, req dto.UpdateRuangLingkupReques
 
 	// Update
 	if err := s.repo.Update(id, req); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 
 	// Ambil data terbaru
 	updated, err := s.repo.GetByID(id)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 

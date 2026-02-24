@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rollbar/rollbar-go"
+	"fortyfour-backend/pkg/logger"
 )
 
 type DomainHandler struct {
@@ -67,7 +67,7 @@ func (h *DomainHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *DomainHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
@@ -88,7 +88,7 @@ func (h *DomainHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 func (h *DomainHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		if err.Error() == "data tidak ditemukan" || err.Error() == "format ID tidak valid" {
 			utils.RespondError(w, 404, err.Error())
 		} else {
@@ -115,14 +115,14 @@ func (h *DomainHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id
 func (h *DomainHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateDomainRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
 	resp, err := h.service.Create(req)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		switch err.Error() {
 		case "nama_domain tidak boleh kosong",
 			"nama_domain minimal 3 karakter",
@@ -158,14 +158,14 @@ func (h *DomainHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 func (h *DomainHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateDomainRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
 	resp, err := h.service.Update(id, req)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		switch err.Error() {
 		case "data tidak ditemukan":
 			utils.RespondError(w, 404, err.Error())
@@ -199,7 +199,7 @@ func (h *DomainHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id 
 //	@Router       /api/domain/{id} [delete]
 func (h *DomainHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		if err.Error() == "data tidak ditemukan" {
 			utils.RespondError(w, 404, err.Error())
 		} else {

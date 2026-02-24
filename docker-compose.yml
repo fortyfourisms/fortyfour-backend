@@ -23,8 +23,7 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
 
-      ROLLBAR_TOKEN: ${ROLLBAR_TOKEN}
-      ROLLBAR_STATUS: ${ROLLBAR_STATUS}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
       
       # RabbitMQ
       RABBITMQ_HOST: rabbitmq
@@ -75,8 +74,7 @@ services:
       REDIS_PORT: 6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
 
-      ROLLBAR_TOKEN: ${ROLLBAR_TOKEN}
-      ROLLBAR_ENVIRONMENT: ${ROLLBAR_STATUS}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
 
       # RabbitMQ
       RABBITMQ_HOST: rabbitmq

@@ -13,8 +13,9 @@ type Config struct {
 	Database        DatabaseConfig
 	Redis           RedisConfig
 	CasbinModelPath string
-	Rollbar         RollbarConfig
 	RabbitMQ        RabbitMQConfig
+	LogLevel        string
+	Environment     string
 }
 
 type DatabaseConfig struct {
@@ -30,11 +31,6 @@ type RedisConfig struct {
 	Port     string
 	Password string
 	DB       int
-}
-
-type RollbarConfig struct {
-	Token string
-	Env   string
 }
 
 type RabbitMQConfig struct {
@@ -83,10 +79,8 @@ func Load() *Config {
 			Vhost:    getEnv("RABBITMQ_VHOST", "/"),
 		},
 		CasbinModelPath: getEnv("CASBIN_MODEL_PATH", absPath),
-		Rollbar: RollbarConfig{
-			Token: getEnv("ROLLBAR_TOKEN", "0eddf8fb05e44067a12a8bb36ccc3ef9"),
-			Env:   getEnv("ROLLBAR_STATUS", "production"),
-		},
+		LogLevel:        getEnv("LOG_LEVEL", "info"),
+		Environment:     getEnv("ENVIRONMENT", "production"),
 	}
 }
 

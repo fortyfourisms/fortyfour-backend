@@ -32,9 +32,9 @@ func TestLoad_WithDefaultValues(t *testing.T) {
 	assert.Equal(t, "", cfg.Redis.Password)
 	assert.Equal(t, 0, cfg.Redis.DB)
 
-	// Rollbar defaults
-	assert.Equal(t, "0eddf8fb05e44067a12a8bb36ccc3ef9", cfg.Rollbar.Token)
-	assert.Equal(t, "production", cfg.Rollbar.Env)
+	// Log defaults
+	assert.Equal(t, "info", cfg.LogLevel)
+	assert.Equal(t, "production", cfg.Environment)
 
 	// Casbin model path should be set
 	assert.NotEmpty(t, cfg.CasbinModelPath)
@@ -56,8 +56,8 @@ func TestLoad_WithEnvironmentVariables(t *testing.T) {
 		"REDIS_PORT":        "6380",
 		"REDIS_PASSWORD":    "redispass",
 		"REDIS_DB":          "5",
-		"ROLLBAR_TOKEN":     "test-rollbar-token",
-		"ROLLBAR_STATUS":    "development",
+		"LOG_LEVEL":         "debug",
+		"ENVIRONMENT":       "development",
 		"CASBIN_MODEL_PATH": "/custom/path/model.conf",
 	}
 
@@ -84,9 +84,9 @@ func TestLoad_WithEnvironmentVariables(t *testing.T) {
 	assert.Equal(t, "redispass", cfg.Redis.Password)
 	assert.Equal(t, 5, cfg.Redis.DB)
 
-	// Rollbar
-	assert.Equal(t, "test-rollbar-token", cfg.Rollbar.Token)
-	assert.Equal(t, "development", cfg.Rollbar.Env)
+	// Log
+	assert.Equal(t, "debug", cfg.LogLevel)
+	assert.Equal(t, "development", cfg.Environment)
 
 	// Casbin
 	assert.Equal(t, "/custom/path/model.conf", cfg.CasbinModelPath)
@@ -359,9 +359,9 @@ func TestConfig_StructureIntegrity(t *testing.T) {
 	// Password can be empty (valid state)
 	assert.GreaterOrEqual(t, cfg.Redis.DB, 0)
 
-	// Rollbar config should be complete
-	assert.NotEmpty(t, cfg.Rollbar.Token)
-	assert.NotEmpty(t, cfg.Rollbar.Env)
+	// Log config should be set
+	assert.NotEmpty(t, cfg.LogLevel)
+	assert.NotEmpty(t, cfg.Environment)
 
 	// Casbin model path should exist
 	assert.NotEmpty(t, cfg.CasbinModelPath)
@@ -443,7 +443,7 @@ func clearEnvVars() {
 		"PORT", "JWT_SECRET", "DOMAIN",
 		"DB_HOST", "DB_PORT", "DB_USER", "DB_PASSWORD", "DB_NAME",
 		"REDIS_HOST", "REDIS_PORT", "REDIS_PASSWORD", "REDIS_DB",
-		"ROLLBAR_TOKEN", "ROLLBAR_STATUS",
+		"LOG_LEVEL", "ENVIRONMENT",
 		"CASBIN_MODEL_PATH",
 	}
 

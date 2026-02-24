@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rollbar/rollbar-go"
+	"fortyfour-backend/pkg/logger"
 )
 
 type SubKategoriHandler struct {
@@ -67,7 +67,7 @@ func (h *SubKategoriHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *SubKategoriHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
@@ -87,7 +87,7 @@ func (h *SubKategoriHandler) handleGetAll(w http.ResponseWriter, _ *http.Request
 func (h *SubKategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		if err.Error() == "data tidak ditemukan" {
 			utils.RespondError(w, 404, err.Error())
 		} else {
@@ -113,14 +113,14 @@ func (h *SubKategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Reques
 func (h *SubKategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateSubKategoriRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
 	resp, err := h.service.Create(req)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		// Mapping error ke HTTP status code
 		switch err.Error() {
 		case "kategori_id tidak boleh kosong",
@@ -161,14 +161,14 @@ func (h *SubKategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request
 func (h *SubKategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateSubKategoriRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
 	resp, err := h.service.Update(id, req)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		// Mapping error ke HTTP status code
 		switch err.Error() {
 		case "data tidak ditemukan",
@@ -207,7 +207,7 @@ func (h *SubKategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request
 //	@Router       /api/sub-kategori/{id} [delete]
 func (h *SubKategoriHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		if err.Error() == "data tidak ditemukan" {
 			utils.RespondError(w, 404, err.Error())
 		} else {

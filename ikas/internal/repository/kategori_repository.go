@@ -5,7 +5,7 @@ import (
 	"ikas/internal/dto"
 	"strings"
 
-	"github.com/rollbar/rollbar-go"
+	"fortyfour-backend/pkg/logger"
 )
 
 type KategoriRepository struct {
@@ -21,7 +21,7 @@ func (r *KategoriRepository) Create(req dto.CreateKategoriRequest, id string) er
 
 	_, err := r.db.Exec(query, id, req.DomainID, req.NamaKategori)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return err
 	}
 
@@ -35,7 +35,7 @@ func (r *KategoriRepository) GetAll() ([]dto.KategoriResponse, error) {
 
 	rows, err := r.db.Query(query)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 	defer rows.Close()
@@ -45,7 +45,7 @@ func (r *KategoriRepository) GetAll() ([]dto.KategoriResponse, error) {
 	for rows.Next() {
 		var item dto.KategoriResponse
 		if err := rows.Scan(&item.ID, &item.DomainID, &item.NamaKategori, &item.CreatedAt, &item.UpdatedAt); err != nil {
-			rollbar.Error(err)
+			logger.Error(err, "operation failed")
 			continue
 		}
 		result = append(result, item)
@@ -62,7 +62,7 @@ func (r *KategoriRepository) GetByID(id string) (*dto.KategoriResponse, error) {
 	var item dto.KategoriResponse
 	err := r.db.QueryRow(query, id).Scan(&item.ID, &item.DomainID, &item.NamaKategori, &item.CreatedAt, &item.UpdatedAt)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 
@@ -94,7 +94,7 @@ func (r *KategoriRepository) Update(id string, req dto.UpdateKategoriRequest) er
 
 	_, err := r.db.Exec(query, args...)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return err
 	}
 
@@ -104,7 +104,7 @@ func (r *KategoriRepository) Update(id string, req dto.UpdateKategoriRequest) er
 func (r *KategoriRepository) Delete(id string) error {
 	_, err := r.db.Exec(`DELETE FROM kategori WHERE id=?`, id)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return err
 	}
 
@@ -126,7 +126,7 @@ func (r *KategoriRepository) CheckDuplicateName(domainID string, namaKategori st
 
 	err := r.db.QueryRow(query, args...).Scan(&count)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return false, err
 	}
 
@@ -139,7 +139,7 @@ func (r *KategoriRepository) CheckDomainExists(domainID string) (bool, error) {
 	query := `SELECT COUNT(*) FROM domain WHERE id = ?`
 	err := r.db.QueryRow(query, domainID).Scan(&count)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return false, err
 	}
 
