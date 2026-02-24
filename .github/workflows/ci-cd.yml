@@ -528,7 +528,7 @@ jobs:
             echo "Waiting for IKAS service to start..."
             for i in {1..30}; do
               sleep 2
-              if curl -f http://localhost:8081/api/health 2>/dev/null; then
+              if curl -f http://localhost:8081/api/maturity/health 2>/dev/null; then
                 echo "✅ IKAS health check passed!"
                 break
               fi
