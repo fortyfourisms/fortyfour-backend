@@ -19,6 +19,21 @@ func NewPertanyaanIdentifikasiService(repo repository.PertanyaanIdentifikasiRepo
 	return &PertanyaanIdentifikasiService{repo: repo}
 }
 
+func validateIndexField(value *string, fieldName string) error {
+	if value == nil {
+		return nil
+	}
+	normalized := utils.NormalizeInput(*value)
+	*value = normalized
+	if utils.ContainsSQLInjectionPattern(*value) {
+		return errors.New(fieldName + " mengandung karakter yang tidak diizinkan")
+	}
+	if !utils.IsValidInput(*value) {
+		return errors.New(fieldName + " hanya boleh mengandung huruf, angka, spasi, dan karakter -_.,()&")
+	}
+	return nil
+}
+
 func (s *PertanyaanIdentifikasiService) validateCreate(req *dto.CreatePertanyaanIdentifikasiRequest) error {
 	req.SubKategoriID = utils.NormalizeInput(req.SubKategoriID)
 	if req.SubKategoriID == "" {
@@ -42,6 +57,31 @@ func (s *PertanyaanIdentifikasiService) validateCreate(req *dto.CreatePertanyaan
 	}
 	if len(req.PertanyaanIdentifikasi) < 3 {
 		return errors.New("pertanyaan_identifikasi minimal 3 karakter")
+	}
+	if utils.ContainsSQLInjectionPattern(req.PertanyaanIdentifikasi) {
+		return errors.New("pertanyaan_identifikasi mengandung karakter yang tidak diizinkan")
+	}
+	if !utils.IsValidInput(req.PertanyaanIdentifikasi) {
+		return errors.New("pertanyaan_identifikasi hanya boleh mengandung huruf, angka, spasi, dan karakter -_.,()&")
+	}
+
+	if err := validateIndexField(req.Index0, "index0"); err != nil {
+		return err
+	}
+	if err := validateIndexField(req.Index1, "index1"); err != nil {
+		return err
+	}
+	if err := validateIndexField(req.Index2, "index2"); err != nil {
+		return err
+	}
+	if err := validateIndexField(req.Index3, "index3"); err != nil {
+		return err
+	}
+	if err := validateIndexField(req.Index4, "index4"); err != nil {
+		return err
+	}
+	if err := validateIndexField(req.Index5, "index5"); err != nil {
+		return err
 	}
 
 	return nil
@@ -79,6 +119,31 @@ func (s *PertanyaanIdentifikasiService) validateUpdate(req *dto.UpdatePertanyaan
 		if len(*req.PertanyaanIdentifikasi) < 3 {
 			return errors.New("pertanyaan_identifikasi minimal 3 karakter")
 		}
+		if utils.ContainsSQLInjectionPattern(*req.PertanyaanIdentifikasi) {
+			return errors.New("pertanyaan_identifikasi mengandung karakter yang tidak diizinkan")
+		}
+		if !utils.IsValidInput(*req.PertanyaanIdentifikasi) {
+			return errors.New("pertanyaan_identifikasi hanya boleh mengandung huruf, angka, spasi, dan karakter -_.,()&")
+		}
+	}
+
+	if err := validateIndexField(req.Index0, "index0"); err != nil {
+		return err
+	}
+	if err := validateIndexField(req.Index1, "index1"); err != nil {
+		return err
+	}
+	if err := validateIndexField(req.Index2, "index2"); err != nil {
+		return err
+	}
+	if err := validateIndexField(req.Index3, "index3"); err != nil {
+		return err
+	}
+	if err := validateIndexField(req.Index4, "index4"); err != nil {
+		return err
+	}
+	if err := validateIndexField(req.Index5, "index5"); err != nil {
+		return err
 	}
 
 	return nil
