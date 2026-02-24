@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
+	"fortyfour-backend/pkg/logger"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/rollbar/rollbar-go"
 )
 
 type Claims struct {
@@ -43,7 +43,7 @@ func GenerateRefreshToken() (string, error) {
 	bytes := make([]byte, 32)
 	if _, err := rand.Read(bytes); err != nil {
 
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return "", err
 	}
 	return hex.EncodeToString(bytes), nil
@@ -56,7 +56,7 @@ func VerifyToken(tokenString, secret string) (*Claims, error) {
 	})
 
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 

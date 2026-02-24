@@ -11,7 +11,6 @@ import (
 	"ikas/internal/services"
 	"ikas/pkg/cache"
 	"ikas/pkg/database"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,25 +18,24 @@ import (
 
 	pkgRmq "fortyfour-backend/pkg/rabbitmq"
 
-	"github.com/rollbar/rollbar-go"
+	"fortyfour-backend/pkg/logger"
 )
 
+// @title IKAS API
+// @version 1.0
+// @description API documentation for IKAS (Indeks Kematangan Keamanan Siber) service.
+// @host localhost:8081
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
-
-	// Load env
-	// if err := godotenv.Load(); err != nil {
-	// 	log.Println("No .env file found")
-	// }
 
 	cfg := config.Load()
 
-	rollbar.SetToken(cfg.Rollbar.Token)
-	rollbar.SetEnvironment(cfg.Rollbar.Env)
-	// Send a test message
-	rollbar.Info("Rollbar Go SDK initialized successfully!")
-
-	// call rollbar.Close() before the application exits to flush error message queue
-	// rollbar.Close()
+	// Initialize structured logger
+	logger.Init(cfg.LogLevel, cfg.Environment)
+	logger.Info("Logger initialized successfully")
 
 	// Initialize MySQL database
 	db, err := database.NewMySQLConnection(database.Config{
@@ -48,7 +46,7 @@ func main() {
 		DBName:   cfg.Database.DBName,
 	})
 	if err != nil {
-		log.Fatal(err)
+		logger.FatalErr(err, "Failed to connect to database")
 	}
 	defer db.Close()
 
@@ -60,31 +58,23 @@ func main() {
 		DB:       cfg.Redis.DB,
 	})
 	if err != nil {
-		log.Println("Failed to connect to Redis:", err)
-		rollbar.Error(err)
-		log.Fatal(err)
+		logger.FatalErr(err, "Failed to connect to Redis")
 	}
-	log.Println("Redis initialized successfully")
-	rollbar.Info("Redis initialized successfully")
+	logger.Info("Redis initialized successfully")
 	defer redisClient.Close()
 
 	// Initialize RabbitMQ (Shared Package)
 	rmq, err := pkgRmq.NewRabbitMQ(cfg.RabbitMQ.GetURL())
 	if err != nil {
-		log.Println("Failed to connect to RabbitMQ:", err)
-		rollbar.Error(err)
-		log.Fatal(err)
+		logger.FatalErr(err, "Failed to connect to RabbitMQ")
 	}
 	defer rmq.Close()
 
 	// Setup RabbitMQ infrastructure (Specific to IKAS)
 	if err := internalRmq.SetupInfrastructure(rmq); err != nil {
-		log.Println("Failed to setup RabbitMQ infrastructure:", err)
-		rollbar.Error(err)
-		log.Fatal(err)
+		logger.FatalErr(err, "Failed to setup RabbitMQ infrastructure")
 	}
-	log.Println("RabbitMQ initialized successfully")
-	rollbar.Info("RabbitMQ initialized successfully")
+	logger.Info("RabbitMQ initialized successfully")
 
 	// Create Shared Producer and Consumer
 	sharedProducer := pkgRmq.NewProducer(rmq.GetChannel())
@@ -99,9 +89,7 @@ func main() {
 	defer cancel()
 
 	if err := msgConsumer.StartAllConsumers(ctx); err != nil {
-		log.Println("Failed to start consumers:", err)
-		rollbar.Error(err)
-		log.Fatal(err)
+		logger.FatalErr(err, "Failed to start consumers")
 	}
 
 	// repository
@@ -156,20 +144,20 @@ func main() {
 	)
 
 	go func() {
-		log.Println("IKAS service running on", cfg.Port)
-		log.Println("Rate limiting enabled:")
-		log.Println("  - Auth endpoints: 5 requests/minute per IP")
-		log.Println("  - Public posts: 60 requests/minute per IP")
-		log.Println("  - Protected posts: 20 requests/minute per user")
-		log.Println("RabbitMQ consumers running:")
-		log.Println("  - ikas.created")
-		log.Println("  - ikas.updated")
-		log.Println("  - ikas.deleted")
-		log.Println("  - ikas.imported")
-		log.Println("  - notifications.email")
+		logger.Infof("IKAS service running on %s", cfg.Port)
+		logger.Info("Rate limiting enabled:")
+		logger.Info("  - Auth endpoints: 5 requests/minute per IP")
+		logger.Info("  - Public posts: 60 requests/minute per IP")
+		logger.Info("  - Protected posts: 20 requests/minute per user")
+		logger.Info("RabbitMQ consumers running:")
+		logger.Info("  - ikas.created")
+		logger.Info("  - ikas.updated")
+		logger.Info("  - ikas.deleted")
+		logger.Info("  - ikas.imported")
+		logger.Info("  - notifications.email")
 
 		if err := http.ListenAndServe(cfg.Port, mux); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+			logger.FatalErr(err, "Server failed")
 		}
 	}()
 
@@ -178,8 +166,8 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down server...")
+	logger.Info("Shutting down server...")
 	cancel() // Stop consumers
-	log.Println("Server stopped gracefully")
+	logger.Info("Server stopped gracefully")
 
 }

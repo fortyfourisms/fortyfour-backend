@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/rollbar/rollbar-go"
+	"fortyfour-backend/pkg/logger"
 )
 
 type RateLimiterConfig struct {
@@ -48,7 +48,7 @@ func (rl *RateLimiter) LimitByIP(next http.HandlerFunc) http.HandlerFunc {
 
 		allowed, remaining, resetTime, err := rl.checkLimit(key)
 		if err != nil {
-			rollbar.Error(err)
+			logger.Error(err, "operation failed")
 			// On error, log and allow request (fail open)
 			// In production, you might want to fail closed instead
 			next(w, r)
@@ -84,7 +84,7 @@ func (rl *RateLimiter) LimitByUser(next http.HandlerFunc) http.HandlerFunc {
 
 		allowed, remaining, resetTime, err := rl.checkLimit(key)
 		if err != nil {
-			rollbar.Error(err)
+			logger.Error(err, "operation failed")
 			next(w, r)
 			return
 		}
@@ -116,7 +116,7 @@ func (rl *RateLimiter) LimitByAPIKey(next http.HandlerFunc) http.HandlerFunc {
 
 		allowed, remaining, resetTime, err := rl.checkLimit(key)
 		if err != nil {
-			rollbar.Error(err)
+			logger.Error(err, "operation failed")
 			next(w, r)
 			return
 		}
@@ -143,7 +143,7 @@ func (rl *RateLimiter) checkLimit(key string) (allowed bool, remaining int, rese
 	// Get current count
 	countStr, err := rl.redis.Get(key)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		// Key doesn't exist, this is the first request
 		count := 1
 		if err := rl.redis.Set(key, strconv.Itoa(count), rl.config.WindowDuration); err != nil {
@@ -155,7 +155,7 @@ func (rl *RateLimiter) checkLimit(key string) (allowed bool, remaining int, rese
 
 	count, err := strconv.Atoi(countStr)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return false, 0, now, err
 	}
 
@@ -168,7 +168,7 @@ func (rl *RateLimiter) checkLimit(key string) (allowed bool, remaining int, rese
 	// Increment counter
 	count++
 	if err := rl.redis.Set(key, strconv.Itoa(count), rl.config.WindowDuration); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return false, 0, now, err
 	}
 

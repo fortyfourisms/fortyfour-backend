@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"strings"
 
+	"fortyfour-backend/pkg/logger"
 	"github.com/google/uuid"
-	"github.com/rollbar/rollbar-go"
 )
 
 type IkasHandler struct {
@@ -75,7 +75,7 @@ func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *IkasHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
@@ -94,7 +94,7 @@ func (h *IkasHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 func (h *IkasHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 404, "Data tidak ditemukan")
 		return
 	}
@@ -114,7 +114,7 @@ func (h *IkasHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id s
 func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateIkasRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
@@ -124,7 +124,7 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	// Create dengan ID
 	if err := h.service.Create(req, newID); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -132,7 +132,7 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	// Ambil data yang baru dibuat (dengan JOIN)
 	resp, err := h.service.GetByID(newID)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 500, "Data berhasil dibuat tapi gagal diambil")
 		return
 	}
@@ -154,14 +154,14 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateIkasRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
 	resp, err := h.service.Update(id, req)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -180,7 +180,7 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 // @Router       /api/ikas/{id} [delete]
 func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
@@ -208,7 +208,7 @@ func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 	// Parse multipart form (max 10MB)
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, "Gagal parse form data")
 		return
 	}
@@ -216,7 +216,7 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 	// Ambil file dari form
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, "File 'file' tidak ditemukan")
 		return
 	}
@@ -231,7 +231,7 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 	// Baca file ke memory
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, "Gagal membaca file")
 		return
 	}
@@ -239,7 +239,7 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 	// Import data - semua data diambil dari Excel
 	resp, err := h.service.ImportFromExcel(fileBytes)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		response := dto.ImportIkasResponse{
 			Success: false,
 			Message: "Import gagal",

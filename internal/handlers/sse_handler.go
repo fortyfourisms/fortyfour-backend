@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
-	"log"
+	"fortyfour-backend/pkg/logger"
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/rollbar/rollbar-go"
 )
 
 type SSEHandler struct {
@@ -62,7 +61,7 @@ func (h *SSEHandler) HandleSSE(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(services.FormatSSEMessage(initialMsg)))
 	w.(http.Flusher).Flush()
 
-	log.Printf("SSE: Client %s connected", clientID)
+	logger.Infof("SSE: Client %s connected", clientID)
 
 	// Listen for client disconnect
 	notify := r.Context().Done()
@@ -76,8 +75,7 @@ func (h *SSEHandler) HandleSSE(w http.ResponseWriter, r *http.Request) {
 			if message != "" {
 				_, err := w.Write([]byte(message))
 				if err != nil {
-					log.Printf("SSE: Error writing to client %s: %v", clientID, err)
-					rollbar.Error(err)
+					logger.Errorf(err, "SSE: error writing to client %s", clientID)
 					return
 				}
 				w.(http.Flusher).Flush()
@@ -85,7 +83,7 @@ func (h *SSEHandler) HandleSSE(w http.ResponseWriter, r *http.Request) {
 
 		case <-notify:
 			// Client disconnected
-			log.Printf("SSE: Client %s disconnected", clientID)
+			logger.Infof("SSE: Client %s disconnected", clientID)
 			return
 		}
 	}
