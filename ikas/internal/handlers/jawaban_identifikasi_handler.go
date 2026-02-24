@@ -155,6 +155,11 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 	var req dto.CreateJawabanIdentifikasiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		rollbar.Error(err)
+		// Cek apakah error karena tipe data salah
+		if strings.Contains(err.Error(), "cannot unmarshal string") {
+			utils.RespondError(w, 400, "jawaban_identifikasi harus berupa angka, bukan string. Contoh: 2 bukan \"2\"")
+			return
+		}
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
@@ -202,6 +207,11 @@ func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http
 	var req dto.UpdateJawabanIdentifikasiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		rollbar.Error(err)
+		// Cek apakah error karena tipe data salah
+		if strings.Contains(err.Error(), "cannot unmarshal string") {
+			utils.RespondError(w, 400, "jawaban_identifikasi harus berupa angka, bukan string. Contoh: 2 bukan \"2\"")
+			return
+		}
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}

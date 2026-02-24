@@ -38,13 +38,12 @@ func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdenti
 		return errors.New("format perusahaan_id tidak valid")
 	}
 
-	req.JawabanIdentifikasi = utils.NormalizeInput(req.JawabanIdentifikasi)
-	if req.JawabanIdentifikasi == "" {
-		return errors.New("jawaban_identifikasi tidak boleh kosong")
+	// Validasi dan format float 2 desimal
+	formatted, err := utils.ValidateFloat(req.JawabanIdentifikasi, "jawaban_identifikasi", false)
+	if err != nil {
+		return err
 	}
-	if len(req.JawabanIdentifikasi) < 1 {
-		return errors.New("jawaban_identifikasi tidak boleh kosong")
-	}
+	req.JawabanIdentifikasi = formatted
 
 	// Validasi: validasi hanya boleh diisi jika evidence ada
 	if req.Validasi != nil {
@@ -61,11 +60,11 @@ func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdenti
 
 func (s *JawabanIdentifikasiService) validateUpdate(req *dto.UpdateJawabanIdentifikasiRequest, existingEvidence *string) error {
 	if req.JawabanIdentifikasi != nil {
-		normalized := utils.NormalizeInput(*req.JawabanIdentifikasi)
-		req.JawabanIdentifikasi = &normalized
-		if *req.JawabanIdentifikasi == "" {
-			return errors.New("jawaban_identifikasi tidak boleh kosong")
+		formatted, err := utils.ValidateFloat(*req.JawabanIdentifikasi, "jawaban_identifikasi", false)
+		if err != nil {
+			return err
 		}
+		req.JawabanIdentifikasi = &formatted
 	}
 
 	if req.Validasi != nil {
@@ -73,7 +72,6 @@ func (s *JawabanIdentifikasiService) validateUpdate(req *dto.UpdateJawabanIdenti
 			return errors.New("validasi hanya boleh berisi 'yes' atau 'no'")
 		}
 
-		// Tentukan evidence yang akan berlaku setelah update
 		effectiveEvidence := existingEvidence
 		if req.Evidence != nil {
 			effectiveEvidence = req.Evidence
