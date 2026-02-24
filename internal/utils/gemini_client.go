@@ -3,10 +3,10 @@ package utils
 import (
 	"context"
 	"errors"
-	"log"
-	"os"
 	"strings"
 	"time"
+
+	"fortyfour-backend/pkg/logger"
 
 	"google.golang.org/genai"
 )
@@ -15,10 +15,9 @@ type GeminiClient struct {
 	client *genai.Client
 }
 
-func NewGeminiClient() *GeminiClient {
-	apiKey := os.Getenv("GEMINI_API_KEY")
+func NewGeminiClient(apiKey string) *GeminiClient {
 	if apiKey == "" {
-		panic("GEMINI_API_KEY is not set")
+		logger.Fatal("GEMINI_API_KEY is not set in config")
 	}
 
 	ctx := context.Background()
@@ -26,7 +25,7 @@ func NewGeminiClient() *GeminiClient {
 		APIKey: apiKey,
 	})
 	if err != nil {
-		panic(err)
+		logger.FatalErr(err, "Failed to create Gemini client")
 	}
 
 	return &GeminiClient{client: client}
@@ -42,7 +41,7 @@ func (g *GeminiClient) Generate(prompt string) (string, error) {
 	// Try each model
 	for modelIdx, modelName := range models {
 		if modelIdx > 0 {
-			log.Printf("Fallback ke model: %s", modelName)
+			logger.Warnf("Fallback ke model: %s", modelName)
 		}
 
 		maxRetries := 5
@@ -75,7 +74,7 @@ func (g *GeminiClient) Generate(prompt string) (string, error) {
 
 				// if model not found, langsung coba model berikutnya
 				if isModelNotFound {
-					log.Printf("Model %s tidak tersedia", modelName)
+					logger.Warnf("Model %s tidak tersedia", modelName)
 					break
 				}
 
@@ -88,7 +87,7 @@ func (g *GeminiClient) Generate(prompt string) (string, error) {
 					jitter := time.Duration(time.Now().UnixNano()%1000) * time.Millisecond
 					totalDelay := delay + jitter
 
-					log.Printf("Retry %d/%d dalam %v... (error: %s)",
+					logger.Warnf("Retry %d/%d dalam %v... (error: %s)",
 						attempt+1, maxRetries, totalDelay, errMsg)
 
 					time.Sleep(totalDelay)
@@ -97,7 +96,7 @@ func (g *GeminiClient) Generate(prompt string) (string, error) {
 
 				// If max retry, coba model berikutnya
 				if attempt == maxRetries-1 && modelIdx < len(models)-1 {
-					log.Printf("Max retries untuk %s, coba model lain...", modelName)
+					logger.Warnf("Max retries untuk %s, coba model lain...", modelName)
 					break
 				}
 
@@ -115,7 +114,7 @@ func (g *GeminiClient) Generate(prompt string) (string, error) {
 			}
 
 			if attempt > 0 || modelIdx > 0 {
-				log.Printf("Berhasil dengan %s setelah %d retry", modelName, attempt)
+				logger.Infof("Berhasil dengan %s setelah %d retry", modelName, attempt)
 			}
 
 			return resp.Text(), nil

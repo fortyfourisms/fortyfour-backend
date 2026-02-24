@@ -124,7 +124,7 @@ func main() {
 	logger.Info("SSE Service initialized successfully")
 
 	// Initialize Gemini Client
-	geminiClient := utils.NewGeminiClient()
+	geminiClient := utils.NewGeminiClient(cfg.GeminiAPIKey)
 	logger.Info("Gemini client initialized successfully")
 
 	// Initialize Repositories
