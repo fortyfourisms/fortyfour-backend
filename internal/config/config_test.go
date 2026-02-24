@@ -33,7 +33,7 @@ func TestLoad_WithDefaultValues(t *testing.T) {
 	assert.Equal(t, 0, cfg.Redis.DB)
 
 	// Rollbar defaults
-	assert.Equal(t, "0eddf8fb05e44067a12a8bb36ccc3ef9", cfg.Rollbar.Token)
+	assert.Equal(t, "7f33debd4cd24dd3add6e4dfeb5732ce", cfg.Rollbar.Token)
 	assert.Equal(t, "production", cfg.Rollbar.Env)
 
 	// Casbin model path should be set
