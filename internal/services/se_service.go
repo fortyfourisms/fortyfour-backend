@@ -152,6 +152,9 @@ func (s *seService) Update(id string, req dto.UpdateSERequest) (*dto.SEResponse,
 	cacheDelete(s.rc, keyDetail("se", id))
 	cacheDelete(s.rc, keyList("se"))
 
+	existing.TotalBobot = totalBobot
+	existing.KategoriSE = kategori
+
 	return existing, nil
 }
 

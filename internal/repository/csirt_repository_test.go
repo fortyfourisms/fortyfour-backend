@@ -219,23 +219,29 @@ func TestCsirtRepository_GetAllWithPerusahaan(t *testing.T) {
 		rows := sqlmock.NewRows([]string{
 			"c.id", "c.nama_csirt", "c.web_csirt", "c.telepon_csirt",
 			"c.photo_csirt", "c.file_rfc2350", "c.file_public_key_pgp",
-			"p.id", "p.photo", "p.nama_perusahaan", "p.sektor",
+			"p.id", "p.photo", "p.nama_perusahaan",
 			"p.alamat", "p.telepon", "p.email", "p.website",
 			"p.created_at", "p.updated_at",
+			"ss.id", "ss.nama_sub_sektor", "ss.id_sektor", "ss.created_at", "ss.updated_at",
+			"s.nama_sektor",
 		}).
 			AddRow(
 				"csirt-1", "CSIRT 1", "https://csirt1.com", "021-111",
 				"photo1.jpg", "rfc1.pdf", "pgp1.key",
-				"perusahaan-1", "logo1.png", "PT Test 1", "Teknologi",
+				"perusahaan-1", "logo1.png", "PT Test 1",
 				"Jl. Test 1", "021-1111", "test1@test.com", "https://test1.com",
 				now, now,
+				"sub-1", "Sub Sektor 1", "sektor-1", now.Format(time.RFC3339), now.Format(time.RFC3339),
+				"Sektor 1",
 			).
 			AddRow(
 				"csirt-2", "CSIRT 2", "https://csirt2.com", "021-222",
 				"photo2.jpg", "rfc2.pdf", "pgp2.key",
-				"perusahaan-2", "logo2.png", "PT Test 2", "Keuangan",
+				"perusahaan-2", "logo2.png", "PT Test 2",
 				"Jl. Test 2", "021-2222", "test2@test.com", "https://test2.com",
 				now, now,
+				nil, nil, nil, nil, nil,
+				nil,
 			)
 
 		mock.ExpectQuery("SELECT (.+) FROM csirt c JOIN perusahaan p").
@@ -249,11 +255,14 @@ func TestCsirtRepository_GetAllWithPerusahaan(t *testing.T) {
 		assert.Equal(t, "CSIRT 1", result[0].NamaCsirt)
 		assert.Equal(t, "perusahaan-1", result[0].Perusahaan.ID)
 		assert.Equal(t, "PT Test 1", result[0].Perusahaan.NamaPerusahaan)
+		assert.NotNil(t, result[0].Perusahaan.SubSektor)
+		assert.Equal(t, "Sub Sektor 1", result[0].Perusahaan.SubSektor.NamaSubSektor)
 
 		assert.Equal(t, "csirt-2", result[1].ID)
 		assert.Equal(t, "CSIRT 2", result[1].NamaCsirt)
 		assert.Equal(t, "perusahaan-2", result[1].Perusahaan.ID)
 		assert.Equal(t, "PT Test 2", result[1].Perusahaan.NamaPerusahaan)
+		assert.Nil(t, result[1].Perusahaan.SubSektor)
 
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -291,16 +300,20 @@ func TestCsirtRepository_GetByIDWithPerusahaan(t *testing.T) {
 		row := sqlmock.NewRows([]string{
 			"c.id", "c.nama_csirt", "c.web_csirt", "c.telepon_csirt",
 			"c.photo_csirt", "c.file_rfc2350", "c.file_public_key_pgp",
-			"p.id", "p.photo", "p.nama_perusahaan", "p.sektor",
+			"p.id", "p.photo", "p.nama_perusahaan",
 			"p.alamat", "p.telepon", "p.email", "p.website",
 			"p.created_at", "p.updated_at",
+			"ss.id", "ss.nama_sub_sektor", "ss.id_sektor", "ss.created_at", "ss.updated_at",
+			"s.nama_sektor",
 		}).
 			AddRow(
 				id, "CSIRT Test", "https://csirt.test.com", "021-12345",
 				"photo.jpg", "rfc.pdf", "pgp.key",
-				"perusahaan-1", "logo.png", "PT Test", "Teknologi",
+				"perusahaan-1", "logo.png", "PT Test",
 				"Jl. Test", "021-1111", "test@test.com", "https://test.com",
 				now, now,
+				"sub-1", "Sub Sektor 1", "sektor-1", now.Format(time.RFC3339), now.Format(time.RFC3339),
+				"Sektor 1",
 			)
 
 		mock.ExpectQuery("SELECT (.+) FROM csirt c JOIN perusahaan p (.+) WHERE c.id = ?").
@@ -314,6 +327,8 @@ func TestCsirtRepository_GetByIDWithPerusahaan(t *testing.T) {
 		assert.Equal(t, "CSIRT Test", result.NamaCsirt)
 		assert.Equal(t, "perusahaan-1", result.Perusahaan.ID)
 		assert.Equal(t, "PT Test", result.Perusahaan.NamaPerusahaan)
+		assert.NotNil(t, result.Perusahaan.SubSektor)
+		assert.Equal(t, "Sub Sektor 1", result.Perusahaan.SubSektor.NamaSubSektor)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 

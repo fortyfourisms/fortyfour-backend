@@ -63,6 +63,12 @@ func TestSdmCsirtService_Create_Success(t *testing.T) {
 		CreateFn: func(req dto.CreateSdmCsirtRequest, id string) error {
 			return nil
 		},
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{
+				ID:           id,
+				NamaPersonel: "Andi Pratama",
+			}, nil
+		},
 	}
 
 	service := NewSdmCsirtService(repo, nil)
@@ -79,6 +85,9 @@ func TestSdmCsirtService_Create_SuccessWithAllFields(t *testing.T) {
 	repo := &mockSdmCsirtRepo{
 		CreateFn: func(req dto.CreateSdmCsirtRequest, id string) error {
 			return nil
+		},
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{ID: id, NamaPersonel: "Budi Santoso"}, nil
 		},
 	}
 
@@ -117,8 +126,7 @@ func TestSdmCsirtService_Create_EmptyName_RepositoryRejects(t *testing.T) {
 	})
 
 	assert.Error(t, err)
-	// Note: Service returns ID even on error (implementation detail)
-	assert.NotEmpty(t, id)
+	assert.Empty(t, id)
 	assert.Contains(t, err.Error(), "nama_personel")
 }
 
@@ -135,8 +143,7 @@ func TestSdmCsirtService_Create_NilName_RepositoryRejects(t *testing.T) {
 	})
 
 	assert.Error(t, err)
-	// Note: Service returns ID even on error (implementation detail)
-	assert.NotEmpty(t, id)
+	assert.Empty(t, id)
 }
 
 /*
@@ -159,8 +166,7 @@ func TestSdmCsirtService_Create_RepositoryError(t *testing.T) {
 	})
 
 	assert.Error(t, err)
-	// Note: Service returns ID even on error (implementation detail)
-	assert.NotEmpty(t, id)
+	assert.Empty(t, id)
 	assert.Equal(t, "database connection error", err.Error())
 }
 
@@ -179,8 +185,7 @@ func TestSdmCsirtService_Create_InvalidCSIRTReference(t *testing.T) {
 	})
 
 	assert.Error(t, err)
-	// Note: Service returns ID even on error (implementation detail)
-	assert.NotEmpty(t, id)
+	assert.Empty(t, id)
 }
 
 /*
@@ -563,6 +568,9 @@ func TestSdmCsirtService_Create_VeryLongName(t *testing.T) {
 		CreateFn: func(req dto.CreateSdmCsirtRequest, id string) error {
 			return nil
 		},
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{ID: id}, nil
+		},
 	}
 
 	service := NewSdmCsirtService(repo, nil)
@@ -582,6 +590,9 @@ func TestSdmCsirtService_Create_SpecialCharactersInName(t *testing.T) {
 	repo := &mockSdmCsirtRepo{
 		CreateFn: func(req dto.CreateSdmCsirtRequest, id string) error {
 			return nil
+		},
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{ID: id}, nil
 		},
 	}
 
@@ -648,6 +659,9 @@ func TestSdmCsirtService_Create_MultipleCertifications(t *testing.T) {
 		CreateFn: func(req dto.CreateSdmCsirtRequest, id string) error {
 			return nil
 		},
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{ID: id}, nil
+		},
 	}
 
 	service := NewSdmCsirtService(repo, nil)
@@ -667,6 +681,9 @@ func TestSdmCsirtService_Create_WithSkillSet(t *testing.T) {
 	repo := &mockSdmCsirtRepo{
 		CreateFn: func(req dto.CreateSdmCsirtRequest, id string) error {
 			return nil
+		},
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{ID: id}, nil
 		},
 	}
 
