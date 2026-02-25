@@ -22,6 +22,7 @@ import (
 	"fortyfour-backend/internal/utils"
 
 	"fortyfour-backend/pkg/logger"
+
 	"github.com/nfnt/resize"
 )
 
@@ -118,7 +119,7 @@ func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, _ *http.Request)
 func (h *PerusahaanHandler) handleGetDropdown(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
