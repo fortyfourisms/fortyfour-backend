@@ -65,7 +65,7 @@ func TestSdmCsirtService_Create_Success(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	id, err := service.Create(dto.CreateSdmCsirtRequest{
 		NamaPersonel: strPtr("Andi Pratama"),
@@ -82,7 +82,7 @@ func TestSdmCsirtService_Create_SuccessWithAllFields(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	id, err := service.Create(dto.CreateSdmCsirtRequest{
 		NamaPersonel:      strPtr("Budi Santoso"),
@@ -110,7 +110,7 @@ func TestSdmCsirtService_Create_EmptyName_RepositoryRejects(t *testing.T) {
 			return errors.New("nama_personel tidak boleh kosong")
 		},
 	}
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	id, err := service.Create(dto.CreateSdmCsirtRequest{
 		NamaPersonel: strPtr(""),
@@ -128,7 +128,7 @@ func TestSdmCsirtService_Create_NilName_RepositoryRejects(t *testing.T) {
 			return errors.New("nama_personel tidak boleh kosong")
 		},
 	}
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	id, err := service.Create(dto.CreateSdmCsirtRequest{
 		NamaPersonel: nil,
@@ -152,7 +152,7 @@ func TestSdmCsirtService_Create_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	id, err := service.Create(dto.CreateSdmCsirtRequest{
 		NamaPersonel: strPtr("Andi"),
@@ -171,7 +171,7 @@ func TestSdmCsirtService_Create_InvalidCSIRTReference(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	id, err := service.Create(dto.CreateSdmCsirtRequest{
 		NamaPersonel: strPtr("Andi"),
@@ -207,7 +207,7 @@ func TestSdmCsirtService_GetAll_Success(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	res, err := service.GetAll()
 
@@ -224,7 +224,7 @@ func TestSdmCsirtService_GetAll_EmptyResult(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	res, err := service.GetAll()
 
@@ -240,7 +240,7 @@ func TestSdmCsirtService_GetAll_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	res, err := service.GetAll()
 
@@ -269,7 +269,7 @@ func TestSdmCsirtService_GetByID_Success(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	res, err := service.GetByID("sdm-123")
 
@@ -287,7 +287,7 @@ func TestSdmCsirtService_GetByID_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	res, err := service.GetByID("invalid-id")
 
@@ -306,7 +306,7 @@ func TestSdmCsirtService_GetByID_EmptyID(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	res, err := service.GetByID("")
 
@@ -321,7 +321,7 @@ func TestSdmCsirtService_GetByID_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	res, err := service.GetByID("sdm-123")
 
@@ -348,7 +348,7 @@ func TestSdmCsirtService_Update_Success(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	newName := "New Name"
 	err := service.Update("sdm-1", dto.UpdateSdmCsirtRequest{
@@ -372,7 +372,7 @@ func TestSdmCsirtService_Update_PartialUpdate(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	// Hanya update jabatan csirt
 	newJabatan := "Senior Analyst"
@@ -396,7 +396,7 @@ func TestSdmCsirtService_Update_AllFields(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	newName := "New Name"
 	newJabatanCsirt := "Senior Analyst"
@@ -428,7 +428,7 @@ func TestSdmCsirtService_Update_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	newName := "New Name"
 	err := service.Update("invalid-id", dto.UpdateSdmCsirtRequest{
@@ -452,7 +452,7 @@ func TestSdmCsirtService_Update_EmptyName_RepositoryRejects(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	emptyName := ""
 	err := service.Update("sdm-1", dto.UpdateSdmCsirtRequest{
@@ -475,7 +475,7 @@ func TestSdmCsirtService_Update_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	newName := "New Name"
 	err := service.Update("sdm-1", dto.UpdateSdmCsirtRequest{
@@ -498,7 +498,7 @@ func TestSdmCsirtService_Delete_Success(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	err := service.Delete("sdm-1")
 
@@ -512,7 +512,7 @@ func TestSdmCsirtService_Delete_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	err := service.Delete("invalid-id")
 
@@ -530,7 +530,7 @@ func TestSdmCsirtService_Delete_EmptyID(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	err := service.Delete("")
 
@@ -544,7 +544,7 @@ func TestSdmCsirtService_Delete_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	err := service.Delete("sdm-1")
 
@@ -565,7 +565,7 @@ func TestSdmCsirtService_Create_VeryLongName(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	longName := "Andi Pratama Budi Santoso Citra Dewi Rahman Wijaya Kusuma Putra Mahardika" // Very long name
 
@@ -585,7 +585,7 @@ func TestSdmCsirtService_Create_SpecialCharactersInName(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	nameWithSpecialChars := "O'Brien"
 
@@ -610,7 +610,7 @@ func TestSdmCsirtService_Update_NoFieldsToUpdate(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	// Update without any fields
 	err := service.Update("sdm-1", dto.UpdateSdmCsirtRequest{})
@@ -633,7 +633,7 @@ func TestSdmCsirtService_GetByID_WithCSIRTRelation(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	res, err := service.GetByID("sdm-1")
 
@@ -650,7 +650,7 @@ func TestSdmCsirtService_Create_MultipleCertifications(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	multipleCerts := "CISSP, CEH, OSCP, Security+, GIAC"
 
@@ -670,7 +670,7 @@ func TestSdmCsirtService_Create_WithSkillSet(t *testing.T) {
 		},
 	}
 
-	service := NewSdmCsirtService(repo)
+	service := NewSdmCsirtService(repo, nil)
 
 	skills := "Incident Response, Malware Analysis, Network Security, SIEM, Forensics"
 

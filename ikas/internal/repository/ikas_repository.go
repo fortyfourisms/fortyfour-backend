@@ -18,6 +18,11 @@ type IkasRepository struct {
 	db *sql.DB
 }
 
+// ImportFromExcel implements IkasRepositoryInterface.
+func (r *IkasRepository) ImportFromExcel(raw []byte) (*dto.IkasResponse, error) {
+	panic("unimplemented")
+}
+
 func NewIkasRepository(db *sql.DB) *IkasRepository {
 	return &IkasRepository{db: db}
 }

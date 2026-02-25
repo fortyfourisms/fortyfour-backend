@@ -399,7 +399,22 @@ info:
   title: IKAS API
   version: "1.0"
 paths:
-  /api/domain:
+  /api/health:
+    get:
+      description: Check if the API is running and healthy
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - Health
+  /api/maturity/domain:
     get:
       description: Mengambil seluruh data domain
       produces:
@@ -447,7 +462,7 @@ paths:
       summary: Tambah domain baru
       tags:
       - Domain
-  /api/domain/{id}:
+  /api/maturity/domain/{id}:
     delete:
       description: Menghapus data domain berdasarkan ID
       parameters:
@@ -534,22 +549,7 @@ paths:
       summary: Update domain
       tags:
       - Domain
-  /api/health:
-    get:
-      description: Check if the API is running and healthy
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Health check
-      tags:
-      - Health
-  /api/ikas:
+  /api/maturity/ikas:
     get:
       description: Mengambil seluruh data ikas
       produces:
@@ -593,7 +593,7 @@ paths:
       summary: Tambah ikas baru
       tags:
       - Ikas
-  /api/ikas/{id}:
+  /api/maturity/ikas/{id}:
     delete:
       description: Menghapus data ikas berdasarkan ID
       parameters:
@@ -668,7 +668,7 @@ paths:
       summary: Update ikas
       tags:
       - Ikas
-  /api/ikas/import:
+  /api/maturity/ikas/import:
     post:
       consumes:
       - multipart/form-data
@@ -718,7 +718,7 @@ paths:
       summary: Import IKAS dari Excel
       tags:
       - Ikas
-  /api/kategori:
+  /api/maturity/kategori:
     get:
       description: Mengambil seluruh data kategori
       produces:
@@ -766,7 +766,7 @@ paths:
       summary: Tambah kategori baru
       tags:
       - Kategori
-  /api/kategori/{id}:
+  /api/maturity/kategori/{id}:
     delete:
       description: Menghapus data kategori berdasarkan ID
       parameters:
@@ -853,7 +853,7 @@ paths:
       summary: Update kategori
       tags:
       - Kategori
-  /api/ruang-lingkup:
+  /api/maturity/ruang-lingkup:
     get:
       description: Mengambil seluruh data ruang lingkup
       produces:
@@ -901,7 +901,7 @@ paths:
       summary: Tambah ruang lingkup baru
       tags:
       - RuangLingkup
-  /api/ruang-lingkup/{id}:
+  /api/maturity/ruang-lingkup/{id}:
     delete:
       description: Menghapus data ruang lingkup berdasarkan ID
       parameters:
@@ -988,7 +988,7 @@ paths:
       summary: Update ruang lingkup
       tags:
       - RuangLingkup
-  /api/sub-kategori:
+  /api/maturity/sub-kategori:
     get:
       description: Mengambil seluruh data sub kategori
       produces:
@@ -1036,7 +1036,7 @@ paths:
       summary: Tambah sub kategori baru
       tags:
       - SubKategori
-  /api/sub-kategori/{id}:
+  /api/maturity/sub-kategori/{id}:
     delete:
       description: Menghapus data sub kategori berdasarkan ID
       parameters:

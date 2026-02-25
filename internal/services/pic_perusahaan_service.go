@@ -5,20 +5,20 @@ import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/repository"
 	"strings"
-
+	"fortyfour-backend/pkg/cache"
 	"github.com/google/uuid"
 )
 
 type PICService struct {
 	repo repository.PICRepositoryInterface
+	rc   cache.RedisInterface
 }
 
-func NewPICService(repo repository.PICRepositoryInterface) *PICService {
-	return &PICService{repo: repo}
+func NewPICService(repo repository.PICRepositoryInterface, rc cache.RedisInterface) *PICService {
+	return &PICService{repo: repo, rc: rc}
 }
 
 func (s *PICService) Create(req dto.CreatePICRequest) (*dto.PICResponse, error) {
-
 	if req.Nama == nil || strings.TrimSpace(*req.Nama) == "" {
 		return nil, errors.New("nama wajib diisi")
 	}
@@ -33,15 +33,47 @@ func (s *PICService) Create(req dto.CreatePICRequest) (*dto.PICResponse, error) 
 		return nil, err
 	}
 
-	return s.repo.GetByID(id)
+	result, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, keyDetail("pic", id), result, TTLDetail)
+	cacheDelete(s.rc, keyList("pic"))
+
+	return result, nil
 }
 
 func (s *PICService) GetAll() ([]dto.PICResponse, error) {
-	return s.repo.GetAll()
+	key := keyList("pic")
+	var result []dto.PICResponse
+	if cacheGet(s.rc, key, &result) {
+		return result, nil
+	}
+
+	result, err := s.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, result, TTLList)
+	return result, nil
 }
 
 func (s *PICService) GetByID(id string) (*dto.PICResponse, error) {
-	return s.repo.GetByID(id)
+	key := keyDetail("pic", id)
+	var result dto.PICResponse
+	if cacheGet(s.rc, key, &result) {
+		return &result, nil
+	}
+
+	data, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, data, TTLDetail)
+	return data, nil
 }
 
 func (s *PICService) Update(id string, req dto.UpdatePICRequest) (*dto.PICResponse, error) {
@@ -53,10 +85,18 @@ func (s *PICService) Update(id string, req dto.UpdatePICRequest) (*dto.PICRespon
 	if err != nil {
 		return nil, err
 	}
-
+	cacheDelete(s.rc, keyDetail("pic", id))
+	cacheDelete(s.rc, keyList("pic"))
 	return updated, nil
 }
 
 func (s *PICService) Delete(id string) error {
-	return s.repo.Delete(id)
+	if err := s.repo.Delete(id); err != nil {
+		return err
+	}
+
+	cacheDelete(s.rc, keyDetail("pic", id))
+	cacheDelete(s.rc, keyList("pic"))
+
+	return nil
 }

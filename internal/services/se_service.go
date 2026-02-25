@@ -6,6 +6,7 @@ import (
 
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/repository"
+	"fortyfour-backend/pkg/cache"
 
 	"github.com/google/uuid"
 )
@@ -20,10 +21,11 @@ type SEService interface {
 
 type seService struct {
 	repo repository.SERepositoryInterface
+	rc cache.RedisInterface
 }
 
-func NewSEService(repo repository.SERepositoryInterface) SEService {
-	return &seService{repo: repo}
+func NewSEService(repo repository.SERepositoryInterface, rc cache.RedisInterface) SEService {
+	return &seService{repo: repo, rc: rc}
 }
 
 /* =======================
@@ -67,7 +69,15 @@ func (s *seService) Create(req dto.CreateSERequest) (*dto.SEResponse, error) {
 		return nil, err
 	}
 
-	return s.repo.GetByID(id)
+	result, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, keyDetail("se", id), result, TTLDetail)
+	cacheDelete(s.rc, keyList("se"))
+
+	return result, nil
 }
 
 /* =======================
@@ -75,14 +85,38 @@ func (s *seService) Create(req dto.CreateSERequest) (*dto.SEResponse, error) {
 ======================= */
 
 func (s *seService) GetAll() ([]dto.SEResponse, error) {
-	return s.repo.GetAll()
+	key := keyList("se")
+	var result []dto.SEResponse
+	if cacheGet(s.rc, key, &result) {
+		return result, nil
+	}
+
+	result, err := s.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, result, TTLList)
+	return result, nil
 }
 
 func (s *seService) GetByID(id string) (*dto.SEResponse, error) {
 	if strings.TrimSpace(id) == "" {
 		return nil, errors.New("id wajib diisi")
 	}
-	return s.repo.GetByID(id)
+	key := keyDetail("se", id)
+	var result dto.SEResponse
+	if cacheGet(s.rc, key, &result) {
+		return &result, nil
+	}
+
+	data, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, data, TTLDetail)
+	return data, nil
 }
 
 /* =======================
@@ -115,7 +149,10 @@ func (s *seService) Update(id string, req dto.UpdateSERequest) (*dto.SEResponse,
 		return nil, err
 	}
 
-	return s.repo.GetByID(id)
+	cacheDelete(s.rc, keyDetail("se", id))
+	cacheDelete(s.rc, keyList("se"))
+
+	return existing, nil
 }
 
 /* =======================
@@ -126,7 +163,14 @@ func (s *seService) Delete(id string) error {
 	if strings.TrimSpace(id) == "" {
 		return errors.New("id wajib diisi")
 	}
-	return s.repo.Delete(id)
+	if err := s.repo.Delete(id); err != nil {
+		return err
+	}
+
+	cacheDelete(s.rc, keyDetail("se", id))
+	cacheDelete(s.rc, keyList("se"))
+
+	return nil
 }
 
 /* ======================================================
