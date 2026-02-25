@@ -15,7 +15,30 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/domain": {
+        "/api/health": {
+            "get": {
+                "description": "Check if the API is running and healthy",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/domain": {
             "get": {
                 "description": "Mengambil seluruh data domain",
                 "produces": [
@@ -88,7 +111,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/domain/{id}": {
+        "/api/maturity/domain/{id}": {
             "get": {
                 "description": "Mengambil satu data domain",
                 "produces": [
@@ -219,30 +242,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/health": {
-            "get": {
-                "description": "Check if the API is running and healthy",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Health"
-                ],
-                "summary": "Health check",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/ikas": {
+        "/api/maturity/ikas": {
             "get": {
                 "description": "Mengambil seluruh data ikas",
                 "produces": [
@@ -309,7 +309,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/ikas/import": {
+        "/api/maturity/ikas/import": {
             "post": {
                 "description": "Import data IKAS dari file Excel (sheet ke-7)",
                 "consumes": [
@@ -382,7 +382,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/ikas/{id}": {
+        "/api/maturity/ikas/{id}": {
             "get": {
                 "description": "Mengambil satu data ikas",
                 "produces": [
@@ -495,7 +495,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/kategori": {
+        "/api/maturity/kategori": {
             "get": {
                 "description": "Mengambil seluruh data kategori",
                 "produces": [
@@ -568,7 +568,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/kategori/{id}": {
+        "/api/maturity/kategori/{id}": {
             "get": {
                 "description": "Mengambil satu data kategori",
                 "produces": [
@@ -699,7 +699,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/ruang-lingkup": {
+        "/api/maturity/ruang-lingkup": {
             "get": {
                 "description": "Mengambil seluruh data ruang lingkup",
                 "produces": [
@@ -772,7 +772,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/ruang-lingkup/{id}": {
+        "/api/maturity/ruang-lingkup/{id}": {
             "get": {
                 "description": "Mengambil satu data ruang lingkup",
                 "produces": [
@@ -903,7 +903,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/sub-kategori": {
+        "/api/maturity/sub-kategori": {
             "get": {
                 "description": "Mengambil seluruh data sub kategori",
                 "produces": [
@@ -976,7 +976,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/sub-kategori/{id}": {
+        "/api/maturity/sub-kategori/{id}": {
             "get": {
                 "description": "Mengambil satu data sub kategori",
                 "produces": [
