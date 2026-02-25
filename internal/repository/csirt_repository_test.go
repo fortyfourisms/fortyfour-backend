@@ -16,7 +16,7 @@ import (
 func setupTest(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *CsirtRepository) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	
+
 	repo := NewCsirtRepository(db)
 	return db, mock, repo
 }
@@ -36,13 +36,13 @@ func TestCsirtRepository_Create(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		req := dto.CreateCsirtRequest{
-			IdPerusahaan:      "perusahaan-123",
-			NamaCsirt:         "CSIRT Test",
-			WebCsirt:          "https://csirt.test.com",
-			TeleponCsirt:      "021-12345678",
-			PhotoCsirt:        "photo.jpg",
-			FileRFC2350:       "rfc2350.pdf",
-			FilePublicKeyPGP:  "pgp.key",
+			IdPerusahaan:     "perusahaan-123",
+			NamaCsirt:        "CSIRT Test",
+			WebCsirt:         "https://csirt.test.com",
+			TeleponCsirt:     "021-12345678",
+			PhotoCsirt:       "photo.jpg",
+			FileRFC2350:      "rfc2350.pdf",
+			FilePublicKeyPGP: "pgp.key",
 		}
 		id := "csirt-123"
 
@@ -244,17 +244,17 @@ func TestCsirtRepository_GetAllWithPerusahaan(t *testing.T) {
 		result, err := repo.GetAllWithPerusahaan()
 		assert.NoError(t, err)
 		assert.Len(t, result, 2)
-		
+
 		assert.Equal(t, "csirt-1", result[0].ID)
 		assert.Equal(t, "CSIRT 1", result[0].NamaCsirt)
 		assert.Equal(t, "perusahaan-1", result[0].Perusahaan.ID)
 		assert.Equal(t, "PT Test 1", result[0].Perusahaan.NamaPerusahaan)
-		
+
 		assert.Equal(t, "csirt-2", result[1].ID)
 		assert.Equal(t, "CSIRT 2", result[1].NamaCsirt)
 		assert.Equal(t, "perusahaan-2", result[1].Perusahaan.ID)
 		assert.Equal(t, "PT Test 2", result[1].Perusahaan.NamaPerusahaan)
-		
+
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 

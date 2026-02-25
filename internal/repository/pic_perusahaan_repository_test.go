@@ -14,7 +14,7 @@ import (
 func setupPICTest(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *PICRepository) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	
+
 	repo := NewPICRepository(db)
 	return db, mock, repo
 }
@@ -36,7 +36,7 @@ func TestPICRepository_Create(t *testing.T) {
 		nama := "John Doe"
 		telepon := "081234567890"
 		idPerusahaan := "perusahaan-123"
-		
+
 		req := dto.CreatePICRequest{
 			Nama:         &nama,
 			Telepon:      &telepon,
@@ -112,7 +112,7 @@ func TestPICRepository_GetAll(t *testing.T) {
 	t.Run("success with perusahaan", func(t *testing.T) {
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		rows := sqlmock.NewRows([]string{
 			"p.id", "p.nama", "p.telepon", "p.created_at", "p.updated_at",
 			"per.id", "per.nama_perusahaan",
@@ -126,7 +126,7 @@ func TestPICRepository_GetAll(t *testing.T) {
 		result, err := repo.GetAll()
 		assert.NoError(t, err)
 		require.Len(t, result, 2)
-		
+
 		// Check first record
 		assert.Equal(t, "pic-1", result[0].ID)
 		assert.Equal(t, "John Doe", result[0].Nama)
@@ -136,21 +136,21 @@ func TestPICRepository_GetAll(t *testing.T) {
 		require.NotNil(t, result[0].Perusahaan)
 		assert.Equal(t, "perusahaan-1", result[0].Perusahaan.ID)
 		assert.Equal(t, "PT ABC", result[0].Perusahaan.NamaPerusahaan)
-		
+
 		// Check second record
 		assert.Equal(t, "pic-2", result[1].ID)
 		assert.Equal(t, "Jane Smith", result[1].Nama)
 		require.NotNil(t, result[1].Perusahaan)
 		assert.Equal(t, "perusahaan-2", result[1].Perusahaan.ID)
 		assert.Equal(t, "PT XYZ", result[1].Perusahaan.NamaPerusahaan)
-		
+
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
 	t.Run("success without perusahaan (null)", func(t *testing.T) {
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		rows := sqlmock.NewRows([]string{
 			"p.id", "p.nama", "p.telepon", "p.created_at", "p.updated_at",
 			"per.id", "per.nama_perusahaan",
@@ -163,11 +163,11 @@ func TestPICRepository_GetAll(t *testing.T) {
 		result, err := repo.GetAll()
 		assert.NoError(t, err)
 		require.Len(t, result, 1)
-		
+
 		assert.Equal(t, "pic-1", result[0].ID)
 		assert.Equal(t, "John Doe", result[0].Nama)
 		assert.Nil(t, result[0].Perusahaan) // Should be nil when no perusahaan
-		
+
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
@@ -201,7 +201,7 @@ func TestPICRepository_GetAll(t *testing.T) {
 	t.Run("scan error - continues to next row", func(t *testing.T) {
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		rows := sqlmock.NewRows([]string{
 			"p.id", "p.nama", "p.telepon", "p.created_at", "p.updated_at",
 			"per.id", "per.nama_perusahaan",
@@ -231,7 +231,7 @@ func TestPICRepository_GetByID(t *testing.T) {
 		id := "pic-123"
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		row := sqlmock.NewRows([]string{
 			"p.id", "p.nama", "p.telepon", "p.created_at", "p.updated_at",
 			"per.id", "per.nama_perusahaan",
@@ -260,7 +260,7 @@ func TestPICRepository_GetByID(t *testing.T) {
 		id := "pic-123"
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		row := sqlmock.NewRows([]string{
 			"p.id", "p.nama", "p.telepon", "p.created_at", "p.updated_at",
 			"per.id", "per.nama_perusahaan",
@@ -333,7 +333,7 @@ func TestPICRepository_Update(t *testing.T) {
 		nama := "John Doe Updated"
 		telepon := "081999999999"
 		idPerusahaan := "perusahaan-456"
-		
+
 		req := dto.UpdatePICRequest{
 			Nama:         &nama,
 			Telepon:      &telepon,
@@ -352,7 +352,7 @@ func TestPICRepository_Update(t *testing.T) {
 	t.Run("success update only nama", func(t *testing.T) {
 		id := "pic-123"
 		nama := "John Doe Updated"
-		
+
 		req := dto.UpdatePICRequest{
 			Nama:         &nama,
 			Telepon:      nil,
@@ -371,7 +371,7 @@ func TestPICRepository_Update(t *testing.T) {
 	t.Run("success update only telepon", func(t *testing.T) {
 		id := "pic-123"
 		telepon := "081999999999"
-		
+
 		req := dto.UpdatePICRequest{
 			Nama:         nil,
 			Telepon:      &telepon,
@@ -391,7 +391,7 @@ func TestPICRepository_Update(t *testing.T) {
 		id := "pic-123"
 		nama := "John Doe Updated"
 		telepon := "081999999999"
-		
+
 		req := dto.UpdatePICRequest{
 			Nama:         &nama,
 			Telepon:      &telepon,
@@ -409,7 +409,7 @@ func TestPICRepository_Update(t *testing.T) {
 
 	t.Run("no fields to update - returns nil without query", func(t *testing.T) {
 		id := "pic-123"
-		
+
 		req := dto.UpdatePICRequest{
 			Nama:         nil,
 			Telepon:      nil,
@@ -425,7 +425,7 @@ func TestPICRepository_Update(t *testing.T) {
 	t.Run("database error", func(t *testing.T) {
 		id := "pic-123"
 		nama := "John Doe Updated"
-		
+
 		req := dto.UpdatePICRequest{
 			Nama: &nama,
 		}
@@ -443,7 +443,7 @@ func TestPICRepository_Update(t *testing.T) {
 	t.Run("no rows affected - not checked by function", func(t *testing.T) {
 		id := "pic-nonexistent"
 		nama := "John Doe"
-		
+
 		req := dto.UpdatePICRequest{
 			Nama: &nama,
 		}

@@ -14,7 +14,7 @@ import (
 func setupSdmCsirtTest(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *SdmCsirtRepository) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	
+
 	repo := NewSdmCsirtRepository(db)
 	return db, mock, repo
 }
@@ -39,7 +39,7 @@ func TestSdmCsirtRepository_Create(t *testing.T) {
 		jabatanPerusahaan := "IT Manager"
 		skill := "Cybersecurity, Network Security"
 		sertifikasi := "CISSP, CEH"
-		
+
 		req := dto.CreateSdmCsirtRequest{
 			IdCsirt:           &idCsirt,
 			NamaPersonel:      &namaPersonel,
@@ -128,7 +128,7 @@ func TestSdmCsirtRepository_GetAll(t *testing.T) {
 	t.Run("success with csirt", func(t *testing.T) {
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		rows := sqlmock.NewRows([]string{
 			"s.id", "s.nama_personel", "s.jabatan_csirt", "s.jabatan_perusahaan",
 			"s.skill", "s.sertifikasi", "s.created_at", "s.updated_at",
@@ -151,7 +151,7 @@ func TestSdmCsirtRepository_GetAll(t *testing.T) {
 		result, err := repo.GetAll()
 		assert.NoError(t, err)
 		require.Len(t, result, 2)
-		
+
 		// Check first record
 		assert.Equal(t, "sdm001", result[0].ID)
 		assert.Equal(t, "John Doe", result[0].NamaPersonel)
@@ -168,20 +168,20 @@ func TestSdmCsirtRepository_GetAll(t *testing.T) {
 		assert.Equal(t, "https://csirt-abc.com", *result[0].Csirt.WebCsirt)
 		require.NotNil(t, result[0].Csirt.TeleponCsirt)
 		assert.Equal(t, "021-111", *result[0].Csirt.TeleponCsirt)
-		
+
 		// Check second record
 		assert.Equal(t, "sdm002", result[1].ID)
 		assert.Equal(t, "Jane Smith", result[1].NamaPersonel)
 		require.NotNil(t, result[1].Csirt)
 		assert.Equal(t, "csirt-2", result[1].Csirt.ID)
-		
+
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
 	t.Run("success without csirt (null)", func(t *testing.T) {
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		rows := sqlmock.NewRows([]string{
 			"s.id", "s.nama_personel", "s.jabatan_csirt", "s.jabatan_perusahaan",
 			"s.skill", "s.sertifikasi", "s.created_at", "s.updated_at",
@@ -191,9 +191,9 @@ func TestSdmCsirtRepository_GetAll(t *testing.T) {
 				"sdm001", "John Doe", "Security Analyst", "IT Manager",
 				"Cybersecurity", "CISSP", createdAt, updatedAt,
 				sql.NullString{Valid: false}, // c.id - this is the key one to check
-				"", // c.nama_csirt - empty string for NULL
-				"", // c.web_csirt - empty string for NULL
-				"", // c.telepon_csirt - empty string for NULL
+				"",                           // c.nama_csirt - empty string for NULL
+				"",                           // c.web_csirt - empty string for NULL
+				"",                           // c.telepon_csirt - empty string for NULL
 			)
 
 		mock.ExpectQuery("SELECT (.+) FROM sdm_csirt s LEFT JOIN csirt c").
@@ -202,11 +202,11 @@ func TestSdmCsirtRepository_GetAll(t *testing.T) {
 		result, err := repo.GetAll()
 		assert.NoError(t, err)
 		require.Len(t, result, 1)
-		
+
 		assert.Equal(t, "sdm001", result[0].ID)
 		assert.Equal(t, "John Doe", result[0].NamaPersonel)
 		assert.Nil(t, result[0].Csirt) // Should be nil when csirtID is not valid
-		
+
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
@@ -260,7 +260,7 @@ func TestSdmCsirtRepository_GetByID(t *testing.T) {
 		id := "sdm001"
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		row := sqlmock.NewRows([]string{
 			"s.id", "s.nama_personel", "s.jabatan_csirt", "s.jabatan_perusahaan",
 			"s.skill", "s.sertifikasi", "s.created_at", "s.updated_at",
@@ -301,7 +301,7 @@ func TestSdmCsirtRepository_GetByID(t *testing.T) {
 		id := "sdm001"
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		row := sqlmock.NewRows([]string{
 			"s.id", "s.nama_personel", "s.jabatan_csirt", "s.jabatan_perusahaan",
 			"s.skill", "s.sertifikasi", "s.created_at", "s.updated_at",
@@ -311,9 +311,9 @@ func TestSdmCsirtRepository_GetByID(t *testing.T) {
 				id, "John Doe", "Security Analyst", "IT Manager",
 				"Cybersecurity", "CISSP", createdAt, updatedAt,
 				sql.NullString{Valid: false}, // c.id - this determines if csirt is nil
-				"", // c.nama_csirt - empty string for NULL
-				"", // c.web_csirt - empty string for NULL
-				"", // c.telepon_csirt - empty string for NULL
+				"",                           // c.nama_csirt - empty string for NULL
+				"",                           // c.web_csirt - empty string for NULL
+				"",                           // c.telepon_csirt - empty string for NULL
 			)
 
 		mock.ExpectQuery("SELECT (.+) FROM sdm_csirt s LEFT JOIN csirt c (.+) WHERE s.id = ?").
@@ -381,7 +381,7 @@ func TestSdmCsirtRepository_Update(t *testing.T) {
 		id := "sdm001"
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		sdm := dto.SdmCsirtResponse{
 			ID:                id,
 			NamaPersonel:      "John Doe Updated",

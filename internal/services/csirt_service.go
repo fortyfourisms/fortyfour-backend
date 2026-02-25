@@ -59,7 +59,7 @@ func (s *CsirtService) GetAll() ([]dto.CsirtResponse, error) {
 }
 
 func (s *CsirtService) GetByID(id string) (*dto.CsirtResponse, error) {
-		key := keyDetail("csirt", id)
+	key := keyDetail("csirt", id)
 	var result dto.CsirtResponse
 	if cacheGet(s.rc, key, &result) {
 		return &result, nil
@@ -110,7 +110,7 @@ func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Cs
 }
 
 func (s *CsirtService) Delete(id string) error {
-		if err := s.repo.Delete(id); err != nil {
+	if err := s.repo.Delete(id); err != nil {
 		return err
 	}
 

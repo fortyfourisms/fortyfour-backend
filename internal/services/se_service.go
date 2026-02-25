@@ -21,7 +21,7 @@ type SEService interface {
 
 type seService struct {
 	repo repository.SERepositoryInterface
-	rc cache.RedisInterface
+	rc   cache.RedisInterface
 }
 
 func NewSEService(repo repository.SERepositoryInterface, rc cache.RedisInterface) SEService {

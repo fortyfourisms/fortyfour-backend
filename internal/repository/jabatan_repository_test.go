@@ -15,7 +15,7 @@ import (
 func setupJabatanTest(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *JabatanRepository) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	
+
 	repo := NewJabatanRepository(db)
 	return db, mock, repo
 }
@@ -91,7 +91,7 @@ func TestJabatanRepository_GetAll(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		rows := sqlmock.NewRows([]string{
 			"id", "nama_jabatan", "created_at", "updated_at",
 		}).
@@ -105,21 +105,21 @@ func TestJabatanRepository_GetAll(t *testing.T) {
 		result, err := repo.GetAll()
 		assert.NoError(t, err)
 		require.Len(t, result, 3)
-		
+
 		// Check first record
 		assert.Equal(t, "001", result[0].ID)
 		assert.Equal(t, "Manager IT", result[0].NamaJabatan)
 		assert.Equal(t, createdAt, result[0].CreatedAt)
 		assert.Equal(t, updatedAt, result[0].UpdatedAt)
-		
+
 		// Check second record
 		assert.Equal(t, "002", result[1].ID)
 		assert.Equal(t, "Staff Admin", result[1].NamaJabatan)
-		
+
 		// Check third record
 		assert.Equal(t, "003", result[2].ID)
 		assert.Equal(t, "Direktur", result[2].NamaJabatan)
-		
+
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
@@ -153,7 +153,7 @@ func TestJabatanRepository_GetAll(t *testing.T) {
 		// It will just append zero-valued structs
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		rows := sqlmock.NewRows([]string{
 			"id", "nama_jabatan", "created_at", "updated_at",
 		}).
@@ -179,7 +179,7 @@ func TestJabatanRepository_GetByID(t *testing.T) {
 		id := "001"
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		row := sqlmock.NewRows([]string{
 			"id", "nama_jabatan", "created_at", "updated_at",
 		}).
@@ -251,7 +251,7 @@ func TestJabatanRepository_Update(t *testing.T) {
 		id := "001"
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		req := dto.JabatanResponse{
 			ID:          id,
 			NamaJabatan: "Senior Manager IT",
@@ -272,7 +272,7 @@ func TestJabatanRepository_Update(t *testing.T) {
 		id := "001"
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		req := dto.JabatanResponse{
 			ID:          id,
 			NamaJabatan: "Senior Manager IT",
@@ -294,7 +294,7 @@ func TestJabatanRepository_Update(t *testing.T) {
 		id := "jabatan-nonexistent"
 		createdAt := "2024-01-01 10:00:00"
 		updatedAt := "2024-01-02 15:30:00"
-		
+
 		req := dto.JabatanResponse{
 			ID:          id,
 			NamaJabatan: "Senior Manager IT",

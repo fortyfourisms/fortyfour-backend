@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/repository"
-	"strings"
 	"fortyfour-backend/pkg/cache"
 	"github.com/google/uuid"
+	"strings"
 )
 
 type PICService struct {

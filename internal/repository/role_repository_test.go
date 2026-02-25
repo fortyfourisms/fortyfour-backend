@@ -16,7 +16,7 @@ import (
 func setupRoleTest(t *testing.T) (*sql.DB, sqlmock.Sqlmock, RoleRepository) {
 	db, mock, err := sqlmock.New()
 	require.NoError(t, err)
-	
+
 	repo := NewRoleRepository(db)
 	return db, mock, repo
 }
@@ -45,9 +45,9 @@ func TestRoleRepository_Create(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		err := repo.Create(ctx, role)
-		
+
 		assert.NoError(t, err)
-		assert.NotEmpty(t, role.ID) // ID should be generated
+		assert.NotEmpty(t, role.ID)              // ID should be generated
 		assert.False(t, role.CreatedAt.IsZero()) // CreatedAt should be set
 		assert.False(t, role.UpdatedAt.IsZero()) // UpdatedAt should be set
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -65,7 +65,7 @@ func TestRoleRepository_Create(t *testing.T) {
 			WillReturnError(errors.New("database error"))
 
 		err := repo.Create(ctx, role)
-		
+
 		assert.Error(t, err)
 		assert.Equal(t, "database error", err.Error())
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -83,7 +83,7 @@ func TestRoleRepository_Create(t *testing.T) {
 			WillReturnError(errors.New("duplicate entry for key 'name'"))
 
 		err := repo.Create(ctx, role)
-		
+
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "duplicate")
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -108,7 +108,7 @@ func TestRoleRepository_GetByID(t *testing.T) {
 			WillReturnRows(rows)
 
 		result, err := repo.GetByID(ctx, id)
-		
+
 		assert.NoError(t, err)
 		require.NotNil(t, result)
 		assert.Equal(t, id, result.ID)
@@ -128,7 +128,7 @@ func TestRoleRepository_GetByID(t *testing.T) {
 			WillReturnError(sql.ErrNoRows)
 
 		result, err := repo.GetByID(ctx, id)
-		
+
 		assert.NoError(t, err) // No error, just nil result
 		assert.Nil(t, result)
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -143,7 +143,7 @@ func TestRoleRepository_GetByID(t *testing.T) {
 			WillReturnError(errors.New("database connection error"))
 
 		result, err := repo.GetByID(ctx, id)
-		
+
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		assert.Equal(t, "database connection error", err.Error())
@@ -162,7 +162,7 @@ func TestRoleRepository_GetByID(t *testing.T) {
 			WillReturnRows(rows)
 
 		result, err := repo.GetByID(ctx, id)
-		
+
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -188,23 +188,23 @@ func TestRoleRepository_GetAll(t *testing.T) {
 			WillReturnRows(rows)
 
 		result, err := repo.GetAll(ctx)
-		
+
 		assert.NoError(t, err)
 		require.Len(t, result, 3)
-		
+
 		// Check first record
 		assert.Equal(t, "role-1", result[0].ID)
 		assert.Equal(t, "Admin", result[0].Name)
 		assert.Equal(t, "Administrator role", result[0].Description)
-		
+
 		// Check second record
 		assert.Equal(t, "role-2", result[1].ID)
 		assert.Equal(t, "User", result[1].Name)
-		
+
 		// Check third record
 		assert.Equal(t, "role-3", result[2].ID)
 		assert.Equal(t, "Guest", result[2].Name)
-		
+
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
@@ -219,7 +219,7 @@ func TestRoleRepository_GetAll(t *testing.T) {
 			WillReturnRows(rows)
 
 		result, err := repo.GetAll(ctx)
-		
+
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		assert.Len(t, result, 0)
@@ -233,7 +233,7 @@ func TestRoleRepository_GetAll(t *testing.T) {
 			WillReturnError(errors.New("query error"))
 
 		result, err := repo.GetAll(ctx)
-		
+
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		assert.Equal(t, "query error", err.Error())
@@ -250,7 +250,7 @@ func TestRoleRepository_GetAll(t *testing.T) {
 			WillReturnRows(rows)
 
 		result, err := repo.GetAll(ctx)
-		
+
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -270,7 +270,7 @@ func TestRoleRepository_GetAll(t *testing.T) {
 			WillReturnRows(rows)
 
 		_, err := repo.GetAll(ctx)
-		
+
 		// The function returns the result and checks rows.Err() at the end
 		// CloseError sets an error that will be returned by rows.Err()
 		assert.Error(t, err)
@@ -296,7 +296,7 @@ func TestRoleRepository_Update(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
 		err := repo.Update(ctx, role)
-		
+
 		assert.NoError(t, err)
 		assert.False(t, role.UpdatedAt.IsZero()) // UpdatedAt should be set
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -315,7 +315,7 @@ func TestRoleRepository_Update(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 
 		err := repo.Update(ctx, role)
-		
+
 		assert.Error(t, err)
 		assert.Equal(t, sql.ErrNoRows, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -334,7 +334,7 @@ func TestRoleRepository_Update(t *testing.T) {
 			WillReturnError(errors.New("update error"))
 
 		err := repo.Update(ctx, role)
-		
+
 		assert.Error(t, err)
 		assert.Equal(t, "update error", err.Error())
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -353,7 +353,7 @@ func TestRoleRepository_Update(t *testing.T) {
 			WillReturnResult(sqlmock.NewErrorResult(errors.New("rows affected error")))
 
 		err := repo.Update(ctx, role)
-		
+
 		assert.Error(t, err)
 		assert.Equal(t, "rows affected error", err.Error())
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -373,7 +373,7 @@ func TestRoleRepository_Delete(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
 		err := repo.Delete(ctx, id)
-		
+
 		assert.NoError(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -387,7 +387,7 @@ func TestRoleRepository_Delete(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 
 		err := repo.Delete(ctx, id)
-		
+
 		assert.Error(t, err)
 		assert.Equal(t, sql.ErrNoRows, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -402,7 +402,7 @@ func TestRoleRepository_Delete(t *testing.T) {
 			WillReturnError(errors.New("delete error"))
 
 		err := repo.Delete(ctx, id)
-		
+
 		assert.Error(t, err)
 		assert.Equal(t, "delete error", err.Error())
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -417,7 +417,7 @@ func TestRoleRepository_Delete(t *testing.T) {
 			WillReturnResult(sqlmock.NewErrorResult(errors.New("rows affected error")))
 
 		err := repo.Delete(ctx, id)
-		
+
 		assert.Error(t, err)
 		assert.Equal(t, "rows affected error", err.Error())
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -442,7 +442,7 @@ func TestRoleRepository_GetByName(t *testing.T) {
 			WillReturnRows(rows)
 
 		result, err := repo.GetByName(ctx, name)
-		
+
 		assert.NoError(t, err)
 		require.NotNil(t, result)
 		assert.Equal(t, "role-123", result.ID)
@@ -462,7 +462,7 @@ func TestRoleRepository_GetByName(t *testing.T) {
 			WillReturnError(sql.ErrNoRows)
 
 		result, err := repo.GetByName(ctx, name)
-		
+
 		assert.NoError(t, err) // No error, just nil result
 		assert.Nil(t, result)
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -477,7 +477,7 @@ func TestRoleRepository_GetByName(t *testing.T) {
 			WillReturnError(errors.New("database connection error"))
 
 		result, err := repo.GetByName(ctx, name)
-		
+
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		assert.Equal(t, "database connection error", err.Error())
@@ -496,7 +496,7 @@ func TestRoleRepository_GetByName(t *testing.T) {
 			WillReturnRows(rows)
 
 		result, err := repo.GetByName(ctx, name)
-		
+
 		assert.Error(t, err)
 		assert.Nil(t, result)
 		assert.NoError(t, mock.ExpectationsWereMet())
