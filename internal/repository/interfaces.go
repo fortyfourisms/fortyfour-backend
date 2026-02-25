@@ -19,6 +19,7 @@ type UserRepositoryInterface interface {
 	EmailExists(email string, excludeID *string) (bool, error)
 	UsernameExists(username string, excludeID *string) (bool, error)
 	SetMFA(userID string, secret *string, enabled bool) error
+	ExistsByPerusahaan(idPerusahaan string) (bool, error)
 }
 
 type TokenRepositoryInterface interface {
@@ -49,6 +50,7 @@ type JabatanRepositoryInterface interface {
 type PerusahaanRepositoryInterface interface {
 	Create(req dto.CreatePerusahaanRequest, id string) error
 	GetByID(id string) (*dto.PerusahaanResponse, error)
+	GetByNama(nama string) (*dto.PerusahaanResponse, error)
 	GetAll() ([]dto.PerusahaanResponse, error)
 	Update(id string, perusahaan dto.PerusahaanResponse) error
 	Delete(id string) error

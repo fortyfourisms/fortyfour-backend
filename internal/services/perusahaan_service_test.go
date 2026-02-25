@@ -15,11 +15,12 @@ import (
 */
 
 type mockPerusahaanRepository struct {
-	CreateFn  func(req dto.CreatePerusahaanRequest, id string) error
-	GetByIDFn func(id string) (*dto.PerusahaanResponse, error)
-	GetAllFn  func() ([]dto.PerusahaanResponse, error)
-	UpdateFn  func(id string, perusahaan dto.PerusahaanResponse) error
-	DeleteFn  func(id string) error
+	CreateFn     func(req dto.CreatePerusahaanRequest, id string) error
+	GetByIDFn    func(id string) (*dto.PerusahaanResponse, error)
+	GetByNamaFn  func(nama string) (*dto.PerusahaanResponse, error)
+	GetAllFn     func() ([]dto.PerusahaanResponse, error)
+	UpdateFn     func(id string, perusahaan dto.PerusahaanResponse) error
+	DeleteFn     func(id string) error
 }
 
 func (m *mockPerusahaanRepository) Create(req dto.CreatePerusahaanRequest, id string) error {
@@ -40,6 +41,13 @@ func (m *mockPerusahaanRepository) Update(id string, perusahaan dto.PerusahaanRe
 
 func (m *mockPerusahaanRepository) Delete(id string) error {
 	return m.DeleteFn(id)
+}
+
+func (m *mockPerusahaanRepository) GetByNama(nama string) (*dto.PerusahaanResponse, error) {
+	if m.GetByNamaFn != nil {
+		return m.GetByNamaFn(nama)
+	}
+	return nil, errors.New("perusahaan not found")
 }
 
 /*

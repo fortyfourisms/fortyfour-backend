@@ -290,6 +290,19 @@ func (r *UserRepository) Delete(id string) error {
 	return err
 }
 
+// ExistsByPerusahaan cek apakah sudah ada user yang terdaftar di perusahaan ini
+func (r *UserRepository) ExistsByPerusahaan(idPerusahaan string) (bool, error) {
+	var count int
+	err := r.db.QueryRow(
+		`SELECT COUNT(*) FROM users WHERE id_perusahaan = ?`,
+		idPerusahaan,
+	).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 func (r *UserRepository) FindAll() ([]models.User, error) {
 	query := `
 		SELECT

@@ -13,6 +13,7 @@ import (
 type PerusahaanServiceInterface interface {
 	GetAll() ([]dto.PerusahaanResponse, error)
 	GetByID(id string) (*dto.PerusahaanResponse, error)
+	GetByNama(nama string) (*dto.PerusahaanResponse, error)
 	Create(req dto.CreatePerusahaanRequest) (*dto.PerusahaanResponse, error)
 	Update(id string, req dto.UpdatePerusahaanRequest) (*dto.PerusahaanResponse, error)
 	Delete(id string) error
@@ -96,6 +97,10 @@ func (s *PerusahaanService) GetByID(id string) (*dto.PerusahaanResponse, error) 
 
 	cacheSet(s.rc, key, data, TTLDetail)
 	return data, nil
+}
+
+func (s *PerusahaanService) GetByNama(nama string) (*dto.PerusahaanResponse, error) {
+	return s.repo.GetByNama(nama)
 }
 
 func (s *PerusahaanService) Update(id string, req dto.UpdatePerusahaanRequest) (*dto.PerusahaanResponse, error) {

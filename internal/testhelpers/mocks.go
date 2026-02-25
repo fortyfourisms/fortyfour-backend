@@ -7,6 +7,7 @@ import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/pkg/cache"
+	"strings"
 	"sync"
 	"time"
 
@@ -297,6 +298,18 @@ func (m *MockUserRepository) SetMFA(userID string, secret *string, enabled bool)
 		}
 	}
 	return errors.New("user not found")
+}
+
+func (m *MockUserRepository) ExistsByPerusahaan(idPerusahaan string) (bool, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	for _, u := range m.users {
+		if u.IDPerusahaan != nil && *u.IDPerusahaan == idPerusahaan {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // ============================================================
@@ -1088,6 +1101,18 @@ func (m *MockPerusahaanService) GetByID(id string) (*dto.PerusahaanResponse, err
 		return nil, errors.New("perusahaan not found")
 	}
 	return p, nil
+}
+
+func (m *MockPerusahaanService) GetByNama(nama string) (*dto.PerusahaanResponse, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for _, p := range m.perusahaans {
+		if strings.EqualFold(p.NamaPerusahaan, nama) {
+			return p, nil
+		}
+	}
+	return nil, errors.New("perusahaan not found")
 }
 
 func (m *MockPerusahaanService) Create(req dto.CreatePerusahaanRequest) (*dto.PerusahaanResponse, error) {

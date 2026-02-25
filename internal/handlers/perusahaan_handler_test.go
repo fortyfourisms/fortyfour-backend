@@ -70,6 +70,14 @@ func (m *mockPerusahaanService) Delete(id string) error {
 	return args.Error(0)
 }
 
+func (m *mockPerusahaanService) GetByNama(nama string) (*dto.PerusahaanResponse, error) {
+	args := m.Called(nama)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.PerusahaanResponse), args.Error(1)
+}
+
 /* =========================
    MOCK SSE SERVICE
 ========================= */

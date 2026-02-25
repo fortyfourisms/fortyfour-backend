@@ -156,6 +156,15 @@ func (m *mockUserRepo) SetMFA(userID string, secret *string, enabled bool) error
 	return errors.New("user not found")
 }
 
+func (m *mockUserRepo) ExistsByPerusahaan(idPerusahaan string) (bool, error) {
+	for _, u := range m.users {
+		if u.IDPerusahaan != nil && *u.IDPerusahaan == idPerusahaan {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 //
 // =========================
 // CONSTRUCTOR TEST

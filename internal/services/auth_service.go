@@ -118,6 +118,12 @@ func (s *AuthService) Register(
 
 	// SCENARIO 1: User wants to CREATE new company (+ Add New Company clicked)
 	if namaPerusahaanTrimmed != "" {
+		// Cek apakah nama perusahaan sudah terdaftar
+		existing, err := perusahaanService.GetByNama(namaPerusahaanTrimmed)
+		if err == nil && existing != nil {
+			return nil, nil, errors.New("perusahaan sudah terdaftar, silakan minta akun kepada admin perusahaan tersebut")
+		}
+
 		// Create company with only nama_perusahaan (id_sub_sektor will be NULL)
 		createReq := dto.CreatePerusahaanRequest{
 			NamaPerusahaan: &namaPerusahaanTrimmed,
@@ -136,6 +142,16 @@ func (s *AuthService) Register(
 		if err != nil {
 			return nil, nil, errors.New("perusahaan tidak ditemukan")
 		}
+
+		// Cek apakah perusahaan ini sudah punya akun terdaftar
+		exists, err := s.userRepo.ExistsByPerusahaan(idPerusahaanTrimmed)
+		if err != nil {
+			return nil, nil, err
+		}
+		if exists {
+			return nil, nil, errors.New("perusahaan sudah terdaftar, silakan minta akun kepada admin perusahaan tersebut")
+		}
+
 		idPerusahaan = &idPerusahaanTrimmed
 	}
 	// SCENARIO 3: Neither provided - user will select company later (id_perusahaan = nil)
