@@ -28,25 +28,41 @@ func NewRabbitMQ(url string) (*RabbitMQ, error) {
 	return rmq, nil
 }
 
-// connect
+// connect with retry and exponential backoff
 func (r *RabbitMQ) connect() error {
-	var err error
+	maxRetries := 5
+	baseDelay := 2 * time.Second
 
-	// create connection
-	r.conn, err = amqp.Dial(r.url)
-	if err != nil {
-		return fmt.Errorf("failed to connect to RabbitMQ: %w", err)
+	var lastErr error
+	for i := 0; i < maxRetries; i++ {
+		if i > 0 {
+			delay := baseDelay * time.Duration(1<<(i-1)) // 2s, 4s, 8s, 16s, 32s
+			log.Printf("⏳ RabbitMQ connection attempt %d/%d failed, retrying in %v...", i, maxRetries, delay)
+			time.Sleep(delay)
+		}
+
+		var err error
+
+		// create connection
+		r.conn, err = amqp.Dial(r.url)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to connect to RabbitMQ: %w", err)
+			continue
+		}
+
+		// create channel
+		r.channel, err = r.conn.Channel()
+		if err != nil {
+			r.conn.Close()
+			lastErr = fmt.Errorf("failed to open channel: %w", err)
+			continue
+		}
+
+		log.Println("Connected to RabbitMQ successfully")
+		return nil
 	}
 
-	// create channel
-	r.channel, err = r.conn.Channel()
-	if err != nil {
-		r.conn.Close()
-		return fmt.Errorf("failed to open channel: %w", err)
-	}
-
-	log.Println("Connected to RabbitMQ successfully")
-	return nil
+	return fmt.Errorf("failed to connect to RabbitMQ after %d attempts: %w", maxRetries, lastErr)
 }
 
 // GetChannel

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"net/http"
 	"os"
 
@@ -17,31 +16,32 @@ import (
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/pkg/cache"
 	"fortyfour-backend/pkg/database"
+	"fortyfour-backend/pkg/logger"
 	pkgRmq "fortyfour-backend/pkg/rabbitmq"
 
 	"github.com/joho/godotenv"
-	"github.com/rollbar/rollbar-go"
 )
 
+// @title Fortyfour Backend API
+// @version 1.0
+// @description API documentation for Fortyfour Backend - main auth and management service.
+// @host localhost:8080
+// @BasePath /
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 
 	// Load env
 	if err := godotenv.Load(); err != nil {
-		log.Println("No .env file found, using system env")
+		logger.Warn("No .env file found, using system env")
 	}
 
 	cfg := config.Load()
 
-	rollbar.SetToken(cfg.Rollbar.Token)
-	rollbar.SetEnvironment(cfg.Rollbar.Env)
-
-	// Ensure all items are sent before the app exits
-	defer rollbar.Wait()
-	// Close Rollbar client when the application exits
-	defer rollbar.Close()
-
-	// Send a test message
-	rollbar.Info("Rollbar Go SDK initialized successfully!")
+	// Initialize structured logger
+	logger.Init(cfg.LogLevel, cfg.Environment)
+	logger.Info("Logger initialized successfully")
 
 	// Initialize MySQL database
 	db, err := database.NewMySQLConnection(database.Config{
@@ -52,9 +52,7 @@ func main() {
 		DBName:   cfg.Database.DBName,
 	})
 	if err != nil {
-		rollbar.Error(err)
-		rollbar.Wait()
-		log.Fatal("Failed to connect to database:", err)
+		logger.FatalErr(err, "Failed to connect to database")
 	}
 	defer db.Close()
 
@@ -66,9 +64,7 @@ func main() {
 		Password: cfg.Database.Password,
 		DBName:   cfg.Database.DBName,
 	}, "./migrations"); err != nil {
-		rollbar.Error(err)
-		rollbar.Wait()
-		log.Fatal("Failed to run database migrations:", err)
+		logger.FatalErr(err, "Failed to run database migrations")
 	}
 
 	// Initialize Redis
@@ -79,32 +75,24 @@ func main() {
 		DB:       cfg.Redis.DB,
 	})
 	if err != nil {
-		rollbar.Error(err)
-		rollbar.Wait()
-		log.Fatal("Failed to connect to Redis:", err)
+		logger.FatalErr(err, "Failed to connect to Redis")
 	}
 	defer redisClient.Close()
 
 	// Initialize RabbitMQ
 	rmq, err := pkgRmq.NewRabbitMQ(cfg.RabbitMQ.GetURL())
 	if err != nil {
-		rollbar.Error(err)
-		rollbar.Wait()
-		log.Fatal("Failed to connect to RabbitMQ:", err)
+		logger.FatalErr(err, "Failed to connect to RabbitMQ")
 	}
 	defer rmq.Close()
-	log.Println("RabbitMQ initialized successfully")
-	rollbar.Info("RabbitMQ initialized successfully")
+	logger.Info("RabbitMQ initialized successfully")
 
 	// Setup RabbitMQ infrastructure (Users)
 	if err := usersRmq.SetupInfrastructure(rmq); err != nil {
-		log.Println("Failed to setup Users RabbitMQ infrastructure:", err)
-		rollbar.Error(err)
-		log.Fatal(err)
+		logger.FatalErr(err, "Failed to setup Users RabbitMQ infrastructure")
 	}
 
-	log.Println("RabbitMQ infrastructure initialized successfully")
-	rollbar.Info("RabbitMQ infrastructure initialized successfully")
+	logger.Info("RabbitMQ infrastructure initialized successfully")
 
 	// Create Shared Producer and Consumer
 	sharedProducer := pkgRmq.NewProducer(rmq.GetChannel())
@@ -121,29 +109,23 @@ func main() {
 	defer cancel()
 
 	if err := usersConsumer.StartAllConsumers(ctx); err != nil {
-		log.Println("Failed to start Users consumers:", err)
-		rollbar.Error(err)
-		log.Fatal(err)
+		logger.FatalErr(err, "Failed to start Users consumers")
 	}
 
 	// Initialize Casbin Service with GORM Adapter
 	casbinService, err := services.NewCasbinService(cfg.Database.GetDSN(), cfg.CasbinModelPath)
 	if err != nil {
-		rollbar.Error(err)
-		rollbar.Wait()
-		log.Fatal("Failed to initialize Casbin:", err)
+		logger.FatalErr(err, "Failed to initialize Casbin")
 	}
-	log.Println("Casbin RBAC initialized successfully with GORM adapter")
-	rollbar.Info("Casbin RBAC initialized successfully with GORM adapter")
+	logger.Info("Casbin RBAC initialized successfully with GORM adapter")
 
 	// Initialize SSE Service
 	sseService := services.NewSSEService()
-	log.Println("SSE Service initialized successfully")
-	rollbar.Info("SSE Service initialized successfully")
+	logger.Info("SSE Service initialized successfully")
 
 	// Initialize Gemini Client
-	geminiClient := utils.NewGeminiClient()
-	log.Println("Gemini client initialized successfully")
+	geminiClient := utils.NewGeminiClient(cfg.GeminiAPIKey)
+	logger.Info("Gemini client initialized successfully")
 
 	// Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
@@ -246,13 +228,12 @@ func main() {
 	)
 
 	// Start server
-	log.Printf("Server starting on %s", cfg.Port)
-	rollbar.Info("Server starting on %s", cfg.Port)
-	log.Println("Rate limiting enabled:")
-	log.Println("  - Auth endpoints: 5 requests/minute per IP")
-	log.Println("  - Public posts: 1000 requests/minute per IP")
-	log.Println("  - Protected posts: 100 requests/minute per user")
-	log.Println("SSE endpoint available at /api/events")
+	logger.Infof("Server starting on %s", cfg.Port)
+	logger.Info("Rate limiting enabled:")
+	logger.Info("  - Auth endpoints: 5 requests/minute per IP")
+	logger.Info("  - Public posts: 1000 requests/minute per IP")
+	logger.Info("  - Protected posts: 100 requests/minute per user")
+	logger.Info("SSE endpoint available at /api/events")
 
-	log.Fatal(http.ListenAndServe(cfg.Port, mux))
+	logger.FatalErr(http.ListenAndServe(cfg.Port, mux), "Server stopped")
 }

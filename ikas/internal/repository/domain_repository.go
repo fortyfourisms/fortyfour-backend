@@ -5,7 +5,7 @@ import (
 	"ikas/internal/dto"
 	"strings"
 
-	"github.com/rollbar/rollbar-go"
+	"fortyfour-backend/pkg/logger"
 )
 
 type DomainRepository struct {
@@ -20,7 +20,7 @@ func (r *DomainRepository) Create(req dto.CreateDomainRequest, id string) error 
 	query := `INSERT INTO domain (id, nama_domain) VALUES (?, ?)`
 	_, err := r.db.Exec(query, id, req.NamaDomain)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 	}
 	return err
 }
@@ -30,7 +30,7 @@ func (r *DomainRepository) GetAll() ([]dto.DomainResponse, error) {
 
 	rows, err := r.db.Query(query)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 	defer rows.Close()
@@ -39,7 +39,7 @@ func (r *DomainRepository) GetAll() ([]dto.DomainResponse, error) {
 	for rows.Next() {
 		var item dto.DomainResponse
 		if err := rows.Scan(&item.ID, &item.NamaDomain, &item.CreatedAt, &item.UpdatedAt); err != nil {
-			rollbar.Error(err)
+			logger.Error(err, "operation failed")
 			continue
 		}
 		result = append(result, item)
@@ -54,7 +54,7 @@ func (r *DomainRepository) GetByID(id string) (*dto.DomainResponse, error) {
 	err := r.db.QueryRow(query, id).
 		Scan(&item.ID, &item.NamaDomain, &item.CreatedAt, &item.UpdatedAt)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 	return &item, nil
@@ -80,7 +80,7 @@ func (r *DomainRepository) Update(id string, req dto.UpdateDomainRequest) error 
 
 	_, err := r.db.Exec(query, args...)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 	}
 	return err
 }
@@ -88,7 +88,7 @@ func (r *DomainRepository) Update(id string, req dto.UpdateDomainRequest) error 
 func (r *DomainRepository) Delete(id string) error {
 	_, err := r.db.Exec(`DELETE FROM domain WHERE id=?`, id)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 	}
 	return err
 }
@@ -106,7 +106,7 @@ func (r *DomainRepository) CheckDuplicateName(nama string, excludeID string) (bo
 
 	err := r.db.QueryRow(query, args...).Scan(&count)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return false, err
 	}
 

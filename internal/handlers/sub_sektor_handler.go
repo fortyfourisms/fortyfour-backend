@@ -1,11 +1,15 @@
 package handlers
 
 import (
+	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"net/http"
 	"strings"
 )
+
+// Ensure dto is available for swagger type resolution.
+var _ dto.SubSektorResponse
 
 type SubSektorHandler struct {
 	service services.SubSektorServiceInterface

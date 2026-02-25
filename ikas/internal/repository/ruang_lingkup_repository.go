@@ -5,7 +5,7 @@ import (
 	"ikas/internal/dto"
 	"strings"
 
-	"github.com/rollbar/rollbar-go"
+	"fortyfour-backend/pkg/logger"
 )
 
 type RuangLingkupRepository struct {
@@ -22,7 +22,7 @@ func (r *RuangLingkupRepository) Create(req dto.CreateRuangLingkupRequest, id st
 
 	_, err := r.db.Exec(query, id, req.NamaRuangLingkup)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return err
 	}
 
@@ -34,7 +34,7 @@ func (r *RuangLingkupRepository) GetAll() ([]dto.RuangLingkupResponse, error) {
 
 	rows, err := r.db.Query(query)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 	defer rows.Close()
@@ -44,7 +44,7 @@ func (r *RuangLingkupRepository) GetAll() ([]dto.RuangLingkupResponse, error) {
 	for rows.Next() {
 		var item dto.RuangLingkupResponse
 		if err := rows.Scan(&item.ID, &item.NamaRuangLingkup, &item.CreatedAt, &item.UpdatedAt); err != nil {
-			rollbar.Error(err)
+			logger.Error(err, "operation failed")
 			continue
 		}
 		result = append(result, item)
@@ -60,7 +60,7 @@ func (r *RuangLingkupRepository) GetByID(id string) (*dto.RuangLingkupResponse, 
 	var item dto.RuangLingkupResponse
 	err := r.db.QueryRow(query, id).Scan(&item.ID, &item.NamaRuangLingkup, &item.CreatedAt, &item.UpdatedAt)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 
@@ -89,7 +89,7 @@ func (r *RuangLingkupRepository) Update(id string, req dto.UpdateRuangLingkupReq
 	// Prepared statement dengan args array
 	_, err := r.db.Exec(query, args...)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return err
 	}
 
@@ -100,7 +100,7 @@ func (r *RuangLingkupRepository) Delete(id string) error {
 	// Prepared statement untuk DELETE
 	_, err := r.db.Exec(`DELETE FROM ruang_lingkup WHERE id=?`, id)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return err
 	}
 
@@ -122,7 +122,7 @@ func (r *RuangLingkupRepository) CheckDuplicateName(nama string, excludeID strin
 
 	err := r.db.QueryRow(query, args...).Scan(&count)
 	if err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return false, err
 	}
 

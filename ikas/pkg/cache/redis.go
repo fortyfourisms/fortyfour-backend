@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"fortyfour-backend/pkg/logger"
 	"github.com/redis/go-redis/v9"
-	"github.com/rollbar/rollbar-go"
 )
 
 // RedisInterface defines the contract for Redis operations
@@ -41,7 +41,7 @@ func NewRedisClient(cfg RedisConfig) (*RedisClient, error) {
 
 	// Test connection
 	if err := client.Ping(ctx).Err(); err != nil {
-		rollbar.Error(err)
+		logger.Error(err, "operation failed")
 		return nil, fmt.Errorf("failed to connect to Redis: %w", err)
 	}
 

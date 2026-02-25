@@ -106,7 +106,7 @@ func (s *IkasService) publishIkasCreatedEvent(ikasID string, req dto.CreateIkasR
 	ctx := context.Background()
 	if err := s.producer.PublishIkasCreated(ctx, event); err != nil {
 		// Log error tapi jangan fail create operation
-		// rollbar.Error(err)
+		// logger.Error(err, "operation failed")
 	}
 }
 
@@ -257,7 +257,7 @@ func (s *IkasService) publishIkasUpdatedEvent(ikasID string, oldNilai, newNilai 
 	ctx := context.Background()
 	if err := s.producer.PublishIkasUpdated(ctx, event); err != nil {
 		// Log error tapi jangan fail update operation
-		// rollbar.Error(err)
+		// logger.Error(err, "operation failed")
 	}
 }
 
@@ -285,7 +285,7 @@ func (s *IkasService) publishIkasDeletedEvent(ikasID string) {
 	ctx := context.Background()
 	if err := s.producer.PublishIkasDeleted(ctx, event); err != nil {
 		// Log error tapi jangan fail delete operation
-		// rollbar.Error(err)
+		// logger.Error(err, "operation failed")
 	}
 }
 
@@ -330,6 +330,6 @@ func (s *IkasService) publishIkasImportedEvent(ikasID string, req *dto.CreateIka
 	ctx := context.Background()
 	if err := s.producer.PublishIkasImported(ctx, event); err != nil {
 		// Log error tapi jangan fail import operation
-		// rollbar.Error(err)
+		// logger.Error(err, "operation failed")
 	}
 }
