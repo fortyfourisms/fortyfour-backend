@@ -179,7 +179,7 @@ func InitRouter(
 	mux.HandleFunc("/api/chat/delete-session", authM.Authenticate(chatHandler.DeleteSession))
 
 	// Swagger UI
-	mux.HandleFunc("/api/swagger/", httpSwagger.WrapHandler)
+	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
 	return (mux)
 }

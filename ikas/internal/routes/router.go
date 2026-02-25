@@ -42,25 +42,25 @@ func InitRouter(
 ) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/api/health", healthHandler)
+	mux.HandleFunc("/api/maturity/health", healthHandler)
 
 	// Swagger UI
-	mux.HandleFunc("/api/swagger/", httpSwagger.WrapHandler)
+	mux.HandleFunc("/swagger/maturity/", httpSwagger.WrapHandler)
 
-	mux.Handle("/api/ikas", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(ikasH))))
-	mux.Handle("/api/ikas/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(ikasH))))
+	mux.Handle("/api/maturity/ikas", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(ikasH))))
+	mux.Handle("/api/maturity/ikas/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(ikasH))))
 
-	mux.Handle("/api/ruang-lingkup", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(ruangLingkupH))))
-	mux.Handle("/api/ruang-lingkup/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(ruangLingkupH))))
+	mux.Handle("/api/maturity/ruang-lingkup", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(ruangLingkupH))))
+	mux.Handle("/api/maturity/ruang-lingkup/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(ruangLingkupH))))
 
-	mux.Handle("/api/domain", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(domainH))))
-	mux.Handle("/api/domain/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(domainH))))
+	mux.Handle("/api/maturity/domain", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(domainH))))
+	mux.Handle("/api/maturity/domain/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(domainH))))
 
-	mux.Handle("/api/kategori", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(kategoriH))))
-	mux.Handle("/api/kategori/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(kategoriH))))
+	mux.Handle("/api/maturity/kategori", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(kategoriH))))
+	mux.Handle("/api/maturity/kategori/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(kategoriH))))
 
-	mux.Handle("/api/sub-kategori", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(subKategoriH))))
-	mux.Handle("/api/sub-kategori/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(subKategoriH))))
+	mux.Handle("/api/maturity/sub-kategori", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(subKategoriH))))
+	mux.Handle("/api/maturity/sub-kategori/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(subKategoriH))))
 
 	return mux
 }

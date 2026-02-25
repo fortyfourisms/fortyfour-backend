@@ -24,6 +24,9 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
 
       LOG_LEVEL: ${LOG_LEVEL:-info}
+
+      # Gemini AI
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
       
       # RabbitMQ
       RABBITMQ_HOST: rabbitmq
