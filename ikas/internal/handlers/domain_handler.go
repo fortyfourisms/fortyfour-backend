@@ -22,7 +22,7 @@ func NewDomainHandler(service *services.DomainService) *DomainHandler {
 }
 
 func (h *DomainHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/domain")
+	path := strings.TrimPrefix(r.URL.Path, "/api/maturity/domain")
 	id := strings.TrimPrefix(path, "/")
 
 	switch r.Method {
@@ -63,7 +63,7 @@ func (h *DomainHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Produce      json
 //	@Success      200  {array}   dto.DomainResponse
 //	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/domain [get]
+//	@Router       /api/maturity/domain [get]
 func (h *DomainHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -84,7 +84,7 @@ func (h *DomainHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 //	@Param        id   path      string  true  "Domain ID"
 //	@Success      200  {object}  dto.DomainResponse
 //	@Failure      404  {object}  dto.ErrorResponse
-//	@Router       /api/domain/{id} [get]
+//	@Router       /api/maturity/domain/{id} [get]
 func (h *DomainHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -111,7 +111,7 @@ func (h *DomainHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id
 //	@Success      201     {object}  dto.DomainResponse
 //	@Failure      400     {object}  dto.ErrorResponse
 //	@Failure      409     {object}  dto.ErrorResponse
-//	@Router       /api/domain [post]
+//	@Router       /api/maturity/domain [post]
 func (h *DomainHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateDomainRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -154,7 +154,7 @@ func (h *DomainHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 //	@Failure      400     {object}  dto.ErrorResponse
 //	@Failure      404     {object}  dto.ErrorResponse
 //	@Failure      409     {object}  dto.ErrorResponse
-//	@Router       /api/domain/{id} [put]
+//	@Router       /api/maturity/domain/{id} [put]
 func (h *DomainHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateDomainRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -196,7 +196,7 @@ func (h *DomainHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id 
 //	@Success      200  {object}  dto.MessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/domain/{id} [delete]
+//	@Router       /api/maturity/domain/{id} [delete]
 func (h *DomainHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		logger.Error(err, "operation failed")

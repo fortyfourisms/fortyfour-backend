@@ -22,7 +22,7 @@ func NewRuangLingkupHandler(service *services.RuangLingkupService) *RuangLingkup
 }
 
 func (h *RuangLingkupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/ruang-lingkup")
+	path := strings.TrimPrefix(r.URL.Path, "/api/maturity/ruang-lingkup")
 	id := strings.TrimPrefix(path, "/")
 
 	switch r.Method {
@@ -63,7 +63,7 @@ func (h *RuangLingkupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 //	@Produce      json
 //	@Success      200  {array}   dto.RuangLingkupResponse
 //	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/ruang-lingkup [get]
+//	@Router       /api/maturity/ruang-lingkup [get]
 func (h *RuangLingkupHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -83,7 +83,7 @@ func (h *RuangLingkupHandler) handleGetAll(w http.ResponseWriter, _ *http.Reques
 //	@Param        id   path      string  true  "RuangLingkup ID"
 //	@Success      200  {object}  dto.RuangLingkupResponse
 //	@Failure      404  {object}  dto.ErrorResponse
-//	@Router       /api/ruang-lingkup/{id} [get]
+//	@Router       /api/maturity/ruang-lingkup/{id} [get]
 func (h *RuangLingkupHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -109,7 +109,7 @@ func (h *RuangLingkupHandler) handleGetByID(w http.ResponseWriter, _ *http.Reque
 //	@Success      201           {object}  dto.RuangLingkupResponse
 //	@Failure      400           {object}  dto.ErrorResponse
 //	@Failure      409           {object}  dto.ErrorResponse
-//	@Router       /api/ruang-lingkup [post]
+//	@Router       /api/maturity/ruang-lingkup [post]
 func (h *RuangLingkupHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateRuangLingkupRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -151,7 +151,7 @@ func (h *RuangLingkupHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 //	@Failure      400             {object}  dto.ErrorResponse
 //	@Failure      404             {object}  dto.ErrorResponse
 //	@Failure      409             {object}  dto.ErrorResponse
-//	@Router       /api/ruang-lingkup/{id} [put]
+//	@Router       /api/maturity/ruang-lingkup/{id} [put]
 func (h *RuangLingkupHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateRuangLingkupRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -192,7 +192,7 @@ func (h *RuangLingkupHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 //	@Success      200  {object}  dto.MessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/ruang-lingkup/{id} [delete]
+//	@Router       /api/maturity/ruang-lingkup/{id} [delete]
 func (h *RuangLingkupHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		logger.Error(err, "operation failed")
