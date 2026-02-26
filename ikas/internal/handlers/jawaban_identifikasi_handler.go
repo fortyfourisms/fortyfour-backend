@@ -22,7 +22,7 @@ func NewJawabanIdentifikasiHandler(service *services.JawabanIdentifikasiService)
 }
 
 func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/jawaban-identifikasi")
+	path := strings.TrimPrefix(r.URL.Path, "/api/maturity/jawaban-identifikasi")
 	id := strings.TrimPrefix(path, "/")
 
 	switch r.Method {
@@ -75,7 +75,7 @@ func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 //	@Param        pertanyaan_identifikasi_id query     string  false  "Filter by pertanyaan identifikasi ID"
 //	@Success      200  {array}   dto.JawabanIdentifikasiResponse
 //	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/jawaban-identifikasi [get]
+//	@Router       /api/maturity/jawaban-identifikasi [get]
 func (h *JawabanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -123,7 +123,7 @@ func (h *JawabanIdentifikasiHandler) handleGetByPertanyaan(w http.ResponseWriter
 //	@Param        id   path      string  true  "JawabanIdentifikasi ID"
 //	@Success      200  {object}  dto.JawabanIdentifikasiResponse
 //	@Failure      404  {object}  dto.ErrorResponse
-//	@Router       /api/jawaban-identifikasi/{id} [get]
+//	@Router       /api/maturity/jawaban-identifikasi/{id} [get]
 func (h *JawabanIdentifikasiHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -150,7 +150,7 @@ func (h *JawabanIdentifikasiHandler) handleGetByID(w http.ResponseWriter, _ *htt
 //	@Failure      400   {object}  dto.ErrorResponse
 //	@Failure      404   {object}  dto.ErrorResponse
 //	@Failure      409   {object}  dto.ErrorResponse
-//	@Router       /api/jawaban-identifikasi [post]
+//	@Router       /api/maturity/jawaban-identifikasi [post]
 func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateJawabanIdentifikasiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -202,7 +202,7 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 //	@Success      200   {object}  dto.JawabanIdentifikasiResponse
 //	@Failure      400   {object}  dto.ErrorResponse
 //	@Failure      404   {object}  dto.ErrorResponse
-//	@Router       /api/jawaban-identifikasi/{id} [put]
+//	@Router       /api/maturity/jawaban-identifikasi/{id} [put]
 func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateJawabanIdentifikasiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -246,7 +246,7 @@ func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http
 //	@Success      200  {object}  dto.MessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/jawaban-identifikasi/{id} [delete]
+//	@Router       /api/maturity/jawaban-identifikasi/{id} [delete]
 func (h *JawabanIdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		rollbar.Error(err)
