@@ -71,7 +71,7 @@ func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Success      200  {array}  dto.IkasResponse
 // @Failure      500  {object} dto.ErrorResponse
-// @Router       /api/ikas [get]
+// @Router       /api/maturity/ikas [get]
 func (h *IkasHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -90,7 +90,7 @@ func (h *IkasHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 // @Param        id   path      string  true  "Ikas ID"
 // @Success      200  {object} dto.IkasResponse
 // @Failure      404  {object} dto.ErrorResponse
-// @Router       /api/ikas/{id} [get]
+// @Router       /api/maturity/ikas/{id} [get]
 func (h *IkasHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -110,7 +110,7 @@ func (h *IkasHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id s
 // @Param        ikas body dto.CreateIkasRequest true "Data ikas"
 // @Success      201  {object} dto.IkasResponse
 // @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/ikas [post]
+// @Router       /api/maturity/ikas [post]
 func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateIkasRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -150,7 +150,7 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 // @Param        ikas body      dto.UpdateIkasRequest true "Data update"
 // @Success      200  {object} dto.IkasResponse
 // @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/ikas/{id} [put]
+// @Router       /api/maturity/ikas/{id} [put]
 func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateIkasRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -177,8 +177,8 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 // @Param        id  path  string  true  "Ikas ID"
 // @Success      200  {object} dto.MessageResponse
 // @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/ikas/{id} [delete]
-func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+// @Router       /api/maturity/ikas/{id} [delete]
+func (h *IkasHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, err.Error())
@@ -204,7 +204,7 @@ func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 // @Param        jabatan formData string true "Jabatan"
 // @Success      201  {object} dto.ImportIkasResponse
 // @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/ikas/import [post]
+// @Router       /api/maturity/ikas/import [post]
 func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 	// Parse multipart form (max 10MB)
 	if err := r.ParseMultipartForm(10 << 20); err != nil {

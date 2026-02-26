@@ -1,5 +1,387 @@
 basePath: /
 definitions:
+  dto.CreateDeteksiData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+    type: object
+  dto.CreateDomainRequest:
+    properties:
+      nama_domain:
+        type: string
+    type: object
+  dto.CreateGulihData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+    type: object
+  dto.CreateIdentifikasiData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+    type: object
+  dto.CreateIkasRequest:
+    properties:
+      deteksi:
+        $ref: '#/definitions/dto.CreateDeteksiData'
+      gulih:
+        $ref: '#/definitions/dto.CreateGulihData'
+      id_deteksi:
+        type: string
+      id_gulih:
+        type: string
+      id_identifikasi:
+        description: ID manual (backward compatibility)
+        type: string
+      id_perusahaan:
+        type: string
+      id_proteksi:
+        type: string
+      identifikasi:
+        allOf:
+        - $ref: '#/definitions/dto.CreateIdentifikasiData'
+        description: Nested data untuk auto-create
+      jabatan:
+        type: string
+      proteksi:
+        $ref: '#/definitions/dto.CreateProteksiData'
+      responden:
+        type: string
+      tanggal:
+        type: string
+      target_nilai:
+        type: number
+      telepon:
+        type: string
+    type: object
+  dto.CreateKategoriRequest:
+    properties:
+      domain_id:
+        type: string
+      nama_kategori:
+        type: string
+    type: object
+  dto.CreateProteksiData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      nilai_subdomain6:
+        type: number
+    type: object
+  dto.CreateRuangLingkupRequest:
+    properties:
+      nama_ruang_lingkup:
+        type: string
+    type: object
+  dto.CreateSubKategoriRequest:
+    properties:
+      kategori_id:
+        type: string
+      nama_sub_kategori:
+        type: string
+    type: object
+  dto.DeteksiInIkas:
+    properties:
+      id:
+        type: string
+      kategori_tingkat_kematangan_domain:
+        type: string
+      nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+    type: object
+  dto.DomainResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      nama_domain:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.GulihInIkas:
+    properties:
+      id:
+        type: string
+      kategori_tingkat_kematangan_domain:
+        type: string
+      nilai_gulih:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+    type: object
+  dto.IdentifikasiInIkas:
+    properties:
+      id:
+        type: string
+      kategori_tingkat_kematangan_domain:
+        type: string
+      nilai_identifikasi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+    type: object
+  dto.IkasResponse:
+    properties:
+      deteksi:
+        $ref: '#/definitions/dto.DeteksiInIkas'
+      gulih:
+        $ref: '#/definitions/dto.GulihInIkas'
+      id:
+        type: string
+      identifikasi:
+        $ref: '#/definitions/dto.IdentifikasiInIkas'
+      jabatan:
+        type: string
+      kategori_kematangan_keamanan_siber:
+        type: string
+      nilai_kematangan:
+        type: number
+      perusahaan:
+        $ref: '#/definitions/dto.PerusahaanInIkas'
+      proteksi:
+        $ref: '#/definitions/dto.ProteksiInIkas'
+      responden:
+        type: string
+      tanggal:
+        type: string
+      target_nilai:
+        type: number
+      telepon:
+        type: string
+    type: object
+  dto.ImportIkasResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.IkasResponse'
+      errors:
+        items:
+          type: string
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  dto.KategoriResponse:
+    properties:
+      created_at:
+        type: string
+      domain_id:
+        type: string
+      id:
+        type: string
+      nama_kategori:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.PerusahaanInIkas:
+    properties:
+      id:
+        type: string
+      nama_perusahaan:
+        type: string
+    type: object
+  dto.ProteksiInIkas:
+    properties:
+      id:
+        type: string
+      kategori_tingkat_kematangan_domain:
+        type: string
+      nilai_proteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      nilai_subdomain6:
+        type: number
+    type: object
+  dto.RuangLingkupResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      nama_ruang_lingkup:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.SubKategoriResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      kategori_id:
+        type: string
+      nama_sub_kategori:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.UpdateDeteksiData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+    type: object
+  dto.UpdateDomainRequest:
+    properties:
+      nama_domain:
+        type: string
+    type: object
+  dto.UpdateGulihData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+    type: object
+  dto.UpdateIdentifikasiData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+    type: object
+  dto.UpdateIkasRequest:
+    properties:
+      deteksi:
+        $ref: '#/definitions/dto.UpdateDeteksiData'
+      gulih:
+        $ref: '#/definitions/dto.UpdateGulihData'
+      id_deteksi:
+        type: string
+      id_gulih:
+        type: string
+      id_identifikasi:
+        type: string
+      id_perusahaan:
+        type: string
+      id_proteksi:
+        type: string
+      identifikasi:
+        allOf:
+        - $ref: '#/definitions/dto.UpdateIdentifikasiData'
+        description: Nested data untuk update subdomain
+      jabatan:
+        type: string
+      nilai_kematangan:
+        type: number
+      proteksi:
+        $ref: '#/definitions/dto.UpdateProteksiData'
+      responden:
+        type: string
+      tanggal:
+        type: string
+      target_nilai:
+        type: number
+      telepon:
+        type: string
+    type: object
+  dto.UpdateKategoriRequest:
+    properties:
+      domain_id:
+        type: string
+      nama_kategori:
+        type: string
+    type: object
+  dto.UpdateProteksiData:
+    properties:
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      nilai_subdomain6:
+        type: number
+    type: object
+  dto.UpdateRuangLingkupRequest:
+    properties:
+      nama_ruang_lingkup:
+        type: string
+    type: object
+  dto.UpdateSubKategoriRequest:
+    properties:
+      kategori_id:
+        type: string
+      nama_sub_kategori:
+        type: string
+    type: object
   fortyfour-backend_internal_dto.AddPolicyRequest:
     properties:
       action:
@@ -913,6 +1295,16 @@ definitions:
       updated_at:
         type: string
       username:
+        type: string
+    type: object
+  ikas_internal_dto.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  ikas_internal_dto.MessageResponse:
+    properties:
+      message:
         type: string
     type: object
 host: localhost:8080
@@ -1839,6 +2231,715 @@ paths:
       summary: Logout dari semua perangkat
       tags:
       - Auth
+  /api/maturity/domain:
+    get:
+      description: Mengambil seluruh data domain
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.DomainResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua domain
+      tags:
+      - Domain
+    post:
+      consumes:
+      - application/json
+      description: Membuat record domain baru
+      parameters:
+      - description: Data domain
+        in: body
+        name: domain
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateDomainRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.DomainResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Tambah domain baru
+      tags:
+      - Domain
+  /api/maturity/domain/{id}:
+    delete:
+      description: Menghapus data domain berdasarkan ID
+      parameters:
+      - description: Domain ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.MessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Hapus domain
+      tags:
+      - Domain
+    get:
+      description: Mengambil satu data domain
+      parameters:
+      - description: Domain ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.DomainResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ambil domain berdasarkan ID
+      tags:
+      - Domain
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data domain berdasarkan ID
+      parameters:
+      - description: Domain ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: domain
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateDomainRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.DomainResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Update domain
+      tags:
+      - Domain
+  /api/maturity/ikas:
+    get:
+      description: Mengambil seluruh data ikas
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.IkasResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua ikas
+      tags:
+      - Ikas
+    post:
+      consumes:
+      - application/json
+      description: Membuat record ikas
+      parameters:
+      - description: Data ikas
+        in: body
+        name: ikas
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateIkasRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.IkasResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Tambah ikas baru
+      tags:
+      - Ikas
+  /api/maturity/ikas/{id}:
+    delete:
+      description: Menghapus data ikas berdasarkan ID
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Hapus ikas
+      tags:
+      - Ikas
+    get:
+      description: Mengambil satu data ikas
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.IkasResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ambil ikas berdasarkan ID
+      tags:
+      - Ikas
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data ikas berdasarkan ID
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: ikas
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateIkasRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.IkasResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Update ikas
+      tags:
+      - Ikas
+  /api/maturity/ikas/import:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Import data IKAS dari file Excel (sheet ke-7)
+      parameters:
+      - description: File Excel (.xlsx)
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: ID Perusahaan
+        in: formData
+        name: id_perusahaan
+        required: true
+        type: string
+      - description: Tanggal (YYYY-MM-DD)
+        in: formData
+        name: tanggal
+        required: true
+        type: string
+      - description: Nama Responden
+        in: formData
+        name: responden
+        required: true
+        type: string
+      - description: Nomor Telepon
+        in: formData
+        name: telepon
+        required: true
+        type: string
+      - description: Jabatan
+        in: formData
+        name: jabatan
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ImportIkasResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Import IKAS dari Excel
+      tags:
+      - Ikas
+  /api/maturity/kategori:
+    get:
+      description: Mengambil seluruh data kategori
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.KategoriResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua kategori
+      tags:
+      - Kategori
+    post:
+      consumes:
+      - application/json
+      description: Membuat record kategori baru
+      parameters:
+      - description: Data kategori
+        in: body
+        name: kategori
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateKategoriRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.KategoriResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Tambah kategori baru
+      tags:
+      - Kategori
+  /api/maturity/kategori/{id}:
+    delete:
+      description: Menghapus data kategori berdasarkan ID
+      parameters:
+      - description: Kategori ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.MessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Hapus kategori
+      tags:
+      - Kategori
+    get:
+      description: Mengambil satu data kategori
+      parameters:
+      - description: Kategori ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.KategoriResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ambil kategori berdasarkan ID
+      tags:
+      - Kategori
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data kategori berdasarkan ID
+      parameters:
+      - description: Kategori ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: kategori
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateKategoriRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.KategoriResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Update kategori
+      tags:
+      - Kategori
+  /api/maturity/ruang-lingkup:
+    get:
+      description: Mengambil seluruh data ruang lingkup
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.RuangLingkupResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua ruang lingkup
+      tags:
+      - RuangLingkup
+    post:
+      consumes:
+      - application/json
+      description: Membuat record ruang lingkup baru
+      parameters:
+      - description: Data ruang lingkup
+        in: body
+        name: ruangLingkup
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateRuangLingkupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.RuangLingkupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Tambah ruang lingkup baru
+      tags:
+      - RuangLingkup
+  /api/maturity/ruang-lingkup/{id}:
+    delete:
+      description: Menghapus data ruang lingkup berdasarkan ID
+      parameters:
+      - description: RuangLingkup ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.MessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Hapus ruang lingkup
+      tags:
+      - RuangLingkup
+    get:
+      description: Mengambil satu data ruang lingkup
+      parameters:
+      - description: RuangLingkup ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.RuangLingkupResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ambil ruang lingkup berdasarkan ID
+      tags:
+      - RuangLingkup
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data ruang lingkup berdasarkan ID
+      parameters:
+      - description: RuangLingkup ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: ruangLingkup
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateRuangLingkupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.RuangLingkupResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Update ruang lingkup
+      tags:
+      - RuangLingkup
+  /api/maturity/sub-kategori:
+    get:
+      description: Mengambil seluruh data sub kategori
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.SubKategoriResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua sub kategori
+      tags:
+      - SubKategori
+    post:
+      consumes:
+      - application/json
+      description: Membuat record sub kategori baru
+      parameters:
+      - description: Data sub kategori
+        in: body
+        name: subKategori
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSubKategoriRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.SubKategoriResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Tambah sub kategori baru
+      tags:
+      - SubKategori
+  /api/maturity/sub-kategori/{id}:
+    delete:
+      description: Menghapus data sub kategori berdasarkan ID
+      parameters:
+      - description: SubKategori ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.MessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Hapus sub kategori
+      tags:
+      - SubKategori
+    get:
+      description: Mengambil satu data sub kategori
+      parameters:
+      - description: SubKategori ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SubKategoriResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ambil sub kategori berdasarkan ID
+      tags:
+      - SubKategori
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data sub kategori berdasarkan ID
+      parameters:
+      - description: SubKategori ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: subKategori
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateSubKategoriRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.SubKategoriResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Update sub kategori
+      tags:
+      - SubKategori
   /api/me:
     get:
       description: Mengambil informasi user yang sedang login.

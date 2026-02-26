@@ -73,7 +73,7 @@ func TestPICService_Create_Success(t *testing.T) {
 		},
 	}
 
-	service := NewPICService(repo)
+	service := NewPICService(repo, nil)
 
 	req := dto.CreatePICRequest{
 		Nama:         &nama,
@@ -91,7 +91,7 @@ func TestPICService_Create_Success(t *testing.T) {
 
 func TestPICService_Create_ValidationError(t *testing.T) {
 	repo := &mockPICRepository{}
-	service := NewPICService(repo)
+	service := NewPICService(repo, nil)
 
 	req := dto.CreatePICRequest{}
 
@@ -117,7 +117,7 @@ func TestPICService_GetAll_Success(t *testing.T) {
 		},
 	}
 
-	service := NewPICService(repo)
+	service := NewPICService(repo, nil)
 
 	result, err := service.GetAll()
 
@@ -145,7 +145,7 @@ func TestPICService_GetByID_Success(t *testing.T) {
 		},
 	}
 
-	service := NewPICService(repo)
+	service := NewPICService(repo, nil)
 
 	result, err := service.GetByID("uuid-test")
 
@@ -161,7 +161,7 @@ func TestPICService_GetByID_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewPICService(repo)
+	service := NewPICService(repo, nil)
 
 	result, err := service.GetByID("invalid-id")
 
@@ -190,7 +190,7 @@ func TestPICService_Update_Success(t *testing.T) {
 		},
 	}
 
-	service := NewPICService(repo)
+	service := NewPICService(repo, nil)
 
 	req := dto.UpdatePICRequest{
 		Nama: &namaBaru,
@@ -215,7 +215,7 @@ func TestPICService_Delete_Success(t *testing.T) {
 		},
 	}
 
-	service := NewPICService(repo)
+	service := NewPICService(repo, nil)
 
 	err := service.Delete("uuid-test")
 

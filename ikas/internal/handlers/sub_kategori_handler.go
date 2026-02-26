@@ -63,7 +63,7 @@ func (h *SubKategoriHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Produce      json
 //	@Success      200  {array}   dto.SubKategoriResponse
 //	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/sub-kategori [get]
+//	@Router       /api/maturity/sub-kategori [get]
 func (h *SubKategoriHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -83,7 +83,7 @@ func (h *SubKategoriHandler) handleGetAll(w http.ResponseWriter, _ *http.Request
 //	@Param        id   path      string  true  "SubKategori ID"
 //	@Success      200  {object}  dto.SubKategoriResponse
 //	@Failure      404  {object}  dto.ErrorResponse
-//	@Router       /api/sub-kategori/{id} [get]
+//	@Router       /api/maturity/sub-kategori/{id} [get]
 func (h *SubKategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -109,7 +109,7 @@ func (h *SubKategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Reques
 //	@Success      201          {object}  dto.SubKategoriResponse
 //	@Failure      400          {object}  dto.ErrorResponse
 //	@Failure      409          {object}  dto.ErrorResponse
-//	@Router       /api/sub-kategori [post]
+//	@Router       /api/maturity/sub-kategori [post]
 func (h *SubKategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateSubKategoriRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -157,7 +157,7 @@ func (h *SubKategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request
 //	@Failure      400          {object}  dto.ErrorResponse
 //	@Failure      404          {object}  dto.ErrorResponse
 //	@Failure      409          {object}  dto.ErrorResponse
-//	@Router       /api/sub-kategori/{id} [put]
+//	@Router       /api/maturity/sub-kategori/{id} [put]
 func (h *SubKategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateSubKategoriRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -204,8 +204,8 @@ func (h *SubKategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request
 //	@Success      200  {object}  dto.MessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/sub-kategori/{id} [delete]
-func (h *SubKategoriHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+//	@Router       /api/maturity/sub-kategori/{id} [delete]
+func (h *SubKategoriHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		logger.Error(err, "operation failed")
 		if err.Error() == "data tidak ditemukan" {

@@ -64,7 +64,7 @@ func (h *KategoriHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Produce      json
 //	@Success      200  {array}   dto.KategoriResponse
 //	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/kategori [get]
+//	@Router       /api/maturity/kategori [get]
 func (h *KategoriHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -84,7 +84,7 @@ func (h *KategoriHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 //	@Param        id   path      string  true  "Kategori ID"
 //	@Success      200  {object}  dto.KategoriResponse
 //	@Failure      404  {object}  dto.ErrorResponse
-//	@Router       /api/kategori/{id} [get]
+//	@Router       /api/maturity/kategori/{id} [get]
 func (h *KategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -110,7 +110,7 @@ func (h *KategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, 
 //	@Success      201       {object}  dto.KategoriResponse
 //	@Failure      400       {object}  dto.ErrorResponse
 //	@Failure      409       {object}  dto.ErrorResponse
-//	@Router       /api/kategori [post]
+//	@Router       /api/maturity/kategori [post]
 func (h *KategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateKategoriRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -158,7 +158,7 @@ func (h *KategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 //	@Failure      400       {object}  dto.ErrorResponse
 //	@Failure      404       {object}  dto.ErrorResponse
 //	@Failure      409       {object}  dto.ErrorResponse
-//	@Router       /api/kategori/{id} [put]
+//	@Router       /api/maturity/kategori/{id} [put]
 func (h *KategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateKategoriRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -205,8 +205,8 @@ func (h *KategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 //	@Success      200  {object}  dto.MessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/kategori/{id} [delete]
-func (h *KategoriHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+//	@Router       /api/maturity/kategori/{id} [delete]
+func (h *KategoriHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		logger.Error(err, "operation failed")
 		if err.Error() == "data tidak ditemukan" {

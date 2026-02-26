@@ -3,6 +3,7 @@ package services
 import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/repository"
+	"fortyfour-backend/pkg/cache"
 
 	"github.com/google/uuid"
 )
@@ -17,23 +18,63 @@ type SdmCsirtServiceInterface interface {
 
 type SdmCsirtService struct {
 	repo repository.SdmCsirtRepositoryInterface
+	rc   cache.RedisInterface
 }
 
-func NewSdmCsirtService(repo repository.SdmCsirtRepositoryInterface) *SdmCsirtService {
-	return &SdmCsirtService{repo: repo}
+func NewSdmCsirtService(repo repository.SdmCsirtRepositoryInterface, rc cache.RedisInterface) *SdmCsirtService {
+	return &SdmCsirtService{repo: repo, rc: rc}
 }
 
 func (s *SdmCsirtService) Create(req dto.CreateSdmCsirtRequest) (string, error) {
 	id := uuid.New().String()
-	return id, s.repo.Create(req, id)
+
+	if err := s.repo.Create(req, id); err != nil {
+		return "", err
+	}
+
+	result, err := s.repo.GetByID(id)
+	if err != nil {
+		return "", err
+	}
+
+	cacheSet(s.rc, keyDetail("sdm", id), result, TTLDetail)
+	cacheDelete(s.rc, keyList("sdm"))
+
+	return id, nil
 }
 
 func (s *SdmCsirtService) GetAll() ([]dto.SdmCsirtResponse, error) {
-	return s.repo.GetAll()
+	key := keyList("sdm")
+	var result []dto.SdmCsirtResponse
+
+	if cacheGet(s.rc, key, &result) {
+		return result, nil
+	}
+
+	data, err := s.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, data, TTLList)
+	return data, nil
 }
 
 func (s *SdmCsirtService) GetByID(id string) (*dto.SdmCsirtResponse, error) {
-	return s.repo.GetByID(id)
+	key := keyDetail("sdm", id)
+	var result dto.SdmCsirtResponse
+
+	if cacheGet(s.rc, key, &result) {
+		return &result, nil
+	}
+
+	data, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, data, TTLDetail)
+	return data, nil
 }
 
 func (s *SdmCsirtService) Update(id string, req dto.UpdateSdmCsirtRequest) error {
@@ -58,9 +99,23 @@ func (s *SdmCsirtService) Update(id string, req dto.UpdateSdmCsirtRequest) error
 		existing.Sertifikasi = *req.Sertifikasi
 	}
 
-	return s.repo.Update(id, *existing)
+	if err := s.repo.Update(id, *existing); err != nil {
+		return err
+	}
+
+	cacheDelete(s.rc, keyDetail("sdm", id))
+	cacheDelete(s.rc, keyList("sdm"))
+
+	return nil
 }
 
 func (s *SdmCsirtService) Delete(id string) error {
-	return s.repo.Delete(id)
+	if err := s.repo.Delete(id); err != nil {
+		return err
+	}
+
+	cacheDelete(s.rc, keyDetail("sdm", id))
+	cacheDelete(s.rc, keyList("sdm"))
+
+	return nil
 }

@@ -59,7 +59,7 @@ func (m *MockSERepository) Delete(id string) error {
 
 func setupSEService() (SEService, *MockSERepository) {
 	mockRepo := new(MockSERepository)
-	service := NewSEService(mockRepo)
+	service := NewSEService(mockRepo, nil)
 	return service, mockRepo
 }
 
@@ -465,18 +465,10 @@ func TestSEService_Update_Success_Recategorize(t *testing.T) {
 		// 5C (5) + 5A (25) = 30 → Tinggi
 	}
 
-	updatedResponse := &dto.SEResponse{
-		ID:         "se-123",
-		TotalBobot: 30,
-		KategoriSE: "Tinggi",
-	}
-
 	// First GetByID call returns existing data
 	mockRepo.On("GetByID", "se-123").Return(existing, nil).Once()
 	// Update is called
 	mockRepo.On("Update", "se-123", req, 30, "Tinggi").Return(nil).Once()
-	// Second GetByID call returns updated data
-	mockRepo.On("GetByID", "se-123").Return(updatedResponse, nil).Once()
 
 	result, err := service.Update("se-123", req)
 
