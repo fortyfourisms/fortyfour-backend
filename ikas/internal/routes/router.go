@@ -68,8 +68,8 @@ func InitRouter(
 	mux.Handle("/api/maturity/pertanyaan-identifikasi", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(pertanyaanIdentifikasiH))))
 	mux.Handle("/api/maturity/pertanyaan-identifikasi/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(pertanyaanIdentifikasiH))))
 
-	mux.Handle("/api/pertanyaan-proteksi", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(pertanyaanProteksiH))))
-	mux.Handle("/api/pertanyaan-proteksi/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(pertanyaanProteksiH))))
+	mux.Handle("/api/maturity/pertanyaan-proteksi", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(pertanyaanProteksiH))))
+	mux.Handle("/api/maturity/pertanyaan-proteksi/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(pertanyaanProteksiH))))
 
 	mux.Handle("/api/jawaban-identifikasi", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(jawabanIdentifikasiH))))
 	mux.Handle("/api/jawaban-identifikasi/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(jawabanIdentifikasiH))))

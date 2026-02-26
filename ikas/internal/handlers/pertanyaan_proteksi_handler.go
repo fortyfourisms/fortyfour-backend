@@ -22,7 +22,7 @@ func NewPertanyaanProteksiHandler(service *services.PertanyaanProteksiService) *
 }
 
 func (h *PertanyaanProteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/pertanyaan-proteksi")
+	path := strings.TrimPrefix(r.URL.Path, "/api/maturity/pertanyaan-proteksi")
 	id := strings.TrimPrefix(path, "/")
 
 	switch r.Method {
@@ -63,7 +63,7 @@ func (h *PertanyaanProteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Req
 //	@Produce      json
 //	@Success      200  {array}   dto.PertanyaanProteksiResponse
 //	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/pertanyaan-proteksi [get]
+//	@Router       /api/maturity/pertanyaan-proteksi [get]
 func (h *PertanyaanProteksiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -83,7 +83,7 @@ func (h *PertanyaanProteksiHandler) handleGetAll(w http.ResponseWriter, _ *http.
 //	@Param        id   path      string  true  "PertanyaanProteksi ID"
 //	@Success      200  {object}  dto.PertanyaanProteksiResponse
 //	@Failure      404  {object}  dto.ErrorResponse
-//	@Router       /api/pertanyaan-proteksi/{id} [get]
+//	@Router       /api/maturity/pertanyaan-proteksi/{id} [get]
 func (h *PertanyaanProteksiHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -109,7 +109,7 @@ func (h *PertanyaanProteksiHandler) handleGetByID(w http.ResponseWriter, _ *http
 //	@Success      201   {object}  dto.PertanyaanProteksiResponse
 //	@Failure      400   {object}  dto.ErrorResponse
 //	@Failure      404   {object}  dto.ErrorResponse
-//	@Router       /api/pertanyaan-proteksi [post]
+//	@Router       /api/maturity/pertanyaan-proteksi [post]
 func (h *PertanyaanProteksiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreatePertanyaanProteksiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -167,7 +167,7 @@ func (h *PertanyaanProteksiHandler) handleCreate(w http.ResponseWriter, r *http.
 //	@Success      200   {object}  dto.PertanyaanProteksiResponse
 //	@Failure      400   {object}  dto.ErrorResponse
 //	@Failure      404   {object}  dto.ErrorResponse
-//	@Router       /api/pertanyaan-proteksi/{id} [put]
+//	@Router       /api/maturity/pertanyaan-proteksi/{id} [put]
 func (h *PertanyaanProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdatePertanyaanProteksiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -225,7 +225,7 @@ func (h *PertanyaanProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.
 //	@Success      200  {object}  dto.MessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/pertanyaan-proteksi/{id} [delete]
+//	@Router       /api/maturity/pertanyaan-proteksi/{id} [delete]
 func (h *PertanyaanProteksiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		rollbar.Error(err)
