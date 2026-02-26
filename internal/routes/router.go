@@ -63,6 +63,7 @@ func InitRouter(
 	mux.HandleFunc("/api/login", strictLimiter.LimitByIP(authH.Login))
 	mux.HandleFunc("/api/refresh", strictLimiter.LimitByIP(authH.Refresh))
 	mux.HandleFunc("/api/logout", authH.Logout)
+	mux.HandleFunc("/api/logout-all", authM.Authenticate(authH.LogoutAll))
 
 	// MFA endpoints
 	// setup & enable -> protected (require Authorization header)

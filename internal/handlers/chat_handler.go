@@ -19,6 +19,18 @@ func NewChatHandler(s *services.ChatService) *ChatHandler {
 	return &ChatHandler{service: s}
 }
 
+// Stream godoc
+// @Summary      Chat dengan AI (SSE streaming)
+// @Description  Mengirim pesan ke AI dan menerima respons secara streaming via Server-Sent Events
+// @Tags         Chat
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      text/event-stream
+// @Param        request  body  dto.ChatRequest  true  "Chat request"
+// @Success      200  {string}  string  "SSE stream"
+// @Failure      400  {object}  dto.ErrorResponse
+// @Failure      500  {object}  dto.ErrorResponse
+// @Router       /api/chat [post]
 func (h *ChatHandler) Stream(w http.ResponseWriter, r *http.Request) {
 	// SSE headers
 	w.Header().Set("Content-Type", "text/event-stream")
@@ -139,6 +151,19 @@ func (h *ChatHandler) Stream(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Saved to history for session: %s", req.SessionID)
 }
 
+// DeleteSession godoc
+// @Summary      Hapus chat session
+// @Description  Menghapus riwayat percakapan berdasarkan session ID
+// @Tags         Chat
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        request  body      object{session_id=string}  true  "Session ID"
+// @Success      200      {object}  map[string]string
+// @Failure      400      {object}  dto.ErrorResponse
+// @Failure      404      {object}  dto.ErrorResponse
+// @Failure      500      {object}  dto.ErrorResponse
+// @Router       /api/chat/delete-session [delete]
 func (h *ChatHandler) DeleteSession(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		SessionID string `json:"session_id"`

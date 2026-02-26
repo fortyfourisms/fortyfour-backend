@@ -26,7 +26,17 @@ func writeError(w http.ResponseWriter, status int, msg string) {
 	writeJSON(w, status, map[string]string{"error": msg})
 }
 
-// Summary handler logic
+// Summary godoc
+// @Summary      Get dashboard summary
+// @Description  Mengambil ringkasan data dashboard (jumlah perusahaan per sektor dan total SE). Filter tanggal opsional dengan format YYYY-MM-DD; keduanya harus diisi agar filter aktif.
+// @Tags         Dashboard
+// @Security     BearerAuth
+// @Produce      json
+// @Param        from  query  string  false  "Start date (YYYY-MM-DD)"
+// @Param        to    query  string  false  "End date (YYYY-MM-DD)"
+// @Success      200  {object}  dto.DashboardSummary
+// @Failure      500  {object}  dto.ErrorResponse
+// @Router       /api/dashboard/summary [get]
 func (h *DashboardHandler) Summary(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	from := q.Get("from")
