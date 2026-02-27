@@ -25,15 +25,15 @@ func NewIkasHandler(service *services.IkasService) *IkasHandler {
 }
 
 func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/maturity/ikas")
+	suffix := utils.ExtractID(r.URL.Path, "ikas")
 
 	// Handle import endpoint
-	if path == "/import" && r.Method == http.MethodPost {
+	if suffix == "import" && r.Method == http.MethodPost {
 		h.handleImport(w, r)
 		return
 	}
 
-	id := strings.TrimPrefix(path, "/")
+	id := suffix
 
 	switch r.Method {
 	case http.MethodGet:
@@ -120,17 +120,14 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Generate UUID untuk ID baru
 	newID := uuid.New().String()
 
-	// Create dengan ID
 	if err := h.service.Create(req, newID); err != nil {
 		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
 
-	// Ambil data yang baru dibuat (dengan JOIN)
 	resp, err := h.service.GetByID(newID)
 	if err != nil {
 		logger.Error(err, "operation failed")
@@ -189,8 +186,6 @@ func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }
 
-// Tambahkan method baru di struct IkasHandler
-
 // ImportIkas godoc
 // @Summary      Import IKAS dari Excel
 // @Description  Import data IKAS dari file Excel (sheet ke-7)
@@ -207,14 +202,12 @@ func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/maturity/ikas/import [post]
 func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
-	// Parse multipart form (max 10MB)
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, "Gagal parse form data")
 		return
 	}
 
-	// Ambil file dari form
 	file, header, err := r.FormFile("file")
 	if err != nil {
 		logger.Error(err, "operation failed")
@@ -223,13 +216,11 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// Validasi extension
 	if !strings.HasSuffix(strings.ToLower(header.Filename), ".xlsx") {
 		utils.RespondError(w, 400, "File harus berformat .xlsx")
 		return
 	}
 
-	// Baca file ke memory
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
 		logger.Error(err, "operation failed")
@@ -237,7 +228,6 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Import data - semua data diambil dari Excel
 	resp, err := h.service.ImportFromExcel(fileBytes)
 	if err != nil {
 		logger.Error(err, "operation failed")
@@ -250,7 +240,7 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(response)
 		return
 	}
-	// Success response
+
 	response := dto.ImportIkasResponse{
 		Success: true,
 		Message: "Import berhasil",

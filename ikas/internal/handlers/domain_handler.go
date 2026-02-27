@@ -6,7 +6,6 @@ import (
 	"ikas/internal/services"
 	"ikas/internal/utils"
 	"net/http"
-	"strings"
 
 	"fortyfour-backend/pkg/logger"
 )
@@ -22,8 +21,7 @@ func NewDomainHandler(service *services.DomainService) *DomainHandler {
 }
 
 func (h *DomainHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/maturity/domain")
-	id := strings.TrimPrefix(path, "/")
+	id := utils.ExtractID(r.URL.Path, "domain")
 
 	switch r.Method {
 	case http.MethodGet:

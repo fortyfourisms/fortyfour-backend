@@ -22,8 +22,7 @@ func NewJawabanIdentifikasiHandler(service *services.JawabanIdentifikasiService)
 }
 
 func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/maturity/jawaban-identifikasi")
-	id := strings.TrimPrefix(path, "/")
+	id := utils.ExtractID(r.URL.Path, "jawaban-identifikasi")
 
 	switch r.Method {
 	case http.MethodGet:

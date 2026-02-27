@@ -6,7 +6,6 @@ import (
 	"ikas/internal/services"
 	"ikas/internal/utils"
 	"net/http"
-	"strings"
 
 	"fortyfour-backend/pkg/logger"
 )
@@ -22,8 +21,7 @@ func NewRuangLingkupHandler(service *services.RuangLingkupService) *RuangLingkup
 }
 
 func (h *RuangLingkupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/maturity/ruang-lingkup")
-	id := strings.TrimPrefix(path, "/")
+	id := utils.ExtractID(r.URL.Path, "ruang-lingkup")
 
 	switch r.Method {
 	case http.MethodGet:

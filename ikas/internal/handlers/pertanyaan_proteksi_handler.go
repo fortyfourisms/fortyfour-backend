@@ -6,7 +6,6 @@ import (
 	"ikas/internal/services"
 	"ikas/internal/utils"
 	"net/http"
-	"strings"
 
 	"github.com/rollbar/rollbar-go"
 )
@@ -22,8 +21,7 @@ func NewPertanyaanProteksiHandler(service *services.PertanyaanProteksiService) *
 }
 
 func (h *PertanyaanProteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/maturity/pertanyaan-proteksi")
-	id := strings.TrimPrefix(path, "/")
+	id := utils.ExtractID(r.URL.Path, "pertanyaan-proteksi")
 
 	switch r.Method {
 	case http.MethodGet:

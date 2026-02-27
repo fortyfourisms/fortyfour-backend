@@ -7,7 +7,6 @@ import (
 	"ikas/internal/utils"
 
 	"net/http"
-	"strings"
 
 	"fortyfour-backend/pkg/logger"
 )
@@ -23,8 +22,7 @@ func NewKategoriHandler(service *services.KategoriService) *KategoriHandler {
 }
 
 func (h *KategoriHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/maturity/kategori")
-	id := strings.TrimPrefix(path, "/")
+	id := utils.ExtractID(r.URL.Path, "kategori")
 
 	switch r.Method {
 	case http.MethodGet:
