@@ -82,15 +82,14 @@ func (m *MockRedisClient) Scan(pattern string) ([]string, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
+	// Ubah pattern Redis (misal "refresh_token:*") menjadi prefix matching
+	prefix := strings.TrimSuffix(pattern, "*")
+
 	var keys []string
-	data := m.data[pattern]
-	for _, val := range data {
-		s := fmt.Sprintf("%c", val)
-		keys = append(keys, s)
-	}
-	_, exists := m.data[pattern]
-	if !exists {
-		return nil, errors.New("key not found")
+	for key := range m.data {
+		if strings.HasPrefix(key, prefix) {
+			keys = append(keys, key)
+		}
 	}
 	return keys, nil
 }

@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/testhelpers"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 )
@@ -172,5 +174,419 @@ func TestTokenService_RevokeRefreshToken_Success(t *testing.T) {
 	_, err = service.RefreshAccessToken(tokens.RefreshToken)
 	if err == nil {
 		t.Error("expected error when using revoked token")
+	}
+}
+
+// ============================================================
+// TestTokenService_SetAuthCookies
+// ============================================================
+
+func TestTokenService_SetAuthCookies_SetsBothCookies(t *testing.T) {
+	redis := testhelpers.NewMockRedisClient()
+	service := NewTokenService(redis, "test-secret", false, "localhost")
+
+	tokens := &models.TokenPair{
+		AccessToken:  "access-token-value",
+		RefreshToken: "refresh-token-value",
+		ExpiresAt:    time.Now().Add(15 * time.Minute),
+	}
+
+	w := httptest.NewRecorder()
+	service.SetAuthCookies(w, tokens)
+
+	resp := w.Result()
+	cookieMap := make(map[string]*http.Cookie)
+	for _, c := range resp.Cookies() {
+		cookieMap[c.Name] = c
+	}
+
+	// access_token cookie
+	ac, ok := cookieMap["access_token"]
+	if !ok {
+		t.Fatal("access_token cookie tidak ditemukan")
+	}
+	if ac.Value != "access-token-value" {
+		t.Errorf("expected value 'access-token-value', got '%s'", ac.Value)
+	}
+	if ac.Path != "/" {
+		t.Errorf("expected path '/', got '%s'", ac.Path)
+	}
+	if ac.MaxAge != 15*60 {
+		t.Errorf("expected MaxAge %d, got %d", 15*60, ac.MaxAge)
+	}
+	if !ac.HttpOnly {
+		t.Error("expected HttpOnly true")
+	}
+	if ac.Secure {
+		t.Error("expected Secure false di non-production")
+	}
+
+	// refresh_token cookie
+	rc, ok := cookieMap["refresh_token"]
+	if !ok {
+		t.Fatal("refresh_token cookie tidak ditemukan")
+	}
+	if rc.Value != "refresh-token-value" {
+		t.Errorf("expected value 'refresh-token-value', got '%s'", rc.Value)
+	}
+	if rc.Path != "/api/refresh" {
+		t.Errorf("expected path '/api/refresh', got '%s'", rc.Path)
+	}
+	if rc.MaxAge != 7*24*60*60 {
+		t.Errorf("expected MaxAge %d, got %d", 7*24*60*60, rc.MaxAge)
+	}
+	if !rc.HttpOnly {
+		t.Error("expected HttpOnly true")
+	}
+}
+
+func TestTokenService_SetAuthCookies_SecureInProduction(t *testing.T) {
+	redis := testhelpers.NewMockRedisClient()
+	service := NewTokenService(redis, "test-secret", true, "example.com")
+
+	tokens := &models.TokenPair{
+		AccessToken:  "access-token",
+		RefreshToken: "refresh-token",
+		ExpiresAt:    time.Now().Add(15 * time.Minute),
+	}
+
+	w := httptest.NewRecorder()
+	service.SetAuthCookies(w, tokens)
+
+	for _, c := range w.Result().Cookies() {
+		if !c.Secure {
+			t.Errorf("cookie '%s' harus Secure di production", c.Name)
+		}
+	}
+}
+
+func TestTokenService_SetAuthCookies_DomainDiSet(t *testing.T) {
+	redis := testhelpers.NewMockRedisClient()
+	service := NewTokenService(redis, "test-secret", false, "myapp.example.com")
+
+	tokens := &models.TokenPair{
+		AccessToken:  "access",
+		RefreshToken: "refresh",
+		ExpiresAt:    time.Now().Add(15 * time.Minute),
+	}
+
+	w := httptest.NewRecorder()
+	service.SetAuthCookies(w, tokens)
+
+	for _, c := range w.Result().Cookies() {
+		if c.Domain != "myapp.example.com" {
+			t.Errorf("cookie '%s': expected domain 'myapp.example.com', got '%s'", c.Name, c.Domain)
+		}
+	}
+}
+
+// ============================================================
+// TestTokenService_GetAccessTokenFromCookie
+// ============================================================
+
+func TestTokenService_GetAccessTokenFromCookie_Success(t *testing.T) {
+	service := NewTokenService(testhelpers.NewMockRedisClient(), "secret", false, "localhost")
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: "my-access-token"})
+
+	token, err := service.GetAccessTokenFromCookie(req)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if token != "my-access-token" {
+		t.Errorf("expected 'my-access-token', got '%s'", token)
+	}
+}
+
+func TestTokenService_GetAccessTokenFromCookie_NoCookie(t *testing.T) {
+	service := NewTokenService(testhelpers.NewMockRedisClient(), "secret", false, "localhost")
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+
+	token, err := service.GetAccessTokenFromCookie(req)
+
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if err.Error() != "access token cookie not found" {
+		t.Errorf("expected 'access token cookie not found', got '%s'", err.Error())
+	}
+	if token != "" {
+		t.Errorf("expected empty token, got '%s'", token)
+	}
+}
+
+func TestTokenService_GetAccessTokenFromCookie_WrongCookieName(t *testing.T) {
+	service := NewTokenService(testhelpers.NewMockRedisClient(), "secret", false, "localhost")
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: "refresh_token", Value: "some-value"})
+
+	_, err := service.GetAccessTokenFromCookie(req)
+
+	if err == nil {
+		t.Error("expected error saat cookie access_token tidak ada")
+	}
+}
+
+// ============================================================
+// TestTokenService_GetRefreshTokenFromCookie
+// ============================================================
+
+func TestTokenService_GetRefreshTokenFromCookie_Success(t *testing.T) {
+	service := NewTokenService(testhelpers.NewMockRedisClient(), "secret", false, "localhost")
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: "refresh_token", Value: "my-refresh-token"})
+
+	token, err := service.GetRefreshTokenFromCookie(req)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if token != "my-refresh-token" {
+		t.Errorf("expected 'my-refresh-token', got '%s'", token)
+	}
+}
+
+func TestTokenService_GetRefreshTokenFromCookie_NoCookie(t *testing.T) {
+	service := NewTokenService(testhelpers.NewMockRedisClient(), "secret", false, "localhost")
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+
+	token, err := service.GetRefreshTokenFromCookie(req)
+
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if err.Error() != "refresh token cookie not found" {
+		t.Errorf("expected 'refresh token cookie not found', got '%s'", err.Error())
+	}
+	if token != "" {
+		t.Errorf("expected empty token, got '%s'", token)
+	}
+}
+
+// ============================================================
+// TestTokenService_ClearAuthCookies
+// ============================================================
+
+func TestTokenService_ClearAuthCookies_MaxAgeMinusOne(t *testing.T) {
+	service := NewTokenService(testhelpers.NewMockRedisClient(), "secret", false, "localhost")
+
+	w := httptest.NewRecorder()
+	service.ClearAuthCookies(w)
+
+	cookieMap := make(map[string]*http.Cookie)
+	for _, c := range w.Result().Cookies() {
+		cookieMap[c.Name] = c
+	}
+
+	ac, ok := cookieMap["access_token"]
+	if !ok {
+		t.Fatal("access_token cookie tidak ditemukan")
+	}
+	if ac.MaxAge != -1 {
+		t.Errorf("expected MaxAge -1, got %d", ac.MaxAge)
+	}
+	if ac.Value != "" {
+		t.Errorf("expected Value kosong, got '%s'", ac.Value)
+	}
+
+	rc, ok := cookieMap["refresh_token"]
+	if !ok {
+		t.Fatal("refresh_token cookie tidak ditemukan")
+	}
+	if rc.MaxAge != -1 {
+		t.Errorf("expected MaxAge -1, got %d", rc.MaxAge)
+	}
+	if rc.Value != "" {
+		t.Errorf("expected Value kosong, got '%s'", rc.Value)
+	}
+}
+
+func TestTokenService_ClearAuthCookies_PathBenar(t *testing.T) {
+	service := NewTokenService(testhelpers.NewMockRedisClient(), "secret", false, "localhost")
+
+	w := httptest.NewRecorder()
+	service.ClearAuthCookies(w)
+
+	cookieMap := make(map[string]*http.Cookie)
+	for _, c := range w.Result().Cookies() {
+		cookieMap[c.Name] = c
+	}
+
+	if cookieMap["access_token"].Path != "/" {
+		t.Errorf("access_token path: expected '/', got '%s'", cookieMap["access_token"].Path)
+	}
+	if cookieMap["refresh_token"].Path != "/api/refresh" {
+		t.Errorf("refresh_token path: expected '/api/refresh', got '%s'", cookieMap["refresh_token"].Path)
+	}
+}
+
+// ============================================================
+// TestTokenService_RevokeAllUserTokens
+// ============================================================
+
+func TestTokenService_RevokeAllUserTokens_HapusSemuaTokenUser(t *testing.T) {
+	redis := testhelpers.NewMockRedisClient()
+	service := NewTokenService(redis, "test-secret", false, "localhost")
+
+	// User 1 login dari 3 device
+	t1, _ := service.GenerateTokenPair("user-1", "alice", "admin")
+	t2, _ := service.GenerateTokenPair("user-1", "alice", "admin")
+	t3, _ := service.GenerateTokenPair("user-1", "alice", "admin")
+
+	// User 2 punya token tersendiri
+	t4, _ := service.GenerateTokenPair("user-2", "bob", "user")
+
+	err := service.RevokeAllUserTokens("user-1")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	// Semua token user-1 harus terhapus
+	for i, tok := range []*models.TokenPair{t1, t2, t3} {
+		exists, _ := redis.Exists("refresh_token:" + tok.RefreshToken)
+		if exists {
+			t.Errorf("token user-1 ke-%d seharusnya sudah dihapus", i+1)
+		}
+	}
+
+	// Token user-2 harus tetap ada
+	exists, _ := redis.Exists("refresh_token:" + t4.RefreshToken)
+	if !exists {
+		t.Error("token user-2 tidak boleh ikut terhapus")
+	}
+}
+
+func TestTokenService_RevokeAllUserTokens_UserTanpaToken(t *testing.T) {
+	redis := testhelpers.NewMockRedisClient()
+	service := NewTokenService(redis, "test-secret", false, "localhost")
+
+	// Revoke user yang tidak punya token → tidak error
+	err := service.RevokeAllUserTokens("user-tidak-ada")
+
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+}
+
+func TestTokenService_RevokeAllUserTokens_TokenTidakBisaDigunakan(t *testing.T) {
+	redis := testhelpers.NewMockRedisClient()
+	service := NewTokenService(redis, "test-secret", false, "localhost")
+
+	tokens, _ := service.GenerateTokenPair("user-1", "alice", "admin")
+
+	_ = service.RevokeAllUserTokens("user-1")
+
+	_, err := service.RefreshAccessToken(tokens.RefreshToken)
+	if err == nil {
+		t.Error("token yang sudah direvoke seharusnya tidak bisa digunakan")
+	}
+}
+
+// ============================================================
+// TestTokenService_ValidateAndRefreshIfNeeded
+// ============================================================
+
+func TestTokenService_ValidateAndRefreshIfNeeded_AccessTokenValid(t *testing.T) {
+	redis := testhelpers.NewMockRedisClient()
+	service := NewTokenService(redis, "test-secret", false, "localhost")
+
+	tokens, _ := service.GenerateTokenPair("user-1", "alice", "admin")
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: tokens.AccessToken})
+	w := httptest.NewRecorder()
+
+	claims, err := service.ValidateAndRefreshIfNeeded(w, req)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if claims.UserID != "user-1" {
+		t.Errorf("expected userID 'user-1', got '%s'", claims.UserID)
+	}
+	if claims.Username != "alice" {
+		t.Errorf("expected username 'alice', got '%s'", claims.Username)
+	}
+	if claims.Role != "admin" {
+		t.Errorf("expected role 'admin', got '%s'", claims.Role)
+	}
+}
+
+func TestTokenService_ValidateAndRefreshIfNeeded_TanpaCookie_ReturnsError(t *testing.T) {
+	redis := testhelpers.NewMockRedisClient()
+	service := NewTokenService(redis, "test-secret", false, "localhost")
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	w := httptest.NewRecorder()
+
+	claims, err := service.ValidateAndRefreshIfNeeded(w, req)
+
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if err.Error() != "authentication required" {
+		t.Errorf("expected 'authentication required', got '%s'", err.Error())
+	}
+	if claims != nil {
+		t.Error("expected nil claims")
+	}
+}
+
+func TestTokenService_ValidateAndRefreshIfNeeded_AccessInvalid_RefreshValid_IssuesNewTokens(t *testing.T) {
+	redis := testhelpers.NewMockRedisClient()
+	service := NewTokenService(redis, "test-secret", false, "localhost")
+
+	tokens, _ := service.GenerateTokenPair("user-1", "alice", "admin")
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: "access-token-tidak-valid"})
+	req.AddCookie(&http.Cookie{Name: "refresh_token", Value: tokens.RefreshToken})
+	w := httptest.NewRecorder()
+
+	claims, err := service.ValidateAndRefreshIfNeeded(w, req)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if claims.UserID != "user-1" {
+		t.Errorf("expected userID 'user-1', got '%s'", claims.UserID)
+	}
+
+	// Cookie baru harus di-set di response
+	cookieMap := make(map[string]*http.Cookie)
+	for _, c := range w.Result().Cookies() {
+		cookieMap[c.Name] = c
+	}
+	if _, ok := cookieMap["access_token"]; !ok {
+		t.Error("access_token cookie baru harus di-set")
+	}
+	if _, ok := cookieMap["refresh_token"]; !ok {
+		t.Error("refresh_token cookie baru harus di-set")
+	}
+}
+
+func TestTokenService_ValidateAndRefreshIfNeeded_BothTokensInvalid_ReturnsError(t *testing.T) {
+	redis := testhelpers.NewMockRedisClient()
+	service := NewTokenService(redis, "test-secret", false, "localhost")
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.AddCookie(&http.Cookie{Name: "access_token", Value: "access-tidak-valid"})
+	req.AddCookie(&http.Cookie{Name: "refresh_token", Value: "refresh-tidak-valid"})
+	w := httptest.NewRecorder()
+
+	claims, err := service.ValidateAndRefreshIfNeeded(w, req)
+
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if claims != nil {
+		t.Error("expected nil claims")
 	}
 }
