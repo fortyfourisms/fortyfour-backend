@@ -29,6 +29,52 @@ func NewJawabanIdentifikasiRepository(db *sql.DB) *JawabanIdentifikasiRepository
 	return &JawabanIdentifikasiRepository{db: db}
 }
 
+const jawabanIdentifikasiSelectQuery = `
+	SELECT
+		ji.id,
+		ji.perusahaan_id,
+		ji.jawaban_identifikasi,
+		ji.evidence,
+		ji.validasi,
+		ji.keterangan,
+		ji.created_at,
+		ji.updated_at,
+		pi.id,
+		pi.pertanyaan_identifikasi,
+		sk.id, sk.nama_sub_kategori,
+		k.id, k.nama_kategori,
+		d.id, d.nama_domain
+	FROM jawaban_identifikasi ji
+	JOIN pertanyaan_identifikasi pi ON ji.pertanyaan_identifikasi_id = pi.id
+	JOIN sub_kategori sk ON pi.sub_kategori_id = sk.id
+	JOIN kategori k ON sk.kategori_id = k.id
+	JOIN domain d ON k.domain_id = d.id`
+
+func scanJawaban(row interface {
+	Scan(dest ...any) error
+}) (dto.JawabanIdentifikasiResponse, error) {
+	var item dto.JawabanIdentifikasiResponse
+	err := row.Scan(
+		&item.ID,
+		&item.PerusahaanID,
+		&item.JawabanIdentifikasi,
+		&item.Evidence,
+		&item.Validasi,
+		&item.Keterangan,
+		&item.CreatedAt,
+		&item.UpdatedAt,
+		&item.PertanyaanIdentifikasi.ID,
+		&item.PertanyaanIdentifikasi.PertanyaanIdentifikasi,
+		&item.PertanyaanIdentifikasi.SubKategori.ID,
+		&item.PertanyaanIdentifikasi.SubKategori.NamaSubKategori,
+		&item.PertanyaanIdentifikasi.SubKategori.Kategori.ID,
+		&item.PertanyaanIdentifikasi.SubKategori.Kategori.NamaKategori,
+		&item.PertanyaanIdentifikasi.SubKategori.Kategori.Domain.ID,
+		&item.PertanyaanIdentifikasi.SubKategori.Kategori.Domain.NamaDomain,
+	)
+	return item, err
+}
+
 func (r *JawabanIdentifikasiRepository) Create(req dto.CreateJawabanIdentifikasiRequest, id string) error {
 	query := `INSERT INTO jawaban_identifikasi
 		(id, pertanyaan_identifikasi_id, perusahaan_id, jawaban_identifikasi, evidence, validasi, keterangan)
@@ -47,15 +93,11 @@ func (r *JawabanIdentifikasiRepository) Create(req dto.CreateJawabanIdentifikasi
 		rollbar.Error(err)
 		return err
 	}
-
 	return nil
 }
 
 func (r *JawabanIdentifikasiRepository) GetAll() ([]dto.JawabanIdentifikasiResponse, error) {
-	query := `SELECT id, pertanyaan_identifikasi_id, perusahaan_id, jawaban_identifikasi,
-		evidence, validasi, keterangan, created_at, updated_at
-		FROM jawaban_identifikasi
-		ORDER BY created_at ASC`
+	query := jawabanIdentifikasiSelectQuery + ` ORDER BY ji.created_at ASC`
 
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -66,18 +108,8 @@ func (r *JawabanIdentifikasiRepository) GetAll() ([]dto.JawabanIdentifikasiRespo
 
 	var result []dto.JawabanIdentifikasiResponse
 	for rows.Next() {
-		var item dto.JawabanIdentifikasiResponse
-		if err := rows.Scan(
-			&item.ID,
-			&item.PertanyaanIdentifikasiID,
-			&item.PerusahaanID,
-			&item.JawabanIdentifikasi,
-			&item.Evidence,
-			&item.Validasi,
-			&item.Keterangan,
-			&item.CreatedAt,
-			&item.UpdatedAt,
-		); err != nil {
+		item, err := scanJawaban(rows)
+		if err != nil {
 			rollbar.Error(err)
 			continue
 		}
@@ -88,23 +120,9 @@ func (r *JawabanIdentifikasiRepository) GetAll() ([]dto.JawabanIdentifikasiRespo
 }
 
 func (r *JawabanIdentifikasiRepository) GetByID(id string) (*dto.JawabanIdentifikasiResponse, error) {
-	query := `SELECT id, pertanyaan_identifikasi_id, perusahaan_id, jawaban_identifikasi,
-		evidence, validasi, keterangan, created_at, updated_at
-		FROM jawaban_identifikasi
-		WHERE id = ?`
+	query := jawabanIdentifikasiSelectQuery + ` WHERE ji.id = ?`
 
-	var item dto.JawabanIdentifikasiResponse
-	err := r.db.QueryRow(query, id).Scan(
-		&item.ID,
-		&item.PertanyaanIdentifikasiID,
-		&item.PerusahaanID,
-		&item.JawabanIdentifikasi,
-		&item.Evidence,
-		&item.Validasi,
-		&item.Keterangan,
-		&item.CreatedAt,
-		&item.UpdatedAt,
-	)
+	item, err := scanJawaban(r.db.QueryRow(query, id))
 	if err != nil {
 		rollbar.Error(err)
 		return nil, err
@@ -114,11 +132,7 @@ func (r *JawabanIdentifikasiRepository) GetByID(id string) (*dto.JawabanIdentifi
 }
 
 func (r *JawabanIdentifikasiRepository) GetByPerusahaan(perusahaanID string) ([]dto.JawabanIdentifikasiResponse, error) {
-	query := `SELECT id, pertanyaan_identifikasi_id, perusahaan_id, jawaban_identifikasi,
-		evidence, validasi, keterangan, created_at, updated_at
-		FROM jawaban_identifikasi
-		WHERE perusahaan_id = ?
-		ORDER BY created_at ASC`
+	query := jawabanIdentifikasiSelectQuery + ` WHERE ji.perusahaan_id = ? ORDER BY ji.created_at ASC`
 
 	rows, err := r.db.Query(query, perusahaanID)
 	if err != nil {
@@ -129,18 +143,8 @@ func (r *JawabanIdentifikasiRepository) GetByPerusahaan(perusahaanID string) ([]
 
 	var result []dto.JawabanIdentifikasiResponse
 	for rows.Next() {
-		var item dto.JawabanIdentifikasiResponse
-		if err := rows.Scan(
-			&item.ID,
-			&item.PertanyaanIdentifikasiID,
-			&item.PerusahaanID,
-			&item.JawabanIdentifikasi,
-			&item.Evidence,
-			&item.Validasi,
-			&item.Keterangan,
-			&item.CreatedAt,
-			&item.UpdatedAt,
-		); err != nil {
+		item, err := scanJawaban(rows)
+		if err != nil {
 			rollbar.Error(err)
 			continue
 		}
@@ -151,11 +155,7 @@ func (r *JawabanIdentifikasiRepository) GetByPerusahaan(perusahaanID string) ([]
 }
 
 func (r *JawabanIdentifikasiRepository) GetByPertanyaan(pertanyaanID string) ([]dto.JawabanIdentifikasiResponse, error) {
-	query := `SELECT id, pertanyaan_identifikasi_id, perusahaan_id, jawaban_identifikasi,
-		evidence, validasi, keterangan, created_at, updated_at
-		FROM jawaban_identifikasi
-		WHERE pertanyaan_identifikasi_id = ?
-		ORDER BY created_at ASC`
+	query := jawabanIdentifikasiSelectQuery + ` WHERE ji.pertanyaan_identifikasi_id = ? ORDER BY ji.created_at ASC`
 
 	rows, err := r.db.Query(query, pertanyaanID)
 	if err != nil {
@@ -166,18 +166,8 @@ func (r *JawabanIdentifikasiRepository) GetByPertanyaan(pertanyaanID string) ([]
 
 	var result []dto.JawabanIdentifikasiResponse
 	for rows.Next() {
-		var item dto.JawabanIdentifikasiResponse
-		if err := rows.Scan(
-			&item.ID,
-			&item.PertanyaanIdentifikasiID,
-			&item.PerusahaanID,
-			&item.JawabanIdentifikasi,
-			&item.Evidence,
-			&item.Validasi,
-			&item.Keterangan,
-			&item.CreatedAt,
-			&item.UpdatedAt,
-		); err != nil {
+		item, err := scanJawaban(rows)
+		if err != nil {
 			rollbar.Error(err)
 			continue
 		}
@@ -196,17 +186,14 @@ func (r *JawabanIdentifikasiRepository) Update(id string, req dto.UpdateJawabanI
 		updates = append(updates, "jawaban_identifikasi=?")
 		args = append(args, *req.JawabanIdentifikasi)
 	}
-
 	if req.Evidence != nil {
 		updates = append(updates, "evidence=?")
 		args = append(args, *req.Evidence)
 	}
-
 	if req.Validasi != nil {
 		updates = append(updates, "validasi=?")
 		args = append(args, *req.Validasi)
 	}
-
 	if req.Keterangan != nil {
 		updates = append(updates, "keterangan=?")
 		args = append(args, *req.Keterangan)
@@ -225,7 +212,6 @@ func (r *JawabanIdentifikasiRepository) Update(id string, req dto.UpdateJawabanI
 		rollbar.Error(err)
 		return err
 	}
-
 	return nil
 }
 

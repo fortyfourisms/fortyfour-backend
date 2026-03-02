@@ -38,14 +38,11 @@ func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdenti
 		return errors.New("format perusahaan_id tidak valid")
 	}
 
-	// Validasi dan format float 2 desimal
-	formatted, err := utils.ValidateFloat(req.JawabanIdentifikasi, "jawaban_identifikasi", false)
-	if err != nil {
-		return err
+	// null = N/A (diperbolehkan), tapi jika diisi harus 0.00 - 5.00
+	if req.JawabanIdentifikasi != nil && (*req.JawabanIdentifikasi < 0 || *req.JawabanIdentifikasi > 5) {
+		return errors.New("jawaban_identifikasi harus bernilai antara 0 sampai 5, atau null untuk N/A")
 	}
-	req.JawabanIdentifikasi = formatted
 
-	// Validasi: validasi hanya boleh diisi jika evidence ada
 	if req.Validasi != nil {
 		if req.Evidence == nil || utils.NormalizeInput(*req.Evidence) == "" {
 			return errors.New("validasi hanya boleh diisi jika evidence ada")
@@ -59,24 +56,19 @@ func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdenti
 }
 
 func (s *JawabanIdentifikasiService) validateUpdate(req *dto.UpdateJawabanIdentifikasiRequest, existingEvidence *string) error {
-	if req.JawabanIdentifikasi != nil {
-		formatted, err := utils.ValidateFloat(*req.JawabanIdentifikasi, "jawaban_identifikasi", false)
-		if err != nil {
-			return err
-		}
-		req.JawabanIdentifikasi = &formatted
+	// null = N/A (diperbolehkan), tapi jika diisi harus 0.00 - 5.00
+	if req.JawabanIdentifikasi != nil && (*req.JawabanIdentifikasi < 0 || *req.JawabanIdentifikasi > 5) {
+		return errors.New("jawaban_identifikasi harus bernilai antara 0 sampai 5, atau null untuk N/A")
 	}
 
 	if req.Validasi != nil {
 		if !validValidasi[*req.Validasi] {
 			return errors.New("validasi hanya boleh berisi 'yes' atau 'no'")
 		}
-
 		effectiveEvidence := existingEvidence
 		if req.Evidence != nil {
 			effectiveEvidence = req.Evidence
 		}
-
 		if effectiveEvidence == nil || utils.NormalizeInput(*effectiveEvidence) == "" {
 			return errors.New("validasi hanya boleh diisi jika evidence ada")
 		}
@@ -118,7 +110,6 @@ func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiReq
 	}
 
 	newID := uuid.New().String()
-
 	if err := s.repo.Create(req, newID); err != nil {
 		rollbar.Error(err)
 		return nil, err
