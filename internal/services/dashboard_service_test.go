@@ -2,8 +2,10 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
+	"time"
 
 	"fortyfour-backend/internal/dto"
 
@@ -385,3 +387,127 @@ func TestDashboardService_GetSummary_ContextCancellation(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, result)
 }
+
+/*
+=====================================
+ TEST CACHE — GetSummary
+=====================================
+*/
+
+func TestDashboardService_GetSummary_CacheHit_SkipRepo(t *testing.T) {
+	mockRepo := new(MockDashboardRepository)
+	rc := newDashboardTestRedis()
+	service := NewDashboardService(mockRepo, rc)
+
+	ctx := context.Background()
+
+	// Pre-populate cache dengan key yang sama yang digunakan service (from=nil → "nil", to=nil → "nil")
+	cached := dto.DashboardSummary{
+		Sektor: []dto.SectorCount{{ID: "cache-1", Nama: "Dari Cache", Total: 99}},
+		SE:     dto.SeAgg{TotalSE: 42},
+	}
+	setDashboardCache(rc, "dashboard:summary:nil:nil", cached)
+
+	result, err := service.GetSummary(ctx, nil, nil)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Len(t, result.Sektor, 1)
+	assert.Equal(t, "Dari Cache", result.Sektor[0].Nama)
+	assert.Equal(t, int64(42), result.SE.TotalSE)
+
+	// Repo tidak boleh dipanggil sama sekali
+	mockRepo.AssertNotCalled(t, "CountPerSektor")
+	mockRepo.AssertNotCalled(t, "SeGlobalAgg")
+}
+
+func TestDashboardService_GetSummary_CacheMiss_SetsCache(t *testing.T) {
+	mockRepo := new(MockDashboardRepository)
+	rc := newDashboardTestRedis()
+	service := NewDashboardService(mockRepo, rc)
+
+	ctx := context.Background()
+
+	mockRepo.On("CountPerSektor", ctx, (*string)(nil), (*string)(nil)).
+		Return([]dto.SectorCount{{ID: "s1", Nama: "ILMATE", Total: 10}}, nil)
+	mockRepo.On("SeGlobalAgg", ctx).Return(dto.SeAgg{TotalSE: 10}, nil)
+
+	_, err := service.GetSummary(ctx, nil, nil)
+
+	assert.NoError(t, err)
+
+	exists, _ := rc.Exists("dashboard:summary:nil:nil")
+	assert.True(t, exists, "hasil harus di-cache setelah GetSummary")
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestDashboardService_GetSummary_CacheKey_BerdasarkanFilter(t *testing.T) {
+	mockRepo := new(MockDashboardRepository)
+	rc := newDashboardTestRedis()
+	service := NewDashboardService(mockRepo, rc)
+
+	ctx := context.Background()
+	from := "2024-01-01"
+	to := "2024-01-31"
+
+	mockRepo.On("CountPerSektor", ctx, &from, &to).
+		Return([]dto.SectorCount{{ID: "s1", Total: 5}}, nil)
+	mockRepo.On("SeGlobalAgg", ctx).Return(dto.SeAgg{TotalSE: 5}, nil)
+
+	_, err := service.GetSummary(ctx, &from, &to)
+
+	assert.NoError(t, err)
+
+	// Key harus spesifik berdasarkan tanggal — berbeda dari key tanpa filter
+	keyWithFilter := "dashboard:summary:2024-01-01:2024-01-31"
+	keyNoFilter := "dashboard:summary:nil:nil"
+
+	existsWith, _ := rc.Exists(keyWithFilter)
+	existsWithout, _ := rc.Exists(keyNoFilter)
+
+	assert.True(t, existsWith, "cache harus ada untuk key dengan filter tanggal")
+	assert.False(t, existsWithout, "cache untuk key tanpa filter tidak boleh ada")
+
+	mockRepo.AssertExpectations(t)
+}
+
+/*
+=====================================
+ HELPERS REDIS UNTUK DASHBOARD TEST
+=====================================
+*/
+
+func newDashboardTestRedis() *dashboardTestRedis {
+	return &dashboardTestRedis{data: make(map[string]string)}
+}
+
+func setDashboardCache(rc *dashboardTestRedis, key string, value interface{}) {
+	b, _ := json.Marshal(value)
+	rc.data[key] = string(b)
+}
+
+type dashboardTestRedis struct {
+	data map[string]string
+}
+
+func (r *dashboardTestRedis) Set(key string, value interface{}, ttl time.Duration) error {
+	if v, ok := value.(string); ok {
+		r.data[key] = v
+	}
+	return nil
+}
+func (r *dashboardTestRedis) Get(key string) (string, error) {
+	v, ok := r.data[key]
+	if !ok {
+		return "", errors.New("not found")
+	}
+	return v, nil
+}
+func (r *dashboardTestRedis) Delete(key string) error { delete(r.data, key); return nil }
+func (r *dashboardTestRedis) Exists(key string) (bool, error) {
+	_, ok := r.data[key]
+	return ok, nil
+}
+func (r *dashboardTestRedis) Scan(pattern string) ([]string, error) { return nil, nil }
+func (r *dashboardTestRedis) Close() error                          { return nil }
