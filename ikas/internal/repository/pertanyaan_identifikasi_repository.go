@@ -52,11 +52,21 @@ func (r *PertanyaanIdentifikasiRepository) Create(req dto.CreatePertanyaanIdenti
 }
 
 func (r *PertanyaanIdentifikasiRepository) GetAll() ([]dto.PertanyaanIdentifikasiResponse, error) {
-	query := `SELECT id, sub_kategori_id, ruang_lingkup_id, pertanyaan_identifikasi,
-		index0, index1, index2, index3, index4, index5,
-		created_at, updated_at
-		FROM pertanyaan_identifikasi
-		ORDER BY created_at ASC`
+	query := `
+		SELECT 
+			pi.id, pi.pertanyaan_identifikasi,
+			pi.index0, pi.index1, pi.index2, pi.index3, pi.index4, pi.index5,
+			pi.created_at, pi.updated_at,
+			sk.id, sk.nama_sub_kategori,
+			k.id, k.nama_kategori,
+			d.id, d.nama_domain,
+			rl.id, rl.nama_ruang_lingkup
+		FROM pertanyaan_identifikasi pi
+		JOIN sub_kategori sk ON pi.sub_kategori_id = sk.id
+		JOIN kategori k ON sk.kategori_id = k.id
+		JOIN domain d ON k.domain_id = d.id
+		JOIN ruang_lingkup rl ON pi.ruang_lingkup_id = rl.id
+		ORDER BY pi.created_at ASC`
 
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -71,8 +81,6 @@ func (r *PertanyaanIdentifikasiRepository) GetAll() ([]dto.PertanyaanIdentifikas
 		var item dto.PertanyaanIdentifikasiResponse
 		if err := rows.Scan(
 			&item.ID,
-			&item.SubKategoriID,
-			&item.RuangLingkupID,
 			&item.PertanyaanIdentifikasi,
 			&item.Index0,
 			&item.Index1,
@@ -82,6 +90,14 @@ func (r *PertanyaanIdentifikasiRepository) GetAll() ([]dto.PertanyaanIdentifikas
 			&item.Index5,
 			&item.CreatedAt,
 			&item.UpdatedAt,
+			&item.SubKategori.ID,
+			&item.SubKategori.NamaSubKategori,
+			&item.SubKategori.Kategori.ID,
+			&item.SubKategori.Kategori.NamaKategori,
+			&item.SubKategori.Kategori.Domain.ID,
+			&item.SubKategori.Kategori.Domain.NamaDomain,
+			&item.RuangLingkup.ID,
+			&item.RuangLingkup.NamaRuangLingkup,
 		); err != nil {
 			rollbar.Error(err)
 			continue
@@ -93,17 +109,25 @@ func (r *PertanyaanIdentifikasiRepository) GetAll() ([]dto.PertanyaanIdentifikas
 }
 
 func (r *PertanyaanIdentifikasiRepository) GetByID(id string) (*dto.PertanyaanIdentifikasiResponse, error) {
-	query := `SELECT id, sub_kategori_id, ruang_lingkup_id, pertanyaan_identifikasi,
-		index0, index1, index2, index3, index4, index5,
-		created_at, updated_at
-		FROM pertanyaan_identifikasi
-		WHERE id = ?`
+	query := `
+		SELECT 
+			pi.id, pi.pertanyaan_identifikasi,
+			pi.index0, pi.index1, pi.index2, pi.index3, pi.index4, pi.index5,
+			pi.created_at, pi.updated_at,
+			sk.id, sk.nama_sub_kategori,
+			k.id, k.nama_kategori,
+			d.id, d.nama_domain,
+			rl.id, rl.nama_ruang_lingkup
+		FROM pertanyaan_identifikasi pi
+		JOIN sub_kategori sk ON pi.sub_kategori_id = sk.id
+		JOIN kategori k ON sk.kategori_id = k.id
+		JOIN domain d ON k.domain_id = d.id
+		JOIN ruang_lingkup rl ON pi.ruang_lingkup_id = rl.id
+		WHERE pi.id = ?`
 
 	var item dto.PertanyaanIdentifikasiResponse
 	err := r.db.QueryRow(query, id).Scan(
 		&item.ID,
-		&item.SubKategoriID,
-		&item.RuangLingkupID,
 		&item.PertanyaanIdentifikasi,
 		&item.Index0,
 		&item.Index1,
@@ -113,6 +137,14 @@ func (r *PertanyaanIdentifikasiRepository) GetByID(id string) (*dto.PertanyaanId
 		&item.Index5,
 		&item.CreatedAt,
 		&item.UpdatedAt,
+		&item.SubKategori.ID,
+		&item.SubKategori.NamaSubKategori,
+		&item.SubKategori.Kategori.ID,
+		&item.SubKategori.Kategori.NamaKategori,
+		&item.SubKategori.Kategori.Domain.ID,
+		&item.SubKategori.Kategori.Domain.NamaDomain,
+		&item.RuangLingkup.ID,
+		&item.RuangLingkup.NamaRuangLingkup,
 	)
 	if err != nil {
 		rollbar.Error(err)
