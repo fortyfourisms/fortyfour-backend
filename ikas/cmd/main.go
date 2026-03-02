@@ -102,6 +102,7 @@ func main() {
 	pertanyaanIdentifikasiRepo := repository.NewPertanyaanIdentifikasiRepository(db)
 	pertanyaanProteksiRepo := repository.NewPertanyaanProteksiRepository(db)
 	pertanyaanDeteksiRepo := repository.NewPertanyaanDeteksiRepository(db)
+	pertanyaanGulihRepo := repository.NewPertanyaanGulihRepository(db)
 
 	jawabanIdentifikasiRepo := repository.NewJawabanIdentifikasiRepository(db)
 
@@ -111,11 +112,10 @@ func main() {
 	domainService := services.NewDomainService(domainRepo)
 	kategoriService := services.NewKategoriService(kategoriRepo)
 	subKategoriService := services.NewSubKategoriService(subKategoriRepo)
-
 	pertanyaanIdentifikasiService := services.NewPertanyaanIdentifikasiService(pertanyaanIdentifikasiRepo)
 	pertanyaanProteksiService := services.NewPertanyaanProteksiService(pertanyaanProteksiRepo)
 	pertanyaanDeteksiService := services.NewPertanyaanDeteksiService(pertanyaanDeteksiRepo)
-
+	pertanyaanGulihService := services.NewPertanyaanGulihService(pertanyaanGulihRepo)
 	jawabanIdentifikasiService := services.NewJawabanIdentifikasiService(jawabanIdentifikasiRepo)
 
 	// handlers
@@ -124,11 +124,10 @@ func main() {
 	domainHandler := handlers.NewDomainHandler(domainService)
 	kategoriHandler := handlers.NewKategoriHandler(kategoriService)
 	subKategoriHandler := handlers.NewSubKategoriHandler(subKategoriService)
-
 	pertanyaanIdentifikasiHandler := handlers.NewPertanyaanIdentifikasiHandler(pertanyaanIdentifikasiService)
 	pertanyaanProteksiHandler := handlers.NewPertanyaanProteksiHandler(pertanyaanProteksiService)
 	pertanyaanDeteksiHandler := handlers.NewPertanyaanDeteksiHandler(pertanyaanDeteksiService)
-
+	pertanyaanGulihHandler := handlers.NewPertanyaanGulihHandler(pertanyaanGulihService)
 	jawabanIdentifikasiHandler := handlers.NewJawabanIdentifikasiHandler(jawabanIdentifikasiService)
 
 	// Middleware
@@ -151,6 +150,7 @@ func main() {
 		pertanyaanIdentifikasiHandler,
 		pertanyaanProteksiHandler,
 		pertanyaanDeteksiHandler,
+		pertanyaanGulihHandler,
 		jawabanIdentifikasiHandler,
 		authMiddleware,
 		strictLimiter,

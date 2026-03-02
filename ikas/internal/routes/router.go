@@ -44,6 +44,7 @@ func InitRouter(
 	pertanyaanIdentifikasiH *handlers.PertanyaanIdentifikasiHandler,
 	pertanyaanProteksiH *handlers.PertanyaanProteksiHandler,
 	pertanyaanDeteksiH *handlers.PertanyaanDeteksiHandler,
+	pertanyaanGulihH *handlers.PertanyaanGulihHandler,
 	jawabanIdentifikasiH *handlers.JawabanIdentifikasiHandler,
 	authM *middleware.AuthMiddleware,
 	strictLimiter *middleware.RateLimiter,
@@ -67,6 +68,7 @@ func InitRouter(
 	handle(mux, "/pertanyaan-identifikasi", withAuth(utils.AdaptHandler(pertanyaanIdentifikasiH)))
 	handle(mux, "/pertanyaan-proteksi", withAuth(utils.AdaptHandler(pertanyaanProteksiH)))
 	handle(mux, "/pertanyaan-deteksi", withAuth(utils.AdaptHandler(pertanyaanDeteksiH)))
+	handle(mux, "/pertanyaan-gulih", withAuth(utils.AdaptHandler(pertanyaanGulihH)))
 	handle(mux, "/jawaban-identifikasi", withAuth(utils.AdaptHandler(jawabanIdentifikasiH)))
 
 	return mux
