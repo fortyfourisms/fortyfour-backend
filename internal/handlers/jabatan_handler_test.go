@@ -194,3 +194,107 @@ func TestJabatanHandler_ServeHTTP(t *testing.T) {
 		})
 	}
 }
+
+// ============================================================
+// TAMBAHAN: error path & response body
+// ============================================================
+
+func TestJabatanHandler_handleGetAll_ResponseBody(t *testing.T) {
+	handler, mockRepo, _ := setupJabatanHandler()
+	mockRepo.Create(dto.CreateJabatanRequest{NamaJabatan: stringPtr("Manajer")}, "id-1")
+	mockRepo.Create(dto.CreateJabatanRequest{NamaJabatan: stringPtr("Staff")}, "id-2")
+
+	req := httptest.NewRequest(http.MethodGet, "/api/jabatan", nil)
+	w := httptest.NewRecorder()
+	handler.handleGetAll(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
+	var result []dto.JabatanResponse
+	json.NewDecoder(w.Body).Decode(&result)
+	if len(result) != 2 {
+		t.Errorf("expected 2 jabatan, got %d", len(result))
+	}
+}
+
+func TestJabatanHandler_handleCreate_ResponseBody(t *testing.T) {
+	handler, _, _ := setupJabatanHandler()
+
+	reqBody := dto.CreateJabatanRequest{NamaJabatan: stringPtr("Direktur")}
+	body, _ := json.Marshal(reqBody)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/jabatan", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "user-1")
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+	handler.handleCreate(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Errorf("expected 201, got %d", w.Code)
+	}
+	var result dto.JabatanResponse
+	json.NewDecoder(w.Body).Decode(&result)
+	if result.NamaJabatan != "Direktur" {
+		t.Errorf("expected NamaJabatan 'Direktur', got '%s'", result.NamaJabatan)
+	}
+}
+
+func TestJabatanHandler_handleUpdate_NotFound(t *testing.T) {
+	handler, _, _ := setupJabatanHandler()
+
+	updateReq := dto.UpdateJabatanRequest{NamaJabatan: stringPtr("Baru")}
+	body, _ := json.Marshal(updateReq)
+
+	req := httptest.NewRequest(http.MethodPut, "/api/jabatan/non-existent", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "user-1")
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+	handler.handleUpdate(w, req, "non-existent")
+
+	// Handler mengembalikan 400 untuk semua error termasuk not found
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestJabatanHandler_handleDelete_NotFound(t *testing.T) {
+	handler, _, _ := setupJabatanHandler()
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/jabatan/tidak-ada", nil)
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "user-1")
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+	handler.handleDelete(w, req, "tidak-ada")
+
+	// Handler mengembalikan 400 untuk semua error termasuk not found
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestJabatanHandler_handleUpdate_ResponseBody(t *testing.T) {
+	handler, mockRepo, _ := setupJabatanHandler()
+	mockRepo.Create(dto.CreateJabatanRequest{NamaJabatan: stringPtr("Lama")}, "upd-id")
+
+	updateReq := dto.UpdateJabatanRequest{NamaJabatan: stringPtr("Baru")}
+	body, _ := json.Marshal(updateReq)
+
+	req := httptest.NewRequest(http.MethodPut, "/api/jabatan/upd-id", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, "user-1")
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+	handler.handleUpdate(w, req, "upd-id")
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
+	var result dto.JabatanResponse
+	json.NewDecoder(w.Body).Decode(&result)
+	if result.NamaJabatan != "Baru" {
+		t.Errorf("expected NamaJabatan 'Baru', got '%s'", result.NamaJabatan)
+	}
+}
