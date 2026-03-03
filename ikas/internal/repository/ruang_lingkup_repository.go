@@ -16,17 +16,17 @@ func NewRuangLingkupRepository(db *sql.DB) *RuangLingkupRepository {
 	return &RuangLingkupRepository{db: db}
 }
 
-func (r *RuangLingkupRepository) Create(req dto.CreateRuangLingkupRequest, id string) error {
+func (r *RuangLingkupRepository) Create(req dto.CreateRuangLingkupRequest) (int64, error) {
 	// Prepared statement sudah aman dari SQL injection
-	query := `INSERT INTO ruang_lingkup (id, nama_ruang_lingkup) VALUES (?, ?)`
+	query := `INSERT INTO ruang_lingkup (nama_ruang_lingkup) VALUES (?)`
 
-	_, err := r.db.Exec(query, id, req.NamaRuangLingkup)
+	res, err := r.db.Exec(query, req.NamaRuangLingkup)
 	if err != nil {
 		logger.Error(err, "operation failed")
-		return err
+		return 0, err
 	}
 
-	return nil
+	return res.LastInsertId()
 }
 
 func (r *RuangLingkupRepository) GetAll() ([]dto.RuangLingkupResponse, error) {
@@ -53,7 +53,7 @@ func (r *RuangLingkupRepository) GetAll() ([]dto.RuangLingkupResponse, error) {
 	return result, nil
 }
 
-func (r *RuangLingkupRepository) GetByID(id string) (*dto.RuangLingkupResponse, error) {
+func (r *RuangLingkupRepository) GetByID(id int) (*dto.RuangLingkupResponse, error) {
 	// Prepared statement dengan placeholder ? untuk mencegah SQL injection
 	query := `SELECT id, nama_ruang_lingkup, created_at, updated_at FROM ruang_lingkup WHERE id = ?`
 
@@ -67,7 +67,7 @@ func (r *RuangLingkupRepository) GetByID(id string) (*dto.RuangLingkupResponse, 
 	return &item, nil
 }
 
-func (r *RuangLingkupRepository) Update(id string, req dto.UpdateRuangLingkupRequest) error {
+func (r *RuangLingkupRepository) Update(id int, req dto.UpdateRuangLingkupRequest) error {
 	query := "UPDATE ruang_lingkup SET "
 	args := []interface{}{}
 	updates := []string{}
@@ -96,7 +96,7 @@ func (r *RuangLingkupRepository) Update(id string, req dto.UpdateRuangLingkupReq
 	return nil
 }
 
-func (r *RuangLingkupRepository) Delete(id string) error {
+func (r *RuangLingkupRepository) Delete(id int) error {
 	// Prepared statement untuk DELETE
 	_, err := r.db.Exec(`DELETE FROM ruang_lingkup WHERE id=?`, id)
 	if err != nil {
@@ -108,14 +108,14 @@ func (r *RuangLingkupRepository) Delete(id string) error {
 }
 
 // Cek duplikasi nama (case-insensitive, trim whitespace)
-func (r *RuangLingkupRepository) CheckDuplicateName(nama string, excludeID string) (bool, error) {
+func (r *RuangLingkupRepository) CheckDuplicateName(nama string, excludeID int) (bool, error) {
 	var count int
 
 	// Prepared statement dengan placeholder ?
 	query := `SELECT COUNT(*) FROM ruang_lingkup WHERE LOWER(TRIM(nama_ruang_lingkup)) = LOWER(TRIM(?))`
 	args := []interface{}{nama}
 
-	if excludeID != "" {
+	if excludeID != 0 {
 		query += ` AND id != ?`
 		args = append(args, excludeID)
 	}

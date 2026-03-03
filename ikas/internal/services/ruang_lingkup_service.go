@@ -8,7 +8,6 @@ import (
 	"ikas/internal/utils"
 
 	"fortyfour-backend/pkg/logger"
-	"github.com/google/uuid"
 )
 
 type RuangLingkupService struct {
@@ -96,7 +95,7 @@ func (s *RuangLingkupService) Create(req dto.CreateRuangLingkupRequest) (*dto.Ru
 	}
 
 	// Cek duplikasi data (case-insensitive, whitespace-trimmed)
-	isDuplicate, err := s.repo.CheckDuplicateName(req.NamaRuangLingkup, "")
+	isDuplicate, err := s.repo.CheckDuplicateName(req.NamaRuangLingkup, 0)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		return nil, err
@@ -105,16 +104,14 @@ func (s *RuangLingkupService) Create(req dto.CreateRuangLingkupRequest) (*dto.Ru
 		return nil, errors.New("nama_ruang_lingkup sudah ada")
 	}
 
-	// Generate UUID
-	newID := uuid.New().String()
-
-	if err := s.repo.Create(req, newID); err != nil {
+	id, err := s.repo.Create(req)
+	if err != nil {
 		logger.Error(err, "operation failed")
 		return nil, err
 	}
 
 	// Ambil data yang baru dibuat
-	resp, err := s.repo.GetByID(newID)
+	resp, err := s.repo.GetByID(int(id))
 	if err != nil {
 		logger.Error(err, "operation failed")
 		return nil, err
@@ -127,12 +124,7 @@ func (s *RuangLingkupService) GetAll() ([]dto.RuangLingkupResponse, error) {
 	return s.repo.GetAll()
 }
 
-func (s *RuangLingkupService) GetByID(id string) (*dto.RuangLingkupResponse, error) {
-	// Validasi format UUID untuk mencegah SQL injection via ID
-	if !utils.IsValidUUID(id) {
-		return nil, errors.New("format ID tidak valid")
-	}
-
+func (s *RuangLingkupService) GetByID(id int) (*dto.RuangLingkupResponse, error) {
 	data, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -143,11 +135,7 @@ func (s *RuangLingkupService) GetByID(id string) (*dto.RuangLingkupResponse, err
 	return data, nil
 }
 
-func (s *RuangLingkupService) Update(id string, req dto.UpdateRuangLingkupRequest) (*dto.RuangLingkupResponse, error) {
-	// Validasi format UUID untuk mencegah SQL injection via ID
-	if !utils.IsValidUUID(id) {
-		return nil, errors.New("format ID tidak valid")
-	}
+func (s *RuangLingkupService) Update(id int, req dto.UpdateRuangLingkupRequest) (*dto.RuangLingkupResponse, error) {
 
 	_, err := s.repo.GetByID(id)
 	if err != nil {
@@ -191,11 +179,7 @@ func (s *RuangLingkupService) Update(id string, req dto.UpdateRuangLingkupReques
 	return updated, nil
 }
 
-func (s *RuangLingkupService) Delete(id string) error {
-	// Validasi format UUID untuk mencegah SQL injection via ID
-	if !utils.IsValidUUID(id) {
-		return errors.New("format ID tidak valid")
-	}
+func (s *RuangLingkupService) Delete(id int) error {
 
 	_, err := s.repo.GetByID(id)
 	if err != nil {
