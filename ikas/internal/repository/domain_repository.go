@@ -16,13 +16,14 @@ func NewDomainRepository(db *sql.DB) *DomainRepository {
 	return &DomainRepository{db: db}
 }
 
-func (r *DomainRepository) Create(req dto.CreateDomainRequest, id string) error {
-	query := `INSERT INTO domain (id, nama_domain) VALUES (?, ?)`
-	_, err := r.db.Exec(query, id, req.NamaDomain)
+func (r *DomainRepository) Create(req dto.CreateDomainRequest) (int64, error) {
+	query := `INSERT INTO domain (nama_domain) VALUES (?)`
+	res, err := r.db.Exec(query, req.NamaDomain)
 	if err != nil {
 		logger.Error(err, "operation failed")
+		return 0, err
 	}
-	return err
+	return res.LastInsertId()
 }
 
 func (r *DomainRepository) GetAll() ([]dto.DomainResponse, error) {
@@ -47,7 +48,7 @@ func (r *DomainRepository) GetAll() ([]dto.DomainResponse, error) {
 	return result, nil
 }
 
-func (r *DomainRepository) GetByID(id string) (*dto.DomainResponse, error) {
+func (r *DomainRepository) GetByID(id int) (*dto.DomainResponse, error) {
 	query := `SELECT id, nama_domain, created_at, updated_at FROM domain WHERE id=?`
 
 	var item dto.DomainResponse
@@ -60,7 +61,7 @@ func (r *DomainRepository) GetByID(id string) (*dto.DomainResponse, error) {
 	return &item, nil
 }
 
-func (r *DomainRepository) Update(id string, req dto.UpdateDomainRequest) error {
+func (r *DomainRepository) Update(id int, req dto.UpdateDomainRequest) error {
 	query := "UPDATE domain SET "
 	args := []interface{}{}
 	updates := []string{}
@@ -85,7 +86,7 @@ func (r *DomainRepository) Update(id string, req dto.UpdateDomainRequest) error 
 	return err
 }
 
-func (r *DomainRepository) Delete(id string) error {
+func (r *DomainRepository) Delete(id int) error {
 	_, err := r.db.Exec(`DELETE FROM domain WHERE id=?`, id)
 	if err != nil {
 		logger.Error(err, "operation failed")
@@ -93,13 +94,13 @@ func (r *DomainRepository) Delete(id string) error {
 	return err
 }
 
-func (r *DomainRepository) CheckDuplicateName(nama string, excludeID string) (bool, error) {
+func (r *DomainRepository) CheckDuplicateName(nama string, excludeID int) (bool, error) {
 	var count int
 
 	query := `SELECT COUNT(*) FROM domain WHERE LOWER(TRIM(nama_domain)) = LOWER(TRIM(?))`
 	args := []interface{}{nama}
 
-	if excludeID != "" {
+	if excludeID != 0 {
 		query += ` AND id != ?`
 		args = append(args, excludeID)
 	}
