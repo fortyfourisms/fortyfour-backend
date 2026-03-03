@@ -152,12 +152,16 @@ func TestUserRepository_FindByID(t *testing.T) {
 					"id", "username", "password", "email",
 					"role_id", "role_name", "id_jabatan", "nama_jabatan",
 					"id_perusahaan", "foto_profile", "banner",
-					"mfa_enabled", "mfa_secret", "created_at", "updated_at",
+					"mfa_enabled", "mfa_secret",
+					"status", "password_changed_at", "login_attempts",
+					"created_at", "updated_at",
 				}).AddRow(
 					"user-123", "testuser", "hashedpass", "test@example.com",
 					"role-1", "admin", "jabatan-1", "Manager",
 					"perusahaan-1", "photo.jpg", "banner.jpg",
-					true, "secret123", time.Now(), time.Now(),
+					true, "secret123",
+					"Aktif", time.Now(), 0,
+					time.Now(), time.Now(),
 				)
 
 				mock.ExpectQuery("SELECT (.+) FROM users").
@@ -179,12 +183,16 @@ func TestUserRepository_FindByID(t *testing.T) {
 					"id", "username", "password", "email",
 					"role_id", "role_name", "id_jabatan", "nama_jabatan",
 					"id_perusahaan", "foto_profile", "banner",
-					"mfa_enabled", "mfa_secret", "created_at", "updated_at",
+					"mfa_enabled", "mfa_secret",
+					"status", "password_changed_at", "login_attempts",
+					"created_at", "updated_at",
 				}).AddRow(
 					"user-456", "testuser2", "hashedpass2", "test2@example.com",
 					nil, nil, nil, nil,
 					nil, nil, nil,
-					false, nil, time.Now(), time.Now(),
+					false, nil,
+					"Aktif", time.Now(), 0,
+					time.Now(), time.Now(),
 				)
 
 				mock.ExpectQuery("SELECT (.+) FROM users").
@@ -270,12 +278,16 @@ func TestUserRepository_FindByUsername(t *testing.T) {
 					"id", "username", "password", "email",
 					"role_id", "role_name", "id_jabatan", "nama_jabatan",
 					"id_perusahaan", "foto_profile", "banner",
-					"mfa_enabled", "mfa_secret", "created_at", "updated_at",
+					"mfa_enabled", "mfa_secret",
+					"status", "password_changed_at", "login_attempts",
+					"created_at", "updated_at",
 				}).AddRow(
 					"user-123", "testuser", "hashedpass", "test@example.com",
 					"role-1", "admin", nil, nil,
 					nil, nil, nil,
-					false, nil, time.Now(), time.Now(),
+					false, nil,
+					"Aktif", time.Now(), 0,
+					time.Now(), time.Now(),
 				)
 
 				mock.ExpectQuery("SELECT (.+) FROM users").

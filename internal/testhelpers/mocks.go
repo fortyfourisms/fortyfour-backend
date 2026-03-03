@@ -145,6 +145,10 @@ func (m *MockUserRepository) Create(user *models.User) error {
 	if user.UpdatedAt.IsZero() {
 		user.UpdatedAt = now
 	}
+	// Set PasswordChangedAt agar password tidak langsung expired
+	if user.PasswordChangedAt.IsZero() {
+		user.PasswordChangedAt = now
+	}
 
 	m.users[user.ID] = user
 	return nil
@@ -297,6 +301,43 @@ func (m *MockUserRepository) SetMFA(userID string, secret *string, enabled bool)
 		}
 	}
 	return errors.New("user not found")
+}
+
+func (m *MockUserRepository) UpdateStatus(userID string, status models.UserStatus) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if u, ok := m.users[userID]; ok {
+		u.Status = status
+	}
+	return nil
+}
+
+func (m *MockUserRepository) IncrementLoginAttempts(userID string) (int, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if u, ok := m.users[userID]; ok {
+		u.LoginAttempts++
+		return u.LoginAttempts, nil
+	}
+	return 0, nil
+}
+
+func (m *MockUserRepository) ResetLoginAttempts(userID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if u, ok := m.users[userID]; ok {
+		u.LoginAttempts = 0
+	}
+	return nil
+}
+
+func (m *MockUserRepository) UpdatePasswordChangedAt(userID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if u, ok := m.users[userID]; ok {
+		u.PasswordChangedAt = time.Now()
+	}
+	return nil
 }
 
 func (m *MockUserRepository) ExistsByPerusahaan(idPerusahaan string) (bool, error) {

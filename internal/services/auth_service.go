@@ -19,12 +19,14 @@ import (
 type AuthService struct {
 	userRepo     repository.UserRepositoryInterface
 	tokenService *TokenService
+	notifSvc     *NotificationService
 }
 
-func NewAuthService(userRepo repository.UserRepositoryInterface, tokenService *TokenService) *AuthService {
+func NewAuthService(userRepo repository.UserRepositoryInterface, tokenService *TokenService, notifSvc *NotificationService) *AuthService {
 	return &AuthService{
 		userRepo:     userRepo,
 		tokenService: tokenService,
+		notifSvc:     notifSvc,
 	}
 }
 
@@ -214,8 +216,58 @@ func (s *AuthService) Login(username, password string) (*models.User, *dto.Token
 		return nil, nil, errors.New("username atau password salah")
 	}
 
+	// Cek status akun sebelum validasi password
+	switch user.Status {
+	case models.UserStatusSuspend:
+		return nil, nil, errors.New("akun Anda telah disuspend, hubungi admin untuk mengaktifkan kembali")
+	case models.UserStatusNonaktif:
+		return nil, nil, errors.New("akun Anda telah dinonaktifkan, hubungi admin")
+	}
+
+	// Validasi password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
+		// Increment login attempts
+		attempts, incErr := s.userRepo.IncrementLoginAttempts(user.ID)
+		if incErr == nil {
+			remaining := models.MaxLoginAttempts - attempts
+			// Kirim notifikasi gagal login
+			msg := fmt.Sprintf("Percobaan login gagal. Sisa kesempatan: %d dari %d.", remaining, models.MaxLoginAttempts)
+			if remaining <= 0 {
+				msg = "Percobaan login gagal. Akun Anda telah disuspend karena melebihi batas percobaan login."
+			}
+			_ = s.notifSvc.Push(user.ID, models.NotifLoginFailed, msg)
+
+			// Suspend jika sudah mencapai batas
+			if attempts >= models.MaxLoginAttempts {
+				_ = s.userRepo.UpdateStatus(user.ID, models.UserStatusSuspend)
+				_ = s.notifSvc.Push(user.ID, models.NotifAccountSuspended,
+					"Akun Anda telah disuspend karena melebihi batas percobaan login (5x). Hubungi admin untuk mengaktifkan kembali.")
+				return nil, nil, errors.New("akun Anda telah disuspend karena melebihi batas percobaan login, hubungi admin")
+			}
+		}
 		return nil, nil, errors.New("username atau password salah")
+	}
+
+	// Password benar — reset login attempts
+	_ = s.userRepo.ResetLoginAttempts(user.ID)
+
+	// Cek apakah password sudah expired (> 90 hari)
+	if user.IsPasswordExpired() {
+		// Suspend akun dan beri notifikasi
+		_ = s.userRepo.UpdateStatus(user.ID, models.UserStatusSuspend)
+		_ = s.notifSvc.Push(user.ID, models.NotifPasswordExpired,
+			"Password Anda telah melewati masa berlaku (90 hari). Akun Anda disuspend. Hubungi admin untuk mengaktifkan kembali.")
+		return nil, nil, errors.New("password Anda telah kedaluwarsa, akun disuspend, hubungi admin")
+	}
+
+	// Cek apakah password akan expired dalam 7 hari (hanya push notif jika belum ada)
+	if user.IsPasswordExpiringSoon() {
+		hasNotif, _ := s.notifSvc.HasPasswordExpirySoonNotif(user.ID)
+		if !hasNotif {
+			days := user.DaysUntilPasswordExpiry()
+			_ = s.notifSvc.Push(user.ID, models.NotifPasswordExpirySoon,
+				fmt.Sprintf("Password Anda akan kedaluwarsa dalam %d hari. Segera ganti password Anda.", days))
+		}
 	}
 
 	// if MFA enabled — return user with nil tokens (handler will create pending token)

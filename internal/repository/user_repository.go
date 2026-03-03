@@ -64,6 +64,7 @@ func (r *UserRepository) FindByID(id string) (*models.User, error) {
 			u.id_perusahaan,
 			u.foto_profile, u.banner,
 			u.mfa_enabled, u.mfa_secret,
+			u.status, u.password_changed_at, u.login_attempts,
 			u.created_at, u.updated_at
 		FROM users u
 		LEFT JOIN roles r ON u.role_id = r.id
@@ -97,6 +98,9 @@ func (r *UserRepository) FindByID(id string) (*models.User, error) {
 		&banner,
 		&user.MFAEnabled,
 		&mfaSecret,
+		&user.Status,
+		&user.PasswordChangedAt,
+		&user.LoginAttempts,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -150,6 +154,7 @@ func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
 			u.id_perusahaan,
 			u.foto_profile, u.banner,
 			u.mfa_enabled, u.mfa_secret,
+			u.status, u.password_changed_at, u.login_attempts,
 			u.created_at, u.updated_at
 		FROM users u
 		LEFT JOIN roles r ON u.role_id = r.id
@@ -183,6 +188,9 @@ func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
 		&banner,
 		&user.MFAEnabled,
 		&mfaSecret,
+		&user.Status,
+		&user.PasswordChangedAt,
+		&user.LoginAttempts,
 		&user.CreatedAt,
 		&user.UpdatedAt,
 	)
@@ -429,4 +437,38 @@ func (r *UserRepository) UsernameExists(username string, excludeID *string) (boo
 		return false, err
 	}
 	return count > 0, nil
+}
+// UpdateStatus mengubah status akun user (Aktif, Suspend, Nonaktif)
+func (r *UserRepository) UpdateStatus(userID string, status models.UserStatus) error {
+	query := `UPDATE users SET status = ?, updated_at = NOW() WHERE id = ?`
+	_, err := r.db.Exec(query, status, userID)
+	return err
+}
+
+// IncrementLoginAttempts menambah counter gagal login dan mengembalikan nilai terbaru
+func (r *UserRepository) IncrementLoginAttempts(userID string) (int, error) {
+	query := `UPDATE users SET login_attempts = login_attempts + 1, updated_at = NOW() WHERE id = ?`
+	if _, err := r.db.Exec(query, userID); err != nil {
+		return 0, err
+	}
+
+	var attempts int
+	if err := r.db.QueryRow(`SELECT login_attempts FROM users WHERE id = ?`, userID).Scan(&attempts); err != nil {
+		return 0, err
+	}
+	return attempts, nil
+}
+
+// ResetLoginAttempts mereset counter gagal login ke 0
+func (r *UserRepository) ResetLoginAttempts(userID string) error {
+	query := `UPDATE users SET login_attempts = 0, updated_at = NOW() WHERE id = ?`
+	_, err := r.db.Exec(query, userID)
+	return err
+}
+
+// UpdatePasswordChangedAt memperbarui timestamp pergantian password
+func (r *UserRepository) UpdatePasswordChangedAt(userID string) error {
+	query := `UPDATE users SET password_changed_at = NOW(), updated_at = NOW() WHERE id = ?`
+	_, err := r.db.Exec(query, userID)
+	return err
 }

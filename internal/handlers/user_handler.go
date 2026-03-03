@@ -12,11 +12,13 @@ import (
 
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/middleware"
+	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/internal/validator"
 
 	"fortyfour-backend/pkg/logger"
+
 	"github.com/google/uuid"
 )
 
@@ -48,6 +50,11 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if strings.HasSuffix(path, "/banner") {
 		h.handleUpdateBanner(w, r)
+		return
+	}
+	if strings.HasSuffix(path, "/status") && r.Method == http.MethodPatch {
+		id := strings.TrimSuffix(path, "/status")
+		h.handleUpdateStatus(w, r, id)
 		return
 	}
 
@@ -462,6 +469,49 @@ func (h *UserHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 	h.sseService.NotifyDelete("users", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "User berhasil dihapus"})
+}
+
+// handleUpdateStatus godoc
+// @Summary      Update status akun user
+// @Description  Admin mengubah status akun user (Aktif, Suspend, Nonaktif)
+// @Tags         Users
+// @Security     BearerAuth
+// @Accept       json
+// @Produce      json
+// @Param        id    path  string  true  "User ID"
+// @Param        body  body  object  true  "Status baru"
+// @Success      200   {object}  map[string]string
+// @Failure      400   {object}  dto.ErrorResponse
+// @Failure      403   {object}  dto.ErrorResponse
+// @Failure      500   {object}  dto.ErrorResponse
+// @Router       /api/users/{id}/status [patch]
+func (h *UserHandler) handleUpdateStatus(w http.ResponseWriter, r *http.Request, id string) {
+	if !h.isAdmin(r) {
+		utils.RespondError(w, http.StatusForbidden, "Hanya admin yang bisa mengubah status akun")
+		return
+	}
+
+	if id == "" {
+		utils.RespondError(w, http.StatusBadRequest, "ID user wajib diisi")
+		return
+	}
+
+	var req struct {
+		Status string `json:"status"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Format request tidak valid")
+		return
+	}
+
+	if err := h.service.UpdateStatus(id, models.UserStatus(req.Status)); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, map[string]string{
+		"message": "Status akun berhasil diubah menjadi " + req.Status,
+	})
 }
 
 func (h *UserHandler) getUserID(r *http.Request) string {

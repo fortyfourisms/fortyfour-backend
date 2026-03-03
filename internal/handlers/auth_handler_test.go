@@ -18,7 +18,7 @@ func setupAuthHandler() (*AuthHandler, *testhelpers.MockRedisClient) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, tokenService)
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
 	perusahaanService := testhelpers.NewMockPerusahaanService()
 	handler := NewAuthHandler(authService, tokenService, perusahaanService)
 

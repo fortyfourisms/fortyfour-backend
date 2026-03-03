@@ -52,6 +52,7 @@ func InitRouter(
 	subsectorH *handlers.SubSektorHandler,
 	seH *handlers.SEHandler,
 	dashboardH *handlers.DashboardHandler,
+	notificationH *handlers.NotificationHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -147,6 +148,10 @@ func InitRouter(
 	// Route Dashboard
 	// Summary: counts per sektor + ikas + se
 	mux.HandleFunc("/api/dashboard/summary", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(dashboardH)))))
+
+	// Routes Notifications
+	mux.HandleFunc("/api/notifications", authM.Authenticate(utils.AdaptHandler(notificationH)))
+	mux.HandleFunc("/api/notifications/", authM.Authenticate(utils.AdaptHandler(notificationH)))
 
 	// Routes Chat
 	mux.HandleFunc("/api/chat", authM.Authenticate(chatHandler.Stream))

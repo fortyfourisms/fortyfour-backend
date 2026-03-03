@@ -147,7 +147,8 @@ func main() {
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret, true, cfg.Domain)
-	authService := services.NewAuthService(userRepo, tokenService)
+	notificationService := services.NewNotificationService(redisClient)
+	authService := services.NewAuthService(userRepo, tokenService, notificationService)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo, redisClient)
 	picService := services.NewPICService(picRepo, redisClient)
 	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
@@ -187,6 +188,7 @@ func main() {
 	subSektorHandler := handlers.NewSubSektorHandler(subSektorService)
 	seHandler := handlers.NewSEHandler(seService, sseService)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
+	notificationHandler := handlers.NewNotificationHandler(notificationService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(tokenService)
@@ -225,6 +227,7 @@ func main() {
 		subSektorHandler,
 		seHandler,
 		dashboardHandler,
+		notificationHandler,
 	)
 
 	// Start server

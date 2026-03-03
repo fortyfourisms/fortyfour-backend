@@ -20,6 +20,12 @@ type UserRepositoryInterface interface {
 	UsernameExists(username string, excludeID *string) (bool, error)
 	SetMFA(userID string, secret *string, enabled bool) error
 	ExistsByPerusahaan(idPerusahaan string) (bool, error)
+
+	// Security fields
+	UpdateStatus(userID string, status models.UserStatus) error
+	IncrementLoginAttempts(userID string) (int, error)
+	ResetLoginAttempts(userID string) error
+	UpdatePasswordChangedAt(userID string) error
 }
 
 type TokenRepositoryInterface interface {
