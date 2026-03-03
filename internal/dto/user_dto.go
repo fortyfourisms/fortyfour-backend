@@ -22,15 +22,16 @@ type UpdateUserPasswordRequest struct {
 }
 
 type UserResponse struct {
-	ID          string  `json:"id"`
-	Username    string  `json:"username"`
-	Email       string  `json:"email"`
-	RoleID      *string `json:"role_id"`
-	RoleName    string  `json:"role_name"`
-	IDJabatan   *string `json:"id_jabatan"`
-	JabatanName *string `json:"jabatan_name"`
-	FotoProfile *string `json:"foto_profile"`
-	Banner      *string `json:"banner"`
-	CreatedAt   string  `json:"created_at"`
-	UpdatedAt   string  `json:"updated_at"`
+	ID           string  `json:"id"`
+	Username     string  `json:"username"`
+	Email        string  `json:"email"`
+	RoleID       *string `json:"role_id"`
+	RoleName     string  `json:"role_name"`
+	IDJabatan    *string `json:"id_jabatan"`
+	JabatanName  *string `json:"jabatan_name"`
+	IDPerusahaan *string `json:"id_perusahaan"`
+	FotoProfile  *string `json:"foto_profile"`
+	Banner       *string `json:"banner"`
+	CreatedAt    string  `json:"created_at"`
+	UpdatedAt    string  `json:"updated_at"`
 }
