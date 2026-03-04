@@ -1,6 +1,9 @@
 package utils
 
-import "net/http"
+import (
+	"net/http"
+	"strconv"
+)
 
 func ValueOrNull(s *string) interface{} {
 	if s != nil {
@@ -28,6 +31,18 @@ func BoolOrNull(b *bool) interface{} {
 		return *b
 	}
 	return nil
+}
+
+func StringToInt(s string) (int, error) {
+	return strconv.Atoi(s)
+}
+
+func ExtractIntID(path, resource string) (int, error) {
+	idStr := ExtractID(path, resource)
+	if idStr == "" {
+		return 0, nil
+	}
+	return strconv.Atoi(idStr)
 }
 
 func AdaptHandler(h http.Handler) http.HandlerFunc {

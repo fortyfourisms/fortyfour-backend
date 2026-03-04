@@ -25,51 +25,55 @@ func NewIkasService(repo repository.IkasRepositoryInterface, producer *rabbitmq.
 }
 
 func (s *IkasService) Create(req dto.CreateIkasRequest, id string) error {
-	var idIdentifikasi, idProteksi, idDeteksi, idGulih string
+	var idIdentifikasi, idProteksi, idDeteksi, idGulih int
 	var nilaiIden, nilaiProt, nilaiDet, nilaiGul float64
 	var err error
 
 	// Create Identifikasi jika ada data
 	if req.Identifikasi != nil {
-		idIdentifikasi = uuid.New().String()
-		nilaiIden, err = s.repo.CreateIdentifikasi(idIdentifikasi, req.Identifikasi)
+		lastID, nilai, err := s.repo.CreateIdentifikasi(req.Identifikasi)
 		if err != nil {
 			return err
 		}
-	} else if req.IDIdentifikasi != "" {
+		idIdentifikasi = int(lastID)
+		nilaiIden = nilai
+	} else if req.IDIdentifikasi != 0 {
 		idIdentifikasi = req.IDIdentifikasi
 	}
 
 	// Create Proteksi jika ada data
 	if req.Proteksi != nil {
-		idProteksi = uuid.New().String()
-		nilaiProt, err = s.repo.CreateProteksi(idProteksi, req.Proteksi)
+		lastID, nilai, err := s.repo.CreateProteksi(req.Proteksi)
 		if err != nil {
 			return err
 		}
-	} else if req.IDProteksi != "" {
+		idProteksi = int(lastID)
+		nilaiProt = nilai
+	} else if req.IDProteksi != 0 {
 		idProteksi = req.IDProteksi
 	}
 
 	// Create Deteksi jika ada data
 	if req.Deteksi != nil {
-		idDeteksi = uuid.New().String()
-		nilaiDet, err = s.repo.CreateDeteksi(idDeteksi, req.Deteksi)
+		lastID, nilai, err := s.repo.CreateDeteksi(req.Deteksi)
 		if err != nil {
 			return err
 		}
-	} else if req.IDDeteksi != "" {
+		idDeteksi = int(lastID)
+		nilaiDet = nilai
+	} else if req.IDDeteksi != 0 {
 		idDeteksi = req.IDDeteksi
 	}
 
 	// Create Gulih jika ada data
 	if req.Gulih != nil {
-		idGulih = uuid.New().String()
-		nilaiGul, err = s.repo.CreateGulih(idGulih, req.Gulih)
+		lastID, nilai, err := s.repo.CreateGulih(req.Gulih)
 		if err != nil {
 			return err
 		}
-	} else if req.IDGulih != "" {
+		idGulih = int(lastID)
+		nilaiGul = nilai
+	} else if req.IDGulih != 0 {
 		idGulih = req.IDGulih
 	}
 

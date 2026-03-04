@@ -22,76 +22,92 @@ func NewIkasRepository(db *sql.DB) *IkasRepository {
 	return &IkasRepository{db: db}
 }
 
-func (r *IkasRepository) CreateIdentifikasi(id string, data *dto.CreateIdentifikasiData) (float64, error) {
+func (r *IkasRepository) CreateIdentifikasi(data *dto.CreateIdentifikasiData) (int64, float64, error) {
 	// Hitung rata-rata
 	nilaiIdentifikasi := (data.NilaiSubdomain1 + data.NilaiSubdomain2 +
 		data.NilaiSubdomain3 + data.NilaiSubdomain4 + data.NilaiSubdomain5) / 5.0
 
 	query := `INSERT INTO identifikasi 
-		(id, nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, 
+		(nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, 
 		nilai_subdomain3, nilai_subdomain4, nilai_subdomain5)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`
+		VALUES (?, ?, ?, ?, ?, ?)`
 
-	_, err := r.db.Exec(query, id, nilaiIdentifikasi,
+	res, err := r.db.Exec(query, nilaiIdentifikasi,
 		data.NilaiSubdomain1, data.NilaiSubdomain2, data.NilaiSubdomain3,
 		data.NilaiSubdomain4, data.NilaiSubdomain5)
+	if err != nil {
+		return 0, 0, err
+	}
 
-	return nilaiIdentifikasi, err
+	lastID, _ := res.LastInsertId()
+	return lastID, nilaiIdentifikasi, nil
 }
 
-func (r *IkasRepository) CreateProteksi(id string, data *dto.CreateProteksiData) (float64, error) {
+func (r *IkasRepository) CreateProteksi(data *dto.CreateProteksiData) (int64, float64, error) {
 	// Hitung rata-rata
 	nilaiProteksi := (data.NilaiSubdomain1 + data.NilaiSubdomain2 +
 		data.NilaiSubdomain3 + data.NilaiSubdomain4 +
 		data.NilaiSubdomain5 + data.NilaiSubdomain6) / 6.0
 
 	query := `INSERT INTO proteksi 
-		(id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
+		(nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
 		nilai_subdomain3, nilai_subdomain4, nilai_subdomain5, nilai_subdomain6)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+		VALUES (?, ?, ?, ?, ?, ?, ?)`
 
-	_, err := r.db.Exec(query, id, nilaiProteksi,
+	res, err := r.db.Exec(query, nilaiProteksi,
 		data.NilaiSubdomain1, data.NilaiSubdomain2, data.NilaiSubdomain3,
 		data.NilaiSubdomain4, data.NilaiSubdomain5, data.NilaiSubdomain6)
+	if err != nil {
+		return 0, 0, err
+	}
 
-	return nilaiProteksi, err
+	lastID, _ := res.LastInsertId()
+	return lastID, nilaiProteksi, nil
 }
 
-func (r *IkasRepository) CreateDeteksi(id string, data *dto.CreateDeteksiData) (float64, error) {
+func (r *IkasRepository) CreateDeteksi(data *dto.CreateDeteksiData) (int64, float64, error) {
 	// Hitung rata-rata
 	nilaiDeteksi := (data.NilaiSubdomain1 + data.NilaiSubdomain2 +
 		data.NilaiSubdomain3) / 3.0
 
 	query := `INSERT INTO deteksi 
-		(id, nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3)
-		VALUES (?, ?, ?, ?, ?)`
+		(nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3)
+		VALUES (?, ?, ?, ?)`
 
-	_, err := r.db.Exec(query, id, nilaiDeteksi,
+	res, err := r.db.Exec(query, nilaiDeteksi,
 		data.NilaiSubdomain1, data.NilaiSubdomain2, data.NilaiSubdomain3)
+	if err != nil {
+		return 0, 0, err
+	}
 
-	return nilaiDeteksi, err
+	lastID, _ := res.LastInsertId()
+	return lastID, nilaiDeteksi, nil
 }
 
-func (r *IkasRepository) CreateGulih(id string, data *dto.CreateGulihData) (float64, error) {
+func (r *IkasRepository) CreateGulih(data *dto.CreateGulihData) (int64, float64, error) {
 	// Hitung rata-rata
 	nilaiGulih := (data.NilaiSubdomain1 + data.NilaiSubdomain2 +
 		data.NilaiSubdomain3 + data.NilaiSubdomain4) / 4.0
 
 	query := `INSERT INTO gulih 
-		(id, nilai_gulih, nilai_subdomain1, nilai_subdomain2, 
+		(nilai_gulih, nilai_subdomain1, nilai_subdomain2, 
 		nilai_subdomain3, nilai_subdomain4)
-		VALUES (?, ?, ?, ?, ?, ?)`
+		VALUES (?, ?, ?, ?, ?)`
 
-	_, err := r.db.Exec(query, id, nilaiGulih,
+	res, err := r.db.Exec(query, nilaiGulih,
 		data.NilaiSubdomain1, data.NilaiSubdomain2,
 		data.NilaiSubdomain3, data.NilaiSubdomain4)
+	if err != nil {
+		return 0, 0, err
+	}
 
-	return nilaiGulih, err
+	lastID, _ := res.LastInsertId()
+	return lastID, nilaiGulih, nil
 }
 
 // Update method Create untuk menerima nilai_kematangan
 func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string, nilaiKematangan float64,
-	idIden, idProt, idDet, idGul string) error {
+	idIden, idProt, idDet, idGul int) error {
 
 	query := `INSERT INTO ikas
 		(id, id_perusahaan, tanggal, responden, telepon, jabatan,
@@ -174,13 +190,13 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 	for rows.Next() {
 		var i dto.IkasResponse
 		var perusahaanID, perusahaanNama sql.NullString
-		var idenID sql.NullString
+		var idenID sql.NullInt64
 		var idenNilai, idenSub1, idenSub2, idenSub3, idenSub4, idenSub5 sql.NullFloat64
-		var protID sql.NullString
+		var protID sql.NullInt64
 		var protNilai, protSub1, protSub2, protSub3, protSub4, protSub5, protSub6 sql.NullFloat64
-		var detID sql.NullString
+		var detID sql.NullInt64
 		var detNilai, detSub1, detSub2, detSub3 sql.NullFloat64
-		var gulihID sql.NullString
+		var gulihID sql.NullInt64
 		var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
 
 		err := rows.Scan(
@@ -238,7 +254,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 		// Map identifikasi
 		if idenID.Valid {
 			i.Identifikasi = &dto.IdentifikasiInIkas{
-				ID:                              idenID.String,
+				ID:                              int(idenID.Int64),
 				NilaiIdentifikasi:               idenNilai.Float64,
 				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(idenNilai.Float64),
 				NilaiSubdomain1:                 idenSub1.Float64,
@@ -252,7 +268,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 		// Map proteksi
 		if protID.Valid {
 			i.Proteksi = &dto.ProteksiInIkas{
-				ID:                              protID.String,
+				ID:                              int(protID.Int64),
 				NilaiProteksi:                   protNilai.Float64,
 				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(protNilai.Float64),
 				NilaiSubdomain1:                 protSub1.Float64,
@@ -267,7 +283,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 		// Map deteksi
 		if detID.Valid {
 			i.Deteksi = &dto.DeteksiInIkas{
-				ID:                              detID.String,
+				ID:                              int(detID.Int64),
 				NilaiDeteksi:                    detNilai.Float64,
 				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(detNilai.Float64),
 				NilaiSubdomain1:                 detSub1.Float64,
@@ -279,7 +295,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 		// Map gulih
 		if gulihID.Valid {
 			i.Gulih = &dto.GulihInIkas{
-				ID:                              gulihID.String,
+				ID:                              int(gulihID.Int64),
 				NilaiGulih:                      gulihNilai.Float64,
 				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(gulihNilai.Float64),
 				NilaiSubdomain1:                 gulihSub1.Float64,
@@ -346,13 +362,13 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 
 	var i dto.IkasResponse
 	var perusahaanID, perusahaanNama sql.NullString
-	var idenID sql.NullString
+	var idenID sql.NullInt64
 	var idenNilai, idenSub1, idenSub2, idenSub3, idenSub4, idenSub5 sql.NullFloat64
-	var protID sql.NullString
+	var protID sql.NullInt64
 	var protNilai, protSub1, protSub2, protSub3, protSub4, protSub5, protSub6 sql.NullFloat64
-	var detID sql.NullString
+	var detID sql.NullInt64
 	var detNilai, detSub1, detSub2, detSub3 sql.NullFloat64
-	var gulihID sql.NullString
+	var gulihID sql.NullInt64
 	var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
 
 	err := row.Scan(
@@ -410,7 +426,7 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	// Map identifikasi
 	if idenID.Valid {
 		i.Identifikasi = &dto.IdentifikasiInIkas{
-			ID:                              idenID.String,
+			ID:                              int(idenID.Int64),
 			NilaiIdentifikasi:               idenNilai.Float64,
 			KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(idenNilai.Float64),
 			NilaiSubdomain1:                 idenSub1.Float64,
@@ -424,7 +440,7 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	// Map proteksi
 	if protID.Valid {
 		i.Proteksi = &dto.ProteksiInIkas{
-			ID:                              protID.String,
+			ID:                              int(protID.Int64),
 			NilaiProteksi:                   protNilai.Float64,
 			KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(protNilai.Float64),
 			NilaiSubdomain1:                 protSub1.Float64,
@@ -439,7 +455,7 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	// Map deteksi
 	if detID.Valid {
 		i.Deteksi = &dto.DeteksiInIkas{
-			ID:                              detID.String,
+			ID:                              int(detID.Int64),
 			NilaiDeteksi:                    detNilai.Float64,
 			KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(detNilai.Float64),
 			NilaiSubdomain1:                 detSub1.Float64,
@@ -451,7 +467,7 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	// Map gulih
 	if gulihID.Valid {
 		i.Gulih = &dto.GulihInIkas{
-			ID:                              gulihID.String,
+			ID:                              int(gulihID.Int64),
 			NilaiGulih:                      gulihNilai.Float64,
 			KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(gulihNilai.Float64),
 			NilaiSubdomain1:                 gulihSub1.Float64,
@@ -526,7 +542,7 @@ func (r *IkasRepository) Update(id string, req dto.UpdateIkasRequest) error {
 	return err
 }
 
-func (r *IkasRepository) UpdateIdentifikasi(id string, data *dto.UpdateIdentifikasiData) (float64, error) {
+func (r *IkasRepository) UpdateIdentifikasi(id int, data *dto.UpdateIdentifikasiData) (float64, error) {
 	query := "UPDATE identifikasi SET "
 	args := []interface{}{}
 	updates := []string{}
@@ -581,7 +597,7 @@ func (r *IkasRepository) UpdateIdentifikasi(id string, data *dto.UpdateIdentifik
 	return nilaiIdentifikasi, err
 }
 
-func (r *IkasRepository) UpdateProteksi(id string, data *dto.UpdateProteksiData) (float64, error) {
+func (r *IkasRepository) UpdateProteksi(id int, data *dto.UpdateProteksiData) (float64, error) {
 	query := "UPDATE proteksi SET "
 	args := []interface{}{}
 	updates := []string{}
@@ -640,7 +656,7 @@ func (r *IkasRepository) UpdateProteksi(id string, data *dto.UpdateProteksiData)
 	return nilaiProteksi, err
 }
 
-func (r *IkasRepository) UpdateDeteksi(id string, data *dto.UpdateDeteksiData) (float64, error) {
+func (r *IkasRepository) UpdateDeteksi(id int, data *dto.UpdateDeteksiData) (float64, error) {
 	query := "UPDATE deteksi SET "
 	args := []interface{}{}
 	updates := []string{}
@@ -686,7 +702,7 @@ func (r *IkasRepository) UpdateDeteksi(id string, data *dto.UpdateDeteksiData) (
 	return nilaiDeteksi, err
 }
 
-func (r *IkasRepository) UpdateGulih(id string, data *dto.UpdateGulihData) (float64, error) {
+func (r *IkasRepository) UpdateGulih(id int, data *dto.UpdateGulihData) (float64, error) {
 	query := "UPDATE gulih SET "
 	args := []interface{}{}
 	updates := []string{}

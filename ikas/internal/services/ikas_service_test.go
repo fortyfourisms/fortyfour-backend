@@ -15,31 +15,31 @@ import (
 
 type mockIkasRepo struct{}
 
-func (m *mockIkasRepo) CreateIdentifikasi(id string, d *dto.CreateIdentifikasiData) (float64, error) {
-	return 80, nil
+func (m *mockIkasRepo) CreateIdentifikasi(d *dto.CreateIdentifikasiData) (int64, float64, error) {
+	return 1, 80, nil
 }
 
 func (m *mockIkasRepo) FindPerusahaanByName(namaPerusahaan string) (string, error) {
 	return "", nil
 }
 
-func (m *mockIkasRepo) CreateProteksi(id string, d *dto.CreateProteksiData) (float64, error) {
-	return 70, nil
+func (m *mockIkasRepo) CreateProteksi(d *dto.CreateProteksiData) (int64, float64, error) {
+	return 2, 70, nil
 }
 
-func (m *mockIkasRepo) CreateDeteksi(id string, d *dto.CreateDeteksiData) (float64, error) {
-	return 90, nil
+func (m *mockIkasRepo) CreateDeteksi(d *dto.CreateDeteksiData) (int64, float64, error) {
+	return 3, 90, nil
 }
 
-func (m *mockIkasRepo) CreateGulih(id string, d *dto.CreateGulihData) (float64, error) {
-	return 60, nil
+func (m *mockIkasRepo) CreateGulih(d *dto.CreateGulihData) (int64, float64, error) {
+	return 4, 60, nil
 }
 
 func (m *mockIkasRepo) Create(
 	req dto.CreateIkasRequest,
 	id string,
 	nilai float64,
-	idI, idP, idD, idG string,
+	idI, idP, idD, idG int,
 ) error {
 	return nil
 }
@@ -53,37 +53,37 @@ func (m *mockIkasRepo) GetByID(id string) (*dto.IkasResponse, error) {
 		ID:              id,
 		NilaiKematangan: 75,
 		Identifikasi: &dto.IdentifikasiInIkas{
-			ID:                "iden-id",
+			ID:                1,
 			NilaiIdentifikasi: 80,
 		},
 		Proteksi: &dto.ProteksiInIkas{
-			ID:            "prot-id",
+			ID:            2,
 			NilaiProteksi: 70,
 		},
 		Deteksi: &dto.DeteksiInIkas{
-			ID:           "det-id",
+			ID:           3,
 			NilaiDeteksi: 90,
 		},
 		Gulih: &dto.GulihInIkas{
-			ID:         "gul-id",
+			ID:         4,
 			NilaiGulih: 60,
 		},
 	}, nil
 }
 
-func (m *mockIkasRepo) UpdateIdentifikasi(id string, d *dto.UpdateIdentifikasiData) (float64, error) {
+func (m *mockIkasRepo) UpdateIdentifikasi(id int, d *dto.UpdateIdentifikasiData) (float64, error) {
 	return 85, nil
 }
 
-func (m *mockIkasRepo) UpdateProteksi(id string, d *dto.UpdateProteksiData) (float64, error) {
+func (m *mockIkasRepo) UpdateProteksi(id int, d *dto.UpdateProteksiData) (float64, error) {
 	return 75, nil
 }
 
-func (m *mockIkasRepo) UpdateDeteksi(id string, d *dto.UpdateDeteksiData) (float64, error) {
+func (m *mockIkasRepo) UpdateDeteksi(id int, d *dto.UpdateDeteksiData) (float64, error) {
 	return 95, nil
 }
 
-func (m *mockIkasRepo) UpdateGulih(id string, d *dto.UpdateGulihData) (float64, error) {
+func (m *mockIkasRepo) UpdateGulih(id int, d *dto.UpdateGulihData) (float64, error) {
 	return 65, nil
 }
 

@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS gulih (
-    id CHAR(36) PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     nilai_gulih FLOAT,
     nilai_subdomain1 FLOAT NOT NULL,
     nilai_subdomain2 FLOAT NOT NULL,

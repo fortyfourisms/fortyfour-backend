@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS jawaban_gulih (
-    id CHAR(36) PRIMARY KEY,
-    pertanyaan_gulih_id CHAR(36) NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pertanyaan_gulih_id INT NOT NULL,
     perusahaan_id CHAR(36) NOT NULL,
     jawaban_gulih DECIMAL(3, 2) NOT NULL,
     evidence TEXT NULL,
