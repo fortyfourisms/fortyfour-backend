@@ -7,7 +7,6 @@ import (
 	"ikas/internal/repository"
 	"ikas/internal/utils"
 
-	"github.com/google/uuid"
 	"github.com/rollbar/rollbar-go"
 )
 
@@ -35,34 +34,17 @@ func validateIndexField(value *string, fieldName string) error {
 }
 
 func (s *PertanyaanIdentifikasiService) validateCreate(req *dto.CreatePertanyaanIdentifikasiRequest) error {
-	req.SubKategoriID = utils.NormalizeInput(req.SubKategoriID)
-	if req.SubKategoriID == "" {
-		return errors.New("sub_kategori_id tidak boleh kosong")
-	}
-	if !utils.IsValidUUID(req.SubKategoriID) {
-		return errors.New("format sub_kategori_id tidak valid")
+	if req.SubKategoriID <= 0 {
+		return errors.New("sub_kategori_id tidak valid")
 	}
 
-	req.RuangLingkupID = utils.NormalizeInput(req.RuangLingkupID)
-	if req.RuangLingkupID == "" {
-		return errors.New("ruang_lingkup_id tidak boleh kosong")
-	}
-	if !utils.IsValidUUID(req.RuangLingkupID) {
-		return errors.New("format ruang_lingkup_id tidak valid")
+	if req.RuangLingkupID <= 0 {
+		return errors.New("ruang_lingkup_id tidak valid")
 	}
 
 	req.PertanyaanIdentifikasi = utils.NormalizeInput(req.PertanyaanIdentifikasi)
 	if req.PertanyaanIdentifikasi == "" {
 		return errors.New("pertanyaan_identifikasi tidak boleh kosong")
-	}
-	if len(req.PertanyaanIdentifikasi) < 3 {
-		return errors.New("pertanyaan_identifikasi minimal 3 karakter")
-	}
-	if utils.ContainsSQLInjectionPattern(req.PertanyaanIdentifikasi) {
-		return errors.New("pertanyaan_identifikasi mengandung karakter yang tidak diizinkan")
-	}
-	if !utils.IsValidInput(req.PertanyaanIdentifikasi) {
-		return errors.New("pertanyaan_identifikasi hanya boleh mengandung huruf, angka, spasi, dan karakter -_.,()&")
 	}
 
 	if err := validateIndexField(req.Index0, "index0"); err != nil {
@@ -89,41 +71,21 @@ func (s *PertanyaanIdentifikasiService) validateCreate(req *dto.CreatePertanyaan
 
 func (s *PertanyaanIdentifikasiService) validateUpdate(req *dto.UpdatePertanyaanIdentifikasiRequest) error {
 	if req.SubKategoriID != nil {
-		normalized := utils.NormalizeInput(*req.SubKategoriID)
-		req.SubKategoriID = &normalized
-		if *req.SubKategoriID == "" {
-			return errors.New("sub_kategori_id tidak boleh kosong")
-		}
-		if !utils.IsValidUUID(*req.SubKategoriID) {
-			return errors.New("format sub_kategori_id tidak valid")
+		if *req.SubKategoriID <= 0 {
+			return errors.New("sub_kategori_id tidak valid")
 		}
 	}
 
 	if req.RuangLingkupID != nil {
-		normalized := utils.NormalizeInput(*req.RuangLingkupID)
-		req.RuangLingkupID = &normalized
-		if *req.RuangLingkupID == "" {
-			return errors.New("ruang_lingkup_id tidak boleh kosong")
-		}
-		if !utils.IsValidUUID(*req.RuangLingkupID) {
-			return errors.New("format ruang_lingkup_id tidak valid")
+		if *req.RuangLingkupID <= 0 {
+			return errors.New("ruang_lingkup_id tidak valid")
 		}
 	}
 
 	if req.PertanyaanIdentifikasi != nil {
-		normalized := utils.NormalizeInput(*req.PertanyaanIdentifikasi)
-		req.PertanyaanIdentifikasi = &normalized
+		*req.PertanyaanIdentifikasi = utils.NormalizeInput(*req.PertanyaanIdentifikasi)
 		if *req.PertanyaanIdentifikasi == "" {
 			return errors.New("pertanyaan_identifikasi tidak boleh kosong")
-		}
-		if len(*req.PertanyaanIdentifikasi) < 3 {
-			return errors.New("pertanyaan_identifikasi minimal 3 karakter")
-		}
-		if utils.ContainsSQLInjectionPattern(*req.PertanyaanIdentifikasi) {
-			return errors.New("pertanyaan_identifikasi mengandung karakter yang tidak diizinkan")
-		}
-		if !utils.IsValidInput(*req.PertanyaanIdentifikasi) {
-			return errors.New("pertanyaan_identifikasi hanya boleh mengandung huruf, angka, spasi, dan karakter -_.,()&")
 		}
 	}
 
@@ -172,14 +134,13 @@ func (s *PertanyaanIdentifikasiService) Create(req dto.CreatePertanyaanIdentifik
 		return nil, errors.New("ruang_lingkup_id tidak ditemukan")
 	}
 
-	newID := uuid.New().String()
-
-	if err := s.repo.Create(req, newID); err != nil {
+	lastID, err := s.repo.Create(req)
+	if err != nil {
 		rollbar.Error(err)
 		return nil, err
 	}
 
-	resp, err := s.repo.GetByID(newID)
+	resp, err := s.repo.GetByID(int(lastID))
 	if err != nil {
 		rollbar.Error(err)
 		return nil, err
@@ -192,11 +153,7 @@ func (s *PertanyaanIdentifikasiService) GetAll() ([]dto.PertanyaanIdentifikasiRe
 	return s.repo.GetAll()
 }
 
-func (s *PertanyaanIdentifikasiService) GetByID(id string) (*dto.PertanyaanIdentifikasiResponse, error) {
-	if !utils.IsValidUUID(id) {
-		return nil, errors.New("format ID tidak valid")
-	}
-
+func (s *PertanyaanIdentifikasiService) GetByID(id int) (*dto.PertanyaanIdentifikasiResponse, error) {
 	data, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -208,9 +165,9 @@ func (s *PertanyaanIdentifikasiService) GetByID(id string) (*dto.PertanyaanIdent
 	return data, nil
 }
 
-func (s *PertanyaanIdentifikasiService) Update(id string, req dto.UpdatePertanyaanIdentifikasiRequest) (*dto.PertanyaanIdentifikasiResponse, error) {
-	if !utils.IsValidUUID(id) {
-		return nil, errors.New("format ID tidak valid")
+func (s *PertanyaanIdentifikasiService) Update(id int, req dto.UpdatePertanyaanIdentifikasiRequest) (*dto.PertanyaanIdentifikasiResponse, error) {
+	if err := s.validateUpdate(&req); err != nil {
+		return nil, err
 	}
 
 	_, err := s.repo.GetByID(id)
@@ -222,28 +179,24 @@ func (s *PertanyaanIdentifikasiService) Update(id string, req dto.UpdatePertanya
 		return nil, err
 	}
 
-	if err := s.validateUpdate(&req); err != nil {
-		return nil, err
-	}
-
 	if req.SubKategoriID != nil {
-		exists, err := s.repo.CheckSubKategoriExists(*req.SubKategoriID)
+		subKategoriExists, err := s.repo.CheckSubKategoriExists(*req.SubKategoriID)
 		if err != nil {
 			rollbar.Error(err)
 			return nil, err
 		}
-		if !exists {
+		if !subKategoriExists {
 			return nil, errors.New("sub_kategori_id tidak ditemukan")
 		}
 	}
 
 	if req.RuangLingkupID != nil {
-		exists, err := s.repo.CheckRuangLingkupExists(*req.RuangLingkupID)
+		ruangLingkupExists, err := s.repo.CheckRuangLingkupExists(*req.RuangLingkupID)
 		if err != nil {
 			rollbar.Error(err)
 			return nil, err
 		}
-		if !exists {
+		if !ruangLingkupExists {
 			return nil, errors.New("ruang_lingkup_id tidak ditemukan")
 		}
 	}
@@ -262,11 +215,7 @@ func (s *PertanyaanIdentifikasiService) Update(id string, req dto.UpdatePertanya
 	return updated, nil
 }
 
-func (s *PertanyaanIdentifikasiService) Delete(id string) error {
-	if !utils.IsValidUUID(id) {
-		return errors.New("format ID tidak valid")
-	}
-
+func (s *PertanyaanIdentifikasiService) Delete(id int) error {
 	_, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
