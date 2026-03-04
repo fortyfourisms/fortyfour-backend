@@ -9,13 +9,13 @@ import (
 )
 
 type PertanyaanDeteksiRepositoryInterface interface {
-	Create(req dto.CreatePertanyaanDeteksiRequest, id string) error
+	Create(req dto.CreatePertanyaanDeteksiRequest) (int64, error)
 	GetAll() ([]dto.PertanyaanDeteksiResponse, error)
-	GetByID(id string) (*dto.PertanyaanDeteksiResponse, error)
-	Update(id string, req dto.UpdatePertanyaanDeteksiRequest) error
-	Delete(id string) error
-	CheckSubKategoriExists(subKategoriID string) (bool, error)
-	CheckRuangLingkupExists(ruangLingkupID string) (bool, error)
+	GetByID(id int) (*dto.PertanyaanDeteksiResponse, error)
+	Update(id int, req dto.UpdatePertanyaanDeteksiRequest) error
+	Delete(id int) error
+	CheckSubKategoriExists(subKategoriID int) (bool, error)
+	CheckRuangLingkupExists(ruangLingkupID int) (bool, error)
 }
 
 type PertanyaanDeteksiRepository struct {
@@ -26,13 +26,12 @@ func NewPertanyaanDeteksiRepository(db *sql.DB) *PertanyaanDeteksiRepository {
 	return &PertanyaanDeteksiRepository{db: db}
 }
 
-func (r *PertanyaanDeteksiRepository) Create(req dto.CreatePertanyaanDeteksiRequest, id string) error {
+func (r *PertanyaanDeteksiRepository) Create(req dto.CreatePertanyaanDeteksiRequest) (int64, error) {
 	query := `INSERT INTO pertanyaan_deteksi
-		(id, sub_kategori_id, ruang_lingkup_id, pertanyaan_deteksi, index0, index1, index2, index3, index4, index5)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		(sub_kategori_id, ruang_lingkup_id, pertanyaan_deteksi, index0, index1, index2, index3, index4, index5)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
-	_, err := r.db.Exec(query,
-		id,
+	res, err := r.db.Exec(query,
 		req.SubKategoriID,
 		req.RuangLingkupID,
 		req.PertanyaanDeteksi,
@@ -45,10 +44,10 @@ func (r *PertanyaanDeteksiRepository) Create(req dto.CreatePertanyaanDeteksiRequ
 	)
 	if err != nil {
 		rollbar.Error(err)
-		return err
+		return 0, err
 	}
 
-	return nil
+	return res.LastInsertId()
 }
 
 func (r *PertanyaanDeteksiRepository) GetAll() ([]dto.PertanyaanDeteksiResponse, error) {
@@ -107,7 +106,7 @@ func (r *PertanyaanDeteksiRepository) GetAll() ([]dto.PertanyaanDeteksiResponse,
 	return result, nil
 }
 
-func (r *PertanyaanDeteksiRepository) GetByID(id string) (*dto.PertanyaanDeteksiResponse, error) {
+func (r *PertanyaanDeteksiRepository) GetByID(id int) (*dto.PertanyaanDeteksiResponse, error) {
 	query := `
 		SELECT
 			pd.id, pd.pertanyaan_deteksi,
@@ -153,7 +152,7 @@ func (r *PertanyaanDeteksiRepository) GetByID(id string) (*dto.PertanyaanDeteksi
 	return &item, nil
 }
 
-func (r *PertanyaanDeteksiRepository) Update(id string, req dto.UpdatePertanyaanDeteksiRequest) error {
+func (r *PertanyaanDeteksiRepository) Update(id int, req dto.UpdatePertanyaanDeteksiRequest) error {
 	query := "UPDATE pertanyaan_deteksi SET "
 	args := []interface{}{}
 	updates := []string{}
@@ -212,7 +211,7 @@ func (r *PertanyaanDeteksiRepository) Update(id string, req dto.UpdatePertanyaan
 	return nil
 }
 
-func (r *PertanyaanDeteksiRepository) Delete(id string) error {
+func (r *PertanyaanDeteksiRepository) Delete(id int) error {
 	_, err := r.db.Exec(`DELETE FROM pertanyaan_deteksi WHERE id=?`, id)
 	if err != nil {
 		rollbar.Error(err)
@@ -221,7 +220,7 @@ func (r *PertanyaanDeteksiRepository) Delete(id string) error {
 	return nil
 }
 
-func (r *PertanyaanDeteksiRepository) CheckSubKategoriExists(subKategoriID string) (bool, error) {
+func (r *PertanyaanDeteksiRepository) CheckSubKategoriExists(subKategoriID int) (bool, error) {
 	var count int
 	err := r.db.QueryRow(`SELECT COUNT(*) FROM sub_kategori WHERE id = ?`, subKategoriID).Scan(&count)
 	if err != nil {
@@ -231,7 +230,7 @@ func (r *PertanyaanDeteksiRepository) CheckSubKategoriExists(subKategoriID strin
 	return count > 0, nil
 }
 
-func (r *PertanyaanDeteksiRepository) CheckRuangLingkupExists(ruangLingkupID string) (bool, error) {
+func (r *PertanyaanDeteksiRepository) CheckRuangLingkupExists(ruangLingkupID int) (bool, error) {
 	var count int
 	err := r.db.QueryRow(`SELECT COUNT(*) FROM ruang_lingkup WHERE id = ?`, ruangLingkupID).Scan(&count)
 	if err != nil {

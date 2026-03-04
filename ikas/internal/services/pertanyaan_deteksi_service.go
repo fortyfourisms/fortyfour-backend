@@ -7,7 +7,6 @@ import (
 	"ikas/internal/repository"
 	"ikas/internal/utils"
 
-	"github.com/google/uuid"
 	"github.com/rollbar/rollbar-go"
 )
 
@@ -35,20 +34,12 @@ func validateDeteksiIndexField(value *string, fieldName string) error {
 }
 
 func (s *PertanyaanDeteksiService) validateCreate(req *dto.CreatePertanyaanDeteksiRequest) error {
-	req.SubKategoriID = utils.NormalizeInput(req.SubKategoriID)
-	if req.SubKategoriID == "" {
-		return errors.New("sub_kategori_id tidak boleh kosong")
-	}
-	if !utils.IsValidUUID(req.SubKategoriID) {
-		return errors.New("format sub_kategori_id tidak valid")
+	if req.SubKategoriID <= 0 {
+		return errors.New("sub_kategori_id tidak valid")
 	}
 
-	req.RuangLingkupID = utils.NormalizeInput(req.RuangLingkupID)
-	if req.RuangLingkupID == "" {
-		return errors.New("ruang_lingkup_id tidak boleh kosong")
-	}
-	if !utils.IsValidUUID(req.RuangLingkupID) {
-		return errors.New("format ruang_lingkup_id tidak valid")
+	if req.RuangLingkupID <= 0 {
+		return errors.New("ruang_lingkup_id tidak valid")
 	}
 
 	req.PertanyaanDeteksi = utils.NormalizeInput(req.PertanyaanDeteksi)
@@ -89,24 +80,14 @@ func (s *PertanyaanDeteksiService) validateCreate(req *dto.CreatePertanyaanDetek
 
 func (s *PertanyaanDeteksiService) validateUpdate(req *dto.UpdatePertanyaanDeteksiRequest) error {
 	if req.SubKategoriID != nil {
-		normalized := utils.NormalizeInput(*req.SubKategoriID)
-		req.SubKategoriID = &normalized
-		if *req.SubKategoriID == "" {
-			return errors.New("sub_kategori_id tidak boleh kosong")
-		}
-		if !utils.IsValidUUID(*req.SubKategoriID) {
-			return errors.New("format sub_kategori_id tidak valid")
+		if *req.SubKategoriID <= 0 {
+			return errors.New("sub_kategori_id tidak valid")
 		}
 	}
 
 	if req.RuangLingkupID != nil {
-		normalized := utils.NormalizeInput(*req.RuangLingkupID)
-		req.RuangLingkupID = &normalized
-		if *req.RuangLingkupID == "" {
-			return errors.New("ruang_lingkup_id tidak boleh kosong")
-		}
-		if !utils.IsValidUUID(*req.RuangLingkupID) {
-			return errors.New("format ruang_lingkup_id tidak valid")
+		if *req.RuangLingkupID <= 0 {
+			return errors.New("ruang_lingkup_id tidak valid")
 		}
 	}
 
@@ -172,14 +153,13 @@ func (s *PertanyaanDeteksiService) Create(req dto.CreatePertanyaanDeteksiRequest
 		return nil, errors.New("ruang_lingkup_id tidak ditemukan")
 	}
 
-	newID := uuid.New().String()
-
-	if err := s.repo.Create(req, newID); err != nil {
+	lastID, err := s.repo.Create(req)
+	if err != nil {
 		rollbar.Error(err)
 		return nil, err
 	}
 
-	resp, err := s.repo.GetByID(newID)
+	resp, err := s.repo.GetByID(int(lastID))
 	if err != nil {
 		rollbar.Error(err)
 		return nil, err
@@ -192,11 +172,7 @@ func (s *PertanyaanDeteksiService) GetAll() ([]dto.PertanyaanDeteksiResponse, er
 	return s.repo.GetAll()
 }
 
-func (s *PertanyaanDeteksiService) GetByID(id string) (*dto.PertanyaanDeteksiResponse, error) {
-	if !utils.IsValidUUID(id) {
-		return nil, errors.New("format ID tidak valid")
-	}
-
+func (s *PertanyaanDeteksiService) GetByID(id int) (*dto.PertanyaanDeteksiResponse, error) {
 	data, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -208,10 +184,8 @@ func (s *PertanyaanDeteksiService) GetByID(id string) (*dto.PertanyaanDeteksiRes
 	return data, nil
 }
 
-func (s *PertanyaanDeteksiService) Update(id string, req dto.UpdatePertanyaanDeteksiRequest) (*dto.PertanyaanDeteksiResponse, error) {
-	if !utils.IsValidUUID(id) {
-		return nil, errors.New("format ID tidak valid")
-	}
+func (s *PertanyaanDeteksiService) Update(id int, req dto.UpdatePertanyaanDeteksiRequest) (*dto.PertanyaanDeteksiResponse, error) {
+	// Removed UUID validation for ID as it's now an int
 
 	_, err := s.repo.GetByID(id)
 	if err != nil {
@@ -262,11 +236,7 @@ func (s *PertanyaanDeteksiService) Update(id string, req dto.UpdatePertanyaanDet
 	return updated, nil
 }
 
-func (s *PertanyaanDeteksiService) Delete(id string) error {
-	if !utils.IsValidUUID(id) {
-		return errors.New("format ID tidak valid")
-	}
-
+func (s *PertanyaanDeteksiService) Delete(id int) error {
 	_, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {

@@ -1,7 +1,7 @@
 package models
 
 type PertanyaanDeteksi struct {
-	ID                string  `json:"id"`
+	ID                int     `json:"id"`
 	SubKategoriID     string  `json:"sub_kategori_id"`
 	RuangLingkupID    string  `json:"ruang_lingkup_id"`
 	PertanyaanDeteksi string  `json:"pertanyaan_deteksi"`
