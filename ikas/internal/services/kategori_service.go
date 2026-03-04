@@ -8,7 +8,6 @@ import (
 	"ikas/internal/utils"
 
 	"fortyfour-backend/pkg/logger"
-	"github.com/google/uuid"
 )
 
 type KategoriService struct {
@@ -21,16 +20,8 @@ func NewKategoriService(repo repository.KategoriRepositoryInterface) *KategoriSe
 
 // Validasi untuk Create
 func (s *KategoriService) validateCreate(req *dto.CreateKategoriRequest) error {
-	// Validasi domain_id
-	req.DomainID = utils.NormalizeInput(req.DomainID)
-
-	if req.DomainID == "" {
-		return errors.New("domain_id tidak boleh kosong")
-	}
-
-	// Validasi format UUID
-	if !utils.IsValidUUID(req.DomainID) {
-		return errors.New("format domain_id tidak valid")
+	if req.DomainID <= 0 {
+		return errors.New("domain_id tidak valid")
 	}
 	req.NamaKategori = utils.NormalizeInput(req.NamaKategori)
 
@@ -62,16 +53,8 @@ func (s *KategoriService) validateCreate(req *dto.CreateKategoriRequest) error {
 // Validasi untuk Update
 func (s *KategoriService) validateUpdate(req *dto.UpdateKategoriRequest) error {
 	if req.DomainID != nil {
-		normalized := utils.NormalizeInput(*req.DomainID)
-		req.DomainID = &normalized
-
-		if *req.DomainID == "" {
-			return errors.New("domain_id tidak boleh kosong")
-		}
-
-		// Validasi format UUID
-		if !utils.IsValidUUID(*req.DomainID) {
-			return errors.New("format domain_id tidak valid")
+		if *req.DomainID <= 0 {
+			return errors.New("domain_id tidak valid")
 		}
 	}
 
@@ -122,7 +105,7 @@ func (s *KategoriService) Create(req dto.CreateKategoriRequest) (*dto.KategoriRe
 	}
 
 	// Cek duplikasi data (case-insensitive, whitespace-trimmed) dalam domain yang sama
-	isDuplicate, err := s.repo.CheckDuplicateName(req.DomainID, req.NamaKategori, "")
+	isDuplicate, err := s.repo.CheckDuplicateName(req.DomainID, req.NamaKategori, 0)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		return nil, err
@@ -131,16 +114,14 @@ func (s *KategoriService) Create(req dto.CreateKategoriRequest) (*dto.KategoriRe
 		return nil, errors.New("nama_kategori sudah ada dalam domain ini")
 	}
 
-	// Generate UUID
-	newID := uuid.New().String()
-
-	if err := s.repo.Create(req, newID); err != nil {
+	id, err := s.repo.Create(req)
+	if err != nil {
 		logger.Error(err, "operation failed")
 		return nil, err
 	}
 
 	// Ambil data yang baru dibuat
-	resp, err := s.repo.GetByID(newID)
+	resp, err := s.repo.GetByID(int(id))
 	if err != nil {
 		logger.Error(err, "operation failed")
 		return nil, err
@@ -153,12 +134,7 @@ func (s *KategoriService) GetAll() ([]dto.KategoriResponse, error) {
 	return s.repo.GetAll()
 }
 
-func (s *KategoriService) GetByID(id string) (*dto.KategoriResponse, error) {
-	// Validasi format UUID untuk mencegah SQL injection via ID
-	if !utils.IsValidUUID(id) {
-		return nil, errors.New("format ID tidak valid")
-	}
-
+func (s *KategoriService) GetByID(id int) (*dto.KategoriResponse, error) {
 	data, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -169,11 +145,7 @@ func (s *KategoriService) GetByID(id string) (*dto.KategoriResponse, error) {
 	return data, nil
 }
 
-func (s *KategoriService) Update(id string, req dto.UpdateKategoriRequest) (*dto.KategoriResponse, error) {
-	// Validasi format UUID untuk mencegah SQL injection via ID
-	if !utils.IsValidUUID(id) {
-		return nil, errors.New("format ID tidak valid")
-	}
+func (s *KategoriService) Update(id int, req dto.UpdateKategoriRequest) (*dto.KategoriResponse, error) {
 
 	// Cek apakah data ada
 	existing, err := s.repo.GetByID(id)
@@ -232,11 +204,7 @@ func (s *KategoriService) Update(id string, req dto.UpdateKategoriRequest) (*dto
 	return updated, nil
 }
 
-func (s *KategoriService) Delete(id string) error {
-	// Validasi format UUID untuk mencegah SQL injection via ID
-	if !utils.IsValidUUID(id) {
-		return errors.New("format ID tidak valid")
-	}
+func (s *KategoriService) Delete(id int) error {
 
 	_, err := s.repo.GetByID(id)
 	if err != nil {
