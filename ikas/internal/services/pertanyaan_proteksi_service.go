@@ -7,7 +7,6 @@ import (
 	"ikas/internal/repository"
 	"ikas/internal/utils"
 
-	"github.com/google/uuid"
 	"github.com/rollbar/rollbar-go"
 )
 
@@ -35,20 +34,12 @@ func validateProteksiIndexField(value *string, fieldName string) error {
 }
 
 func (s *PertanyaanProteksiService) validateCreate(req *dto.CreatePertanyaanProteksiRequest) error {
-	req.SubKategoriID = utils.NormalizeInput(req.SubKategoriID)
-	if req.SubKategoriID == "" {
-		return errors.New("sub_kategori_id tidak boleh kosong")
-	}
-	if !utils.IsValidUUID(req.SubKategoriID) {
-		return errors.New("format sub_kategori_id tidak valid")
+	if req.SubKategoriID <= 0 {
+		return errors.New("sub_kategori_id tidak valid")
 	}
 
-	req.RuangLingkupID = utils.NormalizeInput(req.RuangLingkupID)
-	if req.RuangLingkupID == "" {
-		return errors.New("ruang_lingkup_id tidak boleh kosong")
-	}
-	if !utils.IsValidUUID(req.RuangLingkupID) {
-		return errors.New("format ruang_lingkup_id tidak valid")
+	if req.RuangLingkupID <= 0 {
+		return errors.New("ruang_lingkup_id tidak valid")
 	}
 
 	req.PertanyaanProteksi = utils.NormalizeInput(req.PertanyaanProteksi)
@@ -89,24 +80,14 @@ func (s *PertanyaanProteksiService) validateCreate(req *dto.CreatePertanyaanProt
 
 func (s *PertanyaanProteksiService) validateUpdate(req *dto.UpdatePertanyaanProteksiRequest) error {
 	if req.SubKategoriID != nil {
-		normalized := utils.NormalizeInput(*req.SubKategoriID)
-		req.SubKategoriID = &normalized
-		if *req.SubKategoriID == "" {
-			return errors.New("sub_kategori_id tidak boleh kosong")
-		}
-		if !utils.IsValidUUID(*req.SubKategoriID) {
-			return errors.New("format sub_kategori_id tidak valid")
+		if *req.SubKategoriID <= 0 {
+			return errors.New("sub_kategori_id tidak valid")
 		}
 	}
 
 	if req.RuangLingkupID != nil {
-		normalized := utils.NormalizeInput(*req.RuangLingkupID)
-		req.RuangLingkupID = &normalized
-		if *req.RuangLingkupID == "" {
-			return errors.New("ruang_lingkup_id tidak boleh kosong")
-		}
-		if !utils.IsValidUUID(*req.RuangLingkupID) {
-			return errors.New("format ruang_lingkup_id tidak valid")
+		if *req.RuangLingkupID <= 0 {
+			return errors.New("ruang_lingkup_id tidak valid")
 		}
 	}
 
@@ -172,14 +153,13 @@ func (s *PertanyaanProteksiService) Create(req dto.CreatePertanyaanProteksiReque
 		return nil, errors.New("ruang_lingkup_id tidak ditemukan")
 	}
 
-	newID := uuid.New().String()
-
-	if err := s.repo.Create(req, newID); err != nil {
+	lastID, err := s.repo.Create(req)
+	if err != nil {
 		rollbar.Error(err)
 		return nil, err
 	}
 
-	resp, err := s.repo.GetByID(newID)
+	resp, err := s.repo.GetByID(int(lastID))
 	if err != nil {
 		rollbar.Error(err)
 		return nil, err
@@ -192,11 +172,7 @@ func (s *PertanyaanProteksiService) GetAll() ([]dto.PertanyaanProteksiResponse, 
 	return s.repo.GetAll()
 }
 
-func (s *PertanyaanProteksiService) GetByID(id string) (*dto.PertanyaanProteksiResponse, error) {
-	if !utils.IsValidUUID(id) {
-		return nil, errors.New("format ID tidak valid")
-	}
-
+func (s *PertanyaanProteksiService) GetByID(id int) (*dto.PertanyaanProteksiResponse, error) {
 	data, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -208,9 +184,9 @@ func (s *PertanyaanProteksiService) GetByID(id string) (*dto.PertanyaanProteksiR
 	return data, nil
 }
 
-func (s *PertanyaanProteksiService) Update(id string, req dto.UpdatePertanyaanProteksiRequest) (*dto.PertanyaanProteksiResponse, error) {
-	if !utils.IsValidUUID(id) {
-		return nil, errors.New("format ID tidak valid")
+func (s *PertanyaanProteksiService) Update(id int, req dto.UpdatePertanyaanProteksiRequest) (*dto.PertanyaanProteksiResponse, error) {
+	if err := s.validateUpdate(&req); err != nil {
+		return nil, err
 	}
 
 	_, err := s.repo.GetByID(id)
@@ -222,28 +198,24 @@ func (s *PertanyaanProteksiService) Update(id string, req dto.UpdatePertanyaanPr
 		return nil, err
 	}
 
-	if err := s.validateUpdate(&req); err != nil {
-		return nil, err
-	}
-
 	if req.SubKategoriID != nil {
-		exists, err := s.repo.CheckSubKategoriExists(*req.SubKategoriID)
+		subKategoriExists, err := s.repo.CheckSubKategoriExists(*req.SubKategoriID)
 		if err != nil {
 			rollbar.Error(err)
 			return nil, err
 		}
-		if !exists {
+		if !subKategoriExists {
 			return nil, errors.New("sub_kategori_id tidak ditemukan")
 		}
 	}
 
 	if req.RuangLingkupID != nil {
-		exists, err := s.repo.CheckRuangLingkupExists(*req.RuangLingkupID)
+		ruangLingkupExists, err := s.repo.CheckRuangLingkupExists(*req.RuangLingkupID)
 		if err != nil {
 			rollbar.Error(err)
 			return nil, err
 		}
-		if !exists {
+		if !ruangLingkupExists {
 			return nil, errors.New("ruang_lingkup_id tidak ditemukan")
 		}
 	}
@@ -262,11 +234,7 @@ func (s *PertanyaanProteksiService) Update(id string, req dto.UpdatePertanyaanPr
 	return updated, nil
 }
 
-func (s *PertanyaanProteksiService) Delete(id string) error {
-	if !utils.IsValidUUID(id) {
-		return errors.New("format ID tidak valid")
-	}
-
+func (s *PertanyaanProteksiService) Delete(id int) error {
 	_, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {

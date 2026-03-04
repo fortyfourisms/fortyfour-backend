@@ -3,8 +3,8 @@ package dto
 import "time"
 
 type CreatePertanyaanProteksiRequest struct {
-	SubKategoriID      string  `json:"sub_kategori_id"`
-	RuangLingkupID     string  `json:"ruang_lingkup_id"`
+	SubKategoriID      int     `json:"sub_kategori_id"`
+	RuangLingkupID     int     `json:"ruang_lingkup_id"`
 	PertanyaanProteksi string  `json:"pertanyaan_proteksi"`
 	Index0             *string `json:"index0,omitempty"`
 	Index1             *string `json:"index1,omitempty"`
@@ -15,8 +15,8 @@ type CreatePertanyaanProteksiRequest struct {
 }
 
 type UpdatePertanyaanProteksiRequest struct {
-	SubKategoriID      *string `json:"sub_kategori_id,omitempty"`
-	RuangLingkupID     *string `json:"ruang_lingkup_id,omitempty"`
+	SubKategoriID      *int    `json:"sub_kategori_id,omitempty"`
+	RuangLingkupID     *int    `json:"ruang_lingkup_id,omitempty"`
 	PertanyaanProteksi *string `json:"pertanyaan_proteksi,omitempty"`
 	Index0             *string `json:"index0,omitempty"`
 	Index1             *string `json:"index1,omitempty"`
@@ -27,7 +27,7 @@ type UpdatePertanyaanProteksiRequest struct {
 }
 
 type PertanyaanProteksiResponse struct {
-	ID                 string           `json:"id"`
+	ID                 int              `json:"id"`
 	SubKategori        SubKategoriInfo  `json:"sub_kategori"`
 	RuangLingkup       RuangLingkupInfo `json:"ruang_lingkup"`
 	PertanyaanProteksi string           `json:"pertanyaan_proteksi"`

@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pertanyaan_proteksi (
-    id CHAR(36) PRIMARY KEY,
-    sub_kategori_id CHAR(36) NOT NULL,
-    ruang_lingkup_id CHAR(36) NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sub_kategori_id INT NOT NULL,
+    ruang_lingkup_id INT NOT NULL,
     pertanyaan_proteksi TEXT NOT NULL,
     index0 TEXT,
     index1 TEXT,

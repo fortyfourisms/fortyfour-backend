@@ -9,13 +9,13 @@ import (
 )
 
 type PertanyaanProteksiRepositoryInterface interface {
-	Create(req dto.CreatePertanyaanProteksiRequest, id string) error
+	Create(req dto.CreatePertanyaanProteksiRequest) (int64, error)
 	GetAll() ([]dto.PertanyaanProteksiResponse, error)
-	GetByID(id string) (*dto.PertanyaanProteksiResponse, error)
-	Update(id string, req dto.UpdatePertanyaanProteksiRequest) error
-	Delete(id string) error
-	CheckSubKategoriExists(subKategoriID string) (bool, error)
-	CheckRuangLingkupExists(ruangLingkupID string) (bool, error)
+	GetByID(id int) (*dto.PertanyaanProteksiResponse, error)
+	Update(id int, req dto.UpdatePertanyaanProteksiRequest) error
+	Delete(id int) error
+	CheckSubKategoriExists(subKategoriID int) (bool, error)
+	CheckRuangLingkupExists(ruangLingkupID int) (bool, error)
 }
 
 type PertanyaanProteksiRepository struct {
@@ -26,13 +26,12 @@ func NewPertanyaanProteksiRepository(db *sql.DB) *PertanyaanProteksiRepository {
 	return &PertanyaanProteksiRepository{db: db}
 }
 
-func (r *PertanyaanProteksiRepository) Create(req dto.CreatePertanyaanProteksiRequest, id string) error {
+func (r *PertanyaanProteksiRepository) Create(req dto.CreatePertanyaanProteksiRequest) (int64, error) {
 	query := `INSERT INTO pertanyaan_proteksi
-		(id, sub_kategori_id, ruang_lingkup_id, pertanyaan_proteksi, index0, index1, index2, index3, index4, index5)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		(sub_kategori_id, ruang_lingkup_id, pertanyaan_proteksi, index0, index1, index2, index3, index4, index5)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
-	_, err := r.db.Exec(query,
-		id,
+	res, err := r.db.Exec(query,
 		req.SubKategoriID,
 		req.RuangLingkupID,
 		req.PertanyaanProteksi,
@@ -45,10 +44,10 @@ func (r *PertanyaanProteksiRepository) Create(req dto.CreatePertanyaanProteksiRe
 	)
 	if err != nil {
 		rollbar.Error(err)
-		return err
+		return 0, err
 	}
 
-	return nil
+	return res.LastInsertId()
 }
 
 func (r *PertanyaanProteksiRepository) GetAll() ([]dto.PertanyaanProteksiResponse, error) {
@@ -107,7 +106,7 @@ func (r *PertanyaanProteksiRepository) GetAll() ([]dto.PertanyaanProteksiRespons
 	return result, nil
 }
 
-func (r *PertanyaanProteksiRepository) GetByID(id string) (*dto.PertanyaanProteksiResponse, error) {
+func (r *PertanyaanProteksiRepository) GetByID(id int) (*dto.PertanyaanProteksiResponse, error) {
 	query := `
 		SELECT
 			pp.id, pp.pertanyaan_proteksi,
@@ -153,7 +152,7 @@ func (r *PertanyaanProteksiRepository) GetByID(id string) (*dto.PertanyaanProtek
 	return &item, nil
 }
 
-func (r *PertanyaanProteksiRepository) Update(id string, req dto.UpdatePertanyaanProteksiRequest) error {
+func (r *PertanyaanProteksiRepository) Update(id int, req dto.UpdatePertanyaanProteksiRequest) error {
 	query := "UPDATE pertanyaan_proteksi SET "
 	args := []interface{}{}
 	updates := []string{}
@@ -212,7 +211,7 @@ func (r *PertanyaanProteksiRepository) Update(id string, req dto.UpdatePertanyaa
 	return nil
 }
 
-func (r *PertanyaanProteksiRepository) Delete(id string) error {
+func (r *PertanyaanProteksiRepository) Delete(id int) error {
 	_, err := r.db.Exec(`DELETE FROM pertanyaan_proteksi WHERE id=?`, id)
 	if err != nil {
 		rollbar.Error(err)
@@ -221,7 +220,7 @@ func (r *PertanyaanProteksiRepository) Delete(id string) error {
 	return nil
 }
 
-func (r *PertanyaanProteksiRepository) CheckSubKategoriExists(subKategoriID string) (bool, error) {
+func (r *PertanyaanProteksiRepository) CheckSubKategoriExists(subKategoriID int) (bool, error) {
 	var count int
 	err := r.db.QueryRow(`SELECT COUNT(*) FROM sub_kategori WHERE id = ?`, subKategoriID).Scan(&count)
 	if err != nil {
@@ -231,7 +230,7 @@ func (r *PertanyaanProteksiRepository) CheckSubKategoriExists(subKategoriID stri
 	return count > 0, nil
 }
 
-func (r *PertanyaanProteksiRepository) CheckRuangLingkupExists(ruangLingkupID string) (bool, error) {
+func (r *PertanyaanProteksiRepository) CheckRuangLingkupExists(ruangLingkupID int) (bool, error) {
 	var count int
 	err := r.db.QueryRow(`SELECT COUNT(*) FROM ruang_lingkup WHERE id = ?`, ruangLingkupID).Scan(&count)
 	if err != nil {
