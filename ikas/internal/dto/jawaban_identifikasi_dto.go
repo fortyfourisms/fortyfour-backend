@@ -3,7 +3,7 @@ package dto
 import "time"
 
 type CreateJawabanIdentifikasiRequest struct {
-	PertanyaanIdentifikasiID string   `json:"pertanyaan_identifikasi_id"`
+	PertanyaanIdentifikasiID int      `json:"pertanyaan_identifikasi_id"`
 	PerusahaanID             string   `json:"perusahaan_id"`
 	JawabanIdentifikasi      *float64 `json:"jawaban_identifikasi"`
 	Evidence                 *string  `json:"evidence,omitempty"`
@@ -19,13 +19,13 @@ type UpdateJawabanIdentifikasiRequest struct {
 }
 
 type PertanyaanIdentifikasiInfo struct {
-	ID                     string          `json:"id"`
+	ID                     int             `json:"id"`
 	PertanyaanIdentifikasi string          `json:"pertanyaan_identifikasi"`
 	SubKategori            SubKategoriInfo `json:"sub_kategori"`
 }
 
 type JawabanIdentifikasiResponse struct {
-	ID                     string                     `json:"id"`
+	ID                     int                        `json:"id"`
 	PertanyaanIdentifikasi PertanyaanIdentifikasiInfo `json:"pertanyaan_identifikasi"`
 	PerusahaanID           string                     `json:"perusahaan_id"`
 	JawabanIdentifikasi    *float64                   `json:"jawaban_identifikasi"`

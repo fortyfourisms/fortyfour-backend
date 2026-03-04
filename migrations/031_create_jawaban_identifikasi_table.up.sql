@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS jawaban_identifikasi (
-    id CHAR(36) PRIMARY KEY,
-    pertanyaan_identifikasi_id CHAR(36) NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pertanyaan_identifikasi_id INT NOT NULL,
     perusahaan_id CHAR(36) NOT NULL,
     jawaban_identifikasi DECIMAL(3, 2) NULL COMMENT '0.00-5.00 = nilai jawaban, NULL = N/A',
     evidence TEXT NULL,

@@ -9,16 +9,16 @@ import (
 )
 
 type JawabanIdentifikasiRepositoryInterface interface {
-	Create(req dto.CreateJawabanIdentifikasiRequest, id string) error
+	Create(req dto.CreateJawabanIdentifikasiRequest) (int64, error)
 	GetAll() ([]dto.JawabanIdentifikasiResponse, error)
-	GetByID(id string) (*dto.JawabanIdentifikasiResponse, error)
+	GetByID(id int) (*dto.JawabanIdentifikasiResponse, error)
 	GetByPerusahaan(perusahaanID string) ([]dto.JawabanIdentifikasiResponse, error)
-	GetByPertanyaan(pertanyaanID string) ([]dto.JawabanIdentifikasiResponse, error)
-	Update(id string, req dto.UpdateJawabanIdentifikasiRequest) error
-	Delete(id string) error
-	CheckPertanyaanExists(pertanyaanID string) (bool, error)
+	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanIdentifikasiResponse, error)
+	Update(id int, req dto.UpdateJawabanIdentifikasiRequest) error
+	Delete(id int) error
+	CheckPertanyaanExists(pertanyaanID int) (bool, error)
 	CheckPerusahaanExists(perusahaanID string) (bool, error)
-	CheckDuplicate(perusahaanID, pertanyaanID, excludeID string) (bool, error)
+	CheckDuplicate(perusahaanID string, pertanyaanID int, excludeID int) (bool, error)
 }
 
 type JawabanIdentifikasiRepository struct {
@@ -75,13 +75,12 @@ func scanJawaban(row interface {
 	return item, err
 }
 
-func (r *JawabanIdentifikasiRepository) Create(req dto.CreateJawabanIdentifikasiRequest, id string) error {
+func (r *JawabanIdentifikasiRepository) Create(req dto.CreateJawabanIdentifikasiRequest) (int64, error) {
 	query := `INSERT INTO jawaban_identifikasi
-		(id, pertanyaan_identifikasi_id, perusahaan_id, jawaban_identifikasi, evidence, validasi, keterangan)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`
+		(pertanyaan_identifikasi_id, perusahaan_id, jawaban_identifikasi, evidence, validasi, keterangan)
+		VALUES (?, ?, ?, ?, ?, ?)`
 
-	_, err := r.db.Exec(query,
-		id,
+	res, err := r.db.Exec(query,
 		req.PertanyaanIdentifikasiID,
 		req.PerusahaanID,
 		req.JawabanIdentifikasi,
@@ -91,9 +90,9 @@ func (r *JawabanIdentifikasiRepository) Create(req dto.CreateJawabanIdentifikasi
 	)
 	if err != nil {
 		rollbar.Error(err)
-		return err
+		return 0, err
 	}
-	return nil
+	return res.LastInsertId()
 }
 
 func (r *JawabanIdentifikasiRepository) GetAll() ([]dto.JawabanIdentifikasiResponse, error) {
@@ -119,7 +118,7 @@ func (r *JawabanIdentifikasiRepository) GetAll() ([]dto.JawabanIdentifikasiRespo
 	return result, nil
 }
 
-func (r *JawabanIdentifikasiRepository) GetByID(id string) (*dto.JawabanIdentifikasiResponse, error) {
+func (r *JawabanIdentifikasiRepository) GetByID(id int) (*dto.JawabanIdentifikasiResponse, error) {
 	query := jawabanIdentifikasiSelectQuery + ` WHERE ji.id = ?`
 
 	item, err := scanJawaban(r.db.QueryRow(query, id))
@@ -154,7 +153,7 @@ func (r *JawabanIdentifikasiRepository) GetByPerusahaan(perusahaanID string) ([]
 	return result, nil
 }
 
-func (r *JawabanIdentifikasiRepository) GetByPertanyaan(pertanyaanID string) ([]dto.JawabanIdentifikasiResponse, error) {
+func (r *JawabanIdentifikasiRepository) GetByPertanyaan(pertanyaanID int) ([]dto.JawabanIdentifikasiResponse, error) {
 	query := jawabanIdentifikasiSelectQuery + ` WHERE ji.pertanyaan_identifikasi_id = ? ORDER BY ji.created_at ASC`
 
 	rows, err := r.db.Query(query, pertanyaanID)
@@ -177,7 +176,7 @@ func (r *JawabanIdentifikasiRepository) GetByPertanyaan(pertanyaanID string) ([]
 	return result, nil
 }
 
-func (r *JawabanIdentifikasiRepository) Update(id string, req dto.UpdateJawabanIdentifikasiRequest) error {
+func (r *JawabanIdentifikasiRepository) Update(id int, req dto.UpdateJawabanIdentifikasiRequest) error {
 	query := "UPDATE jawaban_identifikasi SET "
 	args := []interface{}{}
 	updates := []string{}
@@ -215,7 +214,7 @@ func (r *JawabanIdentifikasiRepository) Update(id string, req dto.UpdateJawabanI
 	return nil
 }
 
-func (r *JawabanIdentifikasiRepository) Delete(id string) error {
+func (r *JawabanIdentifikasiRepository) Delete(id int) error {
 	_, err := r.db.Exec(`DELETE FROM jawaban_identifikasi WHERE id=?`, id)
 	if err != nil {
 		rollbar.Error(err)
@@ -224,7 +223,7 @@ func (r *JawabanIdentifikasiRepository) Delete(id string) error {
 	return nil
 }
 
-func (r *JawabanIdentifikasiRepository) CheckPertanyaanExists(pertanyaanID string) (bool, error) {
+func (r *JawabanIdentifikasiRepository) CheckPertanyaanExists(pertanyaanID int) (bool, error) {
 	var count int
 	err := r.db.QueryRow(`SELECT COUNT(*) FROM pertanyaan_identifikasi WHERE id = ?`, pertanyaanID).Scan(&count)
 	if err != nil {
@@ -244,14 +243,14 @@ func (r *JawabanIdentifikasiRepository) CheckPerusahaanExists(perusahaanID strin
 	return count > 0, nil
 }
 
-func (r *JawabanIdentifikasiRepository) CheckDuplicate(perusahaanID, pertanyaanID, excludeID string) (bool, error) {
+func (r *JawabanIdentifikasiRepository) CheckDuplicate(perusahaanID string, pertanyaanID int, excludeID int) (bool, error) {
 	var count int
 
 	query := `SELECT COUNT(*) FROM jawaban_identifikasi
 		WHERE perusahaan_id = ? AND pertanyaan_identifikasi_id = ?`
 	args := []interface{}{perusahaanID, pertanyaanID}
 
-	if excludeID != "" {
+	if excludeID != 0 {
 		query += ` AND id != ?`
 		args = append(args, excludeID)
 	}

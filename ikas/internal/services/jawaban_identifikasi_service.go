@@ -7,7 +7,6 @@ import (
 	"ikas/internal/repository"
 	"ikas/internal/utils"
 
-	"github.com/google/uuid"
 	"github.com/rollbar/rollbar-go"
 )
 
@@ -22,12 +21,8 @@ func NewJawabanIdentifikasiService(repo repository.JawabanIdentifikasiRepository
 var validValidasi = map[string]bool{"yes": true, "no": true}
 
 func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdentifikasiRequest) error {
-	req.PertanyaanIdentifikasiID = utils.NormalizeInput(req.PertanyaanIdentifikasiID)
-	if req.PertanyaanIdentifikasiID == "" {
-		return errors.New("pertanyaan_identifikasi_id tidak boleh kosong")
-	}
-	if !utils.IsValidUUID(req.PertanyaanIdentifikasiID) {
-		return errors.New("format pertanyaan_identifikasi_id tidak valid")
+	if req.PertanyaanIdentifikasiID <= 0 {
+		return errors.New("pertanyaan_identifikasi_id tidak valid")
 	}
 
 	req.PerusahaanID = utils.NormalizeInput(req.PerusahaanID)
@@ -100,7 +95,7 @@ func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiReq
 		return nil, errors.New("perusahaan_id tidak ditemukan")
 	}
 
-	isDuplicate, err := s.repo.CheckDuplicate(req.PerusahaanID, req.PertanyaanIdentifikasiID, "")
+	isDuplicate, err := s.repo.CheckDuplicate(req.PerusahaanID, req.PertanyaanIdentifikasiID, 0)
 	if err != nil {
 		rollbar.Error(err)
 		return nil, err
@@ -109,13 +104,13 @@ func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiReq
 		return nil, errors.New("jawaban untuk pertanyaan ini sudah ada untuk perusahaan tersebut")
 	}
 
-	newID := uuid.New().String()
-	if err := s.repo.Create(req, newID); err != nil {
+	lastID, err := s.repo.Create(req)
+	if err != nil {
 		rollbar.Error(err)
 		return nil, err
 	}
 
-	resp, err := s.repo.GetByID(newID)
+	resp, err := s.repo.GetByID(int(lastID))
 	if err != nil {
 		rollbar.Error(err)
 		return nil, err
@@ -128,8 +123,8 @@ func (s *JawabanIdentifikasiService) GetAll() ([]dto.JawabanIdentifikasiResponse
 	return s.repo.GetAll()
 }
 
-func (s *JawabanIdentifikasiService) GetByID(id string) (*dto.JawabanIdentifikasiResponse, error) {
-	if !utils.IsValidUUID(id) {
+func (s *JawabanIdentifikasiService) GetByID(id int) (*dto.JawabanIdentifikasiResponse, error) {
+	if id <= 0 {
 		return nil, errors.New("format ID tidak valid")
 	}
 
@@ -151,15 +146,15 @@ func (s *JawabanIdentifikasiService) GetByPerusahaan(perusahaanID string) ([]dto
 	return s.repo.GetByPerusahaan(perusahaanID)
 }
 
-func (s *JawabanIdentifikasiService) GetByPertanyaan(pertanyaanID string) ([]dto.JawabanIdentifikasiResponse, error) {
-	if !utils.IsValidUUID(pertanyaanID) {
-		return nil, errors.New("format pertanyaan_identifikasi_id tidak valid")
+func (s *JawabanIdentifikasiService) GetByPertanyaan(pertanyaanID int) ([]dto.JawabanIdentifikasiResponse, error) {
+	if pertanyaanID <= 0 {
+		return nil, errors.New("pertanyaan_identifikasi_id tidak valid")
 	}
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }
 
-func (s *JawabanIdentifikasiService) Update(id string, req dto.UpdateJawabanIdentifikasiRequest) (*dto.JawabanIdentifikasiResponse, error) {
-	if !utils.IsValidUUID(id) {
+func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentifikasiRequest) (*dto.JawabanIdentifikasiResponse, error) {
+	if id <= 0 {
 		return nil, errors.New("format ID tidak valid")
 	}
 
@@ -190,8 +185,8 @@ func (s *JawabanIdentifikasiService) Update(id string, req dto.UpdateJawabanIden
 	return updated, nil
 }
 
-func (s *JawabanIdentifikasiService) Delete(id string) error {
-	if !utils.IsValidUUID(id) {
+func (s *JawabanIdentifikasiService) Delete(id int) error {
+	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
 

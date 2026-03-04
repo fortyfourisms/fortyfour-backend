@@ -22,11 +22,11 @@ func NewJawabanIdentifikasiHandler(service *services.JawabanIdentifikasiService)
 }
 
 func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := utils.ExtractID(r.URL.Path, "jawaban-identifikasi")
+	id, _ := utils.ExtractIntID(r.URL.Path, "jawaban-identifikasi")
 
 	switch r.Method {
 	case http.MethodGet:
-		if id == "" {
+		if id == 0 {
 			// Cek query params untuk filter
 			perusahaanID := r.URL.Query().Get("perusahaan_id")
 			pertanyaanID := r.URL.Query().Get("pertanyaan_identifikasi_id")
@@ -34,7 +34,12 @@ func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 			if perusahaanID != "" {
 				h.handleGetByPerusahaan(w, r, perusahaanID)
 			} else if pertanyaanID != "" {
-				h.handleGetByPertanyaan(w, r, pertanyaanID)
+				idInt, err := utils.StringToInt(pertanyaanID)
+				if err != nil {
+					utils.RespondError(w, 400, "format pertanyaan_identifikasi_id tidak valid")
+					return
+				}
+				h.handleGetByPertanyaan(w, r, idInt)
 			} else {
 				h.handleGetAll(w, r)
 			}
@@ -42,19 +47,19 @@ func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 			h.handleGetByID(w, r, id)
 		}
 	case http.MethodPost:
-		if id != "" {
+		if id != 0 {
 			utils.RespondError(w, 400, "ID tidak diperlukan untuk create")
 			return
 		}
 		h.handleCreate(w, r)
 	case http.MethodPut:
-		if id == "" {
+		if id == 0 {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
 		h.handleUpdate(w, r, id)
 	case http.MethodDelete:
-		if id == "" {
+		if id == 0 {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
@@ -99,7 +104,7 @@ func (h *JawabanIdentifikasiHandler) handleGetByPerusahaan(w http.ResponseWriter
 	utils.RespondJSON(w, 200, data)
 }
 
-func (h *JawabanIdentifikasiHandler) handleGetByPertanyaan(w http.ResponseWriter, _ *http.Request, pertanyaanID string) {
+func (h *JawabanIdentifikasiHandler) handleGetByPertanyaan(w http.ResponseWriter, _ *http.Request, pertanyaanID int) {
 	data, err := h.service.GetByPertanyaan(pertanyaanID)
 	if err != nil {
 		rollbar.Error(err)
@@ -119,11 +124,11 @@ func (h *JawabanIdentifikasiHandler) handleGetByPertanyaan(w http.ResponseWriter
 //	@Description  Mengambil satu data jawaban identifikasi
 //	@Tags         JawabanIdentifikasi
 //	@Produce      json
-//	@Param        id   path      string  true  "JawabanIdentifikasi ID"
+//	@Param        id   path      int  true  "JawabanIdentifikasi ID"
 //	@Success      200  {object}  dto.JawabanIdentifikasiResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Router       /api/maturity/jawaban-identifikasi/{id} [get]
-func (h *JawabanIdentifikasiHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *JawabanIdentifikasiHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id int) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
 		rollbar.Error(err)
@@ -195,18 +200,18 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 //	@Tags         JawabanIdentifikasi
 //	@Accept       json
 //	@Produce      json
-//	@Param        id    path      string                                true  "JawabanIdentifikasi ID"
+//	@Param        id    path      int                                true  "JawabanIdentifikasi ID"
 //	@Param        body  body      dto.UpdateJawabanIdentifikasiRequest  true  "Data update"
 //	@Success      200   {object}  dto.JawabanIdentifikasiResponse
 //	@Failure      400   {object}  dto.ErrorResponse
 //	@Failure      404   {object}  dto.ErrorResponse
 //	@Router       /api/maturity/jawaban-identifikasi/{id} [put]
-func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
+func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id int) {
 	var req dto.UpdateJawabanIdentifikasiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		rollbar.Error(err)
 		if strings.Contains(err.Error(), "cannot unmarshal") {
-			utils.RespondError(w, 400, "jawaban_identifikasi harus berupa angka bulat 0-5 atau null untuk N/A")
+			utils.RespondError(w, 400, "jawaban_identifikasi harus berupa angka bulat 0-5 or null for N/A")
 			return
 		}
 		utils.RespondError(w, 400, "Invalid request body")
@@ -239,12 +244,12 @@ func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http
 //	@Description  Menghapus data jawaban identifikasi berdasarkan ID
 //	@Tags         JawabanIdentifikasi
 //	@Produce      json
-//	@Param        id   path      string  true  "JawabanIdentifikasi ID"
+//	@Param        id   path      int  true  "JawabanIdentifikasi ID"
 //	@Success      200  {object}  dto.MessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
 //	@Router       /api/maturity/jawaban-identifikasi/{id} [delete]
-func (h *JawabanIdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+func (h *JawabanIdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id int) {
 	if err := h.service.Delete(id); err != nil {
 		rollbar.Error(err)
 		if err.Error() == "data tidak ditemukan" {
