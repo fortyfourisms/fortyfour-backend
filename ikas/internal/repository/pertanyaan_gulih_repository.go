@@ -9,13 +9,13 @@ import (
 )
 
 type PertanyaanGulihRepositoryInterface interface {
-	Create(req dto.CreatePertanyaanGulihRequest, id string) error
+	Create(req dto.CreatePertanyaanGulihRequest) (int64, error)
 	GetAll() ([]dto.PertanyaanGulihResponse, error)
-	GetByID(id string) (*dto.PertanyaanGulihResponse, error)
-	Update(id string, req dto.UpdatePertanyaanGulihRequest) error
-	Delete(id string) error
-	CheckSubKategoriExists(subKategoriID string) (bool, error)
-	CheckRuangLingkupExists(ruangLingkupID string) (bool, error)
+	GetByID(id int) (*dto.PertanyaanGulihResponse, error)
+	Update(id int, req dto.UpdatePertanyaanGulihRequest) error
+	Delete(id int) error
+	CheckSubKategoriExists(subKategoriID int) (bool, error)
+	CheckRuangLingkupExists(ruangLingkupID int) (bool, error)
 }
 
 type PertanyaanGulihRepository struct {
@@ -26,13 +26,12 @@ func NewPertanyaanGulihRepository(db *sql.DB) *PertanyaanGulihRepository {
 	return &PertanyaanGulihRepository{db: db}
 }
 
-func (r *PertanyaanGulihRepository) Create(req dto.CreatePertanyaanGulihRequest, id string) error {
+func (r *PertanyaanGulihRepository) Create(req dto.CreatePertanyaanGulihRequest) (int64, error) {
 	query := `INSERT INTO pertanyaan_gulih
-		(id, sub_kategori_id, ruang_lingkup_id, pertanyaan_gulih, index0, index1, index2, index3, index4, index5)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		(sub_kategori_id, ruang_lingkup_id, pertanyaan_gulih, index0, index1, index2, index3, index4, index5)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
-	_, err := r.db.Exec(query,
-		id,
+	res, err := r.db.Exec(query,
 		req.SubKategoriID,
 		req.RuangLingkupID,
 		req.PertanyaanGulih,
@@ -45,10 +44,10 @@ func (r *PertanyaanGulihRepository) Create(req dto.CreatePertanyaanGulihRequest,
 	)
 	if err != nil {
 		rollbar.Error(err)
-		return err
+		return 0, err
 	}
 
-	return nil
+	return res.LastInsertId()
 }
 
 func (r *PertanyaanGulihRepository) GetAll() ([]dto.PertanyaanGulihResponse, error) {
@@ -107,7 +106,7 @@ func (r *PertanyaanGulihRepository) GetAll() ([]dto.PertanyaanGulihResponse, err
 	return result, nil
 }
 
-func (r *PertanyaanGulihRepository) GetByID(id string) (*dto.PertanyaanGulihResponse, error) {
+func (r *PertanyaanGulihRepository) GetByID(id int) (*dto.PertanyaanGulihResponse, error) {
 	query := `
 		SELECT
 			pg.id, pg.pertanyaan_gulih,
@@ -153,7 +152,7 @@ func (r *PertanyaanGulihRepository) GetByID(id string) (*dto.PertanyaanGulihResp
 	return &item, nil
 }
 
-func (r *PertanyaanGulihRepository) Update(id string, req dto.UpdatePertanyaanGulihRequest) error {
+func (r *PertanyaanGulihRepository) Update(id int, req dto.UpdatePertanyaanGulihRequest) error {
 	query := "UPDATE pertanyaan_gulih SET "
 	args := []interface{}{}
 	updates := []string{}
@@ -212,7 +211,7 @@ func (r *PertanyaanGulihRepository) Update(id string, req dto.UpdatePertanyaanGu
 	return nil
 }
 
-func (r *PertanyaanGulihRepository) Delete(id string) error {
+func (r *PertanyaanGulihRepository) Delete(id int) error {
 	_, err := r.db.Exec(`DELETE FROM pertanyaan_gulih WHERE id=?`, id)
 	if err != nil {
 		rollbar.Error(err)
@@ -221,7 +220,7 @@ func (r *PertanyaanGulihRepository) Delete(id string) error {
 	return nil
 }
 
-func (r *PertanyaanGulihRepository) CheckSubKategoriExists(subKategoriID string) (bool, error) {
+func (r *PertanyaanGulihRepository) CheckSubKategoriExists(subKategoriID int) (bool, error) {
 	var count int
 	err := r.db.QueryRow(`SELECT COUNT(*) FROM sub_kategori WHERE id = ?`, subKategoriID).Scan(&count)
 	if err != nil {
@@ -231,7 +230,7 @@ func (r *PertanyaanGulihRepository) CheckSubKategoriExists(subKategoriID string)
 	return count > 0, nil
 }
 
-func (r *PertanyaanGulihRepository) CheckRuangLingkupExists(ruangLingkupID string) (bool, error) {
+func (r *PertanyaanGulihRepository) CheckRuangLingkupExists(ruangLingkupID int) (bool, error) {
 	var count int
 	err := r.db.QueryRow(`SELECT COUNT(*) FROM ruang_lingkup WHERE id = ?`, ruangLingkupID).Scan(&count)
 	if err != nil {

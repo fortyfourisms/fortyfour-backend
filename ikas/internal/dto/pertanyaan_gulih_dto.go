@@ -3,8 +3,8 @@ package dto
 import "time"
 
 type CreatePertanyaanGulihRequest struct {
-	SubKategoriID   string  `json:"sub_kategori_id"`
-	RuangLingkupID  string  `json:"ruang_lingkup_id"`
+	SubKategoriID   int     `json:"sub_kategori_id"`
+	RuangLingkupID  int     `json:"ruang_lingkup_id"`
 	PertanyaanGulih string  `json:"pertanyaan_gulih"`
 	Index0          *string `json:"index0,omitempty"`
 	Index1          *string `json:"index1,omitempty"`
@@ -15,8 +15,8 @@ type CreatePertanyaanGulihRequest struct {
 }
 
 type UpdatePertanyaanGulihRequest struct {
-	SubKategoriID   *string `json:"sub_kategori_id,omitempty"`
-	RuangLingkupID  *string `json:"ruang_lingkup_id,omitempty"`
+	SubKategoriID   *int    `json:"sub_kategori_id,omitempty"`
+	RuangLingkupID  *int    `json:"ruang_lingkup_id,omitempty"`
 	PertanyaanGulih *string `json:"pertanyaan_gulih,omitempty"`
 	Index0          *string `json:"index0,omitempty"`
 	Index1          *string `json:"index1,omitempty"`
@@ -27,7 +27,7 @@ type UpdatePertanyaanGulihRequest struct {
 }
 
 type PertanyaanGulihResponse struct {
-	ID              string           `json:"id"`
+	ID              int              `json:"id"`
 	SubKategori     SubKategoriInfo  `json:"sub_kategori"`
 	RuangLingkup    RuangLingkupInfo `json:"ruang_lingkup"`
 	PertanyaanGulih string           `json:"pertanyaan_gulih"`
