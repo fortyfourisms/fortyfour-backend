@@ -66,6 +66,10 @@ func InitRouter(
 	mux.HandleFunc("/api/logout", authH.Logout)
 	mux.HandleFunc("/api/logout-all", authM.Authenticate(authH.LogoutAll))
 
+	// Route Me — hanya untuk user yang sedang login (GET: lihat profil, PUT: update profil sendiri)
+	mux.HandleFunc("/api/me", authM.Authenticate(moderateLimiter.LimitByUser(authH.MeRouter)))
+	mux.HandleFunc("/api/me/", authM.Authenticate(moderateLimiter.LimitByUser(authH.MeRouter)))
+
 	// MFA endpoints
 	// setup & enable -> protected (require Authorization header)
 	mux.HandleFunc("/api/mfa/setup", strictLimiter.LimitByIP(authH.SetupMFA))

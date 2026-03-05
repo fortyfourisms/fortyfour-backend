@@ -167,9 +167,9 @@ func main() {
 	dashboardService := services.NewDashboardService(dashboardRepo, redisClient)
 
 	// Initialize Handlers
-	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService)
-	userHandler := handlers.NewUserHandler(userService, "./uploads", sseService)
 	uploadPath := "./uploads"
+	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService, userService, uploadPath)
+	userHandler := handlers.NewUserHandler(userService, "./uploads", sseService)
 	os.MkdirAll(uploadPath, os.ModePerm)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
 	picHandler := handlers.NewPICHandler(picService, sseService)
