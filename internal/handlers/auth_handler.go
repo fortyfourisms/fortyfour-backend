@@ -534,7 +534,7 @@ func (h *AuthHandler) UpdateMeMedia(w http.ResponseWriter, r *http.Request) {
 
 	switch {
 	case profileFilename != nil && bannerFilename != nil:
-		resp, err = h.userService.UpdateProfilePhoto(userID, *profileFilename)
+		_, err = h.userService.UpdateProfilePhoto(userID, *profileFilename)
 		if err != nil {
 			utils.RespondError(w, http.StatusBadRequest, err.Error())
 			return
