@@ -50,7 +50,7 @@ services:
       retries: 3
       start_period: 40s
     volumes:
-      - uploads_data:/app/uploads
+      - /var/www/uploads:/app/uploads
     ports:
       - 8080:8080
     extra_hosts:
@@ -163,6 +163,4 @@ volumes:
   redis_data:
     driver: local
   rabbitmq_data:
-    driver: local
-  uploads_data:
     driver: local

@@ -499,13 +499,12 @@ jobs:
             echo "Stopping old containers..."
             docker compose down || true
             
-            # Fix uploads volume ownership for non-root container user (uid 1000)
-            UPLOADS_VOL=$(docker volume inspect fortyfour-backend_uploads_data --format '{{.Mountpoint}}' 2>/dev/null || echo "")
-            if [ -n "$UPLOADS_VOL" ] && [ -d "$UPLOADS_VOL" ]; then
-              echo "Fixing uploads volume ownership..."
-              sudo chown -R 1000:1000 "$UPLOADS_VOL"
-              echo "✅ Uploads volume ownership fixed"
-            fi
+            # Create uploads directory on host with correct permissions
+            # uid 1000 = appuser inside container, readable by nginx on host
+            sudo mkdir -p /var/www/uploads
+            sudo chown -R 1000:1000 /var/www/uploads
+            sudo chmod 755 /var/www/uploads
+            echo "✅ Uploads directory ready"
             
             # Start new containers
             echo "Starting new containers..."
