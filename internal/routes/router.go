@@ -7,7 +7,6 @@ import (
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/utils"
 	"net/http"
-	"strings"
 	"time"
 
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -26,35 +25,6 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 		"status":    "healthy",
 		"timestamp": time.Now().Format(time.RFC3339),
 	})
-}
-
-// createPerusahaanRouter creates a custom router for perusahaan endpoints
-// GET /api/perusahaan (no ID) -> public (for register dropdown)
-// All other methods and GET with ID -> authenticated
-func createPerusahaanRouter(
-	perusahaanH *handlers.PerusahaanHandler,
-	authM *middleware.AuthMiddleware,
-	casbinM *middleware.CasbinMiddleware,
-	moderateLimiter *middleware.RateLimiter,
-) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Check if this is GET request for listing all companies (no ID)
-		if r.Method == http.MethodGet {
-			// Extract path to check if there's an ID
-			path := strings.TrimPrefix(r.URL.Path, "/api/perusahaan")
-			path = strings.TrimPrefix(path, "/")
-
-			// If no ID, allow public access (for register dropdown)
-			if path == "" {
-				// Public access - just call handler directly
-				perusahaanH.ServeHTTP(w, r)
-				return
-			}
-		}
-
-		// For all other cases (POST, PUT, DELETE, or GET with ID), require authentication
-		authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH))))(w, r)
-	}
 }
 
 func InitRouter(
@@ -82,6 +52,7 @@ func InitRouter(
 	subsectorH *handlers.SubSektorHandler,
 	seH *handlers.SEHandler,
 	dashboardH *handlers.DashboardHandler,
+	notificationH *handlers.NotificationHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -93,6 +64,11 @@ func InitRouter(
 	mux.HandleFunc("/api/login", strictLimiter.LimitByIP(authH.Login))
 	mux.HandleFunc("/api/refresh", strictLimiter.LimitByIP(authH.Refresh))
 	mux.HandleFunc("/api/logout", authH.Logout)
+	mux.HandleFunc("/api/logout-all", authM.Authenticate(authH.LogoutAll))
+
+	// Route Me — hanya untuk user yang sedang login (GET: lihat profil, PUT: update profil sendiri)
+	mux.HandleFunc("/api/me", authM.Authenticate(moderateLimiter.LimitByUser(authH.MeRouter)))
+	mux.HandleFunc("/api/me/", authM.Authenticate(moderateLimiter.LimitByUser(authH.MeRouter)))
 
 	// MFA endpoints
 	// setup & enable -> protected (require Authorization header)
@@ -117,9 +93,12 @@ func InitRouter(
 	mux.HandleFunc("/api/events/stats", authM.Authenticate(sseH.GetStats))
 
 	// Route Perusahaan
-	// GET /api/perusahaan (list all) -> PUBLIC untuk dropdown register
+	// GET /api/perusahaan/dropdown -> PUBLIC untuk dropdown register (minimal data: id, nama)
+	mux.HandleFunc("/api/perusahaan/dropdown", moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))
+	
+	// GET /api/perusahaan (list all) -> AUTHENTICATED (full data)
 	// Other methods & GET with ID -> AUTHENTICATED
-	mux.HandleFunc("/api/perusahaan", createPerusahaanRouter(perusahaanH, authM, casbinM, moderateLimiter))
+	mux.HandleFunc("/api/perusahaan", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))))
 	mux.HandleFunc("/api/perusahaan/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))))
 
 	// Route PIC
@@ -173,6 +152,10 @@ func InitRouter(
 	// Route Dashboard
 	// Summary: counts per sektor + ikas + se
 	mux.HandleFunc("/api/dashboard/summary", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(dashboardH)))))
+
+	// Routes Notifications
+	mux.HandleFunc("/api/notifications", authM.Authenticate(utils.AdaptHandler(notificationH)))
+	mux.HandleFunc("/api/notifications/", authM.Authenticate(utils.AdaptHandler(notificationH)))
 
 	// Routes Chat
 	mux.HandleFunc("/api/chat", authM.Authenticate(chatHandler.Stream))

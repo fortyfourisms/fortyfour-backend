@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/repository"
+	"fortyfour-backend/pkg/cache"
 	"strings"
 
 	"github.com/google/uuid"
@@ -12,6 +13,7 @@ import (
 type PerusahaanServiceInterface interface {
 	GetAll() ([]dto.PerusahaanResponse, error)
 	GetByID(id string) (*dto.PerusahaanResponse, error)
+	GetByNama(nama string) (*dto.PerusahaanResponse, error)
 	Create(req dto.CreatePerusahaanRequest) (*dto.PerusahaanResponse, error)
 	Update(id string, req dto.UpdatePerusahaanRequest) (*dto.PerusahaanResponse, error)
 	Delete(id string) error
@@ -20,12 +22,14 @@ type PerusahaanServiceInterface interface {
 type PerusahaanService struct {
 	repo          repository.PerusahaanRepositoryInterface
 	subSektorRepo repository.SubSektorRepositoryInterface
+	rc            cache.RedisInterface
 }
 
-func NewPerusahaanService(repo repository.PerusahaanRepositoryInterface, subSektorRepo repository.SubSektorRepositoryInterface) *PerusahaanService {
+func NewPerusahaanService(repo repository.PerusahaanRepositoryInterface, subSektorRepo repository.SubSektorRepositoryInterface, rc cache.RedisInterface) *PerusahaanService {
 	return &PerusahaanService{
 		repo:          repo,
 		subSektorRepo: subSektorRepo,
+		rc:            rc,
 	}
 }
 
@@ -51,18 +55,54 @@ func (s *PerusahaanService) Create(req dto.CreatePerusahaanRequest) (*dto.Perusa
 	if err := s.repo.Create(req, id); err != nil {
 		return nil, err
 	}
-	return s.repo.GetByID(id)
+
+	result, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, keyDetail("perusahaan", id), result, TTLDetail)
+	cacheDelete(s.rc, keyList("perusahaan"))
+
+	return result, nil
 }
 
 func (s *PerusahaanService) GetAll() ([]dto.PerusahaanResponse, error) {
-	return s.repo.GetAll()
+	key := keyList("perusahaan")
+	var result []dto.PerusahaanResponse
+	if cacheGet(s.rc, key, &result) {
+		return result, nil
+	}
+
+	result, err := s.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, result, TTLList)
+	return result, nil
 }
 
 func (s *PerusahaanService) GetByID(id string) (*dto.PerusahaanResponse, error) {
-	return s.repo.GetByID(id)
+	key := keyDetail("perusahaan", id)
+	var result dto.PerusahaanResponse
+	if cacheGet(s.rc, key, &result) {
+		return &result, nil
+	}
+
+	data, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, data, TTLDetail)
+	return data, nil
 }
 
-// Update method - id_sub_sektor also OPTIONAL
+func (s *PerusahaanService) GetByNama(nama string) (*dto.PerusahaanResponse, error) {
+	return s.repo.GetByNama(nama)
+}
+
 func (s *PerusahaanService) Update(id string, req dto.UpdatePerusahaanRequest) (*dto.PerusahaanResponse, error) {
 	perusahaan, err := s.repo.GetByID(id)
 	if err != nil {
@@ -106,9 +146,19 @@ func (s *PerusahaanService) Update(id string, req dto.UpdatePerusahaanRequest) (
 		return nil, err
 	}
 
+	cacheDelete(s.rc, keyDetail("perusahaan", id))
+	cacheDelete(s.rc, keyList("perusahaan"))
+
 	return perusahaan, nil
 }
 
 func (s *PerusahaanService) Delete(id string) error {
-	return s.repo.Delete(id)
+	if err := s.repo.Delete(id); err != nil {
+		return err
+	}
+
+	cacheDelete(s.rc, keyDetail("perusahaan", id))
+	cacheDelete(s.rc, keyList("perusahaan"))
+
+	return nil
 }

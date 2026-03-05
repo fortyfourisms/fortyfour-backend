@@ -61,20 +61,19 @@ func cacheDelete(rc cache.RedisInterface, key string) {
 
 // cacheDeletePattern hapus semua key yang cocok dengan pattern (menggunakan SCAN).
 // Berguna untuk invalidate GetAll saat ada perubahan data.
-// Uncomment when needed for paginated/filtered cache invalidation.
-// func cacheDeletePattern(rc cache.RedisInterface, pattern string) {
-// 	if rc == nil {
-// 		return
-// 	}
-// 	keys, err := rc.Scan(pattern)
-// 	if err != nil {
-// 		log.Printf("[cache] scan error for pattern %s: %v", pattern, err)
-// 		return
-// 	}
-// 	for _, k := range keys {
-// 		cacheDelete(rc, k)
-// 	}
-// }
+func cacheDeletePattern(rc cache.RedisInterface, pattern string) {
+	if rc == nil {
+		return
+	}
+	keys, err := rc.Scan(pattern)
+	if err != nil {
+		log.Printf("[cache] scan error for pattern %s: %v", pattern, err)
+		return
+	}
+	for _, k := range keys {
+		cacheDelete(rc, k)
+	}
+}
 
 // keyList membuat cache key untuk GetAll
 func keyList(resource string) string {

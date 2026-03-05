@@ -7,6 +7,7 @@ import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/pkg/cache"
+	"strings"
 	"sync"
 	"time"
 
@@ -81,15 +82,14 @@ func (m *MockRedisClient) Scan(pattern string) ([]string, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
+	// Ubah pattern Redis (misal "refresh_token:*") menjadi prefix matching
+	prefix := strings.TrimSuffix(pattern, "*")
+
 	var keys []string
-	data := m.data[pattern]
-	for _, val := range data {
-		s := fmt.Sprintf("%c", val)
-		keys = append(keys, s)
-	}
-	_, exists := m.data[pattern]
-	if !exists {
-		return nil, errors.New("key not found")
+	for key := range m.data {
+		if strings.HasPrefix(key, prefix) {
+			keys = append(keys, key)
+		}
 	}
 	return keys, nil
 }
@@ -144,6 +144,10 @@ func (m *MockUserRepository) Create(user *models.User) error {
 	}
 	if user.UpdatedAt.IsZero() {
 		user.UpdatedAt = now
+	}
+	// Set PasswordChangedAt agar password tidak langsung expired
+	if user.PasswordChangedAt.IsZero() {
+		user.PasswordChangedAt = now
 	}
 
 	m.users[user.ID] = user
@@ -297,6 +301,55 @@ func (m *MockUserRepository) SetMFA(userID string, secret *string, enabled bool)
 		}
 	}
 	return errors.New("user not found")
+}
+
+func (m *MockUserRepository) UpdateStatus(userID string, status models.UserStatus) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if u, ok := m.users[userID]; ok {
+		u.Status = status
+	}
+	return nil
+}
+
+func (m *MockUserRepository) IncrementLoginAttempts(userID string) (int, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if u, ok := m.users[userID]; ok {
+		u.LoginAttempts++
+		return u.LoginAttempts, nil
+	}
+	return 0, nil
+}
+
+func (m *MockUserRepository) ResetLoginAttempts(userID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if u, ok := m.users[userID]; ok {
+		u.LoginAttempts = 0
+	}
+	return nil
+}
+
+func (m *MockUserRepository) UpdatePasswordChangedAt(userID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if u, ok := m.users[userID]; ok {
+		u.PasswordChangedAt = time.Now()
+	}
+	return nil
+}
+
+func (m *MockUserRepository) ExistsByPerusahaan(idPerusahaan string) (bool, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	for _, u := range m.users {
+		if u.IDPerusahaan != nil && *u.IDPerusahaan == idPerusahaan {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 // ============================================================
@@ -1088,6 +1141,18 @@ func (m *MockPerusahaanService) GetByID(id string) (*dto.PerusahaanResponse, err
 		return nil, errors.New("perusahaan not found")
 	}
 	return p, nil
+}
+
+func (m *MockPerusahaanService) GetByNama(nama string) (*dto.PerusahaanResponse, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for _, p := range m.perusahaans {
+		if strings.EqualFold(p.NamaPerusahaan, nama) {
+			return p, nil
+		}
+	}
+	return nil, errors.New("perusahaan not found")
 }
 
 func (m *MockPerusahaanService) Create(req dto.CreatePerusahaanRequest) (*dto.PerusahaanResponse, error) {

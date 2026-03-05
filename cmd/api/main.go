@@ -147,28 +147,29 @@ func main() {
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret, true, cfg.Domain)
-	authService := services.NewAuthService(userRepo, tokenService)
-	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo)
+	notificationService := services.NewNotificationService(redisClient)
+	authService := services.NewAuthService(userRepo, tokenService, notificationService)
+	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo, redisClient)
 	picService := services.NewPICService(picRepo, redisClient)
 	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
-	jabatanService := services.NewJabatanService(jabatanRepo)
+	jabatanService := services.NewJabatanService(jabatanRepo, redisClient)
 	proteksiService := services.NewProteksiService(proteksiRepo)
 	deteksiService := services.NewDeteksiService(deteksiRepo)
 	gulihService := services.NewGulihService(gulihRepo)
 	csirtService := services.NewCsirtService(csirtRepo, redisClient)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo, redisClient)
 	userService := services.NewUserService(userRepo, "./uploads", usersProducer)
-	roleService := services.NewRoleService(roleRepo)
+	roleService := services.NewRoleService(roleRepo, redisClient)
 	chatService := services.NewChatService(chatRepo, geminiClient, db)
-	sektorService := services.NewSektorService(sektorRepo)
-	subSektorService := services.NewSubSektorService(subSektorRepo)
+	sektorService := services.NewSektorService(sektorRepo, redisClient)
+	subSektorService := services.NewSubSektorService(subSektorRepo, redisClient)
 	seService := services.NewSEService(seRepo, redisClient)
-	dashboardService := services.NewDashboardService(dashboardRepo)
+	dashboardService := services.NewDashboardService(dashboardRepo, redisClient)
 
 	// Initialize Handlers
-	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService)
-	userHandler := handlers.NewUserHandler(userService, "./uploads", sseService)
 	uploadPath := "./uploads"
+	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService, userService, uploadPath)
+	userHandler := handlers.NewUserHandler(userService, "./uploads", sseService)
 	os.MkdirAll(uploadPath, os.ModePerm)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
 	picHandler := handlers.NewPICHandler(picService, sseService)
@@ -187,6 +188,7 @@ func main() {
 	subSektorHandler := handlers.NewSubSektorHandler(subSektorService)
 	seHandler := handlers.NewSEHandler(seService, sseService)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
+	notificationHandler := handlers.NewNotificationHandler(notificationService)
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(tokenService)
@@ -225,6 +227,7 @@ func main() {
 		subSektorHandler,
 		seHandler,
 		dashboardHandler,
+		notificationHandler,
 	)
 
 	// Start server
