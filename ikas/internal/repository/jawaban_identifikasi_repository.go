@@ -19,6 +19,7 @@ type JawabanIdentifikasiRepositoryInterface interface {
 	CheckPertanyaanExists(pertanyaanID int) (bool, error)
 	CheckPerusahaanExists(perusahaanID string) (bool, error)
 	CheckDuplicate(perusahaanID string, pertanyaanID int, excludeID int) (bool, error)
+	RecalculateIdentifikasi(perusahaanID string) error
 }
 
 type JawabanIdentifikasiRepository struct {
@@ -262,4 +263,68 @@ func (r *JawabanIdentifikasiRepository) CheckDuplicate(perusahaanID string, pert
 	}
 
 	return count > 0, nil
+}
+
+func (r *JawabanIdentifikasiRepository) RecalculateIdentifikasi(perusahaanID string) error {
+	// Query rata-rata jawaban per kategori_id untuk perusahaan tertentu
+	query := `
+		SELECT k.id AS kategori_id, AVG(ji.jawaban_identifikasi) AS avg_nilai
+		FROM jawaban_identifikasi ji
+		JOIN pertanyaan_identifikasi pi ON ji.pertanyaan_identifikasi_id = pi.id
+		JOIN sub_kategori sk ON pi.sub_kategori_id = sk.id
+		JOIN kategori k ON sk.kategori_id = k.id
+		WHERE ji.perusahaan_id = ? AND ji.jawaban_identifikasi IS NOT NULL
+		GROUP BY k.id
+		ORDER BY k.id`
+
+	rows, err := r.db.Query(query, perusahaanID)
+	if err != nil {
+		rollbar.Error(err)
+		return err
+	}
+	defer rows.Close()
+
+	// Map kategori_id ke nilai subdomain (default 0)
+	subdomain := map[int]float64{1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+
+	for rows.Next() {
+		var kategoriID int
+		var avgNilai float64
+		if err := rows.Scan(&kategoriID, &avgNilai); err != nil {
+			rollbar.Error(err)
+			continue
+		}
+		if kategoriID >= 1 && kategoriID <= 5 {
+			subdomain[kategoriID] = avgNilai
+		}
+	}
+
+	// Hitung rata-rata keseluruhan (nilai_identifikasi)
+	nilaiIdentifikasi := (subdomain[1] + subdomain[2] + subdomain[3] + subdomain[4] + subdomain[5]) / 5.0
+
+	// Upsert ke tabel identifikasi
+	upsertQuery := `
+		INSERT INTO identifikasi 
+			(perusahaan_id, nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, 
+			 nilai_subdomain3, nilai_subdomain4, nilai_subdomain5)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE
+			nilai_identifikasi = VALUES(nilai_identifikasi),
+			nilai_subdomain1 = VALUES(nilai_subdomain1),
+			nilai_subdomain2 = VALUES(nilai_subdomain2),
+			nilai_subdomain3 = VALUES(nilai_subdomain3),
+			nilai_subdomain4 = VALUES(nilai_subdomain4),
+			nilai_subdomain5 = VALUES(nilai_subdomain5)`
+
+	_, err = r.db.Exec(upsertQuery,
+		perusahaanID,
+		nilaiIdentifikasi,
+		subdomain[1], subdomain[2], subdomain[3], subdomain[4], subdomain[5],
+	)
+	if err != nil {
+		rollbar.Error(err)
+		return err
+	}
+
+	return nil
 }

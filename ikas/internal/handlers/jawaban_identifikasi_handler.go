@@ -159,11 +159,14 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 	var req dto.CreateJawabanIdentifikasiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		rollbar.Error(err)
-		if strings.Contains(err.Error(), "cannot unmarshal") {
-			utils.RespondError(w, 400, "jawaban_identifikasi harus berupa angka bulat 0-5 atau null untuk N/A")
-			return
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "pertanyaan_identifikasi_id") {
+			utils.RespondError(w, 400, "pertanyaan_identifikasi_id harus berupa integer")
+		} else if strings.Contains(errMsg, "jawaban_identifikasi") {
+			utils.RespondError(w, 400, "jawaban_identifikasi harus berupa angka 0-5 atau null untuk N/A")
+		} else {
+			utils.RespondError(w, 400, "Invalid request body")
 		}
-		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 

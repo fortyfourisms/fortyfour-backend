@@ -110,6 +110,12 @@ func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiReq
 		return nil, err
 	}
 
+	// Recalculate identifikasi untuk perusahaan ini
+	if err := s.repo.RecalculateIdentifikasi(req.PerusahaanID); err != nil {
+		rollbar.Error(err)
+		// Log tapi jangan gagalkan create
+	}
+
 	resp, err := s.repo.GetByID(int(lastID))
 	if err != nil {
 		rollbar.Error(err)
@@ -176,6 +182,12 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 		return nil, err
 	}
 
+	// Recalculate identifikasi untuk perusahaan ini
+	if err := s.repo.RecalculateIdentifikasi(existing.PerusahaanID); err != nil {
+		rollbar.Error(err)
+		// Log tapi jangan gagalkan update
+	}
+
 	updated, err := s.repo.GetByID(id)
 	if err != nil {
 		rollbar.Error(err)
@@ -190,7 +202,7 @@ func (s *JawabanIdentifikasiService) Delete(id int) error {
 		return errors.New("format ID tidak valid")
 	}
 
-	_, err := s.repo.GetByID(id)
+	existing, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return errors.New("data tidak ditemukan")
@@ -198,5 +210,15 @@ func (s *JawabanIdentifikasiService) Delete(id int) error {
 		return err
 	}
 
-	return s.repo.Delete(id)
+	if err := s.repo.Delete(id); err != nil {
+		return err
+	}
+
+	// Recalculate identifikasi setelah delete
+	if err := s.repo.RecalculateIdentifikasi(existing.PerusahaanID); err != nil {
+		rollbar.Error(err)
+		// Log tapi jangan gagalkan delete
+	}
+
+	return nil
 }
