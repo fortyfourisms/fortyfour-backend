@@ -17,10 +17,10 @@ import (
 // ============================================================
 
 type notifTestRedis struct {
-	data    map[string]string
-	setErr  error
-	getErr  error
-	delErr  error
+	data   map[string]string
+	setErr error
+	getErr error
+	delErr error
 }
 
 func newNotifTestRedis() *notifTestRedis {

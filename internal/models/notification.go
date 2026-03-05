@@ -6,10 +6,10 @@ import "time"
 type NotificationType string
 
 const (
-	NotifLoginFailed       NotificationType = "login_failed"
+	NotifLoginFailed        NotificationType = "login_failed"
 	NotifPasswordExpirySoon NotificationType = "password_expiry_soon"
-	NotifPasswordExpired   NotificationType = "password_expired"
-	NotifAccountSuspended  NotificationType = "account_suspended"
+	NotifPasswordExpired    NotificationType = "password_expired"
+	NotifAccountSuspended   NotificationType = "account_suspended"
 )
 
 // Notification adalah struktur notifikasi yang disimpan di Redis

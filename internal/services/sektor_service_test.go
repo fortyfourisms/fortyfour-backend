@@ -699,7 +699,7 @@ func (r *sektorTestRedis) Get(key string) (string, error) {
 	}
 	return v, nil
 }
-func (r *sektorTestRedis) Delete(key string) error       { delete(r.data, key); return nil }
+func (r *sektorTestRedis) Delete(key string) error { delete(r.data, key); return nil }
 func (r *sektorTestRedis) Exists(key string) (bool, error) {
 	_, ok := r.data[key]
 	return ok, nil

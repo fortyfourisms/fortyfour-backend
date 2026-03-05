@@ -438,6 +438,7 @@ func (r *UserRepository) UsernameExists(username string, excludeID *string) (boo
 	}
 	return count > 0, nil
 }
+
 // UpdateStatus mengubah status akun user (Aktif, Suspend, Nonaktif)
 func (r *UserRepository) UpdateStatus(userID string, status models.UserStatus) error {
 	query := `UPDATE users SET status = ?, updated_at = NOW() WHERE id = ?`

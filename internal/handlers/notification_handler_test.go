@@ -23,10 +23,10 @@ import (
 // ============================================================
 
 type notifHandlerRedis struct {
-	data    map[string]string
-	setErr  error
-	getErr  error
-	delErr  error
+	data   map[string]string
+	setErr error
+	getErr error
+	delErr error
 }
 
 func newNotifHandlerRedis() *notifHandlerRedis {
