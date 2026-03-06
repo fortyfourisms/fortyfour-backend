@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/rabbitmq"
@@ -25,64 +24,12 @@ func NewIkasService(repo repository.IkasRepositoryInterface, producer *rabbitmq.
 }
 
 func (s *IkasService) Create(req dto.CreateIkasRequest, id string) error {
-	var idIdentifikasi, idProteksi, idDeteksi, idGulih int
-	var nilaiIden, nilaiProt, nilaiDet, nilaiGul float64
-	var err error
-
-	// Create Identifikasi jika ada data
-	if req.Identifikasi != nil {
-		lastID, nilai, err := s.repo.CreateIdentifikasi(req.Identifikasi)
-		if err != nil {
-			return err
-		}
-		idIdentifikasi = int(lastID)
-		nilaiIden = nilai
-	} else if req.IDIdentifikasi != 0 {
-		idIdentifikasi = req.IDIdentifikasi
-	}
-
-	// Create Proteksi jika ada data
-	if req.Proteksi != nil {
-		lastID, nilai, err := s.repo.CreateProteksi(req.Proteksi)
-		if err != nil {
-			return err
-		}
-		idProteksi = int(lastID)
-		nilaiProt = nilai
-	} else if req.IDProteksi != 0 {
-		idProteksi = req.IDProteksi
-	}
-
-	// Create Deteksi jika ada data
-	if req.Deteksi != nil {
-		lastID, nilai, err := s.repo.CreateDeteksi(req.Deteksi)
-		if err != nil {
-			return err
-		}
-		idDeteksi = int(lastID)
-		nilaiDet = nilai
-	} else if req.IDDeteksi != 0 {
-		idDeteksi = req.IDDeteksi
-	}
-
-	// Create Gulih jika ada data
-	if req.Gulih != nil {
-		lastID, nilai, err := s.repo.CreateGulih(req.Gulih)
-		if err != nil {
-			return err
-		}
-		idGulih = int(lastID)
-		nilaiGul = nilai
-	} else if req.IDGulih != 0 {
-		idGulih = req.IDGulih
-	}
-
-	// Hitung nilai kematangan (rata-rata dari 4 nilai)
-	nilaiKematangan := (nilaiIden + nilaiProt + nilaiDet + nilaiGul) / 4.0
+	// Nested creation routines have been removed per recent refactor.
+	// Nilai kematangan initialized to 0, it will be automatically calculated when domains are filled later.
+	nilaiKematangan := 0.0
 
 	// Create IKAS record
-	err = s.repo.Create(req, id, nilaiKematangan,
-		idIdentifikasi, idProteksi, idDeteksi, idGulih)
+	err := s.repo.Create(req, id, nilaiKematangan)
 	if err != nil {
 		return err
 	}
@@ -123,7 +70,7 @@ func (s *IkasService) GetByID(id string) (*dto.IkasResponse, error) {
 }
 
 func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*dto.IkasResponse, error) {
-	// Ambil data existing untuk mendapatkan ID nested tables
+	// Ambil data existing
 	existing, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
@@ -132,129 +79,33 @@ func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*dto.IkasRes
 	// Simpan old nilai untuk event
 	oldNilaiKematangan := existing.NilaiKematangan
 
-	var needRecalculateKematangan bool
-	var nilaiIden, nilaiProt, nilaiDet, nilaiGul float64
-
-	// Update Identifikasi jika ada data
-	if req.Identifikasi != nil {
-		if existing.Identifikasi == nil {
-			return nil, errors.New("identifikasi record not found for this ikas")
-		}
-		nilai, err := s.repo.UpdateIdentifikasi(existing.Identifikasi.ID, req.Identifikasi)
-		if err != nil {
-			return nil, err
-		}
-		nilaiIden = nilai
-		needRecalculateKematangan = true
-	} else if existing.Identifikasi != nil {
-		nilaiIden = existing.Identifikasi.NilaiIdentifikasi
-	}
-
-	// Update Proteksi jika ada data
-	if req.Proteksi != nil {
-		if existing.Proteksi == nil {
-			return nil, errors.New("proteksi record not found for this ikas")
-		}
-		nilai, err := s.repo.UpdateProteksi(existing.Proteksi.ID, req.Proteksi)
-		if err != nil {
-			return nil, err
-		}
-		nilaiProt = nilai
-		needRecalculateKematangan = true
-	} else if existing.Proteksi != nil {
-		nilaiProt = existing.Proteksi.NilaiProteksi
-	}
-
-	// Update Deteksi jika ada data
-	if req.Deteksi != nil {
-		if existing.Deteksi == nil {
-			return nil, errors.New("deteksi record not found for this ikas")
-		}
-		nilai, err := s.repo.UpdateDeteksi(existing.Deteksi.ID, req.Deteksi)
-		if err != nil {
-			return nil, err
-		}
-		nilaiDet = nilai
-		needRecalculateKematangan = true
-	} else if existing.Deteksi != nil {
-		nilaiDet = existing.Deteksi.NilaiDeteksi
-	}
-
-	// Update Gulih jika ada data
-	if req.Gulih != nil {
-		if existing.Gulih == nil {
-			return nil, errors.New("gulih record not found for this ikas")
-		}
-		nilai, err := s.repo.UpdateGulih(existing.Gulih.ID, req.Gulih)
-		if err != nil {
-			return nil, err
-		}
-		nilaiGul = nilai
-		needRecalculateKematangan = true
-	} else if existing.Gulih != nil {
-		nilaiGul = existing.Gulih.NilaiGulih
-	}
-
-	// Recalculate nilai_kematangan jika ada perubahan pada nested data
-	var newNilaiKematangan float64
-	if needRecalculateKematangan {
-		newNilaiKematangan = (nilaiIden + nilaiProt + nilaiDet + nilaiGul) / 4.0
-		req.NilaiKematangan = &newNilaiKematangan
-	}
-
-	// Update data IKAS utama
-	if err := s.repo.Update(id, req); err != nil {
+	// Update data IKAS utama (Nested domain checks removed)
+	err = s.repo.Update(id, req)
+	if err != nil {
 		return nil, err
 	}
 
-	// Ambil data terbaru dengan JOIN
+	// Fetch updated data
 	updated, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	go s.publishIkasUpdatedEvent(id, oldNilaiKematangan, newNilaiKematangan, req)
+	// Publish event dengan nilai terbaru (if existing, use 0 if there are changes but kematangan calculation continues to be dynamic in get mode)
+	go s.publishIkasUpdatedEvent(id, updated.NilaiKematangan, oldNilaiKematangan)
 
 	return updated, nil
 }
 
-func (s *IkasService) publishIkasUpdatedEvent(ikasID string, oldNilai, newNilai float64, req dto.UpdateIkasRequest) {
+func (s *IkasService) publishIkasUpdatedEvent(ikasID string, newNilai, oldNilai float64) {
 	if s.producer == nil {
 		return
-	}
-
-	// Collect updated fields
-	updatedFields := []string{}
-	if req.IDPerusahaan != nil {
-		updatedFields = append(updatedFields, "id_perusahaan")
-	}
-	if req.Tanggal != nil {
-		updatedFields = append(updatedFields, "tanggal")
-	}
-	if req.Responden != nil {
-		updatedFields = append(updatedFields, "responden")
-	}
-	if req.NilaiKematangan != nil {
-		updatedFields = append(updatedFields, "nilai_kematangan")
-	}
-	if req.Identifikasi != nil {
-		updatedFields = append(updatedFields, "identifikasi")
-	}
-	if req.Proteksi != nil {
-		updatedFields = append(updatedFields, "proteksi")
-	}
-	if req.Deteksi != nil {
-		updatedFields = append(updatedFields, "deteksi")
-	}
-	if req.Gulih != nil {
-		updatedFields = append(updatedFields, "gulih")
 	}
 
 	event := dto_event.IkasUpdatedEvent{
 		IkasID:             ikasID,
 		OldNilaiKematangan: oldNilai,
 		NewNilaiKematangan: newNilai,
-		UpdatedFields:      updatedFields,
 		UpdatedAt:          time.Now(),
 	}
 
@@ -294,7 +145,7 @@ func (s *IkasService) publishIkasDeletedEvent(ikasID string) {
 }
 
 func (s *IkasService) ImportFromExcel(fileData []byte) (*dto.IkasResponse, error) {
-	// Parse Excel - semua data sudah diambil dari Excel
+	// Parse Excel
 	excelData, err := s.repo.ParseExcelForImport(fileData)
 	if err != nil {
 		return nil, err

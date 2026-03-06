@@ -7,38 +7,15 @@ type CreateIkasRequest struct {
 	Telepon      string  `json:"telepon"`
 	Jabatan      string  `json:"jabatan"`
 	TargetNilai  float64 `json:"target_nilai"`
-
-	// Nested data untuk auto-create
-	Identifikasi *CreateIdentifikasiData `json:"identifikasi,omitempty"`
-	Proteksi     *CreateProteksiData     `json:"proteksi,omitempty"`
-	Deteksi      *CreateDeteksiData      `json:"deteksi,omitempty"`
-	Gulih        *CreateGulihData        `json:"gulih,omitempty"`
-
-	// ID manual (backward compatibility)
-	IDIdentifikasi int `json:"id_identifikasi,omitempty"`
-	IDProteksi     int `json:"id_proteksi,omitempty"`
-	IDDeteksi      int `json:"id_deteksi,omitempty"`
-	IDGulih        int `json:"id_gulih,omitempty"`
 }
 
 type UpdateIkasRequest struct {
-	IDPerusahaan    *string  `json:"id_perusahaan,omitempty"`
-	Tanggal         *string  `json:"tanggal,omitempty"`
-	Responden       *string  `json:"responden,omitempty"`
-	Telepon         *string  `json:"telepon,omitempty"`
-	Jabatan         *string  `json:"jabatan,omitempty"`
-	NilaiKematangan *float64 `json:"nilai_kematangan,omitempty"`
-	TargetNilai     *float64 `json:"target_nilai,omitempty"`
-	IDIdentifikasi  *int     `json:"id_identifikasi,omitempty"`
-	IDProteksi      *int     `json:"id_proteksi,omitempty"`
-	IDDeteksi       *int     `json:"id_deteksi,omitempty"`
-	IDGulih         *int     `json:"id_gulih,omitempty"`
-
-	// Nested data untuk update subdomain
-	Identifikasi *UpdateIdentifikasiData `json:"identifikasi,omitempty"`
-	Proteksi     *UpdateProteksiData     `json:"proteksi,omitempty"`
-	Deteksi      *UpdateDeteksiData      `json:"deteksi,omitempty"`
-	Gulih        *UpdateGulihData        `json:"gulih,omitempty"`
+	IDPerusahaan *string  `json:"id_perusahaan,omitempty"`
+	Tanggal      *string  `json:"tanggal,omitempty"`
+	Responden    *string  `json:"responden,omitempty"`
+	Telepon      *string  `json:"telepon,omitempty"`
+	Jabatan      *string  `json:"jabatan,omitempty"`
+	TargetNilai  *float64 `json:"target_nilai,omitempty"`
 }
 
 // Response dengan nested objects

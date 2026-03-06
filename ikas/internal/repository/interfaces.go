@@ -4,18 +4,11 @@ import "ikas/internal/dto"
 
 // IkasRepositoryInterface
 type IkasRepositoryInterface interface {
-	//CREATE DOMAIN
-	CreateIdentifikasi(data *dto.CreateIdentifikasiData) (int64, float64, error)
-	CreateProteksi(data *dto.CreateProteksiData) (int64, float64, error)
-	CreateDeteksi(data *dto.CreateDeteksiData) (int64, float64, error)
-	CreateGulih(data *dto.CreateGulihData) (int64, float64, error)
-
 	//CREATE IKAS
 	Create(
 		req dto.CreateIkasRequest,
 		id string,
 		nilaiKematangan float64,
-		idIden, idProt, idDet, idGul int,
 	) error
 
 	//READ
@@ -24,12 +17,6 @@ type IkasRepositoryInterface interface {
 
 	//UPDATE IKAS
 	Update(id string, req dto.UpdateIkasRequest) error
-
-	//UPDATE DOMAIN
-	UpdateIdentifikasi(id int, data *dto.UpdateIdentifikasiData) (float64, error)
-	UpdateProteksi(id int, data *dto.UpdateProteksiData) (float64, error)
-	UpdateDeteksi(id int, data *dto.UpdateDeteksiData) (float64, error)
-	UpdateGulih(id int, data *dto.UpdateGulihData) (float64, error)
 
 	//DELETE
 	Delete(id string) error

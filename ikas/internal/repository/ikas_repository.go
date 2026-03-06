@@ -22,98 +22,13 @@ func NewIkasRepository(db *sql.DB) *IkasRepository {
 	return &IkasRepository{db: db}
 }
 
-func (r *IkasRepository) CreateIdentifikasi(data *dto.CreateIdentifikasiData) (int64, float64, error) {
-	// Hitung rata-rata
-	nilaiIdentifikasi := (data.NilaiSubdomain1 + data.NilaiSubdomain2 +
-		data.NilaiSubdomain3 + data.NilaiSubdomain4 + data.NilaiSubdomain5) / 5.0
-
-	query := `INSERT INTO identifikasi 
-		(nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, 
-		nilai_subdomain3, nilai_subdomain4, nilai_subdomain5)
-		VALUES (?, ?, ?, ?, ?, ?)`
-
-	res, err := r.db.Exec(query, nilaiIdentifikasi,
-		data.NilaiSubdomain1, data.NilaiSubdomain2, data.NilaiSubdomain3,
-		data.NilaiSubdomain4, data.NilaiSubdomain5)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	lastID, _ := res.LastInsertId()
-	return lastID, nilaiIdentifikasi, nil
-}
-
-func (r *IkasRepository) CreateProteksi(data *dto.CreateProteksiData) (int64, float64, error) {
-	// Hitung rata-rata
-	nilaiProteksi := (data.NilaiSubdomain1 + data.NilaiSubdomain2 +
-		data.NilaiSubdomain3 + data.NilaiSubdomain4 +
-		data.NilaiSubdomain5 + data.NilaiSubdomain6) / 6.0
-
-	query := `INSERT INTO proteksi 
-		(nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
-		nilai_subdomain3, nilai_subdomain4, nilai_subdomain5, nilai_subdomain6)
-		VALUES (?, ?, ?, ?, ?, ?, ?)`
-
-	res, err := r.db.Exec(query, nilaiProteksi,
-		data.NilaiSubdomain1, data.NilaiSubdomain2, data.NilaiSubdomain3,
-		data.NilaiSubdomain4, data.NilaiSubdomain5, data.NilaiSubdomain6)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	lastID, _ := res.LastInsertId()
-	return lastID, nilaiProteksi, nil
-}
-
-func (r *IkasRepository) CreateDeteksi(data *dto.CreateDeteksiData) (int64, float64, error) {
-	// Hitung rata-rata
-	nilaiDeteksi := (data.NilaiSubdomain1 + data.NilaiSubdomain2 +
-		data.NilaiSubdomain3) / 3.0
-
-	query := `INSERT INTO deteksi 
-		(nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3)
-		VALUES (?, ?, ?, ?)`
-
-	res, err := r.db.Exec(query, nilaiDeteksi,
-		data.NilaiSubdomain1, data.NilaiSubdomain2, data.NilaiSubdomain3)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	lastID, _ := res.LastInsertId()
-	return lastID, nilaiDeteksi, nil
-}
-
-func (r *IkasRepository) CreateGulih(data *dto.CreateGulihData) (int64, float64, error) {
-	// Hitung rata-rata
-	nilaiGulih := (data.NilaiSubdomain1 + data.NilaiSubdomain2 +
-		data.NilaiSubdomain3 + data.NilaiSubdomain4) / 4.0
-
-	query := `INSERT INTO gulih 
-		(nilai_gulih, nilai_subdomain1, nilai_subdomain2, 
-		nilai_subdomain3, nilai_subdomain4)
-		VALUES (?, ?, ?, ?, ?)`
-
-	res, err := r.db.Exec(query, nilaiGulih,
-		data.NilaiSubdomain1, data.NilaiSubdomain2,
-		data.NilaiSubdomain3, data.NilaiSubdomain4)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	lastID, _ := res.LastInsertId()
-	return lastID, nilaiGulih, nil
-}
-
-// Update method Create untuk menerima nilai_kematangan
-func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string, nilaiKematangan float64,
-	idIden, idProt, idDet, idGul int) error {
+// Update method Create untuk menerima nilai_kematangan (inisiasi IKAS)
+func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string, nilaiKematangan float64) error {
 
 	query := `INSERT INTO ikas
 		(id, id_perusahaan, tanggal, responden, telepon, jabatan,
-		nilai_kematangan, target_nilai, id_identifikasi, id_proteksi,
-		id_deteksi, id_gulih)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+		nilai_kematangan, target_nilai)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
 
 	_, err := r.db.Exec(query,
 		id,
@@ -124,10 +39,6 @@ func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string, nilaiKemat
 		req.Jabatan,
 		nilaiKematangan,
 		req.TargetNilai,
-		idIden,
-		idProt,
-		idDet,
-		idGul,
 	)
 
 	return err
@@ -541,29 +452,9 @@ func (r *IkasRepository) Update(id string, req dto.UpdateIkasRequest) error {
 		updates = append(updates, "jabatan=?")
 		args = append(args, *req.Jabatan)
 	}
-	if req.NilaiKematangan != nil {
-		updates = append(updates, "nilai_kematangan=?")
-		args = append(args, *req.NilaiKematangan)
-	}
 	if req.TargetNilai != nil {
 		updates = append(updates, "target_nilai=?")
 		args = append(args, *req.TargetNilai)
-	}
-	if req.IDIdentifikasi != nil {
-		updates = append(updates, "id_identifikasi=?")
-		args = append(args, *req.IDIdentifikasi)
-	}
-	if req.IDProteksi != nil {
-		updates = append(updates, "id_proteksi=?")
-		args = append(args, *req.IDProteksi)
-	}
-	if req.IDDeteksi != nil {
-		updates = append(updates, "id_deteksi=?")
-		args = append(args, *req.IDDeteksi)
-	}
-	if req.IDGulih != nil {
-		updates = append(updates, "id_gulih=?")
-		args = append(args, *req.IDGulih)
 	}
 
 	if len(updates) == 0 {
@@ -576,216 +467,6 @@ func (r *IkasRepository) Update(id string, req dto.UpdateIkasRequest) error {
 
 	_, err := r.db.Exec(query, args...)
 	return err
-}
-
-func (r *IkasRepository) UpdateIdentifikasi(id int, data *dto.UpdateIdentifikasiData) (float64, error) {
-	query := "UPDATE identifikasi SET "
-	args := []interface{}{}
-	updates := []string{}
-
-	if data.NilaiSubdomain1 != nil {
-		updates = append(updates, "nilai_subdomain1=?")
-		args = append(args, *data.NilaiSubdomain1)
-	}
-	if data.NilaiSubdomain2 != nil {
-		updates = append(updates, "nilai_subdomain2=?")
-		args = append(args, *data.NilaiSubdomain2)
-	}
-	if data.NilaiSubdomain3 != nil {
-		updates = append(updates, "nilai_subdomain3=?")
-		args = append(args, *data.NilaiSubdomain3)
-	}
-	if data.NilaiSubdomain4 != nil {
-		updates = append(updates, "nilai_subdomain4=?")
-		args = append(args, *data.NilaiSubdomain4)
-	}
-	if data.NilaiSubdomain5 != nil {
-		updates = append(updates, "nilai_subdomain5=?")
-		args = append(args, *data.NilaiSubdomain5)
-	}
-
-	if len(updates) == 0 {
-		return 0, nil
-	}
-
-	query += strings.Join(updates, ", ")
-	query += " WHERE id=?"
-	args = append(args, id)
-
-	_, err := r.db.Exec(query, args...)
-	if err != nil {
-		return 0, err
-	}
-
-	// Hitung ulang rata-rata
-	var sub1, sub2, sub3, sub4, sub5 float64
-	err = r.db.QueryRow(`SELECT nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, 
-		nilai_subdomain4, nilai_subdomain5 FROM identifikasi WHERE id=?`, id).
-		Scan(&sub1, &sub2, &sub3, &sub4, &sub5)
-	if err != nil {
-		return 0, err
-	}
-
-	nilaiIdentifikasi := (sub1 + sub2 + sub3 + sub4 + sub5) / 5.0
-
-	// Update nilai_identifikasi
-	_, err = r.db.Exec(`UPDATE identifikasi SET nilai_identifikasi=? WHERE id=?`, nilaiIdentifikasi, id)
-	return nilaiIdentifikasi, err
-}
-
-func (r *IkasRepository) UpdateProteksi(id int, data *dto.UpdateProteksiData) (float64, error) {
-	query := "UPDATE proteksi SET "
-	args := []interface{}{}
-	updates := []string{}
-
-	if data.NilaiSubdomain1 != nil {
-		updates = append(updates, "nilai_subdomain1=?")
-		args = append(args, *data.NilaiSubdomain1)
-	}
-	if data.NilaiSubdomain2 != nil {
-		updates = append(updates, "nilai_subdomain2=?")
-		args = append(args, *data.NilaiSubdomain2)
-	}
-	if data.NilaiSubdomain3 != nil {
-		updates = append(updates, "nilai_subdomain3=?")
-		args = append(args, *data.NilaiSubdomain3)
-	}
-	if data.NilaiSubdomain4 != nil {
-		updates = append(updates, "nilai_subdomain4=?")
-		args = append(args, *data.NilaiSubdomain4)
-	}
-	if data.NilaiSubdomain5 != nil {
-		updates = append(updates, "nilai_subdomain5=?")
-		args = append(args, *data.NilaiSubdomain5)
-	}
-	if data.NilaiSubdomain6 != nil {
-		updates = append(updates, "nilai_subdomain6=?")
-		args = append(args, *data.NilaiSubdomain6)
-	}
-
-	if len(updates) == 0 {
-		return 0, nil
-	}
-
-	query += strings.Join(updates, ", ")
-	query += " WHERE id=?"
-	args = append(args, id)
-
-	_, err := r.db.Exec(query, args...)
-	if err != nil {
-		return 0, err
-	}
-
-	// Hitung ulang rata-rata
-	var sub1, sub2, sub3, sub4, sub5, sub6 float64
-	err = r.db.QueryRow(`SELECT nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, 
-		nilai_subdomain4, nilai_subdomain5, nilai_subdomain6 FROM proteksi WHERE id=?`, id).
-		Scan(&sub1, &sub2, &sub3, &sub4, &sub5, &sub6)
-	if err != nil {
-		return 0, err
-	}
-
-	nilaiProteksi := (sub1 + sub2 + sub3 + sub4 + sub5 + sub6) / 6.0
-
-	// Update nilai_proteksi
-	_, err = r.db.Exec(`UPDATE proteksi SET nilai_proteksi=? WHERE id=?`, nilaiProteksi, id)
-	return nilaiProteksi, err
-}
-
-func (r *IkasRepository) UpdateDeteksi(id int, data *dto.UpdateDeteksiData) (float64, error) {
-	query := "UPDATE deteksi SET "
-	args := []interface{}{}
-	updates := []string{}
-
-	if data.NilaiSubdomain1 != nil {
-		updates = append(updates, "nilai_subdomain1=?")
-		args = append(args, *data.NilaiSubdomain1)
-	}
-	if data.NilaiSubdomain2 != nil {
-		updates = append(updates, "nilai_subdomain2=?")
-		args = append(args, *data.NilaiSubdomain2)
-	}
-	if data.NilaiSubdomain3 != nil {
-		updates = append(updates, "nilai_subdomain3=?")
-		args = append(args, *data.NilaiSubdomain3)
-	}
-
-	if len(updates) == 0 {
-		return 0, nil
-	}
-
-	query += strings.Join(updates, ", ")
-	query += " WHERE id=?"
-	args = append(args, id)
-
-	_, err := r.db.Exec(query, args...)
-	if err != nil {
-		return 0, err
-	}
-
-	// Hitung ulang rata-rata
-	var sub1, sub2, sub3 float64
-	err = r.db.QueryRow(`SELECT nilai_subdomain1, nilai_subdomain2, nilai_subdomain3 
-		FROM deteksi WHERE id=?`, id).Scan(&sub1, &sub2, &sub3)
-	if err != nil {
-		return 0, err
-	}
-
-	nilaiDeteksi := (sub1 + sub2 + sub3) / 3.0
-
-	// Update nilai_deteksi
-	_, err = r.db.Exec(`UPDATE deteksi SET nilai_deteksi=? WHERE id=?`, nilaiDeteksi, id)
-	return nilaiDeteksi, err
-}
-
-func (r *IkasRepository) UpdateGulih(id int, data *dto.UpdateGulihData) (float64, error) {
-	query := "UPDATE gulih SET "
-	args := []interface{}{}
-	updates := []string{}
-
-	if data.NilaiSubdomain1 != nil {
-		updates = append(updates, "nilai_subdomain1=?")
-		args = append(args, *data.NilaiSubdomain1)
-	}
-	if data.NilaiSubdomain2 != nil {
-		updates = append(updates, "nilai_subdomain2=?")
-		args = append(args, *data.NilaiSubdomain2)
-	}
-	if data.NilaiSubdomain3 != nil {
-		updates = append(updates, "nilai_subdomain3=?")
-		args = append(args, *data.NilaiSubdomain3)
-	}
-	if data.NilaiSubdomain4 != nil {
-		updates = append(updates, "nilai_subdomain4=?")
-		args = append(args, *data.NilaiSubdomain4)
-	}
-
-	if len(updates) == 0 {
-		return 0, nil
-	}
-
-	query += strings.Join(updates, ", ")
-	query += " WHERE id=?"
-	args = append(args, id)
-
-	_, err := r.db.Exec(query, args...)
-	if err != nil {
-		return 0, err
-	}
-
-	// Hitung ulang rata-rata
-	var sub1, sub2, sub3, sub4 float64
-	err = r.db.QueryRow(`SELECT nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, 
-		nilai_subdomain4 FROM gulih WHERE id=?`, id).Scan(&sub1, &sub2, &sub3, &sub4)
-	if err != nil {
-		return 0, err
-	}
-
-	nilaiGulih := (sub1 + sub2 + sub3 + sub4) / 4.0
-
-	// Update nilai_gulih
-	_, err = r.db.Exec(`UPDATE gulih SET nilai_gulih=? WHERE id=?`, nilaiGulih, id)
-	return nilaiGulih, err
 }
 
 func (r *IkasRepository) Delete(id string) error {
@@ -941,86 +622,6 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRe
 		return nil, fmt.Errorf("error membaca target_nilai (Sheet 7, D4): %v", err)
 	}
 
-	// IDENTIFIKASI
-	idenSub1, err := getCellFloat(sheet7, "E5")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca identifikasi subdomain1 (Sheet 7, E5): %v", err)
-	}
-	idenSub2, err := getCellFloat(sheet7, "E6")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca identifikasi subdomain2 (Sheet 7, E6): %v", err)
-	}
-	idenSub3, err := getCellFloat(sheet7, "E7")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca identifikasi subdomain3 (Sheet 7, E7): %v", err)
-	}
-	idenSub4, err := getCellFloat(sheet7, "E8")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca identifikasi subdomain4 (Sheet 7, E8): %v", err)
-	}
-	idenSub5, err := getCellFloat(sheet7, "E9")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca identifikasi subdomain5 (Sheet 7, E9): %v", err)
-	}
-
-	// PROTEKSI
-	protSub1, err := getCellFloat(sheet7, "E10")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca proteksi subdomain1 (Sheet 7, E10): %v", err)
-	}
-	protSub2, err := getCellFloat(sheet7, "E11")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca proteksi subdomain2 (Sheet 7, E11): %v", err)
-	}
-	protSub3, err := getCellFloat(sheet7, "E12")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca proteksi subdomain3 (Sheet 7, E12): %v", err)
-	}
-	protSub4, err := getCellFloat(sheet7, "E13")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca proteksi subdomain4 (Sheet 7, E13): %v", err)
-	}
-	protSub5, err := getCellFloat(sheet7, "E14")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca proteksi subdomain5 (Sheet 7, E14): %v", err)
-	}
-	protSub6, err := getCellFloat(sheet7, "E15")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca proteksi subdomain6 (Sheet 7, E15): %v", err)
-	}
-
-	// DETEKSI
-	detSub1, err := getCellFloat(sheet7, "E16")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca deteksi subdomain1 (Sheet 7, E16): %v", err)
-	}
-	detSub2, err := getCellFloat(sheet7, "E17")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca deteksi subdomain2 (Sheet 7, E17): %v", err)
-	}
-	detSub3, err := getCellFloat(sheet7, "E18")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca deteksi subdomain3 (Sheet 7, E18): %v", err)
-	}
-
-	// GULIH
-	gulihSub1, err := getCellFloat(sheet7, "E19")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca gulih subdomain1 (Sheet 7, E19): %v", err)
-	}
-	gulihSub2, err := getCellFloat(sheet7, "E20")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca gulih subdomain2 (Sheet 7, E20): %v", err)
-	}
-	gulihSub3, err := getCellFloat(sheet7, "E21")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca gulih subdomain3 (Sheet 7, E21): %v", err)
-	}
-	gulihSub4, err := getCellFloat(sheet7, "E22")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca gulih subdomain4 (Sheet 7, E22): %v", err)
-	}
-
 	// Construct CreateIkasRequest dengan semua data
 	req := &dto.CreateIkasRequest{
 		IDPerusahaan: idPerusahaan,
@@ -1029,32 +630,6 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRe
 		Telepon:      telepon,
 		Jabatan:      jabatan,
 		TargetNilai:  targetNilai,
-		Identifikasi: &dto.CreateIdentifikasiData{
-			NilaiSubdomain1: idenSub1,
-			NilaiSubdomain2: idenSub2,
-			NilaiSubdomain3: idenSub3,
-			NilaiSubdomain4: idenSub4,
-			NilaiSubdomain5: idenSub5,
-		},
-		Proteksi: &dto.CreateProteksiData{
-			NilaiSubdomain1: protSub1,
-			NilaiSubdomain2: protSub2,
-			NilaiSubdomain3: protSub3,
-			NilaiSubdomain4: protSub4,
-			NilaiSubdomain5: protSub5,
-			NilaiSubdomain6: protSub6,
-		},
-		Deteksi: &dto.CreateDeteksiData{
-			NilaiSubdomain1: detSub1,
-			NilaiSubdomain2: detSub2,
-			NilaiSubdomain3: detSub3,
-		},
-		Gulih: &dto.CreateGulihData{
-			NilaiSubdomain1: gulihSub1,
-			NilaiSubdomain2: gulihSub2,
-			NilaiSubdomain3: gulihSub3,
-			NilaiSubdomain4: gulihSub4,
-		},
 	}
 
 	return req, nil
