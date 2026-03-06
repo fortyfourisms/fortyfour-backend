@@ -181,7 +181,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 
 	rows, err := r.db.Query(query)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("query error: %v", err) // pastikan error ini keluar
 	}
 	defer rows.Close()
 
@@ -189,6 +189,8 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 
 	for rows.Next() {
 		var i dto.IkasResponse
+		var tanggal sql.NullString
+		var nilaiKematangan, targetNilai sql.NullFloat64
 		var perusahaanID, perusahaanNama sql.NullString
 		var idenID sql.NullInt64
 		var idenNilai, idenSub1, idenSub2, idenSub3, idenSub4, idenSub5 sql.NullFloat64
@@ -201,12 +203,12 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 
 		err := rows.Scan(
 			&i.ID,
-			&i.Tanggal,
+			&tanggal,
 			&i.Responden,
 			&i.Telepon,
 			&i.Jabatan,
-			&i.NilaiKematangan,
-			&i.TargetNilai,
+			&nilaiKematangan,
+			&targetNilai,
 			&perusahaanID,
 			&perusahaanNama,
 			&idenID,
@@ -238,6 +240,22 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 		)
 		if err != nil {
 			continue
+		}
+
+		if tanggal.Valid {
+			i.Tanggal = tanggal.String
+		}
+
+		if targetNilai.Valid {
+			i.TargetNilai = targetNilai.Float64
+		}
+
+		if nilaiKematangan.Valid {
+			i.NilaiKematangan = nilaiKematangan.Float64
+		} else {
+			// Jika di DB NULL, hitung dinamis
+			sum := idenNilai.Float64 + protNilai.Float64 + detNilai.Float64 + gulihNilai.Float64
+			i.NilaiKematangan = sum / 4.0
 		}
 
 		// Set kategori kematangan keamanan siber
@@ -361,6 +379,8 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	row := r.db.QueryRow(query, id)
 
 	var i dto.IkasResponse
+	var tanggal sql.NullString
+	var nilaiKematangan, targetNilai sql.NullFloat64
 	var perusahaanID, perusahaanNama sql.NullString
 	var idenID sql.NullInt64
 	var idenNilai, idenSub1, idenSub2, idenSub3, idenSub4, idenSub5 sql.NullFloat64
@@ -373,12 +393,12 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 
 	err := row.Scan(
 		&i.ID,
-		&i.Tanggal,
+		&tanggal,
 		&i.Responden,
 		&i.Telepon,
 		&i.Jabatan,
-		&i.NilaiKematangan,
-		&i.TargetNilai,
+		&nilaiKematangan,
+		&targetNilai,
 		&perusahaanID,
 		&perusahaanNama,
 		&idenID,
@@ -410,6 +430,22 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if tanggal.Valid {
+		i.Tanggal = tanggal.String
+	}
+
+	if targetNilai.Valid {
+		i.TargetNilai = targetNilai.Float64
+	}
+
+	if nilaiKematangan.Valid {
+		i.NilaiKematangan = nilaiKematangan.Float64
+	} else {
+		// Jika di DB NULL, hitung dinamis
+		sum := idenNilai.Float64 + protNilai.Float64 + detNilai.Float64 + gulihNilai.Float64
+		i.NilaiKematangan = sum / 4.0
 	}
 
 	// Set kategori kematangan keamanan siber

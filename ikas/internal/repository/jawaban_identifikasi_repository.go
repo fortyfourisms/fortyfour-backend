@@ -326,5 +326,20 @@ func (r *JawabanIdentifikasiRepository) RecalculateIdentifikasi(perusahaanID str
 		return err
 	}
 
+	// Ambil id identifikasi yang baru di-upsert
+	var identifikasiID int
+	err = r.db.QueryRow(`SELECT id FROM identifikasi WHERE perusahaan_id = ?`, perusahaanID).Scan(&identifikasiID)
+	if err != nil {
+		rollbar.Error(err)
+		return err
+	}
+
+	// Update tabel ikas agar id_identifikasi menunjuk ke identifikasi yang baru dihitung
+	_, err = r.db.Exec(`UPDATE ikas SET id_identifikasi = ? WHERE id_perusahaan = ?`, identifikasiID, perusahaanID)
+	if err != nil {
+		rollbar.Error(err)
+		return err
+	}
+
 	return nil
 }
