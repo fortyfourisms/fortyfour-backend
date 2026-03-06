@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"testing"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/middleware"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -47,6 +49,14 @@ func (m *MockSEService) GetByID(id string) (*dto.SEResponse, error) {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*dto.SEResponse), args.Error(1)
+}
+
+func (m *MockSEService) GetByPerusahaan(idPerusahaan string) ([]dto.SEResponse, error) {
+	args := m.Called(idPerusahaan)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]dto.SEResponse), args.Error(1)
 }
 
 func (m *MockSEService) Update(id string, req dto.UpdateSERequest) (*dto.SEResponse, error) {
@@ -97,6 +107,19 @@ func setupSEHandler() (*SEHandler, *MockSEService, *MockSSEServiceForSE) {
 	return handler, mockService, mockSSE
 }
 
+// withAdminContext set role admin di context request
+func withAdminContext(req *http.Request) *http.Request {
+	ctx := context.WithValue(req.Context(), middleware.RoleKey, "admin")
+	return req.WithContext(ctx)
+}
+
+// withUserContext set role user + id_perusahaan di context request
+func withUserContext(req *http.Request, idPerusahaan string) *http.Request {
+	ctx := context.WithValue(req.Context(), middleware.RoleKey, "user")
+	ctx = context.WithValue(ctx, middleware.IDPerusahaanKey, idPerusahaan)
+	return req.WithContext(ctx)
+}
+
 func createValidSERequestForHandler() dto.CreateSERequest {
 	return dto.CreateSERequest{
 		IDPerusahaan:                    "perusahaan-123",
@@ -144,6 +167,7 @@ func TestSEHandler_GetAll_Success(t *testing.T) {
 	mockService.On("GetAll").Return(expectedData, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/se", nil)
+	req = withAdminContext(req)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -165,6 +189,7 @@ func TestSEHandler_GetAll_ServiceError(t *testing.T) {
 	mockService.On("GetAll").Return(nil, errors.New("database error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/se", nil)
+	req = withAdminContext(req)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -256,6 +281,7 @@ func TestSEHandler_Create_Success(t *testing.T) {
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/se", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
+	req = withAdminContext(req)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -277,6 +303,7 @@ func TestSEHandler_Create_InvalidBody(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/api/se", strings.NewReader("invalid json"))
 	req.Header.Set("Content-Type", "application/json")
+	req = withAdminContext(req)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -299,6 +326,7 @@ func TestSEHandler_Create_ServiceError(t *testing.T) {
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/se", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
+	req = withAdminContext(req)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -330,6 +358,7 @@ func TestSEHandler_Create_KategoriStrategis(t *testing.T) {
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/se", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
+	req = withAdminContext(req)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -366,6 +395,7 @@ func TestSEHandler_Create_KategoriTinggi(t *testing.T) {
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/se", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
+	req = withAdminContext(req)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -407,6 +437,7 @@ func TestSEHandler_Update_Success(t *testing.T) {
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest(http.MethodPut, "/api/se/se-123", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
+	req = withAdminContext(req)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -445,6 +476,7 @@ func TestSEHandler_Update_Recategorize(t *testing.T) {
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest(http.MethodPut, "/api/se/se-123", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
+	req = withAdminContext(req)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -464,6 +496,7 @@ func TestSEHandler_Update_InvalidBody(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPut, "/api/se/se-123", strings.NewReader("invalid json"))
 	req.Header.Set("Content-Type", "application/json")
+	req = withAdminContext(req)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -482,6 +515,7 @@ func TestSEHandler_Update_ServiceError(t *testing.T) {
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest(http.MethodPut, "/api/se/se-123", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
+	req = withAdminContext(req)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -504,6 +538,7 @@ func TestSEHandler_Delete_Success(t *testing.T) {
 	mockSSE.On("NotifyDelete", "se", "se-123", "")
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/se/se-123", nil)
+	req = withAdminContext(req)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -524,6 +559,7 @@ func TestSEHandler_Delete_ServiceError(t *testing.T) {
 	mockService.On("Delete", "se-123").Return(errors.New("delete failed"))
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/se/se-123", nil)
+	req = withAdminContext(req)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -614,6 +650,7 @@ func TestSEHandler_ServeHTTP_Routes(t *testing.T) {
 			tt.setupMock(mockService, mockSSE)
 
 			req := httptest.NewRequest(tt.method, tt.path, nil)
+			req = withAdminContext(req)
 			w := httptest.NewRecorder()
 
 			handler.ServeHTTP(w, req)

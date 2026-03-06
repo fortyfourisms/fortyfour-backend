@@ -12,6 +12,7 @@ import (
 	usersRmq "fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/routes"
+	"fortyfour-backend/internal/seeder"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/pkg/cache"
@@ -118,6 +119,10 @@ func main() {
 		logger.FatalErr(err, "Failed to initialize Casbin")
 	}
 	logger.Info("Casbin RBAC initialized successfully with GORM adapter")
+
+	// Seed default Casbin policies (aman dijalankan berulang kali)
+	seeder.SeedCasbinPolicies(casbinService)
+	logger.Info("Casbin policies seeded")
 
 	// Initialize SSE Service
 	sseService := services.NewSSEService()
