@@ -177,9 +177,11 @@ func TestDashboardRepository_CountPerSektor(t *testing.T) {
 			want: 0,
 		},
 		{
-			name:    "error - db error",
-			filter:  dto.DashboardFilter{},
-			mockFn:  func(m sqlmock.Sqlmock) { m.ExpectQuery("SELECT s.id, s.nama_sektor, COUNT").WillReturnError(sql.ErrConnDone) },
+			name:   "error - db error",
+			filter: dto.DashboardFilter{},
+			mockFn: func(m sqlmock.Sqlmock) {
+				m.ExpectQuery("SELECT s.id, s.nama_sektor, COUNT").WillReturnError(sql.ErrConnDone)
+			},
 			want:    0,
 			wantErr: true,
 		},
@@ -379,7 +381,6 @@ func TestDashboardRepository_SeStatusCount(t *testing.T) {
 		})
 	}
 }
-
 
 /*
 =====================================

@@ -95,7 +95,7 @@ func InitRouter(
 	// Route Perusahaan
 	// GET /api/perusahaan/dropdown -> PUBLIC untuk dropdown register (minimal data: id, nama)
 	mux.HandleFunc("/api/perusahaan/dropdown", moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))
-	
+
 	// GET /api/perusahaan (list all) -> AUTHENTICATED (full data)
 	// Other methods & GET with ID -> AUTHENTICATED
 	mux.HandleFunc("/api/perusahaan", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(perusahaanH)))))

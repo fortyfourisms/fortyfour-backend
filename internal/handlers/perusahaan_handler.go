@@ -61,7 +61,7 @@ func (h *PerusahaanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.handleGetDropdown(w, r)
 			return
 		}
-		
+
 		if id == "" {
 			h.handleGetAll(w, r)
 		} else {
@@ -123,7 +123,7 @@ func (h *PerusahaanHandler) handleGetDropdown(w http.ResponseWriter, _ *http.Req
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	
+
 	// Convert to minimal response for security
 	minimalData := dto.ConvertToMinimalList(data)
 	utils.RespondJSON(w, 200, minimalData)

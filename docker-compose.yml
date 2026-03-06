@@ -49,6 +49,8 @@ services:
       timeout: 3s
       retries: 3
       start_period: 40s
+    volumes:
+      - /var/www/uploads:/app/uploads
     ports:
       - 8080:8080
     extra_hosts:

@@ -266,7 +266,7 @@ func TestCasbinService_BulkAddPolicies_Sebagian_Sudah_Ada(t *testing.T) {
 	})
 
 	policies := [][]string{
-		{"user", "/api/posts", "GET"},   // sudah ada
+		{"user", "/api/posts", "GET"},     // sudah ada
 		{"user", "/api/comments", "POST"}, // baru
 	}
 
@@ -307,7 +307,7 @@ func TestCasbinService_BulkAddPolicies_SkipPolicyKurangDari3Elemen(t *testing.T)
 	svc := newServiceWithPolicies(t, nil)
 
 	policies := [][]string{
-		{"admin", "/api/users"}, // hanya 2 elemen — harus diskip
+		{"admin", "/api/users"},       // hanya 2 elemen — harus diskip
 		{"user", "/api/posts", "GET"}, // valid
 	}
 
