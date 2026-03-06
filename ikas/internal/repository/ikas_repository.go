@@ -26,9 +26,9 @@ func NewIkasRepository(db *sql.DB) *IkasRepository {
 func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string, nilaiKematangan float64) error {
 
 	query := `INSERT INTO ikas
-		(id, id_perusahaan, tanggal, responden, telepon, jabatan,
+		(id, id_perusahaan, id_identifikasi, id_proteksi, id_deteksi, id_gulih, tanggal, responden, telepon, jabatan,
 		nilai_kematangan, target_nilai)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+		VALUES (?, ?, NULL, NULL, NULL, NULL, ?, ?, ?, ?, ?, ?)`
 
 	_, err := r.db.Exec(query,
 		id,
