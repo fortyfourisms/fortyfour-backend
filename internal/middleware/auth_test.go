@@ -64,7 +64,7 @@ func TestAuthMiddleware_Authenticate_ValidToken(t *testing.T) {
 	middleware := NewAuthMiddleware(tokenService)
 
 	// Generate a valid token
-	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", testJWTSecret)
+	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", testJWTSecret, nil)
 	assert.NoError(t, err)
 
 	handler := middleware.Authenticate(func(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +92,7 @@ func TestAuthMiddleware_Authenticate_ContextValues(t *testing.T) {
 	middleware := NewAuthMiddleware(tokenService)
 
 	// Generate a valid token
-	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", testJWTSecret)
+	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", testJWTSecret, nil)
 	assert.NoError(t, err)
 
 	handler := middleware.Authenticate(func(w http.ResponseWriter, r *http.Request) {
@@ -143,7 +143,7 @@ func TestAuthMiddleware_OptionalAuth_WithValidToken(t *testing.T) {
 	middleware := NewAuthMiddleware(tokenService)
 
 	// Generate a valid token
-	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "user", testJWTSecret)
+	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "user", testJWTSecret, nil)
 	assert.NoError(t, err)
 
 	handler := middleware.OptionalAuth(func(w http.ResponseWriter, r *http.Request) {
@@ -310,7 +310,7 @@ func TestAuthMiddleware_Authenticate_MultipleCookiesWithSameName(t *testing.T) {
 	middleware := NewAuthMiddleware(tokenService)
 
 	// Generate a valid token
-	validToken, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", testJWTSecret)
+	validToken, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", testJWTSecret, nil)
 	assert.NoError(t, err)
 
 	handler := middleware.Authenticate(func(w http.ResponseWriter, r *http.Request) {
@@ -358,7 +358,7 @@ func TestAuthMiddleware_Authenticate_ContextValueTypes(t *testing.T) {
 	tokenService := createTestTokenService()
 	middleware := NewAuthMiddleware(tokenService)
 
-	token, _, err := utils.GenerateAccessToken("user-123", "john_doe", "superadmin", testJWTSecret)
+	token, _, err := utils.GenerateAccessToken("user-123", "john_doe", "superadmin", testJWTSecret, nil)
 	assert.NoError(t, err)
 
 	handler := middleware.Authenticate(func(w http.ResponseWriter, r *http.Request) {
@@ -396,7 +396,7 @@ func TestAuthMiddleware_AutoRefresh_ValidTokenNoRefreshNeeded(t *testing.T) {
 	middleware := NewAuthMiddleware(tokenService)
 
 	// Generate a valid token that doesn't need refresh
-	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", testJWTSecret)
+	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", testJWTSecret, nil)
 	assert.NoError(t, err)
 
 	handler := middleware.AutoRefresh(func(w http.ResponseWriter, r *http.Request) {
@@ -428,7 +428,7 @@ func TestAuthMiddleware_AutoRefresh_ExpiredTokenRefreshSuccess(t *testing.T) {
 	middleware := NewAuthMiddleware(tokenService)
 
 	// Create token pair with valid refresh token
-	tokens, err := tokenService.GenerateTokenPair("user-2", "refreshuser", "user")
+	tokens, err := tokenService.GenerateTokenPair("user-2", "refreshuser", "user", nil)
 	assert.NoError(t, err)
 
 	// Create an expired access token manually (using very short expiry)
@@ -538,10 +538,10 @@ func TestAuthMiddleware_AutoRefresh_ContextIsolation(t *testing.T) {
 	middleware := NewAuthMiddleware(tokenService)
 
 	// Generate two different tokens
-	token1, _, err := utils.GenerateAccessToken("user-1", "user1", "admin", testJWTSecret)
+	token1, _, err := utils.GenerateAccessToken("user-1", "user1", "admin", testJWTSecret, nil)
 	assert.NoError(t, err)
 
-	token2, _, err := utils.GenerateAccessToken("user-2", "user2", "user", testJWTSecret)
+	token2, _, err := utils.GenerateAccessToken("user-2", "user2", "user", testJWTSecret, nil)
 	assert.NoError(t, err)
 
 	// First request
@@ -577,7 +577,7 @@ func TestAuthMiddleware_AutoRefresh_HeadersSetCorrectly(t *testing.T) {
 	tokenService := createTestTokenService()
 	middleware := NewAuthMiddleware(tokenService)
 
-	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", testJWTSecret)
+	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", testJWTSecret, nil)
 	assert.NoError(t, err)
 
 	handler := middleware.AutoRefresh(func(w http.ResponseWriter, r *http.Request) {
