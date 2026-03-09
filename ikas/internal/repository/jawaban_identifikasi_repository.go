@@ -341,5 +341,33 @@ func (r *JawabanIdentifikasiRepository) RecalculateIdentifikasi(perusahaanID str
 		return err
 	}
 
+	// HITUNG ULANG NILAI_KEMATANGAN SECARA PERSISTEN DI DB
+	updateKematanganQuery := `
+		UPDATE ikas i
+		LEFT JOIN identifikasi iden ON i.id_identifikasi = iden.id
+		LEFT JOIN proteksi prot ON i.id_proteksi = prot.id
+		LEFT JOIN deteksi det ON i.id_deteksi = det.id
+		LEFT JOIN gulih g ON i.id_gulih = g.id
+		SET i.nilai_kematangan = (
+			COALESCE(iden.nilai_identifikasi, 0) + 
+			COALESCE(prot.nilai_proteksi, 0) + 
+			COALESCE(det.nilai_deteksi, 0) + 
+			COALESCE(g.nilai_gulih, 0)
+		) / (
+			(CASE WHEN iden.id IS NOT NULL THEN 1 ELSE 0 END) +
+			(CASE WHEN prot.id IS NOT NULL THEN 1 ELSE 0 END) +
+			(CASE WHEN det.id IS NOT NULL THEN 1 ELSE 0 END) +
+			(CASE WHEN g.id IS NOT NULL THEN 1 ELSE 0 END)
+		)
+		WHERE i.id_perusahaan = ? AND (
+			iden.id IS NOT NULL OR prot.id IS NOT NULL OR det.id IS NOT NULL OR g.id IS NOT NULL
+		)`
+
+	_, err = r.db.Exec(updateKematanganQuery, perusahaanID)
+	if err != nil {
+		rollbar.Error(err)
+		return err
+	}
+
 	return nil
 }
