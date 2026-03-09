@@ -103,6 +103,7 @@ func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
 		"message": "Berhasil mengambil data",
 		"data":    data,
+		"total":   len(data),
 	})
 }
 

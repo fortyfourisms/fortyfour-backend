@@ -70,7 +70,11 @@ func (h *KategoriHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+		"total":   len(data),
+	})
 }
 
 // GetKategoriByID godoc
@@ -94,7 +98,10 @@ func (h *KategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, 
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+	})
 }
 
 // CreateKategori godoc
@@ -140,7 +147,10 @@ func (h *KategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 201, resp)
+	utils.RespondJSON(w, 201, map[string]interface{}{
+		"message": "Berhasil menyimpan data",
+		"data":    resp,
+	})
 }
 
 // UpdateKategori godoc
@@ -190,7 +200,10 @@ func (h *KategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 
-	utils.RespondJSON(w, 200, resp)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil memperbarui data",
+		"data":    resp,
+	})
 }
 
 // DeleteKategori godoc
@@ -215,5 +228,7 @@ func (h *KategoriHandler) handleDelete(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil menghapus data",
+	})
 }

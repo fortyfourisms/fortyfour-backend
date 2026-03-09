@@ -80,7 +80,11 @@ func (h *IkasHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+		"total":   len(data),
+	})
 }
 
 // GetIkasByID godoc
@@ -99,7 +103,10 @@ func (h *IkasHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id s
 		utils.RespondError(w, 404, "Data tidak ditemukan")
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+	})
 }
 
 // CreateIkas godoc
@@ -135,7 +142,10 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 201, resp)
+	utils.RespondJSON(w, 201, map[string]interface{}{
+		"message": "Berhasil menyimpan data",
+		"data":    resp,
+	})
 }
 
 // UpdateIkas godoc
@@ -164,7 +174,10 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 		return
 	}
 
-	utils.RespondJSON(w, 200, resp)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil memperbarui data",
+		"data":    resp,
+	})
 }
 
 // DeleteIkas godoc
@@ -183,7 +196,9 @@ func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil menghapus data",
+	})
 }
 
 // ImportIkas godoc

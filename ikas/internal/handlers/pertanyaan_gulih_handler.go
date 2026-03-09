@@ -69,7 +69,11 @@ func (h *PertanyaanGulihHandler) handleGetAll(w http.ResponseWriter, _ *http.Req
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+		"total":   len(data),
+	})
 }
 
 // GetPertanyaanGulihByID godoc
@@ -93,7 +97,10 @@ func (h *PertanyaanGulihHandler) handleGetByID(w http.ResponseWriter, _ *http.Re
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+	})
 }
 
 // CreatePertanyaanGulih godoc
@@ -150,7 +157,10 @@ func (h *PertanyaanGulihHandler) handleCreate(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.RespondJSON(w, 201, resp)
+	utils.RespondJSON(w, 201, map[string]interface{}{
+		"message": "Berhasil menyimpan data",
+		"data":    resp,
+	})
 }
 
 // UpdatePertanyaanGulih godoc
@@ -210,7 +220,10 @@ func (h *PertanyaanGulihHandler) handleUpdate(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.RespondJSON(w, 200, resp)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil memperbarui data",
+		"data":    resp,
+	})
 }
 
 // DeletePertanyaanGulih godoc
@@ -235,5 +248,7 @@ func (h *PertanyaanGulihHandler) handleDelete(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil menghapus data",
+	})
 }

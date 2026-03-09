@@ -69,7 +69,11 @@ func (h *PertanyaanProteksiHandler) handleGetAll(w http.ResponseWriter, _ *http.
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+		"total":   len(data),
+	})
 }
 
 // GetPertanyaanProteksiByID godoc
@@ -93,7 +97,10 @@ func (h *PertanyaanProteksiHandler) handleGetByID(w http.ResponseWriter, _ *http
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+	})
 }
 
 // CreatePertanyaanProteksi godoc
@@ -150,7 +157,10 @@ func (h *PertanyaanProteksiHandler) handleCreate(w http.ResponseWriter, r *http.
 		return
 	}
 
-	utils.RespondJSON(w, 201, resp)
+	utils.RespondJSON(w, 201, map[string]interface{}{
+		"message": "Berhasil menyimpan data",
+		"data":    resp,
+	})
 }
 
 // UpdatePertanyaanProteksi godoc
@@ -210,7 +220,10 @@ func (h *PertanyaanProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.
 		return
 	}
 
-	utils.RespondJSON(w, 200, resp)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil memperbarui data",
+		"data":    resp,
+	})
 }
 
 // DeletePertanyaanProteksi godoc
@@ -235,5 +248,7 @@ func (h *PertanyaanProteksiHandler) handleDelete(w http.ResponseWriter, r *http.
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil menghapus data",
+	})
 }

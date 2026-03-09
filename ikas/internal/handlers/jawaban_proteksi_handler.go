@@ -87,7 +87,11 @@ func (h *JawabanProteksiHandler) handleGetAll(w http.ResponseWriter, _ *http.Req
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+		"total":   len(data),
+	})
 }
 
 func (h *JawabanProteksiHandler) handleGetByPerusahaan(w http.ResponseWriter, _ *http.Request, perusahaanID string) {
@@ -101,7 +105,11 @@ func (h *JawabanProteksiHandler) handleGetByPerusahaan(w http.ResponseWriter, _ 
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+		"total":   len(data),
+	})
 }
 
 func (h *JawabanProteksiHandler) handleGetByPertanyaan(w http.ResponseWriter, _ *http.Request, pertanyaanID int) {
@@ -115,7 +123,11 @@ func (h *JawabanProteksiHandler) handleGetByPertanyaan(w http.ResponseWriter, _ 
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+		"total":   len(data),
+	})
 }
 
 // GetJawabanProteksiByID godoc
@@ -139,7 +151,10 @@ func (h *JawabanProteksiHandler) handleGetByID(w http.ResponseWriter, _ *http.Re
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+	})
 }
 
 // CreateJawabanProteksi godoc
@@ -193,7 +208,10 @@ func (h *JawabanProteksiHandler) handleCreate(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.RespondJSON(w, 201, resp)
+	utils.RespondJSON(w, 201, map[string]interface{}{
+		"message": "Berhasil menyimpan data",
+		"data":    resp,
+	})
 }
 
 // UpdateJawabanProteksi godoc
@@ -238,7 +256,10 @@ func (h *JawabanProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.RespondJSON(w, 200, resp)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil memperbarui data",
+		"data":    resp,
+	})
 }
 
 // DeleteJawabanProteksi godoc
@@ -263,5 +284,7 @@ func (h *JawabanProteksiHandler) handleDelete(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil menghapus data",
+	})
 }
