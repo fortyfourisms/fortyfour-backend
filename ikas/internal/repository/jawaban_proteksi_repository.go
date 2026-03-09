@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"ikas/internal/dto"
+	"ikas/internal/utils"
 	"strings"
 
 	"github.com/rollbar/rollbar-go"
@@ -268,7 +269,7 @@ func (r *JawabanProteksiRepository) CheckDuplicate(perusahaanID string, pertanya
 func (r *JawabanProteksiRepository) RecalculateProteksi(perusahaanID string) error {
 	// Query rata-rata jawaban per kategori_id untuk perusahaan tertentu
 	query := `
-		SELECT k.id AS kategori_id, AVG(jp.jawaban_proteksi) AS avg_nilai
+		SELECT k.id AS kategori_id, ROUND(AVG(jp.jawaban_proteksi), 2) AS avg_nilai
 		FROM jawaban_proteksi jp
 		JOIN pertanyaan_proteksi pp ON jp.pertanyaan_proteksi_id = pp.id
 		JOIN sub_kategori sk ON pp.sub_kategori_id = sk.id
@@ -301,7 +302,7 @@ func (r *JawabanProteksiRepository) RecalculateProteksi(perusahaanID string) err
 	}
 
 	// Hitung rata-rata keseluruhan (nilai_proteksi)
-	nilaiProteksi := (subdomain[6] + subdomain[7] + subdomain[8] + subdomain[9] + subdomain[10] + subdomain[11]) / 6.0
+	nilaiProteksi := utils.RoundToTwo((subdomain[6] + subdomain[7] + subdomain[8] + subdomain[9] + subdomain[10] + subdomain[11]) / 6.0)
 
 	upsertQuery := `
 		INSERT INTO proteksi 
@@ -346,7 +347,7 @@ func (r *JawabanProteksiRepository) RecalculateProteksi(perusahaanID string) err
 		LEFT JOIN proteksi prot ON i.id_proteksi = prot.id
 		LEFT JOIN deteksi det ON i.id_deteksi = det.id
 		LEFT JOIN gulih g ON i.id_gulih = g.id
-		SET i.nilai_kematangan = (
+		SET i.nilai_kematangan = ROUND((
 			COALESCE(iden.nilai_identifikasi, 0) + 
 			COALESCE(prot.nilai_proteksi, 0) + 
 			COALESCE(det.nilai_deteksi, 0) + 
@@ -356,7 +357,7 @@ func (r *JawabanProteksiRepository) RecalculateProteksi(perusahaanID string) err
 			(CASE WHEN prot.id IS NOT NULL THEN 1 ELSE 0 END) +
 			(CASE WHEN det.id IS NOT NULL THEN 1 ELSE 0 END) +
 			(CASE WHEN g.id IS NOT NULL THEN 1 ELSE 0 END)
-		)
+		), 2)
 		WHERE i.id_perusahaan = ? AND (
 			iden.id IS NOT NULL OR prot.id IS NOT NULL OR det.id IS NOT NULL OR g.id IS NOT NULL
 		)`

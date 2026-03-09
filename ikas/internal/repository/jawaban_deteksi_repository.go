@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"ikas/internal/dto"
+	"ikas/internal/utils"
 	"strings"
 
 	"github.com/rollbar/rollbar-go"
@@ -260,7 +261,7 @@ func (r *JawabanDeteksiRepository) CheckDuplicate(perusahaanID string, pertanyaa
 
 func (r *JawabanDeteksiRepository) RecalculateDeteksi(perusahaanID string) error {
 	query := `
-		SELECT k.id AS kategori_id, AVG(jd.jawaban_deteksi) AS avg_nilai
+		SELECT k.id AS kategori_id, ROUND(AVG(jd.jawaban_deteksi), 2) AS avg_nilai
 		FROM jawaban_deteksi jd
 		JOIN pertanyaan_deteksi pd ON jd.pertanyaan_deteksi_id = pd.id
 		JOIN sub_kategori sk ON pd.sub_kategori_id = sk.id
@@ -292,7 +293,7 @@ func (r *JawabanDeteksiRepository) RecalculateDeteksi(perusahaanID string) error
 		}
 	}
 
-	nilaiDeteksi := (subdomain[12] + subdomain[13] + subdomain[14]) / 3.0
+	nilaiDeteksi := utils.RoundToTwo((subdomain[12] + subdomain[13] + subdomain[14]) / 3.0)
 
 	upsertQuery := `
 		INSERT INTO deteksi 
@@ -333,7 +334,7 @@ func (r *JawabanDeteksiRepository) RecalculateDeteksi(perusahaanID string) error
 		LEFT JOIN proteksi prot ON i.id_proteksi = prot.id
 		LEFT JOIN deteksi det ON i.id_deteksi = det.id
 		LEFT JOIN gulih g ON i.id_gulih = g.id
-		SET i.nilai_kematangan = (
+		SET i.nilai_kematangan = ROUND((
 			COALESCE(iden.nilai_identifikasi, 0) + 
 			COALESCE(prot.nilai_proteksi, 0) + 
 			COALESCE(det.nilai_deteksi, 0) + 
@@ -343,7 +344,7 @@ func (r *JawabanDeteksiRepository) RecalculateDeteksi(perusahaanID string) error
 			(CASE WHEN prot.id IS NOT NULL THEN 1 ELSE 0 END) +
 			(CASE WHEN det.id IS NOT NULL THEN 1 ELSE 0 END) +
 			(CASE WHEN g.id IS NOT NULL THEN 1 ELSE 0 END)
-		)
+		), 2)
 		WHERE i.id_perusahaan = ? AND (
 			iden.id IS NOT NULL OR prot.id IS NOT NULL OR det.id IS NOT NULL OR g.id IS NOT NULL
 		)`

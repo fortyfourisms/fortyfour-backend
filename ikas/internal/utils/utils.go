@@ -1,9 +1,14 @@
 package utils
 
 import (
+	"math"
 	"net/http"
 	"strconv"
 )
+
+func RoundToTwo(f float64) float64 {
+	return math.Round(f*100) / 100
+}
 
 func ValueOrNull(s *string) interface{} {
 	if s != nil {

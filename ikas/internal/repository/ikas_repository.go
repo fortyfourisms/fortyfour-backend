@@ -182,7 +182,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 				count++
 			}
 			if count > 0 {
-				i.NilaiKematangan = sum / count
+				i.NilaiKematangan = utils.RoundToTwo(sum / count)
 			}
 		}
 
@@ -389,7 +389,7 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 			count++
 		}
 		if count > 0 {
-			i.NilaiKematangan = sum / count
+			i.NilaiKematangan = utils.RoundToTwo(sum / count)
 		}
 	}
 
