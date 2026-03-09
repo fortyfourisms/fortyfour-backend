@@ -227,7 +227,9 @@ func saveUploadedFile(r *http.Request, fieldName, uploadDir string) (string, err
 	}
 	defer file.Close()
 
-	os.MkdirAll(uploadDir, os.ModePerm)
+	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
+		return "", err
+	}
 
 	ext := filepath.Ext(header.Filename)
 	filename := uuid.New().String() + ext
