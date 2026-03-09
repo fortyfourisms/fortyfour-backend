@@ -106,6 +106,7 @@ func main() {
 
 	jawabanIdentifikasiRepo := repository.NewJawabanIdentifikasiRepository(db)
 	jawabanProteksiRepo := repository.NewJawabanProteksiRepository(db)
+	jawabanDeteksiRepo := repository.NewJawabanDeteksiRepository(db)
 
 	// services
 	ikasService := services.NewIkasService(ikasRepo, msgProducer)
@@ -119,6 +120,7 @@ func main() {
 	pertanyaanGulihService := services.NewPertanyaanGulihService(pertanyaanGulihRepo)
 	jawabanIdentifikasiService := services.NewJawabanIdentifikasiService(jawabanIdentifikasiRepo)
 	jawabanProteksiService := services.NewJawabanProteksiService(jawabanProteksiRepo)
+	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo)
 
 	// handlers
 	ikasHandler := handlers.NewIkasHandler(ikasService)
@@ -132,6 +134,7 @@ func main() {
 	pertanyaanGulihHandler := handlers.NewPertanyaanGulihHandler(pertanyaanGulihService)
 	jawabanIdentifikasiHandler := handlers.NewJawabanIdentifikasiHandler(jawabanIdentifikasiService)
 	jawabanProteksiHandler := handlers.NewJawabanProteksiHandler(jawabanProteksiService)
+	jawabanDeteksiHandler := handlers.NewJawabanDeteksiHandler(jawabanDeteksiService)
 
 	// Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
@@ -156,6 +159,7 @@ func main() {
 		pertanyaanGulihHandler,
 		jawabanIdentifikasiHandler,
 		jawabanProteksiHandler,
+		jawabanDeteksiHandler,
 		authMiddleware,
 		strictLimiter,
 		moderateLimiter,
