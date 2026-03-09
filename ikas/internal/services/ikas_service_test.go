@@ -47,6 +47,10 @@ func (m *mockIkasRepo) Delete(id string) error {
 	return nil
 }
 
+func (m *mockIkasRepo) ImportFromExcel(raw []byte) (*dto.IkasResponse, error) {
+	return &dto.IkasResponse{ID: "imp-1", Responden: "imported"}, nil
+}
+
 func (m *mockIkasRepo) ParseExcelForImport(b []byte) (*dto.CreateIkasRequest, error) {
 	return &dto.CreateIkasRequest{}, nil
 }

@@ -32,3 +32,27 @@ type PerusahaanResponse struct {
 	CreatedAt      string             `json:"created_at"`
 	UpdatedAt      string             `json:"updated_at"`
 }
+
+// PerusahaanMinimalResponse untuk dropdown di halaman register (public endpoint)
+// Hanya return data minimal yang diperlukan untuk keamanan
+type PerusahaanMinimalResponse struct {
+	ID             string `json:"id"`
+	NamaPerusahaan string `json:"nama_perusahaan"`
+}
+
+// ToMinimal converts full PerusahaanResponse to minimal version
+func (p *PerusahaanResponse) ToMinimal() PerusahaanMinimalResponse {
+	return PerusahaanMinimalResponse{
+		ID:             p.ID,
+		NamaPerusahaan: p.NamaPerusahaan,
+	}
+}
+
+// ConvertToMinimalList converts slice of full response to minimal response list
+func ConvertToMinimalList(data []PerusahaanResponse) []PerusahaanMinimalResponse {
+	result := make([]PerusahaanMinimalResponse, len(data))
+	for i, item := range data {
+		result[i] = item.ToMinimal()
+	}
+	return result
+}

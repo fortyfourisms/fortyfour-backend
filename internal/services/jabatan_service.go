@@ -6,16 +6,18 @@ import (
 
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/repository"
+	"fortyfour-backend/pkg/cache"
 
 	"github.com/google/uuid"
 )
 
 type JabatanService struct {
 	repo repository.JabatanRepositoryInterface
+	rc   cache.RedisInterface
 }
 
-func NewJabatanService(repo repository.JabatanRepositoryInterface) *JabatanService {
-	return &JabatanService{repo: repo}
+func NewJabatanService(repo repository.JabatanRepositoryInterface, rc cache.RedisInterface) *JabatanService {
+	return &JabatanService{repo: repo, rc: rc}
 }
 
 func (s *JabatanService) Create(req dto.CreateJabatanRequest) (*dto.JabatanResponse, error) {
@@ -24,20 +26,51 @@ func (s *JabatanService) Create(req dto.CreateJabatanRequest) (*dto.JabatanRespo
 	}
 
 	id := uuid.New().String()
-
 	if err := s.repo.Create(req, id); err != nil {
 		return nil, err
 	}
 
-	return s.repo.GetByID(id)
+	result, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, keyDetail("jabatan", id), result, TTLDetail)
+	cacheDelete(s.rc, keyList("jabatan"))
+
+	return result, nil
 }
 
 func (s *JabatanService) GetAll() ([]dto.JabatanResponse, error) {
-	return s.repo.GetAll()
+	key := keyList("jabatan")
+	var result []dto.JabatanResponse
+	if cacheGet(s.rc, key, &result) {
+		return result, nil
+	}
+
+	result, err := s.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, result, TTLList)
+	return result, nil
 }
 
 func (s *JabatanService) GetByID(id string) (*dto.JabatanResponse, error) {
-	return s.repo.GetByID(id)
+	key := keyDetail("jabatan", id)
+	var result dto.JabatanResponse
+	if cacheGet(s.rc, key, &result) {
+		return &result, nil
+	}
+
+	data, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, data, TTLDetail)
+	return data, nil
 }
 
 func (s *JabatanService) Update(id string, req dto.UpdateJabatanRequest) (*dto.JabatanResponse, error) {
@@ -54,9 +87,19 @@ func (s *JabatanService) Update(id string, req dto.UpdateJabatanRequest) (*dto.J
 		return nil, err
 	}
 
+	cacheDelete(s.rc, keyDetail("jabatan", id))
+	cacheDelete(s.rc, keyList("jabatan"))
+
 	return jabatan, nil
 }
 
 func (s *JabatanService) Delete(id string) error {
-	return s.repo.Delete(id)
+	if err := s.repo.Delete(id); err != nil {
+		return err
+	}
+
+	cacheDelete(s.rc, keyDetail("jabatan", id))
+	cacheDelete(s.rc, keyList("jabatan"))
+
+	return nil
 }

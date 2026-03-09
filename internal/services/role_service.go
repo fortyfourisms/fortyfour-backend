@@ -7,14 +7,16 @@ import (
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/repository"
+	"fortyfour-backend/pkg/cache"
 )
 
 type RoleService struct {
 	repo repository.RoleRepository
+	rc   cache.RedisInterface
 }
 
-func NewRoleService(repo repository.RoleRepository) *RoleService {
-	return &RoleService{repo: repo}
+func NewRoleService(repo repository.RoleRepository, rc cache.RedisInterface) *RoleService {
+	return &RoleService{repo: repo, rc: rc}
 }
 
 func (s *RoleService) Create(req dto.CreateRoleRequest) (*dto.RoleResponse, error) {
@@ -38,12 +40,21 @@ func (s *RoleService) Create(req dto.CreateRoleRequest) (*dto.RoleResponse, erro
 		return nil, err
 	}
 
-	return s.toResponse(role), nil
+	result := s.toResponse(role)
+	cacheSet(s.rc, keyDetail("role", role.ID), result, TTLDetail)
+	cacheDelete(s.rc, keyList("role"))
+
+	return result, nil
 }
 
 func (s *RoleService) GetByID(id string) (*dto.RoleResponse, error) {
-	ctx := context.Background()
+	key := keyDetail("role", id)
+	var result dto.RoleResponse
+	if cacheGet(s.rc, key, &result) {
+		return &result, nil
+	}
 
+	ctx := context.Background()
 	role, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
@@ -52,12 +63,19 @@ func (s *RoleService) GetByID(id string) (*dto.RoleResponse, error) {
 		return nil, errors.New("role not found")
 	}
 
-	return s.toResponse(role), nil
+	data := s.toResponse(role)
+	cacheSet(s.rc, key, data, TTLDetail)
+	return data, nil
 }
 
 func (s *RoleService) GetAll() ([]*dto.RoleResponse, error) {
-	ctx := context.Background()
+	key := keyList("role")
+	var result []*dto.RoleResponse
+	if cacheGet(s.rc, key, &result) {
+		return result, nil
+	}
 
+	ctx := context.Background()
 	roles, err := s.repo.GetAll(ctx)
 	if err != nil {
 		return nil, err
@@ -68,6 +86,7 @@ func (s *RoleService) GetAll() ([]*dto.RoleResponse, error) {
 		responses = append(responses, s.toResponse(role))
 	}
 
+	cacheSet(s.rc, key, responses, TTLList)
 	return responses, nil
 }
 
@@ -105,6 +124,9 @@ func (s *RoleService) Update(id string, req dto.UpdateRoleRequest) (*dto.RoleRes
 		return nil, err
 	}
 
+	cacheDelete(s.rc, keyDetail("role", id))
+	cacheDelete(s.rc, keyList("role"))
+
 	return s.toResponse(role), nil
 }
 
@@ -115,7 +137,14 @@ func (s *RoleService) Delete(id string) error {
 	if err == sql.ErrNoRows {
 		return errors.New("role not found")
 	}
-	return err
+	if err != nil {
+		return err
+	}
+
+	cacheDelete(s.rc, keyDetail("role", id))
+	cacheDelete(s.rc, keyList("role"))
+
+	return nil
 }
 
 func (s *RoleService) toResponse(role *models.Role) *dto.RoleResponse {

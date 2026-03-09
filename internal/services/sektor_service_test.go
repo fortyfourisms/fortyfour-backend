@@ -1,9 +1,11 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
 	"fortyfour-backend/internal/dto"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -128,7 +130,7 @@ func TestGetAllSektor_Success(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetAll()
@@ -171,7 +173,7 @@ func TestGetAllSektor_EmptyResult(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetAll()
@@ -190,7 +192,7 @@ func TestGetAllSektor_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetAll()
@@ -247,7 +249,7 @@ func TestGetSektorByID_Success_ILMATE(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("sektor-1")
@@ -304,7 +306,7 @@ func TestGetSektorByID_Success_Agro(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("sektor-2")
@@ -359,7 +361,7 @@ func TestGetSektorByID_Success_IKFT(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("sektor-3")
@@ -384,7 +386,7 @@ func TestGetSektorByID_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("invalid-id")
@@ -411,7 +413,7 @@ func TestGetSektorByID_WithoutSubSektor(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("sektor-empty")
@@ -431,7 +433,7 @@ func TestGetSektorByID_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("sektor-1")
@@ -459,7 +461,7 @@ func TestGetSektorByID_EmptyID(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetByID("")
@@ -494,7 +496,7 @@ func TestGetAllSektor_VerifySubSektorData(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetAll()
@@ -533,7 +535,7 @@ func TestGetAllSektor_VerifyAllThreeSektors(t *testing.T) {
 		},
 	}
 
-	service := NewSektorService(repo)
+	service := NewSektorService(repo, nil)
 
 	// Act
 	result, err := service.GetAll()
@@ -552,3 +554,155 @@ func TestGetAllSektor_VerifyAllThreeSektors(t *testing.T) {
 	assert.Contains(t, sektorNames, "Agro")
 	assert.Contains(t, sektorNames, "IKFT")
 }
+
+/*
+=====================================
+ TEST CACHE — GetAll
+=====================================
+*/
+
+func TestGetAllSektor_CacheHit_SkipRepo(t *testing.T) {
+	rc := newSektorTestRedis()
+	cached := []dto.SektorResponse{
+		{ID: "sektor-cache", NamaSektor: "Dari Cache"},
+	}
+	setSektorCache(rc, keyList("sektor"), cached)
+
+	repoCalled := false
+	repo := &mockSektorRepository{
+		GetAllFn: func() ([]dto.SektorResponse, error) {
+			repoCalled = true
+			return nil, errors.New("seharusnya tidak dipanggil")
+		},
+	}
+	service := NewSektorService(repo, rc)
+
+	result, err := service.GetAll()
+
+	assert.NoError(t, err)
+	assert.False(t, repoCalled, "repo tidak boleh dipanggil saat cache hit")
+	assert.Len(t, result, 1)
+	assert.Equal(t, "Dari Cache", result[0].NamaSektor)
+}
+
+func TestGetAllSektor_CacheMiss_SetsCache(t *testing.T) {
+	rc := newSektorTestRedis()
+	repo := &mockSektorRepository{
+		GetAllFn: func() ([]dto.SektorResponse, error) {
+			return []dto.SektorResponse{
+				{ID: "sektor-1", NamaSektor: "ILMATE"},
+			}, nil
+		},
+	}
+	service := NewSektorService(repo, rc)
+
+	result, err := service.GetAll()
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 1)
+
+	exists, _ := rc.Exists(keyList("sektor"))
+	assert.True(t, exists, "data harus di-cache setelah GetAll")
+}
+
+/*
+=====================================
+ TEST CACHE — GetByID
+=====================================
+*/
+
+func TestGetSektorByID_CacheHit_SkipRepo(t *testing.T) {
+	rc := newSektorTestRedis()
+	cached := dto.SektorResponse{ID: "sektor-1", NamaSektor: "ILMATE dari Cache"}
+	setSektorCache(rc, keyDetail("sektor", "sektor-1"), cached)
+
+	repoCalled := false
+	repo := &mockSektorRepository{
+		GetByIDFn: func(id string) (*dto.SektorResponse, error) {
+			repoCalled = true
+			return nil, errors.New("seharusnya tidak dipanggil")
+		},
+	}
+	service := NewSektorService(repo, rc)
+
+	result, err := service.GetByID("sektor-1")
+
+	assert.NoError(t, err)
+	assert.False(t, repoCalled, "repo tidak boleh dipanggil saat cache hit")
+	assert.Equal(t, "ILMATE dari Cache", result.NamaSektor)
+}
+
+func TestGetSektorByID_CacheMiss_SetsCache(t *testing.T) {
+	rc := newSektorTestRedis()
+	repo := &mockSektorRepository{
+		GetByIDFn: func(id string) (*dto.SektorResponse, error) {
+			return &dto.SektorResponse{ID: id, NamaSektor: "ILMATE"}, nil
+		},
+	}
+	service := NewSektorService(repo, rc)
+
+	_, err := service.GetByID("sektor-1")
+
+	assert.NoError(t, err)
+
+	exists, _ := rc.Exists(keyDetail("sektor", "sektor-1"))
+	assert.True(t, exists, "data harus di-cache setelah GetByID")
+}
+
+func TestGetSektorByID_CacheMiss_DifferentIDs_CachedSeparately(t *testing.T) {
+	rc := newSektorTestRedis()
+	repo := &mockSektorRepository{
+		GetByIDFn: func(id string) (*dto.SektorResponse, error) {
+			return &dto.SektorResponse{ID: id, NamaSektor: "Sektor " + id}, nil
+		},
+	}
+	service := NewSektorService(repo, rc)
+
+	_, _ = service.GetByID("sektor-1")
+	_, _ = service.GetByID("sektor-2")
+
+	exists1, _ := rc.Exists(keyDetail("sektor", "sektor-1"))
+	exists2, _ := rc.Exists(keyDetail("sektor", "sektor-2"))
+	assert.True(t, exists1, "sektor-1 harus di-cache")
+	assert.True(t, exists2, "sektor-2 harus di-cache terpisah")
+}
+
+/*
+=====================================
+ HELPERS REDIS UNTUK SEKTOR TEST
+=====================================
+*/
+
+func newSektorTestRedis() *sektorTestRedis {
+	return &sektorTestRedis{data: make(map[string]string)}
+}
+
+func setSektorCache(rc *sektorTestRedis, key string, value interface{}) {
+	b, _ := json.Marshal(value)
+	rc.data[key] = string(b)
+}
+
+type sektorTestRedis struct {
+	data map[string]string
+}
+
+func (r *sektorTestRedis) Set(key string, value interface{}, ttl time.Duration) error {
+	if v, ok := value.(string); ok {
+		r.data[key] = v
+	}
+	return nil
+}
+func (r *sektorTestRedis) Get(key string) (string, error) {
+	v, ok := r.data[key]
+	if !ok {
+		return "", errors.New("not found")
+	}
+	return v, nil
+}
+func (r *sektorTestRedis) Delete(key string) error { delete(r.data, key); return nil }
+func (r *sektorTestRedis) Exists(key string) (bool, error) {
+	_, ok := r.data[key]
+	return ok, nil
+}
+func (r *sektorTestRedis) Scan(pattern string) ([]string, error) { return nil, nil }
+func (r *sektorTestRedis) Close() error                          { return nil }

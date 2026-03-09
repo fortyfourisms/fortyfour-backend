@@ -244,33 +244,36 @@ jobs:
 
       # Scan the LOCAL image (not from registry)
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0  # Use specific stable version
+        uses: aquasecurity/trivy-action@0.31.0
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          format: 'table'  # Use table format for console output
+          format: 'table'
           severity: 'CRITICAL,HIGH,MEDIUM'
-          vuln-type: 'os,library'
+          scanners: 'vuln'
           timeout: '10m'
-          exit-code: '0'  # Don't fail build
+          exit-code: '0'
+        continue-on-error: true
 
       # Generate SARIF only for public repos or if Advanced Security enabled
       - name: Run Trivy for SARIF (if supported)
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.31.0
         if: github.event.repository.private == false || github.event.repository.visibility == 'public'
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH,MEDIUM'
+          scanners: 'vuln'
         continue-on-error: true
 
       # Also generate JSON report as backup
       - name: Run Trivy for JSON report
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.31.0
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           format: 'json'
           output: 'trivy-results.json'
+          scanners: 'vuln'
         continue-on-error: true
 
       # Upload JSON report as artifact (always works)
@@ -283,20 +286,20 @@ jobs:
 
       # Also generate HTML report for artifacts
       - name: Run Trivy for HTML report
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.31.0
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
-          format: 'template'
-          template: '@/contrib/html.tpl'
-          output: 'trivy-report.html'
+          format: 'json'
+          output: 'trivy-report.json'
+          scanners: 'vuln'
         continue-on-error: true
 
-      - name: Upload Trivy HTML report
+      - name: Upload Trivy report
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: trivy-html-report
-          path: trivy-report.html
+          name: trivy-report
+          path: trivy-report.json
 
       # Upload SARIF to GitHub Security (only for public repos or with Advanced Security)
       - name: Upload Trivy results to GitHub Security
@@ -365,6 +368,8 @@ jobs:
           script: |
             mkdir -p ~/fortyfour-backend
             mkdir -p ~/fortyfour-backend/migrations
+            mkdir -p ~/fortyfour-backend/uploads
+            chmod 755 ~/fortyfour-backend/uploads
 
       - name: Copy files to VPS
         uses: appleboy/scp-action@v0.1.4
@@ -373,7 +378,7 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          source: "docker-compose.yml,migrations/*"
+          source: "docker-compose.yml,migrations/*,nginx/conf.d/app.conf"
           target: ~/fortyfour-backend
 
       - name: Deploy to VPS
@@ -495,6 +500,22 @@ jobs:
             # Stop and remove old containers
             echo "Stopping old containers..."
             docker compose down || true
+            
+            # Ensure uploads directory exists with correct permissions
+            mkdir -p ~/fortyfour-backend/uploads
+            chmod 755 ~/fortyfour-backend/uploads
+            # Ensure nginx can traverse to the uploads directory
+            chmod o+x $HOME
+            chmod o+x $HOME/fortyfour-backend
+            echo "✅ Uploads directory ready"
+            
+            # Deploy Nginx config with correct uploads path
+            UPLOADS_PATH="$HOME/fortyfour-backend/uploads"
+            sed "s|alias /var/www/uploads/;|alias ${UPLOADS_PATH}/;|g" \
+              ~/fortyfour-backend/nginx/conf.d/app.conf > /tmp/app.conf
+            sudo cp /tmp/app.conf /etc/nginx/conf.d/app.conf
+            sudo nginx -t && sudo systemctl reload nginx
+            echo "✅ Nginx config updated and reloaded"
             
             # Start new containers
             echo "Starting new containers..."

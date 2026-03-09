@@ -137,6 +137,52 @@ func (r *PerusahaanRepository) GetByID(id string) (*dto.PerusahaanResponse, erro
 	return &p, nil
 }
 
+func (r *PerusahaanRepository) GetByNama(nama string) (*dto.PerusahaanResponse, error) {
+	row := r.db.QueryRow(`
+		SELECT p.id, p.photo, p.nama_perusahaan, p.alamat, p.telepon, p.email, p.website, p.created_at, p.updated_at,
+		       ss.id, ss.nama_sub_sektor, ss.id_sektor, ss.created_at, ss.updated_at,
+		       s.nama_sektor
+		FROM perusahaan p
+		LEFT JOIN sub_sektor ss ON p.id_sub_sektor = ss.id
+		LEFT JOIN sektor s ON ss.id_sektor = s.id
+		WHERE LOWER(p.nama_perusahaan) = LOWER(?)
+	`, nama)
+
+	var p dto.PerusahaanResponse
+	var photo, alamat, telepon, email, website sql.NullString
+	var subID, namaSubSektor, idSektor, namaSektor, subCreatedAt, subUpdatedAt sql.NullString
+
+	err := row.Scan(
+		&p.ID, &photo, &p.NamaPerusahaan,
+		&alamat, &telepon, &email, &website,
+		&p.CreatedAt, &p.UpdatedAt,
+		&subID, &namaSubSektor, &idSektor, &subCreatedAt, &subUpdatedAt,
+		&namaSektor,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	p.Photo = photo.String
+	p.Alamat = alamat.String
+	p.Telepon = telepon.String
+	p.Email = email.String
+	p.Website = website.String
+
+	if subID.Valid {
+		p.SubSektor = &dto.SubSektorResponse{
+			ID:            subID.String,
+			NamaSubSektor: namaSubSektor.String,
+			IDSektor:      idSektor.String,
+			NamaSektor:    namaSektor.String,
+			CreatedAt:     subCreatedAt.String,
+			UpdatedAt:     subUpdatedAt.String,
+		}
+	}
+
+	return &p, nil
+}
+
 func (r *PerusahaanRepository) Update(id string, p dto.PerusahaanResponse) error {
 	var idSubSektor interface{}
 	if p.SubSektor != nil {
