@@ -90,7 +90,7 @@ func TestGenerateAccessToken(t *testing.T) {
 				tt.username,
 				tt.role,
 				tt.secret,
-				nil,
+				"",
 			)
 
 			if tt.wantErr {
@@ -115,7 +115,7 @@ func TestGenerateAccessToken_Claims(t *testing.T) {
 	username := "testuser"
 	role := "admin"
 
-	tokenString, _, err := GenerateAccessToken(userID, username, role, testSecret, nil)
+	tokenString, _, err := GenerateAccessToken(userID, username, role, testSecret, "")
 	require.NoError(t, err)
 
 	// Parse token to verify claims
@@ -134,7 +134,7 @@ func TestTokenExpiration(t *testing.T) {
 	username := "testuser"
 	role := "user"
 
-	_, expiresAt, err := GenerateAccessToken(userID, username, role, testSecret, nil)
+	_, expiresAt, err := GenerateAccessToken(userID, username, role, testSecret, "")
 	require.NoError(t, err)
 
 	// Verify expiration is approximately 15 minutes from now
@@ -151,7 +151,7 @@ func TestTokenRoleField(t *testing.T) {
 
 	for _, role := range roles {
 		t.Run("Role: "+role, func(t *testing.T) {
-			tokenString, _, err := GenerateAccessToken("user123", "testuser", role, testSecret, nil)
+			tokenString, _, err := GenerateAccessToken("user123", "testuser", role, testSecret, "")
 			require.NoError(t, err)
 
 			claims, err := ValidateAccessToken(tokenString, testSecret)
@@ -219,7 +219,7 @@ func TestValidateAccessToken_ValidToken(t *testing.T) {
 	role := "admin"
 
 	// Generate a token
-	tokenString, _, err := GenerateAccessToken(userID, username, role, testSecret, nil)
+	tokenString, _, err := GenerateAccessToken(userID, username, role, testSecret, "")
 	require.NoError(t, err)
 
 	// Verify the token
@@ -454,7 +454,7 @@ func TestValidateAccessToken_WrongClaimTypes(t *testing.T) {
 
 // Helper function to generate a valid token for testing
 func generateValidToken(t *testing.T, secret string) string {
-	token, _, err := GenerateAccessToken("user123", "testuser", "admin", secret, nil)
+	token, _, err := GenerateAccessToken("user123", "testuser", "admin", secret, "")
 	require.NoError(t, err)
 	return token
 }
@@ -466,7 +466,7 @@ func generateValidToken(t *testing.T, secret string) string {
 func BenchmarkGenerateAccessToken(b *testing.B) {
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		GenerateAccessToken("user123", "testuser", "admin", testSecret, nil)
+		GenerateAccessToken("user123", "testuser", "admin", testSecret, "")
 	}
 }
 
@@ -478,7 +478,7 @@ func BenchmarkGenerateRefreshToken(b *testing.B) {
 }
 
 func BenchmarkValidateAccessToken(b *testing.B) {
-	token, _, _ := GenerateAccessToken("user123", "testuser", "admin", testSecret, nil)
+	token, _, _ := GenerateAccessToken("user123", "testuser", "admin", testSecret, "")
 
 	b.ReportAllocs()
 	b.ResetTimer()

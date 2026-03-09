@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -12,6 +13,7 @@ import (
 	"testing"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/models"
 
 	"github.com/stretchr/testify/assert"
@@ -22,11 +24,12 @@ import (
 //
 
 type mockCsirtService struct {
-	GetAllFn  func() ([]dto.CsirtResponse, error)
-	GetByIDFn func(string) (*dto.CsirtResponse, error)
-	CreateFn  func(dto.CreateCsirtRequest) (*models.Csirt, error)
-	UpdateFn  func(string, dto.UpdateCsirtRequest) (*models.Csirt, error)
-	DeleteFn  func(string) error
+	GetAllFn            func() ([]dto.CsirtResponse, error)
+	GetByIDFn           func(string) (*dto.CsirtResponse, error)
+	GetByPerusahaanFn   func(string) ([]dto.CsirtResponse, error)
+	CreateFn            func(dto.CreateCsirtRequest) (*models.Csirt, error)
+	UpdateFn            func(string, dto.UpdateCsirtRequest) (*models.Csirt, error)
+	DeleteFn            func(string) error
 }
 
 func (m *mockCsirtService) GetAll() ([]dto.CsirtResponse, error) {
@@ -34,6 +37,9 @@ func (m *mockCsirtService) GetAll() ([]dto.CsirtResponse, error) {
 }
 func (m *mockCsirtService) GetByID(id string) (*dto.CsirtResponse, error) {
 	return m.GetByIDFn(id)
+}
+func (m *mockCsirtService) GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error) {
+	return m.GetByPerusahaanFn(idPerusahaan)
 }
 func (m *mockCsirtService) Create(req dto.CreateCsirtRequest) (*models.Csirt, error) {
 	return m.CreateFn(req)
@@ -43,6 +49,12 @@ func (m *mockCsirtService) Update(id string, req dto.UpdateCsirtRequest) (*model
 }
 func (m *mockCsirtService) Delete(id string) error {
 	return m.DeleteFn(id)
+}
+
+// withCsirtAdminContext set role admin di context
+func withCsirtAdminContext(req *http.Request) *http.Request {
+	ctx := context.WithValue(req.Context(), middleware.RoleKey, "admin")
+	return req.WithContext(ctx)
 }
 
 //
@@ -101,6 +113,7 @@ func TestCsirtHandler_GetAll_Success(t *testing.T) {
 	handler := NewCsirtHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/csirt", nil)
+	req = withCsirtAdminContext(req)
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)
@@ -124,6 +137,7 @@ func TestCsirtHandler_GetAll_ServiceError(t *testing.T) {
 	handler := NewCsirtHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/csirt", nil)
+	req = withCsirtAdminContext(req)
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)
@@ -208,6 +222,7 @@ func TestCsirtHandler_Create_Success(t *testing.T) {
 		},
 	)
 	t.Cleanup(cleanup)
+	req = withCsirtAdminContext(req)
 
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
@@ -228,6 +243,7 @@ func TestCsirtHandler_Create_InvalidMultipart(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/api/csirt", bytes.NewBufferString("invalid"))
 	req.Header.Set("Content-Type", "application/json")
+	req = withCsirtAdminContext(req)
 
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
@@ -255,6 +271,7 @@ func TestCsirtHandler_Create_ServiceError(t *testing.T) {
 		nil,
 	)
 	t.Cleanup(cleanup)
+	req = withCsirtAdminContext(req)
 
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
@@ -290,6 +307,7 @@ func TestCsirtHandler_Update_Success(t *testing.T) {
 		nil,
 	)
 	t.Cleanup(cleanup)
+	req = withCsirtAdminContext(req)
 
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
@@ -322,6 +340,7 @@ func TestCsirtHandler_Update_NotFound(t *testing.T) {
 		nil,
 	)
 	t.Cleanup(cleanup)
+	req = withCsirtAdminContext(req)
 
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
@@ -349,6 +368,7 @@ func TestCsirtHandler_Update_Error(t *testing.T) {
 		nil,
 	)
 	t.Cleanup(cleanup)
+	req = withCsirtAdminContext(req)
 
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
@@ -372,6 +392,7 @@ func TestCsirtHandler_Delete_Success(t *testing.T) {
 	handler := NewCsirtHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/csirt/1", nil)
+	req = withCsirtAdminContext(req)
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)
@@ -389,6 +410,7 @@ func TestCsirtHandler_Delete_NotFound(t *testing.T) {
 	handler := NewCsirtHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/csirt/999", nil)
+	req = withCsirtAdminContext(req)
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)
@@ -407,6 +429,7 @@ func TestCsirtHandler_Delete_ServiceError(t *testing.T) {
 	handler := NewCsirtHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/csirt/1", nil)
+	req = withCsirtAdminContext(req)
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)

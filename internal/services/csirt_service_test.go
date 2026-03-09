@@ -48,6 +48,10 @@ func (m *mockCsirtRepo) Delete(id string) error {
 	return m.DeleteFn(id)
 }
 
+func (m *mockCsirtRepo) GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error) {
+	return []dto.CsirtResponse{}, nil
+}
+
 /*
 =====================================
  TEST CREATE CSIRT - SUCCESS CASES

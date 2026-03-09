@@ -13,13 +13,13 @@ type RefreshTokenData struct {
 	Username     string    `json:"username"`
 	CreatedAt    time.Time `json:"created_at"`
 	Role         string    `json:"role"`
-	IDPerusahaan *string   `json:"id_perusahaan,omitempty"`
+	IDPerusahaan string    `json:"id_perusahaan"`
 }
 
 type TokenClaims struct {
-	UserID       string  `json:"user_id"`
-	Username     string  `json:"username"`
-	Role         string  `json:"role"`
-	IDPerusahaan *string `json:"id_perusahaan,omitempty"`
-	ExpiresAt    int64   `json:"exp"`
+	UserID       string `json:"user_id"`
+	Username     string `json:"username"`
+	Role         string `json:"role"`
+	IDPerusahaan string `json:"id_perusahaan"`
+	ExpiresAt    int64  `json:"exp"`
 }

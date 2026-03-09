@@ -28,7 +28,7 @@ func NewTokenService(redis cache.RedisInterface, jwtSecret string, isProduction 
 }
 
 // GenerateTokenPair creates access & refresh tokens
-func (s *TokenService) GenerateTokenPair(userID, username, role string, idPerusahaan *string) (*models.TokenPair, error) {
+func (s *TokenService) GenerateTokenPair(userID, username, role, idPerusahaan string) (*models.TokenPair, error) {
 	accessToken, expiresAt, err := utils.GenerateAccessToken(userID, username, role, s.JWTSecret, idPerusahaan)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate access token: %w", err)

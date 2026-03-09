@@ -58,15 +58,15 @@ func main() {
 	defer db.Close()
 
 	// Run database migrations
-	if err := database.RunMigrations(database.Config{
-		Host:     cfg.Database.Host,
-		Port:     cfg.Database.Port,
-		User:     cfg.Database.User,
-		Password: cfg.Database.Password,
-		DBName:   cfg.Database.DBName,
-	}, "./migrations"); err != nil {
-		logger.FatalErr(err, "Failed to run database migrations")
-	}
+	// if err := database.RunMigrations(database.Config{
+	// 	Host:     cfg.Database.Host,
+	// 	Port:     cfg.Database.Port,
+	// 	User:     cfg.Database.User,
+	// 	Password: cfg.Database.Password,
+	// 	DBName:   cfg.Database.DBName,
+	// }, "./migrations"); err != nil {
+	// 	logger.FatalErr(err, "Failed to run database migrations")
+	// }
 
 	// Initialize Redis
 	redisClient, err := cache.NewRedisClient(cache.RedisConfig{
@@ -151,7 +151,8 @@ func main() {
 	dashboardRepo := repository.NewDashboardRepository(db)
 
 	// Initialize services
-	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret, true, cfg.Domain)
+	isProduction := cfg.Environment == "production"
+    tokenService := services.NewTokenService(redisClient, cfg.JWTSecret, isProduction, cfg.Domain)
 	notificationService := services.NewNotificationService(redisClient)
 	authService := services.NewAuthService(userRepo, tokenService, notificationService)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo, redisClient)

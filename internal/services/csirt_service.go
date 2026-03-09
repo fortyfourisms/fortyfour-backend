@@ -5,12 +5,14 @@ import (
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
+
 	"github.com/google/uuid"
 )
 
 type CsirtServiceInterface interface {
 	GetAll() ([]dto.CsirtResponse, error)
 	GetByID(id string) (*dto.CsirtResponse, error)
+	GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error)
 	Create(req dto.CreateCsirtRequest) (*models.Csirt, error)
 	Update(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error)
 	Delete(id string) error
@@ -71,6 +73,22 @@ func (s *CsirtService) GetByID(id string) (*dto.CsirtResponse, error) {
 	}
 
 	cacheSet(s.rc, key, data, TTLDetail)
+	return data, nil
+}
+
+func (s *CsirtService) GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error) {
+	key := "csirt:perusahaan:" + idPerusahaan
+	var result []dto.CsirtResponse
+	if cacheGet(s.rc, key, &result) {
+		return result, nil
+	}
+
+	data, err := s.repo.GetByPerusahaan(idPerusahaan)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, data, TTLList)
 	return data, nil
 }
 

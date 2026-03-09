@@ -10,7 +10,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateAccessToken(userID, username, role, secret string, idPerusahaan *string) (string, time.Time, error) {
+func GenerateAccessToken(userID, username, role, secret, idPerusahaan string) (string, time.Time, error) {
 	expiresAt := time.Now().Add(15 * time.Minute)
 
 	claims := jwt.MapClaims{
@@ -79,13 +79,8 @@ func ValidateAccessToken(tokenString, secret string) (*models.TokenClaims, error
 		return nil, errors.New("invalid exp claim")
 	}
 
-	// id_perusahaan bersifat opsional (admin mungkin tidak punya)
-	var idPerusahaan *string
-	if raw, exists := claims["id_perusahaan"]; exists && raw != nil {
-		if s, ok := raw.(string); ok && s != "" {
-			idPerusahaan = &s
-		}
-	}
+	// id_perusahaan opsional, default ke "" jika tidak ada
+	idPerusahaan, _ := claims["id_perusahaan"].(string)
 
 	return &models.TokenClaims{
 		UserID:       userID,

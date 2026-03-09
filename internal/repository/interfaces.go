@@ -113,6 +113,7 @@ type CsirtRepositoryInterface interface {
 	GetByID(id string) (*models.Csirt, error)
 	GetAllWithPerusahaan() ([]dto.CsirtResponse, error)
 	GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, error)
+	GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error)
 	Update(id string, csirt models.Csirt) error
 	Delete(id string) error
 }
