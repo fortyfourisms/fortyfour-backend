@@ -69,6 +69,22 @@ var defaultPolicies = []Policy{
 	{"user", "/api/sdm-csirt/:id", "PUT"},
 	{"user", "/api/sdm-csirt/:id", "DELETE"},
 
+	// PIC Perusahaan
+	{"user", "/api/pic", "GET"},
+	{"user", "/api/pic", "POST"},
+	{"user", "/api/pic/:id", "GET"},
+	{"user", "/api/pic/:id", "PUT"},
+	{"user", "/api/pic/:id", "DELETE"},
+
+	// Jabatan (user bisa lihat list dan tambah jabatan baru untuk dropdown profil)
+	{"user", "/api/jabatan", "GET"},
+	{"user", "/api/jabatan", "POST"},
+
+	// Perusahaan (user hanya bisa lihat dan update miliknya sendiri)
+	{"user", "/api/perusahaan", "GET"},
+	{"user", "/api/perusahaan/:id", "GET"},
+	{"user", "/api/perusahaan/:id", "PUT"},
+
 	// Profile & data diri sendiri
 	{"user", "/api/users/profile", "GET"},
 	{"user", "/api/users/profile", "PUT"},
