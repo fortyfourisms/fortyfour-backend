@@ -24,41 +24,28 @@ func NewIkasService(repo repository.IkasRepositoryInterface, producer *rabbitmq.
 }
 
 func (s *IkasService) Create(req dto.CreateIkasRequest, id string) error {
-	// Nested creation routines have been removed per recent refactor.
-	// Nilai kematangan initialized to 0, it will be automatically calculated when domains are filled later.
-	nilaiKematangan := 0.0
-
-	// Create IKAS record
-	err := s.repo.Create(req, id, nilaiKematangan)
-	if err != nil {
-		return err
-	}
-
-	go s.publishIkasCreatedEvent(id, req, nilaiKematangan)
-
-	return nil
-}
-
-func (s *IkasService) publishIkasCreatedEvent(ikasID string, req dto.CreateIkasRequest, nilaiKematangan float64) {
-	if s.producer == nil {
-		return // Skip jika producer tidak ada
-	}
-
 	event := dto_event.IkasCreatedEvent{
-		IkasID:          ikasID,
+		IkasID:          id,
 		IDPerusahaan:    req.IDPerusahaan,
 		Tanggal:         req.Tanggal,
 		Responden:       req.Responden,
-		NilaiKematangan: nilaiKematangan,
+		Telepon:         req.Telepon,
+		Jabatan:         req.Jabatan,
 		TargetNilai:     req.TargetNilai,
+		NilaiKematangan: 0.0,
 		CreatedAt:       time.Now(),
+	}
+
+	if s.producer == nil {
+		return nil
 	}
 
 	ctx := context.Background()
 	if err := s.producer.PublishIkasCreated(ctx, event); err != nil {
-		// Log error tapi jangan fail create operation
-		// logger.Error(err, "operation failed")
+		return err
 	}
+
+	return nil
 }
 
 func (s *IkasService) GetAll() ([]dto.IkasResponse, error) {
@@ -69,105 +56,89 @@ func (s *IkasService) GetByID(id string) (*dto.IkasResponse, error) {
 	return s.repo.GetByID(id)
 }
 
-func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) (*dto.IkasResponse, error) {
-	// Ambil data existing
-	existing, err := s.repo.GetByID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	// Simpan old nilai untuk event
-	oldNilaiKematangan := existing.NilaiKematangan
-
-	// Update data IKAS utama (Nested domain checks removed)
-	err = s.repo.Update(id, req)
-	if err != nil {
-		return nil, err
-	}
-
-	// Fetch updated data
-	updated, err := s.repo.GetByID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	// Publish event dengan nilai terbaru (if existing, use 0 if there are changes but kematangan calculation continues to be dynamic in get mode)
-	go s.publishIkasUpdatedEvent(id, updated.NilaiKematangan, oldNilaiKematangan)
-
-	return updated, nil
-}
-
-func (s *IkasService) publishIkasUpdatedEvent(ikasID string, newNilai, oldNilai float64) {
-	if s.producer == nil {
-		return
-	}
-
-	event := dto_event.IkasUpdatedEvent{
-		IkasID:             ikasID,
-		OldNilaiKematangan: oldNilai,
-		NewNilaiKematangan: newNilai,
-		UpdatedAt:          time.Now(),
-	}
-
-	ctx := context.Background()
-	if err := s.producer.PublishIkasUpdated(ctx, event); err != nil {
-		// Log error tapi jangan fail update operation
-		// logger.Error(err, "operation failed")
-	}
-}
-
-func (s *IkasService) Delete(id string) error {
-	err := s.repo.Delete(id)
+func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) error {
+	// Check existence
+	_, err := s.repo.GetByID(id)
 	if err != nil {
 		return err
 	}
 
-	go s.publishIkasDeletedEvent(id)
+	// Publish update event
+	event := dto_event.IkasUpdatedEvent{
+		IkasID:       id,
+		IDPerusahaan: getStringValue(req.IDPerusahaan),
+		Tanggal:      getStringValue(req.Tanggal),
+		Responden:    getStringValue(req.Responden),
+		Telepon:      getStringValue(req.Telepon),
+		Jabatan:      getStringValue(req.Jabatan),
+		TargetNilai:  getFloatValue(req.TargetNilai),
+		UpdatedAt:    time.Now(),
+	}
+
+	if s.producer == nil {
+		return nil
+	}
+
+	ctx := context.Background()
+	if err := s.producer.PublishIkasUpdated(ctx, event); err != nil {
+		return err
+	}
 
 	return nil
 }
 
-func (s *IkasService) publishIkasDeletedEvent(ikasID string) {
-	if s.producer == nil {
-		return
+func getStringValue(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+func getFloatValue(f *float64) float64 {
+	if f == nil {
+		return 0.0
+	}
+	return *f
+}
+
+func (s *IkasService) Delete(id string) error {
+	// Check existence
+	_, err := s.repo.GetByID(id)
+	if err != nil {
+		return err
 	}
 
+	// Publish delete event
 	event := dto_event.IkasDeletedEvent{
-		IkasID:    ikasID,
+		IkasID:    id,
 		DeletedAt: time.Now(),
+	}
+
+	if s.producer == nil {
+		return nil
 	}
 
 	ctx := context.Background()
 	if err := s.producer.PublishIkasDeleted(ctx, event); err != nil {
-		// Log error tapi jangan fail delete operation
-		// logger.Error(err, "operation failed")
+		return err
 	}
+
+	return nil
 }
 
-func (s *IkasService) ImportFromExcel(fileData []byte) (*dto.IkasResponse, error) {
-	// Parse Excel
+func (s *IkasService) ImportFromExcel(fileData []byte) (string, error) {
 	excelData, err := s.repo.ParseExcelForImport(fileData)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	// Generate ID baru
 	newID := uuid.New().String()
 
-	// Create menggunakan service Create yang sudah ada
 	if err := s.Create(*excelData, newID); err != nil {
-		return nil, err
+		return "", err
 	}
 
-	// Ambil data yang baru dibuat
-	resp, err := s.GetByID(newID)
-	if err != nil {
-		return nil, err
-	}
-
-	go s.publishIkasImportedEvent(newID, excelData, resp.NilaiKematangan)
-
-	return resp, nil
+	return newID, nil
 }
 
 func (s *IkasService) publishIkasImportedEvent(ikasID string, req *dto.CreateIkasRequest, nilaiKematangan float64) {
@@ -184,7 +155,6 @@ func (s *IkasService) publishIkasImportedEvent(ikasID string, req *dto.CreateIka
 
 	ctx := context.Background()
 	if err := s.producer.PublishIkasImported(ctx, event); err != nil {
-		// Log error tapi jangan fail import operation
-		// logger.Error(err, "operation failed")
+		// Log error but don't fail import
 	}
 }

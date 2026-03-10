@@ -185,7 +185,7 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 		return
 	}
 
-	resp, err := h.service.Create(req)
+	msg, err := h.service.Create(req)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -209,8 +209,7 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 	}
 
 	utils.RespondJSON(w, 201, map[string]interface{}{
-		"message": "Berhasil menyimpan data",
-		"data":    resp,
+		"message": msg,
 	})
 }
 

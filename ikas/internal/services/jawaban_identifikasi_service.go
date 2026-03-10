@@ -1,9 +1,11 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"ikas/internal/dto"
+	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
 
@@ -11,11 +13,15 @@ import (
 )
 
 type JawabanIdentifikasiService struct {
-	repo repository.JawabanIdentifikasiRepositoryInterface
+	repo     repository.JawabanIdentifikasiRepositoryInterface
+	producer *rabbitmq.Producer
 }
 
-func NewJawabanIdentifikasiService(repo repository.JawabanIdentifikasiRepositoryInterface) *JawabanIdentifikasiService {
-	return &JawabanIdentifikasiService{repo: repo}
+func NewJawabanIdentifikasiService(repo repository.JawabanIdentifikasiRepositoryInterface, producer *rabbitmq.Producer) *JawabanIdentifikasiService {
+	return &JawabanIdentifikasiService{
+		repo:     repo,
+		producer: producer,
+	}
 }
 
 var validValidasi = map[string]bool{"yes": true, "no": true}
@@ -72,57 +78,36 @@ func (s *JawabanIdentifikasiService) validateUpdate(req *dto.UpdateJawabanIdenti
 	return nil
 }
 
-func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiRequest) (*dto.JawabanIdentifikasiResponse, error) {
+func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiRequest) (string, error) {
 	if err := s.validateCreate(&req); err != nil {
-		return nil, err
+		return "", err
 	}
 
 	pertanyaanExists, err := s.repo.CheckPertanyaanExists(req.PertanyaanIdentifikasiID)
 	if err != nil {
 		rollbar.Error(err)
-		return nil, err
+		return "", err
 	}
 	if !pertanyaanExists {
-		return nil, errors.New("pertanyaan_identifikasi_id tidak ditemukan")
+		return "", errors.New("pertanyaan_identifikasi_id tidak ditemukan")
 	}
 
 	perusahaanExists, err := s.repo.CheckPerusahaanExists(req.PerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
-		return nil, err
+		return "", err
 	}
 	if !perusahaanExists {
-		return nil, errors.New("perusahaan_id tidak ditemukan")
+		return "", errors.New("perusahaan_id tidak ditemukan")
 	}
 
-	isDuplicate, err := s.repo.CheckDuplicate(req.PerusahaanID, req.PertanyaanIdentifikasiID, 0)
-	if err != nil {
+	// Publish to RabbitMQ for Pola 2
+	if err := s.producer.PublishJawabanIdentifikasiCreated(context.Background(), req); err != nil {
 		rollbar.Error(err)
-		return nil, err
-	}
-	if isDuplicate {
-		return nil, errors.New("jawaban untuk pertanyaan ini sudah ada untuk perusahaan tersebut")
+		return "", err
 	}
 
-	lastID, err := s.repo.Create(req)
-	if err != nil {
-		rollbar.Error(err)
-		return nil, err
-	}
-
-	// Recalculate identifikasi untuk perusahaan ini
-	if err := s.repo.RecalculateIdentifikasi(req.PerusahaanID); err != nil {
-		rollbar.Error(err)
-		// Log tapi jangan gagalkan create
-	}
-
-	resp, err := s.repo.GetByID(int(lastID))
-	if err != nil {
-		rollbar.Error(err)
-		return nil, err
-	}
-
-	return resp, nil
+	return "Berhasil menyimpan data", nil
 }
 
 func (s *JawabanIdentifikasiService) GetAll() ([]dto.JawabanIdentifikasiResponse, error) {
@@ -182,10 +167,14 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 		return nil, err
 	}
 
-	// Recalculate identifikasi untuk perusahaan ini
-	if err := s.repo.RecalculateIdentifikasi(existing.PerusahaanID); err != nil {
+	// Recalculate identifikasi asynchronously via RabbitMQ
+	event := map[string]interface{}{
+		"perusahaan_id": existing.PerusahaanID,
+		"action":        "update",
+	}
+	if err := s.producer.PublishJawabanIdentifikasiUpdated(context.Background(), event); err != nil {
 		rollbar.Error(err)
-		// Log tapi jangan gagalkan update
+		// Log but don't fail update
 	}
 
 	updated, err := s.repo.GetByID(id)
@@ -214,10 +203,14 @@ func (s *JawabanIdentifikasiService) Delete(id int) error {
 		return err
 	}
 
-	// Recalculate identifikasi setelah delete
-	if err := s.repo.RecalculateIdentifikasi(existing.PerusahaanID); err != nil {
+	// Recalculate identifikasi asynchronously via RabbitMQ
+	event := map[string]interface{}{
+		"perusahaan_id": existing.PerusahaanID,
+		"action":        "delete",
+	}
+	if err := s.producer.PublishJawabanIdentifikasiDeleted(context.Background(), event); err != nil {
 		rollbar.Error(err)
-		// Log tapi jangan gagalkan delete
+		// Log but don't fail delete
 	}
 
 	return nil

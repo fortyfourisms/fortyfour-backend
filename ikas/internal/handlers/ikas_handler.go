@@ -27,7 +27,6 @@ func NewIkasHandler(service *services.IkasService) *IkasHandler {
 func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	suffix := utils.ExtractID(r.URL.Path, "ikas")
 
-	// Handle import endpoint
 	if suffix == "import" && r.Method == http.MethodPost {
 		h.handleImport(w, r)
 		return
@@ -135,16 +134,9 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.service.GetByID(newID)
-	if err != nil {
-		logger.Error(err, "operation failed")
-		utils.RespondError(w, 500, "Data berhasil dibuat tapi gagal diambil")
-		return
-	}
-
 	utils.RespondJSON(w, 201, map[string]interface{}{
 		"message": "Berhasil menyimpan data",
-		"data":    resp,
+		"id":      newID,
 	})
 }
 
@@ -167,16 +159,20 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 		return
 	}
 
-	resp, err := h.service.Update(id, req)
+	err := h.service.Update(id, req)
 	if err != nil {
 		logger.Error(err, "operation failed")
-		utils.RespondError(w, 400, err.Error())
+		if strings.Contains(err.Error(), "no rows") {
+			utils.RespondError(w, 404, "Data tidak ditemukan")
+		} else {
+			utils.RespondError(w, 400, err.Error())
+		}
 		return
 	}
 
 	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil memperbarui data",
-		"data":    resp,
+		"message": "Berhasil menyimpan data",
+		"id":      id,
 	})
 }
 
@@ -192,12 +188,17 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		logger.Error(err, "operation failed")
-		utils.RespondError(w, 400, err.Error())
+		if strings.Contains(err.Error(), "no rows") {
+			utils.RespondError(w, 404, "Data tidak ditemukan")
+		} else {
+			utils.RespondError(w, 400, err.Error())
+		}
 		return
 	}
 
 	utils.RespondJSON(w, 200, map[string]interface{}{
 		"message": "Berhasil menghapus data",
+		"id":      id,
 	})
 }
 
@@ -243,10 +244,14 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.service.ImportFromExcel(fileBytes)
+	newID, err := h.service.ImportFromExcel(fileBytes)
 	if err != nil {
 		logger.Error(err, "operation failed")
-		response := dto.ImportIkasResponse{
+		response := struct {
+			Success bool     `json:"success"`
+			Message string   `json:"message"`
+			Errors  []string `json:"errors,omitempty"`
+		}{
 			Success: false,
 			Message: "Import gagal",
 			Errors:  []string{err.Error()},
@@ -256,10 +261,9 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := dto.ImportIkasResponse{
-		Success: true,
-		Message: "Import berhasil",
-		Data:    resp,
-	}
-	utils.RespondJSON(w, 201, response)
+	utils.RespondJSON(w, 201, map[string]interface{}{
+		"success": true,
+		"message": "Berhasil menyimpan data",
+		"id":      newID,
+	})
 }

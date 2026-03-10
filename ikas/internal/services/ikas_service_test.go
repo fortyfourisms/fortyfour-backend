@@ -47,12 +47,13 @@ func (m *mockIkasRepo) Delete(id string) error {
 	return nil
 }
 
-func (m *mockIkasRepo) ImportFromExcel(raw []byte) (*dto.IkasResponse, error) {
-	return &dto.IkasResponse{ID: "imp-1", Responden: "imported"}, nil
-}
-
 func (m *mockIkasRepo) ParseExcelForImport(b []byte) (*dto.CreateIkasRequest, error) {
 	return &dto.CreateIkasRequest{}, nil
+}
+
+// Mock methods for Excel import process in repo
+func (m *mockIkasRepo) SaveImportedData(id string, data *dto.CreateIkasRequest) error {
+	return nil
 }
 
 /*
@@ -63,14 +64,15 @@ func (m *mockIkasRepo) ParseExcelForImport(b []byte) (*dto.CreateIkasRequest, er
 
 func TestIkasService_Create_Success(t *testing.T) {
 	repo := &mockIkasRepo{}
+	// Nil producer for test
 	service := NewIkasService(repo, nil)
 
 	req := dto.CreateIkasRequest{
 		IDPerusahaan: "1",
 	}
 
+	// This should return nil now because producer check skips it
 	err := service.Create(req, "ikas-id")
-
 	assert.NoError(t, err)
 }
 
@@ -80,7 +82,7 @@ func TestIkasService_Create_Success(t *testing.T) {
 ========================================
 */
 
-func TestIkasService_Update_Recalculate(t *testing.T) {
+func TestIkasService_Update_Async(t *testing.T) {
 	repo := &mockIkasRepo{}
 	service := NewIkasService(repo, nil)
 
@@ -89,10 +91,9 @@ func TestIkasService_Update_Recalculate(t *testing.T) {
 		TargetNilai: &val,
 	}
 
-	resp, err := service.Update("ikas-id", req)
-
+	// Update now returns nil error on nil producer
+	err := service.Update("ikas-id", req)
 	assert.NoError(t, err)
-	assert.NotNil(t, resp)
 }
 
 /*
@@ -101,12 +102,11 @@ func TestIkasService_Update_Recalculate(t *testing.T) {
 ========================================
 */
 
-func TestIkasService_ImportFromExcel(t *testing.T) {
+func TestIkasService_ImportFromExcel_Async(t *testing.T) {
 	repo := &mockIkasRepo{}
 	service := NewIkasService(repo, nil)
 
-	resp, err := service.ImportFromExcel([]byte("fake excel"))
-
-	assert.NoError(t, err)
-	assert.NotNil(t, resp)
+	id, err := service.ImportFromExcel([]byte("fake excel"))
+	assert.NoError(t, err) // Should work and return generated ID
+	assert.NotEmpty(t, id)
 }
