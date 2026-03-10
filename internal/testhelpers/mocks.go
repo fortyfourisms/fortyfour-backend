@@ -1010,6 +1010,19 @@ func (m *MockPICRepository) Delete(id string) error {
 	return nil
 }
 
+func (m *MockPICRepository) GetByPerusahaan(idPerusahaan string) ([]dto.PICResponse, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	pics := make([]dto.PICResponse, 0)
+	for _, p := range m.pics {
+		if p.Perusahaan != nil && p.Perusahaan.ID == idPerusahaan {
+			pics = append(pics, *p)
+		}
+	}
+	return pics, nil
+}
+
 // ============================================================
 // Mock Perusahaan Repository
 // ============================================================

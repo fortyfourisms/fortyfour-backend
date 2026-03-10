@@ -9,38 +9,95 @@ import (
 	"testing"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/services"
 )
 
 //
-// MOCK SERVICE
+// MOCK SDM CSIRT SERVICE
 //
 
 type mockSdmCsirtService struct {
-	CreateFn  func(dto.CreateSdmCsirtRequest) (string, error)
-	GetAllFn  func() ([]dto.SdmCsirtResponse, error)
-	GetByIDFn func(string) (*dto.SdmCsirtResponse, error)
-	UpdateFn  func(string, dto.UpdateSdmCsirtRequest) error
-	DeleteFn  func(string) error
+	CreateFn     func(dto.CreateSdmCsirtRequest) (string, error)
+	GetAllFn     func() ([]dto.SdmCsirtResponse, error)
+	GetByIDFn    func(string) (*dto.SdmCsirtResponse, error)
+	UpdateFn     func(string, dto.UpdateSdmCsirtRequest) error
+	DeleteFn     func(string) error
+	GetByCsirtFn func(string) ([]dto.SdmCsirtResponse, error)
 }
 
 func (m *mockSdmCsirtService) Create(req dto.CreateSdmCsirtRequest) (string, error) {
-	return m.CreateFn(req)
+	if m.CreateFn != nil {
+		return m.CreateFn(req)
+	}
+	return "", nil
 }
 
 func (m *mockSdmCsirtService) GetAll() ([]dto.SdmCsirtResponse, error) {
-	return m.GetAllFn()
+	if m.GetAllFn != nil {
+		return m.GetAllFn()
+	}
+	return []dto.SdmCsirtResponse{}, nil
 }
 
 func (m *mockSdmCsirtService) GetByID(id string) (*dto.SdmCsirtResponse, error) {
-	return m.GetByIDFn(id)
+	if m.GetByIDFn != nil {
+		return m.GetByIDFn(id)
+	}
+	return &dto.SdmCsirtResponse{ID: id}, nil
 }
 
 func (m *mockSdmCsirtService) Update(id string, req dto.UpdateSdmCsirtRequest) error {
-	return m.UpdateFn(id, req)
+	if m.UpdateFn != nil {
+		return m.UpdateFn(id, req)
+	}
+	return nil
 }
 
 func (m *mockSdmCsirtService) Delete(id string) error {
-	return m.DeleteFn(id)
+	if m.DeleteFn != nil {
+		return m.DeleteFn(id)
+	}
+	return nil
+}
+
+func (m *mockSdmCsirtService) GetByCsirt(idCsirt string) ([]dto.SdmCsirtResponse, error) {
+	if m.GetByCsirtFn != nil {
+		return m.GetByCsirtFn(idCsirt)
+	}
+	return []dto.SdmCsirtResponse{}, nil
+}
+
+//
+// MOCK CSIRT SERVICE
+//
+
+type mockCsirtServiceForSdm struct{}
+
+func (m *mockCsirtServiceForSdm) GetAll() ([]dto.CsirtResponse, error) {
+	return []dto.CsirtResponse{}, nil
+}
+func (m *mockCsirtServiceForSdm) GetByID(id string) (*dto.CsirtResponse, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockCsirtServiceForSdm) GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error) {
+	return []dto.CsirtResponse{}, nil
+}
+func (m *mockCsirtServiceForSdm) Create(req dto.CreateCsirtRequest) (*models.Csirt, error) {
+	return nil, nil
+}
+func (m *mockCsirtServiceForSdm) Update(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error) {
+	return nil, nil
+}
+func (m *mockCsirtServiceForSdm) Delete(id string) error { return nil }
+
+//
+// HELPER
+//
+
+func newSdmHandler(mockSvc *mockSdmCsirtService) *SdmCsirtHandler {
+	sseService := services.NewSSEService()
+	return NewSdmCsirtHandler(mockSvc, &mockCsirtServiceForSdm{}, sseService)
 }
 
 //
@@ -56,7 +113,7 @@ func TestSdmCsirtHandler_GetAll_Success(t *testing.T) {
 		},
 	}
 
-	handler := NewSdmCsirtHandler(mockSvc)
+	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/sdm_csirt", nil)
 	rr := httptest.NewRecorder()
@@ -78,7 +135,7 @@ func TestSdmCsirtHandler_GetByID_Success(t *testing.T) {
 		},
 	}
 
-	handler := NewSdmCsirtHandler(mockSvc)
+	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/sdm_csirt/123", nil)
 	rr := httptest.NewRecorder()
@@ -97,7 +154,7 @@ func TestSdmCsirtHandler_GetByID_NotFound(t *testing.T) {
 		},
 	}
 
-	handler := NewSdmCsirtHandler(mockSvc)
+	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/sdm_csirt/999", nil)
 	rr := httptest.NewRecorder()
@@ -114,13 +171,16 @@ func TestSdmCsirtHandler_Create_Success(t *testing.T) {
 		CreateFn: func(req dto.CreateSdmCsirtRequest) (string, error) {
 			return "uuid-123", nil
 		},
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{ID: id, NamaPersonel: "Charlie"}, nil
+		},
 	}
 
 	body, _ := json.Marshal(dto.CreateSdmCsirtRequest{
 		NamaPersonel: stringPtr("Charlie"),
 	})
 
-	handler := NewSdmCsirtHandler(mockSvc)
+	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/sdm_csirt", bytes.NewBuffer(body))
 	rr := httptest.NewRecorder()
@@ -139,7 +199,7 @@ func TestSdmCsirtHandler_Create_Failed(t *testing.T) {
 		},
 	}
 
-	handler := NewSdmCsirtHandler(mockSvc)
+	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/sdm_csirt", bytes.NewBuffer([]byte(`{}`)))
 	rr := httptest.NewRecorder()
@@ -153,6 +213,9 @@ func TestSdmCsirtHandler_Create_Failed(t *testing.T) {
 
 func TestSdmCsirtHandler_Update_Success(t *testing.T) {
 	mockSvc := &mockSdmCsirtService{
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{ID: id, NamaPersonel: "Updated"}, nil
+		},
 		UpdateFn: func(id string, req dto.UpdateSdmCsirtRequest) error {
 			return nil
 		},
@@ -162,7 +225,7 @@ func TestSdmCsirtHandler_Update_Success(t *testing.T) {
 		NamaPersonel: stringPtr("Updated"),
 	})
 
-	handler := NewSdmCsirtHandler(mockSvc)
+	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodPut, "/api/sdm_csirt/1", bytes.NewBuffer(body))
 	rr := httptest.NewRecorder()
@@ -176,12 +239,15 @@ func TestSdmCsirtHandler_Update_Success(t *testing.T) {
 
 func TestSdmCsirtHandler_Update_Failed(t *testing.T) {
 	mockSvc := &mockSdmCsirtService{
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{ID: id}, nil
+		},
 		UpdateFn: func(id string, req dto.UpdateSdmCsirtRequest) error {
 			return errors.New("update failed")
 		},
 	}
 
-	handler := NewSdmCsirtHandler(mockSvc)
+	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodPut, "/api/sdm_csirt/1", bytes.NewBuffer([]byte(`{}`)))
 	rr := httptest.NewRecorder()
@@ -200,7 +266,7 @@ func TestSdmCsirtHandler_Delete_Success(t *testing.T) {
 		},
 	}
 
-	handler := NewSdmCsirtHandler(mockSvc)
+	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/sdm_csirt/1", nil)
 	rr := httptest.NewRecorder()
@@ -219,7 +285,7 @@ func TestSdmCsirtHandler_Delete_Failed(t *testing.T) {
 		},
 	}
 
-	handler := NewSdmCsirtHandler(mockSvc)
+	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/sdm_csirt/1", nil)
 	rr := httptest.NewRecorder()
@@ -231,13 +297,9 @@ func TestSdmCsirtHandler_Delete_Failed(t *testing.T) {
 	}
 }
 
-// ============================================================
-// TAMBAHAN: routing, error, response body
-// ============================================================
-
 func TestSdmCsirtHandler_MethodNotAllowed(t *testing.T) {
 	mockSvc := &mockSdmCsirtService{}
-	handler := NewSdmCsirtHandler(mockSvc)
+	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodPatch, "/api/sdm_csirt", nil)
 	rr := httptest.NewRecorder()
@@ -254,13 +316,12 @@ func TestSdmCsirtHandler_GetAll_Error(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	handler := NewSdmCsirtHandler(mockSvc)
+	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/sdm_csirt", nil)
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
-	// Handler mengembalikan 400 untuk semua error service
 	if rr.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400, got %d", rr.Code)
 	}
@@ -275,7 +336,7 @@ func TestSdmCsirtHandler_GetAll_ResponseBody(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := NewSdmCsirtHandler(mockSvc)
+	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/sdm_csirt", nil)
 	rr := httptest.NewRecorder()
@@ -293,18 +354,19 @@ func TestSdmCsirtHandler_GetAll_ResponseBody(t *testing.T) {
 
 func TestSdmCsirtHandler_Update_InvalidBody(t *testing.T) {
 	mockSvc := &mockSdmCsirtService{
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{ID: id}, nil
+		},
 		UpdateFn: func(id string, req dto.UpdateSdmCsirtRequest) error {
 			return errors.New("update failed")
 		},
 	}
-	handler := NewSdmCsirtHandler(mockSvc)
+	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodPut, "/api/sdm_csirt/1", bytes.NewBuffer([]byte("bad json")))
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
-	// Service tetap dipanggil karena decode error tidak di-check di handler
-	// — status tergantung apakah update error atau tidak
 	if rr.Code == http.StatusOK {
 		t.Error("tidak boleh 200 jika update gagal")
 	}
@@ -316,7 +378,7 @@ func TestSdmCsirtHandler_Delete_WithoutID(t *testing.T) {
 			return errors.New("tidak ditemukan")
 		},
 	}
-	handler := NewSdmCsirtHandler(mockSvc)
+	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/sdm_csirt/non-existent", nil)
 	rr := httptest.NewRecorder()

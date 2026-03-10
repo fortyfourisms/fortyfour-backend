@@ -416,7 +416,11 @@ func TestPICRepository_Update(t *testing.T) {
 			IDPerusahaan: nil,
 		}
 
-		// No ExpectExec because function returns early
+		// No fields to update: function akan COUNT(*) untuk cek keberadaan data
+		mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM pic_perusahaan WHERE id=\\?").
+			WithArgs(id).
+			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
+
 		err := repo.Update(id, req)
 		assert.NoError(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -440,7 +444,7 @@ func TestPICRepository_Update(t *testing.T) {
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
-	t.Run("no rows affected - not checked by function", func(t *testing.T) {
+	t.Run("no rows affected - returns error", func(t *testing.T) {
 		id := "pic-nonexistent"
 		nama := "John Doe"
 
@@ -453,8 +457,8 @@ func TestPICRepository_Update(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 
 		err := repo.Update(id, req)
-		// Function doesn't check rows affected, so no error
-		assert.NoError(t, err)
+		// Function sekarang cek rows affected, return error jika 0
+		assert.Error(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
