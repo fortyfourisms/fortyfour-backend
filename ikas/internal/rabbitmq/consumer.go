@@ -18,6 +18,8 @@ type Consumer struct {
 	pertanyaanIdentifikasiRepo repository.PertanyaanIdentifikasiRepositoryInterface
 	jawabanProteksiRepo        repository.JawabanProteksiRepositoryInterface
 	pertanyaanProteksiRepo     repository.PertanyaanProteksiRepositoryInterface
+	jawabanDeteksiRepo         repository.JawabanDeteksiRepositoryInterface
+	pertanyaanDeteksiRepo      repository.PertanyaanDeteksiRepositoryInterface
 }
 
 func NewConsumer(
@@ -27,6 +29,8 @@ func NewConsumer(
 	pertanyaanIdentifikasiRepo repository.PertanyaanIdentifikasiRepositoryInterface,
 	jawabanProteksiRepo repository.JawabanProteksiRepositoryInterface,
 	pertanyaanProteksiRepo repository.PertanyaanProteksiRepositoryInterface,
+	jawabanDeteksiRepo repository.JawabanDeteksiRepositoryInterface,
+	pertanyaanDeteksiRepo repository.PertanyaanDeteksiRepositoryInterface,
 ) *Consumer {
 	return &Consumer{
 		Consumer:                   c,
@@ -35,6 +39,8 @@ func NewConsumer(
 		pertanyaanIdentifikasiRepo: pertanyaanIdentifikasiRepo,
 		jawabanProteksiRepo:        jawabanProteksiRepo,
 		pertanyaanProteksiRepo:     pertanyaanProteksiRepo,
+		jawabanDeteksiRepo:         jawabanDeteksiRepo,
+		pertanyaanDeteksiRepo:      pertanyaanDeteksiRepo,
 	}
 }
 
@@ -302,6 +308,98 @@ func (c *Consumer) ConsumeJawabanProteksiDeleted(ctx context.Context) error {
 	})
 }
 
+// ConsumeJawabanDeteksiCreated (Pola 2 Batch Write)
+func (c *Consumer) ConsumeJawabanDeteksiCreated(ctx context.Context) error {
+	return c.Consume(ctx, "jawaban.deteksi.created", func(ctx context.Context, body []byte) error {
+		var req dto.CreateJawabanDeteksiRequest
+		if err := json.Unmarshal(body, &req); err != nil {
+			return err
+		}
+
+		log.Printf("Buffering Jawaban Deteksi for Perusahaan: %s, Question: %d", req.PerusahaanID, req.PertanyaanDeteksiID)
+
+		// 1. Save to buffer
+		if err := c.jawabanDeteksiRepo.UpsertToBuffer(req); err != nil {
+			log.Printf("Error upserting to buffer: %v", err)
+			return err
+		}
+
+		// 2. Check if all questions are answered
+		totalQuestions, err := c.pertanyaanDeteksiRepo.GetTotalCount()
+		if err != nil {
+			log.Printf("Error getting total questions: %v", err)
+			return err
+		}
+
+		currentCount, err := c.jawabanDeteksiRepo.GetBufferCount(req.PerusahaanID)
+		if err != nil {
+			log.Printf("Error getting buffer count: %v", err)
+			return err
+		}
+
+		if currentCount >= totalQuestions {
+			log.Printf("All questions answered for Perusahaan %s (%d/%d). Flushing buffer...", req.PerusahaanID, currentCount, totalQuestions)
+			// 3. Flush buffer to main table
+			if err := c.jawabanDeteksiRepo.FlushBuffer(req.PerusahaanID); err != nil {
+				log.Printf("Error flushing buffer: %v", err)
+				return err
+			}
+			// 4. Recalculate scores
+			log.Printf("Recalculating scores for Perusahaan %s", req.PerusahaanID)
+			return c.jawabanDeteksiRepo.RecalculateDeteksi(req.PerusahaanID)
+		}
+
+		log.Printf("Progress for Perusahaan %s: %d/%d", req.PerusahaanID, currentCount, totalQuestions)
+		return nil
+	})
+}
+
+// ConsumeJawabanDeteksiUpdated (Pola 2 Asynchronous Write)
+func (c *Consumer) ConsumeJawabanDeteksiUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "jawaban.deteksi.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.JawabanDeteksiUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		log.Printf("Processing Jawaban Deteksi Updated for ID: %d", event.ID)
+
+		// 1. Update database
+		if err := c.jawabanDeteksiRepo.Update(event.ID, event.Request); err != nil {
+			return err
+		}
+
+		// 2. Get PerusahaanID to recalculate
+		resp, err := c.jawabanDeteksiRepo.GetByID(event.ID)
+		if err != nil {
+			return err
+		}
+
+		// 3. Recalculate scores
+		return c.jawabanDeteksiRepo.RecalculateDeteksi(resp.PerusahaanID)
+	})
+}
+
+// ConsumeJawabanDeteksiDeleted (Pola 2 Asynchronous Write)
+func (c *Consumer) ConsumeJawabanDeteksiDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "jawaban.deteksi.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.JawabanDeteksiDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		log.Printf("Processing Jawaban Deteksi Deleted for ID: %d", event.ID)
+
+		// 1. Delete from database
+		if err := c.jawabanDeteksiRepo.Delete(event.ID); err != nil {
+			return err
+		}
+
+		// 2. Recalculate scores
+		return c.jawabanDeteksiRepo.RecalculateDeteksi(event.PerusahaanID)
+	})
+}
+
 func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 	consumers := []func(context.Context) error{
 		c.ConsumeIkasCreated,
@@ -315,6 +413,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeJawabanProteksiCreated,
 		c.ConsumeJawabanProteksiUpdated,
 		c.ConsumeJawabanProteksiDeleted,
+		c.ConsumeJawabanDeteksiCreated,
+		c.ConsumeJawabanDeteksiUpdated,
+		c.ConsumeJawabanDeteksiDeleted,
 	}
 
 	for _, consumer := range consumers {

@@ -89,6 +89,8 @@ func main() {
 		repository.NewPertanyaanIdentifikasiRepository(db),
 		repository.NewJawabanProteksiRepository(db),
 		repository.NewPertanyaanProteksiRepository(db),
+		repository.NewJawabanDeteksiRepository(db),
+		repository.NewPertanyaanDeteksiRepository(db),
 	)
 
 	// Start consumers in background
@@ -128,7 +130,7 @@ func main() {
 	pertanyaanGulihService := services.NewPertanyaanGulihService(pertanyaanGulihRepo)
 	jawabanIdentifikasiService := services.NewJawabanIdentifikasiService(jawabanIdentifikasiRepo, msgProducer)
 	jawabanProteksiService := services.NewJawabanProteksiService(jawabanProteksiRepo, msgProducer)
-	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo)
+	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo, msgProducer)
 	jawabanGulihService := services.NewJawabanGulihService(jawabanGulihRepo)
 
 	// handlers
@@ -195,6 +197,9 @@ func main() {
 		logger.Info("  - jawaban.proteksi.created")
 		logger.Info("  - jawaban.proteksi.updated")
 		logger.Info("  - jawaban.proteksi.deleted")
+		logger.Info("  - jawaban.deteksi.created")
+		logger.Info("  - jawaban.deteksi.updated")
+		logger.Info("  - jawaban.deteksi.deleted")
 
 		if err := http.ListenAndServe(cfg.Port, mux); err != nil && err != http.ErrServerClosed {
 			logger.FatalErr(err, "Server failed")

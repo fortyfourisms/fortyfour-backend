@@ -72,3 +72,18 @@ func (p *Producer) PublishJawabanProteksiUpdated(ctx context.Context, event inte
 func (p *Producer) PublishJawabanProteksiDeleted(ctx context.Context, event interface{}) error {
 	return p.Publish(ctx, "ikas.events", "jawaban.proteksi.deleted", event)
 }
+
+// PublishJawabanDeteksiCreated
+func (p *Producer) PublishJawabanDeteksiCreated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "jawaban.deteksi.created", event)
+}
+
+// PublishJawabanDeteksiUpdated
+func (p *Producer) PublishJawabanDeteksiUpdated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "jawaban.deteksi.updated", event)
+}
+
+// PublishJawabanDeteksiDeleted
+func (p *Producer) PublishJawabanDeteksiDeleted(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "jawaban.deteksi.deleted", event)
+}

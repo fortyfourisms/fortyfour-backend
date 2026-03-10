@@ -16,6 +16,7 @@ type PertanyaanDeteksiRepositoryInterface interface {
 	Delete(id int) error
 	CheckSubKategoriExists(subKategoriID int) (bool, error)
 	CheckRuangLingkupExists(ruangLingkupID int) (bool, error)
+	GetTotalCount() (int, error)
 }
 
 type PertanyaanDeteksiRepository struct {
@@ -238,4 +239,14 @@ func (r *PertanyaanDeteksiRepository) CheckRuangLingkupExists(ruangLingkupID int
 		return false, err
 	}
 	return count > 0, nil
+}
+
+func (r *PertanyaanDeteksiRepository) GetTotalCount() (int, error) {
+	var count int
+	err := r.db.QueryRow(`SELECT COUNT(*) FROM pertanyaan_deteksi`).Scan(&count)
+	if err != nil {
+		rollbar.Error(err)
+		return 0, err
+	}
+	return count, nil
 }
