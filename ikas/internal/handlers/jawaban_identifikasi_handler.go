@@ -200,7 +200,7 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 		case "pertanyaan_identifikasi_id tidak ditemukan",
 			"perusahaan_id tidak ditemukan":
 			utils.RespondError(w, 404, err.Error())
-		case "jawaban untuk pertanyaan ini sudah ada untuk perusahaan tersebut":
+		case "pertanyaan ini sudah pernah diisi oleh perusahaan Anda":
 			utils.RespondError(w, 409, err.Error())
 		default:
 			utils.RespondError(w, 500, err.Error())
@@ -238,7 +238,7 @@ func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http
 		return
 	}
 
-	resp, err := h.service.Update(id, req)
+	err := h.service.Update(id, req)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -256,8 +256,8 @@ func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http
 	}
 
 	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil memperbarui data",
-		"data":    resp,
+		"message": "Berhasil menyimpan data",
+		"id":      id,
 	})
 }
 
@@ -285,5 +285,6 @@ func (h *JawabanIdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http
 
 	utils.RespondJSON(w, 200, map[string]interface{}{
 		"message": "Berhasil menghapus data",
+		"id":      id,
 	})
 }

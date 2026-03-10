@@ -5,9 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"ikas/internal/dto"
+	"ikas/internal/dto/dto_event"
 	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
+	"time"
 
 	"github.com/rollbar/rollbar-go"
 )
@@ -101,6 +103,17 @@ func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiReq
 		return "", errors.New("perusahaan_id tidak ditemukan")
 	}
 
+	// Synchronous Duplicate Check (Pola 2 Refinement)
+	// Check if already exists in the MAIN table
+	isDuplicate, err := s.repo.CheckDuplicate(req.PerusahaanID, req.PertanyaanIdentifikasiID, 0)
+	if err != nil {
+		rollbar.Error(err)
+		return "", err
+	}
+	if isDuplicate {
+		return "", errors.New("pertanyaan ini sudah pernah diisi oleh perusahaan Anda")
+	}
+
 	// Publish to RabbitMQ for Pola 2
 	if err := s.producer.PublishJawabanIdentifikasiCreated(context.Background(), req); err != nil {
 		rollbar.Error(err)
@@ -144,53 +157,12 @@ func (s *JawabanIdentifikasiService) GetByPertanyaan(pertanyaanID int) ([]dto.Ja
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }
 
-func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentifikasiRequest) (*dto.JawabanIdentifikasiResponse, error) {
-	if id <= 0 {
-		return nil, errors.New("format ID tidak valid")
-	}
-
-	existing, err := s.repo.GetByID(id)
-	if err != nil {
-		rollbar.Error(err)
-		if err == sql.ErrNoRows {
-			return nil, errors.New("data tidak ditemukan")
-		}
-		return nil, err
-	}
-
-	if err := s.validateUpdate(&req, existing.Evidence); err != nil {
-		return nil, err
-	}
-
-	if err := s.repo.Update(id, req); err != nil {
-		rollbar.Error(err)
-		return nil, err
-	}
-
-	// Recalculate identifikasi asynchronously via RabbitMQ
-	event := map[string]interface{}{
-		"perusahaan_id": existing.PerusahaanID,
-		"action":        "update",
-	}
-	if err := s.producer.PublishJawabanIdentifikasiUpdated(context.Background(), event); err != nil {
-		rollbar.Error(err)
-		// Log but don't fail update
-	}
-
-	updated, err := s.repo.GetByID(id)
-	if err != nil {
-		rollbar.Error(err)
-		return nil, err
-	}
-
-	return updated, nil
-}
-
-func (s *JawabanIdentifikasiService) Delete(id int) error {
+func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentifikasiRequest) error {
 	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
 
+	// Existence Check
 	existing, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -199,18 +171,49 @@ func (s *JawabanIdentifikasiService) Delete(id int) error {
 		return err
 	}
 
-	if err := s.repo.Delete(id); err != nil {
+	if err := s.validateUpdate(&req, existing.Evidence); err != nil {
 		return err
 	}
 
-	// Recalculate identifikasi asynchronously via RabbitMQ
-	event := map[string]interface{}{
-		"perusahaan_id": existing.PerusahaanID,
-		"action":        "delete",
+	// Publish Update Event (Pola 2)
+	event := dto_event.JawabanIdentifikasiUpdatedEvent{
+		ID:        id,
+		Request:   req,
+		UpdatedAt: time.Now(),
 	}
+
+	if err := s.producer.PublishJawabanIdentifikasiUpdated(context.Background(), event); err != nil {
+		rollbar.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *JawabanIdentifikasiService) Delete(id int) error {
+	if id <= 0 {
+		return errors.New("format ID tidak valid")
+	}
+
+	// Existence Check
+	existing, err := s.repo.GetByID(id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("data tidak ditemukan")
+		}
+		return err
+	}
+
+	// Publish Delete Event (Pola 2)
+	event := dto_event.JawabanIdentifikasiDeletedEvent{
+		ID:           id,
+		PerusahaanID: existing.PerusahaanID,
+		DeletedAt:    time.Now(),
+	}
+
 	if err := s.producer.PublishJawabanIdentifikasiDeleted(context.Background(), event); err != nil {
 		rollbar.Error(err)
-		// Log but don't fail delete
+		return err
 	}
 
 	return nil

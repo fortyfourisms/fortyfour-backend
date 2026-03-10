@@ -82,7 +82,12 @@ func main() {
 
 	// Wrap with IKAS specific Producer and Consumer
 	msgProducer := internalRmq.NewProducer(sharedProducer)
-	msgConsumer := internalRmq.NewConsumer(sharedConsumer)
+	msgConsumer := internalRmq.NewConsumer(
+		sharedConsumer,
+		repository.NewIkasRepository(db),
+		repository.NewJawabanIdentifikasiRepository(db),
+		repository.NewPertanyaanIdentifikasiRepository(db),
+	)
 
 	// Start consumers in background
 	ctx, cancel := context.WithCancel(context.Background())
@@ -119,7 +124,7 @@ func main() {
 	pertanyaanProteksiService := services.NewPertanyaanProteksiService(pertanyaanProteksiRepo)
 	pertanyaanDeteksiService := services.NewPertanyaanDeteksiService(pertanyaanDeteksiRepo)
 	pertanyaanGulihService := services.NewPertanyaanGulihService(pertanyaanGulihRepo)
-	jawabanIdentifikasiService := services.NewJawabanIdentifikasiService(jawabanIdentifikasiRepo)
+	jawabanIdentifikasiService := services.NewJawabanIdentifikasiService(jawabanIdentifikasiRepo, msgProducer)
 	jawabanProteksiService := services.NewJawabanProteksiService(jawabanProteksiRepo)
 	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo)
 	jawabanGulihService := services.NewJawabanGulihService(jawabanGulihRepo)
@@ -182,6 +187,9 @@ func main() {
 		logger.Info("  - ikas.deleted")
 		logger.Info("  - ikas.imported")
 		logger.Info("  - notifications.email")
+		logger.Info("  - jawaban.identifikasi.created")
+		logger.Info("  - jawaban.identifikasi.updated")
+		logger.Info("  - jawaban.identifikasi.deleted")
 
 		if err := http.ListenAndServe(cfg.Port, mux); err != nil && err != http.ErrServerClosed {
 			logger.FatalErr(err, "Server failed")

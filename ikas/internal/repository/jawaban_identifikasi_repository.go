@@ -21,6 +21,9 @@ type JawabanIdentifikasiRepositoryInterface interface {
 	CheckPerusahaanExists(perusahaanID string) (bool, error)
 	CheckDuplicate(perusahaanID string, pertanyaanID int, excludeID int) (bool, error)
 	RecalculateIdentifikasi(perusahaanID string) error
+	UpsertToBuffer(req dto.CreateJawabanIdentifikasiRequest) error
+	GetBufferCount(perusahaanID string) (int, error)
+	FlushBuffer(perusahaanID string) error
 }
 
 type JawabanIdentifikasiRepository struct {
@@ -371,4 +374,62 @@ func (r *JawabanIdentifikasiRepository) RecalculateIdentifikasi(perusahaanID str
 	}
 
 	return nil
+}
+
+func (r *JawabanIdentifikasiRepository) UpsertToBuffer(req dto.CreateJawabanIdentifikasiRequest) error {
+	query := `INSERT INTO jawaban_identifikasi_buffer 
+		(pertanyaan_identifikasi_id, perusahaan_id, jawaban_identifikasi, evidence, validasi, keterangan)
+		VALUES (?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE 
+		jawaban_identifikasi = VALUES(jawaban_identifikasi),
+		evidence = VALUES(evidence),
+		validasi = VALUES(validasi),
+		keterangan = VALUES(keterangan)`
+
+	_, err := r.db.Exec(query,
+		req.PertanyaanIdentifikasiID,
+		req.PerusahaanID,
+		req.JawabanIdentifikasi,
+		req.Evidence,
+		req.Validasi,
+		req.Keterangan,
+	)
+	return err
+}
+
+func (r *JawabanIdentifikasiRepository) GetBufferCount(perusahaanID string) (int, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM jawaban_identifikasi_buffer WHERE perusahaan_id = ?`
+	err := r.db.QueryRow(query, perusahaanID).Scan(&count)
+	return count, err
+}
+
+func (r *JawabanIdentifikasiRepository) FlushBuffer(perusahaanID string) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// 1. Move from buffer to main table
+	moveQuery := `INSERT INTO jawaban_identifikasi 
+		(pertanyaan_identifikasi_id, perusahaan_id, jawaban_identifikasi, evidence, validasi, keterangan)
+		SELECT pertanyaan_identifikasi_id, perusahaan_id, jawaban_identifikasi, evidence, validasi, keterangan
+		FROM jawaban_identifikasi_buffer WHERE perusahaan_id = ?
+		ON DUPLICATE KEY UPDATE 
+		jawaban_identifikasi = VALUES(jawaban_identifikasi),
+		evidence = VALUES(evidence),
+		validasi = VALUES(validasi),
+		keterangan = VALUES(keterangan)`
+
+	if _, err := tx.Exec(moveQuery, perusahaanID); err != nil {
+		return err
+	}
+
+	// 2. Delete from buffer
+	if _, err := tx.Exec(`DELETE FROM jawaban_identifikasi_buffer WHERE perusahaan_id = ?`, perusahaanID); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }

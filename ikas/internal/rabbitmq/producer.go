@@ -42,3 +42,18 @@ func (p *Producer) PublishIkasImported(ctx context.Context, event interface{}) e
 func (p *Producer) PublishEmailNotification(ctx context.Context, notification interface{}) error {
 	return p.Publish(ctx, "ikas.events", "notification.email", notification)
 }
+
+// PublishJawabanIdentifikasiCreated
+func (p *Producer) PublishJawabanIdentifikasiCreated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "jawaban.identifikasi.created", event)
+}
+
+// PublishJawabanIdentifikasiUpdated
+func (p *Producer) PublishJawabanIdentifikasiUpdated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "jawaban.identifikasi.updated", event)
+}
+
+// PublishJawabanIdentifikasiDeleted
+func (p *Producer) PublishJawabanIdentifikasiDeleted(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "jawaban.identifikasi.deleted", event)
+}
