@@ -107,10 +107,17 @@ func isPhone(phone string) bool {
 // isValidSektor memastikan sektor yang dipilih valid
 func isValidSektor(sektor string) bool {
 	validSektor := []string{
-		"Pemerintah",
-		"Swasta",
-		"Akademisi",
-		"Lainnya",
+        "Industri Makanan dan Minuman",
+        "Industri Tekstil dan Pakaian",
+        "Industri Kimia",
+        "Industri Otomotif",
+        "Industri Elektronik",
+        "Industri Farmasi",
+        "Industri Alat Kesehatan",
+        "Jasa Konstruksi",
+        "Industri Keamanan Siber",
+        "Industri Pertahanan",
+        "Lainnya",
 	}
 
 	for _, s := range validSektor {
