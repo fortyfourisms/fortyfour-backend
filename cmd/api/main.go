@@ -184,7 +184,7 @@ func main() {
 	deteksiHandler := handlers.NewDeteksiHandler(deteksiService, sseService)
 	gulihHandler := handlers.NewGulihHandler(gulihService, sseService)
 	csirtHandler := handlers.NewCsirtHandler(csirtService)
-	sdmCsirtHandler := handlers.NewSdmCsirtHandler(sdmCsirtService)
+	sdmCsirtHandler := handlers.NewSdmCsirtHandler(sdmCsirtService, csirtService, sseService)
 	roleHandler := handlers.NewRoleHandler(roleService, sseService)
 	casbinHandler := handlers.NewCasbinHandler(casbinService, sseService)
 	sseHandler := handlers.NewSSEHandler(sseService)

@@ -12,6 +12,7 @@ type SdmCsirtServiceInterface interface {
 	Create(req dto.CreateSdmCsirtRequest) (string, error)
 	GetAll() ([]dto.SdmCsirtResponse, error)
 	GetByID(id string) (*dto.SdmCsirtResponse, error)
+	GetByCsirt(idCsirt string) ([]dto.SdmCsirtResponse, error)
 	Update(id string, req dto.UpdateSdmCsirtRequest) error
 	Delete(id string) error
 }
@@ -74,6 +75,23 @@ func (s *SdmCsirtService) GetByID(id string) (*dto.SdmCsirtResponse, error) {
 	}
 
 	cacheSet(s.rc, key, data, TTLDetail)
+	return data, nil
+}
+
+func (s *SdmCsirtService) GetByCsirt(idCsirt string) ([]dto.SdmCsirtResponse, error) {
+	key := "sdm_csirt_" + idCsirt
+	var result []dto.SdmCsirtResponse
+
+	if cacheGet(s.rc, key, &result) {
+		return result, nil
+	}
+
+	data, err := s.repo.GetByCsirt(idCsirt)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, data, TTLList)
 	return data, nil
 }
 
