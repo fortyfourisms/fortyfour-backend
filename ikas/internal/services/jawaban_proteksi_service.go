@@ -1,21 +1,29 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"ikas/internal/dto"
+	"ikas/internal/dto/dto_event"
+	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
+	"time"
 
 	"github.com/rollbar/rollbar-go"
 )
 
 type JawabanProteksiService struct {
-	repo repository.JawabanProteksiRepositoryInterface
+	repo     repository.JawabanProteksiRepositoryInterface
+	producer *rabbitmq.Producer
 }
 
-func NewJawabanProteksiService(repo repository.JawabanProteksiRepositoryInterface) *JawabanProteksiService {
-	return &JawabanProteksiService{repo: repo}
+func NewJawabanProteksiService(repo repository.JawabanProteksiRepositoryInterface, producer *rabbitmq.Producer) *JawabanProteksiService {
+	return &JawabanProteksiService{
+		repo:     repo,
+		producer: producer,
+	}
 }
 
 var validValidasiProteksi = map[string]bool{"yes": true, "no": true}
@@ -70,55 +78,46 @@ func (s *JawabanProteksiService) validateUpdate(req *dto.UpdateJawabanProteksiRe
 	return nil
 }
 
-func (s *JawabanProteksiService) Create(req dto.CreateJawabanProteksiRequest) (*dto.JawabanProteksiResponse, error) {
+func (s *JawabanProteksiService) Create(req dto.CreateJawabanProteksiRequest) (string, error) {
 	if err := s.validateCreate(&req); err != nil {
-		return nil, err
+		return "", err
 	}
 
 	pertanyaanExists, err := s.repo.CheckPertanyaanExists(req.PertanyaanProteksiID)
 	if err != nil {
 		rollbar.Error(err)
-		return nil, err
+		return "", err
 	}
 	if !pertanyaanExists {
-		return nil, errors.New("pertanyaan_proteksi_id tidak ditemukan")
+		return "", errors.New("pertanyaan_proteksi_id tidak ditemukan")
 	}
 
 	perusahaanExists, err := s.repo.CheckPerusahaanExists(req.PerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
-		return nil, err
+		return "", err
 	}
 	if !perusahaanExists {
-		return nil, errors.New("perusahaan_id tidak ditemukan")
+		return "", errors.New("perusahaan_id tidak ditemukan")
 	}
 
+	// Synchronous Duplicate Check (Pola 2 Refinement)
 	isDuplicate, err := s.repo.CheckDuplicate(req.PerusahaanID, req.PertanyaanProteksiID, 0)
 	if err != nil {
 		rollbar.Error(err)
-		return nil, err
+		return "", err
 	}
 	if isDuplicate {
-		return nil, errors.New("jawaban untuk pertanyaan ini sudah ada untuk perusahaan tersebut")
+		return "", errors.New("pertanyaan ini sudah pernah diisi oleh perusahaan Anda")
 	}
 
-	lastID, err := s.repo.Create(req)
-	if err != nil {
+	// Publish to RabbitMQ for Pola 2
+	if err := s.producer.PublishJawabanProteksiCreated(context.Background(), req); err != nil {
 		rollbar.Error(err)
-		return nil, err
+		return "", err
 	}
 
-	if err := s.repo.RecalculateProteksi(req.PerusahaanID); err != nil {
-		rollbar.Error(err)
-	}
-
-	resp, err := s.repo.GetByID(int(lastID))
-	if err != nil {
-		rollbar.Error(err)
-		return nil, err
-	}
-
-	return resp, nil
+	return "Berhasil menyimpan data", nil
 }
 
 func (s *JawabanProteksiService) GetAll() ([]dto.JawabanProteksiResponse, error) {
@@ -155,47 +154,12 @@ func (s *JawabanProteksiService) GetByPertanyaan(pertanyaanID int) ([]dto.Jawaba
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }
 
-func (s *JawabanProteksiService) Update(id int, req dto.UpdateJawabanProteksiRequest) (*dto.JawabanProteksiResponse, error) {
-	if id <= 0 {
-		return nil, errors.New("format ID tidak valid")
-	}
-
-	existing, err := s.repo.GetByID(id)
-	if err != nil {
-		rollbar.Error(err)
-		if err == sql.ErrNoRows {
-			return nil, errors.New("data tidak ditemukan")
-		}
-		return nil, err
-	}
-
-	if err := s.validateUpdate(&req, existing.Evidence); err != nil {
-		return nil, err
-	}
-
-	if err := s.repo.Update(id, req); err != nil {
-		rollbar.Error(err)
-		return nil, err
-	}
-
-	if err := s.repo.RecalculateProteksi(existing.PerusahaanID); err != nil {
-		rollbar.Error(err)
-	}
-
-	updated, err := s.repo.GetByID(id)
-	if err != nil {
-		rollbar.Error(err)
-		return nil, err
-	}
-
-	return updated, nil
-}
-
-func (s *JawabanProteksiService) Delete(id int) error {
+func (s *JawabanProteksiService) Update(id int, req dto.UpdateJawabanProteksiRequest) error {
 	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
 
+	// Existence Check
 	existing, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -204,12 +168,49 @@ func (s *JawabanProteksiService) Delete(id int) error {
 		return err
 	}
 
-	if err := s.repo.Delete(id); err != nil {
+	if err := s.validateUpdate(&req, existing.Evidence); err != nil {
 		return err
 	}
 
-	if err := s.repo.RecalculateProteksi(existing.PerusahaanID); err != nil {
+	// Publish Update Event (Pola 2)
+	event := dto_event.JawabanProteksiUpdatedEvent{
+		ID:        id,
+		Request:   req,
+		UpdatedAt: time.Now(),
+	}
+
+	if err := s.producer.PublishJawabanProteksiUpdated(context.Background(), event); err != nil {
 		rollbar.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *JawabanProteksiService) Delete(id int) error {
+	if id <= 0 {
+		return errors.New("format ID tidak valid")
+	}
+
+	// Existence Check
+	existing, err := s.repo.GetByID(id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("data tidak ditemukan")
+		}
+		return err
+	}
+
+	// Publish Delete Event (Pola 2)
+	event := dto_event.JawabanProteksiDeletedEvent{
+		ID:           id,
+		PerusahaanID: existing.PerusahaanID,
+		DeletedAt:    time.Now(),
+	}
+
+	if err := s.producer.PublishJawabanProteksiDeleted(context.Background(), event); err != nil {
+		rollbar.Error(err)
+		return err
 	}
 
 	return nil
