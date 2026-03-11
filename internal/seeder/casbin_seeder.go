@@ -63,11 +63,11 @@ var defaultPolicies = []Policy{
 	{"user", "/api/gulih/:id", "DELETE"},
 
 	// SDM CSIRT
-	{"user", "/api/sdm-csirt", "GET"},
-	{"user", "/api/sdm-csirt", "POST"},
-	{"user", "/api/sdm-csirt/:id", "GET"},
-	{"user", "/api/sdm-csirt/:id", "PUT"},
-	{"user", "/api/sdm-csirt/:id", "DELETE"},
+	{"user", "/api/sdm_csirt", "GET"},
+	{"user", "/api/sdm_csirt", "POST"},
+	{"user", "/api/sdm_csirt/:id", "GET"},
+	{"user", "/api/sdm_csirt/:id", "PUT"},
+	{"user", "/api/sdm_csirt/:id", "DELETE"},
 
 	// PIC Perusahaan
 	{"user", "/api/pic", "GET"},
