@@ -92,7 +92,7 @@ func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id 
 	}
 
 	role := middleware.GetRole(r.Context())
-	if role != "admin" {
+	if role == "user" {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if data.Perusahaan.ID != idPerusahaan {
 			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
@@ -133,9 +133,9 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		TeleponCsirt: r.FormValue("telepon_csirt"),
 	}
 
-	// Ownership check: user tidak bisa set id_perusahaan sembarangan
+	// User: paksa id_perusahaan dari JWT, tidak bisa diisi sembarangan
 	role := middleware.GetRole(r.Context())
-	if role != "admin" {
+	if role == "user" {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if idPerusahaan == "" {
 			utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
@@ -201,9 +201,9 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 		return
 	}
 
-	// Ownership check untuk non-admin
+	// Ownership check untuk user
 	role := middleware.GetRole(r.Context())
-	if role != "admin" {
+	if role == "user" {
 		existing, err := h.service.GetByID(id)
 		if err != nil {
 			utils.RespondError(w, 404, "Data tidak ditemukan")
@@ -260,9 +260,9 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 // @Failure 400 {object} dto.ErrorResponse
 // @Router /api/csirt/{id} [delete]
 func (h *CsirtHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
-	// Ownership check untuk non-admin
+	// Ownership check untuk user
 	role := middleware.GetRole(r.Context())
-	if role != "admin" {
+	if role == "user" {
 		existing, err := h.service.GetByID(id)
 		if err != nil {
 			utils.RespondError(w, 404, "Data tidak ditemukan")
