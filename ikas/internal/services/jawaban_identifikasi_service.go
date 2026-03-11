@@ -41,9 +41,12 @@ func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdenti
 		return errors.New("format perusahaan_id tidak valid")
 	}
 
-	// null = N/A (diperbolehkan), tapi jika diisi harus 0.00 - 5.00
-	if req.JawabanIdentifikasi != nil && (*req.JawabanIdentifikasi < 0 || *req.JawabanIdentifikasi > 5) {
-		return errors.New("jawaban_identifikasi harus bernilai antara 0 sampai 5, atau null untuk N/A")
+	// Jawaban must be provided and between 0.00 - 5.00
+	if req.JawabanIdentifikasi == nil {
+		return errors.New("jawaban_identifikasi tidak boleh kosong")
+	}
+	if *req.JawabanIdentifikasi < 0 || *req.JawabanIdentifikasi > 5 {
+		return errors.New("jawaban_identifikasi harus bernilai antara 0 sampai 5")
 	}
 
 	if req.Validasi != nil {

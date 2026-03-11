@@ -41,8 +41,11 @@ func (s *JawabanProteksiService) validateCreate(req *dto.CreateJawabanProteksiRe
 		return errors.New("format perusahaan_id tidak valid")
 	}
 
-	if req.JawabanProteksi != nil && (*req.JawabanProteksi < 0 || *req.JawabanProteksi > 5) {
-		return errors.New("jawaban_proteksi harus bernilai antara 0 sampai 5, atau null untuk N/A")
+	if req.JawabanProteksi == nil {
+		return errors.New("jawaban_proteksi tidak boleh kosong")
+	}
+	if *req.JawabanProteksi < 0 || *req.JawabanProteksi > 5 {
+		return errors.New("jawaban_proteksi harus bernilai antara 0 sampai 5")
 	}
 
 	if req.Validasi != nil {
