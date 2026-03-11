@@ -30,6 +30,9 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"jawaban.deteksi.created",
 		"jawaban.deteksi.updated",
 		"jawaban.deteksi.deleted",
+		"jawaban.gulih.created",
+		"jawaban.gulih.updated",
+		"jawaban.gulih.deleted",
 	}
 
 	for _, queueName := range queues {
@@ -54,6 +57,9 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"jawaban.deteksi.created":      "jawaban.deteksi.created",
 		"jawaban.deteksi.updated":      "jawaban.deteksi.updated",
 		"jawaban.deteksi.deleted":      "jawaban.deteksi.deleted",
+		"jawaban.gulih.created":        "jawaban.gulih.created",
+		"jawaban.gulih.updated":        "jawaban.gulih.updated",
+		"jawaban.gulih.deleted":        "jawaban.gulih.deleted",
 	}
 
 	for queueName, routingKey := range bindings {

@@ -1,21 +1,29 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"ikas/internal/dto"
+	"ikas/internal/dto/dto_event"
+	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
+	"time"
 
 	"github.com/rollbar/rollbar-go"
 )
 
 type JawabanGulihService struct {
-	repo repository.JawabanGulihRepositoryInterface
+	repo     repository.JawabanGulihRepositoryInterface
+	producer *rabbitmq.Producer
 }
 
-func NewJawabanGulihService(repo repository.JawabanGulihRepositoryInterface) *JawabanGulihService {
-	return &JawabanGulihService{repo: repo}
+func NewJawabanGulihService(repo repository.JawabanGulihRepositoryInterface, producer *rabbitmq.Producer) *JawabanGulihService {
+	return &JawabanGulihService{
+		repo:     repo,
+		producer: producer,
+	}
 }
 
 var validValidasiGulih = map[string]bool{"yes": true, "no": true}
@@ -33,8 +41,11 @@ func (s *JawabanGulihService) validateCreate(req *dto.CreateJawabanGulihRequest)
 		return errors.New("format perusahaan_id tidak valid")
 	}
 
-	if req.JawabanGulih != nil && (*req.JawabanGulih < 0 || *req.JawabanGulih > 5) {
-		return errors.New("jawaban_gulih harus bernilai antara 0 sampai 5, atau null untuk N/A")
+	if req.JawabanGulih == nil {
+		return errors.New("jawaban_gulih tidak boleh kosong")
+	}
+	if *req.JawabanGulih < 0 || *req.JawabanGulih > 5 {
+		return errors.New("jawaban_gulih harus bernilai antara 0 sampai 5")
 	}
 
 	if req.Validasi != nil {
@@ -70,55 +81,46 @@ func (s *JawabanGulihService) validateUpdate(req *dto.UpdateJawabanGulihRequest,
 	return nil
 }
 
-func (s *JawabanGulihService) Create(req dto.CreateJawabanGulihRequest) (*dto.JawabanGulihResponse, error) {
+func (s *JawabanGulihService) Create(req dto.CreateJawabanGulihRequest) (string, error) {
 	if err := s.validateCreate(&req); err != nil {
-		return nil, err
+		return "", err
 	}
 
 	pertanyaanExists, err := s.repo.CheckPertanyaanExists(req.PertanyaanGulihID)
 	if err != nil {
 		rollbar.Error(err)
-		return nil, err
+		return "", err
 	}
 	if !pertanyaanExists {
-		return nil, errors.New("pertanyaan_gulih_id tidak ditemukan")
+		return "", errors.New("pertanyaan_gulih_id tidak ditemukan")
 	}
 
 	perusahaanExists, err := s.repo.CheckPerusahaanExists(req.PerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
-		return nil, err
+		return "", err
 	}
 	if !perusahaanExists {
-		return nil, errors.New("perusahaan_id tidak ditemukan")
+		return "", errors.New("perusahaan_id tidak ditemukan")
 	}
 
+	// Synchronous Duplicate Check (Pola 2 Refinement)
 	isDuplicate, err := s.repo.CheckDuplicate(req.PerusahaanID, req.PertanyaanGulihID, 0)
 	if err != nil {
 		rollbar.Error(err)
-		return nil, err
+		return "", err
 	}
 	if isDuplicate {
-		return nil, errors.New("jawaban untuk pertanyaan ini sudah ada untuk perusahaan tersebut")
+		return "", errors.New("pertanyaan ini sudah pernah diisi oleh perusahaan Anda")
 	}
 
-	lastID, err := s.repo.Create(req)
-	if err != nil {
+	// Publish to RabbitMQ for Pola 2
+	if err := s.producer.PublishJawabanGulihCreated(context.Background(), req); err != nil {
 		rollbar.Error(err)
-		return nil, err
+		return "", err
 	}
 
-	if err := s.repo.RecalculateGulih(req.PerusahaanID); err != nil {
-		rollbar.Error(err)
-	}
-
-	resp, err := s.repo.GetByID(int(lastID))
-	if err != nil {
-		rollbar.Error(err)
-		return nil, err
-	}
-
-	return resp, nil
+	return "Berhasil menyimpan data", nil
 }
 
 func (s *JawabanGulihService) GetAll() ([]dto.JawabanGulihResponse, error) {
@@ -155,47 +157,12 @@ func (s *JawabanGulihService) GetByPertanyaan(pertanyaanID int) ([]dto.JawabanGu
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }
 
-func (s *JawabanGulihService) Update(id int, req dto.UpdateJawabanGulihRequest) (*dto.JawabanGulihResponse, error) {
-	if id <= 0 {
-		return nil, errors.New("format ID tidak valid")
-	}
-
-	existing, err := s.repo.GetByID(id)
-	if err != nil {
-		rollbar.Error(err)
-		if err == sql.ErrNoRows {
-			return nil, errors.New("data tidak ditemukan")
-		}
-		return nil, err
-	}
-
-	if err := s.validateUpdate(&req, existing.Evidence); err != nil {
-		return nil, err
-	}
-
-	if err := s.repo.Update(id, req); err != nil {
-		rollbar.Error(err)
-		return nil, err
-	}
-
-	if err := s.repo.RecalculateGulih(existing.PerusahaanID); err != nil {
-		rollbar.Error(err)
-	}
-
-	updated, err := s.repo.GetByID(id)
-	if err != nil {
-		rollbar.Error(err)
-		return nil, err
-	}
-
-	return updated, nil
-}
-
-func (s *JawabanGulihService) Delete(id int) error {
+func (s *JawabanGulihService) Update(id int, req dto.UpdateJawabanGulihRequest) error {
 	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
 
+	// Existence Check
 	existing, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -204,12 +171,49 @@ func (s *JawabanGulihService) Delete(id int) error {
 		return err
 	}
 
-	if err := s.repo.Delete(id); err != nil {
+	if err := s.validateUpdate(&req, existing.Evidence); err != nil {
 		return err
 	}
 
-	if err := s.repo.RecalculateGulih(existing.PerusahaanID); err != nil {
+	// Publish Update Event (Pola 2)
+	event := dto_event.JawabanGulihUpdatedEvent{
+		ID:        id,
+		Request:   req,
+		UpdatedAt: time.Now(),
+	}
+
+	if err := s.producer.PublishJawabanGulihUpdated(context.Background(), event); err != nil {
 		rollbar.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *JawabanGulihService) Delete(id int) error {
+	if id <= 0 {
+		return errors.New("format ID tidak valid")
+	}
+
+	// Existence Check
+	existing, err := s.repo.GetByID(id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("data tidak ditemukan")
+		}
+		return err
+	}
+
+	// Publish Delete Event (Pola 2)
+	event := dto_event.JawabanGulihDeletedEvent{
+		ID:           id,
+		PerusahaanID: existing.PerusahaanID,
+		DeletedAt:    time.Now(),
+	}
+
+	if err := s.producer.PublishJawabanGulihDeleted(context.Background(), event); err != nil {
+		rollbar.Error(err)
+		return err
 	}
 
 	return nil

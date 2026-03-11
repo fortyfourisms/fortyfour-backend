@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/rollbar/rollbar-go"
 )
 
 type JawabanGulihHandler struct {
@@ -52,22 +54,30 @@ func (h *JawabanGulihHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
-
-	resp, err := h.service.Create(req)
+	msg, err := h.service.Create(req)
 	if err != nil {
-		status := http.StatusInternalServerError
-		if err.Error() == "pertanyaan_gulih_id tidak ditemukan" ||
-			err.Error() == "perusahaan_id tidak ditemukan" ||
-			err.Error() == "jawaban untuk pertanyaan ini sudah ada untuk perusahaan tersebut" {
-			status = http.StatusBadRequest
+		rollbar.Error(err)
+		switch err.Error() {
+		case "pertanyaan_gulih_id tidak valid",
+			"perusahaan_id tidak boleh kosong",
+			"format perusahaan_id tidak valid",
+			"jawaban_gulih harus bernilai antara 0 sampai 5, atau null untuk N/A",
+			"validasi hanya boleh diisi jika evidence ada",
+			"validasi hanya boleh berisi 'yes' atau 'no'":
+			utils.RespondError(w, 400, err.Error())
+		case "pertanyaan_gulih_id tidak ditemukan",
+			"perusahaan_id tidak ditemukan":
+			utils.RespondError(w, 404, err.Error())
+		case "pertanyaan ini sudah pernah diisi oleh perusahaan Anda":
+			utils.RespondError(w, 409, err.Error())
+		default:
+			utils.RespondError(w, 500, err.Error())
 		}
-		utils.RespondError(w, status, err.Error())
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusCreated, map[string]interface{}{
-		"message": "Jawaban berhasil disimpan",
-		"data":    resp,
+	utils.RespondJSON(w, 201, map[string]interface{}{
+		"message": msg,
 	})
 }
 
@@ -159,19 +169,26 @@ func (h *JawabanGulihHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	resp, err := h.service.Update(id, req)
+	err = h.service.Update(id, req)
 	if err != nil {
-		status := http.StatusInternalServerError
-		if err.Error() == "data tidak ditemukan" {
-			status = http.StatusNotFound
+		rollbar.Error(err)
+		switch err.Error() {
+		case "data tidak ditemukan":
+			utils.RespondError(w, 404, err.Error())
+		case "format ID tidak valid",
+			"jawaban_gulih harus bernilai antara 0 sampai 5, atau null untuk N/A",
+			"validasi hanya boleh berisi 'yes' atau 'no'",
+			"validasi hanya boleh diisi jika evidence ada":
+			utils.RespondError(w, 400, err.Error())
+		default:
+			utils.RespondError(w, 500, err.Error())
 		}
-		utils.RespondError(w, status, err.Error())
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"message": "Berhasil memperbarui data",
-		"data":    resp,
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil menyimpan data",
+		"id":      id,
 	})
 }
 
@@ -190,15 +207,17 @@ func (h *JawabanGulihHandler) handleDelete(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err := h.service.Delete(id); err != nil {
-		status := http.StatusInternalServerError
+		rollbar.Error(err)
 		if err.Error() == "data tidak ditemukan" {
-			status = http.StatusNotFound
+			utils.RespondError(w, 404, err.Error())
+		} else {
+			utils.RespondError(w, 500, err.Error())
 		}
-		utils.RespondError(w, status, err.Error())
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
+	utils.RespondJSON(w, 200, map[string]interface{}{
 		"message": "Berhasil menghapus data",
+		"id":      id,
 	})
 }

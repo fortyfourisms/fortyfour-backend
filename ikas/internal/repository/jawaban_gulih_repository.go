@@ -21,6 +21,9 @@ type JawabanGulihRepositoryInterface interface {
 	CheckPerusahaanExists(id string) (bool, error)
 	CheckDuplicate(perusahaanID string, pertanyaanID int, excludeID int) (bool, error)
 	RecalculateGulih(perusahaanID string) error
+	UpsertToBuffer(req dto.CreateJawabanGulihRequest) error
+	GetBufferCount(perusahaanID string) (int, error)
+	FlushBuffer(perusahaanID string) error
 }
 
 type JawabanGulihRepository struct {
@@ -358,4 +361,60 @@ func (r *JawabanGulihRepository) RecalculateGulih(perusahaanID string) error {
 	}
 
 	return nil
+}
+
+func (r *JawabanGulihRepository) UpsertToBuffer(req dto.CreateJawabanGulihRequest) error {
+	query := `INSERT INTO jawaban_gulih_buffer 
+		(pertanyaan_gulih_id, perusahaan_id, jawaban_gulih, evidence, validasi, keterangan)
+		VALUES (?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE 
+		jawaban_gulih = VALUES(jawaban_gulih),
+		evidence = VALUES(evidence),
+		validasi = VALUES(validasi),
+		keterangan = VALUES(keterangan)`
+
+	_, err := r.db.Exec(query,
+		req.PertanyaanGulihID,
+		req.PerusahaanID,
+		req.JawabanGulih,
+		req.Evidence,
+		req.Validasi,
+		req.Keterangan,
+	)
+	return err
+}
+
+func (r *JawabanGulihRepository) GetBufferCount(perusahaanID string) (int, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM jawaban_gulih_buffer WHERE perusahaan_id = ?`
+	err := r.db.QueryRow(query, perusahaanID).Scan(&count)
+	return count, err
+}
+
+func (r *JawabanGulihRepository) FlushBuffer(perusahaanID string) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	moveQuery := `INSERT INTO jawaban_gulih 
+		(pertanyaan_gulih_id, perusahaan_id, jawaban_gulih, evidence, validasi, keterangan)
+		SELECT pertanyaan_gulih_id, perusahaan_id, jawaban_gulih, evidence, validasi, keterangan
+		FROM jawaban_gulih_buffer WHERE perusahaan_id = ?
+		ON DUPLICATE KEY UPDATE 
+		jawaban_gulih = VALUES(jawaban_gulih),
+		evidence = VALUES(evidence),
+		validasi = VALUES(validasi),
+		keterangan = VALUES(keterangan)`
+
+	if _, err := tx.Exec(moveQuery, perusahaanID); err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec(`DELETE FROM jawaban_gulih_buffer WHERE perusahaan_id = ?`, perusahaanID); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
