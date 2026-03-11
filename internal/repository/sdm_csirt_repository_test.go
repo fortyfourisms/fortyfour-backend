@@ -511,3 +511,109 @@ func TestSdmCsirtRepository_Delete(t *testing.T) {
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
+
+func TestSdmCsirtRepository_GetByCsirt(t *testing.T) {
+	sdmCols := []string{
+		"s.id", "s.nama_personel", "s.jabatan_csirt", "s.jabatan_perusahaan",
+		"s.skill", "s.sertifikasi", "s.created_at", "s.updated_at",
+		"c.id", "c.nama_csirt", "c.web_csirt", "c.telepon_csirt",
+	}
+
+	tests := []struct {
+		name    string
+		idCsirt string
+		mockFn  func(mock sqlmock.Sqlmock)
+		wantLen int
+		wantErr bool
+	}{
+		{
+			name:    "success - returns SDM milik CSIRT",
+			idCsirt: "csirt-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows(sdmCols).
+					AddRow(
+						"sdm-1", "John Doe", "Security Analyst", "IT Manager",
+						"Cybersecurity", "CISSP", "2024-01-01 00:00:00", "2024-01-01 00:00:00",
+						"csirt-1", "CSIRT ABC", "https://csirt.abc.com", "021-111",
+					).
+					AddRow(
+						"sdm-2", "Jane Smith", "Incident Responder", "Security Lead",
+						"Forensics", "CEH", "2024-01-01 00:00:00", "2024-01-01 00:00:00",
+						"csirt-1", "CSIRT ABC", "https://csirt.abc.com", "021-111",
+					)
+
+				mock.ExpectQuery("SELECT (.+) FROM sdm_csirt s (.+) WHERE s.id_csirt = \\?").
+					WithArgs("csirt-1").
+					WillReturnRows(rows)
+			},
+			wantLen: 2,
+			wantErr: false,
+		},
+		{
+			name:    "success - CSIRT tidak punya SDM (empty)",
+			idCsirt: "csirt-kosong",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows(sdmCols)
+				mock.ExpectQuery("SELECT (.+) FROM sdm_csirt s (.+) WHERE s.id_csirt = \\?").
+					WithArgs("csirt-kosong").
+					WillReturnRows(rows)
+			},
+			wantLen: 0,
+			wantErr: false,
+		},
+		{
+			name:    "success - SDM tanpa CSIRT yang terhubung (LEFT JOIN null)",
+			idCsirt: "csirt-2",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows(sdmCols).
+					AddRow(
+						"sdm-3", "Budi", "Analyst", "Staff IT",
+						"Networking", "", "2024-01-01 00:00:00", "2024-01-01 00:00:00",
+						sql.NullString{Valid: false}, "", "", "",
+					)
+
+				mock.ExpectQuery("SELECT (.+) FROM sdm_csirt s (.+) WHERE s.id_csirt = \\?").
+					WithArgs("csirt-2").
+					WillReturnRows(rows)
+			},
+			wantLen: 1,
+			wantErr: false,
+		},
+		{
+			name:    "error - database error",
+			idCsirt: "csirt-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery("SELECT (.+) FROM sdm_csirt s (.+) WHERE s.id_csirt = \\?").
+					WithArgs("csirt-1").
+					WillReturnError(sql.ErrConnDone)
+			},
+			wantLen: 0,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, repo := setupSdmCsirtTest(t)
+			defer db.Close()
+
+			tt.mockFn(mock)
+
+			result, err := repo.GetByCsirt(tt.idCsirt)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.Len(t, result, tt.wantLen)
+				for _, sdm := range result {
+					assert.NotEmpty(t, sdm.ID)
+					assert.NotEmpty(t, sdm.NamaPersonel)
+				}
+			}
+
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
