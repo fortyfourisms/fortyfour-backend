@@ -219,7 +219,16 @@ func TestPICService_Update_Success(t *testing.T) {
 //
 
 func TestPICService_Delete_Success(t *testing.T) {
+	idPerusahaan := "uuid-perusahaan"
 	repo := &mockPICRepository{
+		GetByIDFn: func(id string) (*dto.PICResponse, error) {
+			return &dto.PICResponse{
+				ID: id,
+				Perusahaan: &dto.PerusahaanInPIC{
+					ID: idPerusahaan,
+				},
+			}, nil
+		},
 		DeleteFn: func(id string) error {
 			return nil
 		},
@@ -550,6 +559,9 @@ func TestPICService_Update_InvalidatesCache(t *testing.T) {
 
 func TestPICService_Delete_Error(t *testing.T) {
 	repo := &mockPICRepository{
+		GetByIDFn: func(id string) (*dto.PICResponse, error) {
+			return &dto.PICResponse{ID: id}, nil
+		},
 		DeleteFn: func(id string) error {
 			return errors.New("delete failed")
 		},
@@ -568,6 +580,9 @@ func TestPICService_Delete_InvalidatesCache(t *testing.T) {
 	setCache(rc, keyList("pic"), []dto.PICResponse{{ID: "uuid-test"}})
 
 	repo := &mockPICRepository{
+		GetByIDFn: func(id string) (*dto.PICResponse, error) {
+			return &dto.PICResponse{ID: id}, nil
+		},
 		DeleteFn: func(id string) error {
 			return nil
 		},

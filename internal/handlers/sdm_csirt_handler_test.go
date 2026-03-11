@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -9,8 +10,11 @@ import (
 	"testing"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/services"
+
+	"github.com/stretchr/testify/assert"
 )
 
 //
@@ -387,4 +391,329 @@ func TestSdmCsirtHandler_Delete_WithoutID(t *testing.T) {
 	if rr.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400 for delete error, got %d", rr.Code)
 	}
+}
+/*
+=====================================
+ HELPER — USER CONTEXT (SDM)
+=====================================
+*/
+
+func withSdmUserContext(req *http.Request, idPerusahaan string) *http.Request {
+	ctx := context.WithValue(req.Context(), middleware.RoleKey, "user")
+	ctx = context.WithValue(ctx, middleware.IDPerusahaanKey, idPerusahaan)
+	return req.WithContext(ctx)
+}
+
+// mockCsirtServiceForSdmOwnership: csirt milik perusahaan-abc = csirt-abc
+type mockCsirtForOwnership struct {
+	csirtID      string
+	perusahaanID string
+}
+
+func (m *mockCsirtForOwnership) GetAll() ([]dto.CsirtResponse, error) {
+	return []dto.CsirtResponse{}, nil
+}
+func (m *mockCsirtForOwnership) GetByID(id string) (*dto.CsirtResponse, error) {
+	return nil, errors.New("not found")
+}
+func (m *mockCsirtForOwnership) GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error) {
+	if idPerusahaan == m.perusahaanID {
+		return []dto.CsirtResponse{{ID: m.csirtID}}, nil
+	}
+	return []dto.CsirtResponse{}, nil
+}
+func (m *mockCsirtForOwnership) Create(req dto.CreateCsirtRequest) (*models.Csirt, error) {
+	return nil, nil
+}
+func (m *mockCsirtForOwnership) Update(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error) {
+	return nil, nil
+}
+func (m *mockCsirtForOwnership) Delete(id string) error { return nil }
+
+func newSdmHandlerWithOwnership(sdmSvc *mockSdmCsirtService, perusahaanID, csirtID string) *SdmCsirtHandler {
+	sseService := services.NewSSEService()
+	csirtSvc := &mockCsirtForOwnership{csirtID: csirtID, perusahaanID: perusahaanID}
+	return NewSdmCsirtHandler(sdmSvc, csirtSvc, sseService)
+}
+
+/*
+=====================================
+ TEST OWNERSHIP — GET ALL AS USER
+=====================================
+*/
+
+func TestSdmCsirtHandler_GetAll_AsUser_FilterByCsirtPerusahaan(t *testing.T) {
+	sdmSvc := &mockSdmCsirtService{
+		GetByCsirtFn: func(idCsirt string) ([]dto.SdmCsirtResponse, error) {
+			assert.Equal(t, "csirt-abc", idCsirt)
+			return []dto.SdmCsirtResponse{{ID: "sdm-1"}}, nil
+		},
+	}
+	handler := newSdmHandlerWithOwnership(sdmSvc, "perusahaan-abc", "csirt-abc")
+
+	req := httptest.NewRequest(http.MethodGet, "/api/sdm_csirt", nil)
+	req = withSdmUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp []dto.SdmCsirtResponse
+	json.NewDecoder(w.Body).Decode(&resp)
+	assert.Len(t, resp, 1)
+}
+
+func TestSdmCsirtHandler_GetAll_AsUser_NoPerusahaan_Forbidden(t *testing.T) {
+	handler := newSdmHandler(&mockSdmCsirtService{})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/sdm_csirt", nil)
+	ctx := context.WithValue(req.Context(), middleware.RoleKey, "user")
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+func TestSdmCsirtHandler_GetAll_AsUser_NoCsirtForPerusahaan_Empty(t *testing.T) {
+	// Perusahaan tidak punya CSIRT — return empty
+	sdmSvc := &mockSdmCsirtService{}
+	sseService := services.NewSSEService()
+	// csirt service return 0 csirt untuk perusahaan ini
+	csirtSvc := &mockCsirtForOwnership{csirtID: "", perusahaanID: "perusahaan-lain"}
+	handler := NewSdmCsirtHandler(sdmSvc, csirtSvc, sseService)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/sdm_csirt", nil)
+	req = withSdmUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp []dto.SdmCsirtResponse
+	json.NewDecoder(w.Body).Decode(&resp)
+	assert.Empty(t, resp)
+}
+
+/*
+=====================================
+ TEST OWNERSHIP — GET BY ID AS USER
+=====================================
+*/
+
+func TestSdmCsirtHandler_GetByID_AsUser_OwnData_Success(t *testing.T) {
+	sdmSvc := &mockSdmCsirtService{
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{
+				ID:    id,
+				Csirt: &dto.CsirtMiniResponse{ID: "csirt-abc"},
+			}, nil
+		},
+	}
+	handler := newSdmHandlerWithOwnership(sdmSvc, "perusahaan-abc", "csirt-abc")
+
+	req := httptest.NewRequest(http.MethodGet, "/api/sdm_csirt/sdm-1", nil)
+	req = withSdmUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestSdmCsirtHandler_GetByID_AsUser_OtherPerusahaan_Forbidden(t *testing.T) {
+	sdmSvc := &mockSdmCsirtService{
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{
+				ID:    id,
+				Csirt: &dto.CsirtMiniResponse{ID: "csirt-lain"},
+			}, nil
+		},
+	}
+	// perusahaan-abc hanya punya csirt-abc, bukan csirt-lain
+	handler := newSdmHandlerWithOwnership(sdmSvc, "perusahaan-abc", "csirt-abc")
+
+	req := httptest.NewRequest(http.MethodGet, "/api/sdm_csirt/sdm-1", nil)
+	req = withSdmUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+func TestSdmCsirtHandler_GetByID_AsUser_NilCsirt_Forbidden(t *testing.T) {
+	sdmSvc := &mockSdmCsirtService{
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{ID: id, Csirt: nil}, nil
+		},
+	}
+	handler := newSdmHandlerWithOwnership(sdmSvc, "perusahaan-abc", "csirt-abc")
+
+	req := httptest.NewRequest(http.MethodGet, "/api/sdm_csirt/sdm-1", nil)
+	req = withSdmUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+/*
+=====================================
+ TEST OWNERSHIP — CREATE AS USER
+=====================================
+*/
+
+func TestSdmCsirtHandler_Create_AsUser_CsirtBelongsToPerusahaan_Success(t *testing.T) {
+	sdmSvc := &mockSdmCsirtService{
+		CreateFn: func(req dto.CreateSdmCsirtRequest) (string, error) {
+			return "sdm-new", nil
+		},
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{ID: id}, nil
+		},
+	}
+	handler := newSdmHandlerWithOwnership(sdmSvc, "perusahaan-abc", "csirt-abc")
+
+	csirtID := "csirt-abc"
+	body, _ := json.Marshal(dto.CreateSdmCsirtRequest{IdCsirt: &csirtID})
+	req := httptest.NewRequest(http.MethodPost, "/api/sdm_csirt", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withSdmUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+}
+
+func TestSdmCsirtHandler_Create_AsUser_CsirtOtherPerusahaan_Forbidden(t *testing.T) {
+	sdmSvc := &mockSdmCsirtService{}
+	handler := newSdmHandlerWithOwnership(sdmSvc, "perusahaan-abc", "csirt-abc")
+
+	otherCsirt := "csirt-lain"
+	body, _ := json.Marshal(dto.CreateSdmCsirtRequest{IdCsirt: &otherCsirt})
+	req := httptest.NewRequest(http.MethodPost, "/api/sdm_csirt", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withSdmUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+func TestSdmCsirtHandler_Create_AsUser_NoPerusahaan_Forbidden(t *testing.T) {
+	handler := newSdmHandler(&mockSdmCsirtService{})
+
+	body, _ := json.Marshal(dto.CreateSdmCsirtRequest{})
+	req := httptest.NewRequest(http.MethodPost, "/api/sdm_csirt", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := context.WithValue(req.Context(), middleware.RoleKey, "user")
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+/*
+=====================================
+ TEST OWNERSHIP — UPDATE AS USER
+=====================================
+*/
+
+func TestSdmCsirtHandler_Update_AsUser_OwnData_Success(t *testing.T) {
+	sdmSvc := &mockSdmCsirtService{
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{
+				ID:    id,
+				Csirt: &dto.CsirtMiniResponse{ID: "csirt-abc"},
+			}, nil
+		},
+		UpdateFn: func(id string, req dto.UpdateSdmCsirtRequest) error { return nil },
+	}
+	handler := newSdmHandlerWithOwnership(sdmSvc, "perusahaan-abc", "csirt-abc")
+
+	body, _ := json.Marshal(dto.UpdateSdmCsirtRequest{})
+	req := httptest.NewRequest(http.MethodPut, "/api/sdm_csirt/sdm-1", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withSdmUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestSdmCsirtHandler_Update_AsUser_OtherPerusahaan_Forbidden(t *testing.T) {
+	sdmSvc := &mockSdmCsirtService{
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{
+				ID:    id,
+				Csirt: &dto.CsirtMiniResponse{ID: "csirt-lain"},
+			}, nil
+		},
+	}
+	handler := newSdmHandlerWithOwnership(sdmSvc, "perusahaan-abc", "csirt-abc")
+
+	body, _ := json.Marshal(dto.UpdateSdmCsirtRequest{})
+	req := httptest.NewRequest(http.MethodPut, "/api/sdm_csirt/sdm-1", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withSdmUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+/*
+=====================================
+ TEST OWNERSHIP — DELETE AS USER
+=====================================
+*/
+
+func TestSdmCsirtHandler_Delete_AsUser_OwnData_Success(t *testing.T) {
+	sdmSvc := &mockSdmCsirtService{
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{
+				ID:    id,
+				Csirt: &dto.CsirtMiniResponse{ID: "csirt-abc"},
+			}, nil
+		},
+		DeleteFn: func(id string) error { return nil },
+	}
+	handler := newSdmHandlerWithOwnership(sdmSvc, "perusahaan-abc", "csirt-abc")
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/sdm_csirt/sdm-1", nil)
+	req = withSdmUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestSdmCsirtHandler_Delete_AsUser_OtherPerusahaan_Forbidden(t *testing.T) {
+	sdmSvc := &mockSdmCsirtService{
+		GetByIDFn: func(id string) (*dto.SdmCsirtResponse, error) {
+			return &dto.SdmCsirtResponse{
+				ID:    id,
+				Csirt: &dto.CsirtMiniResponse{ID: "csirt-lain"},
+			}, nil
+		},
+	}
+	handler := newSdmHandlerWithOwnership(sdmSvc, "perusahaan-abc", "csirt-abc")
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/sdm_csirt/sdm-1", nil)
+	req = withSdmUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
 }

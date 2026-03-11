@@ -659,3 +659,268 @@ func TestSEHandler_ServeHTTP_Routes(t *testing.T) {
 		})
 	}
 }
+/*
+=====================================
+ TEST OWNERSHIP — GET ALL AS USER
+=====================================
+*/
+
+func TestSEHandler_GetAll_AsUser_FilterByPerusahaan(t *testing.T) {
+	handler, mockService, _ := setupSEHandler()
+
+	expectedData := []dto.SEResponse{
+		{ID: "se-1", NamaSE: "SE Milik Perusahaan", IDPerusahaan: "perusahaan-abc"},
+	}
+	mockService.On("GetByPerusahaan", "perusahaan-abc").Return(expectedData, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/se", nil)
+	req = withUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var response []dto.SEResponse
+	json.NewDecoder(w.Body).Decode(&response)
+	assert.Len(t, response, 1)
+	assert.Equal(t, "perusahaan-abc", response[0].IDPerusahaan)
+	mockService.AssertExpectations(t)
+}
+
+func TestSEHandler_GetAll_AsUser_NoPerusahaan_Forbidden(t *testing.T) {
+	handler, _, _ := setupSEHandler()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/se", nil)
+	ctx := context.WithValue(req.Context(), middleware.RoleKey, "user")
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+func TestSEHandler_GetAll_AsUser_ServiceError(t *testing.T) {
+	handler, mockService, _ := setupSEHandler()
+
+	mockService.On("GetByPerusahaan", "perusahaan-abc").Return(nil, errors.New("db error"))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/se", nil)
+	req = withUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+/*
+=====================================
+ TEST OWNERSHIP — GET BY ID AS USER
+=====================================
+*/
+
+func TestSEHandler_GetByID_AsUser_OwnData_Success(t *testing.T) {
+	handler, mockService, _ := setupSEHandler()
+
+	mockService.On("GetByID", "se-123").Return(&dto.SEResponse{
+		ID: "se-123", IDPerusahaan: "perusahaan-abc",
+	}, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/se/se-123", nil)
+	req = withUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestSEHandler_GetByID_AsUser_OtherPerusahaan_Forbidden(t *testing.T) {
+	handler, mockService, _ := setupSEHandler()
+
+	mockService.On("GetByID", "se-123").Return(&dto.SEResponse{
+		ID: "se-123", IDPerusahaan: "perusahaan-lain",
+	}, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/se/se-123", nil)
+	req = withUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+/*
+=====================================
+ TEST OWNERSHIP — CREATE AS USER
+=====================================
+*/
+
+func TestSEHandler_Create_AsUser_IDPerusahaanForcedFromJWT(t *testing.T) {
+	handler, mockService, mockSSE := setupSEHandler()
+
+	reqBody := createValidSERequestForHandler()
+	reqBody.IDPerusahaan = "perusahaan-lain" // harus di-override oleh JWT
+
+	expectedResponse := &dto.SEResponse{
+		ID: "new-se", IDPerusahaan: "perusahaan-abc", NamaSE: reqBody.NamaSE, KategoriSE: "Strategis",
+	}
+	mockService.On("Create", mock.MatchedBy(func(r dto.CreateSERequest) bool {
+		return r.IDPerusahaan == "perusahaan-abc"
+	})).Return(expectedResponse, nil)
+	mockSSE.On("NotifyCreate", "se", expectedResponse, "")
+
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/api/se", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestSEHandler_Create_AsUser_NoPerusahaan_Forbidden(t *testing.T) {
+	handler, _, _ := setupSEHandler()
+
+	body, _ := json.Marshal(createValidSERequestForHandler())
+	req := httptest.NewRequest(http.MethodPost, "/api/se", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := context.WithValue(req.Context(), middleware.RoleKey, "user")
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+/*
+=====================================
+ TEST OWNERSHIP — UPDATE AS USER
+=====================================
+*/
+
+func TestSEHandler_Update_AsUser_OwnData_Success(t *testing.T) {
+	handler, mockService, mockSSE := setupSEHandler()
+
+	newNama := "Updated"
+	mockService.On("GetByID", "se-123").Return(&dto.SEResponse{
+		ID: "se-123", IDPerusahaan: "perusahaan-abc",
+	}, nil)
+	mockService.On("Update", "se-123", mock.AnythingOfType("dto.UpdateSERequest")).Return(&dto.SEResponse{
+		ID: "se-123", NamaSE: "Updated",
+	}, nil)
+	mockSSE.On("NotifyUpdate", "se", mock.Anything, "")
+
+	body, _ := json.Marshal(dto.UpdateSERequest{NamaSE: &newNama})
+	req := httptest.NewRequest(http.MethodPut, "/api/se/se-123", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestSEHandler_Update_AsUser_OtherPerusahaan_Forbidden(t *testing.T) {
+	handler, mockService, _ := setupSEHandler()
+
+	mockService.On("GetByID", "se-123").Return(&dto.SEResponse{
+		ID: "se-123", IDPerusahaan: "perusahaan-lain",
+	}, nil)
+
+	body, _ := json.Marshal(dto.UpdateSERequest{})
+	req := httptest.NewRequest(http.MethodPut, "/api/se/se-123", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestSEHandler_Update_AsUser_NotFound(t *testing.T) {
+	handler, mockService, _ := setupSEHandler()
+
+	mockService.On("GetByID", "se-nonexistent").Return(nil, errors.New("not found"))
+
+	body, _ := json.Marshal(dto.UpdateSERequest{})
+	req := httptest.NewRequest(http.MethodPut, "/api/se/se-nonexistent", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+/*
+=====================================
+ TEST OWNERSHIP — DELETE AS USER
+=====================================
+*/
+
+func TestSEHandler_Delete_AsUser_OwnData_Success(t *testing.T) {
+	handler, mockService, mockSSE := setupSEHandler()
+
+	mockService.On("GetByID", "se-123").Return(&dto.SEResponse{
+		ID: "se-123", IDPerusahaan: "perusahaan-abc",
+	}, nil)
+	mockService.On("Delete", "se-123").Return(nil)
+	mockSSE.On("NotifyDelete", "se", "se-123", "")
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/se/se-123", nil)
+	req = withUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestSEHandler_Delete_AsUser_OtherPerusahaan_Forbidden(t *testing.T) {
+	handler, mockService, _ := setupSEHandler()
+
+	mockService.On("GetByID", "se-123").Return(&dto.SEResponse{
+		ID: "se-123", IDPerusahaan: "perusahaan-lain",
+	}, nil)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/se/se-123", nil)
+	req = withUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestSEHandler_Delete_AsUser_NotFound(t *testing.T) {
+	handler, mockService, _ := setupSEHandler()
+
+	mockService.On("GetByID", "se-nonexistent").Return(nil, errors.New("not found"))
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/se/se-nonexistent", nil)
+	req = withUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	mockService.AssertExpectations(t)
+}
