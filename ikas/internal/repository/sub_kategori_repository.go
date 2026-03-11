@@ -16,16 +16,16 @@ func NewSubKategoriRepository(db *sql.DB) *SubKategoriRepository {
 	return &SubKategoriRepository{db: db}
 }
 
-func (r *SubKategoriRepository) Create(req dto.CreateSubKategoriRequest, id string) error {
-	query := `INSERT INTO sub_kategori (id, kategori_id, nama_sub_kategori) VALUES (?, ?, ?)`
+func (r *SubKategoriRepository) Create(req dto.CreateSubKategoriRequest) (int64, error) {
+	query := `INSERT INTO sub_kategori (kategori_id, nama_sub_kategori) VALUES (?, ?)`
 
-	_, err := r.db.Exec(query, id, req.KategoriID, req.NamaSubKategori)
+	res, err := r.db.Exec(query, req.KategoriID, req.NamaSubKategori)
 	if err != nil {
 		logger.Error(err, "operation failed")
-		return err
+		return 0, err
 	}
 
-	return nil
+	return res.LastInsertId()
 }
 
 func (r *SubKategoriRepository) GetAll() ([]dto.SubKategoriResponse, error) {
@@ -54,7 +54,7 @@ func (r *SubKategoriRepository) GetAll() ([]dto.SubKategoriResponse, error) {
 	return result, nil
 }
 
-func (r *SubKategoriRepository) GetByID(id string) (*dto.SubKategoriResponse, error) {
+func (r *SubKategoriRepository) GetByID(id int) (*dto.SubKategoriResponse, error) {
 	query := `SELECT id, kategori_id, nama_sub_kategori, created_at, updated_at 
 	          FROM sub_kategori 
 	          WHERE id = ?`
@@ -69,7 +69,7 @@ func (r *SubKategoriRepository) GetByID(id string) (*dto.SubKategoriResponse, er
 	return &item, nil
 }
 
-func (r *SubKategoriRepository) Update(id string, req dto.UpdateSubKategoriRequest) error {
+func (r *SubKategoriRepository) Update(id int, req dto.UpdateSubKategoriRequest) error {
 	query := "UPDATE sub_kategori SET "
 	args := []interface{}{}
 	updates := []string{}
@@ -101,7 +101,7 @@ func (r *SubKategoriRepository) Update(id string, req dto.UpdateSubKategoriReque
 	return nil
 }
 
-func (r *SubKategoriRepository) Delete(id string) error {
+func (r *SubKategoriRepository) Delete(id int) error {
 	_, err := r.db.Exec(`DELETE FROM sub_kategori WHERE id=?`, id)
 	if err != nil {
 		logger.Error(err, "operation failed")
@@ -111,7 +111,7 @@ func (r *SubKategoriRepository) Delete(id string) error {
 	return nil
 }
 
-func (r *SubKategoriRepository) CheckDuplicateName(kategoriID string, namaSubKategori string, excludeID string) (bool, error) {
+func (r *SubKategoriRepository) CheckDuplicateName(kategoriID int, namaSubKategori string, excludeID int) (bool, error) {
 	var count int
 
 	query := `SELECT COUNT(*) FROM sub_kategori 
@@ -119,7 +119,7 @@ func (r *SubKategoriRepository) CheckDuplicateName(kategoriID string, namaSubKat
 	          AND LOWER(TRIM(nama_sub_kategori)) = LOWER(TRIM(?))`
 	args := []interface{}{kategoriID, namaSubKategori}
 
-	if excludeID != "" {
+	if excludeID != 0 {
 		query += ` AND id != ?`
 		args = append(args, excludeID)
 	}
@@ -133,7 +133,7 @@ func (r *SubKategoriRepository) CheckDuplicateName(kategoriID string, namaSubKat
 	return count > 0, nil
 }
 
-func (r *SubKategoriRepository) CheckKategoriExists(kategoriID string) (bool, error) {
+func (r *SubKategoriRepository) CheckKategoriExists(kategoriID int) (bool, error) {
 	var count int
 
 	query := `SELECT COUNT(*) FROM kategori WHERE id = ?`

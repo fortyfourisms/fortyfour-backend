@@ -8,7 +8,6 @@ import (
 	"ikas/internal/utils"
 
 	"fortyfour-backend/pkg/logger"
-	"github.com/google/uuid"
 )
 
 type SubKategoriService struct {
@@ -20,15 +19,8 @@ func NewSubKategoriService(repo repository.SubKategoriRepositoryInterface) *SubK
 }
 
 func (s *SubKategoriService) validateCreate(req *dto.CreateSubKategoriRequest) error {
-	req.KategoriID = utils.NormalizeInput(req.KategoriID)
-
-	if req.KategoriID == "" {
-		return errors.New("kategori_id tidak boleh kosong")
-	}
-
-	// Validasi format UUID
-	if !utils.IsValidUUID(req.KategoriID) {
-		return errors.New("format kategori_id tidak valid")
+	if req.KategoriID <= 0 {
+		return errors.New("kategori_id tidak valid")
 	}
 
 	req.NamaSubKategori = utils.NormalizeInput(req.NamaSubKategori)
@@ -65,17 +57,8 @@ func (s *SubKategoriService) validateCreate(req *dto.CreateSubKategoriRequest) e
 func (s *SubKategoriService) validateUpdate(req *dto.UpdateSubKategoriRequest) error {
 	// Validasi kategori_id jika dikirim
 	if req.KategoriID != nil {
-		normalized := utils.NormalizeInput(*req.KategoriID)
-		req.KategoriID = &normalized
-
-		// NOT NULL: tidak boleh string kosong
-		if *req.KategoriID == "" {
-			return errors.New("kategori_id tidak boleh kosong")
-		}
-
-		// Validasi format UUID
-		if !utils.IsValidUUID(*req.KategoriID) {
-			return errors.New("format kategori_id tidak valid")
+		if *req.KategoriID <= 0 {
+			return errors.New("kategori_id tidak valid")
 		}
 	}
 
@@ -131,7 +114,7 @@ func (s *SubKategoriService) Create(req dto.CreateSubKategoriRequest) (*dto.SubK
 	}
 
 	// Cek duplikasi data (case-insensitive, whitespace-trimmed) dalam kategori yang sama
-	isDuplicate, err := s.repo.CheckDuplicateName(req.KategoriID, req.NamaSubKategori, "")
+	isDuplicate, err := s.repo.CheckDuplicateName(req.KategoriID, req.NamaSubKategori, 0)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		return nil, err
@@ -140,16 +123,14 @@ func (s *SubKategoriService) Create(req dto.CreateSubKategoriRequest) (*dto.SubK
 		return nil, errors.New("nama_sub_kategori sudah ada dalam kategori ini")
 	}
 
-	// Generate UUID
-	newID := uuid.New().String()
-
-	if err := s.repo.Create(req, newID); err != nil {
+	id, err := s.repo.Create(req)
+	if err != nil {
 		logger.Error(err, "operation failed")
 		return nil, err
 	}
 
 	// Ambil data yang baru dibuat
-	resp, err := s.repo.GetByID(newID)
+	resp, err := s.repo.GetByID(int(id))
 	if err != nil {
 		logger.Error(err, "operation failed")
 		return nil, err
@@ -162,12 +143,7 @@ func (s *SubKategoriService) GetAll() ([]dto.SubKategoriResponse, error) {
 	return s.repo.GetAll()
 }
 
-func (s *SubKategoriService) GetByID(id string) (*dto.SubKategoriResponse, error) {
-	// Validasi format UUID untuk mencegah SQL injection via ID
-	if !utils.IsValidUUID(id) {
-		return nil, errors.New("format ID tidak valid")
-	}
-
+func (s *SubKategoriService) GetByID(id int) (*dto.SubKategoriResponse, error) {
 	data, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -178,11 +154,7 @@ func (s *SubKategoriService) GetByID(id string) (*dto.SubKategoriResponse, error
 	return data, nil
 }
 
-func (s *SubKategoriService) Update(id string, req dto.UpdateSubKategoriRequest) (*dto.SubKategoriResponse, error) {
-	// Validasi format UUID untuk mencegah SQL injection via ID
-	if !utils.IsValidUUID(id) {
-		return nil, errors.New("format ID tidak valid")
-	}
+func (s *SubKategoriService) Update(id int, req dto.UpdateSubKategoriRequest) (*dto.SubKategoriResponse, error) {
 
 	// Cek apakah data ada
 	existing, err := s.repo.GetByID(id)
@@ -245,11 +217,7 @@ func (s *SubKategoriService) Update(id string, req dto.UpdateSubKategoriRequest)
 	return updated, nil
 }
 
-func (s *SubKategoriService) Delete(id string) error {
-	// Validasi format UUID untuk mencegah SQL injection via ID
-	if !utils.IsValidUUID(id) {
-		return errors.New("format ID tidak valid")
-	}
+func (s *SubKategoriService) Delete(id int) error {
 
 	_, err := s.repo.GetByID(id)
 	if err != nil {

@@ -6,7 +6,6 @@ import (
 	"ikas/internal/services"
 	"ikas/internal/utils"
 	"net/http"
-	"strings"
 
 	"fortyfour-backend/pkg/logger"
 )
@@ -22,30 +21,29 @@ func NewRuangLingkupHandler(service *services.RuangLingkupService) *RuangLingkup
 }
 
 func (h *RuangLingkupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/ruang-lingkup")
-	id := strings.TrimPrefix(path, "/")
+	id, _ := utils.ExtractIntID(r.URL.Path, "ruang-lingkup")
 
 	switch r.Method {
 	case http.MethodGet:
-		if id == "" {
+		if id == 0 {
 			h.handleGetAll(w, r)
 		} else {
 			h.handleGetByID(w, r, id)
 		}
 	case http.MethodPost:
-		if id != "" {
+		if id != 0 {
 			utils.RespondError(w, 400, "ID tidak diperlukan untuk create")
 			return
 		}
 		h.handleCreate(w, r)
 	case http.MethodPut:
-		if id == "" {
+		if id == 0 {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
 		h.handleUpdate(w, r, id)
 	case http.MethodDelete:
-		if id == "" {
+		if id == 0 {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
@@ -71,7 +69,11 @@ func (h *RuangLingkupHandler) handleGetAll(w http.ResponseWriter, _ *http.Reques
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+		"total":   len(data),
+	})
 }
 
 // GetRuangLingkupByID godoc
@@ -80,11 +82,11 @@ func (h *RuangLingkupHandler) handleGetAll(w http.ResponseWriter, _ *http.Reques
 //	@Description  Mengambil satu data ruang lingkup
 //	@Tags         RuangLingkup
 //	@Produce      json
-//	@Param        id   path      string  true  "RuangLingkup ID"
+//	@Param        id   path      int  true  "RuangLingkup ID"
 //	@Success      200  {object}  dto.RuangLingkupResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Router       /api/maturity/ruang-lingkup/{id} [get]
-func (h *RuangLingkupHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *RuangLingkupHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id int) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
 		logger.Error(err, "operation failed")
@@ -95,7 +97,10 @@ func (h *RuangLingkupHandler) handleGetByID(w http.ResponseWriter, _ *http.Reque
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+	})
 }
 
 // CreateRuangLingkup godoc
@@ -135,7 +140,10 @@ func (h *RuangLingkupHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	utils.RespondJSON(w, 201, resp)
+	utils.RespondJSON(w, 201, map[string]interface{}{
+		"message": "Berhasil menyimpan data",
+		"data":    resp,
+	})
 }
 
 // UpdateRuangLingkup godoc
@@ -145,14 +153,14 @@ func (h *RuangLingkupHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 //	@Tags         RuangLingkup
 //	@Accept       json
 //	@Produce      json
-//	@Param        id              path      string                       true  "RuangLingkup ID"
+//	@Param        id              path      int                       true  "RuangLingkup ID"
 //	@Param        ruangLingkup    body      dto.UpdateRuangLingkupRequest true  "Data update"
 //	@Success      200             {object}  dto.RuangLingkupResponse
 //	@Failure      400             {object}  dto.ErrorResponse
 //	@Failure      404             {object}  dto.ErrorResponse
 //	@Failure      409             {object}  dto.ErrorResponse
 //	@Router       /api/maturity/ruang-lingkup/{id} [put]
-func (h *RuangLingkupHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
+func (h *RuangLingkupHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id int) {
 	var req dto.UpdateRuangLingkupRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Error(err, "operation failed")
@@ -179,7 +187,10 @@ func (h *RuangLingkupHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	utils.RespondJSON(w, 200, resp)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil memperbarui data",
+		"data":    resp,
+	})
 }
 
 // DeleteRuangLingkup godoc
@@ -188,12 +199,12 @@ func (h *RuangLingkupHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 //	@Description  Menghapus data ruang lingkup berdasarkan ID
 //	@Tags         RuangLingkup
 //	@Produce      json
-//	@Param        id   path      string  true  "RuangLingkup ID"
+//	@Param        id   path      int  true  "RuangLingkup ID"
 //	@Success      200  {object}  dto.MessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
 //	@Router       /api/maturity/ruang-lingkup/{id} [delete]
-func (h *RuangLingkupHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *RuangLingkupHandler) handleDelete(w http.ResponseWriter, r *http.Request, id int) {
 	if err := h.service.Delete(id); err != nil {
 		logger.Error(err, "operation failed")
 		if err.Error() == "data tidak ditemukan" {
@@ -203,5 +214,7 @@ func (h *RuangLingkupHandler) handleDelete(w http.ResponseWriter, _ *http.Reques
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil menghapus data",
+	})
 }
