@@ -11,7 +11,7 @@ import (
 )
 
 func GenerateAccessToken(userID, username, role, secret string) (string, time.Time, error) {
-	expiresAt := time.Now().Add(8 * time.Hour)
+	expiresAt := time.Now().Add(15 * time.Minute)
 
 	claims := jwt.MapClaims{
 		"user_id":  userID,
