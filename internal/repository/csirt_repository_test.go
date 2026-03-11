@@ -483,3 +483,120 @@ func TestCsirtRepository_Delete(t *testing.T) {
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
+
+func TestCsirtRepository_GetByPerusahaan(t *testing.T) {
+	csirtCols := []string{
+		"c.id", "c.nama_csirt", "c.web_csirt", "c.telepon_csirt",
+		"c.photo_csirt", "c.file_rfc2350", "c.file_public_key_pgp",
+		"p.id", "p.photo", "p.nama_perusahaan",
+		"p.alamat", "p.telepon", "p.email", "p.website",
+		"p.created_at", "p.updated_at",
+		"ss.id", "ss.nama_sub_sektor", "ss.id_sektor", "ss.created_at", "ss.updated_at",
+		"s.nama_sektor",
+	}
+
+	tests := []struct {
+		name         string
+		idPerusahaan string
+		mockFn       func(mock sqlmock.Sqlmock)
+		wantLen      int
+		wantErr      bool
+	}{
+		{
+			name:         "success - returns CSIRT milik perusahaan dengan sub sektor",
+			idPerusahaan: "perusahaan-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				now := time.Now()
+				rows := sqlmock.NewRows(csirtCols).
+					AddRow(
+						"csirt-1", "CSIRT ABC", "https://csirt.abc.com", "021-111",
+						"photo.jpg", "rfc.pdf", "pgp.key",
+						"perusahaan-1", "logo.png", "PT ABC",
+						"Jl. Test 1", "021-1111", "info@abc.com", "https://abc.com",
+						now, now,
+						"sub-1", "Perbankan", "sektor-1", now.Format(time.RFC3339), now.Format(time.RFC3339),
+						"Keuangan",
+					)
+
+				mock.ExpectQuery("SELECT (.+) FROM csirt c JOIN perusahaan p (.+) WHERE c.id_perusahaan = \\?").
+					WithArgs("perusahaan-1").
+					WillReturnRows(rows)
+			},
+			wantLen: 1,
+			wantErr: false,
+		},
+		{
+			name:         "success - returns CSIRT tanpa sub sektor (nil)",
+			idPerusahaan: "perusahaan-2",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				now := time.Now()
+				rows := sqlmock.NewRows(csirtCols).
+					AddRow(
+						"csirt-2", "CSIRT XYZ", "https://csirt.xyz.com", "021-222",
+						"photo2.jpg", "rfc2.pdf", "pgp2.key",
+						"perusahaan-2", "logo2.png", "PT XYZ",
+						"Jl. Test 2", "021-2222", "info@xyz.com", "https://xyz.com",
+						now, now,
+						nil, nil, nil, nil, nil,
+						nil,
+					)
+
+				mock.ExpectQuery("SELECT (.+) FROM csirt c JOIN perusahaan p (.+) WHERE c.id_perusahaan = \\?").
+					WithArgs("perusahaan-2").
+					WillReturnRows(rows)
+			},
+			wantLen: 1,
+			wantErr: false,
+		},
+		{
+			name:         "success - perusahaan tidak punya CSIRT (empty)",
+			idPerusahaan: "perusahaan-kosong",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows(csirtCols)
+				mock.ExpectQuery("SELECT (.+) FROM csirt c JOIN perusahaan p (.+) WHERE c.id_perusahaan = \\?").
+					WithArgs("perusahaan-kosong").
+					WillReturnRows(rows)
+			},
+			wantLen: 0,
+			wantErr: false,
+		},
+		{
+			name:         "error - database error",
+			idPerusahaan: "perusahaan-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery("SELECT (.+) FROM csirt c JOIN perusahaan p (.+) WHERE c.id_perusahaan = \\?").
+					WithArgs("perusahaan-1").
+					WillReturnError(sql.ErrConnDone)
+			},
+			wantLen: 0,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, repo := setupTest(t)
+			defer db.Close()
+
+			tt.mockFn(mock)
+
+			result, err := repo.GetByPerusahaan(tt.idPerusahaan)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.Len(t, result, tt.wantLen)
+				for _, csirt := range result {
+					assert.NotEmpty(t, csirt.ID)
+					assert.NotEmpty(t, csirt.NamaCsirt)
+					assert.NotNil(t, csirt.Perusahaan)
+					assert.Equal(t, tt.idPerusahaan, csirt.Perusahaan.ID)
+				}
+			}
+
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
