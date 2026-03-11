@@ -21,7 +21,8 @@ CREATE TABLE responden (
         'Industri Pertahanan',
         'Lainnya'
     ) NOT NULL,
-    
+    sektor_lainnya VARCHAR(150) DEFAULT NULL,
+
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
