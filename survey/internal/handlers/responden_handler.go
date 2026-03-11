@@ -109,10 +109,13 @@ func (h *RespondenHandler) handleCreate(w http.ResponseWriter, r *http.Request) 
 
 		switch err.Error() {
 
-		case "nama tidak boleh kosong",
+		case "nama lengkap tidak boleh kosong",
+			"jabatan tidak boleh kosong",
+			"perusahaan tidak boleh kosong",
 			"email tidak boleh kosong",
 			"format email tidak valid",
-			"no_hp tidak boleh kosong":
+			"nomor telepon tidak boleh kosong",
+			"sektor tidak boleh kosong":
 			utils.RespondError(w, http.StatusBadRequest, err.Error())
 
 		case "email sudah terdaftar":
@@ -152,8 +155,11 @@ func (h *RespondenHandler) handleUpdate(w http.ResponseWriter, r *http.Request, 
 		case "data tidak ditemukan":
 			utils.RespondError(w, http.StatusNotFound, err.Error())
 
-		case "format email tidak valid",
-			"nama tidak boleh kosong":
+		case "nama lengkap tidak boleh kosong",
+			"jabatan tidak boleh kosong",
+			"perusahaan tidak boleh kosong",
+			"format email tidak valid",
+			"sektor tidak boleh kosong":
 			utils.RespondError(w, http.StatusBadRequest, err.Error())
 
 		case "email sudah terdaftar":
