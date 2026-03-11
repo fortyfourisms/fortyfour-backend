@@ -1,4 +1,4 @@
-FROM golang:1.25.7-alpine AS builder
+FROM golang:1.26.1-alpine AS builder
 
 RUN apk add --no-cache git ca-certificates tzdata
 
@@ -40,7 +40,7 @@ COPY --from=builder /build/migrations ./migrations
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
 # Create uploads directory before chown so volume mount inherits ownership
-RUN mkdir -p /app/uploads
+RUN mkdir -p /app/uploads/csirt_photo /app/uploads/rfc2350 /app/uploads/pgp
 
 RUN chown -R appuser:appgroup /app
 
