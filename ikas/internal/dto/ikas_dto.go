@@ -7,38 +7,15 @@ type CreateIkasRequest struct {
 	Telepon      string  `json:"telepon"`
 	Jabatan      string  `json:"jabatan"`
 	TargetNilai  float64 `json:"target_nilai"`
-
-	// Nested data untuk auto-create
-	Identifikasi *CreateIdentifikasiData `json:"identifikasi,omitempty"`
-	Proteksi     *CreateProteksiData     `json:"proteksi,omitempty"`
-	Deteksi      *CreateDeteksiData      `json:"deteksi,omitempty"`
-	Gulih        *CreateGulihData        `json:"gulih,omitempty"`
-
-	// ID manual (backward compatibility)
-	IDIdentifikasi string `json:"id_identifikasi,omitempty"`
-	IDProteksi     string `json:"id_proteksi,omitempty"`
-	IDDeteksi      string `json:"id_deteksi,omitempty"`
-	IDGulih        string `json:"id_gulih,omitempty"`
 }
 
 type UpdateIkasRequest struct {
-	IDPerusahaan    *string  `json:"id_perusahaan,omitempty"`
-	Tanggal         *string  `json:"tanggal,omitempty"`
-	Responden       *string  `json:"responden,omitempty"`
-	Telepon         *string  `json:"telepon,omitempty"`
-	Jabatan         *string  `json:"jabatan,omitempty"`
-	NilaiKematangan *float64 `json:"nilai_kematangan,omitempty"`
-	TargetNilai     *float64 `json:"target_nilai,omitempty"`
-	IDIdentifikasi  *string  `json:"id_identifikasi,omitempty"`
-	IDProteksi      *string  `json:"id_proteksi,omitempty"`
-	IDDeteksi       *string  `json:"id_deteksi,omitempty"`
-	IDGulih         *string  `json:"id_gulih,omitempty"`
-
-	// Nested data untuk update subdomain
-	Identifikasi *UpdateIdentifikasiData `json:"identifikasi,omitempty"`
-	Proteksi     *UpdateProteksiData     `json:"proteksi,omitempty"`
-	Deteksi      *UpdateDeteksiData      `json:"deteksi,omitempty"`
-	Gulih        *UpdateGulihData        `json:"gulih,omitempty"`
+	IDPerusahaan *string  `json:"id_perusahaan,omitempty"`
+	Tanggal      *string  `json:"tanggal,omitempty"`
+	Responden    *string  `json:"responden,omitempty"`
+	Telepon      *string  `json:"telepon,omitempty"`
+	Jabatan      *string  `json:"jabatan,omitempty"`
+	TargetNilai  *float64 `json:"target_nilai,omitempty"`
 }
 
 // Response dengan nested objects
@@ -65,7 +42,7 @@ type PerusahaanInIkas struct {
 }
 
 type IdentifikasiInIkas struct {
-	ID                              string  `json:"id"`
+	ID                              int     `json:"id"`
 	NilaiIdentifikasi               float64 `json:"nilai_identifikasi"`
 	KategoriTingkatKematanganDomain string  `json:"kategori_tingkat_kematangan_domain"`
 	NilaiSubdomain1                 float64 `json:"nilai_subdomain1"`
@@ -76,7 +53,7 @@ type IdentifikasiInIkas struct {
 }
 
 type ProteksiInIkas struct {
-	ID                              string  `json:"id"`
+	ID                              int     `json:"id"`
 	NilaiProteksi                   float64 `json:"nilai_proteksi"`
 	KategoriTingkatKematanganDomain string  `json:"kategori_tingkat_kematangan_domain"`
 	NilaiSubdomain1                 float64 `json:"nilai_subdomain1"`
@@ -88,7 +65,7 @@ type ProteksiInIkas struct {
 }
 
 type DeteksiInIkas struct {
-	ID                              string  `json:"id"`
+	ID                              int     `json:"id"`
 	NilaiDeteksi                    float64 `json:"nilai_deteksi"`
 	KategoriTingkatKematanganDomain string  `json:"kategori_tingkat_kematangan_domain"`
 	NilaiSubdomain1                 float64 `json:"nilai_subdomain1"`
@@ -97,7 +74,7 @@ type DeteksiInIkas struct {
 }
 
 type GulihInIkas struct {
-	ID                              string  `json:"id"`
+	ID                              int     `json:"id"`
 	NilaiGulih                      float64 `json:"nilai_gulih"`
 	KategoriTingkatKematanganDomain string  `json:"kategori_tingkat_kematangan_domain"`
 	NilaiSubdomain1                 float64 `json:"nilai_subdomain1"`

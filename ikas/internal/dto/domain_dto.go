@@ -11,7 +11,7 @@ type UpdateDomainRequest struct {
 }
 
 type DomainResponse struct {
-	ID         string    `json:"id"`
+	ID         int       `json:"id"`
 	NamaDomain string    `json:"nama_domain"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`

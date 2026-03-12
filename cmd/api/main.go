@@ -58,15 +58,15 @@ func main() {
 	defer db.Close()
 
 	// Run database migrations
-	if err := database.RunMigrations(database.Config{
-		Host:     cfg.Database.Host,
-		Port:     cfg.Database.Port,
-		User:     cfg.Database.User,
-		Password: cfg.Database.Password,
-		DBName:   cfg.Database.DBName,
-	}, "./migrations"); err != nil {
-		logger.FatalErr(err, "Failed to run database migrations")
-	}
+	// if err := database.RunMigrations(database.Config{
+	// 	Host:     cfg.Database.Host,
+	// 	Port:     cfg.Database.Port,
+	// 	User:     cfg.Database.User,
+	// 	Password: cfg.Database.Password,
+	// 	DBName:   cfg.Database.DBName,
+	// }, "./migrations"); err != nil {
+	// 	logger.FatalErr(err, "Failed to run database migrations")
+	// }
 
 	// Initialize Redis
 	redisClient, err := cache.NewRedisClient(cache.RedisConfig{
@@ -132,6 +132,12 @@ func main() {
 	geminiClient := utils.NewGeminiClient(cfg.GeminiAPIKey)
 	logger.Info("Gemini client initialized successfully")
 
+	uploadPath := os.Getenv("UPLOAD_DIR")
+	if uploadPath == "" {
+		uploadPath = "/app/uploads" // default fallback
+	}
+	os.MkdirAll(uploadPath, os.ModePerm)
+
 	// Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
 	perusahaanRepo := repository.NewPerusahaanRepository(db)
@@ -163,7 +169,7 @@ func main() {
 	gulihService := services.NewGulihService(gulihRepo)
 	csirtService := services.NewCsirtService(csirtRepo, redisClient)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo, redisClient)
-	userService := services.NewUserService(userRepo, "./uploads", usersProducer)
+	userService := services.NewUserService(userRepo, uploadPath, usersProducer)
 	roleService := services.NewRoleService(roleRepo, redisClient)
 	chatService := services.NewChatService(chatRepo, geminiClient, db)
 	sektorService := services.NewSektorService(sektorRepo, redisClient)
@@ -171,11 +177,9 @@ func main() {
 	seService := services.NewSEService(seRepo, redisClient)
 	dashboardService := services.NewDashboardService(dashboardRepo, redisClient)
 
-	// Initialize Handlers
-	uploadPath := "./uploads"
+	// Initialize Handler
 	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService, userService, uploadPath)
-	userHandler := handlers.NewUserHandler(userService, "./uploads", sseService)
-	os.MkdirAll(uploadPath, os.ModePerm)
+	userHandler := handlers.NewUserHandler(userService, uploadPath, sseService)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
 	picHandler := handlers.NewPICHandler(picService, sseService)
 	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService, sseService)

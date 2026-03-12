@@ -1,6 +1,6 @@
 module ikas
 
-go 1.25.7
+go 1.26.1
 
 require (
 	fortyfour-backend v0.0.0-00010101000000-000000000000
@@ -10,6 +10,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.17.3
+	github.com/rollbar/rollbar-go v1.4.8
 	github.com/stretchr/testify v1.11.1
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.6

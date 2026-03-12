@@ -464,6 +464,12 @@ func (h *AuthHandler) UpdateMeMedia(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Ensure upload directory exists
+	if err := os.MkdirAll(h.uploadPath, os.ModePerm); err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, "Gagal menyiapkan direktori upload")
+		return
+	}
+
 	var profileFilename, bannerFilename *string
 
 	if hasPhoto {

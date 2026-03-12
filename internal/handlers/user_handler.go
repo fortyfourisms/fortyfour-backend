@@ -335,6 +335,13 @@ func (h *UserHandler) handleUpdateProfilePhoto(w http.ResponseWriter, r *http.Re
 
 	ext := filepath.Ext(header.Filename)
 	filename := fmt.Sprintf("profile_%s_%d%s", uuid.New().String(), time.Now().Unix(), ext)
+
+	if err := os.MkdirAll(h.uploadPath, os.ModePerm); err != nil {
+		logger.Error(err, "failed to create upload directory")
+		utils.RespondError(w, 500, "Gagal menyimpan file")
+		return
+	}
+
 	filePath := filepath.Join(h.uploadPath, filename)
 
 	dst, err := os.Create(filePath)
@@ -414,6 +421,13 @@ func (h *UserHandler) handleUpdateBanner(w http.ResponseWriter, r *http.Request)
 
 	ext := filepath.Ext(header.Filename)
 	filename := fmt.Sprintf("banner_%s_%d%s", uuid.New().String(), time.Now().Unix(), ext)
+
+	if err := os.MkdirAll(h.uploadPath, os.ModePerm); err != nil {
+		logger.Error(err, "failed to create upload directory")
+		utils.RespondError(w, 500, "Gagal menyimpan file")
+		return
+	}
+
 	filePath := filepath.Join(h.uploadPath, filename)
 
 	dst, err := os.Create(filePath)

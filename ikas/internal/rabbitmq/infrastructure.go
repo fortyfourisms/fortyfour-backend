@@ -21,6 +21,18 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"ikas.deleted",
 		"ikas.imported",
 		"notifications.email",
+		"jawaban.identifikasi.created",
+		"jawaban.identifikasi.updated",
+		"jawaban.identifikasi.deleted",
+		"jawaban.proteksi.created",
+		"jawaban.proteksi.updated",
+		"jawaban.proteksi.deleted",
+		"jawaban.deteksi.created",
+		"jawaban.deteksi.updated",
+		"jawaban.deteksi.deleted",
+		"jawaban.gulih.created",
+		"jawaban.gulih.updated",
+		"jawaban.gulih.deleted",
 	}
 
 	for _, queueName := range queues {
@@ -31,11 +43,23 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 
 	// Bind Queues ke Exchange dengan routing keys
 	bindings := map[string]string{
-		"ikas.created":        "ikas.created",
-		"ikas.updated":        "ikas.updated",
-		"ikas.deleted":        "ikas.deleted",
-		"ikas.imported":       "ikas.imported",
-		"notifications.email": "notification.email",
+		"ikas.created":                 "ikas.created",
+		"ikas.updated":                 "ikas.updated",
+		"ikas.deleted":                 "ikas.deleted",
+		"ikas.imported":                "ikas.imported",
+		"notifications.email":          "notification.email",
+		"jawaban.identifikasi.created": "jawaban.identifikasi.created",
+		"jawaban.identifikasi.updated": "jawaban.identifikasi.updated",
+		"jawaban.identifikasi.deleted": "jawaban.identifikasi.deleted",
+		"jawaban.proteksi.created":     "jawaban.proteksi.created",
+		"jawaban.proteksi.updated":     "jawaban.proteksi.updated",
+		"jawaban.proteksi.deleted":     "jawaban.proteksi.deleted",
+		"jawaban.deteksi.created":      "jawaban.deteksi.created",
+		"jawaban.deteksi.updated":      "jawaban.deteksi.updated",
+		"jawaban.deteksi.deleted":      "jawaban.deteksi.deleted",
+		"jawaban.gulih.created":        "jawaban.gulih.created",
+		"jawaban.gulih.updated":        "jawaban.gulih.updated",
+		"jawaban.gulih.deleted":        "jawaban.gulih.deleted",
 	}
 
 	for queueName, routingKey := range bindings {

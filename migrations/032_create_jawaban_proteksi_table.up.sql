@@ -1,8 +1,16 @@
 CREATE TABLE IF NOT EXISTS jawaban_proteksi (
-    id CHAR(36) PRIMARY KEY,
-    pertanyaan_proteksi_id CHAR(36) NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    pertanyaan_proteksi_id INT NOT NULL,
     perusahaan_id CHAR(36) NOT NULL,
-    jawaban_proteksi TEXT NOT NULL,
+    jawaban_proteksi DECIMAL(3, 2) NOT NULL,
+    evidence TEXT NULL,
+    validasi ENUM('yes', 'no') NULL,
+    keterangan TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT chk_validasi_evidence
+        CHECK (evidence IS NOT NULL OR validasi IS NULL),
 
     CONSTRAINT fk_jawaban_proteksi_pertanyaan
         FOREIGN KEY (pertanyaan_proteksi_id)

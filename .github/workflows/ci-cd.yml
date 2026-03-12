@@ -10,7 +10,7 @@ on:
   #     - main
 
 env:
-  GO_VERSION: '1.25.7'
+  GO_VERSION: '1.26.1'
   DOCKER_IMAGE: fourtyfour
   REGISTRY: ghcr.io
 
@@ -368,6 +368,8 @@ jobs:
           script: |
             mkdir -p ~/fortyfour-backend
             mkdir -p ~/fortyfour-backend/migrations
+            mkdir -p ~/fortyfour-backend/uploads
+            chmod 755 ~/fortyfour-backend/uploads
 
       - name: Copy files to VPS
         uses: appleboy/scp-action@v0.1.4
@@ -376,7 +378,7 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          source: "docker-compose.yml,migrations/*"
+          source: "docker-compose.yml,migrations/*,nginx/conf.d/app.conf"
           target: ~/fortyfour-backend
 
       - name: Deploy to VPS
@@ -499,12 +501,21 @@ jobs:
             echo "Stopping old containers..."
             docker compose down || true
             
-            # Create uploads directory on host with correct permissions
-            # uid 1000 = appuser inside container, readable by nginx on host
-            sudo mkdir -p /var/www/uploads
-            sudo chown -R 1000:1000 /var/www/uploads
-            sudo chmod 755 /var/www/uploads
+            # Ensure uploads directory exists with correct permissions
+            mkdir -p ~/fortyfour-backend/uploads
+            chmod 755 ~/fortyfour-backend/uploads
+            # Ensure nginx can traverse to the uploads directory
+            chmod o+x $HOME
+            chmod o+x $HOME/fortyfour-backend
             echo "✅ Uploads directory ready"
+            
+            # Deploy Nginx config with correct uploads path
+            UPLOADS_PATH="usr/share/nginx/html/uploads"
+            sed "s|alias /app/uploads/;|alias ${UPLOADS_PATH}/;|g" \
+            # ~/fortyfour-backend/nginx/conf.d/app.conf > /tmp/app.conf
+            # sudo cp /tmp/app.conf /etc/nginx/conf.d/app.conf
+            # sudo nginx -t && sudo systemctl reload nginx
+            echo "✅ Nginx config updated and reloaded"
             
             # Start new containers
             echo "Starting new containers..."

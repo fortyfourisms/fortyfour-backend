@@ -6,7 +6,6 @@ import (
 	"ikas/internal/services"
 	"ikas/internal/utils"
 	"net/http"
-	"strings"
 
 	"fortyfour-backend/pkg/logger"
 )
@@ -22,30 +21,29 @@ func NewDomainHandler(service *services.DomainService) *DomainHandler {
 }
 
 func (h *DomainHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/domain")
-	id := strings.TrimPrefix(path, "/")
+	id, _ := utils.ExtractIntID(r.URL.Path, "domain")
 
 	switch r.Method {
 	case http.MethodGet:
-		if id == "" {
+		if id == 0 {
 			h.handleGetAll(w, r)
 		} else {
 			h.handleGetByID(w, r, id)
 		}
 	case http.MethodPost:
-		if id != "" {
+		if id != 0 {
 			utils.RespondError(w, 400, "ID tidak diperlukan untuk create")
 			return
 		}
 		h.handleCreate(w, r)
 	case http.MethodPut:
-		if id == "" {
+		if id == 0 {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
 		h.handleUpdate(w, r, id)
 	case http.MethodDelete:
-		if id == "" {
+		if id == 0 {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
@@ -72,7 +70,11 @@ func (h *DomainHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+		"total":   len(data),
+	})
 }
 
 // GetDomainByID godoc
@@ -81,11 +83,11 @@ func (h *DomainHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 //	@Description  Mengambil satu data domain
 //	@Tags         Domain
 //	@Produce      json
-//	@Param        id   path      string  true  "Domain ID"
+//	@Param        id   path      int  true  "Domain ID"
 //	@Success      200  {object}  dto.DomainResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Router       /api/maturity/domain/{id} [get]
-func (h *DomainHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *DomainHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id int) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
 		logger.Error(err, "operation failed")
@@ -97,7 +99,10 @@ func (h *DomainHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id
 		return
 	}
 
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+	})
 }
 
 // CreateDomain godoc
@@ -138,7 +143,10 @@ func (h *DomainHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 201, resp)
+	utils.RespondJSON(w, 201, map[string]interface{}{
+		"message": "Berhasil menyimpan data",
+		"data":    resp,
+	})
 }
 
 // UpdateDomain godoc
@@ -155,7 +163,7 @@ func (h *DomainHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 //	@Failure      404     {object}  dto.ErrorResponse
 //	@Failure      409     {object}  dto.ErrorResponse
 //	@Router       /api/maturity/domain/{id} [put]
-func (h *DomainHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
+func (h *DomainHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id int) {
 	var req dto.UpdateDomainRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Error(err, "operation failed")
@@ -183,7 +191,10 @@ func (h *DomainHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id 
 		return
 	}
 
-	utils.RespondJSON(w, 200, resp)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil memperbarui data",
+		"data":    resp,
+	})
 }
 
 // DeleteDomain godoc
@@ -192,12 +203,12 @@ func (h *DomainHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id 
 //	@Description  Menghapus data domain berdasarkan ID
 //	@Tags         Domain
 //	@Produce      json
-//	@Param        id   path      string  true  "Domain ID"
+//	@Param        id   path      int  true  "Domain ID"
 //	@Success      200  {object}  dto.MessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
 //	@Router       /api/maturity/domain/{id} [delete]
-func (h *DomainHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *DomainHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id int) {
 	if err := h.service.Delete(id); err != nil {
 		logger.Error(err, "operation failed")
 		if err.Error() == "data tidak ditemukan" {
@@ -208,7 +219,7 @@ func (h *DomainHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id 
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]string{
-		"message": "Delete success",
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil menghapus data",
 	})
 }
