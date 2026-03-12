@@ -2,7 +2,7 @@ package models
 
 type Perusahaan struct {
 	ID             string  `json:"id"`
-	Photo          string  `json:"photo"`
+	Photo          *string `json:"photo"`
 	NamaPerusahaan string  `json:"nama_perusahaan"`
 	IDSubSektor    *string `json:"id_sub_sektor"`
 	Alamat         string  `json:"alamat"`

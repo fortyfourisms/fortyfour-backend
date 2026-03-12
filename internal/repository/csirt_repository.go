@@ -47,6 +47,20 @@ func (r *CsirtRepository) Create(req dto.CreateCsirtRequest, id string) error {
 
 /*
 ========================
+EXISTS BY PERUSAHAAN
+========================
+*/
+func (r *CsirtRepository) ExistsByPerusahaan(idPerusahaan string) (bool, error) {
+	var count int
+	err := r.db.QueryRow(`SELECT COUNT(*) FROM csirt WHERE id_perusahaan = ?`, idPerusahaan).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+/*
+========================
 GET ALL
 ========================
 */
@@ -64,18 +78,31 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 	var result []models.Csirt
 	for rows.Next() {
 		var c models.Csirt
+		var telepon, photo, rfc, pgp sql.NullString
 		err := rows.Scan(
 			&c.ID,
 			&c.IdPerusahaan,
 			&c.NamaCsirt,
 			&c.WebCsirt,
-			&c.TeleponCsirt,
-			&c.PhotoCsirt,
-			&c.FileRFC2350,
-			&c.FilePublicKeyPGP,
+			&telepon,
+			&photo,
+			&rfc,
+			&pgp,
 		)
 		if err != nil {
 			return nil, err
+		}
+		if telepon.Valid {
+			c.TeleponCsirt = &telepon.String
+		}
+		if photo.Valid {
+			c.PhotoCsirt = &photo.String
+		}
+		if rfc.Valid {
+			c.FileRFC2350 = &rfc.String
+		}
+		if pgp.Valid {
+			c.FilePublicKeyPGP = &pgp.String
 		}
 		result = append(result, c)
 	}
@@ -94,18 +121,31 @@ func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 		FROM csirt WHERE id = ?`, id)
 
 	var c models.Csirt
+	var telepon, photo, rfc, pgp sql.NullString
 	err := row.Scan(
 		&c.ID,
 		&c.IdPerusahaan,
 		&c.NamaCsirt,
 		&c.WebCsirt,
-		&c.TeleponCsirt,
-		&c.PhotoCsirt,
-		&c.FileRFC2350,
-		&c.FilePublicKeyPGP,
+		&telepon,
+		&photo,
+		&rfc,
+		&pgp,
 	)
 	if err != nil {
 		return nil, err
+	}
+	if telepon.Valid {
+		c.TeleponCsirt = &telepon.String
+	}
+	if photo.Valid {
+		c.PhotoCsirt = &photo.String
+	}
+	if rfc.Valid {
+		c.FileRFC2350 = &rfc.String
+	}
+	if pgp.Valid {
+		c.FilePublicKeyPGP = &pgp.String
 	}
 	return &c, nil
 }

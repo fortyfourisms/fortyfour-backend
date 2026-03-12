@@ -510,7 +510,7 @@ jobs:
             echo "✅ Uploads directory ready"
             
             # Deploy Nginx config with correct uploads path
-            UPLOADS_PATH="usr/share/nginx/html/uploads"
+            UPLOADS_PATH="/usr/share/nginx/html/uploads"
             sed "s|alias /app/uploads/;|alias ${UPLOADS_PATH}/;|g" \
             # ~/fortyfour-backend/nginx/conf.d/app.conf > /tmp/app.conf
             # sudo cp /tmp/app.conf /etc/nginx/conf.d/app.conf
