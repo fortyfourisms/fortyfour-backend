@@ -610,6 +610,15 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.ParsedExcelD
 		return nil, fmt.Errorf("perusahaan anda belum terdaftar: '%s'", namaPerusahaan)
 	}
 
+	// VALIDASI: Cek apakah data IKAS untuk perusahaan ini sudah ada
+	exists, err := r.CheckExistsByPerusahaanID(idPerusahaan)
+	if err != nil {
+		return nil, fmt.Errorf("error validasi duplikasi data: %v", err)
+	}
+	if exists {
+		return nil, fmt.Errorf("Data IKAS untuk perusahaan '%s' sudah ada. Anda tidak dapat melakukan import lagi, silakan hubungi admin untuk melakukan update data.", namaPerusahaan)
+	}
+
 	// Telepon dari D10
 	telepon, err := getCellString(sheet2, "D10")
 	if err != nil {
@@ -762,4 +771,17 @@ func (r *IkasRepository) FindPerusahaanByName(namaPerusahaan string) (string, er
 	}
 
 	return id, nil
+}
+
+// CheckExistsByPerusahaanID mengecek apakah data IKAS untuk perusahaan tersebut sudah ada
+func (r *IkasRepository) CheckExistsByPerusahaanID(idPerusahaan string) (bool, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM ikas WHERE id_perusahaan = ?`
+
+	err := r.db.QueryRow(query, idPerusahaan).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }
