@@ -368,13 +368,16 @@ func TestCsirtRepository_Update(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		id := "csirt-123"
 		telepon := "021-98763"
+		photo := "updated.jpg"
+		rfc := "updated_rfc.pdf"
+		pgp := "updated_pgp.key"
 		csirt := models.Csirt{
 			NamaCsirt:        "CSIRT Updated",
 			WebCsirt:         "https://csirt.updated.com",
 			TeleponCsirt:     &telepon,
-			PhotoCsirt:       "updated.jpg",
-			FileRFC2350:      "updated_rfc.pdf",
-			FilePublicKeyPGP: "updated_pgp.key",
+			PhotoCsirt:       &photo,
+			FileRFC2350:      &rfc,
+			FilePublicKeyPGP: &pgp,
 		}
 
 		mock.ExpectExec("UPDATE csirt SET").

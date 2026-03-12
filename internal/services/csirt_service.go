@@ -5,6 +5,7 @@ import (
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
+
 	"github.com/google/uuid"
 )
 
@@ -90,13 +91,13 @@ func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Cs
 		c.TeleponCsirt = req.TeleponCsirt
 	}
 	if req.PhotoCsirt != nil {
-		c.PhotoCsirt = *req.PhotoCsirt
+		c.PhotoCsirt = req.PhotoCsirt
 	}
 	if req.FileRFC2350 != nil {
-		c.FileRFC2350 = *req.FileRFC2350
+		c.FileRFC2350 = req.FileRFC2350
 	}
 	if req.FilePublicKeyPGP != nil {
-		c.FilePublicKeyPGP = *req.FilePublicKeyPGP
+		c.FilePublicKeyPGP = req.FilePublicKeyPGP
 	}
 
 	if err := s.repo.Update(id, *c); err != nil {
