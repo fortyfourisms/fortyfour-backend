@@ -163,18 +163,18 @@ func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
 		var csirt dto.CsirtResponse
 		var perusahaan dto.PerusahaanResponse
 		var subID, namaSubSektor, idSektor, namaSektor, subCreatedAt, subUpdatedAt sql.NullString
-		var telepon, photo, rfc, pgp sql.NullString
+		var telepon, photoCsirt, rfc, pgp, photoPerusahaan sql.NullString
 
 		err := rows.Scan(
 			&csirt.ID,
 			&csirt.NamaCsirt,
 			&csirt.WebCsirt,
 			&telepon,
-			&photo,
+			&photoCsirt,
 			&rfc,
 			&pgp,
 			&perusahaan.ID,
-			&perusahaan.Photo,
+			&photoPerusahaan,
 			&perusahaan.NamaPerusahaan,
 			&perusahaan.Alamat,
 			&perusahaan.Telepon,
@@ -196,14 +196,17 @@ func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
 		if telepon.Valid {
 			csirt.TeleponCsirt = &telepon.String
 		}
-		if photo.Valid {
-			csirt.PhotoCsirt = photo.String
+		if photoCsirt.Valid {
+			csirt.PhotoCsirt = photoCsirt.String
 		}
 		if rfc.Valid {
 			csirt.FileRFC2350 = rfc.String
 		}
 		if pgp.Valid {
 			csirt.FilePublicKeyPGP = pgp.String
+		}
+		if photoPerusahaan.Valid {
+			perusahaan.Photo = photoPerusahaan.String
 		}
 
 		// Tambahkan info sub sektor jika ada
@@ -250,18 +253,18 @@ func (r *CsirtRepository) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, 
 	var csirt dto.CsirtResponse
 	var perusahaan dto.PerusahaanResponse
 	var subID, namaSubSektor, idSektor, namaSektor, subCreatedAt, subUpdatedAt sql.NullString
-	var telepon, photo, rfc, pgp sql.NullString
+	var telepon, photoCsirt, photoPerusahaan, rfc, pgp sql.NullString
 
 	err := row.Scan(
 		&csirt.ID,
 		&csirt.NamaCsirt,
 		&csirt.WebCsirt,
 		&telepon,
-		&photo,
+		&photoCsirt,
 		&rfc,
 		&pgp,
 		&perusahaan.ID,
-		&perusahaan.Photo,
+		&photoPerusahaan,
 		&perusahaan.NamaPerusahaan,
 		&perusahaan.Alamat,
 		&perusahaan.Telepon,
@@ -283,14 +286,17 @@ func (r *CsirtRepository) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, 
 	if telepon.Valid {
 		csirt.TeleponCsirt = &telepon.String
 	}
-	if photo.Valid {
-		csirt.PhotoCsirt = photo.String
+	if photoCsirt.Valid {
+		csirt.PhotoCsirt = photoCsirt.String
 	}
 	if rfc.Valid {
 		csirt.FileRFC2350 = rfc.String
 	}
 	if pgp.Valid {
 		csirt.FilePublicKeyPGP = pgp.String
+	}
+	if photoPerusahaan.Valid {
+		perusahaan.Photo = photoPerusahaan.String
 	}
 
 	// Tambahkan info sub sektor jika ada
