@@ -133,7 +133,7 @@ func (c *Consumer) ConsumeEmailNotifications(ctx context.Context) error {
 
 func (c *Consumer) ConsumeJawabanIdentifikasiCreated(ctx context.Context) error {
 	return c.Consume(ctx, "jawaban.identifikasi.created", func(ctx context.Context, body []byte) error {
-		log.Printf("📥 Raw Message from jawaban.identifikasi.created: %s", string(body))
+		log.Printf("Raw Message from jawaban.identifikasi.created: %s", string(body))
 
 		var req dto.CreateJawabanIdentifikasiRequest
 		if err := json.Unmarshal(body, &req); err != nil {
@@ -232,7 +232,7 @@ func (c *Consumer) ConsumeJawabanIdentifikasiDeleted(ctx context.Context) error 
 // ConsumeJawabanProteksiCreated (Pola 2 Batch Write)
 func (c *Consumer) ConsumeJawabanProteksiCreated(ctx context.Context) error {
 	return c.Consume(ctx, "jawaban.proteksi.created", func(ctx context.Context, body []byte) error {
-		log.Printf("📥 Raw Message from jawaban.proteksi.created: %s", string(body))
+		log.Printf("Raw Message from jawaban.proteksi.created: %s", string(body))
 
 		var req dto.CreateJawabanProteksiRequest
 		if err := json.Unmarshal(body, &req); err != nil {
@@ -331,7 +331,7 @@ func (c *Consumer) ConsumeJawabanProteksiDeleted(ctx context.Context) error {
 // ConsumeJawabanDeteksiCreated (Pola 2 Batch Write)
 func (c *Consumer) ConsumeJawabanDeteksiCreated(ctx context.Context) error {
 	return c.Consume(ctx, "jawaban.deteksi.created", func(ctx context.Context, body []byte) error {
-		log.Printf("📥 Raw Message from jawaban.deteksi.created: %s", string(body))
+		log.Printf("Raw Message from jawaban.deteksi.created: %s", string(body))
 
 		var req dto.CreateJawabanDeteksiRequest
 		if err := json.Unmarshal(body, &req); err != nil {
@@ -430,7 +430,7 @@ func (c *Consumer) ConsumeJawabanDeteksiDeleted(ctx context.Context) error {
 // ConsumeJawabanGulihCreated (Pola 2 Batch Write)
 func (c *Consumer) ConsumeJawabanGulihCreated(ctx context.Context) error {
 	return c.Consume(ctx, "jawaban.gulih.created", func(ctx context.Context, body []byte) error {
-		log.Printf("📥 Raw Message from jawaban.gulih.created: %s", string(body))
+		log.Printf("Raw Message from jawaban.gulih.created: %s", string(body))
 
 		var req dto.CreateJawabanGulihRequest
 		if err := json.Unmarshal(body, &req); err != nil {

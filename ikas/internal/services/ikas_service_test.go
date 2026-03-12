@@ -47,8 +47,8 @@ func (m *mockIkasRepo) Delete(id string) error {
 	return nil
 }
 
-func (m *mockIkasRepo) ParseExcelForImport(b []byte) (*dto.CreateIkasRequest, error) {
-	return &dto.CreateIkasRequest{}, nil
+func (m *mockIkasRepo) ParseExcelForImport(b []byte) (*dto.ParsedExcelData, error) {
+	return &dto.ParsedExcelData{}, nil
 }
 
 // Mock methods for Excel import process in repo

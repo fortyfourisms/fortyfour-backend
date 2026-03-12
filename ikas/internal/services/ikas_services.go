@@ -134,8 +134,52 @@ func (s *IkasService) ImportFromExcel(fileData []byte) (string, error) {
 
 	newID := uuid.New().String()
 
-	if err := s.Create(*excelData, newID); err != nil {
+	// 1. Create main IKAS record
+	if err := s.Create(excelData.IkasRequest, newID); err != nil {
 		return "", err
+	}
+
+	// 2. Publish events for each subdomain to trigger automatic processing
+	perusahaanID := excelData.IkasRequest.IDPerusahaan
+
+	// Identifikasi
+	for _, ans := range excelData.JawabanIdentifikasi {
+		event := dto.CreateJawabanIdentifikasiRequest{
+			PertanyaanIdentifikasiID: ans.PertanyaanID,
+			PerusahaanID:           perusahaanID,
+			JawabanIdentifikasi:    &ans.Jawaban,
+		}
+		s.producer.PublishJawabanIdentifikasiCreated(context.Background(), event)
+	}
+
+	// Proteksi
+	for _, ans := range excelData.JawabanProteksi {
+		event := dto.CreateJawabanProteksiRequest{
+			PertanyaanProteksiID: ans.PertanyaanID,
+			PerusahaanID:       perusahaanID,
+			JawabanProteksi:    &ans.Jawaban,
+		}
+		s.producer.PublishJawabanProteksiCreated(context.Background(), event)
+	}
+
+	// Deteksi
+	for _, ans := range excelData.JawabanDeteksi {
+		event := dto.CreateJawabanDeteksiRequest{
+			PertanyaanDeteksiID: ans.PertanyaanID,
+			PerusahaanID:      perusahaanID,
+			JawabanDeteksi:    &ans.Jawaban,
+		}
+		s.producer.PublishJawabanDeteksiCreated(context.Background(), event)
+	}
+
+	// Gulih
+	for _, ans := range excelData.JawabanGulih {
+		event := dto.CreateJawabanGulihRequest{
+			PertanyaanGulihID: ans.PertanyaanID,
+			PerusahaanID:     perusahaanID,
+			JawabanGulih:    &ans.Jawaban,
+		}
+		s.producer.PublishJawabanGulihCreated(context.Background(), event)
 	}
 
 	return newID, nil

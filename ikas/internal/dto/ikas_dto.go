@@ -152,3 +152,16 @@ type ImportIkasResponse struct {
 	Data    *IkasResponse `json:"data,omitempty"`
 	Errors  []string      `json:"errors,omitempty"`
 }
+
+type ExcelSubdomainAnswer struct {
+	PertanyaanID int
+	Jawaban      float64
+}
+
+type ParsedExcelData struct {
+	IkasRequest           CreateIkasRequest
+	JawabanIdentifikasi  []ExcelSubdomainAnswer
+	JawabanProteksi      []ExcelSubdomainAnswer
+	JawabanDeteksi       []ExcelSubdomainAnswer
+	JawabanGulih         []ExcelSubdomainAnswer
+}

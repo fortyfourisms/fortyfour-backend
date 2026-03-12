@@ -22,7 +22,7 @@ type IkasRepositoryInterface interface {
 	Delete(id string) error
 
 	//IMPORT
-	ParseExcelForImport(fileData []byte) (*dto.CreateIkasRequest, error)
+	ParseExcelForImport(fileData []byte) (*dto.ParsedExcelData, error)
 
 	//HELPER
 	FindPerusahaanByName(namaPerusahaan string) (string, error)
