@@ -56,19 +56,34 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 	var result []models.Csirt
 	for rows.Next() {
 		var c models.Csirt
+		var telepon, photo, rfc, pgp sql.NullString
 		err := rows.Scan(
 			&c.ID,
 			&c.IdPerusahaan,
 			&c.NamaCsirt,
 			&c.WebCsirt,
-			&c.TeleponCsirt,
-			&c.PhotoCsirt,
-			&c.FileRFC2350,
-			&c.FilePublicKeyPGP,
+			&telepon,
+			&photo,
+			&rfc,
+			&pgp,
 		)
 		if err != nil {
 			return nil, err
 		}
+
+		if telepon.Valid {
+			c.TeleponCsirt = &telepon.String
+		}
+		if photo.Valid {
+			c.PhotoCsirt = &photo.String
+		}
+		if rfc.Valid {
+			c.FileRFC2350 = &rfc.String
+		}
+		if pgp.Valid {
+			c.FilePublicKeyPGP = &pgp.String
+		}
+
 		result = append(result, c)
 	}
 	return result, nil
@@ -86,19 +101,34 @@ func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 		FROM csirt WHERE id = ?`, id)
 
 	var c models.Csirt
+	var telepon, photo, rfc, pgp sql.NullString
 	err := row.Scan(
 		&c.ID,
 		&c.IdPerusahaan,
 		&c.NamaCsirt,
 		&c.WebCsirt,
-		&c.TeleponCsirt,
-		&c.PhotoCsirt,
-		&c.FileRFC2350,
-		&c.FilePublicKeyPGP,
+		&telepon,
+		&photo,
+		&rfc,
+		&pgp,
 	)
 	if err != nil {
 		return nil, err
 	}
+
+	if telepon.Valid {
+		c.TeleponCsirt = &telepon.String
+	}
+	if photo.Valid {
+		c.PhotoCsirt = &photo.String
+	}
+	if rfc.Valid {
+		c.FileRFC2350 = &rfc.String
+	}
+	if pgp.Valid {
+		c.FilePublicKeyPGP = &pgp.String
+	}
+
 	return &c, nil
 }
 
@@ -133,15 +163,16 @@ func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
 		var csirt dto.CsirtResponse
 		var perusahaan dto.PerusahaanResponse
 		var subID, namaSubSektor, idSektor, namaSektor, subCreatedAt, subUpdatedAt sql.NullString
+		var telepon, photo, rfc, pgp sql.NullString
 
 		err := rows.Scan(
 			&csirt.ID,
 			&csirt.NamaCsirt,
 			&csirt.WebCsirt,
-			&csirt.TeleponCsirt,
-			&csirt.PhotoCsirt,
-			&csirt.FileRFC2350,
-			&csirt.FilePublicKeyPGP,
+			&telepon,
+			&photo,
+			&rfc,
+			&pgp,
 			&perusahaan.ID,
 			&perusahaan.Photo,
 			&perusahaan.NamaPerusahaan,
@@ -160,6 +191,19 @@ func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
 		)
 		if err != nil {
 			return nil, err
+		}
+
+		if telepon.Valid {
+			csirt.TeleponCsirt = &telepon.String
+		}
+		if photo.Valid {
+			csirt.PhotoCsirt = photo.String
+		}
+		if rfc.Valid {
+			csirt.FileRFC2350 = rfc.String
+		}
+		if pgp.Valid {
+			csirt.FilePublicKeyPGP = pgp.String
 		}
 
 		// Tambahkan info sub sektor jika ada
@@ -206,15 +250,16 @@ func (r *CsirtRepository) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, 
 	var csirt dto.CsirtResponse
 	var perusahaan dto.PerusahaanResponse
 	var subID, namaSubSektor, idSektor, namaSektor, subCreatedAt, subUpdatedAt sql.NullString
+	var telepon, photo, rfc, pgp sql.NullString
 
 	err := row.Scan(
 		&csirt.ID,
 		&csirt.NamaCsirt,
 		&csirt.WebCsirt,
-		&csirt.TeleponCsirt,
-		&csirt.PhotoCsirt,
-		&csirt.FileRFC2350,
-		&csirt.FilePublicKeyPGP,
+		&telepon,
+		&photo,
+		&rfc,
+		&pgp,
 		&perusahaan.ID,
 		&perusahaan.Photo,
 		&perusahaan.NamaPerusahaan,
@@ -233,6 +278,19 @@ func (r *CsirtRepository) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, 
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if telepon.Valid {
+		csirt.TeleponCsirt = &telepon.String
+	}
+	if photo.Valid {
+		csirt.PhotoCsirt = photo.String
+	}
+	if rfc.Valid {
+		csirt.FileRFC2350 = rfc.String
+	}
+	if pgp.Valid {
+		csirt.FilePublicKeyPGP = pgp.String
 	}
 
 	// Tambahkan info sub sektor jika ada
