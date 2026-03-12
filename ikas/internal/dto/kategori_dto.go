@@ -3,18 +3,18 @@ package dto
 import "time"
 
 type CreateKategoriRequest struct {
-	DomainID     string `json:"domain_id"`
+	DomainID     int    `json:"domain_id"`
 	NamaKategori string `json:"nama_kategori"`
 }
 
 type UpdateKategoriRequest struct {
-	DomainID     *string `json:"domain_id,omitempty"`
+	DomainID     *int    `json:"domain_id,omitempty"`
 	NamaKategori *string `json:"nama_kategori,omitempty"`
 }
 
 type KategoriResponse struct {
-	ID           string    `json:"id"`
-	DomainID     string    `json:"domain_id"`
+	ID           int       `json:"id"`
+	DomainID     int       `json:"domain_id"`
 	NamaKategori string    `json:"nama_kategori"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`

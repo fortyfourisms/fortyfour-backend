@@ -36,6 +36,7 @@ services:
       RABBITMQ_VHOST: /
 
       ENVIRONMENT: ${ENVIRONMENT:-production}
+      UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
     networks:
       - app-network
     depends_on:
@@ -49,6 +50,8 @@ services:
       timeout: 3s
       retries: 3
       start_period: 40s
+    volumes:
+      - uploads:/app/uploads
     ports:
       - 8080:8080
     extra_hosts:
@@ -162,3 +165,9 @@ volumes:
     driver: local
   rabbitmq_data:
     driver: local
+  uploads:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /usr/share/nginx/html/uploads

@@ -16,16 +16,16 @@ func NewKategoriRepository(db *sql.DB) *KategoriRepository {
 	return &KategoriRepository{db: db}
 }
 
-func (r *KategoriRepository) Create(req dto.CreateKategoriRequest, id string) error {
-	query := `INSERT INTO kategori (id, domain_id, nama_kategori) VALUES (?, ?, ?)`
+func (r *KategoriRepository) Create(req dto.CreateKategoriRequest) (int64, error) {
+	query := `INSERT INTO kategori (domain_id, nama_kategori) VALUES (?, ?)`
 
-	_, err := r.db.Exec(query, id, req.DomainID, req.NamaKategori)
+	res, err := r.db.Exec(query, req.DomainID, req.NamaKategori)
 	if err != nil {
 		logger.Error(err, "operation failed")
-		return err
+		return 0, err
 	}
 
-	return nil
+	return res.LastInsertId()
 }
 
 func (r *KategoriRepository) GetAll() ([]dto.KategoriResponse, error) {
@@ -54,7 +54,7 @@ func (r *KategoriRepository) GetAll() ([]dto.KategoriResponse, error) {
 	return result, nil
 }
 
-func (r *KategoriRepository) GetByID(id string) (*dto.KategoriResponse, error) {
+func (r *KategoriRepository) GetByID(id int) (*dto.KategoriResponse, error) {
 	query := `SELECT id, domain_id, nama_kategori, created_at, updated_at 
 	          FROM kategori 
 	          WHERE id = ?`
@@ -69,7 +69,7 @@ func (r *KategoriRepository) GetByID(id string) (*dto.KategoriResponse, error) {
 	return &item, nil
 }
 
-func (r *KategoriRepository) Update(id string, req dto.UpdateKategoriRequest) error {
+func (r *KategoriRepository) Update(id int, req dto.UpdateKategoriRequest) error {
 	query := "UPDATE kategori SET "
 	args := []interface{}{}
 	updates := []string{}
@@ -101,7 +101,7 @@ func (r *KategoriRepository) Update(id string, req dto.UpdateKategoriRequest) er
 	return nil
 }
 
-func (r *KategoriRepository) Delete(id string) error {
+func (r *KategoriRepository) Delete(id int) error {
 	_, err := r.db.Exec(`DELETE FROM kategori WHERE id=?`, id)
 	if err != nil {
 		logger.Error(err, "operation failed")
@@ -111,7 +111,7 @@ func (r *KategoriRepository) Delete(id string) error {
 	return nil
 }
 
-func (r *KategoriRepository) CheckDuplicateName(domainID string, namaKategori string, excludeID string) (bool, error) {
+func (r *KategoriRepository) CheckDuplicateName(domainID int, namaKategori string, excludeID int) (bool, error) {
 	var count int
 
 	query := `SELECT COUNT(*) FROM kategori 
@@ -119,7 +119,7 @@ func (r *KategoriRepository) CheckDuplicateName(domainID string, namaKategori st
 	          AND LOWER(TRIM(nama_kategori)) = LOWER(TRIM(?))`
 	args := []interface{}{domainID, namaKategori}
 
-	if excludeID != "" {
+	if excludeID != 0 {
 		query += ` AND id != ?`
 		args = append(args, excludeID)
 	}
@@ -133,7 +133,7 @@ func (r *KategoriRepository) CheckDuplicateName(domainID string, namaKategori st
 	return count > 0, nil
 }
 
-func (r *KategoriRepository) CheckDomainExists(domainID string) (bool, error) {
+func (r *KategoriRepository) CheckDomainExists(domainID int) (bool, error) {
 	var count int
 
 	query := `SELECT COUNT(*) FROM domain WHERE id = ?`

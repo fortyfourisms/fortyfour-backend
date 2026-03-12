@@ -82,7 +82,18 @@ func main() {
 
 	// Wrap with IKAS specific Producer and Consumer
 	msgProducer := internalRmq.NewProducer(sharedProducer)
-	msgConsumer := internalRmq.NewConsumer(sharedConsumer)
+	msgConsumer := internalRmq.NewConsumer(
+		sharedConsumer,
+		repository.NewIkasRepository(db),
+		repository.NewJawabanIdentifikasiRepository(db),
+		repository.NewPertanyaanIdentifikasiRepository(db),
+		repository.NewJawabanProteksiRepository(db),
+		repository.NewPertanyaanProteksiRepository(db),
+		repository.NewJawabanDeteksiRepository(db),
+		repository.NewPertanyaanDeteksiRepository(db),
+		repository.NewJawabanGulihRepository(db),
+		repository.NewPertanyaanGulihRepository(db),
+	)
 
 	// Start consumers in background
 	ctx, cancel := context.WithCancel(context.Background())
@@ -99,12 +110,30 @@ func main() {
 	kategoriRepo := repository.NewKategoriRepository(db)
 	subKategoriRepo := repository.NewSubKategoriRepository(db)
 
+	pertanyaanIdentifikasiRepo := repository.NewPertanyaanIdentifikasiRepository(db)
+	pertanyaanProteksiRepo := repository.NewPertanyaanProteksiRepository(db)
+	pertanyaanDeteksiRepo := repository.NewPertanyaanDeteksiRepository(db)
+	pertanyaanGulihRepo := repository.NewPertanyaanGulihRepository(db)
+
+	jawabanIdentifikasiRepo := repository.NewJawabanIdentifikasiRepository(db)
+	jawabanProteksiRepo := repository.NewJawabanProteksiRepository(db)
+	jawabanDeteksiRepo := repository.NewJawabanDeteksiRepository(db)
+	jawabanGulihRepo := repository.NewJawabanGulihRepository(db)
+
 	// services
 	ikasService := services.NewIkasService(ikasRepo, msgProducer)
 	ruangLingkupService := services.NewRuangLingkupService(ruangLingkupRepo)
 	domainService := services.NewDomainService(domainRepo)
 	kategoriService := services.NewKategoriService(kategoriRepo)
 	subKategoriService := services.NewSubKategoriService(subKategoriRepo)
+	pertanyaanIdentifikasiService := services.NewPertanyaanIdentifikasiService(pertanyaanIdentifikasiRepo)
+	pertanyaanProteksiService := services.NewPertanyaanProteksiService(pertanyaanProteksiRepo)
+	pertanyaanDeteksiService := services.NewPertanyaanDeteksiService(pertanyaanDeteksiRepo)
+	pertanyaanGulihService := services.NewPertanyaanGulihService(pertanyaanGulihRepo)
+	jawabanIdentifikasiService := services.NewJawabanIdentifikasiService(jawabanIdentifikasiRepo, msgProducer)
+	jawabanProteksiService := services.NewJawabanProteksiService(jawabanProteksiRepo, msgProducer)
+	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo, msgProducer)
+	jawabanGulihService := services.NewJawabanGulihService(jawabanGulihRepo, msgProducer)
 
 	// handlers
 	ikasHandler := handlers.NewIkasHandler(ikasService)
@@ -112,7 +141,16 @@ func main() {
 	domainHandler := handlers.NewDomainHandler(domainService)
 	kategoriHandler := handlers.NewKategoriHandler(kategoriService)
 	subKategoriHandler := handlers.NewSubKategoriHandler(subKategoriService)
+	pertanyaanIdentifikasiHandler := handlers.NewPertanyaanIdentifikasiHandler(pertanyaanIdentifikasiService)
+	pertanyaanProteksiHandler := handlers.NewPertanyaanProteksiHandler(pertanyaanProteksiService)
+	pertanyaanDeteksiHandler := handlers.NewPertanyaanDeteksiHandler(pertanyaanDeteksiService)
+	pertanyaanGulihHandler := handlers.NewPertanyaanGulihHandler(pertanyaanGulihService)
+	jawabanIdentifikasiHandler := handlers.NewJawabanIdentifikasiHandler(jawabanIdentifikasiService)
+	jawabanProteksiHandler := handlers.NewJawabanProteksiHandler(jawabanProteksiService)
+	jawabanDeteksiHandler := handlers.NewJawabanDeteksiHandler(jawabanDeteksiService)
+	jawabanGulihHandler := handlers.NewJawabanGulihHandler(jawabanGulihService)
 
+	// Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
 
 	// Initialize rate limiters with different configurations
@@ -129,6 +167,14 @@ func main() {
 		domainHandler,
 		kategoriHandler,
 		subKategoriHandler,
+		pertanyaanIdentifikasiHandler,
+		pertanyaanProteksiHandler,
+		pertanyaanDeteksiHandler,
+		pertanyaanGulihHandler,
+		jawabanIdentifikasiHandler,
+		jawabanProteksiHandler,
+		jawabanDeteksiHandler,
+		jawabanGulihHandler,
 		authMiddleware,
 		strictLimiter,
 		moderateLimiter,
@@ -147,6 +193,18 @@ func main() {
 		logger.Info("  - ikas.deleted")
 		logger.Info("  - ikas.imported")
 		logger.Info("  - notifications.email")
+		logger.Info("  - jawaban.identifikasi.created")
+		logger.Info("  - jawaban.identifikasi.updated")
+		logger.Info("  - jawaban.identifikasi.deleted")
+		logger.Info("  - jawaban.proteksi.created")
+		logger.Info("  - jawaban.proteksi.updated")
+		logger.Info("  - jawaban.proteksi.deleted")
+		logger.Info("  - jawaban.deteksi.created")
+		logger.Info("  - jawaban.deteksi.updated")
+		logger.Info("  - jawaban.deteksi.deleted")
+		logger.Info("  - jawaban.gulih.created")
+		logger.Info("  - jawaban.gulih.updated")
+		logger.Info("  - jawaban.gulih.deleted")
 
 		if err := http.ListenAndServe(cfg.Port, mux); err != nil && err != http.ErrServerClosed {
 			logger.FatalErr(err, "Server failed")

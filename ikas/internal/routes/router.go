@@ -28,39 +28,54 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+const baseURL = "/api/maturity"
+
+func handle(mux *http.ServeMux, path string, handler http.Handler) {
+	mux.Handle(baseURL+path, handler)
+	mux.Handle(baseURL+path+"/", handler)
+}
+
 func InitRouter(
 	ikasH *handlers.IkasHandler,
 	ruangLingkupH *handlers.RuangLingkupHandler,
 	domainH *handlers.DomainHandler,
 	kategoriH *handlers.KategoriHandler,
 	subKategoriH *handlers.SubKategoriHandler,
+	pertanyaanIdentifikasiH *handlers.PertanyaanIdentifikasiHandler,
+	pertanyaanProteksiH *handlers.PertanyaanProteksiHandler,
+	pertanyaanDeteksiH *handlers.PertanyaanDeteksiHandler,
+	pertanyaanGulihH *handlers.PertanyaanGulihHandler,
+	jawabanIdentifikasiH *handlers.JawabanIdentifikasiHandler,
+	jawabanProteksiH *handlers.JawabanProteksiHandler,
+	jawabanDeteksiH *handlers.JawabanDeteksiHandler,
+	jawabanGulihH *handlers.JawabanGulihHandler,
 	authM *middleware.AuthMiddleware,
 	strictLimiter *middleware.RateLimiter,
 	moderateLimiter *middleware.RateLimiter,
 	lenientLimiter *middleware.RateLimiter,
-
 ) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/api/maturity/health", healthHandler)
-
-	// Swagger UI
+	mux.HandleFunc(baseURL+"/health", healthHandler)
 	mux.HandleFunc("/swagger/maturity/", httpSwagger.WrapHandler)
 
-	mux.Handle("/api/maturity/ikas", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(ikasH))))
-	mux.Handle("/api/maturity/ikas/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(ikasH))))
+	withAuth := func(h http.HandlerFunc) http.Handler {
+		return authM.Authenticate(moderateLimiter.LimitByUser(h))
+	}
 
-	mux.Handle("/api/maturity/ruang-lingkup", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(ruangLingkupH))))
-	mux.Handle("/api/maturity/ruang-lingkup/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(ruangLingkupH))))
-
-	mux.Handle("/api/maturity/domain", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(domainH))))
-	mux.Handle("/api/maturity/domain/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(domainH))))
-
-	mux.Handle("/api/maturity/kategori", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(kategoriH))))
-	mux.Handle("/api/maturity/kategori/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(kategoriH))))
-
-	mux.Handle("/api/maturity/sub-kategori", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(subKategoriH))))
-	mux.Handle("/api/maturity/sub-kategori/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(subKategoriH))))
+	handle(mux, "/ikas", withAuth(utils.AdaptHandler(ikasH)))
+	handle(mux, "/ruang-lingkup", withAuth(utils.AdaptHandler(ruangLingkupH)))
+	handle(mux, "/domain", withAuth(utils.AdaptHandler(domainH)))
+	handle(mux, "/kategori", withAuth(utils.AdaptHandler(kategoriH)))
+	handle(mux, "/sub-kategori", withAuth(utils.AdaptHandler(subKategoriH)))
+	handle(mux, "/pertanyaan-identifikasi", withAuth(utils.AdaptHandler(pertanyaanIdentifikasiH)))
+	handle(mux, "/pertanyaan-proteksi", withAuth(utils.AdaptHandler(pertanyaanProteksiH)))
+	handle(mux, "/pertanyaan-deteksi", withAuth(utils.AdaptHandler(pertanyaanDeteksiH)))
+	handle(mux, "/pertanyaan-gulih", withAuth(utils.AdaptHandler(pertanyaanGulihH)))
+	handle(mux, "/jawaban-identifikasi", withAuth(utils.AdaptHandler(jawabanIdentifikasiH)))
+	handle(mux, "/jawaban-proteksi", withAuth(utils.AdaptHandler(jawabanProteksiH)))
+	handle(mux, "/jawaban-deteksi", withAuth(utils.AdaptHandler(jawabanDeteksiH)))
+	handle(mux, "/jawaban-gulih", withAuth(utils.AdaptHandler(jawabanGulihH)))
 
 	return mux
 }

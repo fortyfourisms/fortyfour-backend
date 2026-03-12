@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS pertanyaan_gulih (
-    id CHAR(36) PRIMARY KEY,
-    sub_kategori_id CHAR(36) NOT NULL,
-    ruang_lingkup_id CHAR(36) NOT NULL,
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    sub_kategori_id INT NOT NULL,
+    ruang_lingkup_id INT NOT NULL,
     pertanyaan_gulih TEXT NOT NULL,
     index0 TEXT,
     index1 TEXT,
@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS pertanyaan_gulih (
     index3 TEXT,
     index4 TEXT,
     index5 TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_pertanyaan_gulih_sub_kategori
         FOREIGN KEY (sub_kategori_id)

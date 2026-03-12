@@ -6,21 +6,25 @@ import "time"
 type IkasCreatedEvent struct {
 	IkasID          string    `json:"ikas_id"`
 	IDPerusahaan    string    `json:"id_perusahaan"`
-	NamaPerusahaan  string    `json:"nama_perusahaan,omitempty"`
 	Tanggal         string    `json:"tanggal"`
 	Responden       string    `json:"responden"`
-	NilaiKematangan float64   `json:"nilai_kematangan"`
+	Telepon         string    `json:"telepon"`
+	Jabatan         string    `json:"jabatan"`
 	TargetNilai     float64   `json:"target_nilai"`
+	NilaiKematangan float64   `json:"nilai_kematangan"`
 	CreatedAt       time.Time `json:"created_at"`
 }
 
 // IkasUpdatedEvent
 type IkasUpdatedEvent struct {
-	IkasID             string    `json:"ikas_id"`
-	OldNilaiKematangan float64   `json:"old_nilai_kematangan"`
-	NewNilaiKematangan float64   `json:"new_nilai_kematangan"`
-	UpdatedFields      []string  `json:"updated_fields"`
-	UpdatedAt          time.Time `json:"updated_at"`
+	IkasID       string    `json:"ikas_id"`
+	IDPerusahaan string    `json:"id_perusahaan"`
+	Tanggal      string    `json:"tanggal"`
+	Responden    string    `json:"responden"`
+	Telepon      string    `json:"telepon"`
+	Jabatan      string    `json:"jabatan"`
+	TargetNilai  float64   `json:"target_nilai"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 // IkasDeletedEvent

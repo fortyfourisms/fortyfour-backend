@@ -137,7 +137,7 @@ func (h *GulihHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Param        id      path      string  true  "Gulih ID"
 // @Param        deteksi body      dto.UpdateGulihRequest true "Data update"
-// @Success      200  {object} dto.DeteksiResponse
+// @Success      200  {object} dto.GulihResponse
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/gulih/{id} [put]
 func (h *GulihHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {

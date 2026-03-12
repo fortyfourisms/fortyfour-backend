@@ -2742,6 +2742,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/perusahaan/dropdown": {
+            "get": {
+                "description": "Data minimal (id, nama) untuk dropdown di halaman register (PUBLIC - no auth)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Perusahaan"
+                ],
+                "summary": "List perusahaan untuk dropdown",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.PerusahaanMinimalResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/perusahaan/{id}": {
             "get": {
                 "description": "Mengambil satu data perusahaan",
@@ -3907,7 +3936,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/sub-sektor": {
+        "/api/sub_sektor": {
             "get": {
                 "description": "Mengambil seluruh data sub sektor",
                 "produces": [
@@ -3936,7 +3965,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/sub-sektor/by-sektor/{id}": {
+        "/api/sub_sektor/by_sektor/{id}": {
             "get": {
                 "description": "Mengambil data sub sektor dalam satu sektor",
                 "produces": [
@@ -3974,7 +4003,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/sub-sektor/{id}": {
+        "/api/sub_sektor/{id}": {
             "get": {
                 "description": "Mengambil satu data sub sektor",
                 "produces": [
@@ -4395,9 +4424,215 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/chat": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengirim pesan ke AI dan menerima respons secara streaming via Server-Sent Events",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/event-stream"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Chat dengan AI (SSE streaming)",
+                "parameters": [
+                    {
+                        "description": "Chat request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChatRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "SSE stream",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/chat/delete-session": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menghapus riwayat percakapan berdasarkan session ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Chat"
+                ],
+                "summary": "Hapus chat session",
+                "parameters": [
+                    {
+                        "description": "Session ID",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "session_id": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/dashboard/summary": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil ringkasan data dashboard. Filter tanggal opsional dengan format YYYY-MM-DD; keduanya harus diisi agar filter aktif.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get dashboard summary",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.DashboardSummary"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "dto.ChatRequest": {
+            "type": "object",
+            "properties": {
+                "session_id": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.DashboardSummary": {
+            "type": "object",
+            "properties": {
+                "sektor_counts": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "id": { "type": "string" },
+                            "nama_sektor": { "type": "string" },
+                            "total": { "type": "integer" },
+                            "this_month": { "type": "integer" }
+                        }
+                    }
+                },
+                "kse": {
+                    "type": "object",
+                    "properties": {
+                        "total_se": { "type": "integer" }
+                    }
+                }
+            }
+        },
+        "dto.PerusahaanMinimalResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nama_perusahaan": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.CreateDeteksiData": {
             "type": "object",
             "properties": {

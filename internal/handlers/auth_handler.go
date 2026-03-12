@@ -2,7 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -12,6 +16,8 @@ import (
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/internal/validator"
+
+	"github.com/google/uuid"
 )
 
 // AuthHandler handles authentication-related HTTP endpoints.
@@ -19,17 +25,23 @@ type AuthHandler struct {
 	authService       *services.AuthService
 	tokenService      *services.TokenService
 	perusahaanService services.PerusahaanServiceInterface
+	userService       *services.UserService
+	uploadPath        string
 }
 
 func NewAuthHandler(
 	authService *services.AuthService,
 	tokenService *services.TokenService,
 	perusahaanService services.PerusahaanServiceInterface,
+	userService *services.UserService,
+	uploadPath string,
 ) *AuthHandler {
 	return &AuthHandler{
 		authService:       authService,
 		tokenService:      tokenService,
 		perusahaanService: perusahaanService,
+		userService:       userService,
+		uploadPath:        uploadPath,
 	}
 }
 
@@ -274,35 +286,284 @@ func (h *AuthHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// @Summary Get current user info
-// @Description Mengambil informasi user yang sedang login.
-// @Tags Auth
+// @Summary Get current user profile
+// @Description Mengambil data lengkap user yang sedang login (profil diri sendiri).
+// @Tags Me
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} map[string]interface{}
+// @Success 200 {object} dto.UserResponse
 // @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
 // @Router /api/me [get]
-// Me returns current user info
-func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
-	// Get user info from context (set by auth middleware)
+func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
-	if !ok {
+	if !ok || userID == "" {
 		utils.RespondError(w, http.StatusUnauthorized, "User not authenticated")
 		return
 	}
 
-	username, _ := r.Context().Value(middleware.UsernameKey).(string)
-	role, _ := r.Context().Value(middleware.RoleKey).(string)
-
-	response := map[string]interface{}{
-		"user": map[string]interface{}{
-			"id":       userID,
-			"username": username,
-			"role":     role,
-		},
+	user, err := h.userService.GetByID(userID)
+	if err != nil {
+		utils.RespondError(w, http.StatusNotFound, "User tidak ditemukan")
+		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, response)
+	utils.RespondJSON(w, http.StatusOK, user)
+}
+
+// @Summary Update current user profile
+// @Description Memperbarui data diri user yang sedang login (username dan email saja).
+// Role dan jabatan tidak dapat diubah melalui endpoint ini — hanya admin yang bisa mengubahnya.
+// @Tags Me
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.UpdateMeRequest true "Data yang ingin diubah"
+// @Success 200 {object} dto.UserResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Router /api/me [put]
+func (h *AuthHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	var req dto.UpdateMeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Trim spaces
+	if req.Username != nil {
+		trimmed := strings.TrimSpace(*req.Username)
+		req.Username = &trimmed
+	}
+	if req.Email != nil {
+		trimmed := strings.TrimSpace(*req.Email)
+		req.Email = &trimmed
+	}
+
+	// Validasi
+	if err := validator.Validate(req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// Mapping ke UpdateUserRequest — role_id dan id_jabatan sengaja tidak diisi
+	updateReq := dto.UpdateUserRequest{
+		Username: req.Username,
+		Email:    req.Email,
+	}
+
+	resp, err := h.userService.Update(userID, updateReq)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, resp)
+}
+
+// MeRouter menangani semua route di bawah /api/me
+func (h *AuthHandler) MeRouter(w http.ResponseWriter, r *http.Request) {
+	sub := strings.TrimPrefix(r.URL.Path, "/api/me")
+	sub = strings.TrimPrefix(sub, "/")
+
+	switch {
+	case sub == "" || sub == "/":
+		switch r.Method {
+		case http.MethodGet:
+			h.GetMe(w, r)
+		case http.MethodPut:
+			h.UpdateMe(w, r)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
+	case sub == "password" && r.Method == http.MethodPut:
+		h.UpdateMePassword(w, r)
+	case sub == "media" && r.Method == http.MethodPost:
+		h.UpdateMeMedia(w, r)
+	default:
+		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+// @Summary Update password diri sendiri
+// @Description Mengubah password user yang sedang login. Wajib mengisi password lama sebagai verifikasi.
+// @Tags Me
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.UpdateUserPasswordRequest true "Password lama dan baru"
+// @Success 200 {object} dto.MessageResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Router /api/me/password [put]
+func (h *AuthHandler) UpdateMePassword(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	var req dto.UpdateUserPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	req.OldPassword = strings.TrimSpace(req.OldPassword)
+	req.NewPassword = strings.TrimSpace(req.NewPassword)
+	req.ConfirmNewPassword = strings.TrimSpace(req.ConfirmNewPassword)
+
+	if err := validator.Validate(req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if err := h.userService.UpdatePassword(userID, req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": "Password berhasil diubah"})
+}
+
+// @Summary Update foto profile dan/atau banner diri sendiri
+// @Description Upload foto profile dan/atau banner sekaligus. Boleh kirim salah satu atau keduanya.
+// @Tags Me
+// @Accept multipart/form-data
+// @Produce json
+// @Security BearerAuth
+// @Param profile_photo formData file false "Foto profile (jpg/jpeg/png, max 10MB)"
+// @Param banner formData file false "Banner (jpg/jpeg/png, max 10MB)"
+// @Success 200 {object} dto.UserResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 401 {object} dto.ErrorResponse
+// @Router /api/me/media [post]
+func (h *AuthHandler) UpdateMeMedia(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
+	if !ok || userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "User not authenticated")
+		return
+	}
+
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "File terlalu besar (max 10MB)")
+		return
+	}
+
+	_, hasPhoto := r.MultipartForm.File["profile_photo"]
+	_, hasBanner := r.MultipartForm.File["banner"]
+	if !hasPhoto && !hasBanner {
+		utils.RespondError(w, http.StatusBadRequest, "Kirim minimal satu file: profile_photo atau banner")
+		return
+	}
+
+	// Ensure upload directory exists
+	if err := os.MkdirAll(h.uploadPath, os.ModePerm); err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, "Gagal menyiapkan direktori upload")
+		return
+	}
+
+	var profileFilename, bannerFilename *string
+
+	if hasPhoto {
+		file, header, err := r.FormFile("profile_photo")
+		if err != nil {
+			utils.RespondError(w, http.StatusBadRequest, "Gagal membaca file profile_photo")
+			return
+		}
+		defer file.Close()
+
+		if !isValidImageType(header.Filename) {
+			utils.RespondError(w, http.StatusBadRequest, "profile_photo: format harus jpg, jpeg, atau png")
+			return
+		}
+
+		ext := filepath.Ext(header.Filename)
+		filename := fmt.Sprintf("profile_%s_%d%s", uuid.New().String(), time.Now().Unix(), ext)
+		filePath := filepath.Join(h.uploadPath, filename)
+
+		dst, err := os.Create(filePath)
+		if err != nil {
+			utils.RespondError(w, http.StatusInternalServerError, "Gagal menyimpan profile_photo")
+			return
+		}
+		defer dst.Close()
+
+		if _, err := io.Copy(dst, file); err != nil {
+			os.Remove(filePath)
+			utils.RespondError(w, http.StatusInternalServerError, "Gagal menyimpan profile_photo")
+			return
+		}
+		profileFilename = &filename
+	}
+
+	if hasBanner {
+		file, header, err := r.FormFile("banner")
+		if err != nil {
+			utils.RespondError(w, http.StatusBadRequest, "Gagal membaca file banner")
+			return
+		}
+		defer file.Close()
+
+		if !isValidImageType(header.Filename) {
+			utils.RespondError(w, http.StatusBadRequest, "banner: format harus jpg, jpeg, atau png")
+			return
+		}
+
+		ext := filepath.Ext(header.Filename)
+		filename := fmt.Sprintf("banner_%s_%d%s", uuid.New().String(), time.Now().Unix(), ext)
+		filePath := filepath.Join(h.uploadPath, filename)
+
+		dst, err := os.Create(filePath)
+		if err != nil {
+			utils.RespondError(w, http.StatusInternalServerError, "Gagal menyimpan banner")
+			return
+		}
+		defer dst.Close()
+
+		if _, err := io.Copy(dst, file); err != nil {
+			os.Remove(filePath)
+			utils.RespondError(w, http.StatusInternalServerError, "Gagal menyimpan banner")
+			return
+		}
+		bannerFilename = &filename
+	}
+
+	var resp *dto.UserResponse
+	var err error
+
+	switch {
+	case profileFilename != nil && bannerFilename != nil:
+		_, err = h.userService.UpdateProfilePhoto(userID, *profileFilename)
+		if err != nil {
+			utils.RespondError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		resp, err = h.userService.UpdateBanner(userID, *bannerFilename)
+	case profileFilename != nil:
+		resp, err = h.userService.UpdateProfilePhoto(userID, *profileFilename)
+	case bannerFilename != nil:
+		resp, err = h.userService.UpdateBanner(userID, *bannerFilename)
+	}
+
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, http.StatusOK, resp)
+}
+
+// isValidImageType memvalidasi ekstensi file gambar
+func isValidImageType(filename string) bool {
+	ext := strings.ToLower(filepath.Ext(filename))
+	return ext == ".jpg" || ext == ".jpeg" || ext == ".png"
 }
 
 /* ===================== MFA HANDLERS (MICROSOFT-STYLE) ===================== */

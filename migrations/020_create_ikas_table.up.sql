@@ -1,10 +1,10 @@
 CREATE TABLE IF NOT EXISTS ikas (
     id CHAR(36) PRIMARY KEY,
     id_perusahaan CHAR(36),
-    id_identifikasi CHAR(36),
-    id_proteksi CHAR(36),
-    id_deteksi CHAR(36),
-    id_gulih CHAR(36),
+    id_identifikasi INT,
+    id_proteksi INT,
+    id_deteksi INT,
+    id_gulih INT,
 
     tanggal DATETIME,
     responden VARCHAR(255) NOT NULL,

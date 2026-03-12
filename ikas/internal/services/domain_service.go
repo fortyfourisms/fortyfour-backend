@@ -8,7 +8,6 @@ import (
 	"ikas/internal/utils"
 
 	"fortyfour-backend/pkg/logger"
-	"github.com/google/uuid"
 )
 
 type DomainService struct {
@@ -69,7 +68,7 @@ func (s *DomainService) Create(req dto.CreateDomainRequest) (*dto.DomainResponse
 		return nil, err
 	}
 
-	dup, err := s.repo.CheckDuplicateName(req.NamaDomain, "")
+	dup, err := s.repo.CheckDuplicateName(req.NamaDomain, 0)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		return nil, err
@@ -78,23 +77,19 @@ func (s *DomainService) Create(req dto.CreateDomainRequest) (*dto.DomainResponse
 		return nil, errors.New("nama_domain sudah ada")
 	}
 
-	id := uuid.New().String()
-	if err := s.repo.Create(req, id); err != nil {
+	id, err := s.repo.Create(req)
+	if err != nil {
 		return nil, err
 	}
 
-	return s.repo.GetByID(id)
+	return s.repo.GetByID(int(id))
 }
 
 func (s *DomainService) GetAll() ([]dto.DomainResponse, error) {
 	return s.repo.GetAll()
 }
 
-func (s *DomainService) GetByID(id string) (*dto.DomainResponse, error) {
-	if !utils.IsValidUUID(id) {
-		return nil, errors.New("format ID tidak valid")
-	}
-
+func (s *DomainService) GetByID(id int) (*dto.DomainResponse, error) {
 	data, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -105,11 +100,7 @@ func (s *DomainService) GetByID(id string) (*dto.DomainResponse, error) {
 	return data, nil
 }
 
-func (s *DomainService) Update(id string, req dto.UpdateDomainRequest) (*dto.DomainResponse, error) {
-	if !utils.IsValidUUID(id) {
-		return nil, errors.New("format ID tidak valid")
-	}
-
+func (s *DomainService) Update(id int, req dto.UpdateDomainRequest) (*dto.DomainResponse, error) {
 	if _, err := s.repo.GetByID(id); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("data tidak ditemukan")
@@ -121,16 +112,6 @@ func (s *DomainService) Update(id string, req dto.UpdateDomainRequest) (*dto.Dom
 		return nil, err
 	}
 
-	if req.NamaDomain != nil {
-		dup, err := s.repo.CheckDuplicateName(*req.NamaDomain, id)
-		if err != nil {
-			return nil, err
-		}
-		if dup {
-			return nil, errors.New("nama_domain sudah ada")
-		}
-	}
-
 	if err := s.repo.Update(id, req); err != nil {
 		return nil, err
 	}
@@ -138,10 +119,7 @@ func (s *DomainService) Update(id string, req dto.UpdateDomainRequest) (*dto.Dom
 	return s.repo.GetByID(id)
 }
 
-func (s *DomainService) Delete(id string) error {
-	if !utils.IsValidUUID(id) {
-		return errors.New("format ID tidak valid")
-	}
+func (s *DomainService) Delete(id int) error {
 
 	if _, err := s.repo.GetByID(id); err != nil {
 		if err == sql.ErrNoRows {

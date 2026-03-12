@@ -99,6 +99,10 @@ func (m *mockUserRepo) Create(user *models.User) error {
 	}
 	user.ID = "user-1"
 	user.RoleName = "admin"
+	// Set PasswordChangedAt agar tidak langsung expired saat Login
+	if user.PasswordChangedAt.IsZero() {
+		user.PasswordChangedAt = time.Now()
+	}
 	m.users[user.Username] = user
 	return nil
 }
@@ -156,6 +160,41 @@ func (m *mockUserRepo) SetMFA(userID string, secret *string, enabled bool) error
 	return errors.New("user not found")
 }
 
+func (m *mockUserRepo) UpdateStatus(userID string, status models.UserStatus) error {
+	if u, ok := m.users[userID]; ok {
+		u.Status = status
+	}
+	return nil
+}
+func (m *mockUserRepo) IncrementLoginAttempts(userID string) (int, error) {
+	if u, ok := m.users[userID]; ok {
+		u.LoginAttempts++
+		return u.LoginAttempts, nil
+	}
+	return 0, nil
+}
+func (m *mockUserRepo) ResetLoginAttempts(userID string) error {
+	if u, ok := m.users[userID]; ok {
+		u.LoginAttempts = 0
+	}
+	return nil
+}
+func (m *mockUserRepo) UpdatePasswordChangedAt(userID string) error { return nil }
+
+func (m *mockUserRepo) ExistsByPerusahaan(idPerusahaan string) (bool, error) {
+	for _, u := range m.users {
+		if u.IDPerusahaan != nil && *u.IDPerusahaan == idPerusahaan {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// newNotifSvc membuat NotificationService dengan mock redis untuk test
+func newNotifSvc() *NotificationService {
+	return NewNotificationService(newMockRedis())
+}
+
 //
 // =========================
 // CONSTRUCTOR TEST
@@ -178,7 +217,7 @@ func TestNewAuthService(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewAuthService(tt.userRepo, tt.tokenService)
+			got := NewAuthService(tt.userRepo, tt.tokenService, newNotifSvc())
 			if got == nil {
 				t.Errorf("NewAuthService() returned nil")
 			}
@@ -193,7 +232,7 @@ func TestNewAuthService(t *testing.T) {
 //
 
 func TestRegister_Success(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"))
+	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	user, token, err := auth.Register(
 		dto.RegisterRequest{
@@ -213,7 +252,7 @@ func TestRegister_UsernameExists(t *testing.T) {
 	repo := newMockUserRepo()
 	repo.users["user"] = &models.User{Username: "user"}
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"))
+	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	if _, _, err := auth.Register(
 		dto.RegisterRequest{Username: "user", Password: "XyZ#91!kLmPq", Email: "x@mail.com"},
@@ -227,7 +266,7 @@ func TestRegister_EmailExists(t *testing.T) {
 	repo := newMockUserRepo()
 	repo.users["u1"] = &models.User{Email: "mail@test.com"}
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"))
+	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	if _, _, err := auth.Register(
 		dto.RegisterRequest{Username: "u2", Password: "XyZ#91!kLmPq", Email: "mail@test.com"},
@@ -238,7 +277,7 @@ func TestRegister_EmailExists(t *testing.T) {
 }
 
 func TestRegister_WeakPassword(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"))
+	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	if _, _, err := auth.Register(
 		dto.RegisterRequest{Username: "u", Password: "123", Email: "x@mail.com"},
@@ -252,7 +291,7 @@ func TestRegister_CreateError(t *testing.T) {
 	repo := newMockUserRepo()
 	repo.failCreate = true
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"))
+	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	if _, _, err := auth.Register(
 		dto.RegisterRequest{Username: "u", Password: "XyZ#91!kLmPq", Email: "x@mail.com"},
@@ -309,7 +348,7 @@ func TestAuthService_Register_EmptyFields(t *testing.T) {
 			userRepo := testhelpers.NewMockUserRepository()
 			redis := testhelpers.NewMockRedisClient()
 			tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-			s := NewAuthService(userRepo, tokenService)
+			s := NewAuthService(userRepo, tokenService, newNotifSvc())
 
 			_, _, gotErr := s.Register(
 				dto.RegisterRequest{Username: tt.username, Password: tt.password, Email: tt.email},
@@ -334,7 +373,7 @@ func TestAuthService_Register_WithRoleAndJabatan(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, tokenService)
+	authService := NewAuthService(userRepo, tokenService, newNotifSvc())
 
 	roleID := "role-123"
 	idJabatan := "jabatan-456"
@@ -375,7 +414,7 @@ func TestAuthService_Register_DuplicateUsername(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, tokenService)
+	authService := NewAuthService(userRepo, tokenService, newNotifSvc())
 
 	authService.Register(
 		dto.RegisterRequest{Username: "testuser", Password: "MySecureP@ssw0rd2024!", Email: "test@example.com"},
@@ -407,13 +446,14 @@ func TestLogin_Success(t *testing.T) {
 	hash, _ := bcrypt.GenerateFromPassword([]byte("XyZ#91!kLmPq"), bcrypt.DefaultCost)
 
 	repo.users["user"] = &models.User{
-		ID:       "1",
-		Username: "user",
-		Password: string(hash),
-		RoleName: "admin",
+		ID:                "1",
+		Username:          "user",
+		Password:          string(hash),
+		RoleName:          "admin",
+		PasswordChangedAt: time.Now(), // pastikan tidak expired
 	}
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"))
+	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	// User without MFA enabled should return tokens
 	if u, tkn, err := auth.Login("user", "XyZ#91!kLmPq"); err != nil || u == nil || tkn == nil {
@@ -422,7 +462,7 @@ func TestLogin_Success(t *testing.T) {
 }
 
 func TestLogin_UserNotFound(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"))
+	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	if _, _, err := auth.Login("x", "pass"); err == nil {
 		t.Fatal("expected user not found")
@@ -438,7 +478,7 @@ func TestLogin_WrongPassword(t *testing.T) {
 		Password: string(hash),
 	}
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"))
+	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	if _, _, err := auth.Login("u", "wrong"); err == nil {
 		t.Fatal("expected wrong password error")
@@ -453,7 +493,7 @@ func TestLogin_TokenError(t *testing.T) {
 	hash, _ := bcrypt.GenerateFromPassword([]byte("pass"), bcrypt.DefaultCost)
 	repo.users["u"] = &models.User{Username: "u", Password: string(hash)}
 
-	auth := NewAuthService(repo, NewTokenService(redis, "secret", false, "localhost"))
+	auth := NewAuthService(repo, NewTokenService(redis, "secret", false, "localhost"), newNotifSvc())
 
 	if _, _, err := auth.Login("u", "pass"); err == nil {
 		t.Fatal("expected token error")
@@ -464,7 +504,7 @@ func TestAuthService_Login_Success_Detailed(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, tokenService)
+	authService := NewAuthService(userRepo, tokenService, newNotifSvc())
 
 	authService.Register(
 		dto.RegisterRequest{Username: "testuser", Password: "MySecureP@ssw0rd2024!", Email: "test@example.com"},
@@ -507,15 +547,16 @@ func TestAuthService_Login_MFAEnabled_ReturnsNilTokens(t *testing.T) {
 
 	secret := "MFASECRET123"
 	repo.users["user"] = &models.User{
-		ID:         "1",
-		Username:   "user",
-		Password:   string(hash),
-		RoleName:   "admin",
-		MFAEnabled: true,
-		MFASecret:  &secret,
+		ID:                "1",
+		Username:          "user",
+		Password:          string(hash),
+		RoleName:          "admin",
+		MFAEnabled:        true,
+		MFASecret:         &secret,
+		PasswordChangedAt: time.Now(), // pastikan tidak expired
 	}
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"))
+	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	user, tokens, err := auth.Login("user", "XyZ#91!kLmPq")
 
@@ -537,7 +578,7 @@ func TestAuthService_Login_InvalidUsername(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, tokenService)
+	authService := NewAuthService(userRepo, tokenService, newNotifSvc())
 
 	authService.Register(
 		dto.RegisterRequest{Username: "testuser", Password: "MySecureP@ssw0rd2024!", Email: "test@example.com"},
@@ -559,7 +600,7 @@ func TestAuthService_Login_InvalidPassword(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, tokenService)
+	authService := NewAuthService(userRepo, tokenService, newNotifSvc())
 
 	authService.Register(
 		dto.RegisterRequest{Username: "testuser", Password: "MySecureP@ssw0rd2024!", Email: "test@example.com"},
@@ -587,7 +628,7 @@ func TestLogout_Success(t *testing.T) {
 	redis := newMockRedis()
 	redis.store["refresh_token:token"] = "x"
 
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(redis, "secret", false, "localhost"))
+	auth := NewAuthService(newMockUserRepo(), NewTokenService(redis, "secret", false, "localhost"), newNotifSvc())
 
 	if err := auth.Logout("token"); err != nil {
 		t.Fatal("logout success expected")
@@ -595,7 +636,7 @@ func TestLogout_Success(t *testing.T) {
 }
 
 func TestLogout_TokenNotExists(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"))
+	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	if err := auth.Logout("missing"); err != nil {
 		t.Fatal("no error expected for missing token")
@@ -607,7 +648,7 @@ func TestLogout_DeleteError(t *testing.T) {
 	redis.store["refresh_token:token"] = "x"
 	redis.failDelete = true
 
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(redis, "secret", false, "localhost"))
+	auth := NewAuthService(newMockUserRepo(), NewTokenService(redis, "secret", false, "localhost"), newNotifSvc())
 
 	if err := auth.Logout("token"); err == nil {
 		t.Fatal("expected delete error")
@@ -618,7 +659,7 @@ func TestAuthService_Logout_Success_Detailed(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, tokenService)
+	authService := NewAuthService(userRepo, tokenService, newNotifSvc())
 
 	// Register and get tokens
 	_, tokens, err := authService.Register(

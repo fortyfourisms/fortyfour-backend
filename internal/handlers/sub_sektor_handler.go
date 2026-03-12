@@ -52,7 +52,7 @@ func (h *SubSektorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Success      200  {array}  dto.SubSektorResponse
 // @Failure      500  {object} dto.ErrorResponse
-// @Router       /api/sub-sektor [get]
+// @Router       /api/sub_sektor [get]
 func (h *SubSektorHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -70,7 +70,7 @@ func (h *SubSektorHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) 
 // @Param        id   path      string  true  "SubSektor ID"
 // @Success      200  {object} dto.SubSektorResponse
 // @Failure      404  {object} dto.ErrorResponse
-// @Router       /api/sub-sektor/{id} [get]
+// @Router       /api/sub_sektor/{id} [get]
 func (h *SubSektorHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -88,7 +88,7 @@ func (h *SubSektorHandler) handleGetByID(w http.ResponseWriter, _ *http.Request,
 // @Param        id   path      string  true  "Sektor ID"
 // @Success      200  {array}  dto.SubSektorResponse
 // @Failure      500  {object} dto.ErrorResponse
-// @Router       /api/sub-sektor/by-sektor/{id} [get]
+// @Router       /api/sub_sektor/by_sektor/{id} [get]
 func (h *SubSektorHandler) handleGetBySektorID(w http.ResponseWriter, _ *http.Request, sektorID string) {
 	data, err := h.service.GetBySektorID(sektorID)
 	if err != nil {

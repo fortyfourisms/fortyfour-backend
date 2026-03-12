@@ -267,6 +267,9 @@ func (s *UserService) UpdatePassword(id string, req dto.UpdateUserPasswordReques
 		return err
 	}
 
+	// Catat waktu pergantian password (reset masa berlaku 90 hari)
+	_ = s.repo.UpdatePasswordChangedAt(id)
+
 	// Publish UserPasswordUpdated event
 	if s.producer != nil {
 		go func() {
@@ -377,16 +380,34 @@ func (s *UserService) Delete(id string) error {
 
 func (s *UserService) toResponse(user *models.User) dto.UserResponse {
 	return dto.UserResponse{
-		ID:          user.ID,
-		Username:    user.Username,
-		Email:       user.Email,
-		RoleID:      user.RoleID,
-		RoleName:    user.RoleName,
-		IDJabatan:   user.IDJabatan,
-		JabatanName: user.JabatanName,
-		FotoProfile: user.FotoProfile,
-		Banner:      user.Banner,
-		CreatedAt:   user.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:   user.UpdatedAt.Format(time.RFC3339),
+		ID:           user.ID,
+		Username:     user.Username,
+		Email:        user.Email,
+		RoleID:       user.RoleID,
+		RoleName:     user.RoleName,
+		IDJabatan:    user.IDJabatan,
+		JabatanName:  user.JabatanName,
+		IDPerusahaan: user.IDPerusahaan,
+		FotoProfile:  user.FotoProfile,
+		Banner:       user.Banner,
+		CreatedAt:    user.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:    user.UpdatedAt.Format(time.RFC3339),
 	}
+}
+
+// UpdateStatus mengubah status akun user — hanya bisa dilakukan admin
+func (s *UserService) UpdateStatus(userID string, status models.UserStatus) error {
+	// Validasi status
+	switch status {
+	case models.UserStatusAktif, models.UserStatusSuspend, models.UserStatusNonaktif:
+		// valid
+	default:
+		return errors.New("status tidak valid, pilihan: Aktif, Suspend, Nonaktif")
+	}
+
+	if _, err := s.repo.FindByID(userID); err != nil {
+		return errors.New("user tidak ditemukan")
+	}
+
+	return s.repo.UpdateStatus(userID, status)
 }

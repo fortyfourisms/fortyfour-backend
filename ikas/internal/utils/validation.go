@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"fmt"
+	"math"
 	"regexp"
 	"strings"
 )
@@ -66,4 +68,23 @@ func IsValidInput(input string) bool {
 func IsValidUUID(id string) bool {
 	uuidPattern := regexp.MustCompile(`^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$`)
 	return uuidPattern.MatchString(id)
+}
+
+// RoundFloat membulatkan float64 ke n angka desimal
+func RoundFloat(val float64, precision int) float64 {
+	ratio := math.Pow(10, float64(precision))
+	return math.Round(val*ratio) / ratio
+}
+
+// FormatFloat2Decimal memformat float64 menjadi 2 angka di belakang koma
+func FormatFloat2Decimal(val float64) float64 {
+	return RoundFloat(val, 2)
+}
+
+// ValidateFloat memvalidasi nilai float:
+func ValidateFloat(val float64, fieldName string, allowNegative bool) (float64, error) {
+	if !allowNegative && val < 0 {
+		return 0, fmt.Errorf("%s tidak boleh negatif", fieldName)
+	}
+	return FormatFloat2Decimal(val), nil
 }

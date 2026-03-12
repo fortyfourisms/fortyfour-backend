@@ -7,7 +7,6 @@ import (
 	"ikas/internal/utils"
 
 	"net/http"
-	"strings"
 
 	"fortyfour-backend/pkg/logger"
 )
@@ -23,30 +22,29 @@ func NewKategoriHandler(service *services.KategoriService) *KategoriHandler {
 }
 
 func (h *KategoriHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := strings.TrimPrefix(r.URL.Path, "/api/kategori")
-	id := strings.TrimPrefix(path, "/")
+	id, _ := utils.ExtractIntID(r.URL.Path, "kategori")
 
 	switch r.Method {
 	case http.MethodGet:
-		if id == "" {
+		if id == 0 {
 			h.handleGetAll(w, r)
 		} else {
 			h.handleGetByID(w, r, id)
 		}
 	case http.MethodPost:
-		if id != "" {
+		if id != 0 {
 			utils.RespondError(w, 400, "ID tidak diperlukan untuk create")
 			return
 		}
 		h.handleCreate(w, r)
 	case http.MethodPut:
-		if id == "" {
+		if id == 0 {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
 		h.handleUpdate(w, r, id)
 	case http.MethodDelete:
-		if id == "" {
+		if id == 0 {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
@@ -72,7 +70,11 @@ func (h *KategoriHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+		"total":   len(data),
+	})
 }
 
 // GetKategoriByID godoc
@@ -81,11 +83,11 @@ func (h *KategoriHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 //	@Description  Mengambil satu data kategori
 //	@Tags         Kategori
 //	@Produce      json
-//	@Param        id   path      string  true  "Kategori ID"
+//	@Param        id   path      int  true  "Kategori ID"
 //	@Success      200  {object}  dto.KategoriResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Router       /api/maturity/kategori/{id} [get]
-func (h *KategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *KategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id int) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
 		logger.Error(err, "operation failed")
@@ -96,7 +98,10 @@ func (h *KategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, 
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+	})
 }
 
 // CreateKategori godoc
@@ -142,7 +147,10 @@ func (h *KategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 201, resp)
+	utils.RespondJSON(w, 201, map[string]interface{}{
+		"message": "Berhasil menyimpan data",
+		"data":    resp,
+	})
 }
 
 // UpdateKategori godoc
@@ -152,14 +160,14 @@ func (h *KategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 //	@Tags         Kategori
 //	@Accept       json
 //	@Produce      json
-//	@Param        id        path      string                    true  "Kategori ID"
+//	@Param        id        path      int                    true  "Kategori ID"
 //	@Param        kategori  body      dto.UpdateKategoriRequest true  "Data update"
 //	@Success      200       {object}  dto.KategoriResponse
 //	@Failure      400       {object}  dto.ErrorResponse
 //	@Failure      404       {object}  dto.ErrorResponse
 //	@Failure      409       {object}  dto.ErrorResponse
 //	@Router       /api/maturity/kategori/{id} [put]
-func (h *KategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
+func (h *KategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id int) {
 	var req dto.UpdateKategoriRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		logger.Error(err, "operation failed")
@@ -192,7 +200,10 @@ func (h *KategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 
-	utils.RespondJSON(w, 200, resp)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil memperbarui data",
+		"data":    resp,
+	})
 }
 
 // DeleteKategori godoc
@@ -201,12 +212,12 @@ func (h *KategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 //	@Description  Menghapus data kategori berdasarkan ID
 //	@Tags         Kategori
 //	@Produce      json
-//	@Param        id   path      string  true  "Kategori ID"
+//	@Param        id   path      int  true  "Kategori ID"
 //	@Success      200  {object}  dto.MessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
 //	@Router       /api/maturity/kategori/{id} [delete]
-func (h *KategoriHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *KategoriHandler) handleDelete(w http.ResponseWriter, r *http.Request, id int) {
 	if err := h.service.Delete(id); err != nil {
 		logger.Error(err, "operation failed")
 		if err.Error() == "data tidak ditemukan" {
@@ -217,5 +228,7 @@ func (h *KategoriHandler) handleDelete(w http.ResponseWriter, _ *http.Request, i
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil menghapus data",
+	})
 }
