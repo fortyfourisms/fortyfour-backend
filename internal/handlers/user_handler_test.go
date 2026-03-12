@@ -4,14 +4,19 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/testhelpers"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"net/textproto"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -378,4 +383,301 @@ func TestUserHandler_isValidImageType(t *testing.T) {
 
 func stringPtr(s string) *string {
 	return &s
+}
+
+/* =========================
+   HELPERS
+========================= */
+
+func createUserMultipartRequest(method, url, fieldName, filename string) (*http.Request, error) {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// Buat file field dengan content-type image/jpeg
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, fieldName, filename))
+	h.Set("Content-Type", "image/jpeg")
+	part, err := writer.CreatePart(h)
+	if err != nil {
+		return nil, err
+	}
+	// Tulis dummy JPEG bytes (minimal valid)
+	io.WriteString(part, "fakeimagecontent")
+	writer.Close()
+
+	req := httptest.NewRequest(method, url, body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	return req, nil
+}
+
+func withUserCtx(req *http.Request, userID, role string) *http.Request {
+	ctx := req.Context()
+	ctx = context.WithValue(ctx, middleware.UserIDKey, userID)
+	ctx = context.WithValue(ctx, middleware.RoleKey, role)
+	return req.WithContext(ctx)
+}
+
+/* =========================
+   TEST handleUpdateProfilePhoto
+========================= */
+
+func TestUserHandler_handleUpdateProfilePhoto_Success(t *testing.T) {
+	handler, mockRepo, _ := setupUserHandler()
+	defer os.RemoveAll("./test_uploads")
+
+	user := &models.User{
+		ID:        "user-1",
+		Username:  "testuser",
+		Email:     "test@example.com",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	mockRepo.Create(user)
+
+	req, err := createUserMultipartRequest(http.MethodPost, "/api/users/user-1/profile-photo", "profile_photo", "photo.jpg")
+	assert.NoError(t, err)
+	req = withUserCtx(req, "user-1", "user")
+
+	w := httptest.NewRecorder()
+	handler.handleUpdateProfilePhoto(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestUserHandler_handleUpdateProfilePhoto_Forbidden(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+	defer os.RemoveAll("./test_uploads")
+
+	req, err := createUserMultipartRequest(http.MethodPost, "/api/users/user-other/profile-photo", "profile_photo", "photo.jpg")
+	assert.NoError(t, err)
+	req = withUserCtx(req, "user-1", "user") // user-1 coba update user-other
+
+	w := httptest.NewRecorder()
+	handler.handleUpdateProfilePhoto(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+func TestUserHandler_handleUpdateProfilePhoto_AdminCanUpdateOthers(t *testing.T) {
+	handler, mockRepo, _ := setupUserHandler()
+	defer os.RemoveAll("./test_uploads")
+
+	user := &models.User{
+		ID:        "user-target",
+		Username:  "targetuser",
+		Email:     "target@example.com",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	mockRepo.Create(user)
+
+	req, err := createUserMultipartRequest(http.MethodPost, "/api/users/user-target/profile-photo", "profile_photo", "photo.jpg")
+	assert.NoError(t, err)
+	req = withUserCtx(req, "admin-1", "admin") // admin update user lain
+
+	w := httptest.NewRecorder()
+	handler.handleUpdateProfilePhoto(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestUserHandler_handleUpdateProfilePhoto_NoFile(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+	defer os.RemoveAll("./test_uploads")
+
+	// Request multipart tapi tanpa file
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/users/user-1/profile-photo", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = withUserCtx(req, "user-1", "user")
+
+	w := httptest.NewRecorder()
+	handler.handleUpdateProfilePhoto(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestUserHandler_handleUpdateProfilePhoto_InvalidFormat(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+	defer os.RemoveAll("./test_uploads")
+
+	// File .gif - bukan format yang diizinkan
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", `form-data; name="profile_photo"; filename="photo.gif"`)
+	h.Set("Content-Type", "image/gif")
+	part, _ := writer.CreatePart(h)
+	io.WriteString(part, "fakegifcontent")
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/users/user-1/profile-photo", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = withUserCtx(req, "user-1", "user")
+
+	w := httptest.NewRecorder()
+	handler.handleUpdateProfilePhoto(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "Format file")
+}
+
+/* =========================
+   TEST handleUpdateBanner
+========================= */
+
+func TestUserHandler_handleUpdateBanner_Success(t *testing.T) {
+	handler, mockRepo, _ := setupUserHandler()
+	defer os.RemoveAll("./test_uploads")
+
+	user := &models.User{
+		ID:        "user-1",
+		Username:  "testuser",
+		Email:     "test@example.com",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	mockRepo.Create(user)
+
+	req, err := createUserMultipartRequest(http.MethodPost, "/api/users/user-1/banner", "banner", "banner.jpg")
+	assert.NoError(t, err)
+	req = withUserCtx(req, "user-1", "user")
+
+	w := httptest.NewRecorder()
+	handler.handleUpdateBanner(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestUserHandler_handleUpdateBanner_Forbidden(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+	defer os.RemoveAll("./test_uploads")
+
+	req, err := createUserMultipartRequest(http.MethodPost, "/api/users/user-other/banner", "banner", "banner.jpg")
+	assert.NoError(t, err)
+	req = withUserCtx(req, "user-1", "user")
+
+	w := httptest.NewRecorder()
+	handler.handleUpdateBanner(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+func TestUserHandler_handleUpdateBanner_NoFile(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+	defer os.RemoveAll("./test_uploads")
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/users/user-1/banner", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = withUserCtx(req, "user-1", "user")
+
+	w := httptest.NewRecorder()
+	handler.handleUpdateBanner(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestUserHandler_handleUpdateBanner_InvalidFormat(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+	defer os.RemoveAll("./test_uploads")
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", `form-data; name="banner"; filename="banner.gif"`)
+	h.Set("Content-Type", "image/gif")
+	part, _ := writer.CreatePart(h)
+	io.WriteString(part, "fakegifcontent")
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/users/user-1/banner", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = withUserCtx(req, "user-1", "user")
+
+	w := httptest.NewRecorder()
+	handler.handleUpdateBanner(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "Format file")
+}
+
+/* =========================
+   TEST handleUpdateStatus
+========================= */
+
+func TestUserHandler_handleUpdateStatus_Success(t *testing.T) {
+	handler, mockRepo, _ := setupUserHandler()
+
+	user := &models.User{
+		ID:        "user-1",
+		Username:  "targetuser",
+		Email:     "target@example.com",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	mockRepo.Create(user)
+
+	body := strings.NewReader(`{"status":"Suspend"}`)
+	req := httptest.NewRequest(http.MethodPatch, "/api/users/user-1/status", body)
+	req = withUserCtx(req, "admin-1", "admin")
+
+	w := httptest.NewRecorder()
+	handler.handleUpdateStatus(w, req, "user-1")
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "Suspend")
+}
+
+func TestUserHandler_handleUpdateStatus_Forbidden(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+
+	body := strings.NewReader(`{"status":"Suspend"}`)
+	req := httptest.NewRequest(http.MethodPatch, "/api/users/user-1/status", body)
+	req = withUserCtx(req, "user-1", "user") // bukan admin
+
+	w := httptest.NewRecorder()
+	handler.handleUpdateStatus(w, req, "user-1")
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+func TestUserHandler_handleUpdateStatus_InvalidBody(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/users/user-1/status", strings.NewReader("invalid json"))
+	req = withUserCtx(req, "admin-1", "admin")
+
+	w := httptest.NewRecorder()
+	handler.handleUpdateStatus(w, req, "user-1")
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestUserHandler_handleUpdateStatus_InvalidStatus(t *testing.T) {
+	handler, mockRepo, _ := setupUserHandler()
+
+	user := &models.User{
+		ID:        "user-1",
+		Username:  "targetuser",
+		Email:     "target@example.com",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	mockRepo.Create(user)
+
+	body := strings.NewReader(`{"status":"InvalidStatus"}`)
+	req := httptest.NewRequest(http.MethodPatch, "/api/users/user-1/status", body)
+	req = withUserCtx(req, "admin-1", "admin")
+
+	w := httptest.NewRecorder()
+	handler.handleUpdateStatus(w, req, "user-1")
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
