@@ -66,12 +66,12 @@ func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) error {
 	// Publish update event
 	event := dto_event.IkasUpdatedEvent{
 		IkasID:       id,
-		IDPerusahaan: getStringValue(req.IDPerusahaan),
-		Tanggal:      getStringValue(req.Tanggal),
-		Responden:    getStringValue(req.Responden),
-		Telepon:      getStringValue(req.Telepon),
-		Jabatan:      getStringValue(req.Jabatan),
-		TargetNilai:  getFloatValue(req.TargetNilai),
+		IDPerusahaan: req.IDPerusahaan,
+		Tanggal:      req.Tanggal,
+		Responden:    req.Responden,
+		Telepon:      req.Telepon,
+		Jabatan:      req.Jabatan,
+		TargetNilai:  req.TargetNilai,
 		UpdatedAt:    time.Now(),
 	}
 
