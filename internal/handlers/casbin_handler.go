@@ -23,7 +23,7 @@ func NewCasbinHandler(casbinService *services.CasbinService, sseService *service
 	}
 }
 
-// ===== helper (UNTUK TEST) =====
+// helper
 
 func getUserFromContext(r *http.Request) (userID string, role string, ok bool) {
 	uid, uidOk := r.Context().Value(middleware.UserIDKey).(string)
