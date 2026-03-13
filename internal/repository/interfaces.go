@@ -111,6 +111,7 @@ type GulihRepositoryInterface interface {
 // CsirtRepositoryInterface
 type CsirtRepositoryInterface interface {
 	Create(req dto.CreateCsirtRequest, id string) error
+	ExistsByPerusahaan(idPerusahaan string) (bool, error)
 	GetByID(id string) (*models.Csirt, error)
 	GetAllWithPerusahaan() ([]dto.CsirtResponse, error)
 	GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, error)

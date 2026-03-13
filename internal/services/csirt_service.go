@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/repository"
@@ -28,6 +30,14 @@ func NewCsirtService(repo repository.CsirtRepositoryInterface, rc cache.RedisInt
 }
 
 func (s *CsirtService) Create(req dto.CreateCsirtRequest) (*models.Csirt, error) {
+	exists, err := s.repo.ExistsByPerusahaan(req.IdPerusahaan)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, fmt.Errorf("perusahaan ini sudah memiliki data CSIRT")
+	}
+
 	id := uuid.New().String()
 	if err := s.repo.Create(req, id); err != nil {
 		return nil, err

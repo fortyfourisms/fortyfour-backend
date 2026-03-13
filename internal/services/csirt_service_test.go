@@ -17,6 +17,7 @@ import (
 
 type mockCsirtRepo struct {
 	CreateFn                func(req dto.CreateCsirtRequest, id string) error
+	ExistsByPerusahaanFn    func(idPerusahaan string) (bool, error)
 	GetByIDFn               func(id string) (*models.Csirt, error)
 	GetAllWithPerusahaanFn  func() ([]dto.CsirtResponse, error)
 	GetByIDWithPerusahaanFn func(id string) (*dto.CsirtResponse, error)
@@ -26,6 +27,13 @@ type mockCsirtRepo struct {
 
 func (m *mockCsirtRepo) Create(req dto.CreateCsirtRequest, id string) error {
 	return m.CreateFn(req, id)
+}
+
+func (m *mockCsirtRepo) ExistsByPerusahaan(idPerusahaan string) (bool, error) {
+	if m.ExistsByPerusahaanFn != nil {
+		return m.ExistsByPerusahaanFn(idPerusahaan)
+	}
+	return false, nil
 }
 
 func (m *mockCsirtRepo) GetByID(id string) (*models.Csirt, error) {
@@ -216,6 +224,25 @@ func TestCsirtService_Create_RepositoryError_GetByIDFailed(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, res)
+}
+
+func TestCsirtService_Create_DuplicatePerusahaan(t *testing.T) {
+	repo := &mockCsirtRepo{
+		ExistsByPerusahaanFn: func(idPerusahaan string) (bool, error) {
+			return true, nil
+		},
+	}
+
+	service := NewCsirtService(repo, nil)
+
+	res, err := service.Create(dto.CreateCsirtRequest{
+		IdPerusahaan: "perusahaan-123",
+		NamaCsirt:    "CSIRT Test",
+	})
+
+	assert.Error(t, err)
+	assert.Nil(t, res)
+	assert.EqualError(t, err, "perusahaan ini sudah memiliki data CSIRT")
 }
 
 func TestCsirtService_Create_DuplicateCSIRTName(t *testing.T) {
