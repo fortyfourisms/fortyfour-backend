@@ -10,10 +10,10 @@ import (
 type contextKey string
 
 const (
-	UserIDKey        contextKey = "user_id"
-	UsernameKey      contextKey = "username"
-	RoleKey          contextKey = "role"
-	IDPerusahaanKey  contextKey = "id_perusahaan"
+	UserIDKey       contextKey = "user_id"
+	UsernameKey     contextKey = "username"
+	RoleKey         contextKey = "role"
+	IDPerusahaanKey contextKey = "id_perusahaan"
 )
 
 type AuthMiddleware struct {

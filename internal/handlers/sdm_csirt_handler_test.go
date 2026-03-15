@@ -392,6 +392,7 @@ func TestSdmCsirtHandler_Delete_WithoutID(t *testing.T) {
 		t.Fatalf("expected 400 for delete error, got %d", rr.Code)
 	}
 }
+
 /*
 =====================================
  HELPER — USER CONTEXT (SDM)

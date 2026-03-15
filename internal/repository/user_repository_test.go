@@ -951,11 +951,11 @@ func stringPtr(s string) *string {
 
 func TestUserRepository_ExistsByPerusahaan(t *testing.T) {
 	tests := []struct {
-		name          string
-		idPerusahaan  string
-		mockFn        func(mock sqlmock.Sqlmock)
-		want          bool
-		wantErr       bool
+		name         string
+		idPerusahaan string
+		mockFn       func(mock sqlmock.Sqlmock)
+		want         bool
+		wantErr      bool
 	}{
 		{
 			name:         "found - ada user di perusahaan",

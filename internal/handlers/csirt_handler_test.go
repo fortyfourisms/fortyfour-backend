@@ -24,12 +24,12 @@ import (
 //
 
 type mockCsirtService struct {
-	GetAllFn            func() ([]dto.CsirtResponse, error)
-	GetByIDFn           func(string) (*dto.CsirtResponse, error)
-	GetByPerusahaanFn   func(string) ([]dto.CsirtResponse, error)
-	CreateFn            func(dto.CreateCsirtRequest) (*models.Csirt, error)
-	UpdateFn            func(string, dto.UpdateCsirtRequest) (*models.Csirt, error)
-	DeleteFn            func(string) error
+	GetAllFn          func() ([]dto.CsirtResponse, error)
+	GetByIDFn         func(string) (*dto.CsirtResponse, error)
+	GetByPerusahaanFn func(string) ([]dto.CsirtResponse, error)
+	CreateFn          func(dto.CreateCsirtRequest) (*models.Csirt, error)
+	UpdateFn          func(string, dto.UpdateCsirtRequest) (*models.Csirt, error)
+	DeleteFn          func(string) error
 }
 
 func (m *mockCsirtService) GetAll() ([]dto.CsirtResponse, error) {
@@ -453,6 +453,7 @@ func TestCsirtHandler_MethodNotAllowed(t *testing.T) {
 
 	assert.Equal(t, http.StatusMethodNotAllowed, rr.Code)
 }
+
 /*
 =====================================
  HELPER — USER CONTEXT (CSIRT)

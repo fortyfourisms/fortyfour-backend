@@ -19,12 +19,12 @@ import (
 //
 
 type mockPICRepository struct {
-	CreateFn           func(req dto.CreatePICRequest, id string) error
-	GetByIDFn          func(id string) (*dto.PICResponse, error)
-	GetAllFn           func() ([]dto.PICResponse, error)
-	GetByPerusahaanFn  func(idPerusahaan string) ([]dto.PICResponse, error)
-	UpdateFn           func(id string, req dto.UpdatePICRequest) error
-	DeleteFn           func(id string) error
+	CreateFn          func(req dto.CreatePICRequest, id string) error
+	GetByIDFn         func(id string) (*dto.PICResponse, error)
+	GetAllFn          func() ([]dto.PICResponse, error)
+	GetByPerusahaanFn func(idPerusahaan string) ([]dto.PICResponse, error)
+	UpdateFn          func(id string, req dto.UpdatePICRequest) error
+	DeleteFn          func(id string) error
 }
 
 func (m *mockPICRepository) Create(req dto.CreatePICRequest, id string) error {
