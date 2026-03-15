@@ -948,3 +948,322 @@ func TestUserRepository_UsernameExists(t *testing.T) {
 func stringPtr(s string) *string {
 	return &s
 }
+
+func TestUserRepository_ExistsByPerusahaan(t *testing.T) {
+	tests := []struct {
+		name          string
+		idPerusahaan  string
+		mockFn        func(mock sqlmock.Sqlmock)
+		want          bool
+		wantErr       bool
+	}{
+		{
+			name:         "found - ada user di perusahaan",
+			idPerusahaan: "perusahaan-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"count"}).AddRow(2)
+				mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM users WHERE id_perusahaan").
+					WithArgs("perusahaan-1").
+					WillReturnRows(rows)
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name:         "not found - tidak ada user di perusahaan",
+			idPerusahaan: "perusahaan-empty",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"count"}).AddRow(0)
+				mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM users WHERE id_perusahaan").
+					WithArgs("perusahaan-empty").
+					WillReturnRows(rows)
+			},
+			want:    false,
+			wantErr: false,
+		},
+		{
+			name:         "error - database error",
+			idPerusahaan: "perusahaan-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM users WHERE id_perusahaan").
+					WithArgs("perusahaan-1").
+					WillReturnError(sql.ErrConnDone)
+			},
+			want:    false,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			require.NoError(t, err)
+			defer db.Close()
+
+			repo := NewUserRepository(db)
+			tt.mockFn(mock)
+
+			result, err := repo.ExistsByPerusahaan(tt.idPerusahaan)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.want, result)
+			}
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestUserRepository_UpdateStatus(t *testing.T) {
+	tests := []struct {
+		name    string
+		userID  string
+		status  models.UserStatus
+		mockFn  func(mock sqlmock.Sqlmock)
+		wantErr bool
+	}{
+		{
+			name:   "success - set Aktif",
+			userID: "user-1",
+			status: models.UserStatusAktif,
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec("UPDATE users SET status").
+					WithArgs(models.UserStatusAktif, "user-1").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:   "success - set Suspend",
+			userID: "user-1",
+			status: models.UserStatusSuspend,
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec("UPDATE users SET status").
+					WithArgs(models.UserStatusSuspend, "user-1").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:   "error - database error",
+			userID: "user-1",
+			status: models.UserStatusNonaktif,
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec("UPDATE users SET status").
+					WithArgs(models.UserStatusNonaktif, "user-1").
+					WillReturnError(sql.ErrConnDone)
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			require.NoError(t, err)
+			defer db.Close()
+
+			repo := NewUserRepository(db)
+			tt.mockFn(mock)
+
+			err = repo.UpdateStatus(tt.userID, tt.status)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestUserRepository_IncrementLoginAttempts(t *testing.T) {
+	tests := []struct {
+		name        string
+		userID      string
+		mockFn      func(mock sqlmock.Sqlmock)
+		wantAttempt int
+		wantErr     bool
+	}{
+		{
+			name:   "success - increment ke 1",
+			userID: "user-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec("UPDATE users SET login_attempts").
+					WithArgs("user-1").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+				rows := sqlmock.NewRows([]string{"login_attempts"}).AddRow(1)
+				mock.ExpectQuery("SELECT login_attempts FROM users WHERE id").
+					WithArgs("user-1").
+					WillReturnRows(rows)
+			},
+			wantAttempt: 1,
+			wantErr:     false,
+		},
+		{
+			name:   "success - increment ke 3",
+			userID: "user-2",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec("UPDATE users SET login_attempts").
+					WithArgs("user-2").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+				rows := sqlmock.NewRows([]string{"login_attempts"}).AddRow(3)
+				mock.ExpectQuery("SELECT login_attempts FROM users WHERE id").
+					WithArgs("user-2").
+					WillReturnRows(rows)
+			},
+			wantAttempt: 3,
+			wantErr:     false,
+		},
+		{
+			name:   "error - exec gagal",
+			userID: "user-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec("UPDATE users SET login_attempts").
+					WithArgs("user-1").
+					WillReturnError(sql.ErrConnDone)
+			},
+			wantAttempt: 0,
+			wantErr:     true,
+		},
+		{
+			name:   "error - select gagal setelah exec",
+			userID: "user-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec("UPDATE users SET login_attempts").
+					WithArgs("user-1").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+				mock.ExpectQuery("SELECT login_attempts FROM users WHERE id").
+					WithArgs("user-1").
+					WillReturnError(sql.ErrNoRows)
+			},
+			wantAttempt: 0,
+			wantErr:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			require.NoError(t, err)
+			defer db.Close()
+
+			repo := NewUserRepository(db)
+			tt.mockFn(mock)
+
+			attempts, err := repo.IncrementLoginAttempts(tt.userID)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Equal(t, 0, attempts)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.wantAttempt, attempts)
+			}
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestUserRepository_ResetLoginAttempts(t *testing.T) {
+	tests := []struct {
+		name    string
+		userID  string
+		mockFn  func(mock sqlmock.Sqlmock)
+		wantErr bool
+	}{
+		{
+			name:   "success",
+			userID: "user-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec("UPDATE users SET login_attempts = 0").
+					WithArgs("user-1").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:   "error - database error",
+			userID: "user-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec("UPDATE users SET login_attempts = 0").
+					WithArgs("user-1").
+					WillReturnError(sql.ErrConnDone)
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			require.NoError(t, err)
+			defer db.Close()
+
+			repo := NewUserRepository(db)
+			tt.mockFn(mock)
+
+			err = repo.ResetLoginAttempts(tt.userID)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+func TestUserRepository_UpdatePasswordChangedAt(t *testing.T) {
+	tests := []struct {
+		name    string
+		userID  string
+		mockFn  func(mock sqlmock.Sqlmock)
+		wantErr bool
+	}{
+		{
+			name:   "success",
+			userID: "user-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec("UPDATE users SET password_changed_at").
+					WithArgs("user-1").
+					WillReturnResult(sqlmock.NewResult(0, 1))
+			},
+			wantErr: false,
+		},
+		{
+			name:   "error - database error",
+			userID: "user-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectExec("UPDATE users SET password_changed_at").
+					WithArgs("user-1").
+					WillReturnError(sql.ErrConnDone)
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			require.NoError(t, err)
+			defer db.Close()
+
+			repo := NewUserRepository(db)
+			tt.mockFn(mock)
+
+			err = repo.UpdatePasswordChangedAt(tt.userID)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}

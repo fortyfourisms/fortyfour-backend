@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/repository"
@@ -12,6 +14,7 @@ import (
 type CsirtServiceInterface interface {
 	GetAll() ([]dto.CsirtResponse, error)
 	GetByID(id string) (*dto.CsirtResponse, error)
+	GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error)
 	Create(req dto.CreateCsirtRequest) (*models.Csirt, error)
 	Update(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error)
 	Delete(id string) error
@@ -27,6 +30,14 @@ func NewCsirtService(repo repository.CsirtRepositoryInterface, rc cache.RedisInt
 }
 
 func (s *CsirtService) Create(req dto.CreateCsirtRequest) (*models.Csirt, error) {
+	exists, err := s.repo.ExistsByPerusahaan(req.IdPerusahaan)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, fmt.Errorf("perusahaan ini sudah memiliki data CSIRT")
+	}
+
 	id := uuid.New().String()
 	if err := s.repo.Create(req, id); err != nil {
 		return nil, err
@@ -72,6 +83,22 @@ func (s *CsirtService) GetByID(id string) (*dto.CsirtResponse, error) {
 	}
 
 	cacheSet(s.rc, key, data, TTLDetail)
+	return data, nil
+}
+
+func (s *CsirtService) GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error) {
+	key := "csirt:perusahaan:" + idPerusahaan
+	var result []dto.CsirtResponse
+	if cacheGet(s.rc, key, &result) {
+		return result, nil
+	}
+
+	data, err := s.repo.GetByPerusahaan(idPerusahaan)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, data, TTLList)
 	return data, nil
 }
 

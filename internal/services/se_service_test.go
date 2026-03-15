@@ -51,6 +51,14 @@ func (m *MockSERepository) Delete(id string) error {
 	return args.Error(0)
 }
 
+func (m *MockSERepository) GetByPerusahaan(idPerusahaan string) ([]dto.SEResponse, error) {
+	args := m.Called(idPerusahaan)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]dto.SEResponse), args.Error(1)
+}
+
 /*
 =====================================
  HELPER FUNCTIONS
@@ -415,6 +423,54 @@ func TestSEService_GetByID_NotFound(t *testing.T) {
 	mockRepo.On("GetByID", "invalid-id").Return(nil, errors.New("not found"))
 
 	result, err := service.GetByID("invalid-id")
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+
+	mockRepo.AssertExpectations(t)
+}
+
+/*
+=====================================
+ TEST GET BY PERUSAHAAN
+=====================================
+*/
+
+func TestSEService_GetByPerusahaan_Success(t *testing.T) {
+	service, mockRepo := setupSEService()
+
+	expectedData := []dto.SEResponse{
+		{ID: "se-1", NamaSE: "SE 1", IDPerusahaan: "perusahaan-abc", KategoriSE: "Strategis", TotalBobot: 50},
+		{ID: "se-2", NamaSE: "SE 2", IDPerusahaan: "perusahaan-abc", KategoriSE: "Tinggi", TotalBobot: 30},
+	}
+
+	mockRepo.On("GetByPerusahaan", "perusahaan-abc").Return(expectedData, nil)
+
+	result, err := service.GetByPerusahaan("perusahaan-abc")
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 2)
+	assert.Equal(t, "perusahaan-abc", result[0].IDPerusahaan)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestSEService_GetByPerusahaan_EmptyID(t *testing.T) {
+	service, _ := setupSEService()
+
+	result, err := service.GetByPerusahaan("")
+
+	assert.Error(t, err)
+	assert.Equal(t, "id_perusahaan wajib diisi", err.Error())
+	assert.Nil(t, result)
+}
+
+func TestSEService_GetByPerusahaan_RepositoryError(t *testing.T) {
+	service, mockRepo := setupSEService()
+
+	mockRepo.On("GetByPerusahaan", "perusahaan-abc").Return(nil, errors.New("database error"))
+
+	result, err := service.GetByPerusahaan("perusahaan-abc")
 
 	assert.Error(t, err)
 	assert.Nil(t, result)

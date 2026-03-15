@@ -15,11 +15,12 @@ import (
 */
 
 type mockSdmCsirtRepo struct {
-	CreateFn  func(req dto.CreateSdmCsirtRequest, id string) error
-	GetAllFn  func() ([]dto.SdmCsirtResponse, error)
-	GetByIDFn func(id string) (*dto.SdmCsirtResponse, error)
-	UpdateFn  func(id string, req dto.SdmCsirtResponse) error
-	DeleteFn  func(id string) error
+	CreateFn     func(req dto.CreateSdmCsirtRequest, id string) error
+	GetAllFn     func() ([]dto.SdmCsirtResponse, error)
+	GetByIDFn    func(id string) (*dto.SdmCsirtResponse, error)
+	GetByCsirtFn func(idCsirt string) ([]dto.SdmCsirtResponse, error)
+	UpdateFn     func(id string, req dto.SdmCsirtResponse) error
+	DeleteFn     func(id string) error
 }
 
 func (m *mockSdmCsirtRepo) Create(req dto.CreateSdmCsirtRequest, id string) error {
@@ -32,6 +33,13 @@ func (m *mockSdmCsirtRepo) GetAll() ([]dto.SdmCsirtResponse, error) {
 
 func (m *mockSdmCsirtRepo) GetByID(id string) (*dto.SdmCsirtResponse, error) {
 	return m.GetByIDFn(id)
+}
+
+func (m *mockSdmCsirtRepo) GetByCsirt(idCsirt string) ([]dto.SdmCsirtResponse, error) {
+	if m.GetByCsirtFn != nil {
+		return m.GetByCsirtFn(idCsirt)
+	}
+	return []dto.SdmCsirtResponse{}, nil
 }
 
 func (m *mockSdmCsirtRepo) Update(id string, req dto.SdmCsirtResponse) error {

@@ -10,9 +10,10 @@ import (
 type contextKey string
 
 const (
-	UserIDKey   contextKey = "user_id"
-	UsernameKey contextKey = "username"
-	RoleKey     contextKey = "role"
+	UserIDKey        contextKey = "user_id"
+	UsernameKey      contextKey = "username"
+	RoleKey          contextKey = "role"
+	IDPerusahaanKey  contextKey = "id_perusahaan"
 )
 
 type AuthMiddleware struct {
@@ -46,6 +47,7 @@ func (m *AuthMiddleware) Authenticate(next http.HandlerFunc) http.HandlerFunc {
 		ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
 		ctx = context.WithValue(ctx, UsernameKey, claims.Username)
 		ctx = context.WithValue(ctx, RoleKey, claims.Role)
+		ctx = context.WithValue(ctx, IDPerusahaanKey, claims.IDPerusahaan)
 
 		// Set role in header for Casbin middleware compatibility
 		r.Header.Set("X-User-Role", claims.Role)

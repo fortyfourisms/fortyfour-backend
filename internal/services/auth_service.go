@@ -16,6 +16,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// derefStr safely dereferences a *string, returning "" if nil
+func derefStr(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
 type AuthService struct {
 	userRepo     repository.UserRepositoryInterface
 	tokenService *TokenService
@@ -188,7 +196,7 @@ func (s *AuthService) Register(
 	}
 
 	// Generate token pair with role (returns *models.TokenPair)
-	modelTokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
+	modelTokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName, derefStr(user.IDPerusahaan))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -276,7 +284,7 @@ func (s *AuthService) Login(username, password string) (*models.User, *dto.Token
 	}
 
 	// Generate token pair with role
-	modelTokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
+	modelTokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName, derefStr(user.IDPerusahaan))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -377,7 +385,7 @@ func (s *AuthService) VerifyMFA(mfaToken, code string) (*models.User, *dto.Token
 		return nil, nil, errors.New("invalid mfa code")
 	}
 
-	modelTokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
+	modelTokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName, derefStr(user.IDPerusahaan))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -436,7 +444,7 @@ func (s *AuthService) EnableMFAAndLogin(userID, code string) (*models.User, *dto
 	}
 
 	// Generate tokens immediately
-	modelTokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName)
+	modelTokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName, derefStr(user.IDPerusahaan))
 	if err != nil {
 		return nil, nil, err
 	}

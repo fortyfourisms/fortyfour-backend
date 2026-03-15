@@ -31,70 +31,23 @@ func (r *SdmCsirtRepository) Create(req dto.CreateSdmCsirtRequest, id string) er
 	return err
 }
 
-func (r *SdmCsirtRepository) GetAll() ([]dto.SdmCsirtResponse, error) {
-	rows, err := r.db.Query(`
-		SELECT
-			s.id, s.nama_personel, s.jabatan_csirt, s.jabatan_perusahaan,
-			s.skill, s.sertifikasi, s.created_at, s.updated_at,
-			c.id, c.nama_csirt, c.web_csirt, c.telepon_csirt
-		FROM sdm_csirt s
-		LEFT JOIN csirt c ON s.id_csirt = c.id
-	`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+const sdmWithCsirtQuery = `
+	SELECT
+		s.id, s.nama_personel, s.jabatan_csirt, s.jabatan_perusahaan,
+		s.skill, s.sertifikasi, s.created_at, s.updated_at,
+		c.id, c.nama_csirt, c.web_csirt, c.telepon_csirt
+	FROM sdm_csirt s
+	LEFT JOIN csirt c ON s.id_csirt = c.id
+`
 
-	var result []dto.SdmCsirtResponse
-
-	for rows.Next() {
-		var s dto.SdmCsirtResponse
-		var c dto.CsirtMiniResponse
-		var csirtID sql.NullString
-
-		err := rows.Scan(
-			&s.ID,
-			&s.NamaPersonel,
-			&s.JabatanCsirt,
-			&s.JabatanPerusahaan,
-			&s.Skill,
-			&s.Sertifikasi,
-			&s.CreatedAt,
-			&s.UpdatedAt,
-			&csirtID,
-			&c.NamaCsirt,
-			&c.WebCsirt,
-			&c.TeleponCsirt,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		if csirtID.Valid {
-			c.ID = csirtID.String
-			s.Csirt = &c
-		}
-
-		result = append(result, s)
-	}
-
-	return result, nil
-}
-
-func (r *SdmCsirtRepository) GetByID(id string) (*dto.SdmCsirtResponse, error) {
+func scanSdm(rows interface {
+	Scan(...interface{}) error
+}) (dto.SdmCsirtResponse, error) {
 	var s dto.SdmCsirtResponse
 	var c dto.CsirtMiniResponse
 	var csirtID sql.NullString
 
-	err := r.db.QueryRow(`
-		SELECT
-			s.id, s.nama_personel, s.jabatan_csirt, s.jabatan_perusahaan,
-			s.skill, s.sertifikasi, s.created_at, s.updated_at,
-			c.id, c.nama_csirt, c.web_csirt, c.telepon_csirt
-		FROM sdm_csirt s
-		LEFT JOIN csirt c ON s.id_csirt = c.id
-		WHERE s.id = ?
-	`, id).Scan(
+	err := rows.Scan(
 		&s.ID,
 		&s.NamaPersonel,
 		&s.JabatanCsirt,
@@ -108,9 +61,8 @@ func (r *SdmCsirtRepository) GetByID(id string) (*dto.SdmCsirtResponse, error) {
 		&c.WebCsirt,
 		&c.TeleponCsirt,
 	)
-
 	if err != nil {
-		return nil, err
+		return s, err
 	}
 
 	if csirtID.Valid {
@@ -118,6 +70,52 @@ func (r *SdmCsirtRepository) GetByID(id string) (*dto.SdmCsirtResponse, error) {
 		s.Csirt = &c
 	}
 
+	return s, nil
+}
+
+func (r *SdmCsirtRepository) GetAll() ([]dto.SdmCsirtResponse, error) {
+	rows, err := r.db.Query(sdmWithCsirtQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []dto.SdmCsirtResponse
+	for rows.Next() {
+		s, err := scanSdm(rows)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, s)
+	}
+	return result, nil
+}
+
+// GetByCsirt mengambil semua SDM yang terhubung ke CSIRT tertentu
+func (r *SdmCsirtRepository) GetByCsirt(idCsirt string) ([]dto.SdmCsirtResponse, error) {
+	rows, err := r.db.Query(sdmWithCsirtQuery+" WHERE s.id_csirt = ?", idCsirt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []dto.SdmCsirtResponse
+	for rows.Next() {
+		s, err := scanSdm(rows)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, s)
+	}
+	return result, nil
+}
+
+func (r *SdmCsirtRepository) GetByID(id string) (*dto.SdmCsirtResponse, error) {
+	row := r.db.QueryRow(sdmWithCsirtQuery+" WHERE s.id = ?", id)
+	s, err := scanSdm(row)
+	if err != nil {
+		return nil, err
+	}
 	return &s, nil
 }
 

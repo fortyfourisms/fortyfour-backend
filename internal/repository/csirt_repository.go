@@ -14,6 +14,14 @@ func NewCsirtRepository(db *sql.DB) *CsirtRepository {
 	return &CsirtRepository{db: db}
 }
 
+// nullStr safely converts sql.NullString to string
+func nullStr(n sql.NullString) string {
+	if n.Valid {
+		return n.String
+	}
+	return ""
+}
+
 /*
 ========================
 CREATE
@@ -35,6 +43,20 @@ func (r *CsirtRepository) Create(req dto.CreateCsirtRequest, id string) error {
 		req.FilePublicKeyPGP,
 	)
 	return err
+}
+
+/*
+========================
+EXISTS BY PERUSAHAAN
+========================
+*/
+func (r *CsirtRepository) ExistsByPerusahaan(idPerusahaan string) (bool, error) {
+	var count int
+	err := r.db.QueryRow(`SELECT COUNT(*) FROM csirt WHERE id_perusahaan = ?`, idPerusahaan).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 /*
@@ -70,7 +92,6 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		if telepon.Valid {
 			c.TeleponCsirt = &telepon.String
 		}
@@ -83,7 +104,6 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 		if pgp.Valid {
 			c.FilePublicKeyPGP = &pgp.String
 		}
-
 		result = append(result, c)
 	}
 	return result, nil
@@ -115,7 +135,6 @@ func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	if telepon.Valid {
 		c.TeleponCsirt = &telepon.String
 	}
@@ -128,148 +147,39 @@ func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 	if pgp.Valid {
 		c.FilePublicKeyPGP = &pgp.String
 	}
-
 	return &c, nil
 }
 
-/*
-========================
-GET ALL + PERUSAHAAN
-========================
-*/
-func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
-	rows, err := r.db.Query(`
-		SELECT 
-			c.id, c.nama_csirt, c.web_csirt, c.telepon_csirt, 
-			c.photo_csirt, c.file_rfc2350, c.file_public_key_pgp,
-			p.id, p.photo, p.nama_perusahaan, 
-			p.alamat, p.telepon, p.email, p.website,
-			p.created_at, p.updated_at,
-			ss.id, ss.nama_sub_sektor, ss.id_sektor, ss.created_at, ss.updated_at,
-			s.nama_sektor
-		FROM csirt c
-		JOIN perusahaan p ON c.id_perusahaan = p.id
-		LEFT JOIN sub_sektor ss ON p.id_sub_sektor = ss.id
-		LEFT JOIN sektor s ON ss.id_sektor = s.id
-	`)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var result []dto.CsirtResponse
-
-	for rows.Next() {
-		var csirt dto.CsirtResponse
-		var perusahaan dto.PerusahaanResponse
-		var subID, namaSubSektor, idSektor, namaSektor, subCreatedAt, subUpdatedAt sql.NullString
-		var telepon, photoCsirt, rfc, pgp, photoPerusahaan sql.NullString
-
-		err := rows.Scan(
-			&csirt.ID,
-			&csirt.NamaCsirt,
-			&csirt.WebCsirt,
-			&telepon,
-			&photoCsirt,
-			&rfc,
-			&pgp,
-			&perusahaan.ID,
-			&photoPerusahaan,
-			&perusahaan.NamaPerusahaan,
-			&perusahaan.Alamat,
-			&perusahaan.Telepon,
-			&perusahaan.Email,
-			&perusahaan.Website,
-			&perusahaan.CreatedAt,
-			&perusahaan.UpdatedAt,
-			&subID,
-			&namaSubSektor,
-			&idSektor,
-			&subCreatedAt,
-			&subUpdatedAt,
-			&namaSektor,
-		)
-		if err != nil {
-			return nil, err
-		}
-
-		if telepon.Valid {
-			csirt.TeleponCsirt = &telepon.String
-		}
-		if photoCsirt.Valid {
-			csirt.PhotoCsirt = photoCsirt.String
-		}
-		if rfc.Valid {
-			csirt.FileRFC2350 = rfc.String
-		}
-		if pgp.Valid {
-			csirt.FilePublicKeyPGP = pgp.String
-		}
-		if photoPerusahaan.Valid {
-			perusahaan.Photo = photoPerusahaan.String
-		}
-
-		// Tambahkan info sub sektor jika ada
-		if subID.Valid {
-			perusahaan.SubSektor = &dto.SubSektorResponse{
-				ID:            subID.String,
-				NamaSubSektor: namaSubSektor.String,
-				IDSektor:      idSektor.String,
-				NamaSektor:    namaSektor.String,
-				CreatedAt:     subCreatedAt.String,
-				UpdatedAt:     subUpdatedAt.String,
-			}
-		}
-
-		csirt.Perusahaan = perusahaan
-		result = append(result, csirt)
-	}
-
-	return result, nil
-}
-
-/*
-========================
-GET BY ID + PERUSAHAAN
-========================
-*/
-func (r *CsirtRepository) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, error) {
-	row := r.db.QueryRow(`
-		SELECT 
-			c.id, c.nama_csirt, c.web_csirt, c.telepon_csirt, 
-			c.photo_csirt, c.file_rfc2350, c.file_public_key_pgp,
-			p.id, p.photo, p.nama_perusahaan,
-			p.alamat, p.telepon, p.email, p.website,
-			p.created_at, p.updated_at,
-			ss.id, ss.nama_sub_sektor, ss.id_sektor, ss.created_at, ss.updated_at,
-			s.nama_sektor
-		FROM csirt c
-		JOIN perusahaan p ON c.id_perusahaan = p.id
-		LEFT JOIN sub_sektor ss ON p.id_sub_sektor = ss.id
-		LEFT JOIN sektor s ON ss.id_sektor = s.id
-		WHERE c.id = ?
-	`, id)
-
+// scanCsirtWithPerusahaan is a shared helper to scan a CSIRT row that includes perusahaan JOIN data.
+// Handles NULL values for all nullable columns.
+func scanCsirtWithPerusahaan(scanner interface {
+	Scan(dest ...any) error
+}) (dto.CsirtResponse, error) {
 	var csirt dto.CsirtResponse
 	var perusahaan dto.PerusahaanResponse
-	var subID, namaSubSektor, idSektor, namaSektor, subCreatedAt, subUpdatedAt sql.NullString
-	var telepon, photoCsirt, photoPerusahaan, rfc, pgp sql.NullString
 
-	err := row.Scan(
+	var (
+		webCsirt, teleponCsirt, photoCsirt, fileRFC, filePGP sql.NullString
+		photoPerusahaan, alamat, telepon, email, website      sql.NullString
+		subID, namaSubSektor, idSektor, namaSektor            sql.NullString
+		subCreatedAt, subUpdatedAt                            sql.NullString
+	)
+
+	err := scanner.Scan(
 		&csirt.ID,
 		&csirt.NamaCsirt,
-		&csirt.WebCsirt,
-		&telepon,
+		&webCsirt,
+		&teleponCsirt,
 		&photoCsirt,
-		&rfc,
-		&pgp,
+		&fileRFC,
+		&filePGP,
 		&perusahaan.ID,
 		&photoPerusahaan,
 		&perusahaan.NamaPerusahaan,
-		&perusahaan.Alamat,
-		&perusahaan.Telepon,
-		&perusahaan.Email,
-		&perusahaan.Website,
+		&alamat,
+		&telepon,
+		&email,
+		&website,
 		&perusahaan.CreatedAt,
 		&perusahaan.UpdatedAt,
 		&subID,
@@ -280,26 +190,23 @@ func (r *CsirtRepository) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, 
 		&namaSektor,
 	)
 	if err != nil {
-		return nil, err
+		return dto.CsirtResponse{}, err
 	}
 
-	if telepon.Valid {
-		csirt.TeleponCsirt = &telepon.String
-	}
-	if photoCsirt.Valid {
-		csirt.PhotoCsirt = photoCsirt.String
-	}
-	if rfc.Valid {
-		csirt.FileRFC2350 = rfc.String
-	}
-	if pgp.Valid {
-		csirt.FilePublicKeyPGP = pgp.String
-	}
-	if photoPerusahaan.Valid {
-		perusahaan.Photo = photoPerusahaan.String
+	csirt.WebCsirt = nullStr(webCsirt)
+	csirt.PhotoCsirt = nullStr(photoCsirt)
+	csirt.FileRFC2350 = nullStr(fileRFC)
+	csirt.FilePublicKeyPGP = nullStr(filePGP)
+	if teleponCsirt.Valid {
+		csirt.TeleponCsirt = &teleponCsirt.String
 	}
 
-	// Tambahkan info sub sektor jika ada
+	perusahaan.Photo = nullStr(photoPerusahaan)
+	perusahaan.Alamat = nullStr(alamat)
+	perusahaan.Telepon = nullStr(telepon)
+	perusahaan.Email = nullStr(email)
+	perusahaan.Website = nullStr(website)
+
 	if subID.Valid {
 		perusahaan.SubSektor = &dto.SubSektorResponse{
 			ID:            subID.String,
@@ -312,7 +219,81 @@ func (r *CsirtRepository) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, 
 	}
 
 	csirt.Perusahaan = perusahaan
+	return csirt, nil
+}
+
+const csirtWithPerusahaanQuery = `
+	SELECT 
+		c.id, c.nama_csirt, c.web_csirt, c.telepon_csirt, 
+		c.photo_csirt, c.file_rfc2350, c.file_public_key_pgp,
+		p.id, p.photo, p.nama_perusahaan,
+		p.alamat, p.telepon, p.email, p.website,
+		p.created_at, p.updated_at,
+		ss.id, ss.nama_sub_sektor, ss.id_sektor, ss.created_at, ss.updated_at,
+		s.nama_sektor
+	FROM csirt c
+	JOIN perusahaan p ON c.id_perusahaan = p.id
+	LEFT JOIN sub_sektor ss ON p.id_sub_sektor = ss.id
+	LEFT JOIN sektor s ON ss.id_sektor = s.id`
+
+/*
+========================
+GET ALL + PERUSAHAAN
+========================
+*/
+func (r *CsirtRepository) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {
+	rows, err := r.db.Query(csirtWithPerusahaanQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []dto.CsirtResponse
+	for rows.Next() {
+		csirt, err := scanCsirtWithPerusahaan(rows)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, csirt)
+	}
+	return result, nil
+}
+
+/*
+========================
+GET BY ID + PERUSAHAAN
+========================
+*/
+func (r *CsirtRepository) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, error) {
+	row := r.db.QueryRow(csirtWithPerusahaanQuery+` WHERE c.id = ?`, id)
+	csirt, err := scanCsirtWithPerusahaan(row)
+	if err != nil {
+		return nil, err
+	}
 	return &csirt, nil
+}
+
+/*
+========================
+GET BY PERUSAHAAN
+========================
+*/
+func (r *CsirtRepository) GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error) {
+	rows, err := r.db.Query(csirtWithPerusahaanQuery+` WHERE c.id_perusahaan = ?`, idPerusahaan)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []dto.CsirtResponse
+	for rows.Next() {
+		csirt, err := scanCsirtWithPerusahaan(rows)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, csirt)
+	}
+	return result, nil
 }
 
 /*

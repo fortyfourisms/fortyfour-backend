@@ -1,12 +1,14 @@
 package services
 
 import (
+	"database/sql"
 	"errors"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
-	"github.com/google/uuid"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type PICService struct {
@@ -40,6 +42,9 @@ func (s *PICService) Create(req dto.CreatePICRequest) (*dto.PICResponse, error) 
 
 	cacheSet(s.rc, keyDetail("pic", id), result, TTLDetail)
 	cacheDelete(s.rc, keyList("pic"))
+	if result.Perusahaan != nil {
+		cacheDelete(s.rc, "pic_perusahaan_"+result.Perusahaan.ID)
+	}
 
 	return result, nil
 }
@@ -76,8 +81,27 @@ func (s *PICService) GetByID(id string) (*dto.PICResponse, error) {
 	return data, nil
 }
 
+func (s *PICService) GetByPerusahaan(idPerusahaan string) ([]dto.PICResponse, error) {
+	key := "pic_perusahaan_" + idPerusahaan
+	var result []dto.PICResponse
+	if cacheGet(s.rc, key, &result) {
+		return result, nil
+	}
+
+	result, err := s.repo.GetByPerusahaan(idPerusahaan)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, result, TTLList)
+	return result, nil
+}
+
 func (s *PICService) Update(id string, req dto.UpdatePICRequest) (*dto.PICResponse, error) {
 	if err := s.repo.Update(id, req); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("pic not found")
+		}
 		return nil, err
 	}
 
@@ -87,16 +111,25 @@ func (s *PICService) Update(id string, req dto.UpdatePICRequest) (*dto.PICRespon
 	}
 	cacheDelete(s.rc, keyDetail("pic", id))
 	cacheDelete(s.rc, keyList("pic"))
+	if updated.Perusahaan != nil {
+		cacheDelete(s.rc, "pic_perusahaan_"+updated.Perusahaan.ID)
+	}
 	return updated, nil
 }
 
 func (s *PICService) Delete(id string) error {
+	// Ambil data dulu untuk invalidate cache per perusahaan
+	existing, _ := s.repo.GetByID(id)
+
 	if err := s.repo.Delete(id); err != nil {
 		return err
 	}
 
 	cacheDelete(s.rc, keyDetail("pic", id))
 	cacheDelete(s.rc, keyList("pic"))
+	if existing != nil && existing.Perusahaan != nil {
+		cacheDelete(s.rc, "pic_perusahaan_"+existing.Perusahaan.ID)
+	}
 
 	return nil
 }

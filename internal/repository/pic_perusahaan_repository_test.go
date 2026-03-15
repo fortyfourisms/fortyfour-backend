@@ -416,7 +416,11 @@ func TestPICRepository_Update(t *testing.T) {
 			IDPerusahaan: nil,
 		}
 
-		// No ExpectExec because function returns early
+		// No fields to update: function akan COUNT(*) untuk cek keberadaan data
+		mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM pic_perusahaan WHERE id=\\?").
+			WithArgs(id).
+			WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
+
 		err := repo.Update(id, req)
 		assert.NoError(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
@@ -440,7 +444,7 @@ func TestPICRepository_Update(t *testing.T) {
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
-	t.Run("no rows affected - not checked by function", func(t *testing.T) {
+	t.Run("no rows affected - returns error", func(t *testing.T) {
 		id := "pic-nonexistent"
 		nama := "John Doe"
 
@@ -453,8 +457,8 @@ func TestPICRepository_Update(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(0, 0))
 
 		err := repo.Update(id, req)
-		// Function doesn't check rows affected, so no error
-		assert.NoError(t, err)
+		// Function sekarang cek rows affected, return error jika 0
+		assert.Error(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
@@ -513,4 +517,101 @@ func TestPICRepository_Delete(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
+}
+func TestPICRepository_GetByPerusahaan(t *testing.T) {
+	picCols := []string{
+		"p.id", "p.nama", "p.telepon", "p.created_at", "p.updated_at",
+		"per.id", "per.nama_perusahaan",
+	}
+
+	tests := []struct {
+		name         string
+		idPerusahaan string
+		mockFn       func(mock sqlmock.Sqlmock)
+		wantLen      int
+		wantErr      bool
+	}{
+		{
+			name:         "success - returns PIC milik perusahaan",
+			idPerusahaan: "perusahaan-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows(picCols).
+					AddRow("pic-1", "John Doe", "081234567890", "2024-01-01 00:00:00", "2024-01-01 00:00:00", "perusahaan-1", "PT ABC").
+					AddRow("pic-2", "Jane Smith", "081987654321", "2024-01-01 00:00:00", "2024-01-01 00:00:00", "perusahaan-1", "PT ABC")
+
+				mock.ExpectQuery("SELECT (.+) FROM pic_perusahaan p LEFT JOIN perusahaan per (.+) WHERE p.id_perusahaan = \\?").
+					WithArgs("perusahaan-1").
+					WillReturnRows(rows)
+			},
+			wantLen: 2,
+			wantErr: false,
+		},
+		{
+			name:         "success - PIC dengan perusahaan NULL (LEFT JOIN miss)",
+			idPerusahaan: "perusahaan-2",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows(picCols).
+					AddRow(
+						"pic-3", "Budi", "08111",
+						"2024-01-01 00:00:00", "2024-01-01 00:00:00",
+						sql.NullString{Valid: false},
+						sql.NullString{Valid: false},
+					)
+
+				mock.ExpectQuery("SELECT (.+) FROM pic_perusahaan p LEFT JOIN perusahaan per (.+) WHERE p.id_perusahaan = \\?").
+					WithArgs("perusahaan-2").
+					WillReturnRows(rows)
+			},
+			wantLen: 1,
+			wantErr: false,
+		},
+		{
+			name:         "success - perusahaan tidak punya PIC (empty)",
+			idPerusahaan: "perusahaan-kosong",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows(picCols)
+				mock.ExpectQuery("SELECT (.+) FROM pic_perusahaan p LEFT JOIN perusahaan per (.+) WHERE p.id_perusahaan = \\?").
+					WithArgs("perusahaan-kosong").
+					WillReturnRows(rows)
+			},
+			wantLen: 0,
+			wantErr: false,
+		},
+		{
+			name:         "error - database error",
+			idPerusahaan: "perusahaan-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery("SELECT (.+) FROM pic_perusahaan p LEFT JOIN perusahaan per (.+) WHERE p.id_perusahaan = \\?").
+					WithArgs("perusahaan-1").
+					WillReturnError(sql.ErrConnDone)
+			},
+			wantLen: 0,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, repo := setupPICTest(t)
+			defer db.Close()
+
+			tt.mockFn(mock)
+
+			result, err := repo.GetByPerusahaan(tt.idPerusahaan)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.Len(t, result, tt.wantLen)
+				for _, pic := range result {
+					assert.NotEmpty(t, pic.ID)
+					assert.NotEmpty(t, pic.Nama)
+				}
+			}
+
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
 }
