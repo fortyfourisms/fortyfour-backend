@@ -16,10 +16,11 @@ type UpdateUserRequest struct {
 }
 
 // UpdateMeRequest adalah DTO untuk user memperbarui data dirinya sendiri.
-// Tidak mengizinkan perubahan role_id dan id_jabatan (hanya admin yang bisa).
+// Tidak mengizinkan perubahan role_id (hanya admin yang bisa).
 type UpdateMeRequest struct {
-	Username *string `json:"username" validate:"omitempty,min=3,max=50"`
-	Email    *string `json:"email" validate:"omitempty,email"`
+	Username  *string `json:"username" validate:"omitempty,min=3,max=50"`
+	Email     *string `json:"email" validate:"omitempty,email"`
+	IDJabatan *string `json:"id_jabatan"`
 }
 
 type UpdateUserPasswordRequest struct {

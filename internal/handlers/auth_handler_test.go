@@ -2,12 +2,17 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/testhelpers"
+	"io"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -815,4 +820,502 @@ func TestAuthHandler_VerifyMFA_MFANotConfigured(t *testing.T) {
 func generateValidTOTPCode(secret string) string {
 	code, _ := totp.GenerateCode(secret, time.Now())
 	return code
+}
+
+/*
+=====================================
+ SETUP HELPER WITH USER SERVICE
+=====================================
+*/
+
+func withMeUserContext(req *http.Request, userID string) *http.Request {
+	ctx := context.WithValue(req.Context(), middleware.UserIDKey, userID)
+	return req.WithContext(ctx)
+}
+
+/*
+=====================================
+ TEST GET ME
+=====================================
+*/
+
+func TestAuthHandler_GetMe_Success(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = userRepo.Create(user)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/me", nil)
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.GetMe(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp map[string]interface{}
+	json.NewDecoder(w.Body).Decode(&resp)
+	if resp["username"] != "testuser" {
+		t.Errorf("expected username 'testuser', got %v", resp["username"])
+	}
+}
+
+func TestAuthHandler_GetMe_Unauthorized(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/me", nil)
+	// Tidak ada userID di context
+	w := httptest.NewRecorder()
+
+	handler.GetMe(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestAuthHandler_GetMe_UserNotFound(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/me", nil)
+	req = withMeUserContext(req, "nonexistent-id")
+	w := httptest.NewRecorder()
+
+	handler.GetMe(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Errorf("expected 404, got %d", w.Code)
+	}
+}
+
+/*
+=====================================
+ TEST UPDATE ME
+=====================================
+*/
+
+func TestAuthHandler_UpdateMe_Success(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	user := testhelpers.CreateTestUser("user-1", "oldname", "old@test.com")
+	_ = userRepo.Create(user)
+
+	newUsername := "newname"
+	body, _ := json.Marshal(dto.UpdateMeRequest{Username: &newUsername})
+	req := httptest.NewRequest(http.MethodPut, "/api/me", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.UpdateMe(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp map[string]interface{}
+	json.NewDecoder(w.Body).Decode(&resp)
+	if resp["username"] != "newname" {
+		t.Errorf("expected username 'newname', got %v", resp["username"])
+	}
+}
+
+func TestAuthHandler_UpdateMe_WithIDJabatan(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = userRepo.Create(user)
+
+	jabatanID := "jabatan-uuid-123"
+	body, _ := json.Marshal(dto.UpdateMeRequest{IDJabatan: &jabatanID})
+	req := httptest.NewRequest(http.MethodPut, "/api/me", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.UpdateMe(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestAuthHandler_UpdateMe_Unauthorized(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	newUsername := "newname"
+	body, _ := json.Marshal(dto.UpdateMeRequest{Username: &newUsername})
+	req := httptest.NewRequest(http.MethodPut, "/api/me", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handler.UpdateMe(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestAuthHandler_UpdateMe_InvalidBody(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	req := httptest.NewRequest(http.MethodPut, "/api/me", strings.NewReader("invalid json"))
+	req.Header.Set("Content-Type", "application/json")
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.UpdateMe(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestAuthHandler_UpdateMe_RoleIDNotUpdatable(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	roleUser := "role-user"
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	user.RoleID = &roleUser
+	_ = userRepo.Create(user)
+
+	// Kirim JSON dengan role_id — seharusnya diabaikan
+	rawBody := `{"username": "newname", "role_id": "role-admin"}`
+	req := httptest.NewRequest(http.MethodPut, "/api/me", strings.NewReader(rawBody))
+	req.Header.Set("Content-Type", "application/json")
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.UpdateMe(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	// RoleID tidak boleh berubah
+	updatedUser, _ := userRepo.FindByID("user-1")
+	if updatedUser.RoleID == nil || *updatedUser.RoleID != "role-user" {
+		t.Errorf("expected role_id unchanged 'role-user', got '%v'", updatedUser.RoleID)
+	}
+}
+
+/*
+=====================================
+ TEST UPDATE ME PASSWORD
+=====================================
+*/
+
+func TestAuthHandler_UpdateMePassword_Success(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	// Register supaya password di-hash dengan benar
+	reqBody := dto.RegisterRequest{
+		Username: "testuser",
+		Password: "Xk9#mP2$qL7!",
+		Email:    "test@test.com",
+	}
+	body, _ := json.Marshal(reqBody)
+	regReq := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
+	regReq.Header.Set("Content-Type", "application/json")
+	regW := httptest.NewRecorder()
+	handler.Register(regW, regReq)
+
+	if regW.Code != http.StatusCreated {
+		t.Fatalf("register failed: %d %s", regW.Code, regW.Body.String())
+	}
+
+	var regResp map[string]interface{}
+	json.NewDecoder(regW.Body).Decode(&regResp)
+	userSection, ok := regResp["user"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected 'user' in register response, got: %v", regResp)
+	}
+	userID, ok := userSection["id"].(string)
+	if !ok || userID == "" {
+		t.Fatalf("expected user ID in register response, got: %v", userSection)
+	}
+
+	// Update password
+	pwBody, _ := json.Marshal(dto.UpdateUserPasswordRequest{
+		OldPassword:        "Xk9#mP2$qL7!",
+		NewPassword:        "Rz4@wN8&vB3^",
+		ConfirmNewPassword: "Rz4@wN8&vB3^",
+	})
+	req := httptest.NewRequest(http.MethodPut, "/api/me/password", bytes.NewBuffer(pwBody))
+	req.Header.Set("Content-Type", "application/json")
+	req = withMeUserContext(req, userID)
+	w := httptest.NewRecorder()
+
+	handler.UpdateMePassword(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp map[string]string
+	json.NewDecoder(w.Body).Decode(&resp)
+	if resp["message"] != "Password berhasil diubah" {
+		t.Errorf("unexpected message: %v", resp["message"])
+	}
+}
+
+func TestAuthHandler_UpdateMePassword_Unauthorized(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	body, _ := json.Marshal(dto.UpdateUserPasswordRequest{
+		OldPassword: "old", NewPassword: "new12345", ConfirmNewPassword: "new12345",
+	})
+	req := httptest.NewRequest(http.MethodPut, "/api/me/password", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handler.UpdateMePassword(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestAuthHandler_UpdateMePassword_InvalidBody(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	req := httptest.NewRequest(http.MethodPut, "/api/me/password", strings.NewReader("invalid json"))
+	req.Header.Set("Content-Type", "application/json")
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.UpdateMePassword(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestAuthHandler_UpdateMePassword_WrongOldPassword(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	reqBody := dto.RegisterRequest{Username: "pwdtestuser", Password: "Xk9#mP2$qL7!", Email: "t@t.com"}
+	body, _ := json.Marshal(reqBody)
+	regReq := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
+	regReq.Header.Set("Content-Type", "application/json")
+	regW := httptest.NewRecorder()
+	handler.Register(regW, regReq)
+
+	if regW.Code != http.StatusCreated {
+		t.Fatalf("register failed: %d %s", regW.Code, regW.Body.String())
+	}
+
+	var regResp map[string]interface{}
+	json.NewDecoder(regW.Body).Decode(&regResp)
+	userSection, ok := regResp["user"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("expected 'user' in register response, got: %v", regResp)
+	}
+	userID := userSection["id"].(string)
+
+	pwBody, _ := json.Marshal(dto.UpdateUserPasswordRequest{
+		OldPassword:        "Wr0ng#Pass!99",
+		NewPassword:        "Rz4@wN8&vB3^",
+		ConfirmNewPassword: "Rz4@wN8&vB3^",
+	})
+	req := httptest.NewRequest(http.MethodPut, "/api/me/password", bytes.NewBuffer(pwBody))
+	req.Header.Set("Content-Type", "application/json")
+	req = withMeUserContext(req, userID)
+	w := httptest.NewRecorder()
+
+	handler.UpdateMePassword(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+/*
+=====================================
+ TEST UPDATE ME MEDIA
+=====================================
+*/
+
+func TestAuthHandler_UpdateMeMedia_Unauthorized(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	writer.Close()
+	req := httptest.NewRequest(http.MethodPost, "/api/me/media", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	w := httptest.NewRecorder()
+
+	handler.UpdateMeMedia(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestAuthHandler_UpdateMeMedia_NoFileProvided(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = userRepo.Create(user)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	writer.Close()
+	req := httptest.NewRequest(http.MethodPost, "/api/me/media", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.UpdateMeMedia(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+	var resp map[string]string
+	json.NewDecoder(w.Body).Decode(&resp)
+	if resp["error"] == "" {
+		t.Error("expected error message")
+	}
+}
+
+func TestAuthHandler_UpdateMeMedia_InvalidPhotoFormat(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = userRepo.Create(user)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, _ := writer.CreateFormFile("profile_photo", "photo.gif") // format tidak valid
+	io.WriteString(part, "dummy content")
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/me/media", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.UpdateMeMedia(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+	var resp map[string]string
+	json.NewDecoder(w.Body).Decode(&resp)
+	if resp["error"] == "" || !strings.Contains(resp["error"], "format") {
+		t.Errorf("expected format error, got: %v", resp["error"])
+	}
+}
+
+func TestAuthHandler_UpdateMeMedia_UploadProfilePhoto_Success(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = userRepo.Create(user)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, _ := writer.CreateFormFile("profile_photo", "photo.jpg")
+	io.WriteString(part, "dummy image content")
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/me/media", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.UpdateMeMedia(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestAuthHandler_UpdateMeMedia_UploadBanner_Success(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = userRepo.Create(user)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, _ := writer.CreateFormFile("banner", "banner.png")
+	io.WriteString(part, "dummy banner content")
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/me/media", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.UpdateMeMedia(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
 }

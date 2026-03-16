@@ -170,4 +170,4 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /var/www/uploads
+      device: /usr/share/nginx/html/uploads

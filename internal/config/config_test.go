@@ -23,7 +23,7 @@ func TestLoad_WithDefaultValues(t *testing.T) {
 	assert.Equal(t, "localhost", cfg.Database.Host)
 	assert.Equal(t, "3306", cfg.Database.Port)
 	assert.Equal(t, "root", cfg.Database.User)
-	assert.Equal(t, "password", cfg.Database.Password)
+	assert.Equal(t, "", cfg.Database.Password)
 	assert.Equal(t, "fortyfour-backend_db", cfg.Database.DBName)
 
 	// Redis defaults

@@ -638,3 +638,121 @@ func TestPerusahaanRepository_Integration(t *testing.T) {
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 }
+
+func TestPerusahaanRepository_GetByNama(t *testing.T) {
+	tests := []struct {
+		name    string
+		nama    string
+		mockFn  func(mock sqlmock.Sqlmock)
+		want    *dto.PerusahaanResponse
+		wantErr bool
+	}{
+		{
+			name: "success - dengan sub_sektor",
+			nama: "PT ABC",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				now := time.Now()
+				rows := sqlmock.NewRows([]string{
+					"id", "photo", "nama_perusahaan", "alamat", "telepon", "email", "website", "created_at", "updated_at",
+					"sub_id", "nama_sub_sektor", "id_sektor", "sub_created_at", "sub_updated_at", "nama_sektor",
+				}).AddRow(
+					"p1", "photo.jpg", "PT ABC", "Jl. A", "021-111", "a@a.com", "www.a.com", now, now,
+					"sub1", "Perbankan", "s1", now, now, "Keuangan",
+				)
+
+				mock.ExpectQuery("SELECT (.+) FROM perusahaan p (.+) WHERE LOWER(.+)").
+					WithArgs("PT ABC").
+					WillReturnRows(rows)
+			},
+			want: &dto.PerusahaanResponse{
+				ID:             "p1",
+				NamaPerusahaan: "PT ABC",
+				Photo:          "photo.jpg",
+				SubSektor: &dto.SubSektorResponse{
+					ID:            "sub1",
+					NamaSubSektor: "Perbankan",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "success - tanpa sub_sektor (LEFT JOIN null)",
+			nama: "PT XYZ",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				now := time.Now()
+				rows := sqlmock.NewRows([]string{
+					"id", "photo", "nama_perusahaan", "alamat", "telepon", "email", "website", "created_at", "updated_at",
+					"sub_id", "nama_sub_sektor", "id_sektor", "sub_created_at", "sub_updated_at", "nama_sektor",
+				}).AddRow(
+					"p2", "", "PT XYZ", "", "", "", "", now, now,
+					nil, nil, nil, nil, nil, nil,
+				)
+
+				mock.ExpectQuery("SELECT (.+) FROM perusahaan p (.+) WHERE LOWER(.+)").
+					WithArgs("PT XYZ").
+					WillReturnRows(rows)
+			},
+			want: &dto.PerusahaanResponse{
+				ID:             "p2",
+				NamaPerusahaan: "PT XYZ",
+				SubSektor:      nil,
+			},
+			wantErr: false,
+		},
+		{
+			name: "error - not found",
+			nama: "PT Tidak Ada",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery("SELECT (.+) FROM perusahaan p (.+) WHERE LOWER(.+)").
+					WithArgs("PT Tidak Ada").
+					WillReturnError(sql.ErrNoRows)
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "error - database error",
+			nama: "PT ABC",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery("SELECT (.+) FROM perusahaan p (.+) WHERE LOWER(.+)").
+					WithArgs("PT ABC").
+					WillReturnError(sql.ErrConnDone)
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			require.NoError(t, err)
+			defer db.Close()
+
+			repo := NewPerusahaanRepository(db)
+			tt.mockFn(mock)
+
+			result, err := repo.GetByNama(tt.nama)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.Equal(t, tt.want.ID, result.ID)
+				assert.Equal(t, tt.want.NamaPerusahaan, result.NamaPerusahaan)
+				// Verifikasi SubSektor sesuai expectation
+				if tt.want.SubSektor == nil {
+					assert.Nil(t, result.SubSektor)
+				} else {
+					assert.NotNil(t, result.SubSektor)
+					assert.Equal(t, tt.want.SubSektor.ID, result.SubSektor.ID)
+					assert.Equal(t, tt.want.SubSektor.NamaSubSektor, result.SubSektor.NamaSubSektor)
+				}
+			}
+
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}

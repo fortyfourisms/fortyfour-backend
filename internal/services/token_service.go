@@ -28,8 +28,8 @@ func NewTokenService(redis cache.RedisInterface, jwtSecret string, isProduction 
 }
 
 // GenerateTokenPair creates access & refresh tokens
-func (s *TokenService) GenerateTokenPair(userID, username, role string) (*models.TokenPair, error) {
-	accessToken, expiresAt, err := utils.GenerateAccessToken(userID, username, role, s.JWTSecret)
+func (s *TokenService) GenerateTokenPair(userID, username, role, idPerusahaan string) (*models.TokenPair, error) {
+	accessToken, expiresAt, err := utils.GenerateAccessToken(userID, username, role, s.JWTSecret, idPerusahaan)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate access token: %w", err)
 	}
@@ -40,10 +40,11 @@ func (s *TokenService) GenerateTokenPair(userID, username, role string) (*models
 	}
 
 	tokenData := models.RefreshTokenData{
-		UserID:    userID,
-		Username:  username,
-		CreatedAt: time.Now(),
-		Role:      role,
+		UserID:       userID,
+		Username:     username,
+		CreatedAt:    time.Now(),
+		Role:         role,
+		IDPerusahaan: idPerusahaan,
 	}
 
 	tokenDataJSON, err := json.Marshal(tokenData)
@@ -131,7 +132,7 @@ func (s *TokenService) RefreshAccessToken(refreshToken string) (*models.TokenPai
 		// We proceed even if delete fails, though ideally this should be alerted
 	}
 
-	return s.GenerateTokenPair(tokenData.UserID, tokenData.Username, tokenData.Role)
+	return s.GenerateTokenPair(tokenData.UserID, tokenData.Username, tokenData.Role, tokenData.IDPerusahaan)
 }
 
 // RevokeRefreshToken deletes a single refresh token

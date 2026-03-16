@@ -16,7 +16,7 @@ func TestTokenService_GenerateTokenPair_Success(t *testing.T) {
 	service := NewTokenService(redis, "test-secret", false, "localhost")
 
 	// Act
-	tokens, err := service.GenerateTokenPair("1", "testuser", "admin")
+	tokens, err := service.GenerateTokenPair("1", "testuser", "admin", "")
 
 	// Assert
 	if err != nil {
@@ -75,7 +75,7 @@ func TestTokenService_RefreshAccessToken_Success(t *testing.T) {
 	service := NewTokenService(redis, "test-secret", false, "localhost")
 
 	// Generate initial token pair
-	initialTokens, err := service.GenerateTokenPair("1", "testuser", "admin")
+	initialTokens, err := service.GenerateTokenPair("1", "testuser", "admin", "")
 	if err != nil {
 		t.Fatalf("failed to generate initial tokens: %v", err)
 	}
@@ -153,7 +153,7 @@ func TestTokenService_RevokeRefreshToken_Success(t *testing.T) {
 	service := NewTokenService(redis, "test-secret", false, "localhost")
 
 	// Generate token pair
-	tokens, _ := service.GenerateTokenPair("1", "testuser", "admin")
+	tokens, _ := service.GenerateTokenPair("1", "testuser", "admin", "")
 
 	// Act
 	err := service.RevokeRefreshToken(tokens.RefreshToken)
@@ -435,12 +435,12 @@ func TestTokenService_RevokeAllUserTokens_HapusSemuaTokenUser(t *testing.T) {
 	service := NewTokenService(redis, "test-secret", false, "localhost")
 
 	// User 1 login dari 3 device
-	t1, _ := service.GenerateTokenPair("user-1", "alice", "admin")
-	t2, _ := service.GenerateTokenPair("user-1", "alice", "admin")
-	t3, _ := service.GenerateTokenPair("user-1", "alice", "admin")
+	t1, _ := service.GenerateTokenPair("user-1", "alice", "admin", "")
+	t2, _ := service.GenerateTokenPair("user-1", "alice", "admin", "")
+	t3, _ := service.GenerateTokenPair("user-1", "alice", "admin", "")
 
 	// User 2 punya token tersendiri
-	t4, _ := service.GenerateTokenPair("user-2", "bob", "user")
+	t4, _ := service.GenerateTokenPair("user-2", "bob", "user", "")
 
 	err := service.RevokeAllUserTokens("user-1")
 
@@ -479,7 +479,7 @@ func TestTokenService_RevokeAllUserTokens_TokenTidakBisaDigunakan(t *testing.T) 
 	redis := testhelpers.NewMockRedisClient()
 	service := NewTokenService(redis, "test-secret", false, "localhost")
 
-	tokens, _ := service.GenerateTokenPair("user-1", "alice", "admin")
+	tokens, _ := service.GenerateTokenPair("user-1", "alice", "admin", "")
 
 	_ = service.RevokeAllUserTokens("user-1")
 
@@ -497,7 +497,7 @@ func TestTokenService_ValidateAndRefreshIfNeeded_AccessTokenValid(t *testing.T) 
 	redis := testhelpers.NewMockRedisClient()
 	service := NewTokenService(redis, "test-secret", false, "localhost")
 
-	tokens, _ := service.GenerateTokenPair("user-1", "alice", "admin")
+	tokens, _ := service.GenerateTokenPair("user-1", "alice", "admin", "")
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.AddCookie(&http.Cookie{Name: "access_token", Value: tokens.AccessToken})
@@ -543,7 +543,7 @@ func TestTokenService_ValidateAndRefreshIfNeeded_AccessInvalid_RefreshValid_Issu
 	redis := testhelpers.NewMockRedisClient()
 	service := NewTokenService(redis, "test-secret", false, "localhost")
 
-	tokens, _ := service.GenerateTokenPair("user-1", "alice", "admin")
+	tokens, _ := service.GenerateTokenPair("user-1", "alice", "admin", "")
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.AddCookie(&http.Cookie{Name: "access_token", Value: "access-token-tidak-valid"})

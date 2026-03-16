@@ -19,11 +19,12 @@ import (
 //
 
 type mockPICRepository struct {
-	CreateFn  func(req dto.CreatePICRequest, id string) error
-	GetByIDFn func(id string) (*dto.PICResponse, error)
-	GetAllFn  func() ([]dto.PICResponse, error)
-	UpdateFn  func(id string, req dto.UpdatePICRequest) error
-	DeleteFn  func(id string) error
+	CreateFn          func(req dto.CreatePICRequest, id string) error
+	GetByIDFn         func(id string) (*dto.PICResponse, error)
+	GetAllFn          func() ([]dto.PICResponse, error)
+	GetByPerusahaanFn func(idPerusahaan string) ([]dto.PICResponse, error)
+	UpdateFn          func(id string, req dto.UpdatePICRequest) error
+	DeleteFn          func(id string) error
 }
 
 func (m *mockPICRepository) Create(req dto.CreatePICRequest, id string) error {
@@ -44,6 +45,13 @@ func (m *mockPICRepository) Update(id string, req dto.UpdatePICRequest) error {
 
 func (m *mockPICRepository) Delete(id string) error {
 	return m.DeleteFn(id)
+}
+
+func (m *mockPICRepository) GetByPerusahaan(idPerusahaan string) ([]dto.PICResponse, error) {
+	if m.GetByPerusahaanFn != nil {
+		return m.GetByPerusahaanFn(idPerusahaan)
+	}
+	return []dto.PICResponse{}, nil
 }
 
 // Compile-time check
@@ -211,7 +219,16 @@ func TestPICService_Update_Success(t *testing.T) {
 //
 
 func TestPICService_Delete_Success(t *testing.T) {
+	idPerusahaan := "uuid-perusahaan"
 	repo := &mockPICRepository{
+		GetByIDFn: func(id string) (*dto.PICResponse, error) {
+			return &dto.PICResponse{
+				ID: id,
+				Perusahaan: &dto.PerusahaanInPIC{
+					ID: idPerusahaan,
+				},
+			}, nil
+		},
 		DeleteFn: func(id string) error {
 			return nil
 		},
@@ -542,6 +559,9 @@ func TestPICService_Update_InvalidatesCache(t *testing.T) {
 
 func TestPICService_Delete_Error(t *testing.T) {
 	repo := &mockPICRepository{
+		GetByIDFn: func(id string) (*dto.PICResponse, error) {
+			return &dto.PICResponse{ID: id}, nil
+		},
 		DeleteFn: func(id string) error {
 			return errors.New("delete failed")
 		},
@@ -560,6 +580,9 @@ func TestPICService_Delete_InvalidatesCache(t *testing.T) {
 	setCache(rc, keyList("pic"), []dto.PICResponse{{ID: "uuid-test"}})
 
 	repo := &mockPICRepository{
+		GetByIDFn: func(id string) (*dto.PICResponse, error) {
+			return &dto.PICResponse{ID: id}, nil
+		},
 		DeleteFn: func(id string) error {
 			return nil
 		},

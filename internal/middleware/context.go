@@ -47,3 +47,14 @@ func GetRole(ctx context.Context) string {
 	}
 	return ""
 }
+
+// GetIDPerusahaan membaca id_perusahaan dari context.
+// Mengembalikan "" jika tidak ditemukan (misal: user admin yang tidak terikat perusahaan).
+func GetIDPerusahaan(ctx context.Context) string {
+	if v := ctx.Value(IDPerusahaanKey); v != nil {
+		if s, ok := v.(string); ok {
+			return s
+		}
+	}
+	return ""
+}

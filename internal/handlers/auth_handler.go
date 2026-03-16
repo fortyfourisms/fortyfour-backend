@@ -352,10 +352,11 @@ func (h *AuthHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mapping ke UpdateUserRequest — role_id dan id_jabatan sengaja tidak diisi
+	// Mapping ke UpdateUserRequest — role_id sengaja tidak diisi (hanya admin)
 	updateReq := dto.UpdateUserRequest{
-		Username: req.Username,
-		Email:    req.Email,
+		Username:  req.Username,
+		Email:     req.Email,
+		IDJabatan: req.IDJabatan,
 	}
 
 	resp, err := h.userService.Update(userID, updateReq)
