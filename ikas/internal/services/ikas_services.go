@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/rabbitmq"
@@ -24,6 +25,15 @@ func NewIkasService(repo repository.IkasRepositoryInterface, producer *rabbitmq.
 }
 
 func (s *IkasService) Create(req dto.CreateIkasRequest, id string) error {
+	// Check if IKAS for this company already exists
+	exists, err := s.repo.CheckExistsByPerusahaanID(req.IDPerusahaan)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("Data IKAS untuk perusahaan ini sudah ada")
+	}
+
 	event := dto_event.IkasCreatedEvent{
 		IkasID:          id,
 		IDPerusahaan:    req.IDPerusahaan,

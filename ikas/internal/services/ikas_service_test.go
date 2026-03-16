@@ -20,6 +20,9 @@ func (m *mockIkasRepo) FindPerusahaanByName(namaPerusahaan string) (string, erro
 }
 
 func (m *mockIkasRepo) CheckExistsByPerusahaanID(idPerusahaan string) (bool, error) {
+	if idPerusahaan == "perusahaan-ada" {
+		return true, nil
+	}
 	return false, nil
 }
 
@@ -78,6 +81,19 @@ func TestIkasService_Create_Success(t *testing.T) {
 	// This should return nil now because producer check skips it
 	err := service.Create(req, "ikas-id")
 	assert.NoError(t, err)
+}
+
+func TestIkasService_Create_Duplicate(t *testing.T) {
+	repo := &mockIkasRepo{}
+	service := NewIkasService(repo, nil)
+
+	req := dto.CreateIkasRequest{
+		IDPerusahaan: "perusahaan-ada",
+	}
+
+	err := service.Create(req, "ikas-id")
+	assert.Error(t, err)
+	assert.Equal(t, "Data IKAS untuk perusahaan ini sudah ada", err.Error())
 }
 
 /*
