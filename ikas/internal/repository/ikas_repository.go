@@ -87,7 +87,9 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			g.nilai_subdomain1,
 			g.nilai_subdomain2,
 			g.nilai_subdomain3,
-			g.nilai_subdomain4
+			g.nilai_subdomain4,
+			i.created_at,
+			i.updated_at
 		FROM ikas i
 		LEFT JOIN perusahaan p ON i.id_perusahaan = p.id
 		LEFT JOIN identifikasi iden ON i.id_identifikasi = iden.id
@@ -117,6 +119,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 		var detNilai, detSub1, detSub2, detSub3 sql.NullFloat64
 		var gulihID sql.NullInt64
 		var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
+		var createdAt, updatedAt sql.NullString
 
 		err := rows.Scan(
 			&i.ID,
@@ -154,6 +157,8 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			&gulihSub2,
 			&gulihSub3,
 			&gulihSub4,
+			&createdAt,
+			&updatedAt,
 		)
 		if err != nil {
 			continue
@@ -161,6 +166,14 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 
 		if tanggal.Valid {
 			i.Tanggal = tanggal.String
+		}
+
+		if createdAt.Valid {
+			i.CreatedAt = createdAt.String
+		}
+
+		if updatedAt.Valid {
+			i.UpdatedAt = updatedAt.String
 		}
 
 		if targetNilai.Valid {
@@ -300,7 +313,9 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 			g.nilai_subdomain1,
 			g.nilai_subdomain2,
 			g.nilai_subdomain3,
-			g.nilai_subdomain4
+			g.nilai_subdomain4,
+			i.created_at,
+			i.updated_at
 		FROM ikas i
 		LEFT JOIN perusahaan p ON i.id_perusahaan = p.id
 		LEFT JOIN identifikasi iden ON i.id_identifikasi = iden.id
@@ -324,6 +339,7 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	var detNilai, detSub1, detSub2, detSub3 sql.NullFloat64
 	var gulihID sql.NullInt64
 	var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
+	var createdAt, updatedAt sql.NullString
 
 	err := row.Scan(
 		&i.ID,
@@ -361,6 +377,8 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 		&gulihSub2,
 		&gulihSub3,
 		&gulihSub4,
+		&createdAt,
+		&updatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -368,6 +386,14 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 
 	if tanggal.Valid {
 		i.Tanggal = tanggal.String
+	}
+
+	if createdAt.Valid {
+		i.CreatedAt = createdAt.String
+	}
+
+	if updatedAt.Valid {
+		i.UpdatedAt = updatedAt.String
 	}
 
 	if targetNilai.Valid {

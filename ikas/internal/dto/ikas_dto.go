@@ -33,6 +33,8 @@ type IkasResponse struct {
 	Proteksi                        *ProteksiInIkas     `json:"proteksi,omitempty"`
 	Deteksi                         *DeteksiInIkas      `json:"deteksi,omitempty"`
 	Gulih                           *GulihInIkas        `json:"gulih,omitempty"`
+	CreatedAt                       string              `json:"created_at"`
+	UpdatedAt                       string              `json:"updated_at"`
 }
 
 // Nested structs untuk foreign keys

@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS ikas (
     id_proteksi INT,
     id_deteksi INT,
     id_gulih INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     tanggal DATETIME,
     responden VARCHAR(255) NOT NULL,
