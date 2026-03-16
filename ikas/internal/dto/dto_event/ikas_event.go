@@ -18,12 +18,12 @@ type IkasCreatedEvent struct {
 // IkasUpdatedEvent
 type IkasUpdatedEvent struct {
 	IkasID       string    `json:"ikas_id"`
-	IDPerusahaan string    `json:"id_perusahaan"`
-	Tanggal      string    `json:"tanggal"`
-	Responden    string    `json:"responden"`
-	Telepon      string    `json:"telepon"`
-	Jabatan      string    `json:"jabatan"`
-	TargetNilai  float64   `json:"target_nilai"`
+	IDPerusahaan *string   `json:"id_perusahaan"`
+	Tanggal      *string   `json:"tanggal"`
+	Responden    *string   `json:"responden"`
+	Telepon      *string   `json:"telepon"`
+	Jabatan      *string   `json:"jabatan"`
+	TargetNilai  *float64  `json:"target_nilai"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 

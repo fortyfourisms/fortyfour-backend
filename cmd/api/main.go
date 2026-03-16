@@ -199,6 +199,9 @@ func main() {
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
 
+	// Proxy Handler for IKAS
+	ikasProxyHandler := handlers.NewProxyHandler("http://localhost:8081", cfg.InternalGatewayKey)
+
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(tokenService)
 	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
@@ -237,6 +240,7 @@ func main() {
 		seHandler,
 		dashboardHandler,
 		notificationHandler,
+		ikasProxyHandler,
 	)
 
 	// Start server

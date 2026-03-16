@@ -33,6 +33,8 @@ type IkasResponse struct {
 	Proteksi                        *ProteksiInIkas     `json:"proteksi,omitempty"`
 	Deteksi                         *DeteksiInIkas      `json:"deteksi,omitempty"`
 	Gulih                           *GulihInIkas        `json:"gulih,omitempty"`
+	CreatedAt                       string              `json:"created_at"`
+	UpdatedAt                       string              `json:"updated_at"`
 }
 
 // Nested structs untuk foreign keys
@@ -151,4 +153,17 @@ type ImportIkasResponse struct {
 	Message string        `json:"message"`
 	Data    *IkasResponse `json:"data,omitempty"`
 	Errors  []string      `json:"errors,omitempty"`
+}
+
+type ExcelSubdomainAnswer struct {
+	PertanyaanID int
+	Jawaban      float64
+}
+
+type ParsedExcelData struct {
+	IkasRequest           CreateIkasRequest
+	JawabanIdentifikasi  []ExcelSubdomainAnswer
+	JawabanProteksi      []ExcelSubdomainAnswer
+	JawabanDeteksi       []ExcelSubdomainAnswer
+	JawabanGulih         []ExcelSubdomainAnswer
 }

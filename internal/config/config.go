@@ -14,9 +14,10 @@ type Config struct {
 	Redis           RedisConfig
 	CasbinModelPath string
 	RabbitMQ        RabbitMQConfig
-	GeminiAPIKey    string
-	LogLevel        string
-	Environment     string
+	GeminiAPIKey       string
+	InternalGatewayKey string
+	LogLevel           string
+	Environment        string
 }
 
 type DatabaseConfig struct {
@@ -80,9 +81,10 @@ func Load() *Config {
 			Vhost:    getEnv("RABBITMQ_VHOST", "/"),
 		},
 		CasbinModelPath: getEnv("CASBIN_MODEL_PATH", absPath),
-		GeminiAPIKey:    getEnv("GEMINI_API_KEY", ""),
-		LogLevel:        getEnv("LOG_LEVEL", "info"),
-		Environment:     getEnv("ENVIRONMENT", "production"),
+		GeminiAPIKey:       getEnv("GEMINI_API_KEY", ""),
+		InternalGatewayKey: getEnv("INTERNAL_GATEWAY_KEY", ""),
+		LogLevel:           getEnv("LOG_LEVEL", "info"),
+		Environment:        getEnv("ENVIRONMENT", "production"),
 	}
 }
 

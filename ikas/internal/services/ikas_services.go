@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/rabbitmq"
@@ -24,6 +25,15 @@ func NewIkasService(repo repository.IkasRepositoryInterface, producer *rabbitmq.
 }
 
 func (s *IkasService) Create(req dto.CreateIkasRequest, id string) error {
+	// Check if IKAS for this company already exists
+	exists, err := s.repo.CheckExistsByPerusahaanID(req.IDPerusahaan)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return fmt.Errorf("Data IKAS untuk perusahaan ini sudah ada")
+	}
+
 	event := dto_event.IkasCreatedEvent{
 		IkasID:          id,
 		IDPerusahaan:    req.IDPerusahaan,
@@ -66,12 +76,12 @@ func (s *IkasService) Update(id string, req dto.UpdateIkasRequest) error {
 	// Publish update event
 	event := dto_event.IkasUpdatedEvent{
 		IkasID:       id,
-		IDPerusahaan: getStringValue(req.IDPerusahaan),
-		Tanggal:      getStringValue(req.Tanggal),
-		Responden:    getStringValue(req.Responden),
-		Telepon:      getStringValue(req.Telepon),
-		Jabatan:      getStringValue(req.Jabatan),
-		TargetNilai:  getFloatValue(req.TargetNilai),
+		IDPerusahaan: req.IDPerusahaan,
+		Tanggal:      req.Tanggal,
+		Responden:    req.Responden,
+		Telepon:      req.Telepon,
+		Jabatan:      req.Jabatan,
+		TargetNilai:  req.TargetNilai,
 		UpdatedAt:    time.Now(),
 	}
 
@@ -134,8 +144,52 @@ func (s *IkasService) ImportFromExcel(fileData []byte) (string, error) {
 
 	newID := uuid.New().String()
 
-	if err := s.Create(*excelData, newID); err != nil {
+	// 1. Create main IKAS record
+	if err := s.Create(excelData.IkasRequest, newID); err != nil {
 		return "", err
+	}
+
+	// 2. Publish events for each subdomain to trigger automatic processing
+	perusahaanID := excelData.IkasRequest.IDPerusahaan
+
+	// Identifikasi
+	for _, ans := range excelData.JawabanIdentifikasi {
+		event := dto.CreateJawabanIdentifikasiRequest{
+			PertanyaanIdentifikasiID: ans.PertanyaanID,
+			PerusahaanID:           perusahaanID,
+			JawabanIdentifikasi:    &ans.Jawaban,
+		}
+		s.producer.PublishJawabanIdentifikasiCreated(context.Background(), event)
+	}
+
+	// Proteksi
+	for _, ans := range excelData.JawabanProteksi {
+		event := dto.CreateJawabanProteksiRequest{
+			PertanyaanProteksiID: ans.PertanyaanID,
+			PerusahaanID:       perusahaanID,
+			JawabanProteksi:    &ans.Jawaban,
+		}
+		s.producer.PublishJawabanProteksiCreated(context.Background(), event)
+	}
+
+	// Deteksi
+	for _, ans := range excelData.JawabanDeteksi {
+		event := dto.CreateJawabanDeteksiRequest{
+			PertanyaanDeteksiID: ans.PertanyaanID,
+			PerusahaanID:      perusahaanID,
+			JawabanDeteksi:    &ans.Jawaban,
+		}
+		s.producer.PublishJawabanDeteksiCreated(context.Background(), event)
+	}
+
+	// Gulih
+	for _, ans := range excelData.JawabanGulih {
+		event := dto.CreateJawabanGulihRequest{
+			PertanyaanGulihID: ans.PertanyaanID,
+			PerusahaanID:     perusahaanID,
+			JawabanGulih:    &ans.Jawaban,
+		}
+		s.producer.PublishJawabanGulihCreated(context.Background(), event)
 	}
 
 	return newID, nil

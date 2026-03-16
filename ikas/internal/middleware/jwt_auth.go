@@ -4,11 +4,11 @@ import (
 	"context"
 	"ikas/internal/utils"
 	"net/http"
-	"strings"
 )
 
 type AuthMiddleware struct {
-	jwtSecret string
+	jwtSecret          string
+	internalGatewayKey string
 }
 
 type contextKey struct {
@@ -22,35 +22,36 @@ var (
 	Role      = &contextKey{"role"}
 )
 
-func NewAuthMiddleware(jwtSecret string) *AuthMiddleware {
-	return &AuthMiddleware{jwtSecret: jwtSecret}
+func NewAuthMiddleware(jwtSecret string, internalKey string) *AuthMiddleware {
+	return &AuthMiddleware{
+		jwtSecret:          jwtSecret,
+		internalGatewayKey: internalKey,
+	}
 }
 
 func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			utils.RespondError(w, http.StatusUnauthorized, "Missing authorization header")
+		// Check for internal gateway key first
+		internalKey := r.Header.Get("X-Internal-Key")
+		if internalKey != m.internalGatewayKey {
+			utils.RespondError(w, http.StatusUnauthorized, "Unauthorized: Direct access not allowed or invalid internal key")
 			return
 		}
 
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			utils.RespondError(w, http.StatusUnauthorized, "Invalid authorization format")
+		// Extract user info from headers injected by Gateway
+		userID := r.Header.Get("X-User-ID")
+		username := r.Header.Get("X-Username") // Optional, falls back to empty if not set
+		role := r.Header.Get("X-User-Role")
+
+		if userID == "" || role == "" {
+			utils.RespondError(w, http.StatusUnauthorized, "Unauthorized: User identification missing in gateway headers")
 			return
 		}
 
-		claims, err := utils.VerifyToken(parts[1], m.jwtSecret)
-		if err != nil {
-			utils.RespondError(w, http.StatusUnauthorized, "Invalid or expired token")
-			return
-		}
-
-		// inject context
-		ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
-		ctx = context.WithValue(ctx, Username, claims.Username)
-		ctx = context.WithValue(ctx, Role, claims.Role)
+		// Inject into context for downstream handlers/services
+		ctx := context.WithValue(r.Context(), UserIDKey, userID)
+		ctx = context.WithValue(ctx, Username, username)
+		ctx = context.WithValue(ctx, Role, role)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

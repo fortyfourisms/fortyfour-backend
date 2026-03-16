@@ -7,6 +7,7 @@ import (
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
 	"log"
+	"strings"
 
 	"fortyfour-backend/pkg/rabbitmq"
 )
@@ -54,10 +55,17 @@ func (c *Consumer) ConsumeIkasCreated(ctx context.Context) error {
 	return c.Consume(ctx, "ikas.created", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasCreatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			return err
+			log.Printf("❌ Fatal: Unmarshal error from ikas.created: %v. Body: %s", err, string(body))
+			return nil // Acknowledge to remove invalid JSON from queue
 		}
 
 		log.Printf("Processing IKAS Created for ID: %s", event.IkasID)
+
+		// Validate mandatory fields (Poison Pill Prevention)
+		if strings.TrimSpace(event.IDPerusahaan) == "" || strings.TrimSpace(event.Tanggal) == "" {
+			log.Printf("❌ Skipping invalid message from ikas.created: id_perusahaan or tanggal is empty. ID: %s", event.IkasID)
+			return nil // Acknowledge to remove from queue
+		}
 
 		req := dto.CreateIkasRequest{
 			IDPerusahaan: event.IDPerusahaan,
@@ -68,7 +76,14 @@ func (c *Consumer) ConsumeIkasCreated(ctx context.Context) error {
 			TargetNilai:  event.TargetNilai,
 		}
 
-		return c.ikasRepo.Create(req, event.IkasID, event.NilaiKematangan)
+		if err := c.ikasRepo.Create(req, event.IkasID, event.NilaiKematangan); err != nil {
+			if strings.Contains(err.Error(), "Incorrect datetime value") {
+				log.Printf("❌ Skipping message from ikas.created due to invalid date value: %v", err)
+				return nil // Acknowledge to remove poison pill
+			}
+			return err
+		}
+		return nil
 	})
 }
 
@@ -76,21 +91,32 @@ func (c *Consumer) ConsumeIkasUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "ikas.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasUpdatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			return err
+			log.Printf("❌ Fatal: Unmarshal error from ikas.updated: %v. Body: %s", err, string(body))
+			return nil // Acknowledge to remove invalid JSON from queue
 		}
 
 		log.Printf("Processing IKAS Updated for ID: %s", event.IkasID)
 
+		// Publish event is already validated at API level.
+		// For updates, we allow partial fields.
+
 		req := dto.UpdateIkasRequest{
-			IDPerusahaan: &event.IDPerusahaan,
-			Tanggal:      &event.Tanggal,
-			Responden:    &event.Responden,
-			Telepon:      &event.Telepon,
-			Jabatan:      &event.Jabatan,
-			TargetNilai:  &event.TargetNilai,
+			IDPerusahaan: event.IDPerusahaan,
+			Tanggal:      event.Tanggal,
+			Responden:    event.Responden,
+			Telepon:      event.Telepon,
+			Jabatan:      event.Jabatan,
+			TargetNilai:  event.TargetNilai,
 		}
 
-		return c.ikasRepo.Update(event.IkasID, req)
+		if err := c.ikasRepo.Update(event.IkasID, req); err != nil {
+			if strings.Contains(err.Error(), "Incorrect datetime value") {
+				log.Printf("❌ Skipping message from ikas.updated due to invalid date value: %v", err)
+				return nil // Acknowledge to remove poison pill
+			}
+			return err
+		}
+		return nil
 	})
 }
 
@@ -98,7 +124,8 @@ func (c *Consumer) ConsumeIkasDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "ikas.deleted", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasDeletedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			return err
+			log.Printf("❌ Fatal: Unmarshal error from ikas.deleted: %v. Body: %s", err, string(body))
+			return nil // Acknowledge to remove invalid JSON from queue
 		}
 
 		log.Printf("Processing IKAS Deleted for ID: %s", event.IkasID)
@@ -133,7 +160,7 @@ func (c *Consumer) ConsumeEmailNotifications(ctx context.Context) error {
 
 func (c *Consumer) ConsumeJawabanIdentifikasiCreated(ctx context.Context) error {
 	return c.Consume(ctx, "jawaban.identifikasi.created", func(ctx context.Context, body []byte) error {
-		log.Printf("📥 Raw Message from jawaban.identifikasi.created: %s", string(body))
+		log.Printf("Raw Message from jawaban.identifikasi.created: %s", string(body))
 
 		var req dto.CreateJawabanIdentifikasiRequest
 		if err := json.Unmarshal(body, &req); err != nil {
@@ -232,7 +259,7 @@ func (c *Consumer) ConsumeJawabanIdentifikasiDeleted(ctx context.Context) error 
 // ConsumeJawabanProteksiCreated (Pola 2 Batch Write)
 func (c *Consumer) ConsumeJawabanProteksiCreated(ctx context.Context) error {
 	return c.Consume(ctx, "jawaban.proteksi.created", func(ctx context.Context, body []byte) error {
-		log.Printf("📥 Raw Message from jawaban.proteksi.created: %s", string(body))
+		log.Printf("Raw Message from jawaban.proteksi.created: %s", string(body))
 
 		var req dto.CreateJawabanProteksiRequest
 		if err := json.Unmarshal(body, &req); err != nil {
@@ -331,7 +358,7 @@ func (c *Consumer) ConsumeJawabanProteksiDeleted(ctx context.Context) error {
 // ConsumeJawabanDeteksiCreated (Pola 2 Batch Write)
 func (c *Consumer) ConsumeJawabanDeteksiCreated(ctx context.Context) error {
 	return c.Consume(ctx, "jawaban.deteksi.created", func(ctx context.Context, body []byte) error {
-		log.Printf("📥 Raw Message from jawaban.deteksi.created: %s", string(body))
+		log.Printf("Raw Message from jawaban.deteksi.created: %s", string(body))
 
 		var req dto.CreateJawabanDeteksiRequest
 		if err := json.Unmarshal(body, &req); err != nil {
@@ -430,7 +457,7 @@ func (c *Consumer) ConsumeJawabanDeteksiDeleted(ctx context.Context) error {
 // ConsumeJawabanGulihCreated (Pola 2 Batch Write)
 func (c *Consumer) ConsumeJawabanGulihCreated(ctx context.Context) error {
 	return c.Consume(ctx, "jawaban.gulih.created", func(ctx context.Context, body []byte) error {
-		log.Printf("📥 Raw Message from jawaban.gulih.created: %s", string(body))
+		log.Printf("Raw Message from jawaban.gulih.created: %s", string(body))
 
 		var req dto.CreateJawabanGulihRequest
 		if err := json.Unmarshal(body, &req); err != nil {

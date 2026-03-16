@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type Ikas struct {
 	ID              string  `json:"id"`
 	IDPerusahaan    string  `json:"id_perusahaan"`
@@ -12,5 +14,7 @@ type Ikas struct {
 	IDIdentifikasi  string  `json:"id_identifikasi"`
 	IDProteksi      string  `json:"id_proteksi"`
 	IDDeteksi       string  `json:"id_deteksi"`
-	IDGulih         string  `json:"id_gulih"`
+	IDGulih         string    `json:"id_gulih"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
