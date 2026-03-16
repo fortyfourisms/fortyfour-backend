@@ -161,9 +161,9 @@ type ExcelSubdomainAnswer struct {
 }
 
 type ParsedExcelData struct {
-	IkasRequest           CreateIkasRequest
-	JawabanIdentifikasi  []ExcelSubdomainAnswer
-	JawabanProteksi      []ExcelSubdomainAnswer
-	JawabanDeteksi       []ExcelSubdomainAnswer
-	JawabanGulih         []ExcelSubdomainAnswer
+	IkasRequest         CreateIkasRequest
+	JawabanIdentifikasi []ExcelSubdomainAnswer
+	JawabanProteksi     []ExcelSubdomainAnswer
+	JawabanDeteksi      []ExcelSubdomainAnswer
+	JawabanGulih        []ExcelSubdomainAnswer
 }

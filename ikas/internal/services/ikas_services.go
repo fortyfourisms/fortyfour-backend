@@ -156,8 +156,8 @@ func (s *IkasService) ImportFromExcel(fileData []byte) (string, error) {
 	for _, ans := range excelData.JawabanIdentifikasi {
 		event := dto.CreateJawabanIdentifikasiRequest{
 			PertanyaanIdentifikasiID: ans.PertanyaanID,
-			PerusahaanID:           perusahaanID,
-			JawabanIdentifikasi:    &ans.Jawaban,
+			PerusahaanID:             perusahaanID,
+			JawabanIdentifikasi:      &ans.Jawaban,
 		}
 		s.producer.PublishJawabanIdentifikasiCreated(context.Background(), event)
 	}
@@ -166,8 +166,8 @@ func (s *IkasService) ImportFromExcel(fileData []byte) (string, error) {
 	for _, ans := range excelData.JawabanProteksi {
 		event := dto.CreateJawabanProteksiRequest{
 			PertanyaanProteksiID: ans.PertanyaanID,
-			PerusahaanID:       perusahaanID,
-			JawabanProteksi:    &ans.Jawaban,
+			PerusahaanID:         perusahaanID,
+			JawabanProteksi:      &ans.Jawaban,
 		}
 		s.producer.PublishJawabanProteksiCreated(context.Background(), event)
 	}
@@ -176,8 +176,8 @@ func (s *IkasService) ImportFromExcel(fileData []byte) (string, error) {
 	for _, ans := range excelData.JawabanDeteksi {
 		event := dto.CreateJawabanDeteksiRequest{
 			PertanyaanDeteksiID: ans.PertanyaanID,
-			PerusahaanID:      perusahaanID,
-			JawabanDeteksi:    &ans.Jawaban,
+			PerusahaanID:        perusahaanID,
+			JawabanDeteksi:      &ans.Jawaban,
 		}
 		s.producer.PublishJawabanDeteksiCreated(context.Background(), event)
 	}
@@ -186,8 +186,8 @@ func (s *IkasService) ImportFromExcel(fileData []byte) (string, error) {
 	for _, ans := range excelData.JawabanGulih {
 		event := dto.CreateJawabanGulihRequest{
 			PertanyaanGulihID: ans.PertanyaanID,
-			PerusahaanID:     perusahaanID,
-			JawabanGulih:    &ans.Jawaban,
+			PerusahaanID:      perusahaanID,
+			JawabanGulih:      &ans.Jawaban,
 		}
 		s.producer.PublishJawabanGulihCreated(context.Background(), event)
 	}

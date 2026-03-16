@@ -7,10 +7,10 @@ import (
 )
 
 type Config struct {
-	Port            string
-	JWTSecret       string
-	Database        DatabaseConfig
-	Redis           RedisConfig
+	Port               string
+	JWTSecret          string
+	Database           DatabaseConfig
+	Redis              RedisConfig
 	RabbitMQ           RabbitMQConfig
 	CasbinModelPath    string
 	InternalGatewayKey string
