@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"strings"
 
+	"ikas/internal/middleware"
 	"fortyfour-backend/pkg/logger"
 
 	"github.com/google/uuid"
@@ -127,8 +128,9 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	newID := uuid.New().String()
+	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
 
-	if err := h.service.Create(req, newID); err != nil {
+	if err := h.service.Create(r.Context(), req, newID, userID); err != nil {
 		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, err.Error())
 		return
@@ -159,7 +161,8 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 		return
 	}
 
-	err := h.service.Update(id, req)
+	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
+	err := h.service.Update(r.Context(), id, req, userID)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		if strings.Contains(err.Error(), "no rows") {
@@ -186,7 +189,8 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/maturity/ikas/{id} [delete]
 func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
-	if err := h.service.Delete(id); err != nil {
+	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
+	if err := h.service.Delete(r.Context(), id, userID); err != nil {
 		logger.Error(err, "operation failed")
 		if strings.Contains(err.Error(), "no rows") {
 			utils.RespondError(w, 404, "Data tidak ditemukan")
@@ -244,7 +248,8 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newID, err := h.service.ImportFromExcel(fileBytes)
+	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
+	newID, err := h.service.ImportFromExcel(r.Context(), fileBytes, userID)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		response := struct {

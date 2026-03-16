@@ -80,6 +80,10 @@ func main() {
 	}
 	defer redisClient.Close()
 
+	// Initialize SSE Service
+	sseService := services.NewSSEService()
+	logger.Info("SSE Service initialized successfully")
+
 	// Initialize RabbitMQ
 	rmq, err := pkgRmq.NewRabbitMQ(cfg.RabbitMQ.GetURL())
 	if err != nil {
@@ -103,7 +107,7 @@ func main() {
 	usersProducer := usersRmq.NewProducer(sharedProducer)
 
 	// Wrap with specific Consumer
-	usersConsumer := usersRmq.NewConsumer(sharedConsumer)
+	usersConsumer := usersRmq.NewConsumer(sharedConsumer, sseService)
 
 	// Start consumers in background
 	ctx, cancel := context.WithCancel(context.Background())
@@ -124,9 +128,6 @@ func main() {
 	seeder.SeedCasbinPolicies(casbinService)
 	logger.Info("Casbin policies seeded")
 
-	// Initialize SSE Service
-	sseService := services.NewSSEService()
-	logger.Info("SSE Service initialized successfully")
 
 	// Initialize Gemini Client
 	geminiClient := utils.NewGeminiClient(cfg.GeminiAPIKey)
