@@ -104,7 +104,7 @@ func TestAuthHandler_Login_Success_WithMFASetupRequired(t *testing.T) {
 
 	// Now login (user baru harus setup MFA dulu)
 	loginBody := dto.LoginRequest{
-		Username: "testuser",
+		Identifier: "testuser",
 		Password: "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
@@ -306,7 +306,7 @@ func TestAuthHandler_SetupMFA_WithSetupToken(t *testing.T) {
 
 	// Login to get setup token
 	loginBody := dto.LoginRequest{
-		Username: "testuser",
+		Identifier: "testuser",
 		Password: "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
@@ -365,7 +365,7 @@ func TestAuthHandler_EnableMFA_Success(t *testing.T) {
 
 	// 2. Login to get setup_token
 	loginBody := dto.LoginRequest{
-		Username: "testuser",
+		Identifier: "testuser",
 		Password: "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
@@ -459,7 +459,7 @@ func TestAuthHandler_VerifyMFA_Success(t *testing.T) {
 
 	// 2. Login to get setup_token
 	loginBody := dto.LoginRequest{
-		Username: "testuser",
+		Identifier: "testuser",
 		Password: "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
@@ -577,7 +577,7 @@ func TestAuthHandler_EnableMFA_InvalidCode(t *testing.T) {
 	handler.Register(w, req)
 
 	loginBody := dto.LoginRequest{
-		Username: "testuser",
+		Identifier: "testuser",
 		Password: "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
@@ -631,7 +631,7 @@ func TestAuthHandler_EnableMFA_ExpiredSetupToken(t *testing.T) {
 	handler.Register(w, req)
 
 	loginBody := dto.LoginRequest{
-		Username: "testuser",
+		Identifier: "testuser",
 		Password: "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
@@ -919,8 +919,8 @@ func TestAuthHandler_UpdateMe_Success(t *testing.T) {
 	user := testhelpers.CreateTestUser("user-1", "oldname", "old@test.com")
 	_ = userRepo.Create(user)
 
-	newUsername := "newname"
-	body, _ := json.Marshal(dto.UpdateMeRequest{Username: &newUsername})
+	newDisplayName := "New Display Name"
+	body, _ := json.Marshal(dto.UpdateMeRequest{DisplayName: &newDisplayName})
 	req := httptest.NewRequest(http.MethodPut, "/api/me", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 	req = withMeUserContext(req, "user-1")
@@ -933,8 +933,8 @@ func TestAuthHandler_UpdateMe_Success(t *testing.T) {
 	}
 	var resp map[string]interface{}
 	json.NewDecoder(w.Body).Decode(&resp)
-	if resp["username"] != "newname" {
-		t.Errorf("expected username 'newname', got %v", resp["username"])
+	if resp["display_name"] != "New Display Name" {
+		t.Errorf("expected display_name 'New Display Name', got %v", resp["display_name"])
 	}
 }
 
@@ -967,8 +967,8 @@ func TestAuthHandler_UpdateMe_WithIDJabatan(t *testing.T) {
 func TestAuthHandler_UpdateMe_Unauthorized(t *testing.T) {
 	handler, _ := setupAuthHandler()
 
-	newUsername := "newname"
-	body, _ := json.Marshal(dto.UpdateMeRequest{Username: &newUsername})
+	newDisplayName := "newname"
+	body, _ := json.Marshal(dto.UpdateMeRequest{DisplayName: &newDisplayName})
 	req := httptest.NewRequest(http.MethodPut, "/api/me", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()

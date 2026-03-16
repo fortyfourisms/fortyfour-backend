@@ -115,6 +115,16 @@ func (m *mockUserRepo) FindByUsername(username string) (*models.User, error) {
 	return u, nil
 }
 
+// FindByEmail mencari user berdasarkan email
+func (m *mockUserRepo) FindByEmail(email string) (*models.User, error) {
+	for _, u := range m.users {
+		if u.Email == email {
+			return u, nil
+		}
+	}
+	return nil, errors.New("not found")
+}
+
 func (m *mockUserRepo) FindByID(id string) (*models.User, error) {
 	for _, u := range m.users {
 		if u.ID == id {
