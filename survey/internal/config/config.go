@@ -56,7 +56,7 @@ func Load() *Config {
 			Port:     getEnv("DB_PORT", "3306"),
 			User:     getEnv("DB_USER", "root"),
 			Password: getEnv("DB_PASSWORD", ""),
-			DBName:   getEnv("DB_NAME", "survey_db"),
+			DBName:   getEnv("DB_NAME", "fortyfour-backend_db"),
 		},
 
 		Redis: RedisConfig{
