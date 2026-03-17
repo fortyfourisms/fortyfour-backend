@@ -98,6 +98,7 @@ func main() {
 		repository.NewPertanyaanDeteksiRepository(db),
 		repository.NewJawabanGulihRepository(db),
 		repository.NewPertanyaanGulihRepository(db),
+		repository.NewAuditLogRepository(db),
 	)
 
 	// Start consumers in background
@@ -219,6 +220,7 @@ func main() {
 		logger.Info("  - jawaban.gulih.created")
 		logger.Info("  - jawaban.gulih.updated")
 		logger.Info("  - jawaban.gulih.deleted")
+		logger.Info("  - ikas.audit_logs")
 
 		if err := http.ListenAndServe(cfg.Port, mux); err != nil && err != http.ErrServerClosed {
 			logger.FatalErr(err, "Server failed")

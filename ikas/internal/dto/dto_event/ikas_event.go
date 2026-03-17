@@ -54,3 +54,12 @@ type EmailNotificationPayload struct {
 	Body    string                 `json:"body"`
 	Data    map[string]interface{} `json:"data,omitempty"`
 }
+
+// IkasAuditLogEvent
+type IkasAuditLogEvent struct {
+	IkasID    string                 `json:"ikas_id"`
+	UserID    string                 `json:"user_id"`
+	Action    string                 `json:"action"`
+	Changes   map[string]interface{} `json:"changes"`
+	Timestamp time.Time              `json:"timestamp"`
+}

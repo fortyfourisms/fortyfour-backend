@@ -33,6 +33,7 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"jawaban.gulih.created",
 		"jawaban.gulih.updated",
 		"jawaban.gulih.deleted",
+		"ikas.audit_logs",
 	}
 
 	for _, queueName := range queues {
@@ -60,6 +61,7 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"jawaban.gulih.created":        "jawaban.gulih.created",
 		"jawaban.gulih.updated":        "jawaban.gulih.updated",
 		"jawaban.gulih.deleted":        "jawaban.gulih.deleted",
+		"ikas.audit_logs":              "ikas.audit.log",
 	}
 
 	for queueName, routingKey := range bindings {

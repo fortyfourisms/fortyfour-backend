@@ -67,10 +67,47 @@ func (s *IkasService) GetByID(id string) (*dto.IkasResponse, error) {
 }
 
 func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasRequest, userID string) error {
-	// Check existence
-	_, err := s.repo.GetByID(id)
+	// Check existence and get current state
+	current, err := s.repo.GetByID(id)
 	if err != nil {
 		return err
+	}
+
+	// Change detection for audit log
+	changes := make(map[string]interface{})
+	if req.IDPerusahaan != nil && *req.IDPerusahaan != current.Perusahaan.ID {
+		changes["id_perusahaan"] = map[string]interface{}{"old": current.Perusahaan.ID, "new": *req.IDPerusahaan}
+	}
+	if req.Tanggal != nil && *req.Tanggal != current.Tanggal {
+		changes["tanggal"] = map[string]interface{}{"old": current.Tanggal, "new": *req.Tanggal}
+	}
+	if req.Responden != nil && *req.Responden != current.Responden {
+		changes["responden"] = map[string]interface{}{"old": current.Responden, "new": *req.Responden}
+	}
+	if req.Telepon != nil && *req.Telepon != current.Telepon {
+		changes["telepon"] = map[string]interface{}{"old": current.Telepon, "new": *req.Telepon}
+	}
+	if req.Jabatan != nil && *req.Jabatan != current.Jabatan {
+		changes["jabatan"] = map[string]interface{}{"old": current.Jabatan, "new": *req.Jabatan}
+	}
+	if req.TargetNilai != nil && *req.TargetNilai != current.TargetNilai {
+		changes["target_nilai"] = map[string]interface{}{"old": current.TargetNilai, "new": *req.TargetNilai}
+	}
+
+	if s.producer == nil {
+		return nil
+	}
+
+	// Publish audit log if there are changes
+	if len(changes) > 0 {
+		auditEvent := dto_event.IkasAuditLogEvent{
+			IkasID:    id,
+			UserID:    userID,
+			Action:    "UPDATE",
+			Changes:   changes,
+			Timestamp: time.Now(),
+		}
+		_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
 	}
 
 	// Publish update event
@@ -84,10 +121,6 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 		TargetNilai:  req.TargetNilai,
 		UserID:       userID,
 		UpdatedAt:    time.Now(),
-	}
-
-	if s.producer == nil {
-		return nil
 	}
 
 	if err := s.producer.PublishIkasUpdated(ctx, event); err != nil {
