@@ -177,6 +177,112 @@ func (r *seRepository) GetAll() ([]dto.SEResponse, error) {
 	return result, nil
 }
 
+/* ================= GET BY PERUSAHAAN ================= */
+
+func (r *seRepository) GetByPerusahaan(idPerusahaan string) ([]dto.SEResponse, error) {
+	rows, err := r.db.Query(`
+		SELECT
+			se.id,
+			se.id_perusahaan,
+			se.id_sub_sektor,
+			se.id_csirt,
+			se.nilai_investasi,
+			se.anggaran_operasional,
+			se.kepatuhan_peraturan,
+			se.teknik_kriptografi,
+			se.jumlah_pengguna,
+			se.data_pribadi,
+			se.klasifikasi_data,
+			se.kekritisan_proses,
+			se.dampak_kegagalan,
+			se.potensi_kerugian_dan_dampak_negatif,
+			se.nama_se,
+			se.ip_se,
+			se.as_number_se,
+			se.pengelola_se,
+			se.fitur_se,
+			se.total_bobot,
+			se.kategori_se,
+			se.created_at,
+			se.updated_at,
+
+			p.id,
+			p.nama_perusahaan,
+
+			COALESCE(ss.id, ''),
+			COALESCE(ss.nama_sub_sektor, ''),
+			COALESCE(s.id, ''),
+			COALESCE(s.nama_sektor, ''),
+
+			COALESCE(c.id, ''),
+			COALESCE(c.nama_csirt, '')
+		FROM se
+		JOIN perusahaan p ON se.id_perusahaan = p.id
+		LEFT JOIN sub_sektor ss ON se.id_sub_sektor = ss.id
+		LEFT JOIN sektor s ON ss.id_sektor = s.id
+		LEFT JOIN csirt c ON se.id_csirt = c.id
+		WHERE se.id_perusahaan = ?
+		ORDER BY se.created_at DESC
+	`, idPerusahaan)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []dto.SEResponse
+
+	for rows.Next() {
+		var se dto.SEResponse
+		se.Perusahaan = &dto.PerusahaanMiniResponse{}
+		se.SubSektor = &dto.SubSektorMiniResponse{}
+		se.Csirt = &dto.CsirtMiniResponse{}
+
+		err := rows.Scan(
+			&se.ID,
+			&se.IDPerusahaan,
+			&se.IDSubSektor,
+			&se.IDCsirt,
+			&se.NilaiInvestasi,
+			&se.AnggaranOperasional,
+			&se.KepatuhanPeraturan,
+			&se.TeknikKriptografi,
+			&se.JumlahPengguna,
+			&se.DataPribadi,
+			&se.KlasifikasiData,
+			&se.KekritisanProses,
+			&se.DampakKegagalan,
+			&se.PotensiKerugiandanDampakNegatif,
+			&se.NamaSE,
+			&se.IpSE,
+			&se.AsNumberSE,
+			&se.PengelolaSE,
+			&se.FiturSE,
+			&se.TotalBobot,
+			&se.KategoriSE,
+			&se.CreatedAt,
+			&se.UpdatedAt,
+
+			&se.Perusahaan.ID,
+			&se.Perusahaan.NamaPerusahaan,
+
+			&se.SubSektor.ID,
+			&se.SubSektor.NamaSubSektor,
+			&se.SubSektor.IDSektor,
+			&se.SubSektor.NamaSektor,
+
+			&se.Csirt.ID,
+			&se.Csirt.NamaCsirt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		result = append(result, se)
+	}
+
+	return result, nil
+}
+
 /* ================= GET BY ID ================= */
 
 func (r *seRepository) GetByID(id string) (*dto.SEResponse, error) {

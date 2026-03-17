@@ -98,7 +98,26 @@ func (h *PerusahaanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // @Success      200  {array}  dto.PerusahaanResponse
 // @Failure      500  {object} dto.ErrorResponse
 // @Router       /api/perusahaan [get]
-func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
+func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+	role := middleware.GetRole(r.Context())
+
+	// Non-admin: hanya bisa lihat data perusahaannya sendiri
+	if role == "user" {
+		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+		if idPerusahaan == "" {
+			utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
+			return
+		}
+		data, err := h.service.GetByID(idPerusahaan)
+		if err != nil {
+			logger.Error(err, "operation failed")
+			utils.RespondError(w, 404, "Data tidak ditemukan")
+			return
+		}
+		utils.RespondJSON(w, 200, []interface{}{data})
+		return
+	}
+
 	data, err := h.service.GetAll()
 	if err != nil {
 		logger.Error(err, "operation failed")
@@ -138,7 +157,16 @@ func (h *PerusahaanHandler) handleGetDropdown(w http.ResponseWriter, _ *http.Req
 // @Success      200  {object} dto.PerusahaanResponse
 // @Failure      404  {object} dto.ErrorResponse
 // @Router       /api/perusahaan/{id} [get]
-func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
+	role := middleware.GetRole(r.Context())
+	if role == "user" {
+		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+		if id != idPerusahaan {
+			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
+			return
+		}
+	}
+
 	data, err := h.service.GetByID(id)
 	if err != nil {
 		logger.Error(err, "operation failed")
@@ -205,6 +233,16 @@ func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request)
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/perusahaan/{id} [put]
 func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
+	// Ownership check untuk non-admin
+	role := middleware.GetRole(r.Context())
+	if role == "user" {
+		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+		if id != idPerusahaan {
+			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
+			return
+		}
+	}
+
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
 		logger.Error(err, "operation failed")
 		utils.RespondError(w, 400, "Gagal membaca form data")
@@ -251,6 +289,16 @@ func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request,
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/perusahaan/{id} [delete]
 func (h *PerusahaanHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+	// Ownership check untuk non-admin
+	role := middleware.GetRole(r.Context())
+	if role == "user" {
+		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+		if id != idPerusahaan {
+			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
+			return
+		}
+	}
+
 	// Hapus file photo sebelum delete record
 	h.deleteOldPhoto(id)
 

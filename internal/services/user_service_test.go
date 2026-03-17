@@ -433,3 +433,200 @@ func TestUserService_Delete_NotFound(t *testing.T) {
 		t.Error("expected error for nonexistent user")
 	}
 }
+
+/*
+=====================================
+ TEST UPDATE PROFILE PHOTO
+=====================================
+*/
+
+func TestUserService_UpdateProfilePhoto_Success(t *testing.T) {
+	service, mockRepo := setupUserService()
+	defer os.RemoveAll("./test_uploads")
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = mockRepo.Create(user)
+
+	result, err := service.UpdateProfilePhoto("user-1", "photo_new.jpg")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected result, got nil")
+	}
+}
+
+func TestUserService_UpdateProfilePhoto_UserNotFound(t *testing.T) {
+	service, _ := setupUserService()
+	defer os.RemoveAll("./test_uploads")
+
+	result, err := service.UpdateProfilePhoto("nonexistent-id", "photo.jpg")
+
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if result != nil {
+		t.Errorf("expected nil result, got %v", result)
+	}
+}
+
+func TestUserService_UpdateProfilePhoto_ReplacesOldPhoto(t *testing.T) {
+	service, mockRepo := setupUserService()
+	defer os.RemoveAll("./test_uploads")
+
+	// Buat file lama supaya os.Remove bisa dieksekusi tanpa error
+	oldFilename := "old_photo.jpg"
+	oldPath := "./test_uploads/" + oldFilename
+	_ = os.WriteFile(oldPath, []byte("dummy"), 0644)
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	user.FotoProfile = &oldFilename
+	_ = mockRepo.Create(user)
+
+	result, err := service.UpdateProfilePhoto("user-1", "new_photo.jpg")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected result, got nil")
+	}
+	// File lama seharusnya sudah dihapus
+	if _, statErr := os.Stat(oldPath); !os.IsNotExist(statErr) {
+		t.Error("expected old photo file to be deleted")
+	}
+}
+
+/*
+=====================================
+ TEST UPDATE BANNER
+=====================================
+*/
+
+func TestUserService_UpdateBanner_Success(t *testing.T) {
+	service, mockRepo := setupUserService()
+	defer os.RemoveAll("./test_uploads")
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = mockRepo.Create(user)
+
+	result, err := service.UpdateBanner("user-1", "banner_new.jpg")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected result, got nil")
+	}
+}
+
+func TestUserService_UpdateBanner_UserNotFound(t *testing.T) {
+	service, _ := setupUserService()
+	defer os.RemoveAll("./test_uploads")
+
+	result, err := service.UpdateBanner("nonexistent-id", "banner.jpg")
+
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if result != nil {
+		t.Errorf("expected nil result, got %v", result)
+	}
+}
+
+func TestUserService_UpdateBanner_ReplacesOldBanner(t *testing.T) {
+	service, mockRepo := setupUserService()
+	defer os.RemoveAll("./test_uploads")
+
+	oldFilename := "old_banner.jpg"
+	oldPath := "./test_uploads/" + oldFilename
+	_ = os.WriteFile(oldPath, []byte("dummy"), 0644)
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	user.Banner = &oldFilename
+	_ = mockRepo.Create(user)
+
+	result, err := service.UpdateBanner("user-1", "new_banner.jpg")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected result, got nil")
+	}
+	if _, statErr := os.Stat(oldPath); !os.IsNotExist(statErr) {
+		t.Error("expected old banner file to be deleted")
+	}
+}
+
+/*
+=====================================
+ TEST UPDATE STATUS
+=====================================
+*/
+
+func TestUserService_UpdateStatus_Aktif_Success(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = mockRepo.Create(user)
+
+	err := service.UpdateStatus("user-1", "Aktif")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+}
+
+func TestUserService_UpdateStatus_Suspend_Success(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = mockRepo.Create(user)
+
+	err := service.UpdateStatus("user-1", "Suspend")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+}
+
+func TestUserService_UpdateStatus_Nonaktif_Success(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = mockRepo.Create(user)
+
+	err := service.UpdateStatus("user-1", "Nonaktif")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+}
+
+func TestUserService_UpdateStatus_InvalidStatus(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = mockRepo.Create(user)
+
+	err := service.UpdateStatus("user-1", "InvalidStatus")
+
+	if err == nil {
+		t.Fatal("expected error for invalid status, got nil")
+	}
+	if err.Error() != "status tidak valid, pilihan: Aktif, Suspend, Nonaktif" {
+		t.Errorf("unexpected error message: %v", err)
+	}
+}
+
+func TestUserService_UpdateStatus_UserNotFound(t *testing.T) {
+	service, _ := setupUserService()
+
+	err := service.UpdateStatus("nonexistent-id", "Aktif")
+
+	if err == nil {
+		t.Fatal("expected error for nonexistent user, got nil")
+	}
+}

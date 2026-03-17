@@ -1,16 +1,20 @@
 package services
 
 import (
+	"fmt"
+
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
+
 	"github.com/google/uuid"
 )
 
 type CsirtServiceInterface interface {
 	GetAll() ([]dto.CsirtResponse, error)
 	GetByID(id string) (*dto.CsirtResponse, error)
+	GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error)
 	Create(req dto.CreateCsirtRequest) (*models.Csirt, error)
 	Update(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error)
 	Delete(id string) error
@@ -26,6 +30,14 @@ func NewCsirtService(repo repository.CsirtRepositoryInterface, rc cache.RedisInt
 }
 
 func (s *CsirtService) Create(req dto.CreateCsirtRequest) (*models.Csirt, error) {
+	exists, err := s.repo.ExistsByPerusahaan(req.IdPerusahaan)
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, fmt.Errorf("perusahaan ini sudah memiliki data CSIRT")
+	}
+
 	id := uuid.New().String()
 	if err := s.repo.Create(req, id); err != nil {
 		return nil, err
@@ -74,6 +86,22 @@ func (s *CsirtService) GetByID(id string) (*dto.CsirtResponse, error) {
 	return data, nil
 }
 
+func (s *CsirtService) GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error) {
+	key := "csirt:perusahaan:" + idPerusahaan
+	var result []dto.CsirtResponse
+	if cacheGet(s.rc, key, &result) {
+		return result, nil
+	}
+
+	data, err := s.repo.GetByPerusahaan(idPerusahaan)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, data, TTLList)
+	return data, nil
+}
+
 func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error) {
 	c, err := s.repo.GetByID(id)
 	if err != nil {
@@ -90,13 +118,13 @@ func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Cs
 		c.TeleponCsirt = req.TeleponCsirt
 	}
 	if req.PhotoCsirt != nil {
-		c.PhotoCsirt = *req.PhotoCsirt
+		c.PhotoCsirt = req.PhotoCsirt
 	}
 	if req.FileRFC2350 != nil {
-		c.FileRFC2350 = *req.FileRFC2350
+		c.FileRFC2350 = req.FileRFC2350
 	}
 	if req.FilePublicKeyPGP != nil {
-		c.FilePublicKeyPGP = *req.FilePublicKeyPGP
+		c.FilePublicKeyPGP = req.FilePublicKeyPGP
 	}
 
 	if err := s.repo.Update(id, *c); err != nil {

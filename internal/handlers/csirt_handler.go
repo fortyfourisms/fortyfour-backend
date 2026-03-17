@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/pkg/logger"
@@ -29,33 +30,44 @@ func (h *CsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		if id == "" {
-			h.handleGetAll(w)
+			h.handleGetAll(w, r)
 		} else {
-			h.handleGetByID(w, id)
+			h.handleGetByID(w, r, id)
 		}
 	case http.MethodPost:
 		h.handleCreate(w, r)
 	case http.MethodPut:
 		h.handleUpdate(w, r, id)
 	case http.MethodDelete:
-		h.handleDelete(w, id)
+		h.handleDelete(w, r, id)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 
-// @Summary List semua CSIRT
-// @Description Mengambil seluruh data CSIRT
-// @Tags CSIRT
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {array} dto.CsirtResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /api/csirt [get]
-func (h *CsirtHandler) handleGetAll(w http.ResponseWriter) {
-	data, err := h.service.GetAll()
+func (h *CsirtHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+	role := middleware.GetRole(r.Context())
+
+	if role == "admin" {
+		data, err := h.service.GetAll()
+		if err != nil {
+			logger.Error(err, "failed to get all CSIRT data")
+			utils.RespondError(w, 500, err.Error())
+			return
+		}
+		utils.RespondJSON(w, 200, data)
+		return
+	}
+
+	idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+	if idPerusahaan == "" {
+		utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
+		return
+	}
+
+	data, err := h.service.GetByPerusahaan(idPerusahaan)
 	if err != nil {
-		logger.Error(err, "failed to get all CSIRT data")
+		logger.Error(err, "failed to get CSIRT data by perusahaan")
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
@@ -71,13 +83,23 @@ func (h *CsirtHandler) handleGetAll(w http.ResponseWriter) {
 // @Success 200 {object} dto.CsirtResponse
 // @Failure 404 {object} dto.ErrorResponse
 // @Router /api/csirt/{id} [get]
-func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, id string) {
+func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
 		logger.Error(err, "failed to get CSIRT by ID")
 		utils.RespondError(w, 404, "Data tidak ditemukan")
 		return
 	}
+
+	role := middleware.GetRole(r.Context())
+	if role == "user" {
+		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+		if data.Perusahaan.ID != idPerusahaan {
+			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
+			return
+		}
+	}
+
 	utils.RespondJSON(w, 200, data)
 }
 
@@ -109,6 +131,17 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		NamaCsirt:    r.FormValue("nama_csirt"),
 		WebCsirt:     r.FormValue("web_csirt"),
 		TeleponCsirt: r.FormValue("telepon_csirt"),
+	}
+
+	// User: paksa id_perusahaan dari JWT, tidak bisa diisi sembarangan
+	role := middleware.GetRole(r.Context())
+	if role == "user" {
+		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+		if idPerusahaan == "" {
+			utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
+			return
+		}
+		req.IdPerusahaan = idPerusahaan
 	}
 
 	photoPath, err := saveUploadedFile(r, "photo_csirt", "uploads/csirt_photo")
@@ -168,6 +201,21 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 		return
 	}
 
+	// Ownership check untuk user
+	role := middleware.GetRole(r.Context())
+	if role == "user" {
+		existing, err := h.service.GetByID(id)
+		if err != nil {
+			utils.RespondError(w, 404, "Data tidak ditemukan")
+			return
+		}
+		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+		if existing.Perusahaan.ID != idPerusahaan {
+			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
+			return
+		}
+	}
+
 	req := dto.UpdateCsirtRequest{}
 
 	if v := r.FormValue("nama_csirt"); v != "" {
@@ -211,7 +259,22 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 // @Success 200 {object} dto.MessageResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Router /api/csirt/{id} [delete]
-func (h *CsirtHandler) handleDelete(w http.ResponseWriter, id string) {
+func (h *CsirtHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+	// Ownership check untuk user
+	role := middleware.GetRole(r.Context())
+	if role == "user" {
+		existing, err := h.service.GetByID(id)
+		if err != nil {
+			utils.RespondError(w, 404, "Data tidak ditemukan")
+			return
+		}
+		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+		if existing.Perusahaan.ID != idPerusahaan {
+			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
+			return
+		}
+	}
+
 	if err := h.service.Delete(id); err != nil {
 		logger.Error(err, "failed to delete CSIRT")
 		utils.RespondError(w, 400, err.Error())

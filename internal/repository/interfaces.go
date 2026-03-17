@@ -67,6 +67,7 @@ type PICRepositoryInterface interface {
 	Create(req dto.CreatePICRequest, id string) error
 	GetByID(id string) (*dto.PICResponse, error)
 	GetAll() ([]dto.PICResponse, error)
+	GetByPerusahaan(idPerusahaan string) ([]dto.PICResponse, error)
 	Update(id string, req dto.UpdatePICRequest) error
 	Delete(id string) error
 }
@@ -110,9 +111,11 @@ type GulihRepositoryInterface interface {
 // CsirtRepositoryInterface
 type CsirtRepositoryInterface interface {
 	Create(req dto.CreateCsirtRequest, id string) error
+	ExistsByPerusahaan(idPerusahaan string) (bool, error)
 	GetByID(id string) (*models.Csirt, error)
 	GetAllWithPerusahaan() ([]dto.CsirtResponse, error)
 	GetByIDWithPerusahaan(id string) (*dto.CsirtResponse, error)
+	GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error)
 	Update(id string, csirt models.Csirt) error
 	Delete(id string) error
 }
@@ -122,6 +125,7 @@ type SdmCsirtRepositoryInterface interface {
 	Create(req dto.CreateSdmCsirtRequest, id string) error
 	GetAll() ([]dto.SdmCsirtResponse, error)
 	GetByID(id string) (*dto.SdmCsirtResponse, error)
+	GetByCsirt(idCsirt string) ([]dto.SdmCsirtResponse, error)
 	Update(id string, req dto.SdmCsirtResponse) error
 	Delete(id string) error
 }
@@ -144,6 +148,7 @@ type SERepositoryInterface interface {
 	Create(req dto.CreateSERequest, id string, totalBobot int, kategori string) error
 	GetAll() ([]dto.SEResponse, error)
 	GetByID(id string) (*dto.SEResponse, error)
+	GetByPerusahaan(idPerusahaan string) ([]dto.SEResponse, error)
 	Update(id string, req dto.UpdateSERequest, totalBobot int, kategori string) error
 	Delete(id string) error
 }

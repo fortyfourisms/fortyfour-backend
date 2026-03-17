@@ -1027,3 +1027,162 @@ func TestPerusahaanHandler_Routing(t *testing.T) {
 		})
 	}
 }
+
+/* =========================
+   TEST OWNERSHIP CHECKS (user role)
+========================= */
+
+func withPerusahaanUserCtx(req *http.Request, idPerusahaan string) *http.Request {
+	ctx := req.Context()
+	ctx = context.WithValue(ctx, middleware.RoleKey, "user")
+	ctx = context.WithValue(ctx, middleware.IDPerusahaanKey, idPerusahaan)
+	return req.WithContext(ctx)
+}
+
+func TestPerusahaanHandler_GetByID_AsUser_OwnData_Success(t *testing.T) {
+	handler, mockSvc, _, _ := setupHandler(t)
+
+	expected := &dto.PerusahaanResponse{
+		ID:             "perusahaan-1",
+		NamaPerusahaan: "PT Mine",
+	}
+	mockSvc.On("GetByID", "perusahaan-1").Return(expected, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/perusahaan/perusahaan-1", nil)
+	req = withPerusahaanUserCtx(req, "perusahaan-1")
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockSvc.AssertExpectations(t)
+}
+
+func TestPerusahaanHandler_GetByID_AsUser_OtherPerusahaan_Forbidden(t *testing.T) {
+	handler, mockSvc, _, _ := setupHandler(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/perusahaan/perusahaan-other", nil)
+	req = withPerusahaanUserCtx(req, "perusahaan-mine")
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	mockSvc.AssertNotCalled(t, "GetByID")
+}
+
+func TestPerusahaanHandler_Update_AsUser_OwnData_Success(t *testing.T) {
+	handler, mockSvc, mockSSE, _ := setupHandler(t)
+
+	expected := &dto.PerusahaanResponse{
+		ID:             "perusahaan-1",
+		NamaPerusahaan: "PT Updated",
+	}
+	mockSvc.On("Update", "perusahaan-1", mock.AnythingOfType("dto.UpdatePerusahaanRequest")).
+		Return(expected, nil)
+	mockSSE.On("NotifyUpdate", "perusahaan", expected, "user-abc").Return()
+
+	req, _ := createMultipartRequest(
+		http.MethodPut,
+		"/api/perusahaan/perusahaan-1",
+		map[string]string{"nama_perusahaan": "PT Updated"},
+		nil,
+	)
+	ctx := req.Context()
+	ctx = context.WithValue(ctx, middleware.RoleKey, "user")
+	ctx = context.WithValue(ctx, middleware.IDPerusahaanKey, "perusahaan-1")
+	ctx = context.WithValue(ctx, middleware.UserIDKey, "user-abc")
+	req = req.WithContext(ctx)
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockSvc.AssertExpectations(t)
+}
+
+func TestPerusahaanHandler_Update_AsUser_OtherPerusahaan_Forbidden(t *testing.T) {
+	handler, mockSvc, _, _ := setupHandler(t)
+
+	req, _ := createMultipartRequest(
+		http.MethodPut,
+		"/api/perusahaan/perusahaan-other",
+		map[string]string{"nama_perusahaan": "Hacked"},
+		nil,
+	)
+	req = withPerusahaanUserCtx(req, "perusahaan-mine")
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	mockSvc.AssertNotCalled(t, "Update")
+}
+
+func TestPerusahaanHandler_Delete_AsUser_OwnData_Success(t *testing.T) {
+	handler, mockSvc, mockSSE, _ := setupHandler(t)
+
+	// deleteOldPhoto memanggil GetByID untuk cek foto lama
+	mockSvc.On("GetByID", "perusahaan-1").Return(&dto.PerusahaanResponse{ID: "perusahaan-1", Photo: ""}, nil)
+	mockSvc.On("Delete", "perusahaan-1").Return(nil)
+	mockSSE.On("NotifyDelete", "perusahaan", "perusahaan-1", "user-abc").Return()
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/perusahaan/perusahaan-1", nil)
+	ctx := req.Context()
+	ctx = context.WithValue(ctx, middleware.RoleKey, "user")
+	ctx = context.WithValue(ctx, middleware.IDPerusahaanKey, "perusahaan-1")
+	ctx = context.WithValue(ctx, middleware.UserIDKey, "user-abc")
+	req = req.WithContext(ctx)
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	mockSvc.AssertExpectations(t)
+}
+
+func TestPerusahaanHandler_Delete_AsUser_OtherPerusahaan_Forbidden(t *testing.T) {
+	handler, mockSvc, _, _ := setupHandler(t)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/perusahaan/perusahaan-other", nil)
+	req = withPerusahaanUserCtx(req, "perusahaan-mine")
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	mockSvc.AssertNotCalled(t, "Delete")
+}
+
+func TestPerusahaanHandler_GetAll_AsUser_NoPerusahaan_Forbidden(t *testing.T) {
+	handler, mockSvc, _, _ := setupHandler(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/perusahaan", nil)
+	req = withPerusahaanUserCtx(req, "") // id_perusahaan kosong
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	mockSvc.AssertNotCalled(t, "GetAll")
+}
+
+func TestPerusahaanHandler_GetAll_AsUser_OwnPerusahaan_Success(t *testing.T) {
+	handler, mockSvc, _, _ := setupHandler(t)
+
+	expected := &dto.PerusahaanResponse{ID: "perusahaan-1", NamaPerusahaan: "PT Mine"}
+	mockSvc.On("GetByID", "perusahaan-1").Return(expected, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/perusahaan", nil)
+	req = withPerusahaanUserCtx(req, "perusahaan-1")
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	// Response berupa array dengan 1 item
+	var resp []interface{}
+	json.NewDecoder(rr.Body).Decode(&resp)
+	assert.Len(t, resp, 1)
+	mockSvc.AssertExpectations(t)
+}

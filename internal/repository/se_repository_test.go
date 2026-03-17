@@ -762,3 +762,105 @@ func TestSERepository_ValidateABCValues(t *testing.T) {
 		}
 	})
 }
+
+func TestSERepository_GetByPerusahaan(t *testing.T) {
+	cols := []string{
+		"id", "id_perusahaan", "id_sub_sektor", "id_csirt",
+		"nilai_investasi", "anggaran_operasional", "kepatuhan_peraturan", "teknik_kriptografi",
+		"jumlah_pengguna", "data_pribadi", "klasifikasi_data", "kekritisan_proses",
+		"dampak_kegagalan", "potensi_kerugian_dan_dampak_negatif",
+		"nama_se", "ip_se", "as_number_se", "pengelola_se", "fitur_se",
+		"total_bobot", "kategori_se", "created_at", "updated_at",
+		"p_id", "nama_perusahaan",
+		"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
+		"c_id", "nama_csirt",
+	}
+
+	tests := []struct {
+		name         string
+		idPerusahaan string
+		mockFn       func(mock sqlmock.Sqlmock)
+		wantLen      int
+		wantErr      bool
+	}{
+		{
+			name:         "success - returns SE milik perusahaan",
+			idPerusahaan: "perusahaan-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				now := time.Now()
+				rows := sqlmock.NewRows(cols).
+					AddRow("se-1", "perusahaan-1", "sub-1", "csirt-1",
+						"A", "A", "A", "A", "A", "A", "A", "A", "A", "A",
+						"Core Banking", "192.168.1.1", "AS1", "IT", "Features",
+						100, "Strategis", now, now,
+						"perusahaan-1", "PT ABC",
+						"sub-1", "Perbankan", "s-1", "Keuangan",
+						"csirt-1", "CSIRT ABC").
+					AddRow("se-2", "perusahaan-1", "", "",
+						"B", "B", "B", "B", "B", "B", "B", "B", "B", "B",
+						"Internal Portal", "10.0.0.1", "AS2", "IT", "",
+						70, "Tinggi", now, now,
+						"perusahaan-1", "PT ABC",
+						"", "", "", "",
+						"", "")
+
+				mock.ExpectQuery("SELECT (.+) FROM se JOIN perusahaan p (.+) WHERE se.id_perusahaan = \\?").
+					WithArgs("perusahaan-1").
+					WillReturnRows(rows)
+			},
+			wantLen: 2,
+			wantErr: false,
+		},
+		{
+			name:         "success - perusahaan tidak punya SE (empty)",
+			idPerusahaan: "perusahaan-kosong",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows(cols)
+				mock.ExpectQuery("SELECT (.+) FROM se JOIN perusahaan p (.+) WHERE se.id_perusahaan = \\?").
+					WithArgs("perusahaan-kosong").
+					WillReturnRows(rows)
+			},
+			wantLen: 0,
+			wantErr: false,
+		},
+		{
+			name:         "error - database error",
+			idPerusahaan: "perusahaan-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery("SELECT (.+) FROM se JOIN perusahaan p (.+) WHERE se.id_perusahaan = \\?").
+					WithArgs("perusahaan-1").
+					WillReturnError(sql.ErrConnDone)
+			},
+			wantLen: 0,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, err := sqlmock.New()
+			require.NoError(t, err)
+			defer db.Close()
+
+			repo := NewSERepository(db)
+			tt.mockFn(mock)
+
+			result, err := repo.GetByPerusahaan(tt.idPerusahaan)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.Len(t, result, tt.wantLen)
+				for _, se := range result {
+					assert.NotEmpty(t, se.ID)
+					assert.NotNil(t, se.Perusahaan)
+					assert.Equal(t, tt.idPerusahaan, se.IDPerusahaan)
+				}
+			}
+
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}

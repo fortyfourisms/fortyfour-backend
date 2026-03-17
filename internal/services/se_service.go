@@ -15,6 +15,7 @@ type SEService interface {
 	Create(req dto.CreateSERequest) (*dto.SEResponse, error)
 	GetAll() ([]dto.SEResponse, error)
 	GetByID(id string) (*dto.SEResponse, error)
+	GetByPerusahaan(idPerusahaan string) ([]dto.SEResponse, error)
 	Update(id string, req dto.UpdateSERequest) (*dto.SEResponse, error)
 	Delete(id string) error
 }
@@ -119,6 +120,25 @@ func (s *seService) GetByID(id string) (*dto.SEResponse, error) {
 	return data, nil
 }
 
+func (s *seService) GetByPerusahaan(idPerusahaan string) ([]dto.SEResponse, error) {
+	if strings.TrimSpace(idPerusahaan) == "" {
+		return nil, errors.New("id_perusahaan wajib diisi")
+	}
+	key := "se:perusahaan:" + idPerusahaan
+	var result []dto.SEResponse
+	if cacheGet(s.rc, key, &result) {
+		return result, nil
+	}
+
+	data, err := s.repo.GetByPerusahaan(idPerusahaan)
+	if err != nil {
+		return nil, err
+	}
+
+	cacheSet(s.rc, key, data, TTLList)
+	return data, nil
+}
+
 /* =======================
    UPDATE
 ======================= */
@@ -154,6 +174,22 @@ func (s *seService) Update(id string, req dto.UpdateSERequest) (*dto.SEResponse,
 
 	existing.TotalBobot = totalBobot
 	existing.KategoriSE = kategori
+
+	if req.NamaSE != nil {
+		existing.NamaSE = *req.NamaSE
+	}
+	if req.FiturSE != nil {
+		existing.FiturSE = *req.FiturSE
+	}
+	if req.IpSE != nil {
+		existing.IpSE = *req.IpSE
+	}
+	if req.AsNumberSE != nil {
+		existing.AsNumberSE = *req.AsNumberSE
+	}
+	if req.PengelolaSE != nil {
+		existing.PengelolaSE = *req.PengelolaSE
+	}
 
 	return existing, nil
 }

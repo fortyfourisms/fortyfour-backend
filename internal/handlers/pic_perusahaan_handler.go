@@ -66,10 +66,29 @@ func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // @Success      200  {array}  dto.PICResponse
 // @Failure      500  {object} dto.ErrorResponse
 // @Router       /api/pic [get]
-func (h *PICHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
+func (h *PICHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+	role := middleware.GetRole(r.Context())
+
+	if role == "user" {
+		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+		if idPerusahaan == "" {
+			utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
+			return
+		}
+		data, err := h.service.GetByPerusahaan(idPerusahaan)
+		if err != nil {
+			logger.Error(err, "failed to get PIC data by perusahaan")
+			utils.RespondError(w, 500, err.Error())
+			return
+		}
+		utils.RespondJSON(w, 200, data)
+		return
+	}
+
+	// admin atau no-context: return semua
 	data, err := h.service.GetAll()
 	if err != nil {
-		logger.Error(err, "operation failed")
+		logger.Error(err, "failed to get all PIC data")
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
@@ -85,13 +104,23 @@ func (h *PICHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 // @Success      200  {object} dto.PICResponse
 // @Failure      404  {object} dto.ErrorResponse
 // @Router       /api/pic/{id} [get]
-func (h *PICHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
+func (h *PICHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
-		logger.Error(err, "operation failed")
+		logger.Error(err, "failed to get PIC by ID")
 		utils.RespondError(w, 404, "Data tidak ditemukan")
 		return
 	}
+
+	role := middleware.GetRole(r.Context())
+	if role == "user" {
+		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+		if data.Perusahaan == nil || data.Perusahaan.ID != idPerusahaan {
+			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
+			return
+		}
+	}
+
 	utils.RespondJSON(w, 200, data)
 }
 
@@ -108,19 +137,29 @@ func (h *PICHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id st
 func (h *PICHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreatePICRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		logger.Error(err, "operation failed")
+		logger.Error(err, "failed to decode PIC create request")
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
+	// Ownership check: user tidak bisa set id_perusahaan sembarangan
+	role := middleware.GetRole(r.Context())
+	if role == "user" {
+		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+		if idPerusahaan == "" {
+			utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
+			return
+		}
+		req.IDPerusahaan = &idPerusahaan
+	}
+
 	resp, err := h.service.Create(req)
 	if err != nil {
-		logger.Error(err, "operation failed")
+		logger.Error(err, "failed to create PIC")
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
 
-	// SSE Notif Create
 	userID := ""
 	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
@@ -142,21 +181,40 @@ func (h *PICHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/pic/{id} [put]
 func (h *PICHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
+	// Ownership check untuk non-admin
+	role := middleware.GetRole(r.Context())
+	if role == "user" {
+		existing, err := h.service.GetByID(id)
+		if err != nil {
+			utils.RespondError(w, 404, "Data tidak ditemukan")
+			return
+		}
+		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+		if existing.Perusahaan == nil || existing.Perusahaan.ID != idPerusahaan {
+			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
+			return
+		}
+	}
+
 	var req dto.UpdatePICRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		logger.Error(err, "operation failed")
+		logger.Error(err, "failed to decode PIC update request")
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
 
+	// Pastikan user tidak bisa ganti id_perusahaan ke perusahaan lain
+	if role == "user" {
+		req.IDPerusahaan = nil
+	}
+
 	resp, err := h.service.Update(id, req)
 	if err != nil {
-		logger.Error(err, "operation failed")
+		logger.Error(err, "failed to update PIC")
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
 
-	// SSE Notif Update
 	userID := ""
 	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
@@ -176,18 +234,32 @@ func (h *PICHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id str
 // @Failure      400  {object} dto.ErrorResponse
 // @Router       /api/pic/{id} [delete]
 func (h *PICHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
+	// Ownership check untuk non-admin
+	role := middleware.GetRole(r.Context())
+	if role == "user" {
+		existing, err := h.service.GetByID(id)
+		if err != nil {
+			utils.RespondError(w, 404, "Data tidak ditemukan")
+			return
+		}
+		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+		if existing.Perusahaan == nil || existing.Perusahaan.ID != idPerusahaan {
+			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
+			return
+		}
+	}
+
 	if err := h.service.Delete(id); err != nil {
-		logger.Error(err, "operation failed")
+		logger.Error(err, "failed to delete PIC")
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
 
-	// SSE Notif Delete
 	userID := ""
 	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
 		userID = uid.(string)
 	}
-	h.sseService.NotifyDelete("perusahaan", id, userID)
+	h.sseService.NotifyDelete("pic", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }
