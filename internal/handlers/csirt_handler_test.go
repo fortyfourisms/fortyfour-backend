@@ -23,6 +23,13 @@ import (
 // MOCK SERVICE
 //
 
+// mockCsirtSSEService is a no-op SSE service for CSIRT handler tests.
+type mockCsirtSSEService struct{}
+
+func (m *mockCsirtSSEService) NotifyCreate(resource string, data interface{}, userID string) {}
+func (m *mockCsirtSSEService) NotifyUpdate(resource string, data interface{}, userID string) {}
+func (m *mockCsirtSSEService) NotifyDelete(resource string, id interface{}, userID string)   {}
+
 type mockCsirtService struct {
 	GetAllFn          func() ([]dto.CsirtResponse, error)
 	GetByIDFn         func(string) (*dto.CsirtResponse, error)
@@ -110,7 +117,7 @@ func TestCsirtHandler_GetAll_Success(t *testing.T) {
 		},
 	}
 
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/csirt", nil)
 	req = withCsirtAdminContext(req)
@@ -134,7 +141,7 @@ func TestCsirtHandler_GetAll_ServiceError(t *testing.T) {
 		},
 	}
 
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/csirt", nil)
 	req = withCsirtAdminContext(req)
@@ -159,7 +166,7 @@ func TestCsirtHandler_GetByID_Success(t *testing.T) {
 		},
 	}
 
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/csirt/1", nil)
 	rr := httptest.NewRecorder()
@@ -182,7 +189,7 @@ func TestCsirtHandler_GetByID_NotFound(t *testing.T) {
 		},
 	}
 
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/csirt/123", nil)
 	rr := httptest.NewRecorder()
@@ -207,7 +214,7 @@ func TestCsirtHandler_Create_Success(t *testing.T) {
 		},
 	}
 
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req, cleanup := createMultipartRequest(
 		t,
@@ -239,7 +246,7 @@ func TestCsirtHandler_Create_Success(t *testing.T) {
 func TestCsirtHandler_Create_InvalidMultipart(t *testing.T) {
 	mockSvc := &mockCsirtService{}
 
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/csirt", bytes.NewBufferString("invalid"))
 	req.Header.Set("Content-Type", "application/json")
@@ -258,7 +265,7 @@ func TestCsirtHandler_Create_ServiceError(t *testing.T) {
 		},
 	}
 
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req, cleanup := createMultipartRequest(
 		t,
@@ -295,7 +302,7 @@ func TestCsirtHandler_Update_Success(t *testing.T) {
 		},
 	}
 
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req, cleanup := createMultipartRequest(
 		t,
@@ -328,7 +335,7 @@ func TestCsirtHandler_Update_NotFound(t *testing.T) {
 		},
 	}
 
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req, cleanup := createMultipartRequest(
 		t,
@@ -356,7 +363,7 @@ func TestCsirtHandler_Update_Error(t *testing.T) {
 		},
 	}
 
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req, cleanup := createMultipartRequest(
 		t,
@@ -389,7 +396,7 @@ func TestCsirtHandler_Delete_Success(t *testing.T) {
 		},
 	}
 
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/csirt/1", nil)
 	req = withCsirtAdminContext(req)
@@ -407,7 +414,7 @@ func TestCsirtHandler_Delete_NotFound(t *testing.T) {
 		},
 	}
 
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/csirt/999", nil)
 	req = withCsirtAdminContext(req)
@@ -426,7 +433,7 @@ func TestCsirtHandler_Delete_ServiceError(t *testing.T) {
 		},
 	}
 
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/csirt/1", nil)
 	req = withCsirtAdminContext(req)
@@ -444,7 +451,7 @@ func TestCsirtHandler_Delete_ServiceError(t *testing.T) {
 func TestCsirtHandler_MethodNotAllowed(t *testing.T) {
 	mockSvc := &mockCsirtService{}
 
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodPatch, "/api/csirt", nil)
 	rr := httptest.NewRecorder()
@@ -479,7 +486,7 @@ func TestCsirtHandler_GetAll_AsUser_FilterByPerusahaan(t *testing.T) {
 			return []dto.CsirtResponse{{ID: "csirt-1", NamaCsirt: "CSIRT ABC"}}, nil
 		},
 	}
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/csirt", nil)
 	req = withCsirtUserContext(req, "perusahaan-abc")
@@ -494,7 +501,7 @@ func TestCsirtHandler_GetAll_AsUser_FilterByPerusahaan(t *testing.T) {
 }
 
 func TestCsirtHandler_GetAll_AsUser_NoPerusahaan_Forbidden(t *testing.T) {
-	handler := NewCsirtHandler(&mockCsirtService{})
+	handler := NewCsirtHandler(&mockCsirtService{}, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/csirt", nil)
 	ctx := context.WithValue(req.Context(), middleware.RoleKey, "user")
@@ -512,7 +519,7 @@ func TestCsirtHandler_GetAll_AsUser_ServiceError(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/csirt", nil)
 	req = withCsirtUserContext(req, "perusahaan-abc")
@@ -537,7 +544,7 @@ func TestCsirtHandler_GetByID_AsUser_OwnData_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/csirt/csirt-1", nil)
 	req = withCsirtUserContext(req, "perusahaan-abc")
@@ -556,7 +563,7 @@ func TestCsirtHandler_GetByID_AsUser_OtherPerusahaan_Forbidden(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/csirt/csirt-1", nil)
 	req = withCsirtUserContext(req, "perusahaan-abc")
@@ -584,7 +591,7 @@ func TestCsirtHandler_Create_AsUser_IDPerusahaanForcedFromJWT(t *testing.T) {
 			return &dto.CsirtResponse{ID: id, NamaCsirt: "New"}, nil
 		},
 	}
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req, cleanup := createMultipartRequest(t, http.MethodPost, "/api/csirt", map[string]string{
 		"id_perusahaan": "perusahaan-lain", // harus di-override
@@ -601,7 +608,7 @@ func TestCsirtHandler_Create_AsUser_IDPerusahaanForcedFromJWT(t *testing.T) {
 }
 
 func TestCsirtHandler_Create_AsUser_NoPerusahaan_Forbidden(t *testing.T) {
-	handler := NewCsirtHandler(&mockCsirtService{})
+	handler := NewCsirtHandler(&mockCsirtService{}, &mockCsirtSSEService{})
 
 	req, cleanup := createMultipartRequest(t, http.MethodPost, "/api/csirt", map[string]string{
 		"nama_csirt": "CSIRT Baru",
@@ -633,7 +640,7 @@ func TestCsirtHandler_Update_AsUser_OwnData_Success(t *testing.T) {
 			return &models.Csirt{ID: id}, nil
 		},
 	}
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req, cleanup := createMultipartRequest(t, http.MethodPut, "/api/csirt/csirt-1", map[string]string{
 		"nama_csirt": "Updated",
@@ -655,7 +662,7 @@ func TestCsirtHandler_Update_AsUser_OtherPerusahaan_Forbidden(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req, cleanup := createMultipartRequest(t, http.MethodPut, "/api/csirt/csirt-1", nil, nil)
 	defer cleanup()
@@ -682,7 +689,7 @@ func TestCsirtHandler_Delete_AsUser_OwnData_Success(t *testing.T) {
 		},
 		DeleteFn: func(id string) error { return nil },
 	}
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/csirt/csirt-1", nil)
 	req = withCsirtUserContext(req, "perusahaan-abc")
@@ -701,7 +708,7 @@ func TestCsirtHandler_Delete_AsUser_OtherPerusahaan_Forbidden(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := NewCsirtHandler(mockSvc)
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/csirt/csirt-1", nil)
 	req = withCsirtUserContext(req, "perusahaan-abc")
