@@ -22,7 +22,7 @@ CREATE TABLE responden (
         'Lainnya'
     ) NOT NULL,
     sektor_lainnya VARCHAR(150) DEFAULT NULL,
-
+    sertifikat_training VARCHAR(500) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
