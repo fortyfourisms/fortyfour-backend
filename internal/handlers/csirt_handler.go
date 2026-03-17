@@ -17,15 +17,33 @@ import (
 )
 
 type CsirtHandler struct {
-	service services.CsirtServiceInterface
+	service       services.CsirtServiceInterface
+	sseService    services.SSEServiceInterface
+	exportHandler *CsirtExportHandler
 }
 
-func NewCsirtHandler(service services.CsirtServiceInterface) *CsirtHandler {
-	return &CsirtHandler{service: service}
+func NewCsirtHandler(service services.CsirtServiceInterface, sseService services.SSEServiceInterface) *CsirtHandler {
+	return &CsirtHandler{service: service, sseService: sseService}
+}
+
+// SetExportHandler injects the export handler so CsirtHandler can delegate
+// requests matching /{id}/export-pdf.
+func (h *CsirtHandler) SetExportHandler(exportH *CsirtExportHandler) {
+	h.exportHandler = exportH
 }
 
 func (h *CsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/api/csirt"), "/")
+
+	// Delegate /{id}/export-pdf ke CsirtExportHandler
+	if strings.HasSuffix(id, "/export-pdf") || id == "export-pdf" {
+		if h.exportHandler != nil {
+			h.exportHandler.ServeHTTP(w, r)
+		} else {
+			utils.RespondError(w, 500, "Export handler tidak tersedia")
+		}
+		return
+	}
 
 	switch r.Method {
 	case http.MethodGet:
@@ -175,6 +193,12 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID := ""
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyCreate("csirt", resp, userID)
+
 	utils.RespondJSON(w, 201, resp)
 }
 
@@ -247,6 +271,12 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 		return
 	}
 
+	userID := ""
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyUpdate("csirt", resp, userID)
+
 	utils.RespondJSON(w, 200, resp)
 }
 
@@ -280,6 +310,13 @@ func (h *CsirtHandler) handleDelete(w http.ResponseWriter, r *http.Request, id s
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
+
+	userID := ""
+	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
+		userID = uid.(string)
+	}
+	h.sseService.NotifyDelete("csirt", id, userID)
+
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }
 
