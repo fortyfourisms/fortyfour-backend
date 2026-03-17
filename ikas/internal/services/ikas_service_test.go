@@ -27,6 +27,10 @@ func (m *mockIkasRepo) CheckExistsByPerusahaanID(idPerusahaan string) (bool, err
 	return false, nil
 }
 
+func (m *mockIkasRepo) GetIDByPerusahaanID(idPerusahaan string) (string, error) {
+	return "ikas-id", nil
+}
+
 // CREATE IKAS
 func (m *mockIkasRepo) Create(
 	req dto.CreateIkasRequest,

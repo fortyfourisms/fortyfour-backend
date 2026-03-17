@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"ikas/internal/dto"
+	"ikas/internal/middleware"
 	"ikas/internal/services"
 	"ikas/internal/utils"
 	"net/http"
@@ -169,7 +170,12 @@ func (h *JawabanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = h.service.Update(id, req)
+	userID := ""
+	if val := r.Context().Value(middleware.UserIDKey); val != nil {
+		userID = val.(string)
+	}
+
+	err = h.service.Update(id, req, userID)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -206,7 +212,12 @@ func (h *JawabanDeteksiHandler) handleDelete(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	if err := h.service.Delete(id); err != nil {
+	userID := ""
+	if val := r.Context().Value(middleware.UserIDKey); val != nil {
+		userID = val.(string)
+	}
+
+	if err := h.service.Delete(id, userID); err != nil {
 		rollbar.Error(err)
 		if err.Error() == "data tidak ditemukan" {
 			utils.RespondError(w, 404, err.Error())

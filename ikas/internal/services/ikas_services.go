@@ -55,6 +55,16 @@ func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id 
 		return err
 	}
 
+	// Audit Log for Create
+	auditEvent := dto_event.IkasAuditLogEvent{
+		IkasID:    id,
+		UserID:    userID,
+		Action:    "CREATE_IKAS",
+		Changes:   map[string]interface{}{"perusahaan_id": req.IDPerusahaan, "tanggal": req.Tanggal, "responden": req.Responden},
+		Timestamp: time.Now(),
+	}
+	_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
+
 	return nil
 }
 
@@ -165,6 +175,16 @@ func (s *IkasService) Delete(ctx context.Context, id string, userID string) erro
 	if err := s.producer.PublishIkasDeleted(ctx, event); err != nil {
 		return err
 	}
+
+	// Audit Log for Delete
+	auditEvent := dto_event.IkasAuditLogEvent{
+		IkasID:    id,
+		UserID:    userID,
+		Action:    "DELETE_IKAS",
+		Changes:   map[string]interface{}{"status": "deleted"},
+		Timestamp: time.Now(),
+	}
+	_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
 
 	return nil
 }

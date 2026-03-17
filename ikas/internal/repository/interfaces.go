@@ -27,6 +27,7 @@ type IkasRepositoryInterface interface {
 	//HELPER
 	FindPerusahaanByName(namaPerusahaan string) (string, error)
 	CheckExistsByPerusahaanID(idPerusahaan string) (bool, error)
+	GetIDByPerusahaanID(idPerusahaan string) (string, error)
 }
 
 // RuangLingkupRepositoryInterface
