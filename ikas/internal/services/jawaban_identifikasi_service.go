@@ -16,12 +16,18 @@ import (
 
 type JawabanIdentifikasiService struct {
 	repo     repository.JawabanIdentifikasiRepositoryInterface
+	ikasRepo repository.IkasRepositoryInterface
 	producer *rabbitmq.Producer
 }
 
-func NewJawabanIdentifikasiService(repo repository.JawabanIdentifikasiRepositoryInterface, producer *rabbitmq.Producer) *JawabanIdentifikasiService {
+func NewJawabanIdentifikasiService(
+	repo repository.JawabanIdentifikasiRepositoryInterface,
+	ikasRepo repository.IkasRepositoryInterface,
+	producer *rabbitmq.Producer,
+) *JawabanIdentifikasiService {
 	return &JawabanIdentifikasiService{
 		repo:     repo,
+		ikasRepo: ikasRepo,
 		producer: producer,
 	}
 }
@@ -160,7 +166,7 @@ func (s *JawabanIdentifikasiService) GetByPertanyaan(pertanyaanID int) ([]dto.Ja
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }
 
-func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentifikasiRequest) error {
+func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentifikasiRequest, userID string) error {
 	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
@@ -185,6 +191,51 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 		UpdatedAt: time.Now(),
 	}
 
+	// Change detection for audit log
+	changes := make(map[string]interface{})
+	if req.JawabanIdentifikasi != nil && (existing.JawabanIdentifikasi == nil || *req.JawabanIdentifikasi != *existing.JawabanIdentifikasi) {
+		oldVal := interface{}(nil)
+		if existing.JawabanIdentifikasi != nil {
+			oldVal = *existing.JawabanIdentifikasi
+		}
+		changes["jawaban_identifikasi"] = map[string]interface{}{"old": oldVal, "new": *req.JawabanIdentifikasi}
+	}
+	if req.Evidence != nil && (existing.Evidence == nil || *req.Evidence != *existing.Evidence) {
+		oldVal := interface{}(nil)
+		if existing.Evidence != nil {
+			oldVal = *existing.Evidence
+		}
+		changes["evidence"] = map[string]interface{}{"old": oldVal, "new": *req.Evidence}
+	}
+	if req.Validasi != nil && (existing.Validasi == nil || *req.Validasi != *existing.Validasi) {
+		oldVal := interface{}(nil)
+		if existing.Validasi != nil {
+			oldVal = *existing.Validasi
+		}
+		changes["validasi"] = map[string]interface{}{"old": oldVal, "new": *req.Validasi}
+	}
+	if req.Keterangan != nil && (existing.Keterangan == nil || *req.Keterangan != *existing.Keterangan) {
+		oldVal := interface{}(nil)
+		if existing.Keterangan != nil {
+			oldVal = *existing.Keterangan
+		}
+		changes["keterangan"] = map[string]interface{}{"old": oldVal, "new": *req.Keterangan}
+	}
+
+	if s.producer != nil && len(changes) > 0 {
+		ikasID, err := s.ikasRepo.GetIDByPerusahaanID(existing.PerusahaanID)
+		if err == nil {
+			auditEvent := dto_event.IkasAuditLogEvent{
+				IkasID:    ikasID,
+				UserID:    userID,
+				Action:    "UPDATE_IDENTIFIKASI",
+				Changes:   changes,
+				Timestamp: time.Now(),
+			}
+			_ = s.producer.PublishIkasAuditLog(context.Background(), auditEvent)
+		}
+	}
+
 	if err := s.producer.PublishJawabanIdentifikasiUpdated(context.Background(), event); err != nil {
 		rollbar.Error(err)
 		return err
@@ -193,7 +244,7 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 	return nil
 }
 
-func (s *JawabanIdentifikasiService) Delete(id int) error {
+func (s *JawabanIdentifikasiService) Delete(id int, userID string) error {
 	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
@@ -212,6 +263,20 @@ func (s *JawabanIdentifikasiService) Delete(id int) error {
 		ID:           id,
 		PerusahaanID: existing.PerusahaanID,
 		DeletedAt:    time.Now(),
+	}
+
+	if s.producer != nil {
+		ikasID, err := s.ikasRepo.GetIDByPerusahaanID(existing.PerusahaanID)
+		if err == nil {
+			auditEvent := dto_event.IkasAuditLogEvent{
+				IkasID:    ikasID,
+				UserID:    userID,
+				Action:    "DELETE_IDENTIFIKASI",
+				Changes:   map[string]interface{}{"pertanyaan_id": existing.PertanyaanIdentifikasi.ID, "status": "deleted"},
+				Timestamp: time.Now(),
+			}
+			_ = s.producer.PublishIkasAuditLog(context.Background(), auditEvent)
+		}
 	}
 
 	if err := s.producer.PublishJawabanIdentifikasiDeleted(context.Background(), event); err != nil {

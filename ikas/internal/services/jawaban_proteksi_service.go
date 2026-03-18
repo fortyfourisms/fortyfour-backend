@@ -16,12 +16,18 @@ import (
 
 type JawabanProteksiService struct {
 	repo     repository.JawabanProteksiRepositoryInterface
+	ikasRepo repository.IkasRepositoryInterface
 	producer *rabbitmq.Producer
 }
 
-func NewJawabanProteksiService(repo repository.JawabanProteksiRepositoryInterface, producer *rabbitmq.Producer) *JawabanProteksiService {
+func NewJawabanProteksiService(
+	repo repository.JawabanProteksiRepositoryInterface,
+	ikasRepo repository.IkasRepositoryInterface,
+	producer *rabbitmq.Producer,
+) *JawabanProteksiService {
 	return &JawabanProteksiService{
 		repo:     repo,
+		ikasRepo: ikasRepo,
 		producer: producer,
 	}
 }
@@ -157,7 +163,7 @@ func (s *JawabanProteksiService) GetByPertanyaan(pertanyaanID int) ([]dto.Jawaba
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }
 
-func (s *JawabanProteksiService) Update(id int, req dto.UpdateJawabanProteksiRequest) error {
+func (s *JawabanProteksiService) Update(id int, req dto.UpdateJawabanProteksiRequest, userID string) error {
 	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
@@ -182,6 +188,51 @@ func (s *JawabanProteksiService) Update(id int, req dto.UpdateJawabanProteksiReq
 		UpdatedAt: time.Now(),
 	}
 
+	// Change detection for audit log
+	changes := make(map[string]interface{})
+	if req.JawabanProteksi != nil && (existing.JawabanProteksi == nil || *req.JawabanProteksi != *existing.JawabanProteksi) {
+		oldVal := interface{}(nil)
+		if existing.JawabanProteksi != nil {
+			oldVal = *existing.JawabanProteksi
+		}
+		changes["jawaban_proteksi"] = map[string]interface{}{"old": oldVal, "new": *req.JawabanProteksi}
+	}
+	if req.Evidence != nil && (existing.Evidence == nil || *req.Evidence != *existing.Evidence) {
+		oldVal := interface{}(nil)
+		if existing.Evidence != nil {
+			oldVal = *existing.Evidence
+		}
+		changes["evidence"] = map[string]interface{}{"old": oldVal, "new": *req.Evidence}
+	}
+	if req.Validasi != nil && (existing.Validasi == nil || *req.Validasi != *existing.Validasi) {
+		oldVal := interface{}(nil)
+		if existing.Validasi != nil {
+			oldVal = *existing.Validasi
+		}
+		changes["validasi"] = map[string]interface{}{"old": oldVal, "new": *req.Validasi}
+	}
+	if req.Keterangan != nil && (existing.Keterangan == nil || *req.Keterangan != *existing.Keterangan) {
+		oldVal := interface{}(nil)
+		if existing.Keterangan != nil {
+			oldVal = *existing.Keterangan
+		}
+		changes["keterangan"] = map[string]interface{}{"old": oldVal, "new": *req.Keterangan}
+	}
+
+	if s.producer != nil && len(changes) > 0 {
+		ikasID, err := s.ikasRepo.GetIDByPerusahaanID(existing.PerusahaanID)
+		if err == nil {
+			auditEvent := dto_event.IkasAuditLogEvent{
+				IkasID:    ikasID,
+				UserID:    userID,
+				Action:    "UPDATE_PROTEKSI",
+				Changes:   changes,
+				Timestamp: time.Now(),
+			}
+			_ = s.producer.PublishIkasAuditLog(context.Background(), auditEvent)
+		}
+	}
+
 	if err := s.producer.PublishJawabanProteksiUpdated(context.Background(), event); err != nil {
 		rollbar.Error(err)
 		return err
@@ -190,7 +241,7 @@ func (s *JawabanProteksiService) Update(id int, req dto.UpdateJawabanProteksiReq
 	return nil
 }
 
-func (s *JawabanProteksiService) Delete(id int) error {
+func (s *JawabanProteksiService) Delete(id int, userID string) error {
 	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
@@ -209,6 +260,20 @@ func (s *JawabanProteksiService) Delete(id int) error {
 		ID:           id,
 		PerusahaanID: existing.PerusahaanID,
 		DeletedAt:    time.Now(),
+	}
+
+	if s.producer != nil {
+		ikasID, err := s.ikasRepo.GetIDByPerusahaanID(existing.PerusahaanID)
+		if err == nil {
+			auditEvent := dto_event.IkasAuditLogEvent{
+				IkasID:    ikasID,
+				UserID:    userID,
+				Action:    "DELETE_PROTEKSI",
+				Changes:   map[string]interface{}{"pertanyaan_id": existing.PertanyaanProteksi.ID, "status": "deleted"},
+				Timestamp: time.Now(),
+			}
+			_ = s.producer.PublishIkasAuditLog(context.Background(), auditEvent)
+		}
 	}
 
 	if err := s.producer.PublishJawabanProteksiDeleted(context.Background(), event); err != nil {

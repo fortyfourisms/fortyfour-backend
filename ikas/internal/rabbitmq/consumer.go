@@ -23,6 +23,7 @@ type Consumer struct {
 	pertanyaanDeteksiRepo      repository.PertanyaanDeteksiRepositoryInterface
 	jawabanGulihRepo           repository.JawabanGulihRepositoryInterface
 	pertanyaanGulihRepo        repository.PertanyaanGulihRepositoryInterface
+	auditLogRepo               repository.AuditLogRepositoryInterface
 }
 
 func NewConsumer(
@@ -36,6 +37,7 @@ func NewConsumer(
 	pertanyaanDeteksiRepo repository.PertanyaanDeteksiRepositoryInterface,
 	jawabanGulihRepo repository.JawabanGulihRepositoryInterface,
 	pertanyaanGulihRepo repository.PertanyaanGulihRepositoryInterface,
+	auditLogRepo repository.AuditLogRepositoryInterface,
 ) *Consumer {
 	return &Consumer{
 		Consumer:                   c,
@@ -48,6 +50,7 @@ func NewConsumer(
 		pertanyaanDeteksiRepo:      pertanyaanDeteksiRepo,
 		jawabanGulihRepo:           jawabanGulihRepo,
 		pertanyaanGulihRepo:        pertanyaanGulihRepo,
+		auditLogRepo:               auditLogRepo,
 	}
 }
 
@@ -553,6 +556,24 @@ func (c *Consumer) ConsumeJawabanGulihDeleted(ctx context.Context) error {
 	})
 }
 
+func (c *Consumer) ConsumeIkasAuditLog(ctx context.Context) error {
+	return c.Consume(ctx, "ikas.audit_logs", func(ctx context.Context, body []byte) error {
+		var event dto_event.IkasAuditLogEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from ikas.audit_logs: %v. Body: %s", err, string(body))
+			return nil // Acknowledge to remove invalid JSON from queue
+		}
+
+		log.Printf("Processing IKAS Audit Log for ID: %s, User: %s", event.IkasID, event.UserID)
+
+		if err := c.auditLogRepo.SaveAuditLog(event); err != nil {
+			log.Printf("Error saving audit log: %v", err)
+			return err
+		}
+		return nil
+	})
+}
+
 func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 	consumers := []func(context.Context) error{
 		c.ConsumeIkasCreated,
@@ -572,6 +593,7 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeJawabanGulihCreated,
 		c.ConsumeJawabanGulihUpdated,
 		c.ConsumeJawabanGulihDeleted,
+		c.ConsumeIkasAuditLog,
 	}
 
 	for _, consumer := range consumers {

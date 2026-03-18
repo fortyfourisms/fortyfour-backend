@@ -811,3 +811,13 @@ func (r *IkasRepository) CheckExistsByPerusahaanID(idPerusahaan string) (bool, e
 
 	return count > 0, nil
 }
+
+func (r *IkasRepository) GetIDByPerusahaanID(idPerusahaan string) (string, error) {
+	var id string
+	query := `SELECT id FROM ikas WHERE id_perusahaan = ?`
+	err := r.db.QueryRow(query, idPerusahaan).Scan(&id)
+	if err != nil {
+		return "", err
+	}
+	return id, nil
+}
