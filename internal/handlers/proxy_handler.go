@@ -20,24 +20,22 @@ func NewProxyHandler(targetURL string, internalKey string) *ProxyHandler {
 		log.Fatalf("Failed to parse proxy target URL: %v", err)
 	}
 
-	proxy := httputil.NewSingleHostReverseProxy(target)
+	proxy := &httputil.ReverseProxy{
+		Rewrite: func(req *httputil.ProxyRequest) {
+			req.SetURL(target)
+			req.SetXForwarded()
 
-	// Customizing the Director to ensure correct path and headers
-	originalDirector := proxy.Director
-	proxy.Director = func(req *http.Request) {
-		originalDirector(req)
-		req.Host = target.Host
+			// Get user info from context (set by AuthMiddleware in Main API)
+			userID, _ := req.In.Context().Value(middleware.UserIDKey).(string)
+			role, _ := req.In.Context().Value(middleware.RoleKey).(string)
 
-		// Get user info from context (set by AuthMiddleware in Main API)
-		userID, _ := req.Context().Value(middleware.UserIDKey).(string)
-		role, _ := req.Context().Value(middleware.RoleKey).(string)
+			// Inject headers for IKAS to trust
+			req.Out.Header.Set("X-User-ID", userID)
+			req.Out.Header.Set("X-User-Role", role)
+			req.Out.Header.Set("X-Internal-Key", internalKey)
 
-		// Inject headers for IKAS to trust
-		req.Header.Set("X-User-ID", userID)
-		req.Header.Set("X-User-Role", role)
-		req.Header.Set("X-Internal-Key", internalKey)
-
-		log.Printf("Proxying request: %s %s -> %s (User: %s, Role: %s)", req.Method, req.URL.Path, targetURL, userID, role)
+			log.Printf("Proxying request: %s %s -> %s (User: %s, Role: %s)", req.Out.Method, req.Out.URL.Path, targetURL, userID, role)
+		},
 	}
 
 	return &ProxyHandler{

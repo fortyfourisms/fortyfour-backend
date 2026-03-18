@@ -26,5 +26,5 @@ Thumbs.db
 vendor/
 nginx/
 
-
 .agent/
+scripts/
