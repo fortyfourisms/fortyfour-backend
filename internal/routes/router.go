@@ -55,6 +55,7 @@ func InitRouter(
 	seExportH *handlers.SEExportHandler,
 	dashboardH *handlers.DashboardHandler,
 	notificationH *handlers.NotificationHandler,
+	ikasProxyH *handlers.ProxyHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -126,6 +127,10 @@ func InitRouter(
 	// Route Deteksi
 	mux.HandleFunc("/api/deteksi", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(deteksiH)))))
 	mux.HandleFunc("/api/deteksi/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(deteksiH)))))
+
+	// Route IKAS (Proxy to Microservice)
+	mux.Handle("/api/maturity/", authM.Authenticate(casbinM.Authorize(ikasProxyH.ServeHTTP)))
+	mux.Handle("/api/maturity", authM.Authenticate(casbinM.Authorize(ikasProxyH.ServeHTTP)))
 
 	// Route Role
 	mux.HandleFunc("/api/role", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(roleH)))))

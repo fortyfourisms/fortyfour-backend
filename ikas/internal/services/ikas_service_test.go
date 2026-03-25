@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"ikas/internal/dto"
 	"testing"
 
@@ -17,6 +18,17 @@ type mockIkasRepo struct{}
 
 func (m *mockIkasRepo) FindPerusahaanByName(namaPerusahaan string) (string, error) {
 	return "perusahaan-id-1", nil
+}
+
+func (m *mockIkasRepo) CheckExistsByPerusahaanID(idPerusahaan string) (bool, error) {
+	if idPerusahaan == "perusahaan-ada" {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (m *mockIkasRepo) GetIDByPerusahaanID(idPerusahaan string) (string, error) {
+	return "ikas-id", nil
 }
 
 // CREATE IKAS
@@ -47,8 +59,8 @@ func (m *mockIkasRepo) Delete(id string) error {
 	return nil
 }
 
-func (m *mockIkasRepo) ParseExcelForImport(b []byte) (*dto.CreateIkasRequest, error) {
-	return &dto.CreateIkasRequest{}, nil
+func (m *mockIkasRepo) ParseExcelForImport(b []byte) (*dto.ParsedExcelData, error) {
+	return &dto.ParsedExcelData{}, nil
 }
 
 // Mock methods for Excel import process in repo
@@ -72,8 +84,21 @@ func TestIkasService_Create_Success(t *testing.T) {
 	}
 
 	// This should return nil now because producer check skips it
-	err := service.Create(req, "ikas-id")
+	err := service.Create(context.Background(), req, "ikas-id", "test-user")
 	assert.NoError(t, err)
+}
+
+func TestIkasService_Create_Duplicate(t *testing.T) {
+	repo := &mockIkasRepo{}
+	service := NewIkasService(repo, nil)
+
+	req := dto.CreateIkasRequest{
+		IDPerusahaan: "perusahaan-ada",
+	}
+
+	err := service.Create(context.Background(), req, "ikas-id", "test-user")
+	assert.Error(t, err)
+	assert.Equal(t, "Data IKAS untuk perusahaan ini sudah ada", err.Error())
 }
 
 /*
@@ -92,7 +117,7 @@ func TestIkasService_Update_Async(t *testing.T) {
 	}
 
 	// Update now returns nil error on nil producer
-	err := service.Update("ikas-id", req)
+	err := service.Update(context.Background(), "ikas-id", req, "test-user")
 	assert.NoError(t, err)
 }
 
@@ -106,7 +131,7 @@ func TestIkasService_ImportFromExcel_Async(t *testing.T) {
 	repo := &mockIkasRepo{}
 	service := NewIkasService(repo, nil)
 
-	id, err := service.ImportFromExcel([]byte("fake excel"))
+	id, err := service.ImportFromExcel(context.Background(), []byte("fake excel"), "test-user")
 	assert.NoError(t, err) // Should work and return generated ID
 	assert.NotEmpty(t, id)
 }

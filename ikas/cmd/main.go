@@ -16,9 +16,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"fortyfour-backend/pkg/logger"
 	pkgRmq "fortyfour-backend/pkg/rabbitmq"
 
-	"fortyfour-backend/pkg/logger"
+	"github.com/joho/godotenv"
 )
 
 // @title IKAS API
@@ -30,6 +31,10 @@ import (
 // @in header
 // @name Authorization
 func main() {
+	// load env
+	if err := godotenv.Load(); err != nil {
+		os.Stdout.WriteString("Warning: .env file not found\n")
+	}
 
 	cfg := config.Load()
 
@@ -93,6 +98,7 @@ func main() {
 		repository.NewPertanyaanDeteksiRepository(db),
 		repository.NewJawabanGulihRepository(db),
 		repository.NewPertanyaanGulihRepository(db),
+		repository.NewAuditLogRepository(db),
 	)
 
 	// Start consumers in background
@@ -130,10 +136,17 @@ func main() {
 	pertanyaanProteksiService := services.NewPertanyaanProteksiService(pertanyaanProteksiRepo)
 	pertanyaanDeteksiService := services.NewPertanyaanDeteksiService(pertanyaanDeteksiRepo)
 	pertanyaanGulihService := services.NewPertanyaanGulihService(pertanyaanGulihRepo)
-	jawabanIdentifikasiService := services.NewJawabanIdentifikasiService(jawabanIdentifikasiRepo, msgProducer)
-	jawabanProteksiService := services.NewJawabanProteksiService(jawabanProteksiRepo, msgProducer)
-	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo, msgProducer)
-	jawabanGulihService := services.NewJawabanGulihService(jawabanGulihRepo, msgProducer)
+	jawabanIdentifikasiService := services.NewJawabanIdentifikasiService(jawabanIdentifikasiRepo, ikasRepo, msgProducer)
+	jawabanProteksiService := services.NewJawabanProteksiService(jawabanProteksiRepo, ikasRepo, msgProducer)
+	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo, ikasRepo, msgProducer)
+	jawabanGulihService := services.NewJawabanGulihService(jawabanGulihRepo, ikasRepo, msgProducer)
+
+	// Casbin Service
+	casbinService, err := services.NewCasbinService(cfg.Database.GetDSN(), cfg.CasbinModelPath)
+	if err != nil {
+		logger.FatalErr(err, "Failed to initialize Casbin")
+	}
+	logger.Info("Casbin initialized successfully with shared database")
 
 	// handlers
 	ikasHandler := handlers.NewIkasHandler(ikasService)
@@ -151,7 +164,8 @@ func main() {
 	jawabanGulihHandler := handlers.NewJawabanGulihHandler(jawabanGulihService)
 
 	// Middleware
-	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret)
+	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret, cfg.InternalGatewayKey)
+	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
 
 	// Initialize rate limiters with different configurations
 	rateLimitConfigs := middleware.GetRateLimitConfigs()
@@ -176,6 +190,7 @@ func main() {
 		jawabanDeteksiHandler,
 		jawabanGulihHandler,
 		authMiddleware,
+		casbinMiddleware,
 		strictLimiter,
 		moderateLimiter,
 		lenientLimiter,
@@ -205,6 +220,7 @@ func main() {
 		logger.Info("  - jawaban.gulih.created")
 		logger.Info("  - jawaban.gulih.updated")
 		logger.Info("  - jawaban.gulih.deleted")
+		logger.Info("  - ikas.audit_logs")
 
 		if err := http.ListenAndServe(cfg.Port, mux); err != nil && err != http.ErrServerClosed {
 			logger.FatalErr(err, "Server failed")

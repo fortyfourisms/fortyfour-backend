@@ -9,9 +9,6 @@ CREATE TABLE IF NOT EXISTS jawaban_deteksi (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-    CONSTRAINT chk_validasi_evidence
-        CHECK (evidence IS NOT NULL OR validasi IS NULL),
-
     CONSTRAINT fk_jawaban_deteksi_pertanyaan
         FOREIGN KEY (pertanyaan_deteksi_id)
         REFERENCES pertanyaan_deteksi(id)

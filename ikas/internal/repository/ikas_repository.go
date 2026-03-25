@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/xuri/excelize/v2"
+	"sort"
 )
 
 type IkasRepository struct {
@@ -86,7 +87,9 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			g.nilai_subdomain1,
 			g.nilai_subdomain2,
 			g.nilai_subdomain3,
-			g.nilai_subdomain4
+			g.nilai_subdomain4,
+			i.created_at,
+			i.updated_at
 		FROM ikas i
 		LEFT JOIN perusahaan p ON i.id_perusahaan = p.id
 		LEFT JOIN identifikasi iden ON i.id_identifikasi = iden.id
@@ -116,6 +119,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 		var detNilai, detSub1, detSub2, detSub3 sql.NullFloat64
 		var gulihID sql.NullInt64
 		var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
+		var createdAt, updatedAt sql.NullString
 
 		err := rows.Scan(
 			&i.ID,
@@ -153,6 +157,8 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			&gulihSub2,
 			&gulihSub3,
 			&gulihSub4,
+			&createdAt,
+			&updatedAt,
 		)
 		if err != nil {
 			continue
@@ -160,6 +166,14 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 
 		if tanggal.Valid {
 			i.Tanggal = tanggal.String
+		}
+
+		if createdAt.Valid {
+			i.CreatedAt = createdAt.String
+		}
+
+		if updatedAt.Valid {
+			i.UpdatedAt = updatedAt.String
 		}
 
 		if targetNilai.Valid {
@@ -299,7 +313,9 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 			g.nilai_subdomain1,
 			g.nilai_subdomain2,
 			g.nilai_subdomain3,
-			g.nilai_subdomain4
+			g.nilai_subdomain4,
+			i.created_at,
+			i.updated_at
 		FROM ikas i
 		LEFT JOIN perusahaan p ON i.id_perusahaan = p.id
 		LEFT JOIN identifikasi iden ON i.id_identifikasi = iden.id
@@ -323,6 +339,7 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	var detNilai, detSub1, detSub2, detSub3 sql.NullFloat64
 	var gulihID sql.NullInt64
 	var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
+	var createdAt, updatedAt sql.NullString
 
 	err := row.Scan(
 		&i.ID,
@@ -360,6 +377,8 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 		&gulihSub2,
 		&gulihSub3,
 		&gulihSub4,
+		&createdAt,
+		&updatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -367,6 +386,14 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 
 	if tanggal.Valid {
 		i.Tanggal = tanggal.String
+	}
+
+	if createdAt.Valid {
+		i.CreatedAt = createdAt.String
+	}
+
+	if updatedAt.Valid {
+		i.UpdatedAt = updatedAt.String
 	}
 
 	if targetNilai.Valid {
@@ -541,7 +568,8 @@ func parseMultipleDateFormats(dateStr string) (time.Time, error) {
 }
 
 // ParseExcelForImport membaca file Excel dari sheet 2 dan sheet 7
-func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRequest, error) {
+// ParseExcelForImport membaca file Excel dan memetakan datanya ke dto.ParsedExcelData
+func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.ParsedExcelData, error) {
 	f, err := excelize.OpenReader(bytes.NewReader(fileData))
 	if err != nil {
 		return nil, err
@@ -550,16 +578,16 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRe
 
 	sheets := f.GetSheetList()
 
-	// Validasi jumlah sheet
-	if len(sheets) < 2 {
-		return nil, errors.New("file Excel tidak memiliki sheet ke-2")
-	}
-	if len(sheets) < 7 {
-		return nil, errors.New("file Excel tidak memiliki sheet ke-7")
+	// Validasi jumlah sheet (minimal 6 sheet: index 0-5)
+	if len(sheets) < 6 {
+		return nil, errors.New("file Excel tidak lengkap, minimal harus memiliki 6 sheet")
 	}
 
-	sheet2 := sheets[1] // Sheet ke-2 (index 1)
-	sheet7 := sheets[6] // Sheet ke-7 (index 6)
+	sheet2 := sheets[1] // Sheet ke-2 (index 1) - Info Dasar
+	sheet3 := sheets[2] // Sheet ke-3 (index 2) - Identifikasi
+	sheet4 := sheets[3] // Sheet ke-4 (index 3) - Proteksi
+	sheet5 := sheets[4] // Sheet ke-5 (index 4) - Deteksi
+	sheet6 := sheets[5] // Sheet ke-6 (index 5) - Gulih
 
 	// Helper function untuk ambil nilai cell sebagai string
 	getCellString := func(sheetName, cell string) (string, error) {
@@ -577,17 +605,18 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRe
 			return 0, err
 		}
 		val = strings.TrimSpace(val)
-		if val == "" {
-			return 0, fmt.Errorf("cell %s kosong", cell)
+		if val == "" || val == "N/A" {
+			return 0, nil // Return 0 if empty or N/A, handled by business logic later
 		}
 		floatVal, err := strconv.ParseFloat(val, 64)
 		if err != nil {
-			return 0, fmt.Errorf("gagal parse cell %s: %v", cell, err)
+			// Try parsing as percentage if applicable or handle other formats if needed
+			return 0, fmt.Errorf("gagal parse cell %s di %s: %v", cell, sheetName, err)
 		}
 		return floatVal, nil
 	}
 
-	// ===== AMBIL DATA DARI SHEET 2 =====
+	// ===== AMBIL DATA DASAR (SHEET 2) =====
 
 	// Nama Perusahaan dari D4
 	namaPerusahaan, err := getCellString(sheet2, "D4")
@@ -604,7 +633,16 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRe
 		return nil, fmt.Errorf("error mencari perusahaan: %v", err)
 	}
 	if idPerusahaan == "" {
-		return nil, fmt.Errorf("perusahaan dengan nama '%s' tidak ditemukan di database", namaPerusahaan)
+		return nil, fmt.Errorf("perusahaan anda belum terdaftar: '%s'", namaPerusahaan)
+	}
+
+	// VALIDASI: Cek apakah data IKAS untuk perusahaan ini sudah ada
+	exists, err := r.CheckExistsByPerusahaanID(idPerusahaan)
+	if err != nil {
+		return nil, fmt.Errorf("error validasi duplikasi data: %v", err)
+	}
+	if exists {
+		return nil, fmt.Errorf("Data IKAS untuk perusahaan '%s' sudah ada. Anda tidak dapat melakukan import lagi, silakan hubungi admin untuk melakukan update data.", namaPerusahaan)
 	}
 
 	// Telepon dari D10
@@ -625,53 +663,124 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.CreateIkasRe
 		return nil, fmt.Errorf("error membaca jabatan (Sheet 2, D12): %v", err)
 	}
 
+	// Target Nilai dari D15
+	targetNilai, err := getCellFloat(sheet2, "D15")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca target_nilai (Sheet 2, D15): %v", err)
+	}
+
 	// Tanggal dari D18
 	tanggalStr, err := getCellString(sheet2, "D18")
 	if err != nil {
 		return nil, fmt.Errorf("error membaca tanggal (Sheet 2, D18): %v", err)
 	}
 
-	// Parse tanggal - support multiple format
 	var tanggal string
 	if tanggalStr != "" {
-		// Coba parse sebagai Excel date number dulu
 		if excelDate, err := strconv.ParseFloat(tanggalStr, 64); err == nil {
-			// Convert Excel date to time.Time
 			parsedTime, err := excelize.ExcelDateToTime(excelDate, false)
 			if err == nil {
-				tanggal = parsedTime.Format("2006-01-02") // Format MySQL
+				tanggal = parsedTime.Format("2006-01-02")
 			}
 		} else {
-			// Bukan number, coba parse berbagai format string
 			parsedTime, err := parseMultipleDateFormats(tanggalStr)
 			if err == nil {
-				tanggal = parsedTime.Format("2006-01-02") // Format MySQL
+				tanggal = parsedTime.Format("2006-01-02")
 			} else {
-				return nil, fmt.Errorf("format tanggal tidak valid (Sheet 2, D18): %s. Gunakan format DD-MM-YYYY, DD/MM/YYYY, atau YYYY-MM-DD", tanggalStr)
+				return nil, fmt.Errorf("format tanggal tidak valid (Sheet 2, D18): %s", tanggalStr)
 			}
 		}
 	} else {
 		return nil, errors.New("tanggal (Sheet 2, D18) tidak boleh kosong")
 	}
-	// ===== AMBIL DATA DARI SHEET 7 =====
 
-	// Target Nilai dari D4
-	targetNilai, err := getCellFloat(sheet7, "D4")
+	result := &dto.ParsedExcelData{
+		IkasRequest: dto.CreateIkasRequest{
+			IDPerusahaan: idPerusahaan,
+			Tanggal:      tanggal,
+			Responden:    responden,
+			Telepon:      telepon,
+			Jabatan:      jabatan,
+			TargetNilai:  targetNilai,
+		},
+	}
+
+	// Helper to collect answers based on mappings
+	collectAnswers := func(sheetName string, mappings map[string]int) ([]dto.ExcelSubdomainAnswer, error) {
+		var answers []dto.ExcelSubdomainAnswer
+		for cell, qID := range mappings {
+			val, err := getCellFloat(sheetName, cell)
+			if err != nil {
+				// We might want to skip or handle errors differently, but for now let's be strict
+				return nil, err
+			}
+			answers = append(answers, dto.ExcelSubdomainAnswer{
+				PertanyaanID: qID,
+				Jawaban:      val,
+			})
+		}
+
+		// Sort manual berdasarkan PertanyaanID agar urut saat masuk ke DB
+		sort.Slice(answers, func(i, j int) bool {
+			return answers[i].PertanyaanID < answers[j].PertanyaanID
+		})
+
+		return answers, nil
+	}
+
+	// ===== SHEET 3: IDENTIFIKASI =====
+	identifikasiMap := map[string]int{
+		"D5": 1, "D6": 2, "D8": 3, "D10": 4, "D11": 5, "D14": 6, "D15": 7, "D16": 8, "D18": 9, "D19": 10,
+		"D21": 11, "D23": 12, "D26": 13, "D27": 14, "D29": 15, "D31": 16, "D32": 17, "D34": 18, "D36": 19, "D37": 20,
+		"D40": 21, "D42": 22, "D43": 23, "D45": 24, "D47": 25, "D48": 26, "D49": 27, "D50": 28, "D51": 29, "D52": 30,
+		"D53": 31, "D55": 32, "D56": 33, "D58": 34, "D59": 35, "D61": 36, "D62": 37, "D63": 38, "D65": 39, "D68": 40,
+		"D69": 41, "D71": 42, "D72": 43, "D74": 44, "D75": 45, "D77": 46, "D78": 47, "D79": 48, "D81": 49, "D82": 50,
+		"D83": 51,
+	}
+	result.JawabanIdentifikasi, err = collectAnswers(sheet3, identifikasiMap)
 	if err != nil {
-		return nil, fmt.Errorf("error membaca target_nilai (Sheet 7, D4): %v", err)
+		return nil, err
 	}
 
-	// Construct CreateIkasRequest dengan semua data
-	req := &dto.CreateIkasRequest{
-		IDPerusahaan: idPerusahaan,
-		Tanggal:      tanggal,
-		Responden:    responden,
-		Telepon:      telepon,
-		Jabatan:      jabatan,
-		TargetNilai:  targetNilai,
+	// ===== SHEET 4: PROTEKSI =====
+	proteksiMap := map[string]int{
+		"D5": 1, "D7": 2, "D8": 3, "D10": 4, "D11": 5, "D13": 6, "D16": 7, "D17": 8, "D18": 9, "D20": 10,
+		"D21": 11, "D23": 12, "D24": 13, "D26": 14, "D28": 15, "D31": 16, "D32": 17, "D34": 18, "D35": 19, "D37": 20,
+		"D38": 21, "D40": 22, "D41": 23, "D43": 24, "D44": 25, "D45": 26, "D46": 27, "D47": 28, "D49": 29, "D51": 30,
+		"D54": 31, "D55": 32, "D56": 33, "D58": 34, "D60": 35, "D62": 36, "D65": 37, "D66": 38, "D68": 39, "D69": 40,
+		"D71": 41, "D72": 42, "D74": 43, "D76": 44, "D77": 45, "D78": 46, "D79": 47, "D81": 48, "D83": 49, "D86": 50,
+		"D87": 51, "D88": 52, "D89": 53, "D90": 54, "D91": 55, "D92": 56, "D94": 57, "D95": 58, "D96": 59, "D98": 60,
+		"D99": 61, "D100": 62,
+	}
+	result.JawabanProteksi, err = collectAnswers(sheet4, proteksiMap)
+	if err != nil {
+		return nil, err
 	}
 
-	return req, nil
+	// ===== SHEET 5: DETEKSI =====
+	deteksiMap := map[string]int{
+		"D5": 1, "D6": 2, "D8": 3, "D9": 4, "D11": 5, "D13": 6, "D14": 7, "D17": 8, "D19": 9, "D20": 10,
+		"D22": 11, "D24": 12, "D27": 13, "D28": 14, "D29": 15, "D31": 16, "D33": 17, "D35": 18, "D36": 19,
+	}
+	result.JawabanDeteksi, err = collectAnswers(sheet5, deteksiMap)
+	if err != nil {
+		return nil, err
+	}
+
+	// ===== SHEET 6: GULIH =====
+	gulihMap := map[string]int{
+		"D5": 1, "D6": 2, "D7": 3, "D8": 4, "D10": 5, "D11": 6, "D12": 7, "D13": 8, "D15": 9, "D17": 10,
+		"D18": 11, "D19": 12, "D20": 13, "D22": 14, "D25": 15, "D26": 16, "D28": 17, "D30": 18, "D32": 19, "D33": 20,
+		"D36": 21, "D37": 22, "D38": 23, "D39": 24, "D41": 25, "D43": 26, "D44": 27, "D46": 28, "D48": 29, "D50": 30,
+		"D51": 31, "D52": 32, "D53": 33, "D54": 34, "D55": 35, "D57": 36, "D58": 37, "D59": 38, "D61": 39, "D63": 40,
+		"D64": 41, "D66": 42, "D69": 43, "D71": 44, "D72": 45, "D74": 46, "D75": 47, "D77": 48, "D78": 49,
+	}
+	result.JawabanGulih, err = collectAnswers(sheet6, gulihMap)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // FindPerusahaanByName mencari ID perusahaan berdasarkan nama (case-insensitive, exact match)
@@ -687,5 +796,28 @@ func (r *IkasRepository) FindPerusahaanByName(namaPerusahaan string) (string, er
 		return "", err
 	}
 
+	return id, nil
+}
+
+// CheckExistsByPerusahaanID mengecek apakah data IKAS untuk perusahaan tersebut sudah ada
+func (r *IkasRepository) CheckExistsByPerusahaanID(idPerusahaan string) (bool, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM ikas WHERE id_perusahaan = ?`
+
+	err := r.db.QueryRow(query, idPerusahaan).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (r *IkasRepository) GetIDByPerusahaanID(idPerusahaan string) (string, error) {
+	var id string
+	query := `SELECT id FROM ikas WHERE id_perusahaan = ?`
+	err := r.db.QueryRow(query, idPerusahaan).Scan(&id)
+	if err != nil {
+		return "", err
+	}
 	return id, nil
 }

@@ -102,3 +102,8 @@ func (p *Producer) PublishJawabanGulihUpdated(ctx context.Context, event interfa
 func (p *Producer) PublishJawabanGulihDeleted(ctx context.Context, event interface{}) error {
 	return p.Publish(ctx, "ikas.events", "jawaban.gulih.deleted", event)
 }
+
+// PublishIkasAuditLog
+func (p *Producer) PublishIkasAuditLog(ctx context.Context, log interface{}) error {
+	return p.Publish(ctx, "ikas.events", "ikas.audit.log", log)
+}
