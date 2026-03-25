@@ -12,6 +12,7 @@ type IkasCreatedEvent struct {
 	Jabatan         string    `json:"jabatan"`
 	TargetNilai     float64   `json:"target_nilai"`
 	NilaiKematangan float64   `json:"nilai_kematangan"`
+	UserID          string    `json:"user_id"`
 	CreatedAt       time.Time `json:"created_at"`
 }
 
@@ -24,12 +25,14 @@ type IkasUpdatedEvent struct {
 	Telepon      *string   `json:"telepon"`
 	Jabatan      *string   `json:"jabatan"`
 	TargetNilai  *float64  `json:"target_nilai"`
+	UserID       string    `json:"user_id"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 // IkasDeletedEvent
 type IkasDeletedEvent struct {
 	IkasID    string    `json:"ikas_id"`
+	UserID    string    `json:"user_id"`
 	DeletedAt time.Time `json:"deleted_at"`
 }
 
@@ -40,6 +43,7 @@ type IkasImportedEvent struct {
 	NamaPerusahaan  string    `json:"nama_perusahaan,omitempty"`
 	FileName        string    `json:"file_name,omitempty"`
 	NilaiKematangan float64   `json:"nilai_kematangan"`
+	UserID          string    `json:"user_id"`
 	ImportedAt      time.Time `json:"imported_at"`
 }
 
@@ -49,4 +53,13 @@ type EmailNotificationPayload struct {
 	Subject string                 `json:"subject"`
 	Body    string                 `json:"body"`
 	Data    map[string]interface{} `json:"data,omitempty"`
+}
+
+// IkasAuditLogEvent
+type IkasAuditLogEvent struct {
+	IkasID    string                 `json:"ikas_id"`
+	UserID    string                 `json:"user_id"`
+	Action    string                 `json:"action"`
+	Changes   map[string]interface{} `json:"changes"`
+	Timestamp time.Time              `json:"timestamp"`
 }

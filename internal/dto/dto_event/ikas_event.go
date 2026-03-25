@@ -1,0 +1,48 @@
+package dto_event
+
+import "time"
+
+// IkasCreatedEvent
+type IkasCreatedEvent struct {
+	IkasID          string    `json:"ikas_id"`
+	IDPerusahaan    string    `json:"id_perusahaan"`
+	Tanggal         string    `json:"tanggal"`
+	Responden       string    `json:"responden"`
+	Telepon         string    `json:"telepon"`
+	Jabatan         string    `json:"jabatan"`
+	TargetNilai     float64   `json:"target_nilai"`
+	NilaiKematangan float64   `json:"nilai_kematangan"`
+	UserID          string    `json:"user_id"`
+	CreatedAt       time.Time `json:"created_at"`
+}
+
+// IkasUpdatedEvent
+type IkasUpdatedEvent struct {
+	IkasID       string    `json:"ikas_id"`
+	IDPerusahaan *string   `json:"id_perusahaan"`
+	Tanggal      *string   `json:"tanggal"`
+	Responden    *string   `json:"responden"`
+	Telepon      *string   `json:"telepon"`
+	Jabatan      *string   `json:"jabatan"`
+	TargetNilai  *float64  `json:"target_nilai"`
+	UserID       string    `json:"user_id"`
+	UpdatedAt    time.Time `json:"updated_at"`
+}
+
+// IkasDeletedEvent
+type IkasDeletedEvent struct {
+	IkasID    string    `json:"ikas_id"`
+	UserID    string    `json:"user_id"`
+	DeletedAt time.Time `json:"deleted_at"`
+}
+
+// IkasImportedEvent
+type IkasImportedEvent struct {
+	IkasID          string    `json:"ikas_id"`
+	IDPerusahaan    string    `json:"id_perusahaan"`
+	NamaPerusahaan  string    `json:"nama_perusahaan,omitempty"`
+	FileName        string    `json:"file_name,omitempty"`
+	NilaiKematangan float64   `json:"nilai_kematangan"`
+	UserID          string    `json:"user_id"`
+	ImportedAt      time.Time `json:"imported_at"`
+}
