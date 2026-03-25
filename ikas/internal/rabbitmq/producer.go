@@ -103,6 +103,21 @@ func (p *Producer) PublishJawabanGulihDeleted(ctx context.Context, event interfa
 	return p.Publish(ctx, "ikas.events", "jawaban.gulih.deleted", event)
 }
 
+// PublishDomainCreated
+func (p *Producer) PublishDomainCreated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "domain.created", event)
+}
+
+// PublishDomainUpdated
+func (p *Producer) PublishDomainUpdated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "domain.updated", event)
+}
+
+// PublishDomainDeleted
+func (p *Producer) PublishDomainDeleted(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "domain.deleted", event)
+}
+
 // PublishIkasAuditLog
 func (p *Producer) PublishIkasAuditLog(ctx context.Context, log interface{}) error {
 	return p.Publish(ctx, "ikas.events", "ikas.audit.log", log)

@@ -23,6 +23,7 @@ type Consumer struct {
 	pertanyaanDeteksiRepo      repository.PertanyaanDeteksiRepositoryInterface
 	jawabanGulihRepo           repository.JawabanGulihRepositoryInterface
 	pertanyaanGulihRepo        repository.PertanyaanGulihRepositoryInterface
+	domainRepo                 repository.DomainRepositoryInterface
 	auditLogRepo               repository.AuditLogRepositoryInterface
 }
 
@@ -37,6 +38,7 @@ func NewConsumer(
 	pertanyaanDeteksiRepo repository.PertanyaanDeteksiRepositoryInterface,
 	jawabanGulihRepo repository.JawabanGulihRepositoryInterface,
 	pertanyaanGulihRepo repository.PertanyaanGulihRepositoryInterface,
+	domainRepo repository.DomainRepositoryInterface,
 	auditLogRepo repository.AuditLogRepositoryInterface,
 ) *Consumer {
 	return &Consumer{
@@ -50,6 +52,7 @@ func NewConsumer(
 		pertanyaanDeteksiRepo:      pertanyaanDeteksiRepo,
 		jawabanGulihRepo:           jawabanGulihRepo,
 		pertanyaanGulihRepo:        pertanyaanGulihRepo,
+		domainRepo:                 domainRepo,
 		auditLogRepo:               auditLogRepo,
 	}
 }
@@ -556,6 +559,49 @@ func (c *Consumer) ConsumeJawabanGulihDeleted(ctx context.Context) error {
 	})
 }
 
+func (c *Consumer) ConsumeDomainCreated(ctx context.Context) error {
+	return c.Consume(ctx, "domain.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.DomainCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from domain.created: %v", err)
+			return nil
+		}
+
+		log.Printf("Processing Domain Created: %s", event.Request.NamaDomain)
+
+		_, err := c.domainRepo.Create(event.Request)
+		return err
+	})
+}
+
+func (c *Consumer) ConsumeDomainUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "domain.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.DomainUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from domain.updated: %v", err)
+			return nil
+		}
+
+		log.Printf("Processing Domain Updated for ID: %d", event.ID)
+
+		return c.domainRepo.Update(event.ID, event.Request)
+	})
+}
+
+func (c *Consumer) ConsumeDomainDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "domain.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.DomainDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from domain.deleted: %v", err)
+			return nil
+		}
+
+		log.Printf("Processing Domain Deleted for ID: %d", event.ID)
+
+		return c.domainRepo.Delete(event.ID)
+	})
+}
+
 func (c *Consumer) ConsumeIkasAuditLog(ctx context.Context) error {
 	return c.Consume(ctx, "ikas.audit_logs", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasAuditLogEvent
@@ -593,6 +639,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeJawabanGulihCreated,
 		c.ConsumeJawabanGulihUpdated,
 		c.ConsumeJawabanGulihDeleted,
+		c.ConsumeDomainCreated,
+		c.ConsumeDomainUpdated,
+		c.ConsumeDomainDeleted,
 		c.ConsumeIkasAuditLog,
 	}
 

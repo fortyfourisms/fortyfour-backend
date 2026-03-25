@@ -33,6 +33,9 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"jawaban.gulih.created",
 		"jawaban.gulih.updated",
 		"jawaban.gulih.deleted",
+		"domain.created",
+		"domain.updated",
+		"domain.deleted",
 		"ikas.audit_logs",
 	}
 
@@ -61,6 +64,9 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"jawaban.gulih.created":        "jawaban.gulih.created",
 		"jawaban.gulih.updated":        "jawaban.gulih.updated",
 		"jawaban.gulih.deleted":        "jawaban.gulih.deleted",
+		"domain.created":               "domain.created",
+		"domain.updated":               "domain.updated",
+		"domain.deleted":               "domain.deleted",
 		"ikas.audit_logs":              "ikas.audit.log",
 	}
 
