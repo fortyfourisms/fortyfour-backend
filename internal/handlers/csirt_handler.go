@@ -134,6 +134,10 @@ func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id 
 // @Param photo_csirt formData file false "Photo CSIRT"
 // @Param file_rfc2350 formData file false "File RFC2350"
 // @Param file_public_key_pgp formData file false "File Public Key PGP"
+// @Param file_str formData file false "File STR CSIRT (nullable)"
+// @Param tanggal_registrasi formData string false "Tanggal Registrasi (YYYY-MM-DD)"
+// @Param tanggal_kadaluarsa formData string false "Tanggal Kadaluarsa (YYYY-MM-DD)"
+// @Param tanggal_registrasi_ulang formData string false "Tanggal Registrasi Ulang (YYYY-MM-DD)"
 // @Success 201 {object} dto.CsirtResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Router /api/csirt [post]
@@ -145,10 +149,13 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req := dto.CreateCsirtRequest{
-		IdPerusahaan: r.FormValue("id_perusahaan"),
-		NamaCsirt:    r.FormValue("nama_csirt"),
-		WebCsirt:     r.FormValue("web_csirt"),
-		TeleponCsirt: r.FormValue("telepon_csirt"),
+		IdPerusahaan:           r.FormValue("id_perusahaan"),
+		NamaCsirt:              r.FormValue("nama_csirt"),
+		WebCsirt:               r.FormValue("web_csirt"),
+		TeleponCsirt:           r.FormValue("telepon_csirt"),
+		TanggalRegistrasi:      r.FormValue("tanggal_registrasi"),
+		TanggalKadaluarsa:      r.FormValue("tanggal_kadaluarsa"),
+		TanggalRegistrasiUlang: r.FormValue("tanggal_registrasi_ulang"),
 	}
 
 	// User: paksa id_perusahaan dari JWT, tidak bisa diisi sembarangan
@@ -186,6 +193,15 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	req.FilePublicKeyPGP = pgpPath
 
+	// Upload file STR (nullable — tidak wajib)
+	strPath, err := saveUploadedFile(r, "file_str", "uploads/str_csirt")
+	if err != nil {
+		logger.Error(err, "failed to upload STR file")
+		utils.RespondError(w, 400, err.Error())
+		return
+	}
+	req.FileStr = strPath
+
 	resp, err := h.service.Create(req)
 	if err != nil {
 		logger.Error(err, "failed to create CSIRT")
@@ -215,6 +231,10 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 // @Param photo_csirt formData file false "Photo CSIRT"
 // @Param file_rfc2350 formData file false "File RFC2350"
 // @Param file_public_key_pgp formData file false "File Public Key PGP"
+// @Param file_str formData file false "File STR CSIRT (nullable)"
+// @Param tanggal_registrasi formData string false "Tanggal Registrasi (YYYY-MM-DD)"
+// @Param tanggal_kadaluarsa formData string false "Tanggal Kadaluarsa (YYYY-MM-DD)"
+// @Param tanggal_registrasi_ulang formData string false "Tanggal Registrasi Ulang (YYYY-MM-DD)"
 // @Success 200 {object} dto.CsirtResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Router /api/csirt/{id} [put]
@@ -251,6 +271,15 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 	if v := r.FormValue("telepon_csirt"); v != "" {
 		req.TeleponCsirt = &v
 	}
+	if v := r.FormValue("tanggal_registrasi"); v != "" {
+		req.TanggalRegistrasi = &v
+	}
+	if v := r.FormValue("tanggal_kadaluarsa"); v != "" {
+		req.TanggalKadaluarsa = &v
+	}
+	if v := r.FormValue("tanggal_registrasi_ulang"); v != "" {
+		req.TanggalRegistrasiUlang = &v
+	}
 
 	if path, err := saveUploadedFile(r, "photo_csirt", "uploads/csirt_photo"); err == nil && path != "" {
 		req.PhotoCsirt = &path
@@ -262,6 +291,9 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 
 	if path, err := saveUploadedFile(r, "file_public_key_pgp", "uploads/pgp"); err == nil && path != "" {
 		req.FilePublicKeyPGP = &path
+	}
+	if path, err := saveUploadedFile(r, "file_str", "uploads/str_csirt"); err == nil && path != "" {
+		req.FileStr = &path
 	}
 
 	resp, err := h.service.Update(id, req)

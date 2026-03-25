@@ -31,8 +31,9 @@ func (r *CsirtRepository) Create(req dto.CreateCsirtRequest, id string) error {
 	_, err := r.db.Exec(`
 		INSERT INTO csirt (
 			id, id_perusahaan, nama_csirt, web_csirt, telepon_csirt,
-			photo_csirt, file_rfc2350, file_public_key_pgp
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+			photo_csirt, file_rfc2350, file_public_key_pgp,
+			file_str, tanggal_registrasi, tanggal_kadaluarsa, tanggal_registrasi_ulang
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
 		req.IdPerusahaan,
 		req.NamaCsirt,
@@ -41,6 +42,10 @@ func (r *CsirtRepository) Create(req dto.CreateCsirtRequest, id string) error {
 		req.PhotoCsirt,
 		req.FileRFC2350,
 		req.FilePublicKeyPGP,
+		nullableStr(req.FileStr),
+		nullableStr(req.TanggalRegistrasi),
+		nullableStr(req.TanggalKadaluarsa),
+		nullableStr(req.TanggalRegistrasiUlang),
 	)
 	return err
 }
@@ -67,7 +72,8 @@ GET ALL
 func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 	rows, err := r.db.Query(`
 		SELECT id, id_perusahaan, nama_csirt, web_csirt, telepon_csirt,
-		       photo_csirt, file_rfc2350, file_public_key_pgp
+		       photo_csirt, file_rfc2350, file_public_key_pgp,
+		       file_str, tanggal_registrasi, tanggal_kadaluarsa, tanggal_registrasi_ulang
 		FROM csirt
 	`)
 	if err != nil {
@@ -78,7 +84,8 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 	var result []models.Csirt
 	for rows.Next() {
 		var c models.Csirt
-		var telepon, photo, rfc, pgp sql.NullString
+		var telepon, photo, rfc, pgp, fileStr sql.NullString
+		var tglReg, tglKadaluarsa, tglRegUlang sql.NullString
 		err := rows.Scan(
 			&c.ID,
 			&c.IdPerusahaan,
@@ -88,6 +95,10 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 			&photo,
 			&rfc,
 			&pgp,
+			&fileStr,
+			&tglReg,
+			&tglKadaluarsa,
+			&tglRegUlang,
 		)
 		if err != nil {
 			return nil, err
@@ -104,6 +115,18 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 		if pgp.Valid {
 			c.FilePublicKeyPGP = &pgp.String
 		}
+		if fileStr.Valid {
+			c.FileStr = &fileStr.String
+		}
+		if tglReg.Valid {
+			c.TanggalRegistrasi = &tglReg.String
+		}
+		if tglKadaluarsa.Valid {
+			c.TanggalKadaluarsa = &tglKadaluarsa.String
+		}
+		if tglRegUlang.Valid {
+			c.TanggalRegistrasiUlang = &tglRegUlang.String
+		}
 		result = append(result, c)
 	}
 	return result, nil
@@ -117,11 +140,13 @@ GET BY ID
 func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 	row := r.db.QueryRow(`
 		SELECT id, id_perusahaan, nama_csirt, web_csirt, telepon_csirt,
-		       photo_csirt, file_rfc2350, file_public_key_pgp
+		       photo_csirt, file_rfc2350, file_public_key_pgp,
+		       file_str, tanggal_registrasi, tanggal_kadaluarsa, tanggal_registrasi_ulang
 		FROM csirt WHERE id = ?`, id)
 
 	var c models.Csirt
-	var telepon, photo, rfc, pgp sql.NullString
+	var telepon, photo, rfc, pgp, fileStr sql.NullString
+	var tglReg, tglKadaluarsa, tglRegUlang sql.NullString
 	err := row.Scan(
 		&c.ID,
 		&c.IdPerusahaan,
@@ -131,6 +156,10 @@ func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 		&photo,
 		&rfc,
 		&pgp,
+		&fileStr,
+		&tglReg,
+		&tglKadaluarsa,
+		&tglRegUlang,
 	)
 	if err != nil {
 		return nil, err
@@ -147,6 +176,18 @@ func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 	if pgp.Valid {
 		c.FilePublicKeyPGP = &pgp.String
 	}
+	if fileStr.Valid {
+		c.FileStr = &fileStr.String
+	}
+	if tglReg.Valid {
+		c.TanggalRegistrasi = &tglReg.String
+	}
+	if tglKadaluarsa.Valid {
+		c.TanggalKadaluarsa = &tglKadaluarsa.String
+	}
+	if tglRegUlang.Valid {
+		c.TanggalRegistrasiUlang = &tglRegUlang.String
+	}
 	return &c, nil
 }
 
@@ -160,9 +201,10 @@ func scanCsirtWithPerusahaan(scanner interface {
 
 	var (
 		webCsirt, teleponCsirt, photoCsirt, fileRFC, filePGP sql.NullString
-		photoPerusahaan, alamat, telepon, email, website     sql.NullString
-		subID, namaSubSektor, idSektor, namaSektor           sql.NullString
-		subCreatedAt, subUpdatedAt                           sql.NullString
+		fileStr, tglReg, tglKadaluarsa, tglRegUlang           sql.NullString
+		photoPerusahaan, alamat, telepon, email, website      sql.NullString
+		subID, namaSubSektor, idSektor, namaSektor            sql.NullString
+		subCreatedAt, subUpdatedAt                            sql.NullString
 	)
 
 	err := scanner.Scan(
@@ -173,6 +215,10 @@ func scanCsirtWithPerusahaan(scanner interface {
 		&photoCsirt,
 		&fileRFC,
 		&filePGP,
+		&fileStr,
+		&tglReg,
+		&tglKadaluarsa,
+		&tglRegUlang,
 		&perusahaan.ID,
 		&photoPerusahaan,
 		&perusahaan.NamaPerusahaan,
@@ -197,6 +243,10 @@ func scanCsirtWithPerusahaan(scanner interface {
 	csirt.PhotoCsirt = nullStr(photoCsirt)
 	csirt.FileRFC2350 = nullStr(fileRFC)
 	csirt.FilePublicKeyPGP = nullStr(filePGP)
+	csirt.FileStr = nullStr(fileStr)
+	csirt.TanggalRegistrasi = nullStr(tglReg)
+	csirt.TanggalKadaluarsa = nullStr(tglKadaluarsa)
+	csirt.TanggalRegistrasiUlang = nullStr(tglRegUlang)
 	if teleponCsirt.Valid {
 		csirt.TeleponCsirt = &teleponCsirt.String
 	}
@@ -226,6 +276,7 @@ const csirtWithPerusahaanQuery = `
 	SELECT 
 		c.id, c.nama_csirt, c.web_csirt, c.telepon_csirt, 
 		c.photo_csirt, c.file_rfc2350, c.file_public_key_pgp,
+		c.file_str, c.tanggal_registrasi, c.tanggal_kadaluarsa, c.tanggal_registrasi_ulang,
 		p.id, p.photo, p.nama_perusahaan,
 		p.alamat, p.telepon, p.email, p.website,
 		p.created_at, p.updated_at,
@@ -309,7 +360,11 @@ func (r *CsirtRepository) Update(id string, c models.Csirt) error {
 			telepon_csirt = ?,
 			photo_csirt = ?,
 			file_rfc2350 = ?,
-			file_public_key_pgp = ?
+			file_public_key_pgp = ?,
+			file_str = ?,
+			tanggal_registrasi = ?,
+			tanggal_kadaluarsa = ?,
+			tanggal_registrasi_ulang = ?
 		WHERE id = ?`,
 		c.NamaCsirt,
 		c.WebCsirt,
@@ -317,6 +372,10 @@ func (r *CsirtRepository) Update(id string, c models.Csirt) error {
 		c.PhotoCsirt,
 		c.FileRFC2350,
 		c.FilePublicKeyPGP,
+		c.FileStr,
+		c.TanggalRegistrasi,
+		c.TanggalKadaluarsa,
+		c.TanggalRegistrasiUlang,
 		id,
 	)
 	return err
@@ -330,4 +389,12 @@ DELETE
 func (r *CsirtRepository) Delete(id string) error {
 	_, err := r.db.Exec(`DELETE FROM csirt WHERE id = ?`, id)
 	return err
+}
+
+// nullableStr converts empty string to nil for nullable DB columns.
+func nullableStr(s string) interface{} {
+	if s == "" {
+		return nil
+	}
+	return s
 }

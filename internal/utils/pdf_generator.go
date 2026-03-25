@@ -313,32 +313,52 @@ func printRows(pdf *fpdf.Fpdf, rows [][]string) {
 
 func printCsirtBlock(pdf *fpdf.Fpdf, csirt dto.CsirtResponse) {
 	printSectionTitle(pdf, "Informasi CSIRT")
-
+ 
 	namaPerusahaan := csirt.Perusahaan.NamaPerusahaan
 	if namaPerusahaan == "" {
 		namaPerusahaan = csirt.Perusahaan.ID
 	}
-
+ 
 	telepon := "-"
 	if csirt.TeleponCsirt != nil && *csirt.TeleponCsirt != "" {
 		telepon = *csirt.TeleponCsirt
 	}
-
+ 
 	fileRFC := "-"
 	if csirt.FileRFC2350 != "" {
 		fileRFC = csirt.FileRFC2350
 	}
-
+ 
 	filePGP := "-"
 	if csirt.FilePublicKeyPGP != "" {
 		filePGP = csirt.FilePublicKeyPGP
 	}
-
+ 
 	photo := "-"
 	if csirt.PhotoCsirt != "" {
 		photo = csirt.PhotoCsirt
 	}
-
+ 
+	fileStr := "-"
+	if csirt.FileStr != "" {
+		fileStr = csirt.FileStr
+	}
+ 
+	tglReg := "-"
+	if csirt.TanggalRegistrasi != "" {
+		tglReg = csirt.TanggalRegistrasi
+	}
+ 
+	tglKadaluarsa := "-"
+	if csirt.TanggalKadaluarsa != "" {
+		tglKadaluarsa = csirt.TanggalKadaluarsa
+	}
+ 
+	tglRegUlang := "-"
+	if csirt.TanggalRegistrasiUlang != "" {
+		tglRegUlang = csirt.TanggalRegistrasiUlang
+	}
+ 
 	rows := [][]string{
 		{"Perusahaan", namaPerusahaan},
 		{"Nama CSIRT", csirt.NamaCsirt},
@@ -347,6 +367,17 @@ func printCsirtBlock(pdf *fpdf.Fpdf, csirt dto.CsirtResponse) {
 		{"Photo CSIRT", photo},
 		{"File RFC2350", fileRFC},
 		{"File Public Key PGP", filePGP},
+		{"File STR", fileStr},
 	}
 	printRows(pdf, rows)
+ 
+	pdf.Ln(3)
+ 
+	printSectionTitle(pdf, "Tanggal Registrasi")
+	tanggalRows := [][]string{
+		{"Tanggal Registrasi", tglReg},
+		{"Tanggal Kadaluarsa", tglKadaluarsa},
+		{"Tanggal Registrasi Ulang", tglRegUlang},
+	}
+	printRows(pdf, tanggalRows)
 }

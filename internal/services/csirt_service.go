@@ -126,6 +126,18 @@ func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Cs
 	if req.FilePublicKeyPGP != nil {
 		c.FilePublicKeyPGP = req.FilePublicKeyPGP
 	}
+	if req.FileStr != nil {
+		c.FileStr = req.FileStr
+	}
+	if req.TanggalRegistrasi != nil {
+		c.TanggalRegistrasi = req.TanggalRegistrasi
+	}
+	if req.TanggalKadaluarsa != nil {
+		c.TanggalKadaluarsa = req.TanggalKadaluarsa
+	}
+	if req.TanggalRegistrasiUlang != nil {
+		c.TanggalRegistrasiUlang = req.TanggalRegistrasiUlang
+	}
 
 	if err := s.repo.Update(id, *c); err != nil {
 		return nil, err
