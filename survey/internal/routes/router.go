@@ -23,6 +23,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 
 func InitRouter(
 	respondenH *handlers.RespondenHandler,
+	risikoH *handlers.RisikoHandler,
 ) *http.ServeMux {
 
 	mux := http.NewServeMux()
@@ -34,5 +35,8 @@ func InitRouter(
 	mux.Handle("/api/responden", middleware.Logger(utils.AdaptHandler(respondenH)))
 	mux.Handle("/api/responden/", middleware.Logger(utils.AdaptHandler(respondenH)))
 
+	// Risiko Pencurian Intellectual Property Perusahaan
+	mux.Handle("/api/risiko", risikoH)
+	mux.Handle("/api/risiko/", risikoH)
 	return mux
 }

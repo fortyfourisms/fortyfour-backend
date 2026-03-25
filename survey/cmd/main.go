@@ -18,10 +18,8 @@ import (
 
 func main() {
 
-	// Load configuration
 	cfg := config.Load()
 
-	// Initialize database
 	db, err := database.NewMySQLConnection(database.Config{
 		Host:     cfg.Database.Host,
 		Port:     cfg.Database.Port,
@@ -30,58 +28,46 @@ func main() {
 		DBName:   cfg.Database.DBName,
 	})
 	if err != nil {
-		panic("Failed to connect database: " + err.Error())
+		panic(err)
 	}
 	defer db.Close()
 
-	// Repository
+	// RESPONDEN
 	respondenRepo := repository.NewRespondenRepository(db)
-
-	// Services
 	respondenService := services.NewRespondenService(respondenRepo)
-
-	// Handlers
 	respondenHandler := handlers.NewRespondenHandler(respondenService)
 
-	// Router
+	// RISIKO
+	risikoRepo := repository.NewRisikoRepository(db)
+	risikoService := services.NewRisikoService(risikoRepo)
+	risikoHandler := handlers.NewRisikoHandler(risikoService)
+
+	// ROUTER
 	mux := routes.InitRouter(
 		respondenHandler,
+		risikoHandler,
 	)
 
-	// HTTP Server
 	server := &http.Server{
 		Addr:    ":" + cfg.Port,
 		Handler: mux,
 	}
 
-	// Run server
 	go func() {
-		println("=======================================")
-		println("Survey API running on port :", cfg.Port)
-		println("Endpoint:")
-		println("GET  /api/health")
-		println("GET  /api/responden")
-		println("POST /api/responden")
-		println("=======================================")
+
+		println("Survey API running on", cfg.Port)
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			panic("Server error: " + err.Error())
+			panic(err)
 		}
 	}()
 
-	// Graceful Shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	println("Shutting down server...")
-
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := server.Shutdown(ctx); err != nil {
-		panic("Server forced shutdown: " + err.Error())
-	}
-
-	println("Server exited properly")
+	server.Shutdown(ctx)
 }
