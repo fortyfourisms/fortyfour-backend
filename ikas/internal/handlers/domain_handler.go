@@ -125,7 +125,7 @@ func (h *DomainHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.service.Create(req)
+	_, err := h.service.Create(req)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		switch err.Error() {
@@ -143,9 +143,8 @@ func (h *DomainHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 201, map[string]interface{}{
-		"message": "Berhasil menyimpan data",
-		"data":    resp,
+	utils.RespondJSON(w, 201, dto.DomainMessageResponse{
+		Message: "Berhasil menyimpan data",
 	})
 }
 
@@ -171,7 +170,7 @@ func (h *DomainHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id 
 		return
 	}
 
-	resp, err := h.service.Update(id, req)
+	_, err := h.service.Update(id, req)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		switch err.Error() {
@@ -191,9 +190,9 @@ func (h *DomainHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id 
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil memperbarui data",
-		"data":    resp,
+	utils.RespondJSON(w, 200, dto.DomainMessageResponse{
+		ID:      id,
+		Message: "Berhasil memperbarui data",
 	})
 }
 
@@ -219,7 +218,8 @@ func (h *DomainHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id 
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menghapus data",
+	utils.RespondJSON(w, 200, dto.DomainMessageResponse{
+		ID:      id,
+		Message: "Berhasil menghapus data",
 	})
 }
