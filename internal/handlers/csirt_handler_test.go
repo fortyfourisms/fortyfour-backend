@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"fortyfour-backend/internal/dto"
@@ -200,7 +201,7 @@ func TestCsirtHandler_GetByID_NotFound(t *testing.T) {
 }
 
 //
-// TESTS — CREATE
+// TESTS — CREATE (existing)
 //
 
 func TestCsirtHandler_Create_Success(t *testing.T) {
@@ -286,8 +287,202 @@ func TestCsirtHandler_Create_ServiceError(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
 
+// ─────────────────────────────────────────────────────────
+// TESTS — CREATE dengan field BARU (STR + Tanggal)
+// ─────────────────────────────────────────────────────────
+
+func TestCsirtHandler_Create_WithTanggalFields_Success(t *testing.T) {
+	var capturedReq dto.CreateCsirtRequest
+	mockSvc := &mockCsirtService{
+		CreateFn: func(req dto.CreateCsirtRequest) (*models.Csirt, error) {
+			capturedReq = req
+			return &models.Csirt{ID: "csirt-new", NamaCsirt: req.NamaCsirt}, nil
+		},
+	}
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
+
+	req, cleanup := createMultipartRequest(t, http.MethodPost, "/api/csirt",
+		map[string]string{
+			"id_perusahaan":           "perusahaan-1",
+			"nama_csirt":              "CSIRT Lengkap",
+			"tanggal_registrasi":      "2024-01-15",
+			"tanggal_kadaluarsa":      "2025-01-15",
+			"tanggal_registrasi_ulang": "2025-01-20",
+		},
+		nil,
+	)
+	t.Cleanup(cleanup)
+	req = withCsirtAdminContext(req)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+	assert.Equal(t, "2024-01-15", capturedReq.TanggalRegistrasi)
+	assert.Equal(t, "2025-01-15", capturedReq.TanggalKadaluarsa)
+	assert.Equal(t, "2025-01-20", capturedReq.TanggalRegistrasiUlang)
+}
+
+func TestCsirtHandler_Create_WithoutTanggal_FileStrNullable(t *testing.T) {
+	var capturedReq dto.CreateCsirtRequest
+	mockSvc := &mockCsirtService{
+		CreateFn: func(req dto.CreateCsirtRequest) (*models.Csirt, error) {
+			capturedReq = req
+			return &models.Csirt{ID: "csirt-new"}, nil
+		},
+	}
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
+
+	// Tidak kirim tanggal apapun dan tidak kirim file_str
+	req, cleanup := createMultipartRequest(t, http.MethodPost, "/api/csirt",
+		map[string]string{
+			"id_perusahaan": "perusahaan-1",
+			"nama_csirt":    "CSIRT Minimal",
+		},
+		nil,
+	)
+	t.Cleanup(cleanup)
+	req = withCsirtAdminContext(req)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+	// Semua field nullable harusnya empty string (akan jadi NULL di DB via nullableStr)
+	assert.Equal(t, "", capturedReq.TanggalRegistrasi)
+	assert.Equal(t, "", capturedReq.TanggalKadaluarsa)
+	assert.Equal(t, "", capturedReq.TanggalRegistrasiUlang)
+	assert.Equal(t, "", capturedReq.FileStr)
+}
+
+func TestCsirtHandler_Create_WithFileStr_Success(t *testing.T) {
+	var capturedReq dto.CreateCsirtRequest
+	mockSvc := &mockCsirtService{
+		CreateFn: func(req dto.CreateCsirtRequest) (*models.Csirt, error) {
+			capturedReq = req
+			return &models.Csirt{ID: "csirt-new"}, nil
+		},
+	}
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
+
+	req, cleanup := createMultipartRequest(t, http.MethodPost, "/api/csirt",
+		map[string]string{
+			"id_perusahaan":      "perusahaan-1",
+			"nama_csirt":         "CSIRT dengan STR",
+			"tanggal_registrasi": "2024-03-01",
+		},
+		map[string]string{
+			"file_str": "surat_registrasi.pdf", // upload file STR
+		},
+	)
+	t.Cleanup(cleanup)
+	req = withCsirtAdminContext(req)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+	// file_str harus berisi path hasil upload (bukan kosong)
+	assert.NotEmpty(t, capturedReq.FileStr)
+	assert.Contains(t, filepath.ToSlash(capturedReq.FileStr), "uploads/str_csirt")
+}
+
+// ─────────────────────────────────────────────────────────
+// TESTS — UPDATE dengan field BARU (STR + Tanggal)
+// ─────────────────────────────────────────────────────────
+
+func TestCsirtHandler_Update_WithTanggalFields_Success(t *testing.T) {
+	var capturedReq dto.UpdateCsirtRequest
+	mockSvc := &mockCsirtService{
+		UpdateFn: func(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error) {
+			capturedReq = req
+			return &models.Csirt{ID: id}, nil
+		},
+	}
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
+
+	req, cleanup := createMultipartRequest(t, http.MethodPut, "/api/csirt/csirt-1",
+		map[string]string{
+			"tanggal_kadaluarsa":      "2026-06-30",
+			"tanggal_registrasi_ulang": "2026-07-01",
+		},
+		nil,
+	)
+	t.Cleanup(cleanup)
+	req = withCsirtAdminContext(req)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.NotNil(t, capturedReq.TanggalKadaluarsa)
+	assert.Equal(t, "2026-06-30", *capturedReq.TanggalKadaluarsa)
+	assert.NotNil(t, capturedReq.TanggalRegistrasiUlang)
+	assert.Equal(t, "2026-07-01", *capturedReq.TanggalRegistrasiUlang)
+	// tanggal_registrasi tidak dikirim → harus nil (tidak diupdate)
+	assert.Nil(t, capturedReq.TanggalRegistrasi)
+}
+
+func TestCsirtHandler_Update_WithFileStr_ReplacesExisting(t *testing.T) {
+	var capturedReq dto.UpdateCsirtRequest
+	mockSvc := &mockCsirtService{
+		UpdateFn: func(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error) {
+			capturedReq = req
+			return &models.Csirt{ID: id}, nil
+		},
+	}
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
+
+	req, cleanup := createMultipartRequest(t, http.MethodPut, "/api/csirt/csirt-1",
+		nil,
+		map[string]string{
+			"file_str": "str_baru.pdf",
+		},
+	)
+	t.Cleanup(cleanup)
+	req = withCsirtAdminContext(req)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.NotNil(t, capturedReq.FileStr)
+	assert.Contains(t, filepath.ToSlash(*capturedReq.FileStr), "uploads/str_csirt")
+}
+
+func TestCsirtHandler_Update_NoNewTanggal_FieldsRemainNil(t *testing.T) {
+	var capturedReq dto.UpdateCsirtRequest
+	mockSvc := &mockCsirtService{
+		UpdateFn: func(id string, req dto.UpdateCsirtRequest) (*models.Csirt, error) {
+			capturedReq = req
+			return &models.Csirt{ID: id, NamaCsirt: "Updated"}, nil
+		},
+	}
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
+
+	// Hanya update nama, tidak kirim tanggal apapun
+	req, cleanup := createMultipartRequest(t, http.MethodPut, "/api/csirt/csirt-1",
+		map[string]string{
+			"nama_csirt": "CSIRT Updated",
+		},
+		nil,
+	)
+	t.Cleanup(cleanup)
+	req = withCsirtAdminContext(req)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	// Tanggal tidak dikirim → semua nil → tidak di-update di service
+	assert.Nil(t, capturedReq.TanggalRegistrasi)
+	assert.Nil(t, capturedReq.TanggalKadaluarsa)
+	assert.Nil(t, capturedReq.TanggalRegistrasiUlang)
+	assert.Nil(t, capturedReq.FileStr)
+}
+
 //
-// TESTS — UPDATE
+// TESTS — UPDATE (existing)
 //
 
 func TestCsirtHandler_Update_Success(t *testing.T) {
@@ -352,7 +547,6 @@ func TestCsirtHandler_Update_NotFound(t *testing.T) {
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
-	// Current implementation returns 400 for all errors in Update
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
 
@@ -380,7 +574,6 @@ func TestCsirtHandler_Update_Error(t *testing.T) {
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
-	// Current implementation returns 400 for all errors in Update
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
 
@@ -422,7 +615,6 @@ func TestCsirtHandler_Delete_NotFound(t *testing.T) {
 
 	handler.ServeHTTP(rr, req)
 
-	// Current implementation returns 400 for all errors in Delete
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
 
@@ -574,6 +766,45 @@ func TestCsirtHandler_GetByID_AsUser_OtherPerusahaan_Forbidden(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, w.Code)
 }
 
+// ─────────────────────────────────────────────────────────
+// TEST OWNERSHIP — GET BY ID AS USER dengan field baru
+// ─────────────────────────────────────────────────────────
+
+func TestCsirtHandler_GetByID_AsUser_ReturnsNewFields(t *testing.T) {
+	tglReg := "2024-01-15"
+	tglKad := "2025-01-15"
+	tglRU := "2025-01-20"
+	mockSvc := &mockCsirtService{
+		GetByIDFn: func(id string) (*dto.CsirtResponse, error) {
+			return &dto.CsirtResponse{
+				ID:                     id,
+				NamaCsirt:              "CSIRT ABC",
+				TanggalRegistrasi:      tglReg,
+				TanggalKadaluarsa:      tglKad,
+				TanggalRegistrasiUlang: tglRU,
+				FileStr:                "uploads/str_csirt/abc.pdf",
+				Perusahaan:             dto.PerusahaanResponse{ID: "perusahaan-abc"},
+			}, nil
+		},
+	}
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/csirt/csirt-1", nil)
+	req = withCsirtUserContext(req, "perusahaan-abc")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var resp dto.CsirtResponse
+	json.NewDecoder(w.Body).Decode(&resp)
+	assert.Equal(t, tglReg, resp.TanggalRegistrasi)
+	assert.Equal(t, tglKad, resp.TanggalKadaluarsa)
+	assert.Equal(t, tglRU, resp.TanggalRegistrasiUlang)
+	assert.Equal(t, "uploads/str_csirt/abc.pdf", resp.FileStr)
+}
+
 /*
 =====================================
  TEST OWNERSHIP — CREATE AS USER
@@ -621,6 +852,40 @@ func TestCsirtHandler_Create_AsUser_NoPerusahaan_Forbidden(t *testing.T) {
 	handler.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+// ─────────────────────────────────────────────────────────
+// TEST USER — Create dengan tanggal, ID perusahaan dari JWT
+// ─────────────────────────────────────────────────────────
+
+func TestCsirtHandler_Create_AsUser_WithTanggal_IDFromJWT(t *testing.T) {
+	var capturedReq dto.CreateCsirtRequest
+	mockSvc := &mockCsirtService{
+		CreateFn: func(req dto.CreateCsirtRequest) (*models.Csirt, error) {
+			capturedReq = req
+			return &models.Csirt{ID: "csirt-baru"}, nil
+		},
+	}
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
+
+	req, cleanup := createMultipartRequest(t, http.MethodPost, "/api/csirt",
+		map[string]string{
+			"nama_csirt":         "CSIRT User",
+			"tanggal_registrasi": "2025-03-01",
+			"tanggal_kadaluarsa": "2026-03-01",
+		},
+		nil,
+	)
+	defer cleanup()
+	req = withCsirtUserContext(req, "perusahaan-user")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+	assert.Equal(t, "perusahaan-user", capturedReq.IdPerusahaan) // dari JWT
+	assert.Equal(t, "2025-03-01", capturedReq.TanggalRegistrasi)
+	assert.Equal(t, "2026-03-01", capturedReq.TanggalKadaluarsa)
 }
 
 /*
