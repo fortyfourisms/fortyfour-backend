@@ -32,14 +32,16 @@ func main() {
 	}
 	defer db.Close()
 
-	// RESPONDEN
+	// Initialize Repositories
 	respondenRepo := repository.NewRespondenRepository(db)
-	respondenService := services.NewRespondenService(respondenRepo)
-	respondenHandler := handlers.NewRespondenHandler(respondenService)
-
-	// RISIKO
 	risikoRepo := repository.NewRisikoRepository(db)
+
+	// Initialize Services
+	respondenService := services.NewRespondenService(respondenRepo)
 	risikoService := services.NewRisikoService(risikoRepo)
+
+	// Initialize Handler
+	respondenHandler := handlers.NewRespondenHandler(respondenService)
 	risikoHandler := handlers.NewRisikoHandler(risikoService)
 
 	// ROUTER
