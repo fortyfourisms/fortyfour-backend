@@ -31,17 +31,8 @@ func InitRouter(
 	mux.HandleFunc("/api/health", healthHandler)
 
 	// RESPONDEN ROUTES
-	mux.Handle("/api/responden",
-		middleware.Logger(
-			utils.AdaptHandler(respondenH),
-		),
-	)
-
-	mux.Handle("/api/responden/",
-		middleware.Logger(
-			utils.AdaptHandler(respondenH),
-		),
-	)
+	mux.Handle("/api/responden", middleware.Logger(utils.AdaptHandler(respondenH)))
+	mux.Handle("/api/responden/", middleware.Logger(utils.AdaptHandler(respondenH)))
 
 	return mux
 }
