@@ -118,6 +118,18 @@ func (p *Producer) PublishDomainDeleted(ctx context.Context, event interface{}) 
 	return p.Publish(ctx, "ikas.events", "domain.deleted", event)
 }
 
+func (p *Producer) PublishRuangLingkupCreated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "ruang_lingkup.created", event)
+}
+
+func (p *Producer) PublishRuangLingkupUpdated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "ruang_lingkup.updated", event)
+}
+
+func (p *Producer) PublishRuangLingkupDeleted(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "ruang_lingkup.deleted", event)
+}
+
 // PublishIkasAuditLog
 func (p *Producer) PublishIkasAuditLog(ctx context.Context, log interface{}) error {
 	return p.Publish(ctx, "ikas.events", "ikas.audit.log", log)

@@ -36,6 +36,9 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"domain.created",
 		"domain.updated",
 		"domain.deleted",
+		"ruang_lingkup.created",
+		"ruang_lingkup.updated",
+		"ruang_lingkup.deleted",
 		"ikas.audit_logs",
 	}
 
@@ -67,6 +70,9 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"domain.created":               "domain.created",
 		"domain.updated":               "domain.updated",
 		"domain.deleted":               "domain.deleted",
+		"ruang_lingkup.created":        "ruang_lingkup.created",
+		"ruang_lingkup.updated":        "ruang_lingkup.updated",
+		"ruang_lingkup.deleted":        "ruang_lingkup.deleted",
 		"ikas.audit_logs":              "ikas.audit.log",
 	}
 

@@ -24,6 +24,7 @@ type Consumer struct {
 	jawabanGulihRepo           repository.JawabanGulihRepositoryInterface
 	pertanyaanGulihRepo        repository.PertanyaanGulihRepositoryInterface
 	domainRepo                 repository.DomainRepositoryInterface
+	ruangLingkupRepo           repository.RuangLingkupRepositoryInterface
 	auditLogRepo               repository.AuditLogRepositoryInterface
 }
 
@@ -39,6 +40,7 @@ func NewConsumer(
 	jawabanGulihRepo repository.JawabanGulihRepositoryInterface,
 	pertanyaanGulihRepo repository.PertanyaanGulihRepositoryInterface,
 	domainRepo repository.DomainRepositoryInterface,
+	ruangLingkupRepo repository.RuangLingkupRepositoryInterface,
 	auditLogRepo repository.AuditLogRepositoryInterface,
 ) *Consumer {
 	return &Consumer{
@@ -53,6 +55,7 @@ func NewConsumer(
 		jawabanGulihRepo:           jawabanGulihRepo,
 		pertanyaanGulihRepo:        pertanyaanGulihRepo,
 		domainRepo:                 domainRepo,
+		ruangLingkupRepo:           ruangLingkupRepo,
 		auditLogRepo:               auditLogRepo,
 	}
 }
@@ -602,6 +605,43 @@ func (c *Consumer) ConsumeDomainDeleted(ctx context.Context) error {
 	})
 }
 
+func (c *Consumer) ConsumeRuangLingkupCreated(ctx context.Context) error {
+	return c.Consume(ctx, "ruang_lingkup.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.RuangLingkupCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from ruang_lingkup.created: %v", err)
+			return nil
+		}
+		log.Printf("Processing Ruang Lingkup Created: %s", event.Request.NamaRuangLingkup)
+		_, err := c.ruangLingkupRepo.Create(event.Request)
+		return err
+	})
+}
+
+func (c *Consumer) ConsumeRuangLingkupUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "ruang_lingkup.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.RuangLingkupUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from ruang_lingkup.updated: %v", err)
+			return nil
+		}
+		log.Printf("Processing Ruang Lingkup Updated for ID: %d", event.ID)
+		return c.ruangLingkupRepo.Update(event.ID, event.Request)
+	})
+}
+
+func (c *Consumer) ConsumeRuangLingkupDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "ruang_lingkup.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.RuangLingkupDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from ruang_lingkup.deleted: %v", err)
+			return nil
+		}
+		log.Printf("Processing Ruang Lingkup Deleted for ID: %d", event.ID)
+		return c.ruangLingkupRepo.Delete(event.ID)
+	})
+}
+
 func (c *Consumer) ConsumeIkasAuditLog(ctx context.Context) error {
 	return c.Consume(ctx, "ikas.audit_logs", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasAuditLogEvent
@@ -642,6 +682,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeDomainCreated,
 		c.ConsumeDomainUpdated,
 		c.ConsumeDomainDeleted,
+		c.ConsumeRuangLingkupCreated,
+		c.ConsumeRuangLingkupUpdated,
+		c.ConsumeRuangLingkupDeleted,
 		c.ConsumeIkasAuditLog,
 	}
 
