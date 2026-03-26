@@ -39,6 +39,9 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"ruang_lingkup.created",
 		"ruang_lingkup.updated",
 		"ruang_lingkup.deleted",
+		"kategori.created",
+		"kategori.updated",
+		"kategori.deleted",
 		"ikas.audit_logs",
 	}
 
@@ -73,6 +76,9 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"ruang_lingkup.created":        "ruang_lingkup.created",
 		"ruang_lingkup.updated":        "ruang_lingkup.updated",
 		"ruang_lingkup.deleted":        "ruang_lingkup.deleted",
+		"kategori.created":             "kategori.created",
+		"kategori.updated":             "kategori.updated",
+		"kategori.deleted":             "kategori.deleted",
 		"ikas.audit_logs":              "ikas.audit.log",
 	}
 

@@ -130,6 +130,18 @@ func (p *Producer) PublishRuangLingkupDeleted(ctx context.Context, event interfa
 	return p.Publish(ctx, "ikas.events", "ruang_lingkup.deleted", event)
 }
 
+func (p *Producer) PublishKategoriCreated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "kategori.created", event)
+}
+
+func (p *Producer) PublishKategoriUpdated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "kategori.updated", event)
+}
+
+func (p *Producer) PublishKategoriDeleted(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "kategori.deleted", event)
+}
+
 // PublishIkasAuditLog
 func (p *Producer) PublishIkasAuditLog(ctx context.Context, log interface{}) error {
 	return p.Publish(ctx, "ikas.events", "ikas.audit.log", log)
