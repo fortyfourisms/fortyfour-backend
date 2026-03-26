@@ -26,6 +26,7 @@ type Consumer struct {
 	domainRepo                 repository.DomainRepositoryInterface
 	ruangLingkupRepo           repository.RuangLingkupRepositoryInterface
 	kategoriRepo               repository.KategoriRepositoryInterface
+	subKategoriRepo            repository.SubKategoriRepositoryInterface
 	auditLogRepo               repository.AuditLogRepositoryInterface
 }
 
@@ -43,6 +44,7 @@ func NewConsumer(
 	domainRepo repository.DomainRepositoryInterface,
 	ruangLingkupRepo repository.RuangLingkupRepositoryInterface,
 	kategoriRepo repository.KategoriRepositoryInterface,
+	subKategoriRepo repository.SubKategoriRepositoryInterface,
 	auditLogRepo repository.AuditLogRepositoryInterface,
 ) *Consumer {
 	return &Consumer{
@@ -59,6 +61,7 @@ func NewConsumer(
 		domainRepo:                 domainRepo,
 		ruangLingkupRepo:           ruangLingkupRepo,
 		kategoriRepo:               kategoriRepo,
+		subKategoriRepo:            subKategoriRepo,
 		auditLogRepo:               auditLogRepo,
 	}
 }
@@ -682,6 +685,43 @@ func (c *Consumer) ConsumeKategoriDeleted(ctx context.Context) error {
 	})
 }
 
+func (c *Consumer) ConsumeSubKategoriCreated(ctx context.Context) error {
+	return c.Consume(ctx, "sub_kategori.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.SubKategoriCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from sub_kategori.created: %v", err)
+			return nil
+		}
+		log.Printf("Processing Sub Kategori Created: %s", event.Request.NamaSubKategori)
+		_, err := c.subKategoriRepo.Create(event.Request)
+		return err
+	})
+}
+
+func (c *Consumer) ConsumeSubKategoriUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "sub_kategori.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.SubKategoriUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from sub_kategori.updated: %v", err)
+			return nil
+		}
+		log.Printf("Processing Sub Kategori Updated for ID: %d", event.ID)
+		return c.subKategoriRepo.Update(event.ID, event.Request)
+	})
+}
+
+func (c *Consumer) ConsumeSubKategoriDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "sub_kategori.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.SubKategoriDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from sub_kategori.deleted: %v", err)
+			return nil
+		}
+		log.Printf("Processing Sub Kategori Deleted for ID: %d", event.ID)
+		return c.subKategoriRepo.Delete(event.ID)
+	})
+}
+
 func (c *Consumer) ConsumeIkasAuditLog(ctx context.Context) error {
 	return c.Consume(ctx, "ikas.audit_logs", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasAuditLogEvent
@@ -728,6 +768,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeKategoriCreated,
 		c.ConsumeKategoriUpdated,
 		c.ConsumeKategoriDeleted,
+		c.ConsumeSubKategoriCreated,
+		c.ConsumeSubKategoriUpdated,
+		c.ConsumeSubKategoriDeleted,
 		c.ConsumeIkasAuditLog,
 	}
 

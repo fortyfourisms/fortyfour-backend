@@ -101,6 +101,7 @@ func main() {
 		repository.NewDomainRepository(db),
 		repository.NewRuangLingkupRepository(db),
 		repository.NewKategoriRepository(db),
+		repository.NewSubKategoriRepository(db),
 		repository.NewAuditLogRepository(db),
 	)
 
@@ -134,7 +135,7 @@ func main() {
 	ruangLingkupService := services.NewRuangLingkupService(ruangLingkupRepo, msgProducer)
 	domainService := services.NewDomainService(domainRepo, msgProducer)
 	kategoriService := services.NewKategoriService(kategoriRepo, msgProducer)
-	subKategoriService := services.NewSubKategoriService(subKategoriRepo)
+	subKategoriService := services.NewSubKategoriService(subKategoriRepo, msgProducer)
 	pertanyaanIdentifikasiService := services.NewPertanyaanIdentifikasiService(pertanyaanIdentifikasiRepo)
 	pertanyaanProteksiService := services.NewPertanyaanProteksiService(pertanyaanProteksiRepo)
 	pertanyaanDeteksiService := services.NewPertanyaanDeteksiService(pertanyaanDeteksiRepo)
@@ -229,9 +230,10 @@ func main() {
 		logger.Info("  - ruang_lingkup.created")
 		logger.Info("  - ruang_lingkup.updated")
 		logger.Info("  - ruang_lingkup.deleted")
-		logger.Info("  - kategori.created")
-		logger.Info("  - kategori.updated")
 		logger.Info("  - kategori.deleted")
+		logger.Info("  - sub_kategori.created")
+		logger.Info("  - sub_kategori.updated")
+		logger.Info("  - sub_kategori.deleted")
 		logger.Info("  - ikas.audit_logs")
 
 		if err := http.ListenAndServe(cfg.Port, mux); err != nil && err != http.ErrServerClosed {

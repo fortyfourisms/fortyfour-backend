@@ -42,6 +42,9 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"kategori.created",
 		"kategori.updated",
 		"kategori.deleted",
+		"sub_kategori.created",
+		"sub_kategori.updated",
+		"sub_kategori.deleted",
 		"ikas.audit_logs",
 	}
 
@@ -79,6 +82,9 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"kategori.created":             "kategori.created",
 		"kategori.updated":             "kategori.updated",
 		"kategori.deleted":             "kategori.deleted",
+		"sub_kategori.created":         "sub_kategori.created",
+		"sub_kategori.updated":         "sub_kategori.updated",
+		"sub_kategori.deleted":         "sub_kategori.deleted",
 		"ikas.audit_logs":              "ikas.audit.log",
 	}
 
