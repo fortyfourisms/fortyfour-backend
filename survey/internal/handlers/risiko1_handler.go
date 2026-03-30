@@ -6,6 +6,7 @@ import (
 
 	"survey/internal/dto"
 	"survey/internal/services"
+	"survey/internal/utils"
 )
 
 type RisikoHandler struct {
@@ -18,29 +19,31 @@ func NewRisikoHandler(s *services.RisikoService) *RisikoHandler {
 
 func (h *RisikoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method == http.MethodPost {
-		h.create(w, r)
-		return
-	}
+	switch r.Method {
 
-	w.WriteHeader(http.StatusMethodNotAllowed)
+	case http.MethodPost:
+		h.createJawaban(w, r)
+
+	default:
+		utils.RespondError(w, 405, "Method tidak diizinkan")
+	}
 }
 
-func (h *RisikoHandler) create(w http.ResponseWriter, r *http.Request) {
+func (h *RisikoHandler) createJawaban(w http.ResponseWriter, r *http.Request) {
 
-	var req dto.CreateRisikoRequest
+	var req dto.CreateRisikoJawabanRequest
 
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		http.Error(w, err.Error(), 400)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, 400, "Invalid body")
 		return
 	}
 
-	err = h.service.Create(req)
-	if err != nil {
-		http.Error(w, err.Error(), 500)
+	if err := h.service.CreateJawaban(req); err != nil {
+		utils.RespondError(w, 400, err.Error())
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
+	utils.RespondJSON(w, 201, map[string]string{
+		"message": "Jawaban risiko berhasil disimpan",
+	})
 }
