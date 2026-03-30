@@ -98,11 +98,8 @@ type ProteksiRepositoryInterface interface {
 
 // DeteksiRepositoryInterface
 type DeteksiRepositoryInterface interface {
-	Create(req dto.CreateDeteksiRequest, id string) error
 	GetAll() ([]models.Deteksi, error)
 	GetByID(id string) (*models.Deteksi, error)
-	Update(id string, deteksi models.Deteksi) error
-	Delete(id string) error
 }
 
 // GulihRepositoryInterface
