@@ -3,8 +3,8 @@ package repository
 import (
 	"database/sql"
 	"fmt"
-	"fortyfour-backend/internal/dto"
-	"fortyfour-backend/internal/models"
+	"ikas/internal/dto"
+	"ikas/internal/models"
 )
 
 type IdentifikasiRepository struct {

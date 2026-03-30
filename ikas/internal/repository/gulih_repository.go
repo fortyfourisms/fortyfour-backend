@@ -2,8 +2,8 @@ package repository
 
 import (
 	"database/sql"
-	"fortyfour-backend/internal/dto"
-	"fortyfour-backend/internal/models"
+	"ikas/internal/dto"
+	"ikas/internal/models"
 )
 
 type GulihRepository struct {

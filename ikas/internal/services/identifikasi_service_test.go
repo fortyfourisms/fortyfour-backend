@@ -2,11 +2,10 @@ package services
 
 import (
 	"errors"
+	"ikas/internal/dto"
+	"ikas/internal/models"
+	"ikas/internal/repository"
 	"testing"
-
-	"fortyfour-backend/internal/dto"
-	"fortyfour-backend/internal/models"
-	"fortyfour-backend/internal/repository"
 
 	"github.com/stretchr/testify/assert"
 )

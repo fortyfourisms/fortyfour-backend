@@ -2,31 +2,26 @@ package handlers
 
 import (
 	"encoding/json"
+	"ikas/internal/dto"
+	"ikas/internal/services"
+	"ikas/internal/utils"
 	"net/http"
-	"strings"
-
-	"fortyfour-backend/internal/dto"
-	"fortyfour-backend/internal/middleware"
-	"fortyfour-backend/internal/services"
-	"fortyfour-backend/internal/utils"
 
 	"fortyfour-backend/pkg/logger"
 )
 
 type GulihHandler struct {
-	service    *services.GulihService
-	sseService *services.SSEService
+	service *services.GulihService
 }
 
-func NewGulihHandler(service *services.GulihService, sseService *services.SSEService) *GulihHandler {
+func NewGulihHandler(service *services.GulihService) *GulihHandler {
 	return &GulihHandler{
-		service:    service,
-		sseService: sseService,
+		service: service,
 	}
 }
 
 func (h *GulihHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/api/gulih"), "/")
+	id := utils.ExtractID(r.URL.Path, "gulih")
 
 	switch r.Method {
 	case http.MethodGet:
@@ -119,13 +114,6 @@ func (h *GulihHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// SSE Notif Create
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
-	h.sseService.NotifyCreate("gulih", resp, userID)
-
 	utils.RespondJSON(w, 201, resp)
 }
 
@@ -155,13 +143,6 @@ func (h *GulihHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 		return
 	}
 
-	// SSE Notif Update
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
-	h.sseService.NotifyUpdate("gulih", resp, userID)
-
 	utils.RespondJSON(w, 200, resp)
 }
 
@@ -180,13 +161,6 @@ func (h *GulihHandler) handleDelete(w http.ResponseWriter, r *http.Request, id s
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
-
-	// SSE Notif Delete
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
-	h.sseService.NotifyDelete("gulih", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }

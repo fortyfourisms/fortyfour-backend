@@ -15,14 +15,18 @@ import (
 type Consumer struct {
 	*rabbitmq.Consumer
 	ikasRepo                   repository.IkasRepositoryInterface
-	jawabanIdentifikasiRepo    repository.JawabanIdentifikasiRepositoryInterface
+	identifikasiRepo           repository.IdentifikasiRepositoryInterface
 	pertanyaanIdentifikasiRepo repository.PertanyaanIdentifikasiRepositoryInterface
-	jawabanProteksiRepo        repository.JawabanProteksiRepositoryInterface
+	jawabanIdentifikasiRepo    repository.JawabanIdentifikasiRepositoryInterface
+	proteksiRepo               repository.ProteksiRepositoryInterface
 	pertanyaanProteksiRepo     repository.PertanyaanProteksiRepositoryInterface
-	jawabanDeteksiRepo         repository.JawabanDeteksiRepositoryInterface
+	jawabanProteksiRepo        repository.JawabanProteksiRepositoryInterface
+	deteksiRepo                repository.DeteksiRepositoryInterface
 	pertanyaanDeteksiRepo      repository.PertanyaanDeteksiRepositoryInterface
-	jawabanGulihRepo           repository.JawabanGulihRepositoryInterface
+	jawabanDeteksiRepo         repository.JawabanDeteksiRepositoryInterface
+	gulihRepo                  repository.GulihRepositoryInterface
 	pertanyaanGulihRepo        repository.PertanyaanGulihRepositoryInterface
+	jawabanGulihRepo           repository.JawabanGulihRepositoryInterface
 	domainRepo                 repository.DomainRepositoryInterface
 	ruangLingkupRepo           repository.RuangLingkupRepositoryInterface
 	kategoriRepo               repository.KategoriRepositoryInterface
@@ -33,14 +37,18 @@ type Consumer struct {
 func NewConsumer(
 	c *rabbitmq.Consumer,
 	ikasRepo repository.IkasRepositoryInterface,
-	jawabanIdentifikasiRepo repository.JawabanIdentifikasiRepositoryInterface,
+	identifikasiRepo repository.IdentifikasiRepositoryInterface,
 	pertanyaanIdentifikasiRepo repository.PertanyaanIdentifikasiRepositoryInterface,
-	jawabanProteksiRepo repository.JawabanProteksiRepositoryInterface,
+	jawabanIdentifikasiRepo repository.JawabanIdentifikasiRepositoryInterface,
+	proteksiRepo repository.ProteksiRepositoryInterface,
 	pertanyaanProteksiRepo repository.PertanyaanProteksiRepositoryInterface,
-	jawabanDeteksiRepo repository.JawabanDeteksiRepositoryInterface,
+	jawabanProteksiRepo repository.JawabanProteksiRepositoryInterface,
+	deteksiRepo repository.DeteksiRepositoryInterface,
 	pertanyaanDeteksiRepo repository.PertanyaanDeteksiRepositoryInterface,
-	jawabanGulihRepo repository.JawabanGulihRepositoryInterface,
+	jawabanDeteksiRepo repository.JawabanDeteksiRepositoryInterface,
+	gulihRepo repository.GulihRepositoryInterface,
 	pertanyaanGulihRepo repository.PertanyaanGulihRepositoryInterface,
+	jawabanGulihRepo repository.JawabanGulihRepositoryInterface,
 	domainRepo repository.DomainRepositoryInterface,
 	ruangLingkupRepo repository.RuangLingkupRepositoryInterface,
 	kategoriRepo repository.KategoriRepositoryInterface,
@@ -50,14 +58,18 @@ func NewConsumer(
 	return &Consumer{
 		Consumer:                   c,
 		ikasRepo:                   ikasRepo,
-		jawabanIdentifikasiRepo:    jawabanIdentifikasiRepo,
+		identifikasiRepo:           identifikasiRepo,
 		pertanyaanIdentifikasiRepo: pertanyaanIdentifikasiRepo,
-		jawabanProteksiRepo:        jawabanProteksiRepo,
+		jawabanIdentifikasiRepo:    jawabanIdentifikasiRepo,
+		proteksiRepo:               proteksiRepo,
 		pertanyaanProteksiRepo:     pertanyaanProteksiRepo,
-		jawabanDeteksiRepo:         jawabanDeteksiRepo,
+		jawabanProteksiRepo:        jawabanProteksiRepo,
+		deteksiRepo:                deteksiRepo,
 		pertanyaanDeteksiRepo:      pertanyaanDeteksiRepo,
-		jawabanGulihRepo:           jawabanGulihRepo,
+		jawabanDeteksiRepo:         jawabanDeteksiRepo,
+		gulihRepo:                  gulihRepo,
 		pertanyaanGulihRepo:        pertanyaanGulihRepo,
+		jawabanGulihRepo:           jawabanGulihRepo,
 		domainRepo:                 domainRepo,
 		ruangLingkupRepo:           ruangLingkupRepo,
 		kategoriRepo:               kategoriRepo,

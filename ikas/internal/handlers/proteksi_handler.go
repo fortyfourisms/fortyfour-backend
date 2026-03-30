@@ -2,31 +2,26 @@ package handlers
 
 import (
 	"encoding/json"
+	"ikas/internal/dto"
+	"ikas/internal/services"
+	"ikas/internal/utils"
 	"net/http"
-	"strings"
-
-	"fortyfour-backend/internal/dto"
-	"fortyfour-backend/internal/middleware"
-	"fortyfour-backend/internal/services"
-	"fortyfour-backend/internal/utils"
 
 	"fortyfour-backend/pkg/logger"
 )
 
 type ProteksiHandler struct {
-	service    *services.ProteksiService
-	sseService *services.SSEService
+	service *services.ProteksiService
 }
 
-func NewProteksiHandler(service *services.ProteksiService, sseService *services.SSEService) *ProteksiHandler {
+func NewProteksiHandler(service *services.ProteksiService) *ProteksiHandler {
 	return &ProteksiHandler{
-		service:    service,
-		sseService: sseService,
+		service: service,
 	}
 }
 
 func (h *ProteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/api/proteksi"), "/")
+	id := utils.ExtractID(r.URL.Path, "proteksi")
 
 	switch r.Method {
 	case http.MethodGet:
@@ -120,13 +115,6 @@ func (h *ProteksiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// SSE Notif Create
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
-	h.sseService.NotifyCreate("proteksi", resp, userID)
-
 	utils.RespondJSON(w, 201, resp)
 }
 
@@ -156,13 +144,6 @@ func (h *ProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 
-	// SSE Notif Update
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
-	h.sseService.NotifyUpdate("proteksi", resp, userID)
-
 	utils.RespondJSON(w, 200, resp)
 }
 
@@ -181,13 +162,6 @@ func (h *ProteksiHandler) handleDelete(w http.ResponseWriter, r *http.Request, i
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
-
-	// SSE Notif Delete
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
-	h.sseService.NotifyDelete("proteksi", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }

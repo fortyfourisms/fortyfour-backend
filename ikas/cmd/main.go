@@ -90,14 +90,18 @@ func main() {
 	msgConsumer := internalRmq.NewConsumer(
 		sharedConsumer,
 		repository.NewIkasRepository(db),
-		repository.NewJawabanIdentifikasiRepository(db),
+		repository.NewIdentifikasiRepository(db),
 		repository.NewPertanyaanIdentifikasiRepository(db),
-		repository.NewJawabanProteksiRepository(db),
+		repository.NewJawabanIdentifikasiRepository(db),
+		repository.NewProteksiRepository(db),
 		repository.NewPertanyaanProteksiRepository(db),
-		repository.NewJawabanDeteksiRepository(db),
+		repository.NewJawabanProteksiRepository(db),
+		repository.NewDeteksiRepository(db),
 		repository.NewPertanyaanDeteksiRepository(db),
-		repository.NewJawabanGulihRepository(db),
+		repository.NewJawabanDeteksiRepository(db),
+		repository.NewGulihRepository(db),
 		repository.NewPertanyaanGulihRepository(db),
+		repository.NewJawabanGulihRepository(db),
 		repository.NewDomainRepository(db),
 		repository.NewRuangLingkupRepository(db),
 		repository.NewKategoriRepository(db),
@@ -120,6 +124,11 @@ func main() {
 	kategoriRepo := repository.NewKategoriRepository(db)
 	subKategoriRepo := repository.NewSubKategoriRepository(db)
 
+	identifikasiRepo := repository.NewIdentifikasiRepository(db)
+	proteksiRepo := repository.NewProteksiRepository(db)
+	deteksiRepo := repository.NewDeteksiRepository(db)
+	gulihRepo := repository.NewGulihRepository(db)
+
 	pertanyaanIdentifikasiRepo := repository.NewPertanyaanIdentifikasiRepository(db)
 	pertanyaanProteksiRepo := repository.NewPertanyaanProteksiRepository(db)
 	pertanyaanDeteksiRepo := repository.NewPertanyaanDeteksiRepository(db)
@@ -136,6 +145,10 @@ func main() {
 	domainService := services.NewDomainService(domainRepo, msgProducer)
 	kategoriService := services.NewKategoriService(kategoriRepo, msgProducer)
 	subKategoriService := services.NewSubKategoriService(subKategoriRepo, msgProducer)
+	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
+	proteksiService := services.NewProteksiService(proteksiRepo)
+	deteksiService := services.NewDeteksiService(deteksiRepo)
+	gulihService := services.NewGulihService(gulihRepo)
 	pertanyaanIdentifikasiService := services.NewPertanyaanIdentifikasiService(pertanyaanIdentifikasiRepo, msgProducer)
 	pertanyaanProteksiService := services.NewPertanyaanProteksiService(pertanyaanProteksiRepo, msgProducer)
 	pertanyaanDeteksiService := services.NewPertanyaanDeteksiService(pertanyaanDeteksiRepo, msgProducer)
@@ -158,6 +171,10 @@ func main() {
 	domainHandler := handlers.NewDomainHandler(domainService)
 	kategoriHandler := handlers.NewKategoriHandler(kategoriService)
 	subKategoriHandler := handlers.NewSubKategoriHandler(subKategoriService)
+	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
+	proteksiHandler := handlers.NewProteksiHandler(proteksiService)
+	deteksiHandler := handlers.NewDeteksiHandler(deteksiService)
+	gulihHandler := handlers.NewGulihHandler(gulihService)
 	pertanyaanIdentifikasiHandler := handlers.NewPertanyaanIdentifikasiHandler(pertanyaanIdentifikasiService)
 	pertanyaanProteksiHandler := handlers.NewPertanyaanProteksiHandler(pertanyaanProteksiService)
 	pertanyaanDeteksiHandler := handlers.NewPertanyaanDeteksiHandler(pertanyaanDeteksiService)
@@ -185,6 +202,10 @@ func main() {
 		domainHandler,
 		kategoriHandler,
 		subKategoriHandler,
+		identifikasiHandler,
+		proteksiHandler,
+		deteksiHandler,
+		gulihHandler,
 		pertanyaanIdentifikasiHandler,
 		pertanyaanProteksiHandler,
 		pertanyaanDeteksiHandler,

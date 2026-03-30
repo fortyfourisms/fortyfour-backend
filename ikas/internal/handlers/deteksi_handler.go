@@ -2,31 +2,26 @@ package handlers
 
 import (
 	"encoding/json"
+	"ikas/internal/dto"
+	"ikas/internal/services"
+	"ikas/internal/utils"
 	"net/http"
-	"strings"
-
-	"fortyfour-backend/internal/dto"
-	"fortyfour-backend/internal/middleware"
-	"fortyfour-backend/internal/services"
-	"fortyfour-backend/internal/utils"
 
 	"fortyfour-backend/pkg/logger"
 )
 
 type DeteksiHandler struct {
-	service    *services.DeteksiService
-	sseService *services.SSEService
+	service *services.DeteksiService
 }
 
-func NewDeteksiHandler(service *services.DeteksiService, sseService *services.SSEService) *DeteksiHandler {
+func NewDeteksiHandler(service *services.DeteksiService) *DeteksiHandler {
 	return &DeteksiHandler{
-		service:    service,
-		sseService: sseService,
+		service: service,
 	}
 }
 
 func (h *DeteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/api/deteksi"), "/")
+	id := utils.ExtractID(r.URL.Path, "deteksi")
 
 	switch r.Method {
 	case http.MethodGet:
@@ -119,13 +114,6 @@ func (h *DeteksiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// SSE Notif Create
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
-	h.sseService.NotifyCreate("deteksi", resp, userID)
-
 	utils.RespondJSON(w, 201, resp)
 }
 
@@ -155,13 +143,6 @@ func (h *DeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id
 		return
 	}
 
-	// SSE Notif Update
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
-	h.sseService.NotifyUpdate("deteksi", resp, userID)
-
 	utils.RespondJSON(w, 200, resp)
 }
 
@@ -180,13 +161,6 @@ func (h *DeteksiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
-
-	// SSE Notif Delete
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
-	h.sseService.NotifyDelete("deteksi", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }

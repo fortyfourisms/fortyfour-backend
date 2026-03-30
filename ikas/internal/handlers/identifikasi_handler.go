@@ -2,30 +2,26 @@ package handlers
 
 import (
 	"encoding/json"
-	"fortyfour-backend/internal/dto"
-	"fortyfour-backend/internal/middleware"
-	"fortyfour-backend/internal/services"
-	"fortyfour-backend/internal/utils"
+	"ikas/internal/dto"
+	"ikas/internal/services"
+	"ikas/internal/utils"
 	"net/http"
-	"strings"
 
 	"fortyfour-backend/pkg/logger"
 )
 
 type IdentifikasiHandler struct {
-	service    *services.IdentifikasiService
-	sseService *services.SSEService
+	service *services.IdentifikasiService
 }
 
-func NewIdentifikasiHandler(service *services.IdentifikasiService, sseService *services.SSEService) *IdentifikasiHandler {
+func NewIdentifikasiHandler(service *services.IdentifikasiService) *IdentifikasiHandler {
 	return &IdentifikasiHandler{
-		service:    service,
-		sseService: sseService,
+		service: service,
 	}
 }
 
 func (h *IdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/api/identifikasi"), "/")
+	id := utils.ExtractID(r.URL.Path, "identifikasi")
 
 	switch r.Method {
 	case http.MethodGet:
@@ -81,13 +77,6 @@ func (h *IdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
-
-	// SSE Notif Create
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
-	h.sseService.NotifyCreate("identifikasi", resp, userID)
 
 	utils.RespondJSON(w, 201, resp)
 }
@@ -156,13 +145,6 @@ func (h *IdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// SSE Notif Update
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
-	h.sseService.NotifyUpdate("identifikasi", resp, userID)
-
 	utils.RespondJSON(w, 200, resp)
 }
 
@@ -181,13 +163,6 @@ func (h *IdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http.Reques
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
-
-	// SSE Notif Delete
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
-	h.sseService.NotifyDelete("identifikasi", id, userID)
 
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }

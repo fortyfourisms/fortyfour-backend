@@ -1,9 +1,9 @@
 package services
 
 import (
-	"fortyfour-backend/internal/dto"
-	"fortyfour-backend/internal/models"
-	"fortyfour-backend/internal/repository"
+	"ikas/internal/dto"
+	"ikas/internal/models"
+	"ikas/internal/repository"
 
 	"github.com/google/uuid"
 )
