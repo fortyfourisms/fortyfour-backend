@@ -92,11 +92,8 @@ type IdentifikasiRepositoryInterface interface {
 
 // ProteksiRepositoryInterface
 type ProteksiRepositoryInterface interface {
-	Create(req dto.CreateProteksiRequest, id string) error
 	GetAll() ([]models.Proteksi, error)
 	GetByID(id string) (*models.Proteksi, error)
-	Update(id string, proteksi models.Proteksi) error
-	Delete(id string) error
 }
 
 // DeteksiRepositoryInterface
