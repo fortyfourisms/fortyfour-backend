@@ -138,7 +138,7 @@ func main() {
 	subKategoriService := services.NewSubKategoriService(subKategoriRepo, msgProducer)
 	pertanyaanIdentifikasiService := services.NewPertanyaanIdentifikasiService(pertanyaanIdentifikasiRepo, msgProducer)
 	pertanyaanProteksiService := services.NewPertanyaanProteksiService(pertanyaanProteksiRepo, msgProducer)
-	pertanyaanDeteksiService := services.NewPertanyaanDeteksiService(pertanyaanDeteksiRepo)
+	pertanyaanDeteksiService := services.NewPertanyaanDeteksiService(pertanyaanDeteksiRepo, msgProducer)
 	pertanyaanGulihService := services.NewPertanyaanGulihService(pertanyaanGulihRepo)
 	jawabanIdentifikasiService := services.NewJawabanIdentifikasiService(jawabanIdentifikasiRepo, ikasRepo, msgProducer)
 	jawabanProteksiService := services.NewJawabanProteksiService(jawabanProteksiRepo, ikasRepo, msgProducer)
@@ -240,6 +240,9 @@ func main() {
 		logger.Info("  - pertanyaan_proteksi.created")
 		logger.Info("  - pertanyaan_proteksi.updated")
 		logger.Info("  - pertanyaan_proteksi.deleted")
+		logger.Info("  - pertanyaan_deteksi.created")
+		logger.Info("  - pertanyaan_deteksi.updated")
+		logger.Info("  - pertanyaan_deteksi.deleted")
 		logger.Info("  - ikas.audit_logs")
 
 		if err := http.ListenAndServe(cfg.Port, mux); err != nil && err != http.ErrServerClosed {
