@@ -86,11 +86,8 @@ type SubKategoriRepositoryInterface interface {
 
 // IdentifikasiRepositoryInterface
 type IdentifikasiRepositoryInterface interface {
-	Create(req dto.CreateIdentifikasiRequest, id string) error
 	GetAll() ([]models.Identifikasi, error)
 	GetByID(id string) (*models.Identifikasi, error)
-	Update(id string, identifikasi models.Identifikasi) error
-	Delete(id string) error
 }
 
 // ProteksiRepositoryInterface
