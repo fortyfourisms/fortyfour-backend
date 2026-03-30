@@ -54,6 +54,9 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"pertanyaan_deteksi.created",
 		"pertanyaan_deteksi.updated",
 		"pertanyaan_deteksi.deleted",
+		"pertanyaan_gulih.created",
+		"pertanyaan_gulih.updated",
+		"pertanyaan_gulih.deleted",
 		"ikas.audit_logs",
 	}
 
@@ -103,6 +106,9 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"pertanyaan_deteksi.created":      "pertanyaan_deteksi.created",
 		"pertanyaan_deteksi.updated":      "pertanyaan_deteksi.updated",
 		"pertanyaan_deteksi.deleted":      "pertanyaan_deteksi.deleted",
+		"pertanyaan_gulih.created":        "pertanyaan_gulih.created",
+		"pertanyaan_gulih.updated":        "pertanyaan_gulih.updated",
+		"pertanyaan_gulih.deleted":        "pertanyaan_gulih.deleted",
 		"ikas.audit_logs":              "ikas.audit.log",
 	}
 

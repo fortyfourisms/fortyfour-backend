@@ -833,6 +833,43 @@ func (c *Consumer) ConsumePertanyaanDeteksiDeleted(ctx context.Context) error {
 	})
 }
 
+func (c *Consumer) ConsumePertanyaanGulihCreated(ctx context.Context) error {
+	return c.Consume(ctx, "pertanyaan_gulih.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.PertanyaanGulihCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_gulih.created: %v", err)
+			return nil
+		}
+		log.Printf("Processing Pertanyaan Gulih Created: %s", event.Request.PertanyaanGulih)
+		_, err := c.pertanyaanGulihRepo.Create(event.Request)
+		return err
+	})
+}
+
+func (c *Consumer) ConsumePertanyaanGulihUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "pertanyaan_gulih.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.PertanyaanGulihUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_gulih.updated: %v", err)
+			return nil
+		}
+		log.Printf("Processing Pertanyaan Gulih Updated for ID: %d", event.ID)
+		return c.pertanyaanGulihRepo.Update(event.ID, event.Request)
+	})
+}
+
+func (c *Consumer) ConsumePertanyaanGulihDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "pertanyaan_gulih.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.PertanyaanGulihDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_gulih.deleted: %v", err)
+			return nil
+		}
+		log.Printf("Processing Pertanyaan Gulih Deleted for ID: %d", event.ID)
+		return c.pertanyaanGulihRepo.Delete(event.ID)
+	})
+}
+
 func (c *Consumer) ConsumeIkasAuditLog(ctx context.Context) error {
 	return c.Consume(ctx, "ikas.audit_logs", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasAuditLogEvent
@@ -891,6 +928,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumePertanyaanDeteksiCreated,
 		c.ConsumePertanyaanDeteksiUpdated,
 		c.ConsumePertanyaanDeteksiDeleted,
+		c.ConsumePertanyaanGulihCreated,
+		c.ConsumePertanyaanGulihUpdated,
+		c.ConsumePertanyaanGulihDeleted,
 		c.ConsumeIkasAuditLog,
 	}
 
