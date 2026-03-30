@@ -11,34 +11,46 @@ type RisikoService struct {
 }
 
 func NewRisikoService(r *repository.RisikoRepository) *RisikoService {
-	return &RisikoService{r}
+	return &RisikoService{repo: r}
 }
 
-func (s *RisikoService) Create(req dto.CreateRisikoRequest) (dto.RisikoResponse, error) {
+// VALIDASI
+func (s *RisikoService) validate(req dto.CreateRisikoJawabanRequest) error {
 
-	if req.NamaRisiko == "" {
-		return dto.RisikoResponse{}, errors.New("nama risiko wajib diisi")
+	if req.RespondenID == 0 {
+		return errors.New("responden_id wajib")
 	}
 
-	data, err := s.repo.Create(repository.Risiko(req))
-	if err != nil {
-		return dto.RisikoResponse{}, err
+	if req.RisikoID == 0 {
+		return errors.New("risiko_id wajib")
 	}
 
-	return dto.RisikoResponse(data), nil
+	if req.PernahTerjadi == "" {
+		return errors.New("pernah_terjadi wajib")
+	}
+
+	return nil
 }
 
-func (s *RisikoService) GetAll() ([]dto.RisikoResponse, error) {
+// CREATE JAWABAN
+func (s *RisikoService) CreateJawaban(req dto.CreateRisikoJawabanRequest) error {
 
-	list, err := s.repo.GetAll()
-	if err != nil {
-		return nil, err
+	if err := s.validate(req); err != nil {
+		return err
 	}
 
-	var res []dto.RisikoResponse
-	for _, v := range list {
-		res = append(res, dto.RisikoResponse(v))
+	data := map[string]interface{}{
+		"responden_id": req.RespondenID,
+		"risiko_id": req.RisikoID,
+		"pernah_terjadi": req.PernahTerjadi,
+		"dampak_reputasi": req.DampakReputasi,
+		"dampak_operasional": req.DampakOperasional,
+		"dampak_finansial": req.DampakFinansial,
+		"dampak_hukum": req.DampakHukum,
+		"frekuensi": req.Frekuensi,
+		"ada_pengendalian": req.AdaPengendalian,
+		"deskripsi_pengendalian": req.DeskripsiPengendalian,
 	}
 
-	return res, nil
+	return s.repo.CreateJawaban(data)
 }
