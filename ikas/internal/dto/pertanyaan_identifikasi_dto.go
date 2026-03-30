@@ -40,3 +40,8 @@ type PertanyaanIdentifikasiResponse struct {
 	CreatedAt              time.Time        `json:"created_at"`
 	UpdatedAt              time.Time        `json:"updated_at"`
 }
+
+type PertanyaanIdentifikasiMessageResponse struct {
+	ID      int    `json:"id,omitempty"`
+	Message string `json:"message"`
+}

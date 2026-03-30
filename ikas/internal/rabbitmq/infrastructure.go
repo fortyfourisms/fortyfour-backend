@@ -45,6 +45,9 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"sub_kategori.created",
 		"sub_kategori.updated",
 		"sub_kategori.deleted",
+		"pertanyaan_identifikasi.created",
+		"pertanyaan_identifikasi.updated",
+		"pertanyaan_identifikasi.deleted",
 		"ikas.audit_logs",
 	}
 
@@ -85,6 +88,9 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"sub_kategori.created":         "sub_kategori.created",
 		"sub_kategori.updated":         "sub_kategori.updated",
 		"sub_kategori.deleted":         "sub_kategori.deleted",
+		"pertanyaan_identifikasi.created": "pertanyaan_identifikasi.created",
+		"pertanyaan_identifikasi.updated": "pertanyaan_identifikasi.updated",
+		"pertanyaan_identifikasi.deleted": "pertanyaan_identifikasi.deleted",
 		"ikas.audit_logs":              "ikas.audit.log",
 	}
 

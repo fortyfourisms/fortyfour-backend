@@ -136,7 +136,7 @@ func main() {
 	domainService := services.NewDomainService(domainRepo, msgProducer)
 	kategoriService := services.NewKategoriService(kategoriRepo, msgProducer)
 	subKategoriService := services.NewSubKategoriService(subKategoriRepo, msgProducer)
-	pertanyaanIdentifikasiService := services.NewPertanyaanIdentifikasiService(pertanyaanIdentifikasiRepo)
+	pertanyaanIdentifikasiService := services.NewPertanyaanIdentifikasiService(pertanyaanIdentifikasiRepo, msgProducer)
 	pertanyaanProteksiService := services.NewPertanyaanProteksiService(pertanyaanProteksiRepo)
 	pertanyaanDeteksiService := services.NewPertanyaanDeteksiService(pertanyaanDeteksiRepo)
 	pertanyaanGulihService := services.NewPertanyaanGulihService(pertanyaanGulihRepo)
@@ -234,6 +234,9 @@ func main() {
 		logger.Info("  - sub_kategori.created")
 		logger.Info("  - sub_kategori.updated")
 		logger.Info("  - sub_kategori.deleted")
+		logger.Info("  - pertanyaan_identifikasi.created")
+		logger.Info("  - pertanyaan_identifikasi.updated")
+		logger.Info("  - pertanyaan_identifikasi.deleted")
 		logger.Info("  - ikas.audit_logs")
 
 		if err := http.ListenAndServe(cfg.Port, mux); err != nil && err != http.ErrServerClosed {

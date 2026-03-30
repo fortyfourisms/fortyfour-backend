@@ -123,7 +123,7 @@ func (h *PertanyaanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *h
 		return
 	}
 
-	resp, err := h.service.Create(req)
+	_, err := h.service.Create(req)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -143,9 +143,8 @@ func (h *PertanyaanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *h
 		return
 	}
 
-	utils.RespondJSON(w, 201, map[string]interface{}{
-		"message": "Berhasil menyimpan data",
-		"data":    resp,
+	utils.RespondJSON(w, 201, dto.PertanyaanIdentifikasiMessageResponse{
+		Message: "Berhasil menyimpan data",
 	})
 }
 
@@ -170,7 +169,7 @@ func (h *PertanyaanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *h
 		return
 	}
 
-	resp, err := h.service.Update(id, req)
+	_, err := h.service.Update(id, req)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -192,9 +191,9 @@ func (h *PertanyaanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *h
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil memperbarui data",
-		"data":    resp,
+	utils.RespondJSON(w, 200, dto.PertanyaanIdentifikasiMessageResponse{
+		ID:      id,
+		Message: "Berhasil memperbarui data",
 	})
 }
 
@@ -205,7 +204,7 @@ func (h *PertanyaanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *h
 //	@Tags         PertanyaanIdentifikasi
 //	@Produce      json
 //	@Param        id   path      int  true  "PertanyaanIdentifikasi ID"
-//	@Success      200  {object}  dto.MessageResponse
+//	@Success      200  {object}  dto.PertanyaanIdentifikasiMessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
 //	@Router       /api/maturity/pertanyaan-identifikasi/{id} [delete]
@@ -220,7 +219,8 @@ func (h *PertanyaanIdentifikasiHandler) handleDelete(w http.ResponseWriter, r *h
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menghapus data",
+	utils.RespondJSON(w, 200, dto.PertanyaanIdentifikasiMessageResponse{
+		ID:      id,
+		Message: "Berhasil menghapus data",
 	})
 }

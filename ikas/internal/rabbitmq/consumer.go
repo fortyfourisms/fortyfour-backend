@@ -722,6 +722,43 @@ func (c *Consumer) ConsumeSubKategoriDeleted(ctx context.Context) error {
 	})
 }
 
+func (c *Consumer) ConsumePertanyaanIdentifikasiCreated(ctx context.Context) error {
+	return c.Consume(ctx, "pertanyaan_identifikasi.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.PertanyaanIdentifikasiCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_identifikasi.created: %v", err)
+			return nil
+		}
+		log.Printf("Processing Pertanyaan Identifikasi Created: %s", event.Request.PertanyaanIdentifikasi)
+		_, err := c.pertanyaanIdentifikasiRepo.Create(event.Request)
+		return err
+	})
+}
+
+func (c *Consumer) ConsumePertanyaanIdentifikasiUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "pertanyaan_identifikasi.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.PertanyaanIdentifikasiUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_identifikasi.updated: %v", err)
+			return nil
+		}
+		log.Printf("Processing Pertanyaan Identifikasi Updated for ID: %d", event.ID)
+		return c.pertanyaanIdentifikasiRepo.Update(event.ID, event.Request)
+	})
+}
+
+func (c *Consumer) ConsumePertanyaanIdentifikasiDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "pertanyaan_identifikasi.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.PertanyaanIdentifikasiDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_identifikasi.deleted: %v", err)
+			return nil
+		}
+		log.Printf("Processing Pertanyaan Identifikasi Deleted for ID: %d", event.ID)
+		return c.pertanyaanIdentifikasiRepo.Delete(event.ID)
+	})
+}
+
 func (c *Consumer) ConsumeIkasAuditLog(ctx context.Context) error {
 	return c.Consume(ctx, "ikas.audit_logs", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasAuditLogEvent
@@ -771,6 +808,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeSubKategoriCreated,
 		c.ConsumeSubKategoriUpdated,
 		c.ConsumeSubKategoriDeleted,
+		c.ConsumePertanyaanIdentifikasiCreated,
+		c.ConsumePertanyaanIdentifikasiUpdated,
+		c.ConsumePertanyaanIdentifikasiDeleted,
 		c.ConsumeIkasAuditLog,
 	}
 
