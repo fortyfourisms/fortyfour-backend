@@ -759,6 +759,43 @@ func (c *Consumer) ConsumePertanyaanIdentifikasiDeleted(ctx context.Context) err
 	})
 }
 
+func (c *Consumer) ConsumePertanyaanProteksiCreated(ctx context.Context) error {
+	return c.Consume(ctx, "pertanyaan_proteksi.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.PertanyaanProteksiCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_proteksi.created: %v", err)
+			return nil
+		}
+		log.Printf("Processing Pertanyaan Proteksi Created: %s", event.Request.PertanyaanProteksi)
+		_, err := c.pertanyaanProteksiRepo.Create(event.Request)
+		return err
+	})
+}
+
+func (c *Consumer) ConsumePertanyaanProteksiUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "pertanyaan_proteksi.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.PertanyaanProteksiUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_proteksi.updated: %v", err)
+			return nil
+		}
+		log.Printf("Processing Pertanyaan Proteksi Updated for ID: %d", event.ID)
+		return c.pertanyaanProteksiRepo.Update(event.ID, event.Request)
+	})
+}
+
+func (c *Consumer) ConsumePertanyaanProteksiDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "pertanyaan_proteksi.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.PertanyaanProteksiDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_proteksi.deleted: %v", err)
+			return nil
+		}
+		log.Printf("Processing Pertanyaan Proteksi Deleted for ID: %d", event.ID)
+		return c.pertanyaanProteksiRepo.Delete(event.ID)
+	})
+}
+
 func (c *Consumer) ConsumeIkasAuditLog(ctx context.Context) error {
 	return c.Consume(ctx, "ikas.audit_logs", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasAuditLogEvent
@@ -811,6 +848,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumePertanyaanIdentifikasiCreated,
 		c.ConsumePertanyaanIdentifikasiUpdated,
 		c.ConsumePertanyaanIdentifikasiDeleted,
+		c.ConsumePertanyaanProteksiCreated,
+		c.ConsumePertanyaanProteksiUpdated,
+		c.ConsumePertanyaanProteksiDeleted,
 		c.ConsumeIkasAuditLog,
 	}
 
