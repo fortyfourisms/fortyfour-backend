@@ -498,6 +498,206 @@ func TestCsirtExportHandler_ExportByID_ServiceError(t *testing.T) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// SE EXPORT HANDLER — cabang ServeHTTP yang belum dicakup
+// ════════════════════════════════════════════════════════════════════════════
+func TestSEExportHandler_ExportByID_MethodNotAllowed(t *testing.T) {
+	h := NewSEExportHandler(new(mockSEExportService))
+
+	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodPatch} {
+		t.Run(method, func(t *testing.T) {
+			req := httptest.NewRequest(method, "/api/se/se-1/export-pdf", nil)
+			req = withExportAdminCtx(req)
+			w := httptest.NewRecorder()
+
+			h.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+		})
+	}
+}
+
+// Path tidak dikenali → 404 "Route tidak ditemukan"
+func TestSEExportHandler_ServeHTTP_RouteNotFound(t *testing.T) {
+	h := NewSEExportHandler(new(mockSEExportService))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/se/unknown-path", nil)
+	req = withExportAdminCtx(req)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	assert.Contains(t, w.Body.String(), "Route tidak ditemukan")
+}
+
+// ID kosong pada path ByID (/api/se//export-pdf) → 400 "ID tidak valid"
+func TestSEExportHandler_ExportByID_EmptyID_Returns400(t *testing.T) {
+	h := NewSEExportHandler(new(mockSEExportService))
+
+	// Simulasikan path yang menghasilkan id="" setelah trim prefix "/api/se/" dan suffix "/export-pdf"
+	req := httptest.NewRequest(http.MethodGet, "/api/se//export-pdf", nil)
+	req = withExportAdminCtx(req)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "ID tidak valid")
+}
+
+// User - ExportAll service error
+func TestSEExportHandler_ExportAll_User_ServiceError(t *testing.T) {
+	mockSvc := new(mockSEExportService)
+	mockSvc.On("ExportByPerusahaanPDF", "p-user").Return(nil, assert.AnError)
+
+	h := NewSEExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/se/export-pdf", nil)
+	req = withExportUserCtx(req, "p-user")
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	mockSvc.AssertExpectations(t)
+}
+
+// servePDF — verifikasi Content-Length dan Content-Disposition header dengan nama file benar
+func TestSEExportHandler_ExportByID_ResponseHeaders(t *testing.T) {
+	se := &dto.SEResponse{ID: "se-abc", IDPerusahaan: "p-1"}
+	mockSvc := new(mockSEExportService)
+	mockSvc.On("ExportByIDPDF", "se-abc").Return(se, fakePDF, nil)
+
+	h := NewSEExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/se/se-abc/export-pdf", nil)
+	req = withExportAdminCtx(req)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "application/pdf", w.Header().Get("Content-Type"))
+	assert.Contains(t, w.Header().Get("Content-Disposition"), "laporan-se-se-abc.pdf")
+	assert.Equal(t, len(fakePDF), w.Body.Len())
+}
+
+// Admin - ExportAll filter perusahaan service error
+func TestSEExportHandler_ExportAll_Admin_FilterPerusahaan_ServiceError(t *testing.T) {
+	mockSvc := new(mockSEExportService)
+	mockSvc.On("ExportByPerusahaanPDF", "p-fail").Return(nil, assert.AnError)
+
+	h := NewSEExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/se/export-pdf?id_perusahaan=p-fail", nil)
+	req = withExportAdminCtx(req)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	mockSvc.AssertExpectations(t)
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// CSIRT EXPORT HANDLER — cabang ServeHTTP yang belum dicakup
+// ════════════════════════════════════════════════════════════════════════════
+func TestCsirtExportHandler_ExportByID_MethodNotAllowed(t *testing.T) {
+	h := NewCsirtExportHandler(new(mockCsirtExportService))
+
+	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodPatch} {
+		t.Run(method, func(t *testing.T) {
+			req := httptest.NewRequest(method, "/api/csirt/csirt-1/export-pdf", nil)
+			req = withExportAdminCtx(req)
+			w := httptest.NewRecorder()
+
+			h.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+		})
+	}
+}
+
+// Path tidak dikenali → 404 "Route tidak ditemukan"
+func TestCsirtExportHandler_ServeHTTP_RouteNotFound(t *testing.T) {
+	h := NewCsirtExportHandler(new(mockCsirtExportService))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/csirt/unknown-path", nil)
+	req = withExportAdminCtx(req)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	assert.Contains(t, w.Body.String(), "Route tidak ditemukan")
+}
+
+// ID kosong pada path ByID → 400 "ID tidak valid"
+func TestCsirtExportHandler_ExportByID_EmptyID_Returns400(t *testing.T) {
+	h := NewCsirtExportHandler(new(mockCsirtExportService))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/csirt//export-pdf", nil)
+	req = withExportAdminCtx(req)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "ID tidak valid")
+}
+
+// User - ExportAll service error
+func TestCsirtExportHandler_ExportAll_User_ServiceError(t *testing.T) {
+	mockSvc := new(mockCsirtExportService)
+	mockSvc.On("ExportByPerusahaanPDF", "p-user").Return(nil, assert.AnError)
+
+	h := NewCsirtExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/csirt/export-pdf", nil)
+	req = withExportUserCtx(req, "p-user")
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	mockSvc.AssertExpectations(t)
+}
+
+// servePDF — verifikasi Content-Length dan Content-Disposition dengan nama file benar
+func TestCsirtExportHandler_ExportByID_ResponseHeaders(t *testing.T) {
+	csirt := &dto.CsirtResponse{
+		ID:         "csirt-xyz",
+		Perusahaan: dto.PerusahaanResponse{ID: "p-1"},
+	}
+	mockSvc := new(mockCsirtExportService)
+	mockSvc.On("ExportByIDPDF", "csirt-xyz").Return(csirt, fakePDF, nil)
+
+	h := NewCsirtExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/csirt/csirt-xyz/export-pdf", nil)
+	req = withExportAdminCtx(req)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "application/pdf", w.Header().Get("Content-Type"))
+	assert.Contains(t, w.Header().Get("Content-Disposition"), "laporan-csirt-csirt-xyz.pdf")
+	assert.Equal(t, len(fakePDF), w.Body.Len())
+}
+
+// Admin - ExportAll filter perusahaan service error
+func TestCsirtExportHandler_ExportAll_Admin_FilterPerusahaan_ServiceError(t *testing.T) {
+	mockSvc := new(mockCsirtExportService)
+	mockSvc.On("ExportByPerusahaanPDF", "p-fail").Return(nil, assert.AnError)
+
+	h := NewCsirtExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/csirt/export-pdf?id_perusahaan=p-fail", nil)
+	req = withExportAdminCtx(req)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	mockSvc.AssertExpectations(t)
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // HELPERS untuk error "data tidak ditemukan"
 // ════════════════════════════════════════════════════════════════════════════
 
