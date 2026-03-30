@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"ikas/internal/dto"
 	"ikas/internal/models"
 	"ikas/internal/repository"
 	"testing"
@@ -17,15 +16,8 @@ import (
 //
 
 type mockGulihRepository struct {
-	CreateFn  func(req dto.CreateGulihRequest, id string) error
 	GetAllFn  func() ([]models.Gulih, error)
 	GetByIDFn func(id string) (*models.Gulih, error)
-	UpdateFn  func(id string, gulih models.Gulih) error
-	DeleteFn  func(id string) error
-}
-
-func (m *mockGulihRepository) Create(req dto.CreateGulihRequest, id string) error {
-	return m.CreateFn(req, id)
 }
 
 func (m *mockGulihRepository) GetAll() ([]models.Gulih, error) {
@@ -36,63 +28,8 @@ func (m *mockGulihRepository) GetByID(id string) (*models.Gulih, error) {
 	return m.GetByIDFn(id)
 }
 
-func (m *mockGulihRepository) Update(id string, gulih models.Gulih) error {
-	return m.UpdateFn(id, gulih)
-}
-
-func (m *mockGulihRepository) Delete(id string) error {
-	return m.DeleteFn(id)
-}
-
 // compile-time safety check
 var _ repository.GulihRepositoryInterface = (*mockGulihRepository)(nil)
-
-//
-// ===============================
-// TEST CREATE
-// ===============================
-//
-
-func TestGulihService_Create_Success(t *testing.T) {
-	repo := &mockGulihRepository{
-		CreateFn: func(req dto.CreateGulihRequest, id string) error {
-			return nil
-		},
-		GetByIDFn: func(id string) (*models.Gulih, error) {
-			return &models.Gulih{
-				ID:         id,
-				NilaiGulih: 88,
-			}, nil
-		},
-	}
-
-	service := NewGulihService(repo)
-
-	req := dto.CreateGulihRequest{
-		NilaiGulih: 88,
-	}
-
-	result, err := service.Create(req)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	assert.Equal(t, 88.0, result.NilaiGulih)
-}
-
-func TestGulihService_Create_Error(t *testing.T) {
-	repo := &mockGulihRepository{
-		CreateFn: func(req dto.CreateGulihRequest, id string) error {
-			return errors.New("gagal create")
-		},
-	}
-
-	service := NewGulihService(repo)
-
-	result, err := service.Create(dto.CreateGulihRequest{})
-
-	assert.Error(t, err)
-	assert.Nil(t, result)
-}
 
 //
 // ===============================
@@ -155,57 +92,4 @@ func TestGulihService_GetByID_NotFound(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
-}
-
-//
-// ===============================
-// TEST UPDATE
-// ===============================
-//
-
-func TestGulihService_Update_Success(t *testing.T) {
-	nilaiBaru := 95.0
-
-	repo := &mockGulihRepository{
-		GetByIDFn: func(id string) (*models.Gulih, error) {
-			return &models.Gulih{
-				ID:         id,
-				NilaiGulih: 80,
-			}, nil
-		},
-		UpdateFn: func(id string, gulih models.Gulih) error {
-			return nil
-		},
-	}
-
-	service := NewGulihService(repo)
-
-	req := dto.UpdateGulihRequest{
-		NilaiGulih: &nilaiBaru,
-	}
-
-	result, err := service.Update("uuid-test", req)
-
-	assert.NoError(t, err)
-	assert.Equal(t, nilaiBaru, result.NilaiGulih)
-}
-
-//
-// ===============================
-// TEST DELETE
-// ===============================
-//
-
-func TestGulihService_Delete_Success(t *testing.T) {
-	repo := &mockGulihRepository{
-		DeleteFn: func(id string) error {
-			return nil
-		},
-	}
-
-	service := NewGulihService(repo)
-
-	err := service.Delete("uuid-test")
-
-	assert.NoError(t, err)
 }

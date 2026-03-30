@@ -104,9 +104,6 @@ type DeteksiRepositoryInterface interface {
 
 // GulihRepositoryInterface
 type GulihRepositoryInterface interface {
-	Create(req dto.CreateGulihRequest, id string) error
 	GetAll() ([]models.Gulih, error)
 	GetByID(id string) (*models.Gulih, error)
-	Update(id string, gulih models.Gulih) error
-	Delete(id string) error
 }
