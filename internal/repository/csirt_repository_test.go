@@ -725,3 +725,84 @@ func TestCsirtRepository_GetByPerusahaan(t *testing.T) {
 		})
 	}
 }
+// ─────────────────────────────────────────────────────────
+// EXISTS BY PERUSAHAAN
+// ─────────────────────────────────────────────────────────
+
+func TestCsirtRepository_ExistsByPerusahaan(t *testing.T) {
+	tests := []struct {
+		name          string
+		idPerusahaan  string
+		mockFn        func(mock sqlmock.Sqlmock)
+		wantExists    bool
+		wantErr       bool
+	}{
+		{
+			name:         "returns true when csirt exists for perusahaan",
+			idPerusahaan: "perusahaan-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"COUNT(*)"}).AddRow(2)
+				mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM csirt WHERE id_perusahaan = \\?").
+					WithArgs("perusahaan-1").
+					WillReturnRows(rows)
+			},
+			wantExists: true,
+			wantErr:    false,
+		},
+		{
+			name:         "returns false when no csirt for perusahaan",
+			idPerusahaan: "perusahaan-kosong",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"COUNT(*)"}).AddRow(0)
+				mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM csirt WHERE id_perusahaan = \\?").
+					WithArgs("perusahaan-kosong").
+					WillReturnRows(rows)
+			},
+			wantExists: false,
+			wantErr:    false,
+		},
+		{
+			name:         "returns false and error on db failure",
+			idPerusahaan: "perusahaan-1",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM csirt WHERE id_perusahaan = \\?").
+					WithArgs("perusahaan-1").
+					WillReturnError(sql.ErrConnDone)
+			},
+			wantExists: false,
+			wantErr:    true,
+		},
+		{
+			name:         "returns true when exactly one csirt exists",
+			idPerusahaan: "perusahaan-2",
+			mockFn: func(mock sqlmock.Sqlmock) {
+				rows := sqlmock.NewRows([]string{"COUNT(*)"}).AddRow(1)
+				mock.ExpectQuery("SELECT COUNT\\(\\*\\) FROM csirt WHERE id_perusahaan = \\?").
+					WithArgs("perusahaan-2").
+					WillReturnRows(rows)
+			},
+			wantExists: true,
+			wantErr:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			db, mock, repo := setupTest(t)
+			defer db.Close()
+
+			tt.mockFn(mock)
+
+			exists, err := repo.ExistsByPerusahaan(tt.idPerusahaan)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.False(t, exists)
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tt.wantExists, exists)
+			}
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
