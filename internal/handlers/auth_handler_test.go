@@ -12,6 +12,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -1317,5 +1318,543 @@ func TestAuthHandler_UpdateMeMedia_UploadBanner_Success(t *testing.T) {
 
 	if w.Code != http.StatusOK {
 		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+/*
+=====================================
+ TEST LOGIN (missing cases)
+=====================================
+*/
+
+func TestAuthHandler_Login_InvalidBody(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/login", strings.NewReader("invalid json"))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handler.Login(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestAuthHandler_Login_ValidationFails(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	// Identifier kosong — seharusnya gagal validasi
+	loginBody := dto.LoginRequest{
+		Identifier: "",
+		Password:   "",
+	}
+	body, _ := json.Marshal(loginBody)
+	req := httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handler.Login(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestAuthHandler_Login_WrongCredentials(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	// Register user dulu
+	registerBody := dto.RegisterRequest{
+		Username: "testuser",
+		Password: "P@ssj0rd121",
+		Email:    "test@example.com",
+	}
+	body, _ := json.Marshal(registerBody)
+	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.Register(w, req)
+
+	// Login dengan password salah
+	loginBody := dto.LoginRequest{
+		Identifier: "testuser",
+		Password:   "Wr0ng#Password!",
+	}
+	body, _ = json.Marshal(loginBody)
+	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+
+	handler.Login(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestAuthHandler_Login_MFAEnabled_ReturnsMFAToken(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	// 1. Register
+	registerBody := dto.RegisterRequest{
+		Username: "testuser",
+		Password: "P@ssj0rd121",
+		Email:    "test@example.com",
+	}
+	body, _ := json.Marshal(registerBody)
+	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.Register(w, req)
+
+	// 2. Login → dapat setup_token
+	loginBody := dto.LoginRequest{Identifier: "testuser", Password: "P@ssj0rd121"}
+	body, _ = json.Marshal(loginBody)
+	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	handler.Login(w, req)
+	var loginResp map[string]interface{}
+	json.NewDecoder(w.Body).Decode(&loginResp)
+	setupToken := loginResp["setup_token"].(string)
+
+	// 3. Setup MFA → dapat secret
+	setupBody := map[string]string{"setup_token": setupToken}
+	body, _ = json.Marshal(setupBody)
+	req = httptest.NewRequest(http.MethodPost, "/api/mfa/setup", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	handler.SetupMFA(w, req)
+	var setupResp map[string]string
+	json.NewDecoder(w.Body).Decode(&setupResp)
+	secret := setupResp["secret"]
+
+	// 4. Enable MFA
+	code := generateValidTOTPCode(secret)
+	enableBody := map[string]interface{}{"code": code, "setup_token": setupToken}
+	body, _ = json.Marshal(enableBody)
+	req = httptest.NewRequest(http.MethodPost, "/api/mfa/enable", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+	handler.EnableMFA(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("enable MFA failed: %d %s", w.Code, w.Body.String())
+	}
+
+	// 5. Login kembali — MFA sudah aktif, harus dapat mfa_token bukan access_token
+	body, _ = json.Marshal(loginBody)
+	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w = httptest.NewRecorder()
+
+	handler.Login(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp map[string]interface{}
+	json.NewDecoder(w.Body).Decode(&resp)
+
+	if mfaRequired, ok := resp["mfa_required"].(bool); !ok || !mfaRequired {
+		t.Error("expected mfa_required: true in response")
+	}
+	if mfaToken, ok := resp["mfa_token"].(string); !ok || mfaToken == "" {
+		t.Error("expected non-empty mfa_token in response")
+	}
+	// Pastikan tidak ada access_token di cookie
+	for _, cookie := range w.Result().Cookies() {
+		if cookie.Name == "access_token" && cookie.MaxAge >= 0 {
+			t.Error("expected no access_token cookie when MFA is required")
+		}
+	}
+}
+
+/*
+=====================================
+ TEST LOGOUT ALL
+=====================================
+*/
+
+func setupAuthHandlerWithUserService() (*AuthHandler, *testhelpers.MockRedisClient) {
+	uploadPath := os.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	return handler, redis
+}
+
+func TestAuthHandler_LogoutAll_Success(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	// Register user untuk dapat token valid
+	registerBody := dto.RegisterRequest{
+		Username: "testuser",
+		Password: "P@ssj0rd121",
+		Email:    "test@example.com",
+	}
+	body, _ := json.Marshal(registerBody)
+	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.Register(w, req)
+
+	var regResp map[string]interface{}
+	json.NewDecoder(w.Body).Decode(&regResp)
+	userMap := regResp["user"].(map[string]interface{})
+	userID := userMap["id"].(string)
+
+	// Logout all dengan user ID di context
+	req = httptest.NewRequest(http.MethodPost, "/api/logout-all", nil)
+	req = withMeUserContext(req, userID)
+	w = httptest.NewRecorder()
+
+	handler.LogoutAll(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp map[string]string
+	json.NewDecoder(w.Body).Decode(&resp)
+	if resp["message"] == "" {
+		t.Error("expected message in response")
+	}
+
+	// Cookies harus di-clear
+	for _, cookie := range w.Result().Cookies() {
+		if cookie.MaxAge >= 0 {
+			t.Errorf("expected cookie %s to be expired/cleared after LogoutAll", cookie.Name)
+		}
+	}
+}
+
+func TestAuthHandler_LogoutAll_Unauthorized(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	// Request tanpa user ID di context
+	req := httptest.NewRequest(http.MethodPost, "/api/logout-all", nil)
+	w := httptest.NewRecorder()
+
+	handler.LogoutAll(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
+	}
+}
+
+func TestAuthHandler_LogoutAll_RevokesAllTokens(t *testing.T) {
+	handler, redis := setupAuthHandler()
+
+	// Register dan dapat beberapa token
+	registerBody := dto.RegisterRequest{
+		Username: "testuser",
+		Password: "P@ssj0rd121",
+		Email:    "test@example.com",
+	}
+	body, _ := json.Marshal(registerBody)
+
+	// Register → token pertama
+	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.Register(w, req)
+	var regResp map[string]interface{}
+	json.NewDecoder(w.Body).Decode(&regResp)
+	userMap := regResp["user"].(map[string]interface{})
+	userID := userMap["id"].(string)
+
+	// Ambil refresh token pertama dari cookie
+	var firstRefreshToken string
+	for _, cookie := range w.Result().Cookies() {
+		if cookie.Name == "refresh_token" {
+			firstRefreshToken = cookie.Value
+		}
+	}
+
+	// Simulasi token kedua langsung di Redis
+	redis.Set("refresh_token:token-sesi-2:"+userID, userID, 0)
+
+	// Logout all
+	req = httptest.NewRequest(http.MethodPost, "/api/logout-all", nil)
+	req = withMeUserContext(req, userID)
+	w = httptest.NewRecorder()
+	handler.LogoutAll(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("LogoutAll failed: %d", w.Code)
+	}
+
+	// Refresh token pertama tidak boleh bisa dipakai lagi
+	req = httptest.NewRequest(http.MethodPost, "/api/refresh", nil)
+	req.AddCookie(&http.Cookie{Name: "refresh_token", Value: firstRefreshToken})
+	w = httptest.NewRecorder()
+	handler.Refresh(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected revoked refresh token to be rejected (401), got %d", w.Code)
+	}
+}
+
+/*
+=====================================
+ TEST ME ROUTER
+=====================================
+*/
+
+func TestAuthHandler_MeRouter_GET_RoutesToGetMe(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = userRepo.Create(user)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/me", nil)
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.MeRouter(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp map[string]interface{}
+	json.NewDecoder(w.Body).Decode(&resp)
+	if resp["username"] != "testuser" {
+		t.Errorf("expected username 'testuser', got %v", resp["username"])
+	}
+}
+
+func TestAuthHandler_MeRouter_PUT_RoutesToUpdateMe(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	user := testhelpers.CreateTestUser("user-1", "oldname", "old@test.com")
+	_ = userRepo.Create(user)
+
+	newDisplayName := "Updated Name"
+	body, _ := json.Marshal(dto.UpdateMeRequest{DisplayName: &newDisplayName})
+	req := httptest.NewRequest(http.MethodPut, "/api/me", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.MeRouter(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp map[string]interface{}
+	json.NewDecoder(w.Body).Decode(&resp)
+	if resp["display_name"] != "Updated Name" {
+		t.Errorf("expected display_name 'Updated Name', got %v", resp["display_name"])
+	}
+}
+
+func TestAuthHandler_MeRouter_PUT_password_RoutesToUpdateMePassword(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	// Register untuk mendapat user dengan password yang di-hash dengan benar
+	reqBody := dto.RegisterRequest{Username: "meuser", Password: "Xk9#mP2$qL7!", Email: "me@test.com"}
+	body, _ := json.Marshal(reqBody)
+	regReq := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
+	regReq.Header.Set("Content-Type", "application/json")
+	regW := httptest.NewRecorder()
+	handler.Register(regW, regReq)
+	var regResp map[string]interface{}
+	json.NewDecoder(regW.Body).Decode(&regResp)
+	userMap := regResp["user"].(map[string]interface{})
+	userID := userMap["id"].(string)
+
+	pwBody, _ := json.Marshal(dto.UpdateUserPasswordRequest{
+		OldPassword:        "Xk9#mP2$qL7!",
+		NewPassword:        "Rz4@wN8&vB3^",
+		ConfirmNewPassword: "Rz4@wN8&vB3^",
+	})
+	req := httptest.NewRequest(http.MethodPut, "/api/me/password", bytes.NewBuffer(pwBody))
+	req.Header.Set("Content-Type", "application/json")
+	req = withMeUserContext(req, userID)
+	w := httptest.NewRecorder()
+
+	handler.MeRouter(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestAuthHandler_MeRouter_POST_media_RoutesToUpdateMeMedia(t *testing.T) {
+	uploadPath := t.TempDir()
+	userRepo := testhelpers.NewMockUserRepository()
+	redis := testhelpers.NewMockRedisClient()
+	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+	userService := services.NewUserService(userRepo, uploadPath, nil)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = userRepo.Create(user)
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, _ := writer.CreateFormFile("profile_photo", "photo.jpg")
+	io.WriteString(part, "dummy image content")
+	writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/me/media", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.MeRouter(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestAuthHandler_MeRouter_UnknownPath_Returns404(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/me/unknown-sub-path", nil)
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.MeRouter(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Errorf("expected 404, got %d", w.Code)
+	}
+}
+
+func TestAuthHandler_MeRouter_MethodNotAllowed(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	// Method DELETE pada /api/me tidak diizinkan
+	req := httptest.NewRequest(http.MethodDelete, "/api/me", nil)
+	req = withMeUserContext(req, "user-1")
+	w := httptest.NewRecorder()
+
+	handler.MeRouter(w, req)
+
+	if w.Code != http.StatusMethodNotAllowed {
+		t.Errorf("expected 405, got %d", w.Code)
+	}
+}
+
+/*
+=====================================
+ TEST REGISTER (missing error cases)
+=====================================
+*/
+
+func TestAuthHandler_Register_InvalidBody(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/register", strings.NewReader("bukan json"))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handler.Register(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestAuthHandler_Register_ValidationFails_EmptyFields(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	// Semua field kosong
+	reqBody := dto.RegisterRequest{}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handler.Register(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+	var resp map[string]string
+	json.NewDecoder(w.Body).Decode(&resp)
+	if resp["error"] == "" {
+		t.Error("expected error message in response")
+	}
+}
+
+func TestAuthHandler_Register_ValidationFails_InvalidEmail(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	reqBody := dto.RegisterRequest{
+		Username: "validuser",
+		Password: "P@ssj0rd121",
+		Email:    "bukan-email-valid",
+	}
+	body, _ := json.Marshal(reqBody)
+	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handler.Register(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestAuthHandler_Register_DuplicateUsername(t *testing.T) {
+	handler, _ := setupAuthHandler()
+
+	reqBody := dto.RegisterRequest{
+		Username: "sameuser",
+		Password: "P@ssj0rd121",
+		Email:    "first@example.com",
+	}
+	body, _ := json.Marshal(reqBody)
+
+	// Register pertama — harus sukses
+	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.Register(w, req)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("first register failed: %d %s", w.Code, w.Body.String())
+	}
+
+	// Register kedua dengan username sama — harus gagal
+	reqBody2 := dto.RegisterRequest{
+		Username: "sameuser",
+		Password: "P@ssj0rd121",
+		Email:    "second@example.com",
+	}
+	body2, _ := json.Marshal(reqBody2)
+	req2 := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body2))
+	req2.Header.Set("Content-Type", "application/json")
+	w2 := httptest.NewRecorder()
+	handler.Register(w2, req2)
+
+	if w2.Code != http.StatusBadRequest {
+		t.Errorf("expected 400 for duplicate username, got %d: %s", w2.Code, w2.Body.String())
 	}
 }
