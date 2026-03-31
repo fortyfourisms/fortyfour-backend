@@ -7,13 +7,13 @@ import (
 
 type DomainCreatedEvent struct {
 	Request   dto.CreateDomainRequest `json:"request"`
-	CreatedAt time.Time              `json:"created_at"`
+	CreatedAt time.Time               `json:"created_at"`
 }
 
 type DomainUpdatedEvent struct {
 	ID        int                     `json:"id"`
 	Request   dto.UpdateDomainRequest `json:"request"`
-	UpdatedAt time.Time              `json:"updated_at"`
+	UpdatedAt time.Time               `json:"updated_at"`
 }
 
 type DomainDeletedEvent struct {

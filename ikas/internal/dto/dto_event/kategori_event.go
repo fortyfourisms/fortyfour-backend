@@ -11,9 +11,9 @@ type KategoriCreatedEvent struct {
 }
 
 type KategoriUpdatedEvent struct {
-	ID        int                        `json:"id"`
+	ID        int                       `json:"id"`
 	Request   dto.UpdateKategoriRequest `json:"request"`
-	UpdatedAt time.Time                `json:"updated_at"`
+	UpdatedAt time.Time                 `json:"updated_at"`
 }
 
 type KategoriDeletedEvent struct {
