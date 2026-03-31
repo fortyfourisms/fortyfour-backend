@@ -23,6 +23,7 @@ const MaxLoginAttempts = 5
 type User struct {
 	ID           string    `json:"id"`
 	Username     string    `json:"username"`
+	DisplayName  *string   `json:"display_name"`
 	Password     string    `json:"-"`
 	Email        string    `json:"email"`
 	RoleID       *string   `json:"role_id,omitempty"`

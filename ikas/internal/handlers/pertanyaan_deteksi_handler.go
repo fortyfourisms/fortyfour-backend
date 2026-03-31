@@ -123,7 +123,7 @@ func (h *PertanyaanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	resp, err := h.service.Create(req)
+	_, err := h.service.Create(req)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -157,9 +157,8 @@ func (h *PertanyaanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	utils.RespondJSON(w, 201, map[string]interface{}{
-		"message": "Berhasil menyimpan data",
-		"data":    resp,
+	utils.RespondJSON(w, 201, dto.PertanyaanDeteksiMessageResponse{
+		Message: "Berhasil menyimpan data",
 	})
 }
 
@@ -184,7 +183,7 @@ func (h *PertanyaanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	resp, err := h.service.Update(id, req)
+	_, err := h.service.Update(id, req)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -220,9 +219,9 @@ func (h *PertanyaanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil memperbarui data",
-		"data":    resp,
+	utils.RespondJSON(w, 200, dto.PertanyaanDeteksiMessageResponse{
+		ID:      id,
+		Message: "Berhasil memperbarui data",
 	})
 }
 
@@ -233,7 +232,7 @@ func (h *PertanyaanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.R
 //	@Tags         PertanyaanDeteksi
 //	@Produce      json
 //	@Param        id   path      int  true  "PertanyaanDeteksi ID"
-//	@Success      200  {object}  dto.MessageResponse
+//	@Success      200  {object}  dto.PertanyaanDeteksiMessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
 //	@Router       /api/maturity/pertanyaan-deteksi/{id} [delete]
@@ -248,7 +247,8 @@ func (h *PertanyaanDeteksiHandler) handleDelete(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menghapus data",
+	utils.RespondJSON(w, 200, dto.PertanyaanDeteksiMessageResponse{
+		ID:      id,
+		Message: "Berhasil menghapus data",
 	})
 }

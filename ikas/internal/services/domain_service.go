@@ -1,21 +1,26 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"ikas/internal/dto"
+	"ikas/internal/dto/dto_event"
+	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
+	"time"
 
 	"fortyfour-backend/pkg/logger"
 )
 
 type DomainService struct {
-	repo repository.DomainRepositoryInterface
+	repo     repository.DomainRepositoryInterface
+	producer *rabbitmq.Producer
 }
 
-func NewDomainService(repo repository.DomainRepositoryInterface) *DomainService {
-	return &DomainService{repo: repo}
+func NewDomainService(repo repository.DomainRepositoryInterface, producer *rabbitmq.Producer) *DomainService {
+	return &DomainService{repo: repo, producer: producer}
 }
 
 func (s *DomainService) validateCreate(req *dto.CreateDomainRequest) error {
@@ -77,12 +82,14 @@ func (s *DomainService) Create(req dto.CreateDomainRequest) (*dto.DomainResponse
 		return nil, errors.New("nama_domain sudah ada")
 	}
 
-	id, err := s.repo.Create(req)
-	if err != nil {
+	if err := s.producer.PublishDomainCreated(context.Background(), dto_event.DomainCreatedEvent{
+		Request:   req,
+		CreatedAt: time.Now(),
+	}); err != nil {
 		return nil, err
 	}
 
-	return s.repo.GetByID(int(id))
+	return nil, nil
 }
 
 func (s *DomainService) GetAll() ([]dto.DomainResponse, error) {
@@ -112,11 +119,15 @@ func (s *DomainService) Update(id int, req dto.UpdateDomainRequest) (*dto.Domain
 		return nil, err
 	}
 
-	if err := s.repo.Update(id, req); err != nil {
+	if err := s.producer.PublishDomainUpdated(context.Background(), dto_event.DomainUpdatedEvent{
+		ID:        id,
+		Request:   req,
+		UpdatedAt: time.Now(),
+	}); err != nil {
 		return nil, err
 	}
 
-	return s.repo.GetByID(id)
+	return nil, nil
 }
 
 func (s *DomainService) Delete(id int) error {
@@ -128,5 +139,8 @@ func (s *DomainService) Delete(id int) error {
 		return err
 	}
 
-	return s.repo.Delete(id)
+	return s.producer.PublishDomainDeleted(context.Background(), dto_event.DomainDeletedEvent{
+		ID:        id,
+		DeletedAt: time.Now(),
+	})
 }

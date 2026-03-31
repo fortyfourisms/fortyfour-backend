@@ -24,6 +24,7 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-type MessageResponse struct {
+type KategoriMessageResponse struct {
+	ID      int    `json:"id,omitempty"`
 	Message string `json:"message"`
 }

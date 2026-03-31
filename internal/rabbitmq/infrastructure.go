@@ -54,7 +54,7 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		if _, err := rmq.DeclareQueue(queueName); err != nil {
 			return fmt.Errorf("failed to declare queue %s: %w", queueName, err)
 		}
-		
+
 		// Bind to ikas.events exchange (from IKAS service)
 		routingKey := strings.TrimPrefix(queueName, "main_api.")
 		if err := rmq.BindQueue(queueName, routingKey, "ikas.events"); err != nil {

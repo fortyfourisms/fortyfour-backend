@@ -14,9 +14,10 @@ type RegisterRequest struct {
 	IDPerusahaan   *string `json:"id_perusahaan,omitempty"`   // For selecting existing company
 }
 
+// LoginRequest sekarang menerima username ATAU email via field "identifier"
 type LoginRequest struct {
-	Username string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required"`
+	Identifier string `json:"identifier" validate:"required"`
+	Password   string `json:"password" validate:"required"`
 }
 
 type RefreshTokenRequest struct {

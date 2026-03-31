@@ -1,21 +1,29 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"ikas/internal/dto"
+	"ikas/internal/dto/dto_event"
+	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
+	"time"
 
 	"github.com/rollbar/rollbar-go"
 )
 
 type PertanyaanIdentifikasiService struct {
-	repo repository.PertanyaanIdentifikasiRepositoryInterface
+	repo     repository.PertanyaanIdentifikasiRepositoryInterface
+	producer *rabbitmq.Producer
 }
 
-func NewPertanyaanIdentifikasiService(repo repository.PertanyaanIdentifikasiRepositoryInterface) *PertanyaanIdentifikasiService {
-	return &PertanyaanIdentifikasiService{repo: repo}
+func NewPertanyaanIdentifikasiService(repo repository.PertanyaanIdentifikasiRepositoryInterface, producer *rabbitmq.Producer) *PertanyaanIdentifikasiService {
+	return &PertanyaanIdentifikasiService{
+		repo:     repo,
+		producer: producer,
+	}
 }
 
 func validateIndexField(value *string, fieldName string) error {
@@ -134,19 +142,15 @@ func (s *PertanyaanIdentifikasiService) Create(req dto.CreatePertanyaanIdentifik
 		return nil, errors.New("ruang_lingkup_id tidak ditemukan")
 	}
 
-	lastID, err := s.repo.Create(req)
-	if err != nil {
+	if err := s.producer.PublishPertanyaanIdentifikasiCreated(context.Background(), dto_event.PertanyaanIdentifikasiCreatedEvent{
+		Request:   req,
+		CreatedAt: time.Now(),
+	}); err != nil {
 		rollbar.Error(err)
 		return nil, err
 	}
 
-	resp, err := s.repo.GetByID(int(lastID))
-	if err != nil {
-		rollbar.Error(err)
-		return nil, err
-	}
-
-	return resp, nil
+	return nil, nil
 }
 
 func (s *PertanyaanIdentifikasiService) GetAll() ([]dto.PertanyaanIdentifikasiResponse, error) {
@@ -201,18 +205,16 @@ func (s *PertanyaanIdentifikasiService) Update(id int, req dto.UpdatePertanyaanI
 		}
 	}
 
-	if err := s.repo.Update(id, req); err != nil {
+	if err := s.producer.PublishPertanyaanIdentifikasiUpdated(context.Background(), dto_event.PertanyaanIdentifikasiUpdatedEvent{
+		ID:        id,
+		Request:   req,
+		UpdatedAt: time.Now(),
+	}); err != nil {
 		rollbar.Error(err)
 		return nil, err
 	}
 
-	updated, err := s.repo.GetByID(id)
-	if err != nil {
-		rollbar.Error(err)
-		return nil, err
-	}
-
-	return updated, nil
+	return nil, nil
 }
 
 func (s *PertanyaanIdentifikasiService) Delete(id int) error {
@@ -224,5 +226,8 @@ func (s *PertanyaanIdentifikasiService) Delete(id int) error {
 		return err
 	}
 
-	return s.repo.Delete(id)
+	return s.producer.PublishPertanyaanIdentifikasiDeleted(context.Background(), dto_event.PertanyaanIdentifikasiDeletedEvent{
+		ID:        id,
+		DeletedAt: time.Now(),
+	})
 }

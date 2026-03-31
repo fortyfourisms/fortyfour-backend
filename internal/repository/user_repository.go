@@ -32,218 +32,147 @@ func (r *UserRepository) Create(user *models.User) error {
 
 	query := `
 		INSERT INTO users (
-			id, username, password, email, role_id, id_jabatan, id_perusahaan,
+			id, username, display_name, password, email, role_id, id_jabatan, id_perusahaan,
 			mfa_enabled, mfa_secret, created_at, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, false, NULL, NOW(), NOW())
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, false, NULL, NOW(), NOW())
 	`
 
 	_, err := r.db.Exec(
 		query,
 		user.ID,
 		user.Username,
+		user.DisplayName,
 		user.Password,
 		user.Email,
 		user.RoleID,
 		user.IDJabatan,
 		user.IDPerusahaan,
 	)
+	return err
+}
 
+// selectUserColumns adalah SELECT query yang dipakai bersama oleh FindByID, FindByUsername, FindByEmail
+const selectUserColumns = `
+	SELECT
+		u.id, u.username, u.display_name, u.password, u.email,
+		u.role_id, r.name AS role_name,
+		u.id_jabatan, j.nama_jabatan,
+		u.id_perusahaan,
+		u.foto_profile, u.banner,
+		u.mfa_enabled, u.mfa_secret,
+		u.status, u.password_changed_at, u.login_attempts,
+		u.created_at, u.updated_at
+	FROM users u
+	LEFT JOIN roles r ON u.role_id = r.id
+	LEFT JOIN jabatan j ON u.id_jabatan = j.id
+`
+
+// scanFullUser melakukan Scan dari row ke *models.User
+func scanFullUser(row *sql.Row) (*models.User, error) {
+	user := &models.User{}
+	var (
+		displayName  sql.NullString
+		roleID       sql.NullString
+		roleName     sql.NullString
+		idJabatan    sql.NullString
+		jabatanName  sql.NullString
+		idPerusahaan sql.NullString
+		fotoProfile  sql.NullString
+		banner       sql.NullString
+		mfaSecret    sql.NullString
+	)
+
+	err := row.Scan(
+		&user.ID,
+		&user.Username,
+		&displayName,
+		&user.Password,
+		&user.Email,
+		&roleID,
+		&roleName,
+		&idJabatan,
+		&jabatanName,
+		&idPerusahaan,
+		&fotoProfile,
+		&banner,
+		&user.MFAEnabled,
+		&mfaSecret,
+		&user.Status,
+		&user.PasswordChangedAt,
+		&user.LoginAttempts,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, errors.New("user not found")
+	}
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	if displayName.Valid {
+		tmp := displayName.String
+		user.DisplayName = &tmp
+	}
+	if roleID.Valid {
+		user.RoleID = &roleID.String
+	}
+	if roleName.Valid {
+		user.RoleName = roleName.String
+	}
+	if idJabatan.Valid {
+		user.IDJabatan = &idJabatan.String
+	}
+	if jabatanName.Valid {
+		tmp := jabatanName.String
+		user.JabatanName = &tmp
+	}
+	if idPerusahaan.Valid {
+		tmp := idPerusahaan.String
+		user.IDPerusahaan = &tmp
+	}
+	if fotoProfile.Valid {
+		tmp := fotoProfile.String
+		user.FotoProfile = &tmp
+	}
+	if banner.Valid {
+		tmp := banner.String
+		user.Banner = &tmp
+	}
+	if mfaSecret.Valid {
+		tmp := mfaSecret.String
+		user.MFASecret = &tmp
+	}
+
+	return user, nil
 }
 
 func (r *UserRepository) FindByID(id string) (*models.User, error) {
-	query := `
-		SELECT
-			u.id, u.username, u.password, u.email,
-			u.role_id, r.name AS role_name,
-			u.id_jabatan, j.nama_jabatan,
-			u.id_perusahaan,
-			u.foto_profile, u.banner,
-			u.mfa_enabled, u.mfa_secret,
-			u.status, u.password_changed_at, u.login_attempts,
-			u.created_at, u.updated_at
-		FROM users u
-		LEFT JOIN roles r ON u.role_id = r.id
-		LEFT JOIN jabatan j ON u.id_jabatan = j.id
-		WHERE u.id = ?
-	`
-
-	user := &models.User{}
-	var (
-		roleID       sql.NullString
-		roleName     sql.NullString
-		idJabatan    sql.NullString
-		jabatanName  sql.NullString
-		idPerusahaan sql.NullString
-		fotoProfile  sql.NullString
-		banner       sql.NullString
-		mfaSecret    sql.NullString
-	)
-
-	err := r.db.QueryRow(query, id).Scan(
-		&user.ID,
-		&user.Username,
-		&user.Password,
-		&user.Email,
-		&roleID,
-		&roleName,
-		&idJabatan,
-		&jabatanName,
-		&idPerusahaan,
-		&fotoProfile,
-		&banner,
-		&user.MFAEnabled,
-		&mfaSecret,
-		&user.Status,
-		&user.PasswordChangedAt,
-		&user.LoginAttempts,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
-
-	if err == sql.ErrNoRows {
-		return nil, errors.New("user not found")
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if roleID.Valid {
-		user.RoleID = &roleID.String
-	}
-	if roleName.Valid {
-		user.RoleName = roleName.String
-	}
-	if idJabatan.Valid {
-		user.IDJabatan = &idJabatan.String
-	}
-	if jabatanName.Valid {
-		tmp := jabatanName.String
-		user.JabatanName = &tmp
-	}
-	if idPerusahaan.Valid {
-		tmp := idPerusahaan.String
-		user.IDPerusahaan = &tmp
-	}
-	if fotoProfile.Valid {
-		tmp := fotoProfile.String
-		user.FotoProfile = &tmp
-	}
-	if banner.Valid {
-		tmp := banner.String
-		user.Banner = &tmp
-	}
-	if mfaSecret.Valid {
-		tmp := mfaSecret.String
-		user.MFASecret = &tmp
-	}
-
-	return user, nil
+	row := r.db.QueryRow(selectUserColumns+` WHERE u.id = ?`, id)
+	return scanFullUser(row)
 }
 
 func (r *UserRepository) FindByUsername(username string) (*models.User, error) {
-	query := `
-		SELECT
-			u.id, u.username, u.password, u.email,
-			u.role_id, r.name AS role_name,
-			u.id_jabatan, j.nama_jabatan,
-			u.id_perusahaan,
-			u.foto_profile, u.banner,
-			u.mfa_enabled, u.mfa_secret,
-			u.status, u.password_changed_at, u.login_attempts,
-			u.created_at, u.updated_at
-		FROM users u
-		LEFT JOIN roles r ON u.role_id = r.id
-		LEFT JOIN jabatan j ON u.id_jabatan = j.id
-		WHERE u.username = ?
-	`
+	row := r.db.QueryRow(selectUserColumns+` WHERE u.username = ?`, username)
+	return scanFullUser(row)
+}
 
-	user := &models.User{}
-	var (
-		roleID       sql.NullString
-		roleName     sql.NullString
-		idJabatan    sql.NullString
-		jabatanName  sql.NullString
-		idPerusahaan sql.NullString
-		fotoProfile  sql.NullString
-		banner       sql.NullString
-		mfaSecret    sql.NullString
-	)
-
-	err := r.db.QueryRow(query, username).Scan(
-		&user.ID,
-		&user.Username,
-		&user.Password,
-		&user.Email,
-		&roleID,
-		&roleName,
-		&idJabatan,
-		&jabatanName,
-		&idPerusahaan,
-		&fotoProfile,
-		&banner,
-		&user.MFAEnabled,
-		&mfaSecret,
-		&user.Status,
-		&user.PasswordChangedAt,
-		&user.LoginAttempts,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
-
-	if err == sql.ErrNoRows {
-		return nil, errors.New("user not found")
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if roleID.Valid {
-		user.RoleID = &roleID.String
-	}
-	if roleName.Valid {
-		user.RoleName = roleName.String
-	}
-	if idJabatan.Valid {
-		user.IDJabatan = &idJabatan.String
-	}
-	if jabatanName.Valid {
-		tmp := jabatanName.String
-		user.JabatanName = &tmp
-	}
-	if idPerusahaan.Valid {
-		tmp := idPerusahaan.String
-		user.IDPerusahaan = &tmp
-	}
-	if fotoProfile.Valid {
-		tmp := fotoProfile.String
-		user.FotoProfile = &tmp
-	}
-	if banner.Valid {
-		tmp := banner.String
-		user.Banner = &tmp
-	}
-	if mfaSecret.Valid {
-		tmp := mfaSecret.String
-		user.MFASecret = &tmp
-	}
-
-	return user, nil
+// FindByEmail mencari user berdasarkan email — digunakan untuk login by email
+func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
+	row := r.db.QueryRow(selectUserColumns+` WHERE u.email = ?`, email)
+	return scanFullUser(row)
 }
 
 func (r *UserRepository) Update(user *models.User) error {
 	query := `
 		UPDATE users
-		SET username = ?, email = ?, role_id = ?, id_jabatan = ?, updated_at = NOW()
+		SET username = ?, display_name = ?, email = ?, role_id = ?, id_jabatan = ?, updated_at = NOW()
 		WHERE id = ?
 	`
 	_, err := r.db.Exec(
 		query,
 		user.Username,
+		user.DisplayName,
 		user.Email,
 		user.RoleID,
 		user.IDJabatan,
@@ -255,13 +184,14 @@ func (r *UserRepository) Update(user *models.User) error {
 func (r *UserRepository) UpdateWithPhoto(user *models.User) error {
 	query := `
 		UPDATE users
-		SET username = ?, email = ?, role_id = ?, id_jabatan = ?,
+		SET username = ?, display_name = ?, email = ?, role_id = ?, id_jabatan = ?,
 		    foto_profile = ?, banner = ?, updated_at = NOW()
 		WHERE id = ?
 	`
 	_, err := r.db.Exec(
 		query,
 		user.Username,
+		user.DisplayName,
 		user.Email,
 		user.RoleID,
 		user.IDJabatan,
@@ -314,7 +244,7 @@ func (r *UserRepository) ExistsByPerusahaan(idPerusahaan string) (bool, error) {
 func (r *UserRepository) FindAll() ([]models.User, error) {
 	query := `
 		SELECT
-			u.id, u.username, u.email,
+			u.id, u.username, u.display_name, u.email,
 			u.role_id, r.name AS role_name,
 			u.id_jabatan, j.nama_jabatan,
 			u.id_perusahaan,
@@ -337,11 +267,12 @@ func (r *UserRepository) FindAll() ([]models.User, error) {
 
 	for rows.Next() {
 		var user models.User
-		var roleID, roleName, idJabatan, jabatanName, idPerusahaan, fotoProfile, banner sql.NullString
+		var displayName, roleID, roleName, idJabatan, jabatanName, idPerusahaan, fotoProfile, banner sql.NullString
 
 		err := rows.Scan(
 			&user.ID,
 			&user.Username,
+			&displayName,
 			&user.Email,
 			&roleID,
 			&roleName,
@@ -358,6 +289,10 @@ func (r *UserRepository) FindAll() ([]models.User, error) {
 			return nil, err
 		}
 
+		if displayName.Valid {
+			tmp := displayName.String
+			user.DisplayName = &tmp
+		}
 		if roleID.Valid {
 			user.RoleID = &roleID.String
 		}
