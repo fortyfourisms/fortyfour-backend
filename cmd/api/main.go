@@ -128,7 +128,6 @@ func main() {
 	seeder.SeedCasbinPolicies(casbinService)
 	logger.Info("Casbin policies seeded")
 
-
 	// Initialize Gemini Client
 	geminiClient := utils.NewGeminiClient(cfg.GeminiAPIKey)
 	logger.Info("Gemini client initialized successfully")
@@ -143,11 +142,7 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	perusahaanRepo := repository.NewPerusahaanRepository(db)
 	picRepo := repository.NewPICRepository(db)
-	identifikasiRepo := repository.NewIdentifikasiRepository(db)
 	jabatanRepo := repository.NewJabatanRepository(db)
-	proteksiRepo := repository.NewProteksiRepository(db)
-	deteksiRepo := repository.NewDeteksiRepository(db)
-	gulihRepo := repository.NewGulihRepository(db)
 	csirtRepo := repository.NewCsirtRepository(db)
 	sdmCsirtRepo := repository.NewSdmCsirtRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
@@ -163,11 +158,7 @@ func main() {
 	authService := services.NewAuthService(userRepo, tokenService, notificationService)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo, redisClient)
 	picService := services.NewPICService(picRepo, redisClient)
-	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
 	jabatanService := services.NewJabatanService(jabatanRepo, redisClient)
-	proteksiService := services.NewProteksiService(proteksiRepo)
-	deteksiService := services.NewDeteksiService(deteksiRepo)
-	gulihService := services.NewGulihService(gulihRepo)
 	csirtService := services.NewCsirtService(csirtRepo, redisClient)
 	csirtExportService := services.NewCsirtExportService(csirtService)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo, redisClient)
@@ -185,11 +176,7 @@ func main() {
 	userHandler := handlers.NewUserHandler(userService, uploadPath, sseService)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
 	picHandler := handlers.NewPICHandler(picService, sseService)
-	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService, sseService)
 	jabatanHandler := handlers.NewJabatanHandler(jabatanService, sseService)
-	proteksiHandler := handlers.NewProteksiHandler(proteksiService, sseService)
-	deteksiHandler := handlers.NewDeteksiHandler(deteksiService, sseService)
-	gulihHandler := handlers.NewGulihHandler(gulihService, sseService)
 	csirtHandler := handlers.NewCsirtHandler(csirtService, sseService)
 	csirtExportHandler := handlers.NewCsirtExportHandler(csirtExportService)
 	csirtHandler.SetExportHandler(csirtExportHandler)
@@ -227,10 +214,6 @@ func main() {
 		perusahaanHandler,
 		picHandler,
 		jabatanHandler,
-		identifikasiHandler,
-		deteksiHandler,
-		gulihHandler,
-		proteksiHandler,
 		roleHandler,
 		casbinHandler,
 		sseHandler,

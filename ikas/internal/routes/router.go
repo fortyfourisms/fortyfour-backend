@@ -41,6 +41,10 @@ func InitRouter(
 	domainH *handlers.DomainHandler,
 	kategoriH *handlers.KategoriHandler,
 	subKategoriH *handlers.SubKategoriHandler,
+	identifikasiH *handlers.IdentifikasiHandler,
+	proteksiH *handlers.ProteksiHandler,
+	deteksiH *handlers.DeteksiHandler,
+	gulihH *handlers.GulihHandler,
 	pertanyaanIdentifikasiH *handlers.PertanyaanIdentifikasiHandler,
 	pertanyaanProteksiH *handlers.PertanyaanProteksiHandler,
 	pertanyaanDeteksiH *handlers.PertanyaanDeteksiHandler,
@@ -69,6 +73,10 @@ func InitRouter(
 	handle(mux, "/domain", withAuth(utils.AdaptHandler(domainH)))
 	handle(mux, "/kategori", withAuth(utils.AdaptHandler(kategoriH)))
 	handle(mux, "/sub-kategori", withAuth(utils.AdaptHandler(subKategoriH)))
+	handle(mux, "/identifikasi", withAuth(utils.AdaptHandler(identifikasiH)))
+	handle(mux, "/proteksi", withAuth(utils.AdaptHandler(proteksiH)))
+	handle(mux, "/deteksi", withAuth(utils.AdaptHandler(deteksiH)))
+	handle(mux, "/gulih", withAuth(utils.AdaptHandler(gulihH)))
 	handle(mux, "/pertanyaan-identifikasi", withAuth(utils.AdaptHandler(pertanyaanIdentifikasiH)))
 	handle(mux, "/pertanyaan-proteksi", withAuth(utils.AdaptHandler(pertanyaanProteksiH)))
 	handle(mux, "/pertanyaan-deteksi", withAuth(utils.AdaptHandler(pertanyaanDeteksiH)))

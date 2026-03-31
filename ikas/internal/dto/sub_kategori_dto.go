@@ -19,3 +19,8 @@ type SubKategoriResponse struct {
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 }
+
+type SubKategoriMessageResponse struct {
+	ID      int    `json:"id,omitempty"`
+	Message string `json:"message"`
+}

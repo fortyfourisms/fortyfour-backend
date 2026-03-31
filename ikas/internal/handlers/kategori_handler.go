@@ -124,7 +124,7 @@ func (h *KategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.service.Create(req)
+	_, err := h.service.Create(req)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		// Mapping error ke HTTP status code
@@ -147,9 +147,8 @@ func (h *KategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 201, map[string]interface{}{
-		"message": "Berhasil menyimpan data",
-		"data":    resp,
+	utils.RespondJSON(w, 201, dto.KategoriMessageResponse{
+		Message: "Berhasil menyimpan data",
 	})
 }
 
@@ -175,7 +174,7 @@ func (h *KategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 
-	resp, err := h.service.Update(id, req)
+	_, err := h.service.Update(id, req)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		// Mapping error ke HTTP status code
@@ -200,9 +199,9 @@ func (h *KategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil memperbarui data",
-		"data":    resp,
+	utils.RespondJSON(w, 200, dto.KategoriMessageResponse{
+		ID:      id,
+		Message: "Berhasil memperbarui data",
 	})
 }
 
@@ -213,7 +212,7 @@ func (h *KategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 //	@Tags         Kategori
 //	@Produce      json
 //	@Param        id   path      int  true  "Kategori ID"
-//	@Success      200  {object}  dto.MessageResponse
+//	@Success      200  {object}  dto.KategoriMessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
 //	@Router       /api/maturity/kategori/{id} [delete]
@@ -228,7 +227,8 @@ func (h *KategoriHandler) handleDelete(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menghapus data",
+	utils.RespondJSON(w, 200, dto.KategoriMessageResponse{
+		ID:      id,
+		Message: "Berhasil menghapus data",
 	})
 }

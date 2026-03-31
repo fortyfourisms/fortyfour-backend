@@ -103,6 +103,105 @@ func (p *Producer) PublishJawabanGulihDeleted(ctx context.Context, event interfa
 	return p.Publish(ctx, "ikas.events", "jawaban.gulih.deleted", event)
 }
 
+// PublishDomainCreated
+func (p *Producer) PublishDomainCreated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "domain.created", event)
+}
+
+// PublishDomainUpdated
+func (p *Producer) PublishDomainUpdated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "domain.updated", event)
+}
+
+// PublishDomainDeleted
+func (p *Producer) PublishDomainDeleted(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "domain.deleted", event)
+}
+
+func (p *Producer) PublishRuangLingkupCreated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "ruang_lingkup.created", event)
+}
+
+func (p *Producer) PublishRuangLingkupUpdated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "ruang_lingkup.updated", event)
+}
+
+func (p *Producer) PublishRuangLingkupDeleted(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "ruang_lingkup.deleted", event)
+}
+
+func (p *Producer) PublishKategoriCreated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "kategori.created", event)
+}
+
+func (p *Producer) PublishKategoriUpdated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "kategori.updated", event)
+}
+
+func (p *Producer) PublishKategoriDeleted(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "kategori.deleted", event)
+}
+
+func (p *Producer) PublishSubKategoriCreated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "sub_kategori.created", event)
+}
+
+func (p *Producer) PublishSubKategoriUpdated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "sub_kategori.updated", event)
+}
+
+func (p *Producer) PublishSubKategoriDeleted(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "sub_kategori.deleted", event)
+}
+
+func (p *Producer) PublishPertanyaanIdentifikasiCreated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "pertanyaan_identifikasi.created", event)
+}
+
+func (p *Producer) PublishPertanyaanIdentifikasiUpdated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "pertanyaan_identifikasi.updated", event)
+}
+
+func (p *Producer) PublishPertanyaanIdentifikasiDeleted(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "pertanyaan_identifikasi.deleted", event)
+}
+
+func (p *Producer) PublishPertanyaanProteksiCreated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "pertanyaan_proteksi.created", event)
+}
+
+func (p *Producer) PublishPertanyaanProteksiUpdated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "pertanyaan_proteksi.updated", event)
+}
+
+func (p *Producer) PublishPertanyaanProteksiDeleted(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "pertanyaan_proteksi.deleted", event)
+}
+
+func (p *Producer) PublishPertanyaanDeteksiCreated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "pertanyaan_deteksi.created", event)
+}
+
+func (p *Producer) PublishPertanyaanDeteksiUpdated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "pertanyaan_deteksi.updated", event)
+}
+
+func (p *Producer) PublishPertanyaanDeteksiDeleted(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "pertanyaan_deteksi.deleted", event)
+}
+
+func (p *Producer) PublishPertanyaanGulihCreated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "pertanyaan_gulih.created", event)
+}
+
+func (p *Producer) PublishPertanyaanGulihUpdated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "pertanyaan_gulih.updated", event)
+}
+
+func (p *Producer) PublishPertanyaanGulihDeleted(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "pertanyaan_gulih.deleted", event)
+}
+
 // PublishIkasAuditLog
 func (p *Producer) PublishIkasAuditLog(ctx context.Context, log interface{}) error {
 	return p.Publish(ctx, "ikas.events", "ikas.audit.log", log)

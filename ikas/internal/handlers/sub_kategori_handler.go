@@ -123,7 +123,7 @@ func (h *SubKategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	resp, err := h.service.Create(req)
+	_, err := h.service.Create(req)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		// Mapping error ke HTTP status code
@@ -146,9 +146,8 @@ func (h *SubKategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.RespondJSON(w, 201, map[string]interface{}{
-		"message": "Berhasil menyimpan data",
-		"data":    resp,
+	utils.RespondJSON(w, 201, dto.SubKategoriMessageResponse{
+		Message: "Berhasil menyimpan data",
 	})
 }
 
@@ -174,7 +173,7 @@ func (h *SubKategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	resp, err := h.service.Update(id, req)
+	_, err := h.service.Update(id, req)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		// Mapping error ke HTTP status code
@@ -199,9 +198,9 @@ func (h *SubKategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil memperbarui data",
-		"data":    resp,
+	utils.RespondJSON(w, 200, dto.SubKategoriMessageResponse{
+		ID:      id,
+		Message: "Berhasil memperbarui data",
 	})
 }
 
@@ -212,7 +211,7 @@ func (h *SubKategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request
 //	@Tags         SubKategori
 //	@Produce      json
 //	@Param        id   path      int  true  "SubKategori ID"
-//	@Success      200  {object}  dto.MessageResponse
+//	@Success      200  {object}  dto.SubKategoriMessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
 //	@Router       /api/maturity/sub-kategori/{id} [delete]
@@ -227,7 +226,8 @@ func (h *SubKategoriHandler) handleDelete(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menghapus data",
+	utils.RespondJSON(w, 200, dto.SubKategoriMessageResponse{
+		ID:      id,
+		Message: "Berhasil menghapus data",
 	})
 }
