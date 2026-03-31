@@ -50,6 +50,7 @@ func (s *CsirtService) Create(req dto.CreateCsirtRequest) (*models.Csirt, error)
 
 	cacheSet(s.rc, keyDetail("csirt", id), result, TTLDetail)
 	cacheDelete(s.rc, keyList("csirt"))
+	cacheDelete(s.rc, "csirt:perusahaan:"+req.IdPerusahaan)
 
 	return result, nil
 }
@@ -145,17 +146,24 @@ func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Cs
 
 	cacheDelete(s.rc, keyDetail("csirt", id))
 	cacheDelete(s.rc, keyList("csirt"))
+	cacheDelete(s.rc, "csirt:perusahaan:"+c.IdPerusahaan)
 
 	return c, nil
 }
 
 func (s *CsirtService) Delete(id string) error {
+	// Ambil data dulu untuk invalidate cache per perusahaan
+	existing, _ := s.repo.GetByID(id)
+
 	if err := s.repo.Delete(id); err != nil {
 		return err
 	}
 
 	cacheDelete(s.rc, keyDetail("csirt", id))
 	cacheDelete(s.rc, keyList("csirt"))
+	if existing != nil {
+		cacheDelete(s.rc, "csirt:perusahaan:"+existing.IdPerusahaan)
+	}
 
 	return nil
 }
