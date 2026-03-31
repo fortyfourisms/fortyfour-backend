@@ -602,6 +602,8 @@ func TestSEService_Update_RepositoryError(t *testing.T) {
 func TestSEService_Delete_Success(t *testing.T) {
 	service, mockRepo := setupSEService()
 
+	existingSE := &dto.SEResponse{ID: "se-123", IDPerusahaan: "perusahaan-1"}
+	mockRepo.On("GetByID", "se-123").Return(existingSE, nil)
 	mockRepo.On("Delete", "se-123").Return(nil)
 
 	err := service.Delete("se-123")
@@ -623,6 +625,7 @@ func TestSEService_Delete_EmptyID(t *testing.T) {
 func TestSEService_Delete_RepositoryError(t *testing.T) {
 	service, mockRepo := setupSEService()
 
+	mockRepo.On("GetByID", "se-123").Return((*dto.SEResponse)(nil), nil)
 	mockRepo.On("Delete", "se-123").Return(errors.New("delete failed"))
 
 	err := service.Delete("se-123")

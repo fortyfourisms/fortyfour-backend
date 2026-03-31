@@ -37,7 +37,10 @@ func (m *mockCsirtRepo) ExistsByPerusahaan(idPerusahaan string) (bool, error) {
 }
 
 func (m *mockCsirtRepo) GetByID(id string) (*models.Csirt, error) {
-	return m.GetByIDFn(id)
+	if m.GetByIDFn != nil {
+		return m.GetByIDFn(id)
+	}
+	return nil, nil
 }
 
 func (m *mockCsirtRepo) GetAllWithPerusahaan() ([]dto.CsirtResponse, error) {

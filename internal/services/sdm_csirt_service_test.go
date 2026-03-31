@@ -32,7 +32,10 @@ func (m *mockSdmCsirtRepo) GetAll() ([]dto.SdmCsirtResponse, error) {
 }
 
 func (m *mockSdmCsirtRepo) GetByID(id string) (*dto.SdmCsirtResponse, error) {
-	return m.GetByIDFn(id)
+	if m.GetByIDFn != nil {
+		return m.GetByIDFn(id)
+	}
+	return nil, nil
 }
 
 func (m *mockSdmCsirtRepo) GetByCsirt(idCsirt string) ([]dto.SdmCsirtResponse, error) {
