@@ -27,39 +27,39 @@ const (
 func toSafe(s string) string {
 	r := strings.NewReplacer(
 		// Dashes
-		"\u2013", "-",    // en dash  –
-		"\u2014", "--",   // em dash  —
-		"\u2012", "-",    // figure dash
-		"\u2015", "--",   // horizontal bar
+		"\u2013", "-", // en dash  –
+		"\u2014", "--", // em dash  —
+		"\u2012", "-", // figure dash
+		"\u2015", "--", // horizontal bar
 
 		// Quotes
-		"\u2018", "'",    // left single quotation mark  '
-		"\u2019", "'",    // right single quotation mark  '
-		"\u201A", ",",    // single low-9 quotation mark  ‚
-		"\u201C", "\"",   // left double quotation mark  "
-		"\u201D", "\"",   // right double quotation mark  "
-		"\u201E", "\"",   // double low-9 quotation mark  „
+		"\u2018", "'", // left single quotation mark  '
+		"\u2019", "'", // right single quotation mark  '
+		"\u201A", ",", // single low-9 quotation mark  ‚
+		"\u201C", "\"", // left double quotation mark  "
+		"\u201D", "\"", // right double quotation mark  "
+		"\u201E", "\"", // double low-9 quotation mark  „
 
 		// Spaces & separators
-		"\u00A0", " ",    // non-breaking space
-		"\u2009", " ",    // thin space
-		"\u200B", "",     // zero-width space
+		"\u00A0", " ", // non-breaking space
+		"\u2009", " ", // thin space
+		"\u200B", "", // zero-width space
 
 		// Symbols
-		"\u2026", "...",  // ellipsis  …
-		"\u2022", "*",    // bullet  •
-		"\u00B7", "*",    // middle dot  ·
-		"\u00A9", "(c)",  // copyright  ©
-		"\u00AE", "(R)",  // registered  ®
+		"\u2026", "...", // ellipsis  …
+		"\u2022", "*", // bullet  •
+		"\u00B7", "*", // middle dot  ·
+		"\u00A9", "(c)", // copyright  ©
+		"\u00AE", "(R)", // registered  ®
 		"\u2122", "(TM)", // trademark  ™
 		"\u00B0", " deg", // degree  °
-		"\u00D7", "x",    // multiplication sign  ×
-		"\u00F7", "/",    // division sign  ÷
+		"\u00D7", "x", // multiplication sign  ×
+		"\u00F7", "/", // division sign  ÷
 
 		// Arrows
-		"\u2192", "->",   // →
-		"\u2190", "<-",   // ←
-		"\u2194", "<->",  // ↔
+		"\u2192", "->", // →
+		"\u2190", "<-", // ←
+		"\u2194", "<->", // ↔
 	)
 	return r.Replace(s)
 }
@@ -313,52 +313,52 @@ func printRows(pdf *fpdf.Fpdf, rows [][]string) {
 
 func printCsirtBlock(pdf *fpdf.Fpdf, csirt dto.CsirtResponse) {
 	printSectionTitle(pdf, "Informasi CSIRT")
- 
+
 	namaPerusahaan := csirt.Perusahaan.NamaPerusahaan
 	if namaPerusahaan == "" {
 		namaPerusahaan = csirt.Perusahaan.ID
 	}
- 
+
 	telepon := "-"
 	if csirt.TeleponCsirt != nil && *csirt.TeleponCsirt != "" {
 		telepon = *csirt.TeleponCsirt
 	}
- 
+
 	fileRFC := "-"
 	if csirt.FileRFC2350 != "" {
 		fileRFC = csirt.FileRFC2350
 	}
- 
+
 	filePGP := "-"
 	if csirt.FilePublicKeyPGP != "" {
 		filePGP = csirt.FilePublicKeyPGP
 	}
- 
+
 	photo := "-"
 	if csirt.PhotoCsirt != "" {
 		photo = csirt.PhotoCsirt
 	}
- 
+
 	fileStr := "-"
 	if csirt.FileStr != "" {
 		fileStr = csirt.FileStr
 	}
- 
+
 	tglReg := "-"
 	if csirt.TanggalRegistrasi != "" {
 		tglReg = csirt.TanggalRegistrasi
 	}
- 
+
 	tglKadaluarsa := "-"
 	if csirt.TanggalKadaluarsa != "" {
 		tglKadaluarsa = csirt.TanggalKadaluarsa
 	}
- 
+
 	tglRegUlang := "-"
 	if csirt.TanggalRegistrasiUlang != "" {
 		tglRegUlang = csirt.TanggalRegistrasiUlang
 	}
- 
+
 	rows := [][]string{
 		{"Perusahaan", namaPerusahaan},
 		{"Nama CSIRT", csirt.NamaCsirt},
@@ -370,9 +370,9 @@ func printCsirtBlock(pdf *fpdf.Fpdf, csirt dto.CsirtResponse) {
 		{"File STR", fileStr},
 	}
 	printRows(pdf, rows)
- 
+
 	pdf.Ln(3)
- 
+
 	printSectionTitle(pdf, "Tanggal Registrasi")
 	tanggalRows := [][]string{
 		{"Tanggal Registrasi", tglReg},

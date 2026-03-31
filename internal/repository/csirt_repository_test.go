@@ -64,9 +64,9 @@ func TestCsirtRepository_Create(t *testing.T) {
 				req.PhotoCsirt,
 				req.FileRFC2350,
 				req.FilePublicKeyPGP,
-				req.FileStr,              // nullable — terisi
-				req.TanggalRegistrasi,    // nullable — terisi
-				req.TanggalKadaluarsa,    // nullable — terisi
+				req.FileStr,                // nullable — terisi
+				req.TanggalRegistrasi,      // nullable — terisi
+				req.TanggalKadaluarsa,      // nullable — terisi
 				req.TanggalRegistrasiUlang, // nullable — terisi
 			).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -725,17 +725,18 @@ func TestCsirtRepository_GetByPerusahaan(t *testing.T) {
 		})
 	}
 }
+
 // ─────────────────────────────────────────────────────────
 // EXISTS BY PERUSAHAAN
 // ─────────────────────────────────────────────────────────
 
 func TestCsirtRepository_ExistsByPerusahaan(t *testing.T) {
 	tests := []struct {
-		name          string
-		idPerusahaan  string
-		mockFn        func(mock sqlmock.Sqlmock)
-		wantExists    bool
-		wantErr       bool
+		name         string
+		idPerusahaan string
+		mockFn       func(mock sqlmock.Sqlmock)
+		wantExists   bool
+		wantErr      bool
 	}{
 		{
 			name:         "returns true when csirt exists for perusahaan",

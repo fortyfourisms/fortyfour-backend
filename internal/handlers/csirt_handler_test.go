@@ -303,10 +303,10 @@ func TestCsirtHandler_Create_WithTanggalFields_Success(t *testing.T) {
 
 	req, cleanup := createMultipartRequest(t, http.MethodPost, "/api/csirt",
 		map[string]string{
-			"id_perusahaan":           "perusahaan-1",
-			"nama_csirt":              "CSIRT Lengkap",
-			"tanggal_registrasi":      "2024-01-15",
-			"tanggal_kadaluarsa":      "2025-01-15",
+			"id_perusahaan":            "perusahaan-1",
+			"nama_csirt":               "CSIRT Lengkap",
+			"tanggal_registrasi":       "2024-01-15",
+			"tanggal_kadaluarsa":       "2025-01-15",
 			"tanggal_registrasi_ulang": "2025-01-20",
 		},
 		nil,
@@ -403,7 +403,7 @@ func TestCsirtHandler_Update_WithTanggalFields_Success(t *testing.T) {
 
 	req, cleanup := createMultipartRequest(t, http.MethodPut, "/api/csirt/csirt-1",
 		map[string]string{
-			"tanggal_kadaluarsa":      "2026-06-30",
+			"tanggal_kadaluarsa":       "2026-06-30",
 			"tanggal_registrasi_ulang": "2026-07-01",
 		},
 		nil,

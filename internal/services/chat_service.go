@@ -33,11 +33,10 @@ type ChatServiceInterface interface {
 	Repo() repository.ChatRepository
 	GetGemini() GeminiGenerator
 }
- 
+
 type GeminiGenerator interface {
 	Generate(prompt string) (string, error)
 }
- 
 
 // GetDatabaseSchema: sql generate
 func (s *ChatService) GetDatabaseSchema() (string, error) {

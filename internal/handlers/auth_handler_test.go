@@ -12,7 +12,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -106,7 +105,7 @@ func TestAuthHandler_Login_Success_WithMFASetupRequired(t *testing.T) {
 	// Now login (user baru harus setup MFA dulu)
 	loginBody := dto.LoginRequest{
 		Identifier: "testuser",
-		Password: "P@ssj0rd121",
+		Password:   "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -308,7 +307,7 @@ func TestAuthHandler_SetupMFA_WithSetupToken(t *testing.T) {
 	// Login to get setup token
 	loginBody := dto.LoginRequest{
 		Identifier: "testuser",
-		Password: "P@ssj0rd121",
+		Password:   "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -367,7 +366,7 @@ func TestAuthHandler_EnableMFA_Success(t *testing.T) {
 	// 2. Login to get setup_token
 	loginBody := dto.LoginRequest{
 		Identifier: "testuser",
-		Password: "P@ssj0rd121",
+		Password:   "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -461,7 +460,7 @@ func TestAuthHandler_VerifyMFA_Success(t *testing.T) {
 	// 2. Login to get setup_token
 	loginBody := dto.LoginRequest{
 		Identifier: "testuser",
-		Password: "P@ssj0rd121",
+		Password:   "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -579,7 +578,7 @@ func TestAuthHandler_EnableMFA_InvalidCode(t *testing.T) {
 
 	loginBody := dto.LoginRequest{
 		Identifier: "testuser",
-		Password: "P@ssj0rd121",
+		Password:   "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -633,7 +632,7 @@ func TestAuthHandler_EnableMFA_ExpiredSetupToken(t *testing.T) {
 
 	loginBody := dto.LoginRequest{
 		Identifier: "testuser",
-		Password: "P@ssj0rd121",
+		Password:   "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -1477,16 +1476,16 @@ func TestAuthHandler_Login_MFAEnabled_ReturnsMFAToken(t *testing.T) {
 =====================================
 */
 
-func setupAuthHandlerWithUserService() (*AuthHandler, *testhelpers.MockRedisClient) {
-	uploadPath := os.TempDir()
-	userRepo := testhelpers.NewMockUserRepository()
-	redis := testhelpers.NewMockRedisClient()
-	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
-	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
-	return handler, redis
-}
+// func setupAuthHandlerWithUserService() (*AuthHandler, *testhelpers.MockRedisClient) {
+// 	uploadPath := os.TempDir()
+// 	userRepo := testhelpers.NewMockUserRepository()
+// 	redis := testhelpers.NewMockRedisClient()
+// 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+// 	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+// 	userService := services.NewUserService(userRepo, uploadPath, nil)
+// 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+// 	return handler, redis
+// }
 
 func TestAuthHandler_LogoutAll_Success(t *testing.T) {
 	handler, _ := setupAuthHandler()
