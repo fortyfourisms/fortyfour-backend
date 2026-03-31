@@ -509,8 +509,68 @@ func (r *IkasRepository) Update(id string, req dto.UpdateIkasRequest) error {
 }
 
 func (r *IkasRepository) Delete(id string) error {
-	_, err := r.db.Exec(`DELETE FROM ikas WHERE id=?`, id)
-	return err
+	// Get perusahaan ID
+	var perusahaanID string
+	err := r.db.QueryRow(`SELECT id_perusahaan FROM ikas WHERE id = ?`, id).Scan(&perusahaanID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil // Sudah tidak ada
+		}
+		return err
+	}
+
+	// Start transaction
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Delete buffer data
+	tablesBuffer := []string{
+		"jawaban_identifikasi_buffer",
+		"jawaban_proteksi_buffer",
+		"jawaban_deteksi_buffer",
+		"jawaban_gulih_buffer",
+	}
+	for _, table := range tablesBuffer {
+		if _, err := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE perusahaan_id = ?`, table), perusahaanID); err != nil {
+			return fmt.Errorf("error deleting from %s: %v", table, err)
+		}
+	}
+
+	// Delete main answers
+	tablesJawaban := []string{
+		"jawaban_identifikasi",
+		"jawaban_proteksi",
+		"jawaban_deteksi",
+		"jawaban_gulih",
+	}
+	for _, table := range tablesJawaban {
+		if _, err := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE perusahaan_id = ?`, table), perusahaanID); err != nil {
+			return fmt.Errorf("error deleting from %s: %v", table, err)
+		}
+	}
+
+	// Delete ikas
+	if _, err := tx.Exec(`DELETE FROM ikas WHERE id = ?`, id); err != nil {
+		return fmt.Errorf("error deleting from ikas: %v", err)
+	}
+
+	// Delete domain data
+	tablesDomain := []string{
+		"identifikasi",
+		"proteksi",
+		"deteksi",
+		"gulih",
+	}
+	for _, table := range tablesDomain {
+		if _, err := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE perusahaan_id = ?`, table), perusahaanID); err != nil {
+			return fmt.Errorf("error deleting from %s: %v", table, err)
+		}
+	}
+
+	return tx.Commit()
 }
 
 func parseMultipleDateFormats(dateStr string) (time.Time, error) {
