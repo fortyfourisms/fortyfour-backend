@@ -1,21 +1,29 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"ikas/internal/dto"
+	"ikas/internal/dto/dto_event"
+	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
+	"time"
 
 	"fortyfour-backend/pkg/logger"
 )
 
 type SubKategoriService struct {
-	repo repository.SubKategoriRepositoryInterface
+	repo     repository.SubKategoriRepositoryInterface
+	producer *rabbitmq.Producer
 }
 
-func NewSubKategoriService(repo repository.SubKategoriRepositoryInterface) *SubKategoriService {
-	return &SubKategoriService{repo: repo}
+func NewSubKategoriService(repo repository.SubKategoriRepositoryInterface, producer *rabbitmq.Producer) *SubKategoriService {
+	return &SubKategoriService{
+		repo:     repo,
+		producer: producer,
+	}
 }
 
 func (s *SubKategoriService) validateCreate(req *dto.CreateSubKategoriRequest) error {
@@ -123,20 +131,14 @@ func (s *SubKategoriService) Create(req dto.CreateSubKategoriRequest) (*dto.SubK
 		return nil, errors.New("nama_sub_kategori sudah ada dalam kategori ini")
 	}
 
-	id, err := s.repo.Create(req)
-	if err != nil {
-		logger.Error(err, "operation failed")
+	if err := s.producer.PublishSubKategoriCreated(context.Background(), dto_event.SubKategoriCreatedEvent{
+		Request:   req,
+		CreatedAt: time.Now(),
+	}); err != nil {
 		return nil, err
 	}
 
-	// Ambil data yang baru dibuat
-	resp, err := s.repo.GetByID(int(id))
-	if err != nil {
-		logger.Error(err, "operation failed")
-		return nil, err
-	}
-
-	return resp, nil
+	return nil, nil
 }
 
 func (s *SubKategoriService) GetAll() ([]dto.SubKategoriResponse, error) {
@@ -202,19 +204,15 @@ func (s *SubKategoriService) Update(id int, req dto.UpdateSubKategoriRequest) (*
 	}
 
 	// Update
-	if err := s.repo.Update(id, req); err != nil {
-		logger.Error(err, "operation failed")
+	if err := s.producer.PublishSubKategoriUpdated(context.Background(), dto_event.SubKategoriUpdatedEvent{
+		ID:        id,
+		Request:   req,
+		UpdatedAt: time.Now(),
+	}); err != nil {
 		return nil, err
 	}
 
-	// Ambil data terbaru
-	updated, err := s.repo.GetByID(id)
-	if err != nil {
-		logger.Error(err, "operation failed")
-		return nil, err
-	}
-
-	return updated, nil
+	return nil, nil
 }
 
 func (s *SubKategoriService) Delete(id int) error {
@@ -227,5 +225,8 @@ func (s *SubKategoriService) Delete(id int) error {
 		return err
 	}
 
-	return s.repo.Delete(id)
+	return s.producer.PublishSubKategoriDeleted(context.Background(), dto_event.SubKategoriDeletedEvent{
+		ID:        id,
+		DeletedAt: time.Now(),
+	})
 }

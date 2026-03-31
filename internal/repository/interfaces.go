@@ -72,42 +72,6 @@ type PICRepositoryInterface interface {
 	Delete(id string) error
 }
 
-// IdentifikasiRepositoryInterface
-type IdentifikasiRepositoryInterface interface {
-	Create(req dto.CreateIdentifikasiRequest, id string) error
-	GetAll() ([]models.Identifikasi, error)
-	GetByID(id string) (*models.Identifikasi, error)
-	Update(id string, identifikasi models.Identifikasi) error
-	Delete(id string) error
-}
-
-// ProteksiRepositoryInterface
-type ProteksiRepositoryInterface interface {
-	Create(req dto.CreateProteksiRequest, id string) error
-	GetAll() ([]models.Proteksi, error)
-	GetByID(id string) (*models.Proteksi, error)
-	Update(id string, proteksi models.Proteksi) error
-	Delete(id string) error
-}
-
-// DeteksiRepositoryInterface
-type DeteksiRepositoryInterface interface {
-	Create(req dto.CreateDeteksiRequest, id string) error
-	GetAll() ([]models.Deteksi, error)
-	GetByID(id string) (*models.Deteksi, error)
-	Update(id string, deteksi models.Deteksi) error
-	Delete(id string) error
-}
-
-// GulihRepositoryInterface
-type GulihRepositoryInterface interface {
-	Create(req dto.CreateGulihRequest, id string) error
-	GetAll() ([]models.Gulih, error)
-	GetByID(id string) (*models.Gulih, error)
-	Update(id string, gulih models.Gulih) error
-	Delete(id string) error
-}
-
 // CsirtRepositoryInterface
 type CsirtRepositoryInterface interface {
 	Create(req dto.CreateCsirtRequest, id string) error

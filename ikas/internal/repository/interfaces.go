@@ -1,6 +1,9 @@
 package repository
 
-import "ikas/internal/dto"
+import (
+	"ikas/internal/dto"
+	"ikas/internal/models"
+)
 
 // IkasRepositoryInterface
 type IkasRepositoryInterface interface {
@@ -79,4 +82,28 @@ type SubKategoriRepositoryInterface interface {
 	Delete(id int) error
 	CheckDuplicateName(kategoriID int, namaSubKategori string, excludeID int) (bool, error)
 	CheckKategoriExists(kategoriID int) (bool, error)
+}
+
+// IdentifikasiRepositoryInterface
+type IdentifikasiRepositoryInterface interface {
+	GetAll() ([]models.Identifikasi, error)
+	GetByID(id string) (*models.Identifikasi, error)
+}
+
+// ProteksiRepositoryInterface
+type ProteksiRepositoryInterface interface {
+	GetAll() ([]models.Proteksi, error)
+	GetByID(id string) (*models.Proteksi, error)
+}
+
+// DeteksiRepositoryInterface
+type DeteksiRepositoryInterface interface {
+	GetAll() ([]models.Deteksi, error)
+	GetByID(id string) (*models.Deteksi, error)
+}
+
+// GulihRepositoryInterface
+type GulihRepositoryInterface interface {
+	GetAll() ([]models.Gulih, error)
+	GetByID(id string) (*models.Gulih, error)
 }

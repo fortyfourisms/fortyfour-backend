@@ -33,10 +33,6 @@ func InitRouter(
 	perusahaanH *handlers.PerusahaanHandler,
 	picH *handlers.PICHandler,
 	jabatanH *handlers.JabatanHandler,
-	identifikasiH *handlers.IdentifikasiHandler,
-	deteksiH *handlers.DeteksiHandler,
-	gulihH *handlers.GulihHandler,
-	proteksiH *handlers.ProteksiHandler,
 	roleH *handlers.RoleHandler,
 	casbinH *handlers.CasbinHandler,
 	sseH *handlers.SSEHandler,
@@ -109,22 +105,6 @@ func InitRouter(
 	// Route Jabatan
 	mux.HandleFunc("/api/jabatan", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(jabatanH)))))
 	mux.HandleFunc("/api/jabatan/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(jabatanH)))))
-
-	// Route Identifikasi
-	mux.HandleFunc("/api/identifikasi", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(identifikasiH)))))
-	mux.HandleFunc("/api/identifikasi/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(identifikasiH)))))
-
-	// Route Gulih
-	mux.HandleFunc("/api/gulih", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(gulihH)))))
-	mux.HandleFunc("/api/gulih/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(gulihH)))))
-
-	// Route Proteksi
-	mux.HandleFunc("/api/proteksi", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(proteksiH)))))
-	mux.HandleFunc("/api/proteksi/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(proteksiH)))))
-
-	// Route Deteksi
-	mux.HandleFunc("/api/deteksi", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(deteksiH)))))
-	mux.HandleFunc("/api/deteksi/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(deteksiH)))))
 
 	// Route IKAS (Proxy to Microservice)
 	mux.Handle("/api/maturity/", authM.Authenticate(casbinM.Authorize(ikasProxyH.ServeHTTP)))

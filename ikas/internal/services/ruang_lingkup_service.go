@@ -1,21 +1,29 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"ikas/internal/dto"
+	"ikas/internal/dto/dto_event"
+	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
+	"time"
 
 	"fortyfour-backend/pkg/logger"
 )
 
 type RuangLingkupService struct {
-	repo repository.RuangLingkupRepositoryInterface
+	repo     repository.RuangLingkupRepositoryInterface
+	producer *rabbitmq.Producer
 }
 
-func NewRuangLingkupService(repo repository.RuangLingkupRepositoryInterface) *RuangLingkupService {
-	return &RuangLingkupService{repo: repo}
+func NewRuangLingkupService(repo repository.RuangLingkupRepositoryInterface, producer *rabbitmq.Producer) *RuangLingkupService {
+	return &RuangLingkupService{
+		repo:     repo,
+		producer: producer,
+	}
 }
 
 // Validasi untuk Create
@@ -104,20 +112,14 @@ func (s *RuangLingkupService) Create(req dto.CreateRuangLingkupRequest) (*dto.Ru
 		return nil, errors.New("nama_ruang_lingkup sudah ada")
 	}
 
-	id, err := s.repo.Create(req)
-	if err != nil {
-		logger.Error(err, "operation failed")
+	if err := s.producer.PublishRuangLingkupCreated(context.Background(), dto_event.RuangLingkupCreatedEvent{
+		Request:   req,
+		CreatedAt: time.Now(),
+	}); err != nil {
 		return nil, err
 	}
 
-	// Ambil data yang baru dibuat
-	resp, err := s.repo.GetByID(int(id))
-	if err != nil {
-		logger.Error(err, "operation failed")
-		return nil, err
-	}
-
-	return resp, nil
+	return nil, nil
 }
 
 func (s *RuangLingkupService) GetAll() ([]dto.RuangLingkupResponse, error) {
@@ -163,20 +165,15 @@ func (s *RuangLingkupService) Update(id int, req dto.UpdateRuangLingkupRequest) 
 		}
 	}
 
-	// Update
-	if err := s.repo.Update(id, req); err != nil {
-		logger.Error(err, "operation failed")
+	if err := s.producer.PublishRuangLingkupUpdated(context.Background(), dto_event.RuangLingkupUpdatedEvent{
+		ID:        id,
+		Request:   req,
+		UpdatedAt: time.Now(),
+	}); err != nil {
 		return nil, err
 	}
 
-	// Ambil data terbaru
-	updated, err := s.repo.GetByID(id)
-	if err != nil {
-		logger.Error(err, "operation failed")
-		return nil, err
-	}
-
-	return updated, nil
+	return nil, nil
 }
 
 func (s *RuangLingkupService) Delete(id int) error {
@@ -189,5 +186,8 @@ func (s *RuangLingkupService) Delete(id int) error {
 		return err
 	}
 
-	return s.repo.Delete(id)
+	return s.producer.PublishRuangLingkupDeleted(context.Background(), dto_event.RuangLingkupDeletedEvent{
+		ID:        id,
+		DeletedAt: time.Now(),
+	})
 }

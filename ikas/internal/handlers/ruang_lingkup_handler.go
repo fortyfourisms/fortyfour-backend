@@ -123,7 +123,7 @@ func (h *RuangLingkupHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	resp, err := h.service.Create(req)
+	_, err := h.service.Create(req)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		// Mapping error ke HTTP status code
@@ -140,9 +140,8 @@ func (h *RuangLingkupHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	utils.RespondJSON(w, 201, map[string]interface{}{
-		"message": "Berhasil menyimpan data",
-		"data":    resp,
+	utils.RespondJSON(w, 201, dto.RuangLingkupMessageResponse{
+		Message: "Berhasil menyimpan data",
 	})
 }
 
@@ -168,7 +167,7 @@ func (h *RuangLingkupHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	resp, err := h.service.Update(id, req)
+	_, err := h.service.Update(id, req)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		// Mapping error ke HTTP status code
@@ -187,9 +186,9 @@ func (h *RuangLingkupHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil memperbarui data",
-		"data":    resp,
+	utils.RespondJSON(w, 200, dto.RuangLingkupMessageResponse{
+		ID:      id,
+		Message: "Berhasil memperbarui data",
 	})
 }
 
@@ -214,7 +213,8 @@ func (h *RuangLingkupHandler) handleDelete(w http.ResponseWriter, r *http.Reques
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menghapus data",
+	utils.RespondJSON(w, 200, dto.RuangLingkupMessageResponse{
+		ID:      id,
+		Message: "Berhasil menghapus data",
 	})
 }

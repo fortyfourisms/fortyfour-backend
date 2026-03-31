@@ -90,14 +90,22 @@ func main() {
 	msgConsumer := internalRmq.NewConsumer(
 		sharedConsumer,
 		repository.NewIkasRepository(db),
-		repository.NewJawabanIdentifikasiRepository(db),
+		repository.NewIdentifikasiRepository(db),
 		repository.NewPertanyaanIdentifikasiRepository(db),
-		repository.NewJawabanProteksiRepository(db),
+		repository.NewJawabanIdentifikasiRepository(db),
+		repository.NewProteksiRepository(db),
 		repository.NewPertanyaanProteksiRepository(db),
-		repository.NewJawabanDeteksiRepository(db),
+		repository.NewJawabanProteksiRepository(db),
+		repository.NewDeteksiRepository(db),
 		repository.NewPertanyaanDeteksiRepository(db),
-		repository.NewJawabanGulihRepository(db),
+		repository.NewJawabanDeteksiRepository(db),
+		repository.NewGulihRepository(db),
 		repository.NewPertanyaanGulihRepository(db),
+		repository.NewJawabanGulihRepository(db),
+		repository.NewDomainRepository(db),
+		repository.NewRuangLingkupRepository(db),
+		repository.NewKategoriRepository(db),
+		repository.NewSubKategoriRepository(db),
 		repository.NewAuditLogRepository(db),
 	)
 
@@ -116,6 +124,11 @@ func main() {
 	kategoriRepo := repository.NewKategoriRepository(db)
 	subKategoriRepo := repository.NewSubKategoriRepository(db)
 
+	identifikasiRepo := repository.NewIdentifikasiRepository(db)
+	proteksiRepo := repository.NewProteksiRepository(db)
+	deteksiRepo := repository.NewDeteksiRepository(db)
+	gulihRepo := repository.NewGulihRepository(db)
+
 	pertanyaanIdentifikasiRepo := repository.NewPertanyaanIdentifikasiRepository(db)
 	pertanyaanProteksiRepo := repository.NewPertanyaanProteksiRepository(db)
 	pertanyaanDeteksiRepo := repository.NewPertanyaanDeteksiRepository(db)
@@ -128,14 +141,18 @@ func main() {
 
 	// services
 	ikasService := services.NewIkasService(ikasRepo, msgProducer)
-	ruangLingkupService := services.NewRuangLingkupService(ruangLingkupRepo)
-	domainService := services.NewDomainService(domainRepo)
-	kategoriService := services.NewKategoriService(kategoriRepo)
-	subKategoriService := services.NewSubKategoriService(subKategoriRepo)
-	pertanyaanIdentifikasiService := services.NewPertanyaanIdentifikasiService(pertanyaanIdentifikasiRepo)
-	pertanyaanProteksiService := services.NewPertanyaanProteksiService(pertanyaanProteksiRepo)
-	pertanyaanDeteksiService := services.NewPertanyaanDeteksiService(pertanyaanDeteksiRepo)
-	pertanyaanGulihService := services.NewPertanyaanGulihService(pertanyaanGulihRepo)
+	ruangLingkupService := services.NewRuangLingkupService(ruangLingkupRepo, msgProducer)
+	domainService := services.NewDomainService(domainRepo, msgProducer)
+	kategoriService := services.NewKategoriService(kategoriRepo, msgProducer)
+	subKategoriService := services.NewSubKategoriService(subKategoriRepo, msgProducer)
+	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
+	proteksiService := services.NewProteksiService(proteksiRepo)
+	deteksiService := services.NewDeteksiService(deteksiRepo)
+	gulihService := services.NewGulihService(gulihRepo)
+	pertanyaanIdentifikasiService := services.NewPertanyaanIdentifikasiService(pertanyaanIdentifikasiRepo, msgProducer)
+	pertanyaanProteksiService := services.NewPertanyaanProteksiService(pertanyaanProteksiRepo, msgProducer)
+	pertanyaanDeteksiService := services.NewPertanyaanDeteksiService(pertanyaanDeteksiRepo, msgProducer)
+	pertanyaanGulihService := services.NewPertanyaanGulihService(pertanyaanGulihRepo, msgProducer)
 	jawabanIdentifikasiService := services.NewJawabanIdentifikasiService(jawabanIdentifikasiRepo, ikasRepo, msgProducer)
 	jawabanProteksiService := services.NewJawabanProteksiService(jawabanProteksiRepo, ikasRepo, msgProducer)
 	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo, ikasRepo, msgProducer)
@@ -154,6 +171,10 @@ func main() {
 	domainHandler := handlers.NewDomainHandler(domainService)
 	kategoriHandler := handlers.NewKategoriHandler(kategoriService)
 	subKategoriHandler := handlers.NewSubKategoriHandler(subKategoriService)
+	identifikasiHandler := handlers.NewIdentifikasiHandler(identifikasiService)
+	proteksiHandler := handlers.NewProteksiHandler(proteksiService)
+	deteksiHandler := handlers.NewDeteksiHandler(deteksiService)
+	gulihHandler := handlers.NewGulihHandler(gulihService)
 	pertanyaanIdentifikasiHandler := handlers.NewPertanyaanIdentifikasiHandler(pertanyaanIdentifikasiService)
 	pertanyaanProteksiHandler := handlers.NewPertanyaanProteksiHandler(pertanyaanProteksiService)
 	pertanyaanDeteksiHandler := handlers.NewPertanyaanDeteksiHandler(pertanyaanDeteksiService)
@@ -181,6 +202,10 @@ func main() {
 		domainHandler,
 		kategoriHandler,
 		subKategoriHandler,
+		identifikasiHandler,
+		proteksiHandler,
+		deteksiHandler,
+		gulihHandler,
 		pertanyaanIdentifikasiHandler,
 		pertanyaanProteksiHandler,
 		pertanyaanDeteksiHandler,
@@ -220,6 +245,28 @@ func main() {
 		logger.Info("  - jawaban.gulih.created")
 		logger.Info("  - jawaban.gulih.updated")
 		logger.Info("  - jawaban.gulih.deleted")
+		logger.Info("  - domain.created")
+		logger.Info("  - domain.updated")
+		logger.Info("  - domain.deleted")
+		logger.Info("  - ruang_lingkup.created")
+		logger.Info("  - ruang_lingkup.updated")
+		logger.Info("  - ruang_lingkup.deleted")
+		logger.Info("  - kategori.deleted")
+		logger.Info("  - sub_kategori.created")
+		logger.Info("  - sub_kategori.updated")
+		logger.Info("  - sub_kategori.deleted")
+		logger.Info("  - pertanyaan_identifikasi.created")
+		logger.Info("  - pertanyaan_identifikasi.updated")
+		logger.Info("  - pertanyaan_identifikasi.deleted")
+		logger.Info("  - pertanyaan_proteksi.created")
+		logger.Info("  - pertanyaan_proteksi.updated")
+		logger.Info("  - pertanyaan_proteksi.deleted")
+		logger.Info("  - pertanyaan_deteksi.created")
+		logger.Info("  - pertanyaan_deteksi.updated")
+		logger.Info("  - pertanyaan_deteksi.deleted")
+		logger.Info("  - pertanyaan_gulih.created")
+		logger.Info("  - pertanyaan_gulih.updated")
+		logger.Info("  - pertanyaan_gulih.deleted")
 		logger.Info("  - ikas.audit_logs")
 
 		if err := http.ListenAndServe(cfg.Port, mux); err != nil && err != http.ErrServerClosed {
