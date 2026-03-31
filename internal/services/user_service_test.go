@@ -630,3 +630,164 @@ func TestUserService_UpdateStatus_UserNotFound(t *testing.T) {
 		t.Fatal("expected error for nonexistent user, got nil")
 	}
 }
+
+/*
+=====================================
+ TEST UPDATE ME
+=====================================
+*/
+
+func TestUserService_UpdateMe_Success_DisplayName(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = mockRepo.Create(user)
+
+	displayName := "Display Baru"
+	req := dto.UpdateMeRequest{DisplayName: &displayName}
+
+	result, err := service.UpdateMe("user-1", req)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected result, got nil")
+	}
+	if result.DisplayName == nil || *result.DisplayName != "Display Baru" {
+		t.Errorf("expected display_name 'Display Baru', got %v", result.DisplayName)
+	}
+}
+
+func TestUserService_UpdateMe_Success_Email(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "old@test.com")
+	_ = mockRepo.Create(user)
+
+	newEmail := "new@test.com"
+	req := dto.UpdateMeRequest{Email: &newEmail}
+
+	result, err := service.UpdateMe("user-1", req)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result.Email != "new@test.com" {
+		t.Errorf("expected email 'new@test.com', got '%s'", result.Email)
+	}
+}
+
+func TestUserService_UpdateMe_Success_IDJabatan(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = mockRepo.Create(user)
+
+	jabatanID := "jabatan-uuid-123"
+	req := dto.UpdateMeRequest{IDJabatan: &jabatanID}
+
+	result, err := service.UpdateMe("user-1", req)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected result, got nil")
+	}
+}
+
+func TestUserService_UpdateMe_UserNotFound(t *testing.T) {
+	service, _ := setupUserService()
+
+	displayName := "Test"
+	req := dto.UpdateMeRequest{DisplayName: &displayName}
+
+	result, err := service.UpdateMe("tidak-ada", req)
+
+	if err == nil {
+		t.Error("expected error for non-existent user")
+	}
+	if result != nil {
+		t.Error("expected nil result on error")
+	}
+}
+
+func TestUserService_UpdateMe_EmptyDisplayName(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = mockRepo.Create(user)
+
+	emptyName := "   " // hanya spasi
+	req := dto.UpdateMeRequest{DisplayName: &emptyName}
+
+	result, err := service.UpdateMe("user-1", req)
+
+	if err == nil {
+		t.Error("expected error for empty display name")
+	}
+	if result != nil {
+		t.Error("expected nil result on error")
+	}
+}
+
+func TestUserService_UpdateMe_InvalidEmail(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = mockRepo.Create(user)
+
+	invalidEmail := "bukan-email"
+	req := dto.UpdateMeRequest{Email: &invalidEmail}
+
+	result, err := service.UpdateMe("user-1", req)
+
+	if err == nil {
+		t.Error("expected error for invalid email format")
+	}
+	if result != nil {
+		t.Error("expected nil result on error")
+	}
+}
+
+func TestUserService_UpdateMe_DuplicateEmail(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user1 := testhelpers.CreateTestUser("user-1", "user1", "user1@test.com")
+	user2 := testhelpers.CreateTestUser("user-2", "user2", "user2@test.com")
+	_ = mockRepo.Create(user1)
+	_ = mockRepo.Create(user2)
+
+	// user-1 coba pakai email milik user-2
+	existingEmail := "user2@test.com"
+	req := dto.UpdateMeRequest{Email: &existingEmail}
+
+	result, err := service.UpdateMe("user-1", req)
+
+	if err == nil {
+		t.Error("expected error for duplicate email")
+	}
+	if result != nil {
+		t.Error("expected nil result on error")
+	}
+}
+
+func TestUserService_UpdateMe_NoFieldsChanged(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = mockRepo.Create(user)
+
+	// Request kosong — tidak ada field yang diubah
+	req := dto.UpdateMeRequest{}
+
+	result, err := service.UpdateMe("user-1", req)
+
+	if err != nil {
+		t.Fatalf("expected no error for empty update, got %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected result even with no changes")
+	}
+}
