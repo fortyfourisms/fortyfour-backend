@@ -244,7 +244,7 @@ jobs:
 
       # Scan the LOCAL image (not from registry)
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.31.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           format: 'table'
@@ -256,7 +256,7 @@ jobs:
 
       # Generate SARIF only for public repos or if Advanced Security enabled
       - name: Run Trivy for SARIF (if supported)
-        uses: aquasecurity/trivy-action@0.31.0
+        uses: aquasecurity/trivy-action@0.35.0
         if: github.event.repository.private == false || github.event.repository.visibility == 'public'
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
@@ -268,7 +268,7 @@ jobs:
 
       # Also generate JSON report as backup
       - name: Run Trivy for JSON report
-        uses: aquasecurity/trivy-action@0.31.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           format: 'json'
@@ -286,7 +286,7 @@ jobs:
 
       # Also generate HTML report for artifacts
       - name: Run Trivy for HTML report
-        uses: aquasecurity/trivy-action@0.31.0
+        uses: aquasecurity/trivy-action@0.35.0
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           format: 'json'
