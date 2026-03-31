@@ -9,18 +9,18 @@ type CreateUserRequest struct {
 }
 
 type UpdateUserRequest struct {
-	Username  *string `json:"username" validate:"omitempty,min=3,max=50"`
-	Email     *string `json:"email" validate:"omitempty,email"`
-	RoleID    *string `json:"role_id"`
-	IDJabatan *string `json:"id_jabatan"`
+	Username    *string `json:"username" validate:"omitempty,min=3,max=50"`
+	DisplayName *string `json:"display_name" validate:"omitempty,min=1,max=100"`
+	Email       *string `json:"email" validate:"omitempty,email"`
+	RoleID      *string `json:"role_id"`
+	IDJabatan   *string `json:"id_jabatan"`
 }
 
-// UpdateMeRequest adalah DTO untuk user memperbarui data dirinya sendiri.
-// Tidak mengizinkan perubahan role_id (hanya admin yang bisa).
+// UpdateMeRequest untuk user update dirinya sendiri.
 type UpdateMeRequest struct {
-	Username  *string `json:"username" validate:"omitempty,min=3,max=50"`
-	Email     *string `json:"email" validate:"omitempty,email"`
-	IDJabatan *string `json:"id_jabatan"`
+	DisplayName *string `json:"display_name" validate:"omitempty,min=1,max=100"`
+	Email       *string `json:"email" validate:"omitempty,email"`
+	IDJabatan   *string `json:"id_jabatan"`
 }
 
 type UpdateUserPasswordRequest struct {
@@ -32,6 +32,7 @@ type UpdateUserPasswordRequest struct {
 type UserResponse struct {
 	ID           string  `json:"id"`
 	Username     string  `json:"username"`
+	DisplayName  *string `json:"display_name"`
 	Email        string  `json:"email"`
 	RoleID       *string `json:"role_id"`
 	RoleName     string  `json:"role_name"`

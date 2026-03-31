@@ -661,3 +661,173 @@ func TestDashboardHandler_Summary_ManySektor(t *testing.T) {
 
 	mockService.AssertExpectations(t)
 }
+
+/*
+=====================================
+ TEST FILTER FROM / TO — cabang yang belum dicakup
+=====================================
+*/
+
+// from+to keduanya valid TANPA year → From & To diset, Year nil
+func TestDashboardHandler_Summary_FromTo_Valid_WithoutYear(t *testing.T) {
+	mockService := new(MockDashboardService)
+	handler := createTestHandler(mockService)
+
+	from := "2024-03-01"
+	to := "2024-03-31"
+	f := dto.DashboardFilter{From: &from, To: &to}
+	mockService.On("GetSummary", mock.Anything, f).Return(emptySummary(), nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/dashboard/summary?from=2024-03-01&to=2024-03-31", nil)
+	w := httptest.NewRecorder()
+	handler.Summary(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+// from valid tapi to invalid → keduanya diabaikan (filter kosong)
+func TestDashboardHandler_Summary_FromValid_ToInvalid_BothIgnored(t *testing.T) {
+	tests := []struct {
+		name string
+		url  string
+	}{
+		{"to format salah DD-MM-YYYY", "/api/dashboard/summary?from=2024-01-01&to=31-01-2024"},
+		{"to bukan tanggal", "/api/dashboard/summary?from=2024-01-01&to=not-a-date"},
+		{"to bulan tidak valid", "/api/dashboard/summary?from=2024-01-01&to=2024-13-01"},
+		{"to hari tidak valid", "/api/dashboard/summary?from=2024-01-01&to=2024-01-32"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockService := new(MockDashboardService)
+			handler := createTestHandler(mockService)
+
+			// from+to tidak keduanya valid → filter kosong (From & To nil)
+			mockService.On("GetSummary", mock.Anything, emptyFilter()).Return(emptySummary(), nil)
+
+			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
+			w := httptest.NewRecorder()
+			handler.Summary(w, req)
+
+			assert.Equal(t, http.StatusOK, w.Code, "URL: %s", tt.url)
+			mockService.AssertExpectations(t)
+		})
+	}
+}
+
+// from+to valid + year + kategori_se → semua filter aktif bersamaan
+func TestDashboardHandler_Summary_FromTo_WithKategoriSE(t *testing.T) {
+	mockService := new(MockDashboardService)
+	handler := createTestHandler(mockService)
+
+	from := "2025-01-01"
+	to := "2025-03-31"
+	year := "2025"
+	kategori := "Strategis"
+	f := dto.DashboardFilter{From: &from, To: &to, Year: &year, KategoriSE: &kategori}
+	mockService.On("GetSummary", mock.Anything, f).Return(emptySummary(), nil)
+
+	req := httptest.NewRequest(http.MethodGet,
+		"/api/dashboard/summary?from=2025-01-01&to=2025-03-31&year=2025&kategori_se=Strategis", nil)
+	w := httptest.NewRecorder()
+	handler.Summary(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+/*
+=====================================
+ TEST FILTER SUB_SEKTOR_ID — cabang standalone
+=====================================
+*/
+
+// sub_sektor_id saja tanpa filter lain
+func TestDashboardHandler_Summary_SubSektorID_Only(t *testing.T) {
+	mockService := new(MockDashboardService)
+	handler := createTestHandler(mockService)
+
+	subID := "sub-sektor-uuid-99"
+	f := dto.DashboardFilter{SubSektorID: &subID}
+	mockService.On("GetSummary", mock.Anything, f).Return(emptySummary(), nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/dashboard/summary?sub_sektor_id=sub-sektor-uuid-99", nil)
+	w := httptest.NewRecorder()
+	handler.Summary(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+// sub_sektor_id kosong ("") → ptrStr mengembalikan nil → filter kosong
+func TestDashboardHandler_Summary_SubSektorID_Empty_TreatedAsNil(t *testing.T) {
+	mockService := new(MockDashboardService)
+	handler := createTestHandler(mockService)
+
+	mockService.On("GetSummary", mock.Anything, emptyFilter()).Return(emptySummary(), nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/dashboard/summary?sub_sektor_id=", nil)
+	w := httptest.NewRecorder()
+	handler.Summary(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+/*
+=====================================
+ TEST VALIDASI QUARTER — semua nilai valid (1,2,4)
+=====================================
+*/
+
+// Semua nilai quarter valid (1–4) harus diterima
+func TestDashboardHandler_Summary_AllValidQuarters(t *testing.T) {
+	for _, q := range []string{"1", "2", "4"} {
+		t.Run("quarter="+q, func(t *testing.T) {
+			mockService := new(MockDashboardService)
+			handler := createTestHandler(mockService)
+
+			year := "2025"
+			quarter := q
+			f := dto.DashboardFilter{Year: &year, Quarter: &quarter}
+			mockService.On("GetSummary", mock.Anything, f).Return(emptySummary(), nil)
+
+			req := httptest.NewRequest(http.MethodGet,
+				"/api/dashboard/summary?year=2025&quarter="+q, nil)
+			w := httptest.NewRecorder()
+			handler.Summary(w, req)
+
+			assert.Equal(t, http.StatusOK, w.Code)
+			mockService.AssertExpectations(t)
+		})
+	}
+}
+
+/*
+=====================================
+ TEST ptrStr HELPER
+=====================================
+*/
+
+func TestPtrStr_EmptyString_ReturnsNil(t *testing.T) {
+	result := ptrStr("")
+	assert.Nil(t, result)
+}
+
+func TestPtrStr_NonEmptyString_ReturnsPointer(t *testing.T) {
+	result := ptrStr("hello")
+	assert.NotNil(t, result)
+	assert.Equal(t, "hello", *result)
+}
+
+/*
+=====================================
+ TEST NewDashboardHandler CONSTRUCTOR
+=====================================
+*/
+
+func TestNewDashboardHandler_ReturnsNonNil(t *testing.T) {
+	h := NewDashboardHandler(nil)
+	assert.NotNil(t, h)
+}

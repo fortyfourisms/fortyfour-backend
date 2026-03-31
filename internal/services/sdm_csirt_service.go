@@ -40,6 +40,9 @@ func (s *SdmCsirtService) Create(req dto.CreateSdmCsirtRequest) (string, error) 
 
 	cacheSet(s.rc, keyDetail("sdm", id), result, TTLDetail)
 	cacheDelete(s.rc, keyList("sdm"))
+	if req.IdCsirt != nil {
+		cacheDelete(s.rc, "sdm_csirt_"+*req.IdCsirt)
+	}
 
 	return id, nil
 }
@@ -123,17 +126,26 @@ func (s *SdmCsirtService) Update(id string, req dto.UpdateSdmCsirtRequest) error
 
 	cacheDelete(s.rc, keyDetail("sdm", id))
 	cacheDelete(s.rc, keyList("sdm"))
+	if existing.Csirt != nil {
+		cacheDelete(s.rc, "sdm_csirt_"+existing.Csirt.ID)
+	}
 
 	return nil
 }
 
 func (s *SdmCsirtService) Delete(id string) error {
+	// Ambil data dulu untuk invalidate cache per csirt
+	existing, _ := s.repo.GetByID(id)
+
 	if err := s.repo.Delete(id); err != nil {
 		return err
 	}
 
 	cacheDelete(s.rc, keyDetail("sdm", id))
 	cacheDelete(s.rc, keyList("sdm"))
+	if existing != nil && existing.Csirt != nil {
+		cacheDelete(s.rc, "sdm_csirt_"+existing.Csirt.ID)
+	}
 
 	return nil
 }

@@ -12,8 +12,9 @@ import (
 )
 
 type SEHandler struct {
-	service    services.SEService
-	sseService services.SSEServiceInterface
+	service       services.SEService
+	sseService    services.SSEServiceInterface
+	exportHandler *SEExportHandler
 }
 
 func NewSEHandler(
@@ -26,8 +27,24 @@ func NewSEHandler(
 	}
 }
 
+// SetExportHandler injects the export handler so SEHandler can delegate
+// requests matching /{id}/export-pdf.
+func (h *SEHandler) SetExportHandler(exportH *SEExportHandler) {
+	h.exportHandler = exportH
+}
+
 func (h *SEHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(strings.TrimPrefix(r.URL.Path, "/api/se"), "/")
+
+	// Delegate /{id}/export-pdf ke SEExportHandler
+	if strings.HasSuffix(id, "/export-pdf") || id == "export-pdf" {
+		if h.exportHandler != nil {
+			h.exportHandler.ServeHTTP(w, r)
+		} else {
+			utils.RespondError(w, 500, "Export handler tidak tersedia")
+		}
+		return
+	}
 
 	switch r.Method {
 	case http.MethodGet:

@@ -42,11 +42,13 @@ func InitRouter(
 	moderateLimiter *middleware.RateLimiter,
 	lenientLimiter *middleware.RateLimiter,
 	csirtH *handlers.CsirtHandler,
+	csirtExportH *handlers.CsirtExportHandler,
 	sdmCsirtH *handlers.SdmCsirtHandler,
 	chatHandler *handlers.ChatHandler,
 	sektorH *handlers.SektorHandler,
 	subsectorH *handlers.SubSektorHandler,
 	seH *handlers.SEHandler,
+	seExportH *handlers.SEExportHandler,
 	dashboardH *handlers.DashboardHandler,
 	notificationH *handlers.NotificationHandler,
 	ikasProxyH *handlers.ProxyHandler,
@@ -118,6 +120,13 @@ func InitRouter(
 	mux.HandleFunc("/api/csirt", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(csirtH)))))
 	mux.HandleFunc("/api/csirt/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(csirtH)))))
 
+	// Route CSIRT Export PDF
+	// GET /api/csirt/export-pdf                        → semua (admin) atau milik perusahaan sendiri (user)
+	// GET /api/csirt/export-pdf?id_perusahaan=xxx      → admin: filter perusahaan tertentu
+	// GET /api/csirt/{id}/export-pdf                   → export satu CSIRT by ID
+	mux.HandleFunc("/api/csirt/export-pdf", authM.Authenticate(utils.AdaptHandler(csirtExportH)))
+	mux.HandleFunc("/api/csirt/export-pdf/", authM.Authenticate(utils.AdaptHandler(csirtExportH)))
+
 	// Route SDM_CSIRT
 	mux.HandleFunc("/api/sdm_csirt", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
 	mux.HandleFunc("/api/sdm_csirt/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
@@ -133,6 +142,13 @@ func InitRouter(
 	// Route SE
 	mux.HandleFunc("/api/se", authM.Authenticate(utils.AdaptHandler(seH)))
 	mux.HandleFunc("/api/se/", authM.Authenticate(utils.AdaptHandler(seH)))
+
+	// Route SE Export PDF
+	// GET /api/se/export-pdf                        → semua SE (admin) atau milik perusahaan sendiri (user)
+	// GET /api/se/export-pdf?id_perusahaan=xxx      → admin: filter perusahaan tertentu
+	// GET /api/se/{id}/export-pdf                   → export satu SE by ID
+	mux.HandleFunc("/api/se/export-pdf", authM.Authenticate(utils.AdaptHandler(seExportH)))
+	mux.HandleFunc("/api/se/export-pdf/", authM.Authenticate(utils.AdaptHandler(seExportH)))
 
 	// Route Dashboard
 	// Summary: counts per sektor + ikas + se

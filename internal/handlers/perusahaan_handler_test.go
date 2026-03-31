@@ -1186,3 +1186,139 @@ func TestPerusahaanHandler_GetAll_AsUser_OwnPerusahaan_Success(t *testing.T) {
 	assert.Len(t, resp, 1)
 	mockSvc.AssertExpectations(t)
 }
+
+/* =========================
+   TEST GET DROPDOWN
+========================= */
+
+func TestPerusahaanHandler_GetDropdown_Success(t *testing.T) {
+	handler, mockSvc, _, _ := setupHandler(t)
+
+	fullData := []dto.PerusahaanResponse{
+		{ID: "1", NamaPerusahaan: "PT Alpha", Alamat: "Jl. Alpha No. 1", Telepon: "021-111"},
+		{ID: "2", NamaPerusahaan: "PT Beta", Alamat: "Jl. Beta No. 2", Telepon: "021-222"},
+	}
+	mockSvc.On("GetAll").Return(fullData, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/perusahaan/dropdown", nil)
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	assert.Equal(t, "application/json", rr.Header().Get("Content-Type"))
+
+	var resp []dto.PerusahaanMinimalResponse
+	err := json.NewDecoder(rr.Body).Decode(&resp)
+	assert.NoError(t, err)
+	assert.Len(t, resp, 2)
+	assert.Equal(t, "1", resp[0].ID)
+	assert.Equal(t, "PT Alpha", resp[0].NamaPerusahaan)
+	assert.Equal(t, "2", resp[1].ID)
+	assert.Equal(t, "PT Beta", resp[1].NamaPerusahaan)
+
+	mockSvc.AssertExpectations(t)
+}
+
+func TestPerusahaanHandler_GetDropdown_ServiceError(t *testing.T) {
+	handler, mockSvc, _, _ := setupHandler(t)
+
+	mockSvc.On("GetAll").Return(nil, errors.New("database error"))
+
+	req := httptest.NewRequest(http.MethodGet, "/api/perusahaan/dropdown", nil)
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+	mockSvc.AssertExpectations(t)
+}
+
+func TestPerusahaanHandler_GetDropdown_ReturnsOnlyMinimalFields(t *testing.T) {
+	handler, mockSvc, _, _ := setupHandler(t)
+
+	// Data lengkap dengan semua field terisi
+	fullData := []dto.PerusahaanResponse{
+		{
+			ID:             "1",
+			NamaPerusahaan: "PT Rahasia",
+			Alamat:         "Jl. Rahasia No. 99",
+			Telepon:        "021-999",
+		},
+	}
+	mockSvc.On("GetAll").Return(fullData, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/perusahaan/dropdown", nil)
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	// Decode sebagai generic map untuk verifikasi field yang dikembalikan
+	var resp []map[string]interface{}
+	json.NewDecoder(rr.Body).Decode(&resp)
+
+	assert.Len(t, resp, 1)
+	// Hanya id dan nama_perusahaan yang boleh ada
+	assert.Contains(t, resp[0], "id")
+	assert.Contains(t, resp[0], "nama_perusahaan")
+	// Field sensitif/lengkap tidak boleh ada
+	assert.NotContains(t, resp[0], "alamat")
+	assert.NotContains(t, resp[0], "telepon")
+
+	mockSvc.AssertExpectations(t)
+}
+
+func TestPerusahaanHandler_GetDropdown_EmptyList(t *testing.T) {
+	handler, mockSvc, _, _ := setupHandler(t)
+
+	mockSvc.On("GetAll").Return([]dto.PerusahaanResponse{}, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/perusahaan/dropdown", nil)
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var resp []dto.PerusahaanMinimalResponse
+	json.NewDecoder(rr.Body).Decode(&resp)
+	assert.Len(t, resp, 0)
+	mockSvc.AssertExpectations(t)
+}
+
+func TestPerusahaanHandler_GetDropdown_OnlyAllowsGET(t *testing.T) {
+	// POST ke /api/perusahaan/dropdown ditolak karena id != "" pada POST
+	t.Run("POST_rejected", func(t *testing.T) {
+		handler, _, _, _ := setupHandler(t)
+		req := httptest.NewRequest(http.MethodPost, "/api/perusahaan/dropdown", nil)
+		rr := httptest.NewRecorder()
+		handler.ServeHTTP(rr, req)
+		assert.Equal(t, http.StatusBadRequest, rr.Code)
+	})
+
+	// PUT ke /api/perusahaan/dropdown — handler memperlakukan "dropdown" sebagai ID,
+	// setup mock agar tidak panic, lalu pastikan response bukan 200
+	t.Run("PUT_rejected", func(t *testing.T) {
+		handler, mockSvc, _, _ := setupHandler(t)
+		mockSvc.On("GetByID", "dropdown").Return((*dto.PerusahaanResponse)(nil), errors.New("not found"))
+		req := httptest.NewRequest(http.MethodPut, "/api/perusahaan/dropdown", strings.NewReader("{}"))
+		req.Header.Set("Content-Type", "application/json")
+		rr := httptest.NewRecorder()
+		handler.ServeHTTP(rr, req)
+		assert.NotEqual(t, http.StatusOK, rr.Code)
+	})
+
+	// DELETE ke /api/perusahaan/dropdown — handler memperlakukan "dropdown" sebagai ID,
+	// setup mock agar tidak panic, lalu pastikan response bukan 200
+	t.Run("DELETE_rejected", func(t *testing.T) {
+		handler, mockSvc, _, _ := setupHandler(t)
+		mockSvc.On("GetByID", "dropdown").Return((*dto.PerusahaanResponse)(nil), errors.New("not found"))
+		mockSvc.On("Delete", "dropdown").Return(errors.New("not found"))
+		req := httptest.NewRequest(http.MethodDelete, "/api/perusahaan/dropdown", nil)
+		rr := httptest.NewRecorder()
+		handler.ServeHTTP(rr, req)
+		assert.NotEqual(t, http.StatusOK, rr.Code)
+	})
+}

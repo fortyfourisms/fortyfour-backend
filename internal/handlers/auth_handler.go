@@ -127,7 +127,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Trim spaces
-	req.Username = strings.TrimSpace(req.Username)
+	req.Identifier = strings.TrimSpace(req.Identifier)
 	req.Password = strings.TrimSpace(req.Password)
 
 	// Validasi menggunakan validator
@@ -136,7 +136,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, tokens, err := h.authService.Login(req.Username, req.Password)
+	user, tokens, err := h.authService.Login(req.Identifier, req.Password)
 	if err != nil {
 		utils.RespondError(w, http.StatusUnauthorized, err.Error())
 		return
@@ -311,10 +311,9 @@ func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, user)
 }
 
-// @Summary Update current user profile
-// @Description Memperbarui data diri user yang sedang login (username dan email saja).
-// Role dan jabatan tidak dapat diubah melalui endpoint ini — hanya admin yang bisa mengubahnya.
-// @Tags Me
+// @Summary Update profile sendiri
+// @Description User mengupdate display_name, email, dan jabatan miliknya
+// @Tags Auth
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -337,9 +336,9 @@ func (h *AuthHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Trim spaces
-	if req.Username != nil {
-		trimmed := strings.TrimSpace(*req.Username)
-		req.Username = &trimmed
+	if req.DisplayName != nil {
+		trimmed := strings.TrimSpace(*req.DisplayName)
+		req.DisplayName = &trimmed
 	}
 	if req.Email != nil {
 		trimmed := strings.TrimSpace(*req.Email)
@@ -352,14 +351,7 @@ func (h *AuthHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mapping ke UpdateUserRequest — role_id sengaja tidak diisi (hanya admin)
-	updateReq := dto.UpdateUserRequest{
-		Username:  req.Username,
-		Email:     req.Email,
-		IDJabatan: req.IDJabatan,
-	}
-
-	resp, err := h.userService.Update(userID, updateReq)
+	resp, err := h.userService.UpdateMe(userID, req)
 	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return

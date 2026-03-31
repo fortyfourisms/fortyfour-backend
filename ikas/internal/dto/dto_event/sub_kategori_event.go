@@ -11,9 +11,9 @@ type SubKategoriCreatedEvent struct {
 }
 
 type SubKategoriUpdatedEvent struct {
-	ID        int                        `json:"id"`
+	ID        int                          `json:"id"`
 	Request   dto.UpdateSubKategoriRequest `json:"request"`
-	UpdatedAt time.Time                  `json:"updated_at"`
+	UpdatedAt time.Time                    `json:"updated_at"`
 }
 
 type SubKategoriDeletedEvent struct {

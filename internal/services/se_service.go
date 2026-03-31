@@ -77,6 +77,7 @@ func (s *seService) Create(req dto.CreateSERequest) (*dto.SEResponse, error) {
 
 	cacheSet(s.rc, keyDetail("se", id), result, TTLDetail)
 	cacheDelete(s.rc, keyList("se"))
+	cacheDelete(s.rc, "se:perusahaan:"+req.IDPerusahaan)
 
 	return result, nil
 }
@@ -171,6 +172,7 @@ func (s *seService) Update(id string, req dto.UpdateSERequest) (*dto.SEResponse,
 
 	cacheDelete(s.rc, keyDetail("se", id))
 	cacheDelete(s.rc, keyList("se"))
+	cacheDelete(s.rc, "se:perusahaan:"+existing.IDPerusahaan)
 
 	existing.TotalBobot = totalBobot
 	existing.KategoriSE = kategori
@@ -202,12 +204,19 @@ func (s *seService) Delete(id string) error {
 	if strings.TrimSpace(id) == "" {
 		return errors.New("id wajib diisi")
 	}
+
+	// Ambil data dulu untuk invalidate cache per perusahaan
+	existing, _ := s.repo.GetByID(id)
+
 	if err := s.repo.Delete(id); err != nil {
 		return err
 	}
 
 	cacheDelete(s.rc, keyDetail("se", id))
 	cacheDelete(s.rc, keyList("se"))
+	if existing != nil {
+		cacheDelete(s.rc, "se:perusahaan:"+existing.IDPerusahaan)
+	}
 
 	return nil
 }

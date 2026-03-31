@@ -58,15 +58,15 @@ func main() {
 	defer db.Close()
 
 	// Run database migrations
-	// if err := database.RunMigrations(database.Config{
-	// 	Host:     cfg.Database.Host,
-	// 	Port:     cfg.Database.Port,
-	// 	User:     cfg.Database.User,
-	// 	Password: cfg.Database.Password,
-	// 	DBName:   cfg.Database.DBName,
-	// }, "./migrations"); err != nil {
-	// 	logger.FatalErr(err, "Failed to run database migrations")
-	// }
+	if err := database.RunMigrations(database.Config{
+		Host:     cfg.Database.Host,
+		Port:     cfg.Database.Port,
+		User:     cfg.Database.User,
+		Password: cfg.Database.Password,
+		DBName:   cfg.Database.DBName,
+	}, "./migrations"); err != nil {
+		logger.FatalErr(err, "Failed to run database migrations")
+	}
 
 	// Initialize Redis
 	redisClient, err := cache.NewRedisClient(cache.RedisConfig{
@@ -160,6 +160,7 @@ func main() {
 	picService := services.NewPICService(picRepo, redisClient)
 	jabatanService := services.NewJabatanService(jabatanRepo, redisClient)
 	csirtService := services.NewCsirtService(csirtRepo, redisClient)
+	csirtExportService := services.NewCsirtExportService(csirtService)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo, redisClient)
 	userService := services.NewUserService(userRepo, uploadPath, usersProducer)
 	roleService := services.NewRoleService(roleRepo, redisClient)
@@ -167,6 +168,7 @@ func main() {
 	sektorService := services.NewSektorService(sektorRepo, redisClient)
 	subSektorService := services.NewSubSektorService(subSektorRepo, redisClient)
 	seService := services.NewSEService(seRepo, redisClient)
+	seExportService := services.NewSEExportService(seService)
 	dashboardService := services.NewDashboardService(dashboardRepo, redisClient)
 
 	// Initialize Handler
@@ -175,7 +177,9 @@ func main() {
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
 	picHandler := handlers.NewPICHandler(picService, sseService)
 	jabatanHandler := handlers.NewJabatanHandler(jabatanService, sseService)
-	csirtHandler := handlers.NewCsirtHandler(csirtService)
+	csirtHandler := handlers.NewCsirtHandler(csirtService, sseService)
+	csirtExportHandler := handlers.NewCsirtExportHandler(csirtExportService)
+	csirtHandler.SetExportHandler(csirtExportHandler)
 	sdmCsirtHandler := handlers.NewSdmCsirtHandler(sdmCsirtService, csirtService, sseService)
 	roleHandler := handlers.NewRoleHandler(roleService, sseService)
 	casbinHandler := handlers.NewCasbinHandler(casbinService, sseService)
@@ -184,6 +188,8 @@ func main() {
 	sektorHandler := handlers.NewSektorHandler(sektorService)
 	subSektorHandler := handlers.NewSubSektorHandler(subSektorService)
 	seHandler := handlers.NewSEHandler(seService, sseService)
+	seExportHandler := handlers.NewSEExportHandler(seExportService)
+	seHandler.SetExportHandler(seExportHandler)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
 
@@ -217,11 +223,13 @@ func main() {
 		moderateLimiter,
 		lenientLimiter,
 		csirtHandler,
+		csirtExportHandler,
 		sdmCsirtHandler,
 		chatHandler,
 		sektorHandler,
 		subSektorHandler,
 		seHandler,
+		seExportHandler,
 		dashboardHandler,
 		notificationHandler,
 		ikasProxyHandler,

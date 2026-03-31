@@ -127,8 +127,7 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*dto.UserResponse, erro
 				CreatedAt: user.CreatedAt,
 			}
 			if err := s.producer.PublishUserCreated(context.Background(), event); err != nil {
-				// Log error but don't fail the request
-				// log.Printf("Failed to publish UserCreated event: %v", err)
+				// Log error
 			}
 		}()
 	}
@@ -137,6 +136,7 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*dto.UserResponse, erro
 	return &response, nil
 }
 
+// Update digunakan oleh admin untuk update data user termasuk username dan role.
 func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserResponse, error) {
 	user, err := s.repo.FindByID(id)
 	if err != nil {
@@ -162,7 +162,11 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 		user.Username = trimmed
 	}
 
-	// Update email if provided
+	if req.DisplayName != nil {
+		trimmed := strings.TrimSpace(*req.DisplayName)
+		user.DisplayName = &trimmed
+	}
+
 	if req.Email != nil {
 		trimmed := strings.TrimSpace(*req.Email)
 		if trimmed == "" {
@@ -189,15 +193,8 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 		user.IDJabatan = req.IDJabatan
 	}
 
-	// Need to elaborate why this return error user not found
-	// if err := s.repo.Update(user); err != nil {
-	// 	return nil, err
-	// }
-
-	// This run smooth
 	s.repo.Update(user)
 
-	// Get updated user
 	user, err = s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -221,6 +218,54 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 				// Log error
 			}
 		}()
+	}
+
+	response := s.toResponse(user)
+	return &response, nil
+}
+
+// UpdateMe digunakan oleh user untuk update profilnya sendiri.
+func (s *UserService) UpdateMe(id string, req dto.UpdateMeRequest) (*dto.UserResponse, error) {
+	user, err := s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if req.DisplayName != nil {
+		trimmed := strings.TrimSpace(*req.DisplayName)
+		if trimmed == "" {
+			return nil, errors.New("display name tidak boleh kosong")
+		}
+		user.DisplayName = &trimmed
+	}
+
+	if req.Email != nil {
+		trimmed := strings.TrimSpace(*req.Email)
+		if trimmed == "" {
+			return nil, errors.New("email tidak boleh kosong")
+		}
+		if !validator.ValidateEmail(trimmed) {
+			return nil, errors.New("email tidak valid")
+		}
+		exists, err := s.repo.EmailExists(trimmed, &id)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, errors.New("email sudah digunakan")
+		}
+		user.Email = trimmed
+	}
+
+	if req.IDJabatan != nil {
+		user.IDJabatan = req.IDJabatan
+	}
+
+	s.repo.Update(user)
+
+	user, err = s.repo.FindByID(id)
+	if err != nil {
+		return nil, err
 	}
 
 	response := s.toResponse(user)
@@ -303,7 +348,6 @@ func (s *UserService) UpdateProfilePhoto(id string, filename string) (*dto.UserR
 		return nil, err
 	}
 
-	// Get updated user
 	user, err = s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -330,7 +374,6 @@ func (s *UserService) UpdateBanner(id string, filename string) (*dto.UserRespons
 		return nil, err
 	}
 
-	// Get updated user
 	user, err = s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -382,6 +425,7 @@ func (s *UserService) toResponse(user *models.User) dto.UserResponse {
 	return dto.UserResponse{
 		ID:           user.ID,
 		Username:     user.Username,
+		DisplayName:  user.DisplayName,
 		Email:        user.Email,
 		RoleID:       user.RoleID,
 		RoleName:     user.RoleName,

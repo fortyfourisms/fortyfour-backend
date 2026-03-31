@@ -177,6 +177,18 @@ func (m *MockUserRepository) FindByUsername(username string) (*models.User, erro
 	return nil, errors.New("user not found")
 }
 
+func (m *MockUserRepository) FindByEmail(email string) (*models.User, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	for _, user := range m.users {
+		if user.Email == email {
+			return user, nil
+		}
+	}
+	return nil, errors.New("user not found")
+}
+
 func (m *MockUserRepository) Update(user *models.User) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
