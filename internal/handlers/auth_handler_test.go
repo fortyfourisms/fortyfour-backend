@@ -12,7 +12,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -1477,16 +1476,16 @@ func TestAuthHandler_Login_MFAEnabled_ReturnsMFAToken(t *testing.T) {
 =====================================
 */
 
-func setupAuthHandlerWithUserService() (*AuthHandler, *testhelpers.MockRedisClient) {
-	uploadPath := os.TempDir()
-	userRepo := testhelpers.NewMockUserRepository()
-	redis := testhelpers.NewMockRedisClient()
-	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
-	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
-	return handler, redis
-}
+// func setupAuthHandlerWithUserService() (*AuthHandler, *testhelpers.MockRedisClient) {
+// 	uploadPath := os.TempDir()
+// 	userRepo := testhelpers.NewMockUserRepository()
+// 	redis := testhelpers.NewMockRedisClient()
+// 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
+// 	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis))
+// 	userService := services.NewUserService(userRepo, uploadPath, nil)
+// 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+// 	return handler, redis
+// }
 
 func TestAuthHandler_LogoutAll_Success(t *testing.T) {
 	handler, _ := setupAuthHandler()
