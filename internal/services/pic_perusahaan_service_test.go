@@ -644,3 +644,103 @@ func (r *testRedisClient) Exists(key string) (bool, error) {
 }
 func (r *testRedisClient) Scan(pattern string) ([]string, error) { return nil, nil }
 func (r *testRedisClient) Close() error                          { return nil }
+
+/*
+=====================================
+ TEST GET BY PERUSAHAAN
+=====================================
+*/
+
+func TestPICService_GetByPerusahaan_Success(t *testing.T) {
+	repo := &mockPICRepository{
+		GetByPerusahaanFn: func(idPerusahaan string) ([]dto.PICResponse, error) {
+			return []dto.PICResponse{
+				{ID: "pic-1", Nama: "John Doe"},
+				{ID: "pic-2", Nama: "Jane Doe"},
+			}, nil
+		},
+	}
+	service := NewPICService(repo, nil)
+
+	result, err := service.GetByPerusahaan("perusahaan-1")
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 2)
+	assert.Equal(t, "pic-1", result[0].ID)
+	assert.Equal(t, "pic-2", result[1].ID)
+}
+
+func TestPICService_GetByPerusahaan_EmptyResult(t *testing.T) {
+	repo := &mockPICRepository{
+		GetByPerusahaanFn: func(idPerusahaan string) ([]dto.PICResponse, error) {
+			return []dto.PICResponse{}, nil
+		},
+	}
+	service := NewPICService(repo, nil)
+
+	result, err := service.GetByPerusahaan("perusahaan-kosong")
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 0)
+}
+
+func TestPICService_GetByPerusahaan_RepositoryError(t *testing.T) {
+	repo := &mockPICRepository{
+		GetByPerusahaanFn: func(idPerusahaan string) ([]dto.PICResponse, error) {
+			return nil, errors.New("db error")
+		},
+	}
+	service := NewPICService(repo, nil)
+
+	result, err := service.GetByPerusahaan("perusahaan-1")
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+}
+
+func TestPICService_GetByPerusahaan_CacheHit_SkipRepo(t *testing.T) {
+	rc := newMockRedisForPIC()
+
+	cached := []dto.PICResponse{{ID: "pic-cached", Nama: "Cached PIC"}}
+	setCache(rc, "pic_perusahaan_perusahaan-1", cached)
+
+	callCount := 0
+	repo := &mockPICRepository{
+		GetByPerusahaanFn: func(idPerusahaan string) ([]dto.PICResponse, error) {
+			callCount++
+			return []dto.PICResponse{}, nil
+		},
+	}
+	service := NewPICService(repo, rc)
+
+	result, err := service.GetByPerusahaan("perusahaan-1")
+
+	assert.NoError(t, err)
+	assert.Equal(t, 0, callCount, "repo harus tidak dipanggil saat cache hit")
+	assert.Len(t, result, 1)
+	assert.Equal(t, "pic-cached", result[0].ID)
+}
+
+func TestPICService_GetByPerusahaan_CacheMiss_SetsCache(t *testing.T) {
+	rc := newMockRedisForPIC()
+
+	callCount := 0
+	repo := &mockPICRepository{
+		GetByPerusahaanFn: func(idPerusahaan string) ([]dto.PICResponse, error) {
+			callCount++
+			return []dto.PICResponse{{ID: "pic-1", Nama: "From DB"}}, nil
+		},
+	}
+	service := NewPICService(repo, rc)
+
+	result, err := service.GetByPerusahaan("perusahaan-1")
+
+	assert.NoError(t, err)
+	assert.Equal(t, 1, callCount, "repo harus dipanggil sekali saat cache miss")
+	assert.Len(t, result, 1)
+
+	// Panggil kedua — harus dari cache
+	result2, _ := service.GetByPerusahaan("perusahaan-1")
+	assert.Equal(t, 1, callCount, "repo tidak boleh dipanggil lagi setelah cache terisi")
+	assert.Equal(t, result[0].ID, result2[0].ID)
+}
