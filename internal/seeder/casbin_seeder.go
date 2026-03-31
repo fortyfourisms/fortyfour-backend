@@ -34,34 +34,6 @@ var defaultPolicies = []Policy{
 	{"user", "/api/csirt/:id", "PUT"},
 	{"user", "/api/csirt/:id", "DELETE"},
 
-	// Identifikasi
-	{"user", "/api/identifikasi", "GET"},
-	{"user", "/api/identifikasi", "POST"},
-	{"user", "/api/identifikasi/:id", "GET"},
-	{"user", "/api/identifikasi/:id", "PUT"},
-	{"user", "/api/identifikasi/:id", "DELETE"},
-
-	// Proteksi
-	{"user", "/api/proteksi", "GET"},
-	{"user", "/api/proteksi", "POST"},
-	{"user", "/api/proteksi/:id", "GET"},
-	{"user", "/api/proteksi/:id", "PUT"},
-	{"user", "/api/proteksi/:id", "DELETE"},
-
-	// Deteksi
-	{"user", "/api/deteksi", "GET"},
-	{"user", "/api/deteksi", "POST"},
-	{"user", "/api/deteksi/:id", "GET"},
-	{"user", "/api/deteksi/:id", "PUT"},
-	{"user", "/api/deteksi/:id", "DELETE"},
-
-	// Gulih
-	{"user", "/api/gulih", "GET"},
-	{"user", "/api/gulih", "POST"},
-	{"user", "/api/gulih/:id", "GET"},
-	{"user", "/api/gulih/:id", "PUT"},
-	{"user", "/api/gulih/:id", "DELETE"},
-
 	// SDM CSIRT
 	{"user", "/api/sdm_csirt", "GET"},
 	{"user", "/api/sdm_csirt", "POST"},
@@ -84,10 +56,6 @@ var defaultPolicies = []Policy{
 	{"user", "/api/perusahaan", "GET"},
 	{"user", "/api/perusahaan/:id", "GET"},
 	{"user", "/api/perusahaan/:id", "PUT"},
-
-	// Profile & data diri sendiri
-	{"user", "/api/users/profile", "GET"},
-	{"user", "/api/users/profile", "PUT"},
 }
 
 // SeedCasbinPolicies memastikan semua default policy ada di database.
