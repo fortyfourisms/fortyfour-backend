@@ -106,7 +106,7 @@ func TestAuthHandler_Login_Success_WithMFASetupRequired(t *testing.T) {
 	// Now login (user baru harus setup MFA dulu)
 	loginBody := dto.LoginRequest{
 		Identifier: "testuser",
-		Password: "P@ssj0rd121",
+		Password:   "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -308,7 +308,7 @@ func TestAuthHandler_SetupMFA_WithSetupToken(t *testing.T) {
 	// Login to get setup token
 	loginBody := dto.LoginRequest{
 		Identifier: "testuser",
-		Password: "P@ssj0rd121",
+		Password:   "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -367,7 +367,7 @@ func TestAuthHandler_EnableMFA_Success(t *testing.T) {
 	// 2. Login to get setup_token
 	loginBody := dto.LoginRequest{
 		Identifier: "testuser",
-		Password: "P@ssj0rd121",
+		Password:   "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -461,7 +461,7 @@ func TestAuthHandler_VerifyMFA_Success(t *testing.T) {
 	// 2. Login to get setup_token
 	loginBody := dto.LoginRequest{
 		Identifier: "testuser",
-		Password: "P@ssj0rd121",
+		Password:   "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -579,7 +579,7 @@ func TestAuthHandler_EnableMFA_InvalidCode(t *testing.T) {
 
 	loginBody := dto.LoginRequest{
 		Identifier: "testuser",
-		Password: "P@ssj0rd121",
+		Password:   "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -633,7 +633,7 @@ func TestAuthHandler_EnableMFA_ExpiredSetupToken(t *testing.T) {
 
 	loginBody := dto.LoginRequest{
 		Identifier: "testuser",
-		Password: "P@ssj0rd121",
+		Password:   "P@ssj0rd121",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))

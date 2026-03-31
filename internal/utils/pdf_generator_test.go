@@ -94,10 +94,10 @@ func TestToSafe_DashesConversion(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"\u2013", "-"},   // en dash → -
-		{"\u2014", "--"},  // em dash → --
-		{"\u2012", "-"},   // figure dash → -
-		{"\u2015", "--"},  // horizontal bar → --
+		{"\u2013", "-"},  // en dash → -
+		{"\u2014", "--"}, // em dash → --
+		{"\u2012", "-"},  // figure dash → -
+		{"\u2015", "--"}, // horizontal bar → --
 	}
 	for _, c := range cases {
 		assert.Equal(t, c.expected, toSafe(c.input), "input: %q", c.input)
@@ -122,9 +122,9 @@ func TestToSafe_QuotesConversion(t *testing.T) {
 }
 
 func TestToSafe_SpacesConversion(t *testing.T) {
-	assert.Equal(t, " ", toSafe("\u00A0"))  // non-breaking space
-	assert.Equal(t, " ", toSafe("\u2009"))  // thin space
-	assert.Equal(t, "", toSafe("\u200B"))   // zero-width space dihapus
+	assert.Equal(t, " ", toSafe("\u00A0")) // non-breaking space
+	assert.Equal(t, " ", toSafe("\u2009")) // thin space
+	assert.Equal(t, "", toSafe("\u200B"))  // zero-width space dihapus
 }
 
 func TestToSafe_SymbolsConversion(t *testing.T) {
@@ -132,15 +132,15 @@ func TestToSafe_SymbolsConversion(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"\u2026", "..."},   // ellipsis
-		{"\u2022", "*"},     // bullet
-		{"\u00B7", "*"},     // middle dot
-		{"\u00A9", "(c)"},   // copyright
-		{"\u00AE", "(R)"},   // registered
-		{"\u2122", "(TM)"},  // trademark
-		{"\u00B0", " deg"},  // degree
-		{"\u00D7", "x"},     // multiplication
-		{"\u00F7", "/"},     // division
+		{"\u2026", "..."},  // ellipsis
+		{"\u2022", "*"},    // bullet
+		{"\u00B7", "*"},    // middle dot
+		{"\u00A9", "(c)"},  // copyright
+		{"\u00AE", "(R)"},  // registered
+		{"\u2122", "(TM)"}, // trademark
+		{"\u00B0", " deg"}, // degree
+		{"\u00D7", "x"},    // multiplication
+		{"\u00F7", "/"},    // division
 	}
 	for _, c := range cases {
 		assert.Equal(t, c.expected, toSafe(c.input), "input: %q", c.input)
@@ -148,9 +148,9 @@ func TestToSafe_SymbolsConversion(t *testing.T) {
 }
 
 func TestToSafe_ArrowsConversion(t *testing.T) {
-	assert.Equal(t, "->", toSafe("\u2192"))   // →
-	assert.Equal(t, "<-", toSafe("\u2190"))   // ←
-	assert.Equal(t, "<->", toSafe("\u2194"))  // ↔
+	assert.Equal(t, "->", toSafe("\u2192"))  // →
+	assert.Equal(t, "<-", toSafe("\u2190"))  // ←
+	assert.Equal(t, "<->", toSafe("\u2194")) // ↔
 }
 
 func TestToSafe_PlainASCIIUnchanged(t *testing.T) {
