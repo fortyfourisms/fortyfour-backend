@@ -26,6 +26,19 @@ func NewChatService(
 	}
 }
 
+type ChatServiceInterface interface {
+	GenerateSQLQuery(userQuestion string) (string, error)
+	ExecuteQuery(sqlQuery string) ([]map[string]interface{}, error)
+	FormatQueryResults(userQuestion string, results []map[string]interface{}) (string, error)
+	Repo() repository.ChatRepository
+	GetGemini() GeminiGenerator
+}
+ 
+type GeminiGenerator interface {
+	Generate(prompt string) (string, error)
+}
+ 
+
 // GetDatabaseSchema: sql generate
 func (s *ChatService) GetDatabaseSchema() (string, error) {
 	// Daftar kolom yang tidak boleh diakses

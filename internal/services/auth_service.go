@@ -206,20 +206,28 @@ func (s *AuthService) Register(
 
 /* ===================== Login ===================== */
 // Login authenticates a user and returns user + token pair DTO (tokens == nil if MFA required)
-func (s *AuthService) Login(username, password string) (*models.User, *dto.TokenPair, error) {
-	// Trim spaces
-	username = strings.TrimSpace(username)
+/* ===================== Login ===================== */
+// Login menerima username ATAU email sebagai identifier
+func (s *AuthService) Login(identifier, password string) (*models.User, *dto.TokenPair, error) {
+	identifier = strings.TrimSpace(identifier)
 	password = strings.TrimSpace(password)
 
-	// Validasi field tidak boleh kosong
-	if username == "" {
-		return nil, nil, errors.New("username wajib diisi")
+	if identifier == "" {
+		return nil, nil, errors.New("username atau email wajib diisi")
 	}
 	if password == "" {
 		return nil, nil, errors.New("password wajib diisi")
 	}
 
-	user, err := s.userRepo.FindByUsername(username)
+	// Coba cari by username dulu, kalau tidak ketemu coba by email
+	var user *models.User
+	var err error
+
+	if strings.Contains(identifier, "@") {
+		user, err = s.userRepo.FindByEmail(identifier)
+	} else {
+		user, err = s.userRepo.FindByUsername(identifier)
+	}
 	if err != nil {
 		return nil, nil, errors.New("username atau password salah")
 	}

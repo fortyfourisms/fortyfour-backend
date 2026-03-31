@@ -115,6 +115,16 @@ func (m *mockUserRepo) FindByUsername(username string) (*models.User, error) {
 	return u, nil
 }
 
+// FindByEmail mencari user berdasarkan email
+func (m *mockUserRepo) FindByEmail(email string) (*models.User, error) {
+	for _, u := range m.users {
+		if u.Email == email {
+			return u, nil
+		}
+	}
+	return nil, errors.New("not found")
+}
+
 func (m *mockUserRepo) FindByID(id string) (*models.User, error) {
 	for _, u := range m.users {
 		if u.ID == id {
@@ -696,3 +706,309 @@ func TestAuthService_Logout_Success_Detailed(t *testing.T) {
 //
 
 var _ repository.UserRepositoryInterface = (*mockUserRepo)(nil)
+
+/*
+=====================================
+ TEST MFA - SetupMFA
+=====================================
+*/
+
+func setupAuthService() (*AuthService, *mockUserRepo, *mockRedis) {
+	repo := newMockUserRepo()
+	redis := newMockRedis()
+	tokenSvc := NewTokenService(redis, "test-secret", false, "localhost")
+	svc := NewAuthService(repo, tokenSvc, newNotifSvc())
+	return svc, repo, redis
+}
+
+func TestAuthService_SetupMFA_Success(t *testing.T) {
+	svc, repo, _ := setupAuthService()
+
+	user := &models.User{ID: "user-1", Username: "testuser", Email: "test@example.com"}
+	repo.users["user-1"] = user
+
+	uri, secret, err := svc.SetupMFA("user-1")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if uri == "" {
+		t.Error("expected provisioning URI, got empty string")
+	}
+	if secret == "" {
+		t.Error("expected secret, got empty string")
+	}
+}
+
+func TestAuthService_SetupMFA_UserNotFound(t *testing.T) {
+	svc, _, _ := setupAuthService()
+
+	uri, secret, err := svc.SetupMFA("tidak-ada")
+
+	if err == nil {
+		t.Error("expected error for non-existent user")
+	}
+	if uri != "" || secret != "" {
+		t.Error("expected empty uri and secret on error")
+	}
+}
+
+func TestAuthService_SetupMFA_RedisError(t *testing.T) {
+	svc, repo, redis := setupAuthService()
+
+	user := &models.User{ID: "user-1", Username: "testuser", Email: "test@example.com"}
+	repo.users["user-1"] = user
+	redis.failSet = true
+
+	_, _, err := svc.SetupMFA("user-1")
+
+	if err == nil {
+		t.Error("expected error when redis fails")
+	}
+}
+
+/*
+=====================================
+ TEST MFA - CreateMFASetupToken
+=====================================
+*/
+
+func TestAuthService_CreateMFASetupToken_Success(t *testing.T) {
+	svc, _, _ := setupAuthService()
+
+	token, err := svc.CreateMFASetupToken("user-1")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if token == "" {
+		t.Error("expected non-empty setup token")
+	}
+}
+
+func TestAuthService_CreateMFASetupToken_RedisError(t *testing.T) {
+	svc, _, redis := setupAuthService()
+	redis.failSet = true
+
+	token, err := svc.CreateMFASetupToken("user-1")
+
+	if err == nil {
+		t.Error("expected error when redis fails")
+	}
+	if token != "" {
+		t.Error("expected empty token on error")
+	}
+}
+
+func TestAuthService_CreateMFASetupToken_UniquePerCall(t *testing.T) {
+	svc, _, _ := setupAuthService()
+
+	token1, _ := svc.CreateMFASetupToken("user-1")
+	token2, _ := svc.CreateMFASetupToken("user-1")
+
+	if token1 == token2 {
+		t.Error("expected unique tokens per call")
+	}
+}
+
+/*
+=====================================
+ TEST MFA - ValidateMFASetupToken
+=====================================
+*/
+
+func TestAuthService_ValidateMFASetupToken_Success(t *testing.T) {
+	svc, _, _ := setupAuthService()
+
+	token, _ := svc.CreateMFASetupToken("user-1")
+
+	userID, err := svc.ValidateMFASetupToken(token)
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if userID != "user-1" {
+		t.Errorf("expected userID 'user-1', got '%s'", userID)
+	}
+}
+
+func TestAuthService_ValidateMFASetupToken_InvalidToken(t *testing.T) {
+	svc, _, _ := setupAuthService()
+
+	userID, err := svc.ValidateMFASetupToken("token-tidak-ada")
+
+	if err == nil {
+		t.Error("expected error for invalid token")
+	}
+	if userID != "" {
+		t.Error("expected empty userID on error")
+	}
+}
+
+/*
+=====================================
+ TEST MFA - CreateMFAPending
+=====================================
+*/
+
+func TestAuthService_CreateMFAPending_Success(t *testing.T) {
+	svc, _, _ := setupAuthService()
+
+	token, err := svc.CreateMFAPending("user-1")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if token == "" {
+		t.Error("expected non-empty mfa pending token")
+	}
+}
+
+func TestAuthService_CreateMFAPending_RedisError(t *testing.T) {
+	svc, _, redis := setupAuthService()
+	redis.failSet = true
+
+	token, err := svc.CreateMFAPending("user-1")
+
+	if err == nil {
+		t.Error("expected error when redis fails")
+	}
+	if token != "" {
+		t.Error("expected empty token on error")
+	}
+}
+
+func TestAuthService_CreateMFAPending_UniquePerCall(t *testing.T) {
+	svc, _, _ := setupAuthService()
+
+	token1, _ := svc.CreateMFAPending("user-1")
+	token2, _ := svc.CreateMFAPending("user-1")
+
+	if token1 == token2 {
+		t.Error("expected unique pending tokens per call")
+	}
+}
+
+/*
+=====================================
+ TEST MFA - EnableMFA
+=====================================
+*/
+
+func TestAuthService_EnableMFA_SetupNotFound(t *testing.T) {
+	svc, _, _ := setupAuthService()
+
+	// Tidak ada mfa_setup di redis → harus error
+	err := svc.EnableMFA("user-1", "123456")
+
+	if err == nil {
+		t.Error("expected error when mfa setup not found in redis")
+	}
+	if err.Error() != "mfa setup expired or not found" {
+		t.Errorf("unexpected error message: %s", err.Error())
+	}
+}
+
+func TestAuthService_EnableMFA_InvalidCode(t *testing.T) {
+	svc, repo, redis := setupAuthService()
+
+	user := &models.User{ID: "user-1", Username: "testuser", Email: "test@example.com"}
+	repo.users["user-1"] = user
+
+	// Setup MFA dulu agar secret tersimpan di redis
+	_, _, err := svc.SetupMFA("user-1")
+	if err != nil {
+		t.Fatalf("setup MFA failed: %v", err)
+	}
+	_ = redis
+
+	// Coba enable dengan kode salah
+	err = svc.EnableMFA("user-1", "000000")
+
+	if err == nil {
+		t.Error("expected error for invalid TOTP code")
+	}
+	if err.Error() != "invalid mfa code" {
+		t.Errorf("unexpected error: %s", err.Error())
+	}
+}
+
+/*
+=====================================
+ TEST MFA - VerifyMFA
+=====================================
+*/
+
+func TestAuthService_VerifyMFA_InvalidToken(t *testing.T) {
+	svc, _, _ := setupAuthService()
+
+	user, tokens, err := svc.VerifyMFA("token-tidak-ada", "123456")
+
+	if err == nil {
+		t.Error("expected error for invalid mfa token")
+	}
+	if user != nil || tokens != nil {
+		t.Error("expected nil user and tokens on error")
+	}
+	if err.Error() != "invalid or expired mfa token" {
+		t.Errorf("unexpected error: %s", err.Error())
+	}
+}
+
+func TestAuthService_VerifyMFA_UserNotFound(t *testing.T) {
+	svc, _, redis := setupAuthService()
+
+	// Set pending token yang menunjuk ke user yang tidak ada
+	redis.store["mfa_pending:test-token"] = "user-tidak-ada"
+
+	user, tokens, err := svc.VerifyMFA("test-token", "123456")
+
+	if err == nil {
+		t.Error("expected error when user not found")
+	}
+	if user != nil || tokens != nil {
+		t.Error("expected nil user and tokens on error")
+	}
+}
+
+func TestAuthService_VerifyMFA_MFANotConfigured(t *testing.T) {
+	svc, repo, redis := setupAuthService()
+
+	// User tanpa MFASecret
+	user := &models.User{ID: "user-1", Username: "testuser", Email: "test@example.com", MFASecret: nil}
+	repo.users["user-1"] = user
+	redis.store["mfa_pending:test-token"] = "user-1"
+
+	result, tokens, err := svc.VerifyMFA("test-token", "123456")
+
+	if err == nil {
+		t.Error("expected error when mfa not configured")
+	}
+	if result != nil || tokens != nil {
+		t.Error("expected nil result and tokens")
+	}
+	if err.Error() != "mfa not configured" {
+		t.Errorf("unexpected error: %s", err.Error())
+	}
+}
+
+func TestAuthService_VerifyMFA_InvalidCode(t *testing.T) {
+	svc, repo, redis := setupAuthService()
+
+	secret := "JBSWY3DPEHPK3PXP" // valid base32 TOTP secret
+	user := &models.User{ID: "user-1", Username: "testuser", Email: "test@example.com", MFASecret: &secret, MFAEnabled: true}
+	repo.users["user-1"] = user
+	redis.store["mfa_pending:test-token"] = "user-1"
+
+	result, tokens, err := svc.VerifyMFA("test-token", "000000")
+
+	if err == nil {
+		t.Error("expected error for invalid TOTP code")
+	}
+	if result != nil || tokens != nil {
+		t.Error("expected nil result and tokens on invalid code")
+	}
+	if err.Error() != "invalid mfa code" {
+		t.Errorf("unexpected error: %s", err.Error())
+	}
+}

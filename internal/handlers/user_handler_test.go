@@ -681,3 +681,223 @@ func TestUserHandler_handleUpdateStatus_InvalidStatus(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
+
+/* =========================
+   TEST ServeHTTP — routing guards
+========================= */
+
+// POST /api/users/{id} → 400 karena ID tidak diperlukan untuk create
+func TestUserHandler_ServeHTTP_PostWithID_Returns400(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+
+	body := strings.NewReader(`{"username":"newuser","email":"new@example.com","password":"P@ss123!"}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/users/some-id", body)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "ID tidak diperlukan")
+}
+
+// PUT /api/users (tanpa ID) → 400
+func TestUserHandler_ServeHTTP_PutWithoutID_Returns400(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+
+	body := strings.NewReader(`{"username":"updateduser"}`)
+	req := httptest.NewRequest(http.MethodPut, "/api/users", body)
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "ID wajib")
+}
+
+// DELETE /api/users (tanpa ID) → 400
+func TestUserHandler_ServeHTTP_DeleteWithoutID_Returns400(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/users", nil)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "ID wajib")
+}
+
+/* =========================
+   TEST handleUpdatePassword — cabang yang belum dicakup
+========================= */
+
+// Method selain PUT ke /password → 405
+func TestUserHandler_handleUpdatePassword_MethodNotAllowed(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+
+	for _, method := range []string{http.MethodPost, http.MethodGet, http.MethodDelete, http.MethodPatch} {
+		t.Run(method, func(t *testing.T) {
+			req := httptest.NewRequest(method, "/api/users/user-1/password", nil)
+			req = withUserCtx(req, "user-1", "user")
+			w := httptest.NewRecorder()
+
+			handler.handleUpdatePassword(w, req)
+
+			assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+		})
+	}
+}
+
+// Body tidak valid JSON → 400
+func TestUserHandler_handleUpdatePassword_InvalidBody(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+
+	req := httptest.NewRequest(http.MethodPut, "/api/users/user-1/password", strings.NewReader("not-json"))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+
+	handler.handleUpdatePassword(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "Invalid request body")
+}
+
+// Body valid JSON tapi field kosong → validasi gagal → 400
+func TestUserHandler_handleUpdatePassword_ValidationFails(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+
+	// Kirim body dengan password kosong (setelah di-trim akan gagal validasi)
+	body := strings.NewReader(`{"old_password":"","new_password":"","confirm_new_password":""}`)
+	req := httptest.NewRequest(http.MethodPut, "/api/users/user-1/password", body)
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+
+	handler.handleUpdatePassword(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+/* =========================
+   TEST handleUpdate — cabang yang belum dicakup
+========================= */
+
+// Body tidak valid JSON → 400 (setelah lolos cek ownership)
+func TestUserHandler_handleUpdate_InvalidBody(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+
+	req := httptest.NewRequest(http.MethodPut, "/api/users/user-1", strings.NewReader("not-json"))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "user-1", "user") // user update dirinya sendiri → lolos ownership check
+	w := httptest.NewRecorder()
+
+	handler.handleUpdate(w, req, "user-1")
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "Invalid request body")
+}
+
+// Non-admin mencoba mengubah RoleID → 403
+func TestUserHandler_handleUpdate_NonAdminChangeRole_Returns403(t *testing.T) {
+	handler, mockRepo, _ := setupUserHandler()
+
+	user := &models.User{
+		ID:        "user-1",
+		Username:  "testuser",
+		Email:     "test@example.com",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	mockRepo.Create(user)
+
+	roleID := "role-admin"
+	updateReq := dto.UpdateUserRequest{
+		RoleID: &roleID,
+	}
+	body, _ := json.Marshal(updateReq)
+
+	req := httptest.NewRequest(http.MethodPut, "/api/users/user-1", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "user-1", "user") // bukan admin
+	w := httptest.NewRecorder()
+
+	handler.handleUpdate(w, req, "user-1")
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+	assert.Contains(t, w.Body.String(), "tidak bisa mengubah role")
+}
+
+/* =========================
+   TEST handleUpdateProfilePhoto / handleUpdateBanner — Method Not Allowed
+========================= */
+
+func TestUserHandler_handleUpdateProfilePhoto_MethodNotAllowed(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+
+	for _, method := range []string{http.MethodGet, http.MethodPut, http.MethodDelete, http.MethodPatch} {
+		t.Run(method, func(t *testing.T) {
+			req := httptest.NewRequest(method, "/api/users/user-1/profile-photo", nil)
+			req = withUserCtx(req, "user-1", "user")
+			w := httptest.NewRecorder()
+
+			handler.handleUpdateProfilePhoto(w, req)
+
+			assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+		})
+	}
+}
+
+func TestUserHandler_handleUpdateBanner_MethodNotAllowed(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+
+	for _, method := range []string{http.MethodGet, http.MethodPut, http.MethodDelete, http.MethodPatch} {
+		t.Run(method, func(t *testing.T) {
+			req := httptest.NewRequest(method, "/api/users/user-1/banner", nil)
+			req = withUserCtx(req, "user-1", "user")
+			w := httptest.NewRecorder()
+
+			handler.handleUpdateBanner(w, req)
+
+			assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+		})
+	}
+}
+
+/* =========================
+   TEST handleUpdateStatus — ID kosong
+========================= */
+
+// ID kosong → 400
+func TestUserHandler_handleUpdateStatus_EmptyID_Returns400(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+
+	body := strings.NewReader(`{"status":"Suspend"}`)
+	req := httptest.NewRequest(http.MethodPatch, "/api/users//status", body)
+	req = withUserCtx(req, "admin-1", "admin")
+	w := httptest.NewRecorder()
+
+	handler.handleUpdateStatus(w, req, "") // id="" disimulasikan langsung
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "ID user wajib diisi")
+}
+
+/* =========================
+   TEST handleDelete — service error
+========================= */
+
+// Delete user yang tidak ada → service kembalikan error → 400
+func TestUserHandler_handleDelete_ServiceError(t *testing.T) {
+	handler, _, _ := setupUserHandler()
+	// mockRepo kosong, tidak ada user → Delete akan error
+	req := httptest.NewRequest(http.MethodDelete, "/api/users/nonexistent-id", nil)
+	req = withUserCtx(req, "admin-1", "admin")
+	w := httptest.NewRecorder()
+
+	handler.handleDelete(w, req, "nonexistent-id")
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
