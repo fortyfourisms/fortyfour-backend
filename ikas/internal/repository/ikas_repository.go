@@ -181,29 +181,15 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			i.TargetNilai = targetNilai.Float64
 		}
 
-		// Selalu hitung nilai_kematangan secara dinamis dari domain yang sudah terisi
+		// Selalu hitung nilai_kematangan secara dinamis dari domain yang sudah terisi dengan bobot:
+		// Identifikasi (25%), Proteksi (30%), Deteksi (25%), Gulih (20%)
 		{
-			var sum float64
-			var count float64
-			if idenNilai.Valid {
-				sum += idenNilai.Float64
-				count++
-			}
-			if protNilai.Valid {
-				sum += protNilai.Float64
-				count++
-			}
-			if detNilai.Valid {
-				sum += detNilai.Float64
-				count++
-			}
-			if gulihNilai.Valid {
-				sum += gulihNilai.Float64
-				count++
-			}
-			if count > 0 {
-				i.NilaiKematangan = utils.RoundToTwo(sum / count)
-			}
+			i.NilaiKematangan = utils.RoundToTwo(
+				idenNilai.Float64*0.25 +
+					protNilai.Float64*0.30 +
+					detNilai.Float64*0.25 +
+					gulihNilai.Float64*0.20,
+			)
 		}
 
 		// Set kategori kematangan keamanan siber
@@ -401,29 +387,15 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 		i.TargetNilai = targetNilai.Float64
 	}
 
-	// Selalu hitung nilai_kematangan secara dinamis dari domain yang sudah terisi
+	// Selalu hitung nilai_kematangan secara dinamis dari domain yang sudah terisi dengan bobot:
+	// Identifikasi (25%), Proteksi (30%), Deteksi (25%), Gulih (20%)
 	{
-		var sum float64
-		var count float64
-		if idenNilai.Valid {
-			sum += idenNilai.Float64
-			count++
-		}
-		if protNilai.Valid {
-			sum += protNilai.Float64
-			count++
-		}
-		if detNilai.Valid {
-			sum += detNilai.Float64
-			count++
-		}
-		if gulihNilai.Valid {
-			sum += gulihNilai.Float64
-			count++
-		}
-		if count > 0 {
-			i.NilaiKematangan = utils.RoundToTwo(sum / count)
-		}
+		i.NilaiKematangan = utils.RoundToTwo(
+			idenNilai.Float64*0.25 +
+				protNilai.Float64*0.30 +
+				detNilai.Float64*0.25 +
+				gulihNilai.Float64*0.20,
+		)
 	}
 
 	// Set kategori kematangan keamanan siber
