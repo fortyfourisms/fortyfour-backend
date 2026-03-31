@@ -47,7 +47,11 @@ func (h *ProteksiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+		"total":   len(data),
+	})
 }
 
 // GetProteksiByID godoc
@@ -66,5 +70,8 @@ func (h *ProteksiHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, 
 		utils.RespondError(w, 404, "Data tidak ditemukan")
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+	})
 }
