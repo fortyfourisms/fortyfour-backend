@@ -1205,3 +1205,116 @@ func TestAuthService_EnableMFAAndLogin_SetupKeyNotCleanedOnInvalidCode(t *testin
 		t.Error("mfa_setup key seharusnya MASIH ada di redis karena validasi kode gagal sebelum cleanup")
 	}
 }
+/*
+=====================================
+ TEST REGISTER — Role Default Not Found
+=====================================
+*/
+
+// failingMockRoleRepo adalah variant mockRoleRepo yang GetByName-nya bisa dikonfigurasi
+// untuk gagal — digunakan untuk mensimulasikan kondisi role "user" tidak ada di database.
+type failingMockRoleRepo struct {
+	failGetByName bool
+	returnNilRole bool
+}
+
+func (m *failingMockRoleRepo) Create(ctx context.Context, role *models.Role) error { return nil }
+func (m *failingMockRoleRepo) GetByID(ctx context.Context, id string) (*models.Role, error) {
+	return &models.Role{ID: "role-user-id", Name: "user"}, nil
+}
+func (m *failingMockRoleRepo) GetAll(ctx context.Context) ([]*models.Role, error) { return nil, nil }
+func (m *failingMockRoleRepo) Update(ctx context.Context, role *models.Role) error { return nil }
+func (m *failingMockRoleRepo) Delete(ctx context.Context, id string) error        { return nil }
+func (m *failingMockRoleRepo) GetByName(ctx context.Context, name string) (*models.Role, error) {
+	if m.failGetByName {
+		return nil, errors.New("database error")
+	}
+	if m.returnNilRole {
+		return nil, nil
+	}
+	return &models.Role{ID: "role-user-id", Name: "user"}, nil
+}
+
+// TestRegister_RoleDefaultNotFound memverifikasi bahwa Register mengembalikan error
+// ketika role default "user" tidak ditemukan di database (GetByName error).
+func TestRegister_RoleDefaultNotFound(t *testing.T) {
+	roleRepo := &failingMockRoleRepo{failGetByName: true}
+	auth := NewAuthService(
+		newMockUserRepo(),
+		roleRepo,
+		NewTokenService(newMockRedis(), "secret", false, "localhost"),
+		newNotifSvc(),
+	)
+
+	_, _, err := auth.Register(
+		dto.RegisterRequest{
+			Username: "newuser",
+			Password: "XyZ#91!kLmPq",
+			Email:    "newuser@mail.com",
+		},
+		testhelpers.NewMockPerusahaanService(),
+	)
+
+	if err == nil {
+		t.Fatal("expected error ketika role default tidak ditemukan")
+	}
+	if err.Error() != "role default tidak ditemukan, hubungi administrator" {
+		t.Errorf("unexpected error message: %s", err.Error())
+	}
+}
+
+// TestRegister_RoleDefaultNil memverifikasi bahwa Register mengembalikan error
+// ketika GetByName berhasil tapi mengembalikan nil (role belum di-seed).
+func TestRegister_RoleDefaultNil(t *testing.T) {
+	roleRepo := &failingMockRoleRepo{returnNilRole: true}
+	auth := NewAuthService(
+		newMockUserRepo(),
+		roleRepo,
+		NewTokenService(newMockRedis(), "secret", false, "localhost"),
+		newNotifSvc(),
+	)
+
+	_, _, err := auth.Register(
+		dto.RegisterRequest{
+			Username: "newuser2",
+			Password: "XyZ#91!kLmPq",
+			Email:    "newuser2@mail.com",
+		},
+		testhelpers.NewMockPerusahaanService(),
+	)
+
+	if err == nil {
+		t.Fatal("expected error ketika role default nil")
+	}
+	if err.Error() != "role default tidak ditemukan, hubungi administrator" {
+		t.Errorf("unexpected error message: %s", err.Error())
+	}
+}
+
+// TestRegister_RoleIDAssignedFromDatabase memverifikasi bahwa user yang berhasil
+// register mendapatkan RoleID dari database (bukan dari request body).
+func TestRegister_RoleIDAssignedFromDatabase(t *testing.T) {
+	roleRepo := &failingMockRoleRepo{} // GetByName sukses → returns "role-user-id"
+	auth := NewAuthService(
+		newMockUserRepo(),
+		roleRepo,
+		NewTokenService(newMockRedis(), "secret", false, "localhost"),
+		newNotifSvc(),
+	)
+
+	user, token, err := auth.Register(
+		dto.RegisterRequest{
+			Username: "verifyuser",
+			Password: "XyZ#91!kLmPq",
+			Email:    "verify@mail.com",
+		},
+		testhelpers.NewMockPerusahaanService(),
+	)
+
+	if err != nil {
+		t.Fatalf("expected success, got: %v", err)
+	}
+	if user == nil || token == nil {
+		t.Fatal("expected user dan token, got nil")
+	}
+}
