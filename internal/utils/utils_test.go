@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -98,4 +100,59 @@ func intPtr(i int) *int {
 
 func boolPtr(b bool) *bool {
 	return &b
+}
+
+// ================================================================
+// AdaptHandler
+// ================================================================
+
+func TestAdaptHandler_WrapsHandlerAndServes(t *testing.T) {
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusCreated)
+		w.Write([]byte("created"))
+	})
+
+	adapted := AdaptHandler(inner)
+
+	req := httptest.NewRequest(http.MethodPost, "/resource", nil)
+	w := httptest.NewRecorder()
+	adapted(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Errorf("expected status 201, got %d", w.Code)
+	}
+	if w.Body.String() != "created" {
+		t.Errorf("expected body 'created', got '%s'", w.Body.String())
+	}
+}
+
+func TestAdaptHandler_ReturnTypeIsHandlerFunc(t *testing.T) {
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+	result := AdaptHandler(inner)
+
+	// Pastikan hasil adalah http.HandlerFunc yang bisa dipanggil langsung
+	var _ http.HandlerFunc = result
+}
+
+func TestAdaptHandler_PassesRequestThrough(t *testing.T) {
+	var gotMethod, gotPath string
+
+	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		gotMethod = r.Method
+		gotPath = r.URL.Path
+		w.WriteHeader(http.StatusOK)
+	})
+
+	adapted := AdaptHandler(inner)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/items/99", nil)
+	w := httptest.NewRecorder()
+	adapted(w, req)
+
+	if gotMethod != http.MethodDelete {
+		t.Errorf("expected method DELETE, got '%s'", gotMethod)
+	}
+	if gotPath != "/api/items/99" {
+		t.Errorf("expected path '/api/items/99', got '%s'", gotPath)
+	}
 }
