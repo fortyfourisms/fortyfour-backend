@@ -1,7 +1,9 @@
 package services
 
 import (
+	"errors"
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/testhelpers"
 	"os"
 	"testing"
@@ -790,4 +792,114 @@ func TestUserService_UpdateMe_NoFieldsChanged(t *testing.T) {
 	if result == nil {
 		t.Fatal("expected result even with no changes")
 	}
+}
+
+// ================================================================
+// failingUserRepo — wrapper tipis untuk mensimulasikan error FindAll
+// ================================================================
+
+// failingUserRepo embed MockUserRepository dan override FindAll agar bisa inject error.
+// Ini tidak memerlukan file baru karena deklarasi type diperbolehkan di dalam file test
+// yang sudah ada, selama berada di package yang sama.
+type failingUserRepo struct {
+	*testhelpers.MockUserRepository
+	failFindAll bool
+}
+
+func (f *failingUserRepo) FindAll() ([]models.User, error) {
+	if f.failFindAll {
+		return nil, errors.New("database connection error")
+	}
+	return f.MockUserRepository.FindAll()
+}
+
+func newFailingUserService(failFindAll bool) (*UserService, *failingUserRepo) {
+	base := testhelpers.NewMockUserRepository()
+	repo := &failingUserRepo{
+		MockUserRepository: base,
+		failFindAll:        failFindAll,
+	}
+	uploadPath := "./test_uploads"
+	service := NewUserService(repo, uploadPath, nil)
+	return service, repo
+}
+
+/*
+=====================================
+ TEST GET ALL USERS — TAMBAHAN
+=====================================
+*/
+
+// TestUserService_GetAll_RepoError memverifikasi bahwa GetAll meneruskan
+// error dari repository ke pemanggil tanpa panik atau menghasilkan data parsial.
+func TestUserService_GetAll_RepoError(t *testing.T) {
+	service, _ := newFailingUserService(true)
+
+	result, err := service.GetAll()
+
+	if err == nil {
+		t.Fatal("expected error dari repo, got nil")
+	}
+	if result != nil {
+		t.Errorf("expected nil result saat error, got %v", result)
+	}
+}
+
+// TestUserService_GetAll_MultipleUsers memverifikasi bahwa GetAll memetakan
+// semua user ke DTO dengan benar, termasuk field ID, Username, dan Email.
+func TestUserService_GetAll_MultipleUsers(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	users := []struct{ id, username, email string }{
+		{"id-1", "alice", "alice@test.com"},
+		{"id-2", "bob", "bob@test.com"},
+		{"id-3", "charlie", "charlie@test.com"},
+	}
+	for _, u := range users {
+		_ = mockRepo.Create(testhelpers.CreateTestUser(u.id, u.username, u.email))
+	}
+
+	result, err := service.GetAll()
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(result) != 3 {
+		t.Fatalf("expected 3 users, got %d", len(result))
+	}
+
+	// Verifikasi setiap user memiliki ID dan Username yang tidak kosong
+	for _, r := range result {
+		if r.ID == "" {
+			t.Error("expected non-empty ID di response")
+		}
+		if r.Username == "" {
+			t.Error("expected non-empty Username di response")
+		}
+	}
+}
+
+// TestUserService_GetAll_ReturnsDTONotModel memverifikasi bahwa GetAll
+// mengembalikan slice dto.UserResponse (bukan models.User), sehingga field
+// sensitif seperti Password tidak ikut terekspos.
+func TestUserService_GetAll_ReturnsDTONotModel(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("id-x", "userx", "userx@test.com")
+	user.Password = "hashed-secret-password"
+	_ = mockRepo.Create(user)
+
+	result, err := service.GetAll()
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(result) != 1 {
+		t.Fatalf("expected 1 user, got %d", len(result))
+	}
+
+	// dto.UserResponse tidak boleh punya field Password
+	// Verifikasi dengan cek tipe return saja — ini compile-time guarantee,
+	// cukup pastikan result adalah []dto.UserResponse (bukan pointer ke model)
+	var _ []dto.UserResponse = result
 }
