@@ -206,7 +206,7 @@ func TestIkasHandler_ServeHTTP_Create_Success(t *testing.T) {
 
 	createReq := dto.CreateIkasRequest{IDPerusahaan: "1", Responden: "User"}
 	repo.On("CheckExistsByPerusahaanID", "1").Return(false, nil)
-	
+
 	producer.On("PublishIkasCreated", mock.Anything, mock.MatchedBy(func(e dto_event.IkasCreatedEvent) bool {
 		return e.IDPerusahaan == "1" && e.UserID == "user-123"
 	})).Return(nil)
@@ -258,13 +258,13 @@ func TestIkasHandler_ServeHTTP_Update_Success(t *testing.T) {
 
 	perusahaanID := "2"
 	updateReq := dto.UpdateIkasRequest{IDPerusahaan: &perusahaanID}
-	
+
 	current := &dto.IkasResponse{
-		ID: "123",
+		ID:         "123",
 		Perusahaan: &dto.PerusahaanInIkas{ID: "1"},
 	}
 	repo.On("GetByID", "123").Return(current, nil)
-	
+
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasUpdated", mock.Anything, mock.Anything).Return(nil)
 
@@ -325,7 +325,7 @@ func TestIkasHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	handler := setupIkasHandler(repo, producer)
 
 	repo.On("GetByID", "123").Return(&dto.IkasResponse{ID: "123"}, nil)
-	
+
 	producer.On("PublishIkasDeleted", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 
@@ -380,7 +380,7 @@ func TestIkasHandler_ServeHTTP_Import_InvalidForm(t *testing.T) {
 func createMultipartRequest(t *testing.T, field string, filename string, content []byte) *http.Request {
 	body := new(bytes.Buffer)
 	writer := multipart.NewWriter(body)
-	
+
 	if filename != "" {
 		part, err := writer.CreateFormFile(field, filename)
 		assert.NoError(t, err)
@@ -444,7 +444,7 @@ func TestIkasHandler_ServeHTTP_Import_Success(t *testing.T) {
 
 	repo.On("ParseExcelForImport", mock.Anything).Return(importData, nil)
 	repo.On("CheckExistsByPerusahaanID", "1").Return(false, nil) // Create IKAS
-	
+
 	producer.On("PublishIkasCreated", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishJawabanIdentifikasiCreated", mock.Anything, mock.Anything).Return(nil)
@@ -469,7 +469,7 @@ func TestIkasHandler_ServeHTTP_Import_SystemError(t *testing.T) {
 	}
 
 	repo.On("ParseExcelForImport", mock.Anything).Return(importData, nil)
-	repo.On("CheckExistsByPerusahaanID", "1").Return(false, errors.New("db error")) 
+	repo.On("CheckExistsByPerusahaanID", "1").Return(false, errors.New("db error"))
 
 	req := createMultipartRequest(t, "file", "test.xlsx", []byte("dummy data"))
 	w := httptest.NewRecorder()

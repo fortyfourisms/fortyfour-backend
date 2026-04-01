@@ -178,7 +178,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Create_Success(t *testing.T) {
 	repo.On("CheckSubKategoriExists", 1).Return(true, nil)
 	repo.On("CheckRuangLingkupExists", 1).Return(true, nil)
 	repo.On("Create", mock.Anything).Return(int64(1), nil)
-	
+
 	producer.On("PublishPertanyaanGulihCreated", mock.Anything, mock.MatchedBy(func(e dto_event.PertanyaanGulihCreatedEvent) bool {
 		return e.Request.PertanyaanGulih == "Pertanyaan Test"
 	})).Return(nil)
@@ -259,10 +259,10 @@ func TestPertanyaanGulihHandler_ServeHTTP_Update_Success(t *testing.T) {
 	handler := setupPertanyaanGulihHandler(repo, producer)
 
 	updateReq := dto.UpdatePertanyaanGulihRequest{PertanyaanGulih: gulihStrPtr("Pertanyaan Ubah")}
-	
+
 	repo.On("GetByID", 1).Return(&dto.PertanyaanGulihResponse{ID: 1}, nil)
 	repo.On("Update", 1, mock.Anything).Return(nil)
-	
+
 	producer.On("PublishPertanyaanGulihUpdated", mock.Anything, mock.Anything).Return(nil)
 
 	body, _ := json.Marshal(updateReq)
@@ -306,7 +306,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Update_ValidationError(t *testing.T) {
 
 	repo.On("GetByID", 1).Return(&dto.PertanyaanGulihResponse{ID: 1}, nil)
 	repo.On("Update", 1, mock.Anything).Return(errors.New("pertanyaan_gulih tidak boleh kosong"))
-	
+
 	body, _ := json.Marshal(dto.UpdatePertanyaanGulihRequest{PertanyaanGulih: gulihStrPtr("")})
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/pertanyaan-gulih/1", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()

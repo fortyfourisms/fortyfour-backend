@@ -177,7 +177,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Create_Success(t *testing.T) {
 	createReq := dto.CreatePertanyaanIdentifikasiRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanIdentifikasi: "Pertanyaan Test"}
 	repo.On("CheckSubKategoriExists", 1).Return(true, nil)
 	repo.On("CheckRuangLingkupExists", 1).Return(true, nil)
-	
+
 	producer.On("PublishPertanyaanIdentifikasiCreated", mock.Anything, mock.MatchedBy(func(e dto_event.PertanyaanIdentifikasiCreatedEvent) bool {
 		return e.Request.PertanyaanIdentifikasi == "Pertanyaan Test"
 	})).Return(nil)
@@ -257,9 +257,9 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Update_Success(t *testing.T) {
 	handler := setupPertanyaanIdentifikasiHandler(repo, producer)
 
 	updateReq := dto.UpdatePertanyaanIdentifikasiRequest{PertanyaanIdentifikasi: identStrPtr("Pertanyaan Update")}
-	
+
 	repo.On("GetByID", 1).Return(&dto.PertanyaanIdentifikasiResponse{ID: 1}, nil)
-	
+
 	producer.On("PublishPertanyaanIdentifikasiUpdated", mock.Anything, mock.Anything).Return(nil)
 
 	body, _ := json.Marshal(updateReq)
@@ -302,7 +302,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Update_ValidationError(t *testi
 	handler := setupPertanyaanIdentifikasiHandler(repo, nil)
 
 	repo.On("GetByID", 1).Return(&dto.PertanyaanIdentifikasiResponse{ID: 1}, nil)
-	
+
 	body, _ := json.Marshal(dto.UpdatePertanyaanIdentifikasiRequest{PertanyaanIdentifikasi: identStrPtr("")})
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/pertanyaan-identifikasi/1", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
