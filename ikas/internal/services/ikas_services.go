@@ -5,19 +5,30 @@ import (
 	"fmt"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
-	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"time"
 
 	"github.com/google/uuid"
 )
 
-type IkasService struct {
-	repo     repository.IkasRepositoryInterface
-	producer *rabbitmq.Producer
+type IkasProducerInterface interface {
+	PublishIkasCreated(ctx context.Context, event interface{}) error
+	PublishIkasUpdated(ctx context.Context, event interface{}) error
+	PublishIkasDeleted(ctx context.Context, event interface{}) error
+	PublishIkasAuditLog(ctx context.Context, event interface{}) error
+	PublishIkasImported(ctx context.Context, event interface{}) error
+	PublishJawabanIdentifikasiCreated(ctx context.Context, event interface{}) error
+	PublishJawabanProteksiCreated(ctx context.Context, event interface{}) error
+	PublishJawabanDeteksiCreated(ctx context.Context, event interface{}) error
+	PublishJawabanGulihCreated(ctx context.Context, event interface{}) error
 }
 
-func NewIkasService(repo repository.IkasRepositoryInterface, producer *rabbitmq.Producer) *IkasService {
+type IkasService struct {
+	repo     repository.IkasRepositoryInterface
+	producer IkasProducerInterface
+}
+
+func NewIkasService(repo repository.IkasRepositoryInterface, producer IkasProducerInterface) *IkasService {
 	return &IkasService{
 		repo:     repo,
 		producer: producer,
