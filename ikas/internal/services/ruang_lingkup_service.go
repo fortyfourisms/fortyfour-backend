@@ -6,7 +6,6 @@ import (
 	"errors"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
-	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
 	"time"
@@ -14,12 +13,18 @@ import (
 	"fortyfour-backend/pkg/logger"
 )
 
-type RuangLingkupService struct {
-	repo     repository.RuangLingkupRepositoryInterface
-	producer *rabbitmq.Producer
+type RuangLingkupProducerInterface interface {
+	PublishRuangLingkupCreated(ctx context.Context, event interface{}) error
+	PublishRuangLingkupUpdated(ctx context.Context, event interface{}) error
+	PublishRuangLingkupDeleted(ctx context.Context, event interface{}) error
 }
 
-func NewRuangLingkupService(repo repository.RuangLingkupRepositoryInterface, producer *rabbitmq.Producer) *RuangLingkupService {
+type RuangLingkupService struct {
+	repo     repository.RuangLingkupRepositoryInterface
+	producer RuangLingkupProducerInterface
+}
+
+func NewRuangLingkupService(repo repository.RuangLingkupRepositoryInterface, producer RuangLingkupProducerInterface) *RuangLingkupService {
 	return &RuangLingkupService{
 		repo:     repo,
 		producer: producer,

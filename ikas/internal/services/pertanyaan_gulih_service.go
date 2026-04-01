@@ -6,7 +6,6 @@ import (
 	"errors"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
-	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
 	"time"
@@ -14,12 +13,18 @@ import (
 	"github.com/rollbar/rollbar-go"
 )
 
-type PertanyaanGulihService struct {
-	repo     repository.PertanyaanGulihRepositoryInterface
-	producer *rabbitmq.Producer
+type PertanyaanGulihProducerInterface interface {
+	PublishPertanyaanGulihCreated(ctx context.Context, event interface{}) error
+	PublishPertanyaanGulihUpdated(ctx context.Context, event interface{}) error
+	PublishPertanyaanGulihDeleted(ctx context.Context, event interface{}) error
 }
 
-func NewPertanyaanGulihService(repo repository.PertanyaanGulihRepositoryInterface, producer *rabbitmq.Producer) *PertanyaanGulihService {
+type PertanyaanGulihService struct {
+	repo     repository.PertanyaanGulihRepositoryInterface
+	producer PertanyaanGulihProducerInterface
+}
+
+func NewPertanyaanGulihService(repo repository.PertanyaanGulihRepositoryInterface, producer PertanyaanGulihProducerInterface) *PertanyaanGulihService {
 	return &PertanyaanGulihService{
 		repo:     repo,
 		producer: producer,
