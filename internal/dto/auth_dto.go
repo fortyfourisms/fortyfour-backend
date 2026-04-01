@@ -6,7 +6,6 @@ type RegisterRequest struct {
 	Username  string  `json:"username" validate:"required,min=3,max=50"`
 	Password  string  `json:"password" validate:"required,min=8"`
 	Email     string  `json:"email" validate:"required,email"`
-	RoleID    *string `json:"role_id,omitempty"`
 	IDJabatan *string `json:"id_jabatan,omitempty"`
 
 	// Added company fields for registration
