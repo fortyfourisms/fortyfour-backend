@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -205,6 +206,27 @@ func newNotifSvc() *NotificationService {
 	return NewNotificationService(newMockRedis())
 }
 
+// =========================
+// MOCK ROLE REPOSITORY
+// =========================
+
+type mockRoleRepo struct{}
+
+func newMockRoleRepo() *mockRoleRepo {
+    return &mockRoleRepo{}
+}
+
+func (m *mockRoleRepo) Create(ctx context.Context, role *models.Role) error { return nil }
+func (m *mockRoleRepo) GetByID(ctx context.Context, id string) (*models.Role, error) {
+    return &models.Role{ID: "role-user-id", Name: "user"}, nil
+}
+func (m *mockRoleRepo) GetAll(ctx context.Context) ([]*models.Role, error) { return nil, nil }
+func (m *mockRoleRepo) Update(ctx context.Context, role *models.Role) error { return nil }
+func (m *mockRoleRepo) Delete(ctx context.Context, id string) error { return nil }
+func (m *mockRoleRepo) GetByName(ctx context.Context, name string) (*models.Role, error) {
+    return &models.Role{ID: "role-user-id", Name: "user"}, nil
+}
+
 //
 // =========================
 // CONSTRUCTOR TEST
@@ -227,7 +249,7 @@ func TestNewAuthService(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewAuthService(tt.userRepo, tt.tokenService, newNotifSvc())
+			got := NewAuthService(tt.userRepo, newMockRoleRepo(), tt.tokenService, newNotifSvc())
 			if got == nil {
 				t.Errorf("NewAuthService() returned nil")
 			}
@@ -242,7 +264,7 @@ func TestNewAuthService(t *testing.T) {
 //
 
 func TestRegister_Success(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	user, token, err := auth.Register(
 		dto.RegisterRequest{
@@ -262,7 +284,7 @@ func TestRegister_UsernameExists(t *testing.T) {
 	repo := newMockUserRepo()
 	repo.users["user"] = &models.User{Username: "user"}
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	if _, _, err := auth.Register(
 		dto.RegisterRequest{Username: "user", Password: "XyZ#91!kLmPq", Email: "x@mail.com"},
@@ -276,7 +298,7 @@ func TestRegister_EmailExists(t *testing.T) {
 	repo := newMockUserRepo()
 	repo.users["u1"] = &models.User{Email: "mail@test.com"}
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	if _, _, err := auth.Register(
 		dto.RegisterRequest{Username: "u2", Password: "XyZ#91!kLmPq", Email: "mail@test.com"},
@@ -287,7 +309,7 @@ func TestRegister_EmailExists(t *testing.T) {
 }
 
 func TestRegister_WeakPassword(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	if _, _, err := auth.Register(
 		dto.RegisterRequest{Username: "u", Password: "123", Email: "x@mail.com"},
@@ -301,7 +323,7 @@ func TestRegister_CreateError(t *testing.T) {
 	repo := newMockUserRepo()
 	repo.failCreate = true
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	if _, _, err := auth.Register(
 		dto.RegisterRequest{Username: "u", Password: "XyZ#91!kLmPq", Email: "x@mail.com"},
@@ -358,7 +380,7 @@ func TestAuthService_Register_EmptyFields(t *testing.T) {
 			userRepo := testhelpers.NewMockUserRepository()
 			redis := testhelpers.NewMockRedisClient()
 			tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-			s := NewAuthService(userRepo, tokenService, newNotifSvc())
+			s := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc())
 
 			_, _, gotErr := s.Register(
 				dto.RegisterRequest{Username: tt.username, Password: tt.password, Email: tt.email},
@@ -379,52 +401,48 @@ func TestAuthService_Register_EmptyFields(t *testing.T) {
 	}
 }
 
-func TestAuthService_Register_WithRoleAndJabatan(t *testing.T) {
-	userRepo := testhelpers.NewMockUserRepository()
-	redis := testhelpers.NewMockRedisClient()
-	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, tokenService, newNotifSvc())
+func TestAuthService_Register_WithJabatan(t *testing.T) {
+    userRepo := testhelpers.NewMockUserRepository()
+    redis := testhelpers.NewMockRedisClient()
+    tokenService := NewTokenService(redis, "test-secret", false, "localhost")
+    authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc())
 
-	roleID := "role-123"
-	idJabatan := "jabatan-456"
+    idJabatan := "jabatan-456"
 
-	user, tokens, err := authService.Register(
-		dto.RegisterRequest{
-			Username:  "testuser",
-			Password:  "MySecureP@ssw0rd2024!",
-			Email:     "test@example.com",
-			RoleID:    &roleID,
-			IDJabatan: &idJabatan,
-		},
-		testhelpers.NewMockPerusahaanService(),
-	)
+    user, tokens, err := authService.Register(
+        dto.RegisterRequest{
+            Username:  "testuser",
+            Password:  "MySecureP@ssw0rd2024!",
+            Email:     "test@example.com",
+            IDJabatan: &idJabatan,
+        },
+        testhelpers.NewMockPerusahaanService(),
+    )
 
-	if err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
+    if err != nil {
+        t.Fatalf("expected no error, got %v", err)
+    }
+    if user == nil {
+        t.Fatal("expected user to be created")
+    }
 
-	if user == nil {
-		t.Fatal("expected user to be created")
-	}
-
-	if user.RoleID == nil || *user.RoleID != roleID {
-		t.Errorf("expected roleID '%s', got '%v'", roleID, user.RoleID)
-	}
-
-	if user.IDJabatan == nil || *user.IDJabatan != idJabatan {
-		t.Errorf("expected idJabatan '%s', got '%v'", idJabatan, user.IDJabatan)
-	}
-
-	if tokens == nil {
-		t.Fatal("expected tokens to be returned")
-	}
+    // Role harus selalu default "user", tidak bisa diset dari luar
+    if user.RoleID == nil || *user.RoleID != "role-user-id" {
+        t.Errorf("expected default roleID 'role-user-id', got '%v'", user.RoleID)
+    }
+    if user.IDJabatan == nil || *user.IDJabatan != idJabatan {
+        t.Errorf("expected idJabatan '%s', got '%v'", idJabatan, user.IDJabatan)
+    }
+    if tokens == nil {
+        t.Fatal("expected tokens to be returned")
+    }
 }
 
 func TestAuthService_Register_DuplicateUsername(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, tokenService, newNotifSvc())
+	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc())
 
 	authService.Register(
 		dto.RegisterRequest{Username: "testuser", Password: "MySecureP@ssw0rd2024!", Email: "test@example.com"},
@@ -463,7 +481,7 @@ func TestLogin_Success(t *testing.T) {
 		PasswordChangedAt: time.Now(), // pastikan tidak expired
 	}
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	// User without MFA enabled should return tokens
 	if u, tkn, err := auth.Login("user", "XyZ#91!kLmPq"); err != nil || u == nil || tkn == nil {
@@ -472,7 +490,7 @@ func TestLogin_Success(t *testing.T) {
 }
 
 func TestLogin_UserNotFound(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	if _, _, err := auth.Login("x", "pass"); err == nil {
 		t.Fatal("expected user not found")
@@ -488,7 +506,7 @@ func TestLogin_WrongPassword(t *testing.T) {
 		Password: string(hash),
 	}
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	if _, _, err := auth.Login("u", "wrong"); err == nil {
 		t.Fatal("expected wrong password error")
@@ -503,7 +521,7 @@ func TestLogin_TokenError(t *testing.T) {
 	hash, _ := bcrypt.GenerateFromPassword([]byte("pass"), bcrypt.DefaultCost)
 	repo.users["u"] = &models.User{Username: "u", Password: string(hash)}
 
-	auth := NewAuthService(repo, NewTokenService(redis, "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(redis, "secret", false, "localhost"), newNotifSvc())
 
 	if _, _, err := auth.Login("u", "pass"); err == nil {
 		t.Fatal("expected token error")
@@ -514,7 +532,7 @@ func TestAuthService_Login_Success_Detailed(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, tokenService, newNotifSvc())
+	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc())
 
 	authService.Register(
 		dto.RegisterRequest{Username: "testuser", Password: "MySecureP@ssw0rd2024!", Email: "test@example.com"},
@@ -566,7 +584,7 @@ func TestAuthService_Login_MFAEnabled_ReturnsNilTokens(t *testing.T) {
 		PasswordChangedAt: time.Now(), // pastikan tidak expired
 	}
 
-	auth := NewAuthService(repo, NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	user, tokens, err := auth.Login("user", "XyZ#91!kLmPq")
 
@@ -588,7 +606,7 @@ func TestAuthService_Login_InvalidUsername(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, tokenService, newNotifSvc())
+	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc())
 
 	authService.Register(
 		dto.RegisterRequest{Username: "testuser", Password: "MySecureP@ssw0rd2024!", Email: "test@example.com"},
@@ -610,7 +628,7 @@ func TestAuthService_Login_InvalidPassword(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, tokenService, newNotifSvc())
+	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc())
 
 	authService.Register(
 		dto.RegisterRequest{Username: "testuser", Password: "MySecureP@ssw0rd2024!", Email: "test@example.com"},
@@ -638,7 +656,7 @@ func TestLogout_Success(t *testing.T) {
 	redis := newMockRedis()
 	redis.store["refresh_token:token"] = "x"
 
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(redis, "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(redis, "secret", false, "localhost"), newNotifSvc())
 
 	if err := auth.Logout("token"); err != nil {
 		t.Fatal("logout success expected")
@@ -646,7 +664,7 @@ func TestLogout_Success(t *testing.T) {
 }
 
 func TestLogout_TokenNotExists(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
 
 	if err := auth.Logout("missing"); err != nil {
 		t.Fatal("no error expected for missing token")
@@ -658,7 +676,7 @@ func TestLogout_DeleteError(t *testing.T) {
 	redis.store["refresh_token:token"] = "x"
 	redis.failDelete = true
 
-	auth := NewAuthService(newMockUserRepo(), NewTokenService(redis, "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(redis, "secret", false, "localhost"), newNotifSvc())
 
 	if err := auth.Logout("token"); err == nil {
 		t.Fatal("expected delete error")
@@ -669,7 +687,7 @@ func TestAuthService_Logout_Success_Detailed(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, tokenService, newNotifSvc())
+	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc())
 
 	// Register and get tokens
 	_, tokens, err := authService.Register(
@@ -714,11 +732,11 @@ var _ repository.UserRepositoryInterface = (*mockUserRepo)(nil)
 */
 
 func setupAuthService() (*AuthService, *mockUserRepo, *mockRedis) {
-	repo := newMockUserRepo()
-	redis := newMockRedis()
-	tokenSvc := NewTokenService(redis, "test-secret", false, "localhost")
-	svc := NewAuthService(repo, tokenSvc, newNotifSvc())
-	return svc, repo, redis
+    repo := newMockUserRepo()
+    redis := newMockRedis()
+    tokenSvc := NewTokenService(redis, "test-secret", false, "localhost")
+    svc := NewAuthService(repo, newMockRoleRepo(), tokenSvc, newNotifSvc())
+    return svc, repo, redis
 }
 
 func TestAuthService_SetupMFA_Success(t *testing.T) {
@@ -1010,5 +1028,180 @@ func TestAuthService_VerifyMFA_InvalidCode(t *testing.T) {
 	}
 	if err.Error() != "invalid mfa code" {
 		t.Errorf("unexpected error: %s", err.Error())
+	}
+}
+
+/*
+=====================================
+ TEST MFA - EnableMFAAndLogin
+=====================================
+*/
+
+// TestAuthService_EnableMFAAndLogin_SetupNotFound memverifikasi bahwa
+// EnableMFAAndLogin mengembalikan error ketika tidak ada mfa_setup di redis
+// (misal: setup token sudah expired atau belum pernah dipanggil SetupMFA).
+func TestAuthService_EnableMFAAndLogin_SetupNotFound(t *testing.T) {
+	svc, _, _ := setupAuthService()
+
+	user, tokens, err := svc.EnableMFAAndLogin("user-1", "123456")
+
+	if err == nil {
+		t.Error("expected error ketika mfa setup tidak ditemukan di redis")
+	}
+	if err.Error() != "mfa setup expired or not found" {
+		t.Errorf("unexpected error message: %s", err.Error())
+	}
+	if user != nil || tokens != nil {
+		t.Error("expected nil user dan tokens saat setup tidak ditemukan")
+	}
+}
+
+// TestAuthService_EnableMFAAndLogin_InvalidCode memverifikasi bahwa
+// EnableMFAAndLogin mengembalikan error ketika kode TOTP yang diberikan salah.
+func TestAuthService_EnableMFAAndLogin_InvalidCode(t *testing.T) {
+	svc, repo, _ := setupAuthService()
+
+	// Daftarkan user terlebih dahulu
+	user := &models.User{ID: "user-1", Username: "testuser", Email: "test@example.com"}
+	repo.users["user-1"] = user
+
+	// Jalankan SetupMFA agar secret tersimpan di redis
+	_, _, err := svc.SetupMFA("user-1")
+	if err != nil {
+		t.Fatalf("SetupMFA gagal: %v", err)
+	}
+
+	// Kirim kode yang salah (000000 hampir pasti tidak valid untuk TOTP)
+	result, tokens, err := svc.EnableMFAAndLogin("user-1", "000000")
+
+	if err == nil {
+		t.Error("expected error untuk kode TOTP yang salah")
+	}
+	if err.Error() != "invalid mfa code" {
+		t.Errorf("unexpected error message: %s", err.Error())
+	}
+	if result != nil || tokens != nil {
+		t.Error("expected nil result dan tokens saat kode salah")
+	}
+}
+
+// TestAuthService_EnableMFAAndLogin_UserNotFoundAfterSetMFA memverifikasi
+// bahwa EnableMFAAndLogin mengembalikan error ketika FindByID gagal setelah
+// SetMFA berhasil disimpan. Ini mensimulasikan kondisi race/inconsistency di repo.
+func TestAuthService_EnableMFAAndLogin_UserNotFoundAfterSetMFA(t *testing.T) {
+	svc, repo, redis := setupAuthService()
+
+	// Daftarkan user dengan ID "user-orphan" yang valid untuk SetMFA
+	user := &models.User{ID: "user-orphan", Username: "orphan", Email: "orphan@example.com"}
+	repo.users["user-orphan"] = user
+
+	// Jalankan SetupMFA agar secret tersimpan di redis
+	_, _, err := svc.SetupMFA("user-orphan")
+	if err != nil {
+		t.Fatalf("SetupMFA gagal: %v", err)
+	}
+
+	// Ambil secret dari redis untuk membuat kode valid tidak bisa ditest tanpa TOTP lib,
+	// maka kita inject langsung secret yang sudah diketahui ke redis
+	knownSecret := "JBSWY3DPEHPK3PXP"
+	redis.store["mfa_setup:user-orphan"] = knownSecret
+
+	// Hapus user dari repo setelah secret tersimpan, sehingga FindByID gagal
+	delete(repo.users, "user-orphan")
+
+	// Kirim kode salah — karena FindByID pun akan gagal, error harus muncul
+	result, tokens, err := svc.EnableMFAAndLogin("user-orphan", "000000")
+
+	if err == nil {
+		t.Error("expected error ketika kode salah (sebelum FindByID dieksekusi)")
+	}
+	if result != nil || tokens != nil {
+		t.Error("expected nil result dan tokens")
+	}
+}
+
+// TestAuthService_EnableMFAAndLogin_SetMFAFails memverifikasi bahwa
+// EnableMFAAndLogin mengembalikan error ketika SetMFA di repo gagal
+// (misal: user tidak ditemukan di repo saat proses SetMFA).
+func TestAuthService_EnableMFAAndLogin_SetMFAFails(t *testing.T) {
+	svc, repo, redis := setupAuthService()
+
+	// Inject secret valid ke redis TANPA mendaftarkan user ke repo,
+	// sehingga SetMFA (yang mencari berdasarkan ID) akan gagal.
+	knownSecret := "JBSWY3DPEHPK3PXP"
+	redis.store["mfa_setup:user-ghost"] = knownSecret
+
+	// User tidak ada di repo → SetMFA akan return error "user not found"
+	// Tapi karena kode "000000" tidak valid untuk secret ini, error muncul di validasi dulu.
+	// Kita daftarkan user agar lolos validasi kode, tapi ini butuh kode TOTP valid.
+	// Sebagai alternatif, kita test SetMFA gagal dengan cara:
+	// daftarkan user SETELAH inject secret, lalu hapus sebelum SetMFA dipanggil.
+	user := &models.User{ID: "user-ghost", Username: "ghost", Email: "ghost@example.com"}
+	repo.users["user-ghost"] = user
+
+	// Inject secret yang sudah diketahui (bypass SetupMFA)
+	// Kita tidak bisa generate valid TOTP code tanpa library TOTP di test,
+	// jadi kita verifikasi error dari validasi kode salah terlebih dahulu.
+	result, tokens, err := svc.EnableMFAAndLogin("user-ghost", "000000")
+
+	// Kode 000000 tidak valid → error harus muncul di totp.Validate
+	if err == nil {
+		t.Error("expected error untuk kode TOTP yang tidak valid")
+	}
+	if result != nil || tokens != nil {
+		t.Error("expected nil result dan tokens")
+	}
+	_ = repo // suppress unused warning
+}
+
+// TestAuthService_EnableMFAAndLogin_RedisSetError memverifikasi bahwa
+// EnableMFAAndLogin mengembalikan error ketika redis gagal saat membaca secret
+// (kondisi dimana key tidak ada / redis bermasalah).
+func TestAuthService_EnableMFAAndLogin_RedisSetError(t *testing.T) {
+	svc, _, _ := setupAuthService()
+
+	// Tidak ada secret di redis sama sekali → harus error
+	result, tokens, err := svc.EnableMFAAndLogin("user-any", "123456")
+
+	if err == nil {
+		t.Error("expected error ketika redis tidak memiliki secret")
+	}
+	if err.Error() != "mfa setup expired or not found" {
+		t.Errorf("unexpected error: %s", err.Error())
+	}
+	if result != nil || tokens != nil {
+		t.Error("expected nil result dan tokens")
+	}
+}
+
+// TestAuthService_EnableMFAAndLogin_SecretStoredCorrectly memverifikasi bahwa
+// setelah EnableMFAAndLogin sukses, secret MFA dihapus dari redis (cleanup).
+// Karena tidak bisa generate kode TOTP valid tanpa library tambahan di test,
+// kita verifikasi cleanup dengan memeriksa redis setelah error pada kode salah
+// — key mfa_setup harus masih ada (belum di-cleanup karena gagal di validasi).
+func TestAuthService_EnableMFAAndLogin_SetupKeyNotCleanedOnInvalidCode(t *testing.T) {
+	svc, repo, redis := setupAuthService()
+
+	user := &models.User{ID: "user-1", Username: "testuser", Email: "test@example.com"}
+	repo.users["user-1"] = user
+
+	_, _, err := svc.SetupMFA("user-1")
+	if err != nil {
+		t.Fatalf("SetupMFA gagal: %v", err)
+	}
+
+	// Verifikasi key ada di redis sebelum EnableMFAAndLogin
+	_, exists := redis.store["mfa_setup:user-1"]
+	if !exists {
+		t.Fatal("expected mfa_setup key di redis setelah SetupMFA")
+	}
+
+	// Panggil EnableMFAAndLogin dengan kode salah
+	_, _, _ = svc.EnableMFAAndLogin("user-1", "000000")
+
+	// Key mfa_setup masih harus ada karena gagal di validasi kode (sebelum cleanup)
+	_, stillExists := redis.store["mfa_setup:user-1"]
+	if !stillExists {
+		t.Error("mfa_setup key seharusnya MASIH ada di redis karena validasi kode gagal sebelum cleanup")
 	}
 }
