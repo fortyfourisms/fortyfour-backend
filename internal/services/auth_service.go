@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -26,13 +27,20 @@ func derefStr(s *string) string {
 
 type AuthService struct {
 	userRepo     repository.UserRepositoryInterface
+	roleRepo     repository.RoleRepository
 	tokenService *TokenService
 	notifSvc     *NotificationService
 }
 
-func NewAuthService(userRepo repository.UserRepositoryInterface, tokenService *TokenService, notifSvc *NotificationService) *AuthService {
+func NewAuthService(
+	userRepo repository.UserRepositoryInterface,
+	roleRepo repository.RoleRepository,
+	tokenService *TokenService,
+	notifSvc *NotificationService,
+) *AuthService {
 	return &AuthService{
 		userRepo:     userRepo,
+		roleRepo:     roleRepo,
 		tokenService: tokenService,
 		notifSvc:     notifSvc,
 	}
@@ -57,7 +65,6 @@ func mapTokenPairToDTO(m *models.TokenPair) *dto.TokenPair {
 }
 
 /* ===================== Register ===================== */
-// Register creates a new user and returns token pair DTO
 func (s *AuthService) Register(
 	req dto.RegisterRequest,
 	perusahaanService PerusahaanServiceInterface,
@@ -107,6 +114,13 @@ func (s *AuthService) Register(
 		return nil, nil, errors.New("email sudah digunakan")
 	}
 
+	// ===== AMBIL ROLE "user" DARI DATABASE =====
+	// Role selalu default "user", tidak bisa diatur dari luar
+	defaultRole, err := s.roleRepo.GetByName(context.Background(), "user")
+	if err != nil || defaultRole == nil {
+		return nil, nil, errors.New("role default tidak ditemukan, hubungi administrator")
+	}
+
 	// Handle company creation/selection logic
 	var idPerusahaan *string
 
@@ -126,7 +140,7 @@ func (s *AuthService) Register(
 		return nil, nil, errors.New("tidak bisa mengisi nama_perusahaan dan id_perusahaan bersamaan")
 	}
 
-	// SCENARIO 1: User wants to CREATE new company (+ Add New Company clicked)
+	// SCENARIO 1: User wants to CREATE new company
 	if namaPerusahaanTrimmed != "" {
 		// Cek apakah nama perusahaan sudah terdaftar
 		existing, err := perusahaanService.GetByNama(namaPerusahaanTrimmed)
@@ -146,8 +160,7 @@ func (s *AuthService) Register(
 		}
 		idPerusahaan = &perusahaan.ID
 	} else if idPerusahaanTrimmed != "" {
-		// SCENARIO 2: User selects existing company from dropdown
-		// Validate company exists
+		// SCENARIO 2: User selects existing company
 		_, err := perusahaanService.GetByID(idPerusahaanTrimmed)
 		if err != nil {
 			return nil, nil, errors.New("perusahaan tidak ditemukan")
@@ -164,7 +177,7 @@ func (s *AuthService) Register(
 
 		idPerusahaan = &idPerusahaanTrimmed
 	}
-	// SCENARIO 3: Neither provided - user will select company later (id_perusahaan = nil)
+	// SCENARIO 3: Neither provided - user will select company later
 
 	// hash password
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -176,7 +189,7 @@ func (s *AuthService) Register(
 		Username:     username,
 		Password:     string(hashed),
 		Email:        email,
-		RoleID:       req.RoleID,
+		RoleID:       &defaultRole.ID,
 		IDJabatan:    req.IDJabatan,
 		IDPerusahaan: idPerusahaan,
 	}
