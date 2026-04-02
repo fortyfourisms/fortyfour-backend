@@ -41,6 +41,8 @@ type UserResponse struct {
 	IDPerusahaan *string `json:"id_perusahaan"`
 	FotoProfile  *string `json:"foto_profile"`
 	Banner       *string `json:"banner"`
+	Status       string  `json:"status"`
+	MFAEnabled   bool    `json:"mfa_enabled"`
 	CreatedAt    string  `json:"created_at"`
 	UpdatedAt    string  `json:"updated_at"`
 }
