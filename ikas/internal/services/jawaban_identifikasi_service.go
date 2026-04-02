@@ -6,7 +6,6 @@ import (
 	"errors"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
-	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
 	"time"
@@ -14,16 +13,23 @@ import (
 	"github.com/rollbar/rollbar-go"
 )
 
+type JawabanIdentifikasiProducerInterface interface {
+	PublishJawabanIdentifikasiCreated(ctx context.Context, event interface{}) error
+	PublishJawabanIdentifikasiUpdated(ctx context.Context, event interface{}) error
+	PublishJawabanIdentifikasiDeleted(ctx context.Context, event interface{}) error
+	PublishIkasAuditLog(ctx context.Context, event interface{}) error
+}
+
 type JawabanIdentifikasiService struct {
 	repo     repository.JawabanIdentifikasiRepositoryInterface
 	ikasRepo repository.IkasRepositoryInterface
-	producer *rabbitmq.Producer
+	producer JawabanIdentifikasiProducerInterface
 }
 
 func NewJawabanIdentifikasiService(
 	repo repository.JawabanIdentifikasiRepositoryInterface,
 	ikasRepo repository.IkasRepositoryInterface,
-	producer *rabbitmq.Producer,
+	producer JawabanIdentifikasiProducerInterface,
 ) *JawabanIdentifikasiService {
 	return &JawabanIdentifikasiService{
 		repo:     repo,
