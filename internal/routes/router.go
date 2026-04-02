@@ -109,8 +109,8 @@ func InitRouter(
 	mux.HandleFunc("/api/jabatan/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(jabatanH)))))
 
 	// Route IKAS (Proxy to Microservice)
-	mux.Handle("/api/maturity/", authM.Authenticate(casbinM.Authorize(ikasProxyH.ServeHTTP)))
-	mux.Handle("/api/maturity", authM.Authenticate(casbinM.Authorize(ikasProxyH.ServeHTTP)))
+	mux.Handle("/api/maturity/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(ikasProxyH.ServeHTTP))))
+	mux.Handle("/api/maturity", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(ikasProxyH.ServeHTTP))))
 
 	// Route Role
 	mux.HandleFunc("/api/role", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(roleH)))))

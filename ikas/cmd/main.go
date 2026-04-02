@@ -188,13 +188,6 @@ func main() {
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret, cfg.InternalGatewayKey)
 	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
 
-	// Initialize rate limiters with different configurations
-	rateLimitConfigs := middleware.GetRateLimitConfigs()
-
-	strictLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Strict)
-	moderateLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Moderate)
-	lenientLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Lenient)
-
 	// Router
 	mux := routes.InitRouter(
 		ikasHandler,
@@ -216,17 +209,10 @@ func main() {
 		jawabanGulihHandler,
 		authMiddleware,
 		casbinMiddleware,
-		strictLimiter,
-		moderateLimiter,
-		lenientLimiter,
 	)
 
 	go func() {
 		logger.Infof("IKAS service running on %s", cfg.Port)
-		logger.Info("Rate limiting enabled:")
-		logger.Info("  - Auth endpoints: 5 requests/minute per IP")
-		logger.Info("  - Public posts: 60 requests/minute per IP")
-		logger.Info("  - Protected posts: 20 requests/minute per user")
 		logger.Info("RabbitMQ consumers running:")
 		logger.Info("  - ikas.created")
 		logger.Info("  - ikas.updated")
