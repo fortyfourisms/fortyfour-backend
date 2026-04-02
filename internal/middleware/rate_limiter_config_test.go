@@ -15,7 +15,7 @@ func TestGetRateLimitConfigs(t *testing.T) {
 
 	// Verify Strict config
 	t.Run("Strict config", func(t *testing.T) {
-		assert.Equal(t, 5, configs.Strict.RequestsPerWindow, "Strict should allow 5 requests")
+		assert.Equal(t, 10, configs.Strict.RequestsPerWindow, "Strict should allow 10 requests")
 		assert.Equal(t, 1*time.Minute, configs.Strict.WindowDuration, "Strict window should be 1 minute")
 		assert.Equal(t, "rate_limit_strict", configs.Strict.KeyPrefix, "Strict key prefix should be correct")
 	})
@@ -163,8 +163,8 @@ func TestRateLimitConfigs_StrictValues(t *testing.T) {
 	// Test exact values for Strict config (to catch unintended changes)
 	strictConfig := configs.Strict
 
-	assert.Equal(t, 5, strictConfig.RequestsPerWindow,
-		"Strict requests per window should be 5")
+	assert.Equal(t, 10, strictConfig.RequestsPerWindow,
+		"Strict requests per window should be 10")
 	assert.Equal(t, 1*time.Minute, strictConfig.WindowDuration,
 		"Strict window duration should be 1 minute")
 	assert.Equal(t, "rate_limit_strict", strictConfig.KeyPrefix,

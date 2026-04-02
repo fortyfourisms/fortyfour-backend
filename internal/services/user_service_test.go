@@ -903,3 +903,151 @@ func TestUserService_GetAll_ReturnsDTONotModel(t *testing.T) {
 	// cukup pastikan result adalah []dto.UserResponse (bukan pointer ke model)
 	var _ []dto.UserResponse = result
 }
+/*
+=====================================
+ TEST toResponse — Status & MFAEnabled
+=====================================
+*/
+
+// TestUserService_GetAll_StatusIncludedInResponse memverifikasi bahwa
+// field Status ter-mapping dengan benar dari models.User ke dto.UserResponse
+// oleh fungsi toResponse() di GetAll.
+func TestUserService_GetAll_StatusIncludedInResponse(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("id-status", "statususer", "status@test.com")
+	user.Status = models.UserStatusSuspend
+	_ = mockRepo.Create(user)
+
+	result, err := service.GetAll()
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(result) != 1 {
+		t.Fatalf("expected 1 user, got %d", len(result))
+	}
+	if result[0].Status != string(models.UserStatusSuspend) {
+		t.Errorf("expected status '%s', got '%s'", models.UserStatusSuspend, result[0].Status)
+	}
+}
+
+// TestUserService_GetByID_StatusIncludedInResponse memverifikasi hal yang sama
+// untuk GetByID (menggunakan FindByID yang berbeda query dengan FindAll).
+func TestUserService_GetByID_StatusIncludedInResponse(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("id-status2", "statususer2", "status2@test.com")
+	user.Status = models.UserStatusNonaktif
+	_ = mockRepo.Create(user)
+
+	result, err := service.GetByID("id-status2")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result.Status != string(models.UserStatusNonaktif) {
+		t.Errorf("expected status '%s', got '%s'", models.UserStatusNonaktif, result.Status)
+	}
+}
+
+// TestUserService_GetAll_StatusDefaultAktif memverifikasi bahwa user baru
+// yang belum pernah diubah statusnya memiliki status "Aktif" di response.
+func TestUserService_GetAll_StatusDefaultAktif(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("id-aktif", "aktifuser", "aktif@test.com")
+	user.Status = models.UserStatusAktif
+	_ = mockRepo.Create(user)
+
+	result, err := service.GetAll()
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(result) != 1 {
+		t.Fatalf("expected 1 user, got %d", len(result))
+	}
+	if result[0].Status != string(models.UserStatusAktif) {
+		t.Errorf("expected status 'Aktif', got '%s'", result[0].Status)
+	}
+}
+
+// TestUserService_GetAll_MFAEnabledIncludedInResponse memverifikasi bahwa
+// field MFAEnabled ter-mapping dengan benar ke dto.UserResponse.
+func TestUserService_GetAll_MFAEnabledIncludedInResponse(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("id-mfa", "mfauser", "mfa@test.com")
+	user.MFAEnabled = true
+	_ = mockRepo.Create(user)
+
+	result, err := service.GetAll()
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(result) != 1 {
+		t.Fatalf("expected 1 user, got %d", len(result))
+	}
+	if !result[0].MFAEnabled {
+		t.Error("expected MFAEnabled = true di response")
+	}
+}
+
+// TestUserService_UpdateStatus_StatusReflectedInGetByID memverifikasi end-to-end:
+// setelah UpdateStatus, GetByID harus mengembalikan status yang sudah diubah.
+func TestUserService_UpdateStatus_StatusReflectedInGetByID(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("id-upd", "upduser", "upd@test.com")
+	user.Status = models.UserStatusAktif
+	_ = mockRepo.Create(user)
+
+	err := service.UpdateStatus("id-upd", models.UserStatusSuspend)
+	if err != nil {
+		t.Fatalf("UpdateStatus gagal: %v", err)
+	}
+
+	result, err := service.GetByID("id-upd")
+	if err != nil {
+		t.Fatalf("GetByID gagal: %v", err)
+	}
+	if result.Status != string(models.UserStatusSuspend) {
+		t.Errorf("expected status 'Suspend' setelah update, got '%s'", result.Status)
+	}
+}
+
+// TestUserService_GetAll_AllStatusValues memverifikasi ketiga nilai status
+// (Aktif, Suspend, Nonaktif) terpetakan dengan benar ke response.
+func TestUserService_GetAll_AllStatusValues(t *testing.T) {
+	tests := []struct {
+		name   string
+		status models.UserStatus
+	}{
+		{"Aktif", models.UserStatusAktif},
+		{"Suspend", models.UserStatusSuspend},
+		{"Nonaktif", models.UserStatusNonaktif},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			service, mockRepo := setupUserService()
+
+			user := testhelpers.CreateTestUser("id-"+tt.name, "user-"+tt.name, tt.name+"@test.com")
+			user.Status = tt.status
+			_ = mockRepo.Create(user)
+
+			result, err := service.GetAll()
+			if err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+			if len(result) != 1 {
+				t.Fatalf("expected 1 user, got %d", len(result))
+			}
+			if result[0].Status != string(tt.status) {
+				t.Errorf("expected status '%s', got '%s'", tt.status, result[0].Status)
+			}
+		})
+	}
+}
