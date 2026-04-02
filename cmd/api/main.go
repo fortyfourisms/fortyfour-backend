@@ -58,15 +58,15 @@ func main() {
 	defer db.Close()
 
 	// Run database migrations
-	if err := database.RunMigrations(database.Config{
-		Host:     cfg.Database.Host,
-		Port:     cfg.Database.Port,
-		User:     cfg.Database.User,
-		Password: cfg.Database.Password,
-		DBName:   cfg.Database.DBName,
-	}, "./migrations"); err != nil {
-		logger.FatalErr(err, "Failed to run database migrations")
-	}
+	// if err := database.RunMigrations(database.Config{
+	// 	Host:     cfg.Database.Host,
+	// 	Port:     cfg.Database.Port,
+	// 	User:     cfg.Database.User,
+	// 	Password: cfg.Database.Password,
+	// 	DBName:   cfg.Database.DBName,
+	// }, "./migrations"); err != nil {
+	// 	logger.FatalErr(err, "Failed to run database migrations")
+	// }
 
 	// Initialize Redis
 	redisClient, err := cache.NewRedisClient(cache.RedisConfig{
@@ -238,7 +238,7 @@ func main() {
 	// Start server
 	logger.Infof("Server starting on %s", cfg.Port)
 	logger.Info("Rate limiting enabled:")
-	logger.Info("  - Auth endpoints: 5 requests/minute per IP")
+	logger.Info("  - Auth endpoints: 10 requests/minute per IP")
 	logger.Info("  - Public posts: 1000 requests/minute per IP")
 	logger.Info("  - Protected posts: 100 requests/minute per user")
 	logger.Info("SSE endpoint available at /api/events")

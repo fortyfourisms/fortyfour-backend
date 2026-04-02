@@ -19,7 +19,7 @@ type RateLimitConfigs struct {
 func GetRateLimitConfigs() RateLimitConfigs {
 	return RateLimitConfigs{
 		Strict: RateLimiterConfig{
-			RequestsPerWindow: 5,
+			RequestsPerWindow: 10,
 			WindowDuration:    1 * time.Minute,
 			KeyPrefix:         "rate_limit_strict",
 		},
