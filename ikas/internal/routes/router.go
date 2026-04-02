@@ -54,7 +54,6 @@ func InitRouter(
 	jawabanDeteksiH *handlers.JawabanDeteksiHandler,
 	jawabanGulihH *handlers.JawabanGulihHandler,
 	authM *middleware.AuthMiddleware,
-	casbinM *middleware.CasbinMiddleware,
 ) *http.ServeMux {
 	mux := http.NewServeMux()
 
@@ -62,7 +61,7 @@ func InitRouter(
 	mux.HandleFunc("/swagger/maturity/", httpSwagger.WrapHandler)
 
 	withAuth := func(h http.HandlerFunc) http.Handler {
-		return authM.Authenticate(casbinM.Authorize(h))
+		return authM.Authenticate(h)
 	}
 
 	handle(mux, "/ikas", withAuth(utils.AdaptHandler(ikasH)))

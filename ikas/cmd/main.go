@@ -158,13 +158,6 @@ func main() {
 	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo, ikasRepo, msgProducer)
 	jawabanGulihService := services.NewJawabanGulihService(jawabanGulihRepo, ikasRepo, msgProducer)
 
-	// Casbin Service
-	casbinService, err := services.NewCasbinService(cfg.Database.GetDSN(), cfg.CasbinModelPath)
-	if err != nil {
-		logger.FatalErr(err, "Failed to initialize Casbin")
-	}
-	logger.Info("Casbin initialized successfully with shared database")
-
 	// handlers
 	ikasHandler := handlers.NewIkasHandler(ikasService)
 	ruangLingkupHandler := handlers.NewRuangLingkupHandler(ruangLingkupService)
@@ -186,7 +179,6 @@ func main() {
 
 	// Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret, cfg.InternalGatewayKey)
-	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
 
 	// Router
 	mux := routes.InitRouter(
@@ -208,7 +200,6 @@ func main() {
 		jawabanDeteksiHandler,
 		jawabanGulihHandler,
 		authMiddleware,
-		casbinMiddleware,
 	)
 
 	go func() {
