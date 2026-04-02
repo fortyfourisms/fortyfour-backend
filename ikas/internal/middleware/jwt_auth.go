@@ -7,7 +7,6 @@ import (
 )
 
 type AuthMiddleware struct {
-	jwtSecret          string
 	internalGatewayKey string
 }
 
@@ -22,9 +21,8 @@ var (
 	Role      = &contextKey{"role"}
 )
 
-func NewAuthMiddleware(jwtSecret string, internalKey string) *AuthMiddleware {
+func NewAuthMiddleware(internalKey string) *AuthMiddleware {
 	return &AuthMiddleware{
-		jwtSecret:          jwtSecret,
 		internalGatewayKey: internalKey,
 	}
 }

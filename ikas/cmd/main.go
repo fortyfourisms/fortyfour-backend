@@ -178,7 +178,7 @@ func main() {
 	jawabanGulihHandler := handlers.NewJawabanGulihHandler(jawabanGulihService)
 
 	// Middleware
-	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret, cfg.InternalGatewayKey)
+	authMiddleware := middleware.NewAuthMiddleware(cfg.InternalGatewayKey)
 
 	// Router
 	mux := routes.InitRouter(

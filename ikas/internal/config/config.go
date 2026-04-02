@@ -2,17 +2,14 @@ package config
 
 import (
 	"os"
-	"path/filepath"
 	"strconv"
 )
 
 type Config struct {
 	Port               string
-	JWTSecret          string
 	Database           DatabaseConfig
 	Redis              RedisConfig
 	RabbitMQ           RabbitMQConfig
-	CasbinModelPath    string
 	InternalGatewayKey string
 	LogLevel           string
 	Environment        string
@@ -43,8 +40,7 @@ type RabbitMQConfig struct {
 
 func Load() *Config {
 	return &Config{
-		Port:      getEnv("PORT", ":8081"),
-		JWTSecret: getEnv("JWT_SECRET", "your-secret-key"),
+		Port: getEnv("PORT", ":8081"),
 		Database: DatabaseConfig{
 			Host:     getEnv("DB_HOST", "localhost"),
 			Port:     getEnv("DB_PORT", "3306"),
@@ -65,7 +61,6 @@ func Load() *Config {
 			Password: getEnv("RABBITMQ_PASSWORD", "guest"),
 			Vhost:    getEnv("RABBITMQ_VHOST", "/"),
 		},
-		CasbinModelPath:    getEnv("CASBIN_MODEL_PATH", func() string { abs, _ := filepath.Abs("casbin/casbin_model.conf"); return abs }()),
 		InternalGatewayKey: getEnv("INTERNAL_GATEWAY_KEY", ""),
 		LogLevel:           getEnv("LOG_LEVEL", "info"),
 		Environment:        getEnv("ENVIRONMENT", "development"),
