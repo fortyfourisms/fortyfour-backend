@@ -6,7 +6,6 @@ import (
 	"errors"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
-	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
 	"time"
@@ -14,12 +13,18 @@ import (
 	"fortyfour-backend/pkg/logger"
 )
 
-type DomainService struct {
-	repo     repository.DomainRepositoryInterface
-	producer *rabbitmq.Producer
+type DomainProducerInterface interface {
+	PublishDomainCreated(ctx context.Context, event interface{}) error
+	PublishDomainUpdated(ctx context.Context, event interface{}) error
+	PublishDomainDeleted(ctx context.Context, event interface{}) error
 }
 
-func NewDomainService(repo repository.DomainRepositoryInterface, producer *rabbitmq.Producer) *DomainService {
+type DomainService struct {
+	repo     repository.DomainRepositoryInterface
+	producer DomainProducerInterface
+}
+
+func NewDomainService(repo repository.DomainRepositoryInterface, producer DomainProducerInterface) *DomainService {
 	return &DomainService{repo: repo, producer: producer}
 }
 
@@ -117,6 +122,17 @@ func (s *DomainService) Update(id int, req dto.UpdateDomainRequest) (*dto.Domain
 
 	if err := s.validateUpdate(&req); err != nil {
 		return nil, err
+	}
+
+	if req.NamaDomain != nil {
+		dup, err := s.repo.CheckDuplicateName(*req.NamaDomain, id)
+		if err != nil {
+			logger.Error(err, "operation failed")
+			return nil, err
+		}
+		if dup {
+			return nil, errors.New("nama_domain sudah ada")
+		}
 	}
 
 	if err := s.producer.PublishDomainUpdated(context.Background(), dto_event.DomainUpdatedEvent{

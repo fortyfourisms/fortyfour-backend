@@ -337,17 +337,12 @@ func (r *JawabanDeteksiRepository) RecalculateDeteksi(perusahaanID string) error
 		LEFT JOIN proteksi prot ON i.id_proteksi = prot.id
 		LEFT JOIN deteksi det ON i.id_deteksi = det.id
 		LEFT JOIN gulih g ON i.id_gulih = g.id
-		SET i.nilai_kematangan = ROUND((
-			COALESCE(iden.nilai_identifikasi, 0) + 
-			COALESCE(prot.nilai_proteksi, 0) + 
-			COALESCE(det.nilai_deteksi, 0) + 
-			COALESCE(g.nilai_gulih, 0)
-		) / (
-			(CASE WHEN iden.id IS NOT NULL THEN 1 ELSE 0 END) +
-			(CASE WHEN prot.id IS NOT NULL THEN 1 ELSE 0 END) +
-			(CASE WHEN det.id IS NOT NULL THEN 1 ELSE 0 END) +
-			(CASE WHEN g.id IS NOT NULL THEN 1 ELSE 0 END)
-		), 2)
+		SET i.nilai_kematangan = ROUND(
+			COALESCE(iden.nilai_identifikasi, 0) * 0.25 + 
+			COALESCE(prot.nilai_proteksi, 0) * 0.30 + 
+			COALESCE(det.nilai_deteksi, 0) * 0.25 + 
+			COALESCE(g.nilai_gulih, 0) * 0.20
+		, 2)
 		WHERE i.id_perusahaan = ? AND (
 			iden.id IS NOT NULL OR prot.id IS NOT NULL OR det.id IS NOT NULL OR g.id IS NOT NULL
 		)`
