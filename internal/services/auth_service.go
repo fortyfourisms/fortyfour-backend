@@ -140,6 +140,11 @@ func (s *AuthService) Register(
 		return nil, nil, errors.New("tidak bisa mengisi nama_perusahaan dan id_perusahaan bersamaan")
 	}
 
+	// Validate: Wajib salah satu
+	if namaPerusahaanTrimmed == "" && idPerusahaanTrimmed == "" {
+		return nil, nil, errors.New("wajib mengisi nama_perusahaan (buat perusahaan baru) atau id_perusahaan (bergabung ke perusahaan yang sudah ada)")
+	}
+
 	// SCENARIO 1: User wants to CREATE new company
 	if namaPerusahaanTrimmed != "" {
 		// Cek apakah nama perusahaan sudah terdaftar
@@ -177,8 +182,6 @@ func (s *AuthService) Register(
 
 		idPerusahaan = &idPerusahaanTrimmed
 	}
-	// SCENARIO 3: Neither provided - user will select company later
-
 	// hash password
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
