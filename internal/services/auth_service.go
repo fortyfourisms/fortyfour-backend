@@ -388,12 +388,30 @@ func (s *AuthService) CreateMFAPending(userID string) (string, error) {
 	return token, nil
 }
 
+// MaxMFAAttempts adalah batas maksimal percobaan verifikasi MFA sebelum token diinvalidasi
+const MaxMFAAttempts = 5
+
 // VerifyMFA - verify pending mfa token + totp code and return user + tokens (dto)
 func (s *AuthService) VerifyMFA(mfaToken, code string) (*models.User, *dto.TokenPair, error) {
 	key := fmt.Sprintf("mfa_pending:%s", mfaToken)
+	attemptsKey := fmt.Sprintf("mfa_attempts:%s", mfaToken)
+
 	userID, err := s.tokenService.redis.Get(key)
 	if err != nil {
 		return nil, nil, errors.New("invalid or expired mfa token")
+	}
+
+	// Cek jumlah percobaan MFA yang sudah dilakukan
+	var attempts int
+	if attemptsStr, err := s.tokenService.redis.Get(attemptsKey); err == nil {
+		fmt.Sscan(attemptsStr, &attempts)
+	}
+
+	if attempts >= MaxMFAAttempts {
+		// Invalidate pending token agar user harus login ulang
+		_ = s.tokenService.redis.Delete(key)
+		_ = s.tokenService.redis.Delete(attemptsKey)
+		return nil, nil, errors.New("terlalu banyak percobaan MFA, silakan login ulang")
 	}
 
 	user, err := s.userRepo.FindByID(userID)
@@ -406,7 +424,18 @@ func (s *AuthService) VerifyMFA(mfaToken, code string) (*models.User, *dto.Token
 	}
 
 	if !totp.Validate(code, *user.MFASecret) {
-		return nil, nil, errors.New("invalid mfa code")
+		// Increment attempts, TTL mengikuti sisa waktu mfa_pending (5 menit)
+		newAttempts := attempts + 1
+		_ = s.tokenService.redis.Set(attemptsKey, fmt.Sprintf("%d", newAttempts), 5*time.Minute)
+
+		remaining := MaxMFAAttempts - newAttempts
+		if remaining <= 0 {
+			// Invalidate pending token agar user harus login ulang
+			_ = s.tokenService.redis.Delete(key)
+			_ = s.tokenService.redis.Delete(attemptsKey)
+			return nil, nil, errors.New("terlalu banyak percobaan MFA, silakan login ulang")
+		}
+		return nil, nil, fmt.Errorf("kode MFA salah, sisa percobaan: %d", remaining)
 	}
 
 	modelTokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName, derefStr(user.IDPerusahaan))
@@ -414,7 +443,9 @@ func (s *AuthService) VerifyMFA(mfaToken, code string) (*models.User, *dto.Token
 		return nil, nil, err
 	}
 
+	// Berhasil — hapus semua key terkait MFA pending
 	_ = s.tokenService.redis.Delete(key)
+	_ = s.tokenService.redis.Delete(attemptsKey)
 	return user, mapTokenPairToDTO(modelTokens), nil
 }
 
