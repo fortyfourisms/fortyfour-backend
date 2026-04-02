@@ -186,7 +186,12 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 		return
 	}
 
-	msg, err := h.service.Create(req)
+	userRole := ""
+	if val := r.Context().Value(middleware.Role); val != nil {
+		userRole = val.(string)
+	}
+
+	msg, err := h.service.Create(req, userRole)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -244,7 +249,12 @@ func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http
 		userID = val.(string)
 	}
 
-	err := h.service.Update(id, req, userID)
+	userRole := ""
+	if val := r.Context().Value(middleware.Role); val != nil {
+		userRole = val.(string)
+	}
+
+	err := h.service.Update(id, req, userID, userRole)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {

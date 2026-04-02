@@ -40,7 +40,7 @@ func NewJawabanProteksiService(
 
 var validValidasiProteksi = map[string]bool{"yes": true, "no": true}
 
-func (s *JawabanProteksiService) validateCreate(req *dto.CreateJawabanProteksiRequest) error {
+func (s *JawabanProteksiService) validateCreate(req *dto.CreateJawabanProteksiRequest, userRole string) error {
 	if req.PertanyaanProteksiID <= 0 {
 		return errors.New("pertanyaan_proteksi_id tidak valid")
 	}
@@ -60,6 +60,13 @@ func (s *JawabanProteksiService) validateCreate(req *dto.CreateJawabanProteksiRe
 		return errors.New("jawaban_proteksi harus bernilai antara 0 sampai 5")
 	}
 
+	// Restricted fields for non-admins
+	if userRole != "admin" {
+		if req.Validasi != nil || (req.Keterangan != nil && utils.NormalizeInput(*req.Keterangan) != "") {
+			return errors.New("hanya admin yang dapat mengisi field validasi dan keterangan")
+		}
+	}
+
 	if req.Validasi != nil {
 		if req.Evidence == nil || utils.NormalizeInput(*req.Evidence) == "" {
 			return errors.New("validasi hanya boleh diisi jika evidence ada")
@@ -72,9 +79,16 @@ func (s *JawabanProteksiService) validateCreate(req *dto.CreateJawabanProteksiRe
 	return nil
 }
 
-func (s *JawabanProteksiService) validateUpdate(req *dto.UpdateJawabanProteksiRequest, existingEvidence *string) error {
+func (s *JawabanProteksiService) validateUpdate(req *dto.UpdateJawabanProteksiRequest, existingEvidence *string, userRole string) error {
 	if req.JawabanProteksi != nil && (*req.JawabanProteksi < 0 || *req.JawabanProteksi > 5) {
-		return errors.New("jawaban_proteksi harus bernilai antara 0 sampai 5, atau null untuk N/A")
+		return errors.New("jawaban_proteksi harus bernilai antara 0 sampai 5, atau null for N/A")
+	}
+
+	// Restricted fields for non-admins
+	if userRole != "admin" {
+		if req.Validasi != nil || (req.Keterangan != nil && utils.NormalizeInput(*req.Keterangan) != "") {
+			return errors.New("hanya admin yang dapat mengubah field validasi dan keterangan")
+		}
 	}
 
 	if req.Validasi != nil {
@@ -93,8 +107,8 @@ func (s *JawabanProteksiService) validateUpdate(req *dto.UpdateJawabanProteksiRe
 	return nil
 }
 
-func (s *JawabanProteksiService) Create(req dto.CreateJawabanProteksiRequest) (string, error) {
-	if err := s.validateCreate(&req); err != nil {
+func (s *JawabanProteksiService) Create(req dto.CreateJawabanProteksiRequest, userRole string) (string, error) {
+	if err := s.validateCreate(&req, userRole); err != nil {
 		return "", err
 	}
 
@@ -169,7 +183,7 @@ func (s *JawabanProteksiService) GetByPertanyaan(pertanyaanID int) ([]dto.Jawaba
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }
 
-func (s *JawabanProteksiService) Update(id int, req dto.UpdateJawabanProteksiRequest, userID string) error {
+func (s *JawabanProteksiService) Update(id int, req dto.UpdateJawabanProteksiRequest, userID string, userRole string) error {
 	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
@@ -183,7 +197,7 @@ func (s *JawabanProteksiService) Update(id int, req dto.UpdateJawabanProteksiReq
 		return err
 	}
 
-	if err := s.validateUpdate(&req, existing.Evidence); err != nil {
+	if err := s.validateUpdate(&req, existing.Evidence, userRole); err != nil {
 		return err
 	}
 

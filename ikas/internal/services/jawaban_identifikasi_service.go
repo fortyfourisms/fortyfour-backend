@@ -40,7 +40,7 @@ func NewJawabanIdentifikasiService(
 
 var validValidasi = map[string]bool{"yes": true, "no": true}
 
-func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdentifikasiRequest) error {
+func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdentifikasiRequest, userRole string) error {
 	if req.PertanyaanIdentifikasiID <= 0 {
 		return errors.New("pertanyaan_identifikasi_id tidak valid")
 	}
@@ -61,6 +61,13 @@ func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdenti
 		return errors.New("jawaban_identifikasi harus bernilai antara 0 sampai 5")
 	}
 
+	// Restricted fields for non-admins
+	if userRole != "admin" {
+		if req.Validasi != nil || (req.Keterangan != nil && utils.NormalizeInput(*req.Keterangan) != "") {
+			return errors.New("hanya admin yang dapat mengisi field validasi dan keterangan")
+		}
+	}
+
 	if req.Validasi != nil {
 		if req.Evidence == nil || utils.NormalizeInput(*req.Evidence) == "" {
 			return errors.New("validasi hanya boleh diisi jika evidence ada")
@@ -73,10 +80,17 @@ func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdenti
 	return nil
 }
 
-func (s *JawabanIdentifikasiService) validateUpdate(req *dto.UpdateJawabanIdentifikasiRequest, existingEvidence *string) error {
+func (s *JawabanIdentifikasiService) validateUpdate(req *dto.UpdateJawabanIdentifikasiRequest, existingEvidence *string, userRole string) error {
 	// null = N/A (diperbolehkan), tapi jika diisi harus 0.00 - 5.00
 	if req.JawabanIdentifikasi != nil && (*req.JawabanIdentifikasi < 0 || *req.JawabanIdentifikasi > 5) {
 		return errors.New("jawaban_identifikasi harus bernilai antara 0 sampai 5, atau null untuk N/A")
+	}
+
+	// Restricted fields for non-admins
+	if userRole != "admin" {
+		if req.Validasi != nil || (req.Keterangan != nil && utils.NormalizeInput(*req.Keterangan) != "") {
+			return errors.New("hanya admin yang dapat mengubah field validasi dan keterangan")
+		}
 	}
 
 	if req.Validasi != nil {
@@ -95,8 +109,8 @@ func (s *JawabanIdentifikasiService) validateUpdate(req *dto.UpdateJawabanIdenti
 	return nil
 }
 
-func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiRequest) (string, error) {
-	if err := s.validateCreate(&req); err != nil {
+func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiRequest, userRole string) (string, error) {
+	if err := s.validateCreate(&req, userRole); err != nil {
 		return "", err
 	}
 
@@ -172,7 +186,7 @@ func (s *JawabanIdentifikasiService) GetByPertanyaan(pertanyaanID int) ([]dto.Ja
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }
 
-func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentifikasiRequest, userID string) error {
+func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentifikasiRequest, userID string, userRole string) error {
 	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
@@ -186,7 +200,7 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 		return err
 	}
 
-	if err := s.validateUpdate(&req, existing.Evidence); err != nil {
+	if err := s.validateUpdate(&req, existing.Evidence, userRole); err != nil {
 		return err
 	}
 

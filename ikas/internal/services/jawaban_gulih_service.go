@@ -40,7 +40,7 @@ func NewJawabanGulihService(
 
 var validValidasiGulih = map[string]bool{"yes": true, "no": true}
 
-func (s *JawabanGulihService) validateCreate(req *dto.CreateJawabanGulihRequest) error {
+func (s *JawabanGulihService) validateCreate(req *dto.CreateJawabanGulihRequest, userRole string) error {
 	if req.PertanyaanGulihID <= 0 {
 		return errors.New("pertanyaan_gulih_id tidak valid")
 	}
@@ -60,6 +60,13 @@ func (s *JawabanGulihService) validateCreate(req *dto.CreateJawabanGulihRequest)
 		return errors.New("jawaban_gulih harus bernilai antara 0 sampai 5")
 	}
 
+	// Restricted fields for non-admins
+	if userRole != "admin" {
+		if req.Validasi != nil || (req.Keterangan != nil && utils.NormalizeInput(*req.Keterangan) != "") {
+			return errors.New("hanya admin yang dapat mengisi field validasi dan keterangan")
+		}
+	}
+
 	if req.Validasi != nil {
 		if req.Evidence == nil || utils.NormalizeInput(*req.Evidence) == "" {
 			return errors.New("validasi hanya boleh diisi jika evidence ada")
@@ -72,9 +79,16 @@ func (s *JawabanGulihService) validateCreate(req *dto.CreateJawabanGulihRequest)
 	return nil
 }
 
-func (s *JawabanGulihService) validateUpdate(req *dto.UpdateJawabanGulihRequest, existingEvidence *string) error {
+func (s *JawabanGulihService) validateUpdate(req *dto.UpdateJawabanGulihRequest, existingEvidence *string, userRole string) error {
 	if req.JawabanGulih != nil && (*req.JawabanGulih < 0 || *req.JawabanGulih > 5) {
-		return errors.New("jawaban_gulih harus bernilai antara 0 sampai 5, atau null untuk N/A")
+		return errors.New("jawaban_gulih harus bernilai antara 0 sampai 5, atau null for N/A")
+	}
+
+	// Restricted fields for non-admins
+	if userRole != "admin" {
+		if req.Validasi != nil || (req.Keterangan != nil && utils.NormalizeInput(*req.Keterangan) != "") {
+			return errors.New("hanya admin yang dapat mengubah field validasi dan keterangan")
+		}
 	}
 
 	if req.Validasi != nil {
@@ -93,8 +107,8 @@ func (s *JawabanGulihService) validateUpdate(req *dto.UpdateJawabanGulihRequest,
 	return nil
 }
 
-func (s *JawabanGulihService) Create(req dto.CreateJawabanGulihRequest) (string, error) {
-	if err := s.validateCreate(&req); err != nil {
+func (s *JawabanGulihService) Create(req dto.CreateJawabanGulihRequest, userRole string) (string, error) {
+	if err := s.validateCreate(&req, userRole); err != nil {
 		return "", err
 	}
 
@@ -169,7 +183,7 @@ func (s *JawabanGulihService) GetByPertanyaan(pertanyaanID int) ([]dto.JawabanGu
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }
 
-func (s *JawabanGulihService) Update(id int, req dto.UpdateJawabanGulihRequest, userID string) error {
+func (s *JawabanGulihService) Update(id int, req dto.UpdateJawabanGulihRequest, userID string, userRole string) error {
 	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
@@ -183,7 +197,7 @@ func (s *JawabanGulihService) Update(id int, req dto.UpdateJawabanGulihRequest, 
 		return err
 	}
 
-	if err := s.validateUpdate(&req, existing.Evidence); err != nil {
+	if err := s.validateUpdate(&req, existing.Evidence, userRole); err != nil {
 		return err
 	}
 
