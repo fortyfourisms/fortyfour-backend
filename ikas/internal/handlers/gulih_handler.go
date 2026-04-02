@@ -47,7 +47,11 @@ func (h *GulihHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+		"total":   len(data),
+	})
 }
 
 // GetGulihByID godoc
@@ -65,5 +69,8 @@ func (h *GulihHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id 
 		utils.RespondError(w, 404, "Data tidak ditemukan")
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+	})
 }

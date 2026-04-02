@@ -48,7 +48,11 @@ func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, _ *http.Reques
 		return
 	}
 
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+		"total":   len(data),
+	})
 }
 
 // GetIdentifikasiByID godoc
@@ -67,5 +71,8 @@ func (h *IdentifikasiHandler) handleGetByID(w http.ResponseWriter, _ *http.Reque
 		utils.RespondError(w, 404, "Data tidak ditemukan")
 		return
 	}
-	utils.RespondJSON(w, 200, data)
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+	})
 }

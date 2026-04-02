@@ -6,7 +6,6 @@ import (
 	"errors"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
-	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
 	"time"
@@ -14,12 +13,18 @@ import (
 	"fortyfour-backend/pkg/logger"
 )
 
-type KategoriService struct {
-	repo     repository.KategoriRepositoryInterface
-	producer *rabbitmq.Producer
+type KategoriProducerInterface interface {
+	PublishKategoriCreated(ctx context.Context, event interface{}) error
+	PublishKategoriUpdated(ctx context.Context, event interface{}) error
+	PublishKategoriDeleted(ctx context.Context, event interface{}) error
 }
 
-func NewKategoriService(repo repository.KategoriRepositoryInterface, producer *rabbitmq.Producer) *KategoriService {
+type KategoriService struct {
+	repo     repository.KategoriRepositoryInterface
+	producer KategoriProducerInterface
+}
+
+func NewKategoriService(repo repository.KategoriRepositoryInterface, producer KategoriProducerInterface) *KategoriService {
 	return &KategoriService{
 		repo:     repo,
 		producer: producer,
