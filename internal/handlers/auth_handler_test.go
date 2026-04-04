@@ -35,9 +35,9 @@ func TestAuthHandler_Register_Success(t *testing.T) {
 	handler, _ := setupAuthHandler()
 
 	reqBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "P@sJord121",
-		Email:    "test@example.com",
+		Username:       "testuser",
+		Password:       "P@sJord121",
+		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 1"; return &s }(),
 	}
 	body, _ := json.Marshal(reqBody)
@@ -93,9 +93,9 @@ func TestAuthHandler_Login_Success_WithMFASetupRequired(t *testing.T) {
 
 	// Register user first
 	registerBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "P@ssj0rd121",
-		Email:    "test@example.com",
+		Username:       "testuser",
+		Password:       "P@ssj0rd121",
+		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 2"; return &s }(),
 	}
 	body, _ := json.Marshal(registerBody)
@@ -145,9 +145,9 @@ func TestAuthHandler_RefreshToken_Success(t *testing.T) {
 
 	// Register user and get tokens
 	registerBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "P@ssj0rd121",
-		Email:    "test@example.com",
+		Username:       "testuser",
+		Password:       "P@ssj0rd121",
+		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 3"; return &s }(),
 	}
 	body, _ := json.Marshal(registerBody)
@@ -228,9 +228,9 @@ func TestAuthHandler_Logout_Success(t *testing.T) {
 
 	// Register user
 	registerBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "P@ssj0rd121",
-		Email:    "test@example.com",
+		Username:       "testuser",
+		Password:       "P@ssj0rd121",
+		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 4"; return &s }(),
 	}
 	body, _ := json.Marshal(registerBody)
@@ -298,9 +298,9 @@ func TestAuthHandler_SetupMFA_WithSetupToken(t *testing.T) {
 
 	// Register user
 	registerBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "P@ssj0rd121",
-		Email:    "test@example.com",
+		Username:       "testuser",
+		Password:       "P@ssj0rd121",
+		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 5"; return &s }(),
 	}
 	body, _ := json.Marshal(registerBody)
@@ -358,9 +358,9 @@ func TestAuthHandler_EnableMFA_Success(t *testing.T) {
 
 	// 1. Register user
 	registerBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "P@ssj0rd121",
-		Email:    "test@example.com",
+		Username:       "testuser",
+		Password:       "P@ssj0rd121",
+		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 6"; return &s }(),
 	}
 	body, _ := json.Marshal(registerBody)
@@ -453,9 +453,9 @@ func TestAuthHandler_VerifyMFA_Success(t *testing.T) {
 
 	// 1. Register user
 	registerBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "P@ssj0rd121",
-		Email:    "test@example.com",
+		Username:       "testuser",
+		Password:       "P@ssj0rd121",
+		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 7"; return &s }(),
 	}
 	body, _ := json.Marshal(registerBody)
@@ -573,9 +573,9 @@ func TestAuthHandler_EnableMFA_InvalidCode(t *testing.T) {
 
 	// Setup: Register, Login, SetupMFA
 	registerBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "P@ssj0rd121",
-		Email:    "test@example.com",
+		Username:       "testuser",
+		Password:       "P@ssj0rd121",
+		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 8"; return &s }(),
 	}
 	body, _ := json.Marshal(registerBody)
@@ -628,9 +628,9 @@ func TestAuthHandler_EnableMFA_ExpiredSetupToken(t *testing.T) {
 
 	// Setup: Register and Login
 	registerBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "P@ssj0rd121",
-		Email:    "test@example.com",
+		Username:       "testuser",
+		Password:       "P@ssj0rd121",
+		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 9"; return &s }(),
 	}
 	body, _ := json.Marshal(registerBody)
@@ -786,9 +786,9 @@ func TestAuthHandler_VerifyMFA_MFANotConfigured(t *testing.T) {
 
 	// Register a user without MFA
 	registerBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "P@ssj0rd121",
-		Email:    "test@example.com",
+		Username:       "testuser",
+		Password:       "P@ssj0rd121",
+		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 10"; return &s }(),
 	}
 	body, _ := json.Marshal(registerBody)
@@ -1055,9 +1055,9 @@ func TestAuthHandler_UpdateMePassword_Success(t *testing.T) {
 
 	// Register supaya password di-hash dengan benar
 	reqBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "Xk9#mP2$qL7!",
-		Email:    "test@test.com",
+		Username:       "testuser",
+		Password:       "Xk9#mP2$qL7!",
+		Email:          "test@test.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 11"; return &s }(),
 	}
 	body, _ := json.Marshal(reqBody)
@@ -1376,9 +1376,9 @@ func TestAuthHandler_Login_WrongCredentials(t *testing.T) {
 
 	// Register user dulu
 	registerBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "P@ssj0rd121",
-		Email:    "test@example.com",
+		Username:       "testuser",
+		Password:       "P@ssj0rd121",
+		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 12"; return &s }(),
 	}
 	body, _ := json.Marshal(registerBody)
@@ -1409,9 +1409,9 @@ func TestAuthHandler_Login_MFAEnabled_ReturnsMFAToken(t *testing.T) {
 
 	// 1. Register
 	registerBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "P@ssj0rd121",
-		Email:    "test@example.com",
+		Username:       "testuser",
+		Password:       "P@ssj0rd121",
+		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 13"; return &s }(),
 	}
 	body, _ := json.Marshal(registerBody)
@@ -1505,9 +1505,9 @@ func TestAuthHandler_LogoutAll_Success(t *testing.T) {
 
 	// Register user untuk dapat token valid
 	registerBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "P@ssj0rd121",
-		Email:    "test@example.com",
+		Username:       "testuser",
+		Password:       "P@ssj0rd121",
+		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 14"; return &s }(),
 	}
 	body, _ := json.Marshal(registerBody)
@@ -1564,9 +1564,9 @@ func TestAuthHandler_LogoutAll_RevokesAllTokens(t *testing.T) {
 
 	// Register dan dapat beberapa token
 	registerBody := dto.RegisterRequest{
-		Username: "testuser",
-		Password: "P@ssj0rd121",
-		Email:    "test@example.com",
+		Username:       "testuser",
+		Password:       "P@ssj0rd121",
+		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 15"; return &s }(),
 	}
 	body, _ := json.Marshal(registerBody)
@@ -1821,9 +1821,9 @@ func TestAuthHandler_Register_ValidationFails_InvalidEmail(t *testing.T) {
 	handler, _ := setupAuthHandler()
 
 	reqBody := dto.RegisterRequest{
-		Username: "validuser",
-		Password: "P@ssj0rd121",
-		Email:    "bukan-email-valid",
+		Username:       "validuser",
+		Password:       "P@ssj0rd121",
+		Email:          "bukan-email-valid",
 		NamaPerusahaan: func() *string { s := "PT Test Company 16"; return &s }(),
 	}
 	body, _ := json.Marshal(reqBody)
@@ -1842,9 +1842,9 @@ func TestAuthHandler_Register_DuplicateUsername(t *testing.T) {
 	handler, _ := setupAuthHandler()
 
 	reqBody := dto.RegisterRequest{
-		Username: "sameuser",
-		Password: "P@ssj0rd121",
-		Email:    "first@example.com",
+		Username:       "sameuser",
+		Password:       "P@ssj0rd121",
+		Email:          "first@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 17"; return &s }(),
 	}
 	body, _ := json.Marshal(reqBody)
@@ -1860,9 +1860,9 @@ func TestAuthHandler_Register_DuplicateUsername(t *testing.T) {
 
 	// Register kedua dengan username sama — harus gagal
 	reqBody2 := dto.RegisterRequest{
-		Username: "sameuser",
-		Password: "P@ssj0rd121",
-		Email:    "second@example.com",
+		Username:       "sameuser",
+		Password:       "P@ssj0rd121",
+		Email:          "second@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 18"; return &s }(),
 	}
 	body2, _ := json.Marshal(reqBody2)

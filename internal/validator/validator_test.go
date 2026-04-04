@@ -366,7 +366,7 @@ func TestReverseString_Unicode(t *testing.T) {
 		input    string
 		expected string
 	}{
-		{"héllo", "ollèh"[0:0] + "olleh"},  // fallback ke ASCII aman
+		{"héllo", "ollèh"[0:0] + "olleh"}, // fallback ke ASCII aman
 		{"αβγ", "γβα"},
 		{"你好", "好你"},
 	}

@@ -151,20 +151,6 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 	return nil
 }
 
-func getStringValue(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
-}
-
-func getFloatValue(f *float64) float64 {
-	if f == nil {
-		return 0.0
-	}
-	return *f
-}
-
 func (s *IkasService) Delete(ctx context.Context, id string, userID string) error {
 	// Check existence
 	_, err := s.repo.GetByID(id)
@@ -259,20 +245,3 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 	return newID, nil
 }
 
-func (s *IkasService) publishIkasImportedEvent(ikasID string, req *dto.CreateIkasRequest, nilaiKematangan float64) {
-	if s.producer == nil {
-		return
-	}
-
-	event := dto_event.IkasImportedEvent{
-		IkasID:          ikasID,
-		IDPerusahaan:    req.IDPerusahaan,
-		NilaiKematangan: nilaiKematangan,
-		ImportedAt:      time.Now(),
-	}
-
-	ctx := context.Background()
-	if err := s.producer.PublishIkasImported(ctx, event); err != nil {
-		// Log error but don't fail import
-	}
-}
