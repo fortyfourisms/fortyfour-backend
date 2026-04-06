@@ -903,7 +903,6 @@ func TestUserService_GetAll_ReturnsDTONotModel(t *testing.T) {
 	// cukup pastikan result adalah []dto.UserResponse (bukan pointer ke model)
 	var _ []dto.UserResponse = result
 }
-
 /*
 =====================================
  TEST toResponse — Status & MFAEnabled
