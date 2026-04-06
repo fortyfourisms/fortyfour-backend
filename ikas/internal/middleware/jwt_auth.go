@@ -16,9 +16,10 @@ type contextKey struct {
 
 // context keys (sama konsep, beda package aman)
 var (
-	UserIDKey = &contextKey{"user-id"}
-	Username  = &contextKey{"username"}
-	Role      = &contextKey{"role"}
+	UserIDKey       = &contextKey{"user-id"}
+	Username        = &contextKey{"username"}
+	Role            = &contextKey{"role"}
+	PerusahaanIDKey = &contextKey{"perusahaan-id"}
 )
 
 func NewAuthMiddleware(internalKey string) *AuthMiddleware {
@@ -40,6 +41,7 @@ func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 		userID := r.Header.Get("X-User-ID")
 		username := r.Header.Get("X-Username") // Optional, falls back to empty if not set
 		role := r.Header.Get("X-User-Role")
+		perusahaanID := r.Header.Get("X-Perusahaan-ID")
 
 		if userID == "" || role == "" {
 			utils.RespondError(w, http.StatusUnauthorized, "Unauthorized: User identification missing in gateway headers")
@@ -50,6 +52,7 @@ func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), UserIDKey, userID)
 		ctx = context.WithValue(ctx, Username, username)
 		ctx = context.WithValue(ctx, Role, role)
+		ctx = context.WithValue(ctx, PerusahaanIDKey, perusahaanID)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

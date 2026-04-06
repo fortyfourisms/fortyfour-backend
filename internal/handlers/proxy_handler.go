@@ -28,13 +28,15 @@ func NewProxyHandler(targetURL string, internalKey string) *ProxyHandler {
 			// Get user info from context (set by AuthMiddleware in Main API)
 			userID, _ := req.In.Context().Value(middleware.UserIDKey).(string)
 			role, _ := req.In.Context().Value(middleware.RoleKey).(string)
+			perusahaanID, _ := req.In.Context().Value(middleware.IDPerusahaanKey).(string)
 
 			// Inject headers for IKAS to trust
 			req.Out.Header.Set("X-User-ID", userID)
 			req.Out.Header.Set("X-User-Role", role)
+			req.Out.Header.Set("X-Perusahaan-ID", perusahaanID)
 			req.Out.Header.Set("X-Internal-Key", internalKey)
 
-			log.Printf("Proxying request: %s %s -> %s (User: %s, Role: %s)", req.Out.Method, req.Out.URL.Path, targetURL, userID, role)
+			log.Printf("Proxying request: %s %s -> %s (User: %s, Role: %s, Perusahaan: %s)", req.Out.Method, req.Out.URL.Path, targetURL, userID, role, perusahaanID)
 		},
 	}
 

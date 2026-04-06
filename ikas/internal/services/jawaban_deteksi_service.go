@@ -153,7 +153,7 @@ func (s *JawabanDeteksiService) GetAll() ([]dto.JawabanDeteksiResponse, error) {
 	return s.repo.GetAll()
 }
 
-func (s *JawabanDeteksiService) GetByID(id int) (*dto.JawabanDeteksiResponse, error) {
+func (s *JawabanDeteksiService) GetByID(id int, userRole string, userPerusahaanID string) (*dto.JawabanDeteksiResponse, error) {
 	if id <= 0 {
 		return nil, errors.New("format ID tidak valid")
 	}
@@ -164,6 +164,10 @@ func (s *JawabanDeteksiService) GetByID(id int) (*dto.JawabanDeteksiResponse, er
 			return nil, errors.New("data tidak ditemukan")
 		}
 		return nil, err
+	}
+
+	if userRole != "admin" && data.PerusahaanID != userPerusahaanID {
+		return nil, errors.New("anda tidak memiliki akses ke data ini")
 	}
 
 	return data, nil
@@ -183,7 +187,7 @@ func (s *JawabanDeteksiService) GetByPertanyaan(pertanyaanID int) ([]dto.Jawaban
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }
 
-func (s *JawabanDeteksiService) Update(id int, req dto.UpdateJawabanDeteksiRequest, userID string, userRole string) error {
+func (s *JawabanDeteksiService) Update(id int, req dto.UpdateJawabanDeteksiRequest, userID string, userRole string, userPerusahaanID string) error {
 	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
@@ -195,6 +199,10 @@ func (s *JawabanDeteksiService) Update(id int, req dto.UpdateJawabanDeteksiReque
 			return errors.New("data tidak ditemukan")
 		}
 		return err
+	}
+
+	if userRole != "admin" && existing.PerusahaanID != userPerusahaanID {
+		return errors.New("anda tidak memiliki akses untuk mengubah data ini")
 	}
 
 	if err := s.validateUpdate(&req, existing.Evidence, userRole); err != nil {
@@ -261,7 +269,7 @@ func (s *JawabanDeteksiService) Update(id int, req dto.UpdateJawabanDeteksiReque
 	return nil
 }
 
-func (s *JawabanDeteksiService) Delete(id int, userID string) error {
+func (s *JawabanDeteksiService) Delete(id int, userID string, userRole string, userPerusahaanID string) error {
 	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
@@ -273,6 +281,10 @@ func (s *JawabanDeteksiService) Delete(id int, userID string) error {
 			return errors.New("data tidak ditemukan")
 		}
 		return err
+	}
+
+	if userRole != "admin" && existing.PerusahaanID != userPerusahaanID {
+		return errors.New("anda tidak memiliki akses untuk menghapus data ini")
 	}
 
 	// Publish Delete Event (Pola 2)

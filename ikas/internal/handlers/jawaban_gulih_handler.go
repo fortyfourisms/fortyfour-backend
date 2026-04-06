@@ -29,6 +29,21 @@ func (h *JawabanGulihHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	case method == http.MethodPost && path == "/api/maturity/jawaban-gulih":
 		h.handleCreate(w, r)
 	case method == http.MethodGet && path == "/api/maturity/jawaban-gulih":
+		// Implicitly filter by PerusahaanID if user is not admin
+		userRole, _ := r.Context().Value(middleware.Role).(string)
+		userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+		
+		perusahaanID := r.URL.Query().Get("perusahaan_id")
+		
+		if userRole != "admin" {
+			// Override for non-admins
+			values := r.URL.Query()
+			values.Set("perusahaan_id", userPerusahaanID)
+			r.URL.RawQuery = values.Encode()
+		} else if perusahaanID != "" {
+			// Leave as is for admin filtering
+		}
+
 		h.handleGetAll(w, r)
 	case method == http.MethodGet && strings.HasPrefix(path, "/api/maturity/jawaban-gulih/"):
 		h.handleGetByID(w, r)
@@ -137,7 +152,10 @@ func (h *JawabanGulihHandler) handleGetByID(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	resp, err := h.service.GetByID(id)
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	resp, err := h.service.GetByID(id, userRole, userPerusahaanID)
 	if err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "data tidak ditemukan" {
@@ -185,7 +203,12 @@ func (h *JawabanGulihHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 		userRole = val.(string)
 	}
 
-	err = h.service.Update(id, req, userID, userRole)
+	userPerusahaanID := ""
+	if val := r.Context().Value(middleware.PerusahaanIDKey); val != nil {
+		userPerusahaanID = val.(string)
+	}
+
+	err = h.service.Update(id, req, userID, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -227,7 +250,10 @@ func (h *JawabanGulihHandler) handleDelete(w http.ResponseWriter, r *http.Reques
 		userID = val.(string)
 	}
 
-	if err := h.service.Delete(id, userID); err != nil {
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	if err := h.service.Delete(id, userID, userRole, userPerusahaanID); err != nil {
 		rollbar.Error(err)
 		if err.Error() == "data tidak ditemukan" {
 			utils.RespondError(w, 404, err.Error())
