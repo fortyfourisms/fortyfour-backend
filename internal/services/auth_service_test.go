@@ -219,7 +219,7 @@ func (m *mockRoleRepo) Create(ctx context.Context, role *models.Role) error { re
 func (m *mockRoleRepo) GetByID(ctx context.Context, id string) (*models.Role, error) {
 	return &models.Role{ID: "role-user-id", Name: "user"}, nil
 }
-func (m *mockRoleRepo) GetAll(ctx context.Context) ([]*models.Role, error) { return nil, nil }
+func (m *mockRoleRepo) GetAll(ctx context.Context) ([]*models.Role, error)  { return nil, nil }
 func (m *mockRoleRepo) Update(ctx context.Context, role *models.Role) error { return nil }
 func (m *mockRoleRepo) Delete(ctx context.Context, id string) error         { return nil }
 func (m *mockRoleRepo) GetByName(ctx context.Context, name string) (*models.Role, error) {
@@ -1452,9 +1452,9 @@ func (m *failingMockRoleRepo) Create(ctx context.Context, role *models.Role) err
 func (m *failingMockRoleRepo) GetByID(ctx context.Context, id string) (*models.Role, error) {
 	return &models.Role{ID: "role-user-id", Name: "user"}, nil
 }
-func (m *failingMockRoleRepo) GetAll(ctx context.Context) ([]*models.Role, error) { return nil, nil }
+func (m *failingMockRoleRepo) GetAll(ctx context.Context) ([]*models.Role, error)  { return nil, nil }
 func (m *failingMockRoleRepo) Update(ctx context.Context, role *models.Role) error { return nil }
-func (m *failingMockRoleRepo) Delete(ctx context.Context, id string) error        { return nil }
+func (m *failingMockRoleRepo) Delete(ctx context.Context, id string) error         { return nil }
 func (m *failingMockRoleRepo) GetByName(ctx context.Context, name string) (*models.Role, error) {
 	if m.failGetByName {
 		return nil, errors.New("database error")

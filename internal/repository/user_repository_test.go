@@ -673,7 +673,7 @@ func TestUserRepository_FindAll(t *testing.T) {
 				}).
 					AddRow("user-1", "user1", nil, "user1@example.com", // ← nil untuk display_name
 						"role-1", "admin", nil, nil, nil, nil, nil,
-						false, "aktif", time.Now(), time.Now()).
+												false, "aktif", time.Now(), time.Now()).
 					AddRow("user-2", "user2", nil, "user2@example.com", // ← nil untuk display_name
 						"role-2", "user", nil, nil, nil, nil, nil,
 						false, "aktif", time.Now(), time.Now())
