@@ -250,6 +250,7 @@ func (r *UserRepository) FindAll() ([]models.User, error) {
 			u.id_perusahaan,
 			u.foto_profile, u.banner,
 			u.mfa_enabled,
+			u.status,
 			u.created_at, u.updated_at
 		FROM users u
 		LEFT JOIN roles r ON u.role_id = r.id
@@ -282,6 +283,7 @@ func (r *UserRepository) FindAll() ([]models.User, error) {
 			&fotoProfile,
 			&banner,
 			&user.MFAEnabled,
+			&user.Status,
 			&user.CreatedAt,
 			&user.UpdatedAt,
 		)

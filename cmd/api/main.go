@@ -155,7 +155,7 @@ func main() {
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret, true, cfg.Domain)
 	notificationService := services.NewNotificationService(redisClient)
-	authService := services.NewAuthService(userRepo, tokenService, notificationService)
+	authService := services.NewAuthService(userRepo, roleRepo, tokenService, notificationService)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo, redisClient)
 	picService := services.NewPICService(picRepo, redisClient)
 	jabatanService := services.NewJabatanService(jabatanRepo, redisClient)
@@ -238,7 +238,7 @@ func main() {
 	// Start server
 	logger.Infof("Server starting on %s", cfg.Port)
 	logger.Info("Rate limiting enabled:")
-	logger.Info("  - Auth endpoints: 5 requests/minute per IP")
+	logger.Info("  - Auth endpoints: 10 requests/minute per IP")
 	logger.Info("  - Public posts: 1000 requests/minute per IP")
 	logger.Info("  - Protected posts: 100 requests/minute per user")
 	logger.Info("SSE endpoint available at /api/events")

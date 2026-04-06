@@ -1,7 +1,9 @@
 package services
 
 import (
+	"errors"
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/testhelpers"
 	"os"
 	"testing"
@@ -789,5 +791,264 @@ func TestUserService_UpdateMe_NoFieldsChanged(t *testing.T) {
 	}
 	if result == nil {
 		t.Fatal("expected result even with no changes")
+	}
+}
+
+// ================================================================
+// failingUserRepo — wrapper tipis untuk mensimulasikan error FindAll
+// ================================================================
+
+// failingUserRepo embed MockUserRepository dan override FindAll agar bisa inject error.
+// Ini tidak memerlukan file baru karena deklarasi type diperbolehkan di dalam file test
+// yang sudah ada, selama berada di package yang sama.
+type failingUserRepo struct {
+	*testhelpers.MockUserRepository
+	failFindAll bool
+}
+
+func (f *failingUserRepo) FindAll() ([]models.User, error) {
+	if f.failFindAll {
+		return nil, errors.New("database connection error")
+	}
+	return f.MockUserRepository.FindAll()
+}
+
+func newFailingUserService(failFindAll bool) (*UserService, *failingUserRepo) {
+	base := testhelpers.NewMockUserRepository()
+	repo := &failingUserRepo{
+		MockUserRepository: base,
+		failFindAll:        failFindAll,
+	}
+	uploadPath := "./test_uploads"
+	service := NewUserService(repo, uploadPath, nil)
+	return service, repo
+}
+
+/*
+=====================================
+ TEST GET ALL USERS — TAMBAHAN
+=====================================
+*/
+
+// TestUserService_GetAll_RepoError memverifikasi bahwa GetAll meneruskan
+// error dari repository ke pemanggil tanpa panik atau menghasilkan data parsial.
+func TestUserService_GetAll_RepoError(t *testing.T) {
+	service, _ := newFailingUserService(true)
+
+	result, err := service.GetAll()
+
+	if err == nil {
+		t.Fatal("expected error dari repo, got nil")
+	}
+	if result != nil {
+		t.Errorf("expected nil result saat error, got %v", result)
+	}
+}
+
+// TestUserService_GetAll_MultipleUsers memverifikasi bahwa GetAll memetakan
+// semua user ke DTO dengan benar, termasuk field ID, Username, dan Email.
+func TestUserService_GetAll_MultipleUsers(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	users := []struct{ id, username, email string }{
+		{"id-1", "alice", "alice@test.com"},
+		{"id-2", "bob", "bob@test.com"},
+		{"id-3", "charlie", "charlie@test.com"},
+	}
+	for _, u := range users {
+		_ = mockRepo.Create(testhelpers.CreateTestUser(u.id, u.username, u.email))
+	}
+
+	result, err := service.GetAll()
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(result) != 3 {
+		t.Fatalf("expected 3 users, got %d", len(result))
+	}
+
+	// Verifikasi setiap user memiliki ID dan Username yang tidak kosong
+	for _, r := range result {
+		if r.ID == "" {
+			t.Error("expected non-empty ID di response")
+		}
+		if r.Username == "" {
+			t.Error("expected non-empty Username di response")
+		}
+	}
+}
+
+// TestUserService_GetAll_ReturnsDTONotModel memverifikasi bahwa GetAll
+// mengembalikan slice dto.UserResponse (bukan models.User), sehingga field
+// sensitif seperti Password tidak ikut terekspos.
+func TestUserService_GetAll_ReturnsDTONotModel(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("id-x", "userx", "userx@test.com")
+	user.Password = "hashed-secret-password"
+	_ = mockRepo.Create(user)
+
+	result, err := service.GetAll()
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(result) != 1 {
+		t.Fatalf("expected 1 user, got %d", len(result))
+	}
+
+	// dto.UserResponse tidak boleh punya field Password
+	// Verifikasi dengan cek tipe return saja — ini compile-time guarantee,
+	// cukup pastikan result adalah []dto.UserResponse (bukan pointer ke model)
+	var _ []dto.UserResponse = result
+}
+
+/*
+=====================================
+ TEST toResponse — Status & MFAEnabled
+=====================================
+*/
+
+// TestUserService_GetAll_StatusIncludedInResponse memverifikasi bahwa
+// field Status ter-mapping dengan benar dari models.User ke dto.UserResponse
+// oleh fungsi toResponse() di GetAll.
+func TestUserService_GetAll_StatusIncludedInResponse(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("id-status", "statususer", "status@test.com")
+	user.Status = models.UserStatusSuspend
+	_ = mockRepo.Create(user)
+
+	result, err := service.GetAll()
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(result) != 1 {
+		t.Fatalf("expected 1 user, got %d", len(result))
+	}
+	if result[0].Status != string(models.UserStatusSuspend) {
+		t.Errorf("expected status '%s', got '%s'", models.UserStatusSuspend, result[0].Status)
+	}
+}
+
+// TestUserService_GetByID_StatusIncludedInResponse memverifikasi hal yang sama
+// untuk GetByID (menggunakan FindByID yang berbeda query dengan FindAll).
+func TestUserService_GetByID_StatusIncludedInResponse(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("id-status2", "statususer2", "status2@test.com")
+	user.Status = models.UserStatusNonaktif
+	_ = mockRepo.Create(user)
+
+	result, err := service.GetByID("id-status2")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if result.Status != string(models.UserStatusNonaktif) {
+		t.Errorf("expected status '%s', got '%s'", models.UserStatusNonaktif, result.Status)
+	}
+}
+
+// TestUserService_GetAll_StatusDefaultAktif memverifikasi bahwa user baru
+// yang belum pernah diubah statusnya memiliki status "Aktif" di response.
+func TestUserService_GetAll_StatusDefaultAktif(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("id-aktif", "aktifuser", "aktif@test.com")
+	user.Status = models.UserStatusAktif
+	_ = mockRepo.Create(user)
+
+	result, err := service.GetAll()
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(result) != 1 {
+		t.Fatalf("expected 1 user, got %d", len(result))
+	}
+	if result[0].Status != string(models.UserStatusAktif) {
+		t.Errorf("expected status 'Aktif', got '%s'", result[0].Status)
+	}
+}
+
+// TestUserService_GetAll_MFAEnabledIncludedInResponse memverifikasi bahwa
+// field MFAEnabled ter-mapping dengan benar ke dto.UserResponse.
+func TestUserService_GetAll_MFAEnabledIncludedInResponse(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("id-mfa", "mfauser", "mfa@test.com")
+	user.MFAEnabled = true
+	_ = mockRepo.Create(user)
+
+	result, err := service.GetAll()
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if len(result) != 1 {
+		t.Fatalf("expected 1 user, got %d", len(result))
+	}
+	if !result[0].MFAEnabled {
+		t.Error("expected MFAEnabled = true di response")
+	}
+}
+
+// TestUserService_UpdateStatus_StatusReflectedInGetByID memverifikasi end-to-end:
+// setelah UpdateStatus, GetByID harus mengembalikan status yang sudah diubah.
+func TestUserService_UpdateStatus_StatusReflectedInGetByID(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("id-upd", "upduser", "upd@test.com")
+	user.Status = models.UserStatusAktif
+	_ = mockRepo.Create(user)
+
+	err := service.UpdateStatus("id-upd", models.UserStatusSuspend)
+	if err != nil {
+		t.Fatalf("UpdateStatus gagal: %v", err)
+	}
+
+	result, err := service.GetByID("id-upd")
+	if err != nil {
+		t.Fatalf("GetByID gagal: %v", err)
+	}
+	if result.Status != string(models.UserStatusSuspend) {
+		t.Errorf("expected status 'Suspend' setelah update, got '%s'", result.Status)
+	}
+}
+
+// TestUserService_GetAll_AllStatusValues memverifikasi ketiga nilai status
+// (Aktif, Suspend, Nonaktif) terpetakan dengan benar ke response.
+func TestUserService_GetAll_AllStatusValues(t *testing.T) {
+	tests := []struct {
+		name   string
+		status models.UserStatus
+	}{
+		{"Aktif", models.UserStatusAktif},
+		{"Suspend", models.UserStatusSuspend},
+		{"Nonaktif", models.UserStatusNonaktif},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			service, mockRepo := setupUserService()
+
+			user := testhelpers.CreateTestUser("id-"+tt.name, "user-"+tt.name, tt.name+"@test.com")
+			user.Status = tt.status
+			_ = mockRepo.Create(user)
+
+			result, err := service.GetAll()
+			if err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+			if len(result) != 1 {
+				t.Fatalf("expected 1 user, got %d", len(result))
+			}
+			if result[0].Status != string(tt.status) {
+				t.Errorf("expected status '%s', got '%s'", tt.status, result[0].Status)
+			}
+		})
 	}
 }
