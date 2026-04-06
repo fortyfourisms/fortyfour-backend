@@ -559,6 +559,15 @@ func (m *MockRoleRepository) GetByName(ctx context.Context, name string) (*model
 	return nil, nil // Return nil, nil if not found (not an error)
 }
 
+func NewMockRoleRepositoryWithDefaults() *MockRoleRepository {
+	repo := NewMockRoleRepository()
+	repo.roles["role-user-id"] = &models.Role{
+		ID:   "role-user-id",
+		Name: "user",
+	}
+	return repo
+}
+
 // ============================================================
 // Mock Jabatan Repository
 // ============================================================

@@ -345,7 +345,7 @@ func TestRuangLingkupHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	producer := new(mockRuangLingkupProducer)
 	handler := setupRuangLingkupHandler(repo, producer)
 
-	// In the service: 
+	// In the service:
 	// _, err := s.repo.GetByID(id)
 	// return s.producer.PublishRuangLingkupDeleted(...)
 	repo.On("GetByID", 1).Return(&dto.RuangLingkupResponse{ID: 1}, nil)

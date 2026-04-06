@@ -178,7 +178,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Create_Success(t *testing.T) {
 	repo.On("CheckSubKategoriExists", 1).Return(true, nil)
 	repo.On("CheckRuangLingkupExists", 1).Return(true, nil)
 	repo.On("Create", mock.Anything).Return(int64(1), nil)
-	
+
 	producer.On("PublishPertanyaanDeteksiCreated", mock.Anything, mock.MatchedBy(func(e dto_event.PertanyaanDeteksiCreatedEvent) bool {
 		return e.Request.PertanyaanDeteksi == "Pertanyaan Test"
 	})).Return(nil)
@@ -259,10 +259,10 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Update_Success(t *testing.T) {
 	handler := setupPertanyaanDeteksiHandler(repo, producer)
 
 	updateReq := dto.UpdatePertanyaanDeteksiRequest{PertanyaanDeteksi: deteksiStrPtr("Pertanyaan Ubah")}
-	
+
 	repo.On("GetByID", 1).Return(&dto.PertanyaanDeteksiResponse{ID: 1}, nil)
 	repo.On("Update", 1, mock.Anything).Return(nil)
-	
+
 	producer.On("PublishPertanyaanDeteksiUpdated", mock.Anything, mock.Anything).Return(nil)
 
 	body, _ := json.Marshal(updateReq)
@@ -306,7 +306,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Update_ValidationError(t *testing.T)
 
 	repo.On("GetByID", 1).Return(&dto.PertanyaanDeteksiResponse{ID: 1}, nil)
 	repo.On("Update", 1, mock.Anything).Return(errors.New("pertanyaan_deteksi tidak boleh kosong"))
-	
+
 	body, _ := json.Marshal(dto.UpdatePertanyaanDeteksiRequest{PertanyaanDeteksi: deteksiStrPtr("")})
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/pertanyaan-deteksi/1", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()

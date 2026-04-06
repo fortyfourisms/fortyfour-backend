@@ -669,14 +669,14 @@ func TestUserRepository_FindAll(t *testing.T) {
 					"id", "username", "display_name", "email", // ← display_name
 					"role_id", "role_name", "id_jabatan", "nama_jabatan",
 					"id_perusahaan", "foto_profile", "banner",
-					"mfa_enabled", "created_at", "updated_at",
+					"mfa_enabled", "status", "created_at", "updated_at",
 				}).
 					AddRow("user-1", "user1", nil, "user1@example.com", // ← nil untuk display_name
 						"role-1", "admin", nil, nil, nil, nil, nil,
-												false, time.Now(), time.Now()).
+												false, "aktif", time.Now(), time.Now()).
 					AddRow("user-2", "user2", nil, "user2@example.com", // ← nil untuk display_name
 						"role-2", "user", nil, nil, nil, nil, nil,
-						false, time.Now(), time.Now())
+						false, "aktif", time.Now(), time.Now())
 
 				mock.ExpectQuery("SELECT (.+) FROM users").
 					WillReturnRows(rows)
@@ -691,7 +691,7 @@ func TestUserRepository_FindAll(t *testing.T) {
 					"id", "username", "display_name", "email", // ← display_name
 					"role_id", "role_name", "id_jabatan", "nama_jabatan",
 					"id_perusahaan", "foto_profile", "banner",
-					"mfa_enabled", "created_at", "updated_at",
+					"mfa_enabled", "status", "created_at", "updated_at",
 				})
 
 				mock.ExpectQuery("SELECT (.+) FROM users").

@@ -434,6 +434,8 @@ func (s *UserService) toResponse(user *models.User) dto.UserResponse {
 		IDPerusahaan: user.IDPerusahaan,
 		FotoProfile:  user.FotoProfile,
 		Banner:       user.Banner,
+		Status:       string(user.Status),
+		MFAEnabled:   user.MFAEnabled,
 		CreatedAt:    user.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:    user.UpdatedAt.Format(time.RFC3339),
 	}

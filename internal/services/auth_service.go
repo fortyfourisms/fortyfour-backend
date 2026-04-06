@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -26,13 +27,20 @@ func derefStr(s *string) string {
 
 type AuthService struct {
 	userRepo     repository.UserRepositoryInterface
+	roleRepo     repository.RoleRepository
 	tokenService *TokenService
 	notifSvc     *NotificationService
 }
 
-func NewAuthService(userRepo repository.UserRepositoryInterface, tokenService *TokenService, notifSvc *NotificationService) *AuthService {
+func NewAuthService(
+	userRepo repository.UserRepositoryInterface,
+	roleRepo repository.RoleRepository,
+	tokenService *TokenService,
+	notifSvc *NotificationService,
+) *AuthService {
 	return &AuthService{
 		userRepo:     userRepo,
+		roleRepo:     roleRepo,
 		tokenService: tokenService,
 		notifSvc:     notifSvc,
 	}
@@ -57,7 +65,6 @@ func mapTokenPairToDTO(m *models.TokenPair) *dto.TokenPair {
 }
 
 /* ===================== Register ===================== */
-// Register creates a new user and returns token pair DTO
 func (s *AuthService) Register(
 	req dto.RegisterRequest,
 	perusahaanService PerusahaanServiceInterface,
@@ -107,6 +114,13 @@ func (s *AuthService) Register(
 		return nil, nil, errors.New("email sudah digunakan")
 	}
 
+	// ===== AMBIL ROLE "user" DARI DATABASE =====
+	// Role selalu default "user", tidak bisa diatur dari luar
+	defaultRole, err := s.roleRepo.GetByName(context.Background(), "user")
+	if err != nil || defaultRole == nil {
+		return nil, nil, errors.New("role default tidak ditemukan, hubungi administrator")
+	}
+
 	// Handle company creation/selection logic
 	var idPerusahaan *string
 
@@ -126,7 +140,12 @@ func (s *AuthService) Register(
 		return nil, nil, errors.New("tidak bisa mengisi nama_perusahaan dan id_perusahaan bersamaan")
 	}
 
-	// SCENARIO 1: User wants to CREATE new company (+ Add New Company clicked)
+	// Validate: Wajib salah satu
+	if namaPerusahaanTrimmed == "" && idPerusahaanTrimmed == "" {
+		return nil, nil, errors.New("wajib mengisi nama_perusahaan (buat perusahaan baru) atau id_perusahaan (bergabung ke perusahaan yang sudah ada)")
+	}
+
+	// SCENARIO 1: User wants to CREATE new company
 	if namaPerusahaanTrimmed != "" {
 		// Cek apakah nama perusahaan sudah terdaftar
 		existing, err := perusahaanService.GetByNama(namaPerusahaanTrimmed)
@@ -146,8 +165,7 @@ func (s *AuthService) Register(
 		}
 		idPerusahaan = &perusahaan.ID
 	} else if idPerusahaanTrimmed != "" {
-		// SCENARIO 2: User selects existing company from dropdown
-		// Validate company exists
+		// SCENARIO 2: User selects existing company
 		_, err := perusahaanService.GetByID(idPerusahaanTrimmed)
 		if err != nil {
 			return nil, nil, errors.New("perusahaan tidak ditemukan")
@@ -164,8 +182,6 @@ func (s *AuthService) Register(
 
 		idPerusahaan = &idPerusahaanTrimmed
 	}
-	// SCENARIO 3: Neither provided - user will select company later (id_perusahaan = nil)
-
 	// hash password
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -176,7 +192,7 @@ func (s *AuthService) Register(
 		Username:     username,
 		Password:     string(hashed),
 		Email:        email,
-		RoleID:       req.RoleID,
+		RoleID:       &defaultRole.ID,
 		IDJabatan:    req.IDJabatan,
 		IDPerusahaan: idPerusahaan,
 	}
@@ -372,12 +388,30 @@ func (s *AuthService) CreateMFAPending(userID string) (string, error) {
 	return token, nil
 }
 
+// MaxMFAAttempts adalah batas maksimal percobaan verifikasi MFA sebelum token diinvalidasi
+const MaxMFAAttempts = 5
+
 // VerifyMFA - verify pending mfa token + totp code and return user + tokens (dto)
 func (s *AuthService) VerifyMFA(mfaToken, code string) (*models.User, *dto.TokenPair, error) {
 	key := fmt.Sprintf("mfa_pending:%s", mfaToken)
+	attemptsKey := fmt.Sprintf("mfa_attempts:%s", mfaToken)
+
 	userID, err := s.tokenService.redis.Get(key)
 	if err != nil {
 		return nil, nil, errors.New("invalid or expired mfa token")
+	}
+
+	// Cek jumlah percobaan MFA yang sudah dilakukan
+	var attempts int
+	if attemptsStr, err := s.tokenService.redis.Get(attemptsKey); err == nil {
+		fmt.Sscan(attemptsStr, &attempts)
+	}
+
+	if attempts >= MaxMFAAttempts {
+		// Invalidate pending token agar user harus login ulang
+		_ = s.tokenService.redis.Delete(key)
+		_ = s.tokenService.redis.Delete(attemptsKey)
+		return nil, nil, errors.New("terlalu banyak percobaan MFA, silakan login ulang")
 	}
 
 	user, err := s.userRepo.FindByID(userID)
@@ -390,7 +424,18 @@ func (s *AuthService) VerifyMFA(mfaToken, code string) (*models.User, *dto.Token
 	}
 
 	if !totp.Validate(code, *user.MFASecret) {
-		return nil, nil, errors.New("invalid mfa code")
+		// Increment attempts, TTL mengikuti sisa waktu mfa_pending (5 menit)
+		newAttempts := attempts + 1
+		_ = s.tokenService.redis.Set(attemptsKey, fmt.Sprintf("%d", newAttempts), 5*time.Minute)
+
+		remaining := MaxMFAAttempts - newAttempts
+		if remaining <= 0 {
+			// Invalidate pending token agar user harus login ulang
+			_ = s.tokenService.redis.Delete(key)
+			_ = s.tokenService.redis.Delete(attemptsKey)
+			return nil, nil, errors.New("terlalu banyak percobaan MFA, silakan login ulang")
+		}
+		return nil, nil, fmt.Errorf("kode MFA salah, sisa percobaan: %d", remaining)
 	}
 
 	modelTokens, err := s.tokenService.GenerateTokenPair(user.ID, user.Username, user.RoleName, derefStr(user.IDPerusahaan))
@@ -398,7 +443,9 @@ func (s *AuthService) VerifyMFA(mfaToken, code string) (*models.User, *dto.Token
 		return nil, nil, err
 	}
 
+	// Berhasil — hapus semua key terkait MFA pending
 	_ = s.tokenService.redis.Delete(key)
+	_ = s.tokenService.redis.Delete(attemptsKey)
 	return user, mapTokenPairToDTO(modelTokens), nil
 }
 
