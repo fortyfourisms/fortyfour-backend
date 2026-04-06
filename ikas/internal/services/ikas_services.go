@@ -244,4 +244,3 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 
 	return newID, nil
 }
-

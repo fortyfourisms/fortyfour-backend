@@ -48,12 +48,12 @@ type Materi struct {
 // ── Soal & Pilihan ───────────────────────────────────────────────────────────
 
 type Soal struct {
-	ID         string          `json:"id"`
-	IDMateri   string          `json:"id_materi"` // materi bertipe kuis
-	Pertanyaan string          `json:"pertanyaan"`
-	Urutan     int             `json:"urutan"`
+	ID         string           `json:"id"`
+	IDMateri   string           `json:"id_materi"` // materi bertipe kuis
+	Pertanyaan string           `json:"pertanyaan"`
+	Urutan     int              `json:"urutan"`
 	Pilihan    []PilihanJawaban `json:"pilihan,omitempty"`
-	CreatedAt  time.Time       `json:"created_at"`
+	CreatedAt  time.Time        `json:"created_at"`
 }
 
 type PilihanJawaban struct {
@@ -67,14 +67,14 @@ type PilihanJawaban struct {
 // ── Progress Materi (video & pdf) ────────────────────────────────────────────
 
 type UserMateriProgress struct {
-	ID                  string     `json:"id"`
-	IDUser              string     `json:"id_user"`
-	IDMateri            string     `json:"id_materi"`
-	IsCompleted         bool       `json:"is_completed"`
-	LastWatchedSeconds  int        `json:"last_watched_seconds"` // hanya video
-	CompletedAt         *time.Time `json:"completed_at"`
-	CreatedAt           time.Time  `json:"created_at"`
-	UpdatedAt           time.Time  `json:"updated_at"`
+	ID                 string     `json:"id"`
+	IDUser             string     `json:"id_user"`
+	IDMateri           string     `json:"id_materi"`
+	IsCompleted        bool       `json:"is_completed"`
+	LastWatchedSeconds int        `json:"last_watched_seconds"` // hanya video
+	CompletedAt        *time.Time `json:"completed_at"`
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          time.Time  `json:"updated_at"`
 }
 
 // ── Kuis Attempt ─────────────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ type KuisAttempt struct {
 	ID         string     `json:"id"`
 	IDUser     string     `json:"id_user"`
 	IDMateri   string     `json:"id_materi"`
-	Skor       float64    `json:"skor"`        // 0-100
+	Skor       float64    `json:"skor"` // 0-100
 	TotalSoal  int        `json:"total_soal"`
 	TotalBenar int        `json:"total_benar"`
 	StartedAt  time.Time  `json:"started_at"`

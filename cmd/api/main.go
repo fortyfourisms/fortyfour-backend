@@ -151,10 +151,10 @@ func main() {
 	subSektorRepo := repository.NewSubSektorRepository(db)
 	seRepo := repository.NewSERepository(db)
 	dashboardRepo := repository.NewDashboardRepository(db)
-	kelasRepo    := repository.NewKelasRepository(db)
-	materiRepo   := repository.NewMateriRepository(db)
-	soalRepo     := repository.NewSoalRepository(db)
-	kuisRepo     := repository.NewKuisAttemptRepository(db)
+	kelasRepo := repository.NewKelasRepository(db)
+	materiRepo := repository.NewMateriRepository(db)
+	soalRepo := repository.NewSoalRepository(db)
+	kuisRepo := repository.NewKuisAttemptRepository(db)
 	progressRepo := repository.NewProgressRepository(db)
 
 	// Initialize services
@@ -175,10 +175,10 @@ func main() {
 	seService := services.NewSEService(seRepo, redisClient)
 	seExportService := services.NewSEExportService(seService)
 	dashboardService := services.NewDashboardService(dashboardRepo, redisClient)
-	kelasSvc  := services.NewKelasService(kelasRepo, materiRepo, progressRepo, redisClient)
+	kelasSvc := services.NewKelasService(kelasRepo, materiRepo, progressRepo, redisClient)
 	materiSvc := services.NewMateriService(materiRepo, kelasRepo, progressRepo, redisClient)
-	soalSvc   := services.NewSoalService(soalRepo, materiRepo, redisClient)
-	kuisSvc   := services.NewKuisService(kuisRepo, soalRepo, materiRepo, progressRepo, redisClient)
+	soalSvc := services.NewSoalService(soalRepo, materiRepo, redisClient)
+	kuisSvc := services.NewKuisService(kuisRepo, soalRepo, materiRepo, progressRepo, redisClient)
 
 	// Initialize Handler
 	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService, userService, uploadPath)

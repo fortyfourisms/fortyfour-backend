@@ -19,11 +19,11 @@ import (
 //   /api/kuis           → kuis (user: start & submit)
 
 type LMSHandler struct {
-	kelasSvc *services.KelasService
+	kelasSvc  *services.KelasService
 	materiSvc *services.MateriService
-	soalSvc  *services.SoalService
-	kuisSvc  *services.KuisService
-	sseSvc   *services.SSEService
+	soalSvc   *services.SoalService
+	kuisSvc   *services.KuisService
+	sseSvc    *services.SSEService
 }
 
 func NewLMSHandler(

@@ -18,14 +18,14 @@ type UpdateKelasRequest struct {
 }
 
 type KelasResponse struct {
-	ID        string               `json:"id"`
-	Judul     string               `json:"judul"`
-	Deskripsi *string              `json:"deskripsi"`
-	Thumbnail *string              `json:"thumbnail"`
-	Status    models.KelasStatus   `json:"status"`
-	CreatedBy string               `json:"created_by"`
-	CreatedAt string               `json:"created_at"`
-	UpdatedAt string               `json:"updated_at"`
+	ID        string             `json:"id"`
+	Judul     string             `json:"judul"`
+	Deskripsi *string            `json:"deskripsi"`
+	Thumbnail *string            `json:"thumbnail"`
+	Status    models.KelasStatus `json:"status"`
+	CreatedBy string             `json:"created_by"`
+	CreatedAt string             `json:"created_at"`
+	UpdatedAt string             `json:"updated_at"`
 
 	// Disertakan saat GET detail
 	Materi   []MateriResponse `json:"materi,omitempty"`
@@ -34,10 +34,10 @@ type KelasResponse struct {
 
 // KelasProgress adalah ringkasan progress user dalam satu kelas
 type KelasProgress struct {
-	TotalMateri     int  `json:"total_materi"`
-	MateriSelesai   int  `json:"materi_selesai"`
-	KuisSelesai     bool `json:"kuis_selesai"`
-	IsKelasSelesai  bool `json:"is_kelas_selesai"`
+	TotalMateri    int  `json:"total_materi"`
+	MateriSelesai  int  `json:"materi_selesai"`
+	KuisSelesai    bool `json:"kuis_selesai"`
+	IsKelasSelesai bool `json:"is_kelas_selesai"`
 }
 
 // ── Materi ───────────────────────────────────────────────────────────────────
@@ -60,16 +60,16 @@ type UpdateMateriRequest struct {
 }
 
 type MateriResponse struct {
-	ID          string             `json:"id"`
-	IDKelas     string             `json:"id_kelas"`
-	Judul       string             `json:"judul"`
-	Tipe        models.MateriTipe  `json:"tipe"`
-	Urutan      int                `json:"urutan"`
-	YoutubeID   *string            `json:"youtube_id,omitempty"`
-	PDFPath     *string            `json:"pdf_path,omitempty"`
-	DurasiDetik *int               `json:"durasi_detik,omitempty"`
-	CreatedAt   string             `json:"created_at"`
-	UpdatedAt   string             `json:"updated_at"`
+	ID          string            `json:"id"`
+	IDKelas     string            `json:"id_kelas"`
+	Judul       string            `json:"judul"`
+	Tipe        models.MateriTipe `json:"tipe"`
+	Urutan      int               `json:"urutan"`
+	YoutubeID   *string           `json:"youtube_id,omitempty"`
+	PDFPath     *string           `json:"pdf_path,omitempty"`
+	DurasiDetik *int              `json:"durasi_detik,omitempty"`
+	CreatedAt   string            `json:"created_at"`
+	UpdatedAt   string            `json:"updated_at"`
 
 	// Progress user untuk materi ini (disertakan saat GET detail kelas)
 	IsCompleted        bool `json:"is_completed,omitempty"`
@@ -82,9 +82,9 @@ type MateriResponse struct {
 // ── Soal ─────────────────────────────────────────────────────────────────────
 
 type CreateSoalRequest struct {
-	Pertanyaan string                   `json:"pertanyaan" validate:"required"`
-	Urutan     int                      `json:"urutan" validate:"required,min=1"`
-	Pilihan    []CreatePilihanRequest   `json:"pilihan" validate:"required,min=2,max=5,dive"`
+	Pertanyaan string                 `json:"pertanyaan" validate:"required"`
+	Urutan     int                    `json:"urutan" validate:"required,min=1"`
+	Pilihan    []CreatePilihanRequest `json:"pilihan" validate:"required,min=2,max=5,dive"`
 }
 
 type CreatePilihanRequest struct {
@@ -94,9 +94,9 @@ type CreatePilihanRequest struct {
 }
 
 type UpdateSoalRequest struct {
-	Pertanyaan *string                  `json:"pertanyaan,omitempty"`
-	Urutan     *int                     `json:"urutan,omitempty"`
-	Pilihan    []CreatePilihanRequest   `json:"pilihan,omitempty"`
+	Pertanyaan *string                `json:"pertanyaan,omitempty"`
+	Urutan     *int                   `json:"urutan,omitempty"`
+	Pilihan    []CreatePilihanRequest `json:"pilihan,omitempty"`
 }
 
 // SoalResponse untuk admin (tampilkan is_correct)
@@ -110,10 +110,10 @@ type SoalResponse struct {
 
 // SoalUserResponse untuk user (sembunyikan is_correct)
 type SoalUserResponse struct {
-	ID         string                  `json:"id"`
-	Pertanyaan string                  `json:"pertanyaan"`
-	Urutan     int                     `json:"urutan"`
-	Pilihan    []PilihanUserResponse   `json:"pilihan"`
+	ID         string                `json:"id"`
+	Pertanyaan string                `json:"pertanyaan"`
+	Urutan     int                   `json:"urutan"`
+	Pilihan    []PilihanUserResponse `json:"pilihan"`
 }
 
 type PilihanResponse struct {
@@ -174,9 +174,9 @@ type KuisResultResponse struct {
 }
 
 type HasilSoalResponse struct {
-	IDSoal        string `json:"id_soal"`
-	Pertanyaan    string `json:"pertanyaan"`
-	IDPilihanUser string `json:"id_pilihan_user"` // jawaban yang dipilih user
+	IDSoal         string `json:"id_soal"`
+	Pertanyaan     string `json:"pertanyaan"`
+	IDPilihanUser  string `json:"id_pilihan_user"`  // jawaban yang dipilih user
 	IDPilihanBenar string `json:"id_pilihan_benar"` // jawaban benar
-	IsCorrect     bool   `json:"is_correct"`
+	IsCorrect      bool   `json:"is_correct"`
 }

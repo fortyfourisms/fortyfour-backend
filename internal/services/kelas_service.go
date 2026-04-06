@@ -14,10 +14,10 @@ import (
 )
 
 type KelasService struct {
-	repo     repository.KelasRepositoryInterface
-	materiRepo repository.MateriRepositoryInterface
+	repo         repository.KelasRepositoryInterface
+	materiRepo   repository.MateriRepositoryInterface
 	progressRepo repository.ProgressRepositoryInterface
-	rc       cache.RedisInterface
+	rc           cache.RedisInterface
 }
 
 func NewKelasService(
