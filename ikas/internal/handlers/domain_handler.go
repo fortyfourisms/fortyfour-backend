@@ -203,7 +203,7 @@ func (h *DomainHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id 
 //	@Tags         Domain
 //	@Produce      json
 //	@Param        id   path      int  true  "Domain ID"
-//	@Success      200  {object}  dto.DomainMessageResponse
+//	@Success      200  {object}  dto.MessageResponse
 //	@Failure      404  {object}  dto.ErrorResponse
 //	@Failure      500  {object}  dto.ErrorResponse
 //	@Router       /api/maturity/domain/{id} [delete]
