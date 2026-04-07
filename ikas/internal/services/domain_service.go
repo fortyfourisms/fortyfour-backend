@@ -87,14 +87,19 @@ func (s *DomainService) Create(req dto.CreateDomainRequest) (*dto.DomainResponse
 		return nil, errors.New("nama_domain sudah ada")
 	}
 
-	if err := s.producer.PublishDomainCreated(context.Background(), dto_event.DomainCreatedEvent{
-		Request:   req,
-		CreatedAt: time.Now(),
-	}); err != nil {
+	newID, err := s.repo.Create(req)
+	if err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	go func() {
+		_ = s.producer.PublishDomainCreated(context.Background(), dto_event.DomainCreatedEvent{
+			Request:   req,
+			CreatedAt: time.Now(),
+		})
+	}()
+
+	return s.repo.GetByID(int(newID))
 }
 
 func (s *DomainService) GetAll() ([]dto.DomainResponse, error) {
@@ -135,13 +140,17 @@ func (s *DomainService) Update(id int, req dto.UpdateDomainRequest) (*dto.Domain
 		}
 	}
 
-	if err := s.producer.PublishDomainUpdated(context.Background(), dto_event.DomainUpdatedEvent{
-		ID:        id,
-		Request:   req,
-		UpdatedAt: time.Now(),
-	}); err != nil {
+	if err := s.repo.Update(id, req); err != nil {
 		return nil, err
 	}
+
+	go func() {
+		_ = s.producer.PublishDomainUpdated(context.Background(), dto_event.DomainUpdatedEvent{
+			ID:        id,
+			Request:   req,
+			UpdatedAt: time.Now(),
+		})
+	}()
 
 	return nil, nil
 }
@@ -155,8 +164,16 @@ func (s *DomainService) Delete(id int) error {
 		return err
 	}
 
-	return s.producer.PublishDomainDeleted(context.Background(), dto_event.DomainDeletedEvent{
-		ID:        id,
-		DeletedAt: time.Now(),
-	})
+	if err := s.repo.Delete(id); err != nil {
+		return err
+	}
+
+	go func() {
+		_ = s.producer.PublishDomainDeleted(context.Background(), dto_event.DomainDeletedEvent{
+			ID:        id,
+			DeletedAt: time.Now(),
+		})
+	}()
+
+	return nil
 }

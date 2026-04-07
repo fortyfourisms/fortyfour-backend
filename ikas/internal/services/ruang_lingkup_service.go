@@ -117,14 +117,19 @@ func (s *RuangLingkupService) Create(req dto.CreateRuangLingkupRequest) (*dto.Ru
 		return nil, errors.New("nama_ruang_lingkup sudah ada")
 	}
 
-	if err := s.producer.PublishRuangLingkupCreated(context.Background(), dto_event.RuangLingkupCreatedEvent{
-		Request:   req,
-		CreatedAt: time.Now(),
-	}); err != nil {
+	newID, err := s.repo.Create(req)
+	if err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	go func() {
+		_ = s.producer.PublishRuangLingkupCreated(context.Background(), dto_event.RuangLingkupCreatedEvent{
+			Request:   req,
+			CreatedAt: time.Now(),
+		})
+	}()
+
+	return s.repo.GetByID(int(newID))
 }
 
 func (s *RuangLingkupService) GetAll() ([]dto.RuangLingkupResponse, error) {
@@ -170,13 +175,17 @@ func (s *RuangLingkupService) Update(id int, req dto.UpdateRuangLingkupRequest) 
 		}
 	}
 
-	if err := s.producer.PublishRuangLingkupUpdated(context.Background(), dto_event.RuangLingkupUpdatedEvent{
-		ID:        id,
-		Request:   req,
-		UpdatedAt: time.Now(),
-	}); err != nil {
+	if err := s.repo.Update(id, req); err != nil {
 		return nil, err
 	}
+
+	go func() {
+		_ = s.producer.PublishRuangLingkupUpdated(context.Background(), dto_event.RuangLingkupUpdatedEvent{
+			ID:        id,
+			Request:   req,
+			UpdatedAt: time.Now(),
+		})
+	}()
 
 	return nil, nil
 }
@@ -191,8 +200,16 @@ func (s *RuangLingkupService) Delete(id int) error {
 		return err
 	}
 
-	return s.producer.PublishRuangLingkupDeleted(context.Background(), dto_event.RuangLingkupDeletedEvent{
-		ID:        id,
-		DeletedAt: time.Now(),
-	})
+	if err := s.repo.Delete(id); err != nil {
+		return err
+	}
+
+	go func() {
+		_ = s.producer.PublishRuangLingkupDeleted(context.Background(), dto_event.RuangLingkupDeletedEvent{
+			ID:        id,
+			DeletedAt: time.Now(),
+		})
+	}()
+
+	return nil
 }
