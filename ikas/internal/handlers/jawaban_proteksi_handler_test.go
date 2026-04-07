@@ -18,7 +18,7 @@ import (
 )
 
 // Helper functions for jawaban proteksi tests
-func jpStrPtr(s string) *string     { return &s }
+func jpStrPtr(s string) *string       { return &s }
 func jpFloat64Ptr(f float64) *float64 { return &f }
 
 // ─── Mock Producer ───────────────────────────────────────────────────────────
@@ -446,7 +446,6 @@ func TestJawabanProteksiHandler_Create_InvalidJawabanType(t *testing.T) {
 	handler.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
-
 
 // ─── UPDATE ──────────────────────────────────────────────────────────────────
 

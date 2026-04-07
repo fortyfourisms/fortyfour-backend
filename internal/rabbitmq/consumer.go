@@ -184,18 +184,42 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeIkasCreated,
 		c.ConsumeIkasUpdated,
 		c.ConsumeIkasDeleted,
-		func(ctx context.Context) error { return c.consumeGenericIkasEvent(ctx, "main_api.ruang_lingkup.created", "ruang_lingkup", "Created") },
-		func(ctx context.Context) error { return c.consumeGenericIkasEvent(ctx, "main_api.ruang_lingkup.updated", "ruang_lingkup", "Updated") },
-		func(ctx context.Context) error { return c.consumeGenericIkasEvent(ctx, "main_api.ruang_lingkup.deleted", "ruang_lingkup", "Deleted") },
-		func(ctx context.Context) error { return c.consumeGenericIkasEvent(ctx, "main_api.domain.created", "domain", "Created") },
-		func(ctx context.Context) error { return c.consumeGenericIkasEvent(ctx, "main_api.domain.updated", "domain", "Updated") },
-		func(ctx context.Context) error { return c.consumeGenericIkasEvent(ctx, "main_api.domain.deleted", "domain", "Deleted") },
-		func(ctx context.Context) error { return c.consumeGenericIkasEvent(ctx, "main_api.kategori.created", "kategori", "Created") },
-		func(ctx context.Context) error { return c.consumeGenericIkasEvent(ctx, "main_api.kategori.updated", "kategori", "Updated") },
-		func(ctx context.Context) error { return c.consumeGenericIkasEvent(ctx, "main_api.kategori.deleted", "kategori", "Deleted") },
-		func(ctx context.Context) error { return c.consumeGenericIkasEvent(ctx, "main_api.sub_kategori.created", "sub_kategori", "Created") },
-		func(ctx context.Context) error { return c.consumeGenericIkasEvent(ctx, "main_api.sub_kategori.updated", "sub_kategori", "Updated") },
-		func(ctx context.Context) error { return c.consumeGenericIkasEvent(ctx, "main_api.sub_kategori.deleted", "sub_kategori", "Deleted") },
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.ruang_lingkup.created", "ruang_lingkup", "Created")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.ruang_lingkup.updated", "ruang_lingkup", "Updated")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.ruang_lingkup.deleted", "ruang_lingkup", "Deleted")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.domain.created", "domain", "Created")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.domain.updated", "domain", "Updated")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.domain.deleted", "domain", "Deleted")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.kategori.created", "kategori", "Created")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.kategori.updated", "kategori", "Updated")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.kategori.deleted", "kategori", "Deleted")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.sub_kategori.created", "sub_kategori", "Created")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.sub_kategori.updated", "sub_kategori", "Updated")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.sub_kategori.deleted", "sub_kategori", "Deleted")
+		},
 	}
 
 	for _, consumer := range consumers {

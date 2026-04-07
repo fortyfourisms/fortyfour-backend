@@ -1,9 +1,9 @@
 package handlers
 
 import (
+	_ "ikas/internal/dto"
 	"ikas/internal/services"
 	"ikas/internal/utils"
-	"ikas/internal/dto"
 	"net/http"
 
 	"fortyfour-backend/pkg/logger"

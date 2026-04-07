@@ -32,9 +32,9 @@ func (h *JawabanGulihHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 		// Implicitly filter by PerusahaanID if user is not admin
 		userRole, _ := r.Context().Value(middleware.Role).(string)
 		userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
-		
+
 		perusahaanID := r.URL.Query().Get("perusahaan_id")
-		
+
 		if userRole != "admin" {
 			// Override for non-admins
 			values := r.URL.Query()
