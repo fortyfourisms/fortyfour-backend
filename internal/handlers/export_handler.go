@@ -8,6 +8,7 @@ import (
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
+	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/pkg/logger"
 )
 
