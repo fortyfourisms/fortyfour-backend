@@ -1,23 +1,19 @@
-package service
+package services
 
 import (
 	"errors"
 
-	"survey-backend/model"
-	"survey-backend/repository"
-	"survey-backend/validation"
+	"survey/internal/models"
+	"survey/internal/repository"
+	"survey/validator"
 )
 
-type IPTheftService struct {
-	repo     *repository.IPTheftRepository
-	progress *repository.ProgressRepository
+type RisikoService struct {
+	repo *repository.RisikoRepository
 }
 
-func NewIPTheftService(
-	repo *repository.IPTheftRepository,
-	progress *repository.ProgressRepository,
-) *IPTheftService {
-	return &IPTheftService{repo: repo, progress: progress}
+func NewRisikoService(repo *repository.RisikoRepository) *RisikoService {
+	return &RisikoService{repo: repo}
 }
 
 // STEP 1 — Eligibility
@@ -29,17 +25,17 @@ func NewIPTheftService(
 //   has_experienced = true  → next_step: "show_detail"   (alur Ya)
 //   has_experienced = false → next_step: "show_reason"   (alur Tidak)
 
-func (s *IPTheftService) ProcessEligibility(req model.EligibilityRequest) (*model.EligibilityResponse, error) {
+func (s *RisikoService) ProcessEligibility(req models.EligibilityRequest) (*models.EligibilityResponse, error) {
 	if err := validation.ValidateEligibilityRequest(req); err != nil {
 		return nil, err
 	}
 
-	s.progress.GetOrCreate(req.RespondentID)
+	s.repo.GetOrCreate(req.RespondentID)
 
-	record := &model.IPTheftResponse{
+	record := &models.IPTheftResponse{
 		RespondentID:   req.RespondentID,
 		HasExperienced: req.HasExperienced,
-		CurrentStep:    model.StepEligibility,
+		CurrentStep:    models.StepEligibility,
 	}
 	if err := s.repo.Upsert(record); err != nil {
 		return nil, err
@@ -50,7 +46,7 @@ func (s *IPTheftService) ProcessEligibility(req model.EligibilityRequest) (*mode
 		nextStep = "show_detail"
 	}
 
-	return &model.EligibilityResponse{
+	return &models.EligibilityResponse{
 		RespondentID:   req.RespondentID,
 		HasExperienced: req.HasExperienced,
 		NextStep:       nextStep,
@@ -65,7 +61,7 @@ func (s *IPTheftService) ProcessEligibility(req model.EligibilityRequest) (*mode
 //    mengalami insiden pencurian Intellectual Property?"
 // Setelah step ini → Risiko 1 SELESAI (tombol Berikutnya aktif)
 
-func (s *IPTheftService) ProcessReason(req model.ReasonRequest) (*model.IPTheftResponse, error) {
+func (s *RisikoService) ProcessReason(req models.ReasonRequest) (*models.IPTheftResponse, error) {
 	if err := validation.ValidateReasonRequest(req); err != nil {
 		return nil, err
 	}
@@ -80,13 +76,13 @@ func (s *IPTheftService) ProcessReason(req model.ReasonRequest) (*model.IPTheftR
 	}
 
 	existing.Reason = req.Reason
-	existing.CurrentStep = model.StepDone
+	existing.CurrentStep = models.StepDone
 
 	if err := s.repo.Upsert(existing); err != nil {
 		return nil, err
 	}
 
-	s.progress.MarkCompleted(req.RespondentID, 1)
+	s.repo.MarkCompleted(req.RespondentID, 1)
 	return existing, nil
 }
 
@@ -101,7 +97,7 @@ func (s *IPTheftService) ProcessReason(req model.ReasonRequest) (*model.IPTheftR
 // Setelah step ini → next_step: "show_control"
 //   UI wajib melanjutkan ke Step 2c (ControlRequest) sebelum tombol Berikutnya aktif
 
-func (s *IPTheftService) ProcessDetail(req model.DetailRequest) (*model.DetailResponse, error) {
+func (s *RisikoService) ProcessDetail(req models.DetailRequest) (*models.DetailResponse, error) {
 	if err := validation.ValidateDetailRequest(req); err != nil {
 		return nil, err
 	}
@@ -117,14 +113,14 @@ func (s *IPTheftService) ProcessDetail(req model.DetailRequest) (*model.DetailRe
 
 	existing.Impact = &req.Impact
 	existing.Frequency = &req.Frequency
-	existing.CurrentStep = model.StepDetail
+	existing.CurrentStep = models.StepDetail
 
 	if err := s.repo.Upsert(existing); err != nil {
 		return nil, err
 	}
 
 	// Selalu lanjut ke step pengendalian — belum selesai
-	return &model.DetailResponse{
+	return &models.DetailResponse{
 		RespondentID: req.RespondentID,
 		NextStep:     "show_control",
 	}, nil
@@ -143,7 +139,7 @@ func (s *IPTheftService) ProcessDetail(req model.DetailRequest) (*model.DetailRe
 //   ● Tidak → langsung tombol Berikutnya aktif (tidak ada pertanyaan tambahan)
 // Setelah step ini → Risiko 1 SELESAI (next_step: "finish")
 
-func (s *IPTheftService) ProcessControl(req model.ControlRequest) (*model.ControlResponse, error) {
+func (s *RisikoService) ProcessControl(req models.ControlRequest) (*models.ControlResponse, error) {
 	if err := validation.ValidateControlRequest(req); err != nil {
 		return nil, err
 	}
@@ -159,14 +155,14 @@ func (s *IPTheftService) ProcessControl(req model.ControlRequest) (*model.Contro
 	}
 
 	// Guard 2: step 2b (detail) harus sudah diisi terlebih dahulu
-	if existing.CurrentStep != model.StepDetail {
+	if existing.CurrentStep != models.StepDetail {
 		return nil, errors.New("langkah dampak & frekuensi (detail) harus diisi sebelum tindakan pengendalian")
 	}
 
 	// Simpan jawaban pengendalian
 	hasControl := req.HasControl
 	existing.HasControl = &hasControl
-	existing.CurrentStep = model.StepControl
+	existing.CurrentStep = models.StepControl
 
 	if req.HasControl {
 		// Alur Ya → simpan tindakan pengendalian yang diisi user
@@ -181,11 +177,11 @@ func (s *IPTheftService) ProcessControl(req model.ControlRequest) (*model.Contro
 	}
 
 	// Risiko 1 selesai
-	existing.CurrentStep = model.StepDone
+	existing.CurrentStep = models.StepDone
 	_ = s.repo.Upsert(existing)
-	s.progress.MarkCompleted(req.RespondentID, 1)
+	s.repo.MarkCompleted(req.RespondentID, 1)
 
-	return &model.ControlResponse{
+	return &models.ControlResponse{
 		RespondentID:    req.RespondentID,
 		HasControl:      req.HasControl,
 		ControlMeasures: req.ControlMeasures,
@@ -194,7 +190,7 @@ func (s *IPTheftService) ProcessControl(req model.ControlRequest) (*model.Contro
 }
 
 // Query
-func (s *IPTheftService) GetResponse(respondentID string) (*model.IPTheftResponse, error) {
+func (s *RisikoService) GetResponse(respondentID string) (*models.IPTheftResponse, error) {
 	return s.repo.FindByRespondentID(respondentID)
 }
 
@@ -209,30 +205,21 @@ func errWrongBranch(endpoint, branch string) error {
 	return &branchError{endpoint: endpoint, branch: branch}
 }
 
-// Navigation Service
-type NavigationService struct {
-	progress *repository.ProgressRepository
-}
-
-func NewNavigationService(progress *repository.ProgressRepository) *NavigationService {
-	return &NavigationService{progress: progress}
-}
-
-func (s *NavigationService) Navigate(req model.NavigateRequest) (*model.SurveyProgress, error) {
-	p := s.progress.GetOrCreate(req.RespondentID)
+func (s *RisikoService) Navigate(req models.NavigateRequest) (*models.SurveyProgress, error) {
+	p := s.repo.GetOrCreate(req.RespondentID)
 	switch req.Direction {
 	case "next":
 		if p.CurrentRisk < p.TotalRisks {
-			s.progress.SetCurrentRisk(req.RespondentID, p.CurrentRisk+1)
+			s.repo.SetCurrentRisk(req.RespondentID, p.CurrentRisk+1)
 		}
 	case "previous":
 		if p.CurrentRisk > 1 {
-			s.progress.SetCurrentRisk(req.RespondentID, p.CurrentRisk-1)
+			s.repo.SetCurrentRisk(req.RespondentID, p.CurrentRisk-1)
 		}
 	}
-	return s.progress.Get(req.RespondentID)
+	return s.repo.Get(req.RespondentID)
 }
 
-func (s *NavigationService) GetProgress(respondentID string) (*model.SurveyProgress, error) {
-	return s.progress.GetOrCreate(respondentID), nil
+func (s *RisikoService) GetProgress(respondentID string) (*models.SurveyProgress, error) {
+	return s.repo.GetOrCreate(respondentID), nil
 }

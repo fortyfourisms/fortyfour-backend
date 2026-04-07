@@ -3,7 +3,7 @@ package validation
 import (
 	"errors"
 	"strings"
-	"survey-backend/model"
+	"survey/internal/models"
 )
 
 var (
@@ -14,14 +14,14 @@ var (
 	ErrMissingControlInfo  = errors.New("tindakan pengendalian wajib diisi jika has_control = true")
 )
 
-func ValidateEligibilityRequest(req model.EligibilityRequest) error {
+func ValidateEligibilityRequest(req models.EligibilityRequest) error {
 	if strings.TrimSpace(req.RespondentID) == "" {
 		return ErrMissingRespondentID
 	}
 	return nil
 }
 
-func ValidateReasonRequest(req model.ReasonRequest) error {
+func ValidateReasonRequest(req models.ReasonRequest) error {
 	if strings.TrimSpace(req.RespondentID) == "" {
 		return ErrMissingRespondentID
 	}
@@ -33,7 +33,7 @@ func ValidateReasonRequest(req model.ReasonRequest) error {
 
 // ValidateDetailRequest — validasi Step 2b: matrix dampak + frekuensi
 // (tidak lagi termasuk validasi pengendalian — itu ada di ValidateControlRequest)
-func ValidateDetailRequest(req model.DetailRequest) error {
+func ValidateDetailRequest(req models.DetailRequest) error {
 	if strings.TrimSpace(req.RespondentID) == "" {
 		return ErrMissingRespondentID
 	}
@@ -47,9 +47,10 @@ func ValidateDetailRequest(req model.DetailRequest) error {
 }
 
 // ValidateControlRequest — validasi Step 2c: tindakan pengendalian
-//   has_control = true  → ControlMeasures wajib diisi
-//   has_control = false → ControlMeasures diabaikan, langsung Berikutnya
-func ValidateControlRequest(req model.ControlRequest) error {
+//
+//	has_control = true  → ControlMeasures wajib diisi
+//	has_control = false → ControlMeasures diabaikan, langsung Berikutnya
+func ValidateControlRequest(req models.ControlRequest) error {
 	if strings.TrimSpace(req.RespondentID) == "" {
 		return ErrMissingRespondentID
 	}
@@ -59,7 +60,7 @@ func ValidateControlRequest(req model.ControlRequest) error {
 	return nil
 }
 
-func validateImpactMatrix(m model.ImpactMatrix) error {
+func validateImpactMatrix(m models.ImpactMatrix) error {
 	if !m.Reputation.Valid() {
 		return errors.New("dampak reputasi tidak valid (harus 1–4)")
 	}

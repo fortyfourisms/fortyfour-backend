@@ -1,4 +1,4 @@
-package model
+package models
 
 import "time"
 
@@ -117,8 +117,9 @@ type DetailRequest struct {
 
 // DetailResponse — response setelah submit detail
 // next_step menentukan sub-branching berikutnya di sisi UI:
-//   "show_control_measures" → user menjawab has_control = true  → tampilkan textarea
-//   "finish"                → user menjawab has_control = false → langsung tombol Berikutnya
+//
+//	"show_control_measures" → user menjawab has_control = true  → tampilkan textarea
+//	"finish"                → user menjawab has_control = false → langsung tombol Berikutnya
 type DetailResponse struct {
 	RespondentID string `json:"respondent_id"`
 	NextStep     string `json:"next_step"`
@@ -126,8 +127,9 @@ type DetailResponse struct {
 
 // ControlRequest — Step 2c: sub-branching pengendalian risiko
 // Pertanyaan wajib: "Apa perusahaan Anda telah memiliki tindakan pengendalian?"
-//   has_control = true  → wajib isi ControlMeasures
-//   has_control = false → langsung selesai (tombol berikutnya aktif)
+//
+//	has_control = true  → wajib isi ControlMeasures
+//	has_control = false → langsung selesai (tombol berikutnya aktif)
 type ControlRequest struct {
 	RespondentID string `json:"respondent_id"`
 
@@ -141,7 +143,8 @@ type ControlRequest struct {
 
 // ControlResponse — response setelah submit kontrol
 // next_step:
-//   "finish" → risiko 1 selesai, tampilkan tombol Berikutnya
+//
+//	"finish" → risiko 1 selesai, tampilkan tombol Berikutnya
 type ControlResponse struct {
 	RespondentID    string `json:"respondent_id"`
 	HasControl      bool   `json:"has_control"`
@@ -164,10 +167,10 @@ type SurveyStep string
 
 const (
 	StepEligibility SurveyStep = "eligibility" // Step 1  — sudah jawab Ya/Tidak
-	StepDetail      SurveyStep = "detail"       // Step 2b — sudah isi dampak & frekuensi (alur Ya)
-	StepControl     SurveyStep = "control"      // Step 2c — sudah isi tindakan pengendalian (alur Ya)
-	StepReason      SurveyStep = "reason"       // Step 2a — sudah isi alasan (alur Tidak)
-	StepDone        SurveyStep = "done"         // Semua step selesai
+	StepDetail      SurveyStep = "detail"      // Step 2b — sudah isi dampak & frekuensi (alur Ya)
+	StepControl     SurveyStep = "control"     // Step 2c — sudah isi tindakan pengendalian (alur Ya)
+	StepReason      SurveyStep = "reason"      // Step 2a — sudah isi alasan (alur Tidak)
+	StepDone        SurveyStep = "done"        // Semua step selesai
 )
 
 // IPTheftResponse — rekaman jawaban lengkap Risiko 1
@@ -202,11 +205,11 @@ type IPTheftResponse struct {
 
 // SurveyProgress — status progres keseluruhan survey (14 risiko)
 type SurveyProgress struct {
-	RespondentID    string         `json:"respondent_id"`
-	CurrentRisk     int            `json:"current_risk"`
-	TotalRisks      int            `json:"total_risks"`
-	PercentComplete float64        `json:"percent_complete"`
-	CompletedRisks  []int          `json:"completed_risks"`
+	RespondentID    string  `json:"respondent_id"`
+	CurrentRisk     int     `json:"current_risk"`
+	TotalRisks      int     `json:"total_risks"`
+	PercentComplete float64 `json:"percent_complete"`
+	CompletedRisks  []int   `json:"completed_risks"`
 }
 
 // Response Wrappers

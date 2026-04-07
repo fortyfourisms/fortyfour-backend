@@ -1,6 +1,9 @@
 package repository
 
-import "database/sql"
+import (
+	"database/sql"
+	"survey/internal/models"
+)
 
 type RisikoRepository struct {
 	db *sql.DB
@@ -43,4 +46,28 @@ func (r *RisikoRepository) CreateJawaban(
 	)
 
 	return err
+}
+
+var ErrNotFound = sql.ErrNoRows
+
+func (r *RisikoRepository) Upsert(m *models.IPTheftResponse) error {
+	return nil
+}
+
+func (r *RisikoRepository) FindByRespondentID(id string) (*models.IPTheftResponse, error) {
+	return nil, ErrNotFound
+}
+
+func (r *RisikoRepository) GetOrCreate(id string) *models.SurveyProgress {
+	return &models.SurveyProgress{}
+}
+
+func (r *RisikoRepository) MarkCompleted(id string, risk int) {
+}
+
+func (r *RisikoRepository) SetCurrentRisk(id string, risk int) {
+}
+
+func (r *RisikoRepository) Get(id string) (*models.SurveyProgress, error) {
+	return &models.SurveyProgress{}, nil
 }

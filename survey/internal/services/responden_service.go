@@ -19,7 +19,7 @@ func NewRespondenService(repo *repository.RespondenRepository) *RespondenService
 	return &RespondenService{repo: repo}
 }
 
-//Validation
+// Validation
 func (s *RespondenService) validate(req *dto.CreateRespondenRequest) error {
 
 	req.NamaLengkap = strings.TrimSpace(req.NamaLengkap)
@@ -44,7 +44,7 @@ func (s *RespondenService) validate(req *dto.CreateRespondenRequest) error {
 	return nil
 }
 
-//Create
+// Create
 func (s *RespondenService) Create(req dto.CreateRespondenRequest) (*dto.RespondenResponse, error) {
 
 	if err := s.validate(&req); err != nil {
@@ -73,7 +73,7 @@ func (s *RespondenService) Create(req dto.CreateRespondenRequest) (*dto.Responde
 	return &resp, nil
 }
 
-//Get
+// Get
 func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
 
 	data, err := s.repo.GetAll()
@@ -107,7 +107,7 @@ func (s *RespondenService) GetByID(id int) (*dto.RespondenResponse, error) {
 	return &resp, nil
 }
 
-//Update
+// Update
 func (s *RespondenService) Update(id int, req dto.UpdateRespondenRequest) (*dto.RespondenResponse, error) {
 
 	if id <= 0 {
@@ -148,7 +148,7 @@ func (s *RespondenService) Update(id int, req dto.UpdateRespondenRequest) (*dto.
 	return &resp, nil
 }
 
-//Delete
+// Delete
 func (s *RespondenService) Delete(id int) error {
 
 	if id <= 0 {
@@ -166,7 +166,7 @@ func (s *RespondenService) Delete(id int) error {
 	return s.repo.Delete(id)
 }
 
-//Helpers
+// Helpers
 func (s *RespondenService) toModel(req dto.CreateRespondenRequest) models.Responden {
 
 	return models.Responden{
@@ -196,4 +196,4 @@ func (s *RespondenService) toResponse(m *models.Responden) dto.RespondenResponse
 		CreatedAt:          m.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:          m.UpdatedAt.Format(time.RFC3339),
 	}
-} 
+}
