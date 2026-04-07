@@ -158,13 +158,6 @@ func main() {
 	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo, ikasRepo, msgProducer)
 	jawabanGulihService := services.NewJawabanGulihService(jawabanGulihRepo, ikasRepo, msgProducer)
 
-	// Casbin Service
-	casbinService, err := services.NewCasbinService(cfg.Database.GetDSN(), cfg.CasbinModelPath)
-	if err != nil {
-		logger.FatalErr(err, "Failed to initialize Casbin")
-	}
-	logger.Info("Casbin initialized successfully with shared database")
-
 	// handlers
 	ikasHandler := handlers.NewIkasHandler(ikasService)
 	ruangLingkupHandler := handlers.NewRuangLingkupHandler(ruangLingkupService)
@@ -185,15 +178,7 @@ func main() {
 	jawabanGulihHandler := handlers.NewJawabanGulihHandler(jawabanGulihService)
 
 	// Middleware
-	authMiddleware := middleware.NewAuthMiddleware(cfg.JWTSecret, cfg.InternalGatewayKey)
-	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
-
-	// Initialize rate limiters with different configurations
-	rateLimitConfigs := middleware.GetRateLimitConfigs()
-
-	strictLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Strict)
-	moderateLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Moderate)
-	lenientLimiter := middleware.NewRateLimiter(redisClient, rateLimitConfigs.Lenient)
+	authMiddleware := middleware.NewAuthMiddleware(cfg.InternalGatewayKey)
 
 	// Router
 	mux := routes.InitRouter(
@@ -215,18 +200,10 @@ func main() {
 		jawabanDeteksiHandler,
 		jawabanGulihHandler,
 		authMiddleware,
-		casbinMiddleware,
-		strictLimiter,
-		moderateLimiter,
-		lenientLimiter,
 	)
 
 	go func() {
 		logger.Infof("IKAS service running on %s", cfg.Port)
-		logger.Info("Rate limiting enabled:")
-		logger.Info("  - Auth endpoints: 5 requests/minute per IP")
-		logger.Info("  - Public posts: 60 requests/minute per IP")
-		logger.Info("  - Protected posts: 20 requests/minute per user")
 		logger.Info("RabbitMQ consumers running:")
 		logger.Info("  - ikas.created")
 		logger.Info("  - ikas.updated")

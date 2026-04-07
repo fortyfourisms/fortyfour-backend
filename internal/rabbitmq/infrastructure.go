@@ -48,6 +48,18 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"main_api.ikas.created",
 		"main_api.ikas.updated",
 		"main_api.ikas.deleted",
+		"main_api.ruang_lingkup.created",
+		"main_api.ruang_lingkup.updated",
+		"main_api.ruang_lingkup.deleted",
+		"main_api.domain.created",
+		"main_api.domain.updated",
+		"main_api.domain.deleted",
+		"main_api.kategori.created",
+		"main_api.kategori.updated",
+		"main_api.kategori.deleted",
+		"main_api.sub_kategori.created",
+		"main_api.sub_kategori.updated",
+		"main_api.sub_kategori.deleted",
 	}
 
 	for _, queueName := range ikasQueues {

@@ -29,6 +29,21 @@ func (h *JawabanDeteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	case method == http.MethodPost && path == "/api/maturity/jawaban-deteksi":
 		h.handleCreate(w, r)
 	case method == http.MethodGet && path == "/api/maturity/jawaban-deteksi":
+		// Implicitly filter by PerusahaanID if user is not admin
+		userRole, _ := r.Context().Value(middleware.Role).(string)
+		userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+		
+		perusahaanID := r.URL.Query().Get("perusahaan_id")
+		
+		if userRole != "admin" {
+			// Override for non-admins
+			values := r.URL.Query()
+			values.Set("perusahaan_id", userPerusahaanID)
+			r.URL.RawQuery = values.Encode()
+		} else if perusahaanID != "" {
+			// Leave as is for admin filtering
+		}
+
 		h.handleGetAll(w, r)
 	case method == http.MethodGet && strings.HasPrefix(path, "/api/maturity/jawaban-deteksi/"):
 		h.handleGetByID(w, r)
@@ -55,7 +70,12 @@ func (h *JawabanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.Requ
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
-	msg, err := h.service.Create(req)
+	userRole := ""
+	if val := r.Context().Value(middleware.Role); val != nil {
+		userRole = val.(string)
+	}
+
+	msg, err := h.service.Create(req, userRole)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -132,7 +152,10 @@ func (h *JawabanDeteksiHandler) handleGetByID(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	resp, err := h.service.GetByID(id)
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	resp, err := h.service.GetByID(id, userRole, userPerusahaanID)
 	if err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "data tidak ditemukan" {
@@ -175,7 +198,17 @@ func (h *JawabanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Requ
 		userID = val.(string)
 	}
 
-	err = h.service.Update(id, req, userID)
+	userRole := ""
+	if val := r.Context().Value(middleware.Role); val != nil {
+		userRole = val.(string)
+	}
+	
+	userPerusahaanID := ""
+	if val := r.Context().Value(middleware.PerusahaanIDKey); val != nil {
+		userPerusahaanID = val.(string)
+	}
+
+	err = h.service.Update(id, req, userID, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -217,7 +250,10 @@ func (h *JawabanDeteksiHandler) handleDelete(w http.ResponseWriter, r *http.Requ
 		userID = val.(string)
 	}
 
-	if err := h.service.Delete(id, userID); err != nil {
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	if err := h.service.Delete(id, userID, userRole, userPerusahaanID); err != nil {
 		rollbar.Error(err)
 		if err.Error() == "data tidak ditemukan" {
 			utils.RespondError(w, 404, err.Error())
