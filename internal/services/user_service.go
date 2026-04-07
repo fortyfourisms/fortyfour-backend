@@ -231,6 +231,24 @@ func (s *UserService) UpdateMe(id string, req dto.UpdateMeRequest) (*dto.UserRes
 		return nil, err
 	}
 
+	if req.Username != nil {
+        trimmed := strings.TrimSpace(*req.Username)
+        if trimmed == "" {
+            return nil, errors.New("username tidak boleh kosong")
+        }
+        if !validator.ValidateUsername(trimmed) {
+            return nil, errors.New("username harus 3-50 karakter")
+        }
+        exists, err := s.repo.UsernameExists(trimmed, &id)
+        if err != nil {
+            return nil, err
+        }
+        if exists {
+            return nil, errors.New("username sudah digunakan")
+        }
+        user.Username = trimmed
+    }
+
 	if req.DisplayName != nil {
 		trimmed := strings.TrimSpace(*req.DisplayName)
 		if trimmed == "" {

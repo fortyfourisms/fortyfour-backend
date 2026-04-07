@@ -18,6 +18,7 @@ type UpdateUserRequest struct {
 
 // UpdateMeRequest untuk user update dirinya sendiri.
 type UpdateMeRequest struct {
+	Username    *string `json:"username" validate:"omitempty,min=3,max=50"`
 	DisplayName *string `json:"display_name" validate:"omitempty,min=1,max=100"`
 	Email       *string `json:"email" validate:"omitempty,email"`
 	IDJabatan   *string `json:"id_jabatan"`
