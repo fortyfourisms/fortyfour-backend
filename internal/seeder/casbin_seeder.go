@@ -56,6 +56,31 @@ var defaultPolicies = []Policy{
 	{"user", "/api/perusahaan", "GET"},
 	{"user", "/api/perusahaan/:id", "GET"},
 	{"user", "/api/perusahaan/:id", "PUT"},
+
+	// Maturity (Jawaban)
+	{"user", "/api/maturity/jawaban-identifikasi", "GET"},
+	{"user", "/api/maturity/jawaban-identifikasi", "POST"},
+	{"user", "/api/maturity/jawaban-identifikasi/:id", "GET"},
+	{"user", "/api/maturity/jawaban-identifikasi/:id", "PUT"},
+	// {"user", "/api/maturity/jawaban-identifikasi/:id", "DELETE"},
+
+	{"user", "/api/maturity/jawaban-proteksi", "GET"},
+	{"user", "/api/maturity/jawaban-proteksi", "POST"},
+	{"user", "/api/maturity/jawaban-proteksi/:id", "GET"},
+	{"user", "/api/maturity/jawaban-proteksi/:id", "PUT"},
+	// {"user", "/api/maturity/jawaban-proteksi/:id", "DELETE"},
+
+	{"user", "/api/maturity/jawaban-deteksi", "GET"},
+	{"user", "/api/maturity/jawaban-deteksi", "POST"},
+	{"user", "/api/maturity/jawaban-deteksi/:id", "GET"},
+	{"user", "/api/maturity/jawaban-deteksi/:id", "PUT"},
+	// {"user", "/api/maturity/jawaban-deteksi/:id", "DELETE"},
+
+	{"user", "/api/maturity/jawaban-gulih", "GET"},
+	{"user", "/api/maturity/jawaban-gulih", "POST"},
+	{"user", "/api/maturity/jawaban-gulih/:id", "GET"},
+	{"user", "/api/maturity/jawaban-gulih/:id", "PUT"},
+	// {"user", "/api/maturity/jawaban-gulih/:id", "DELETE"},
 }
 
 // SeedCasbinPolicies memastikan semua default policy ada di database.
