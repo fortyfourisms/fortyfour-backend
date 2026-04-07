@@ -1,68 +1,16 @@
 basePath: /
 definitions:
-  dto.CreateDeteksiData:
-    properties:
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-    type: object
   dto.CreateDomainRequest:
     properties:
       nama_domain:
         type: string
     type: object
-  dto.CreateGulihData:
-    properties:
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-    type: object
-  dto.CreateIdentifikasiData:
-    properties:
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-      nilai_subdomain5:
-        type: number
-    type: object
   dto.CreateIkasRequest:
     properties:
-      deteksi:
-        $ref: '#/definitions/dto.CreateDeteksiData'
-      gulih:
-        $ref: '#/definitions/dto.CreateGulihData'
-      id_deteksi:
-        type: string
-      id_gulih:
-        type: string
-      id_identifikasi:
-        description: ID manual (backward compatibility)
-        type: string
       id_perusahaan:
         type: string
-      id_proteksi:
-        type: string
-      identifikasi:
-        allOf:
-        - $ref: '#/definitions/dto.CreateIdentifikasiData'
-        description: Nested data untuk auto-create
       jabatan:
         type: string
-      proteksi:
-        $ref: '#/definitions/dto.CreateProteksiData'
       responden:
         type: string
       tanggal:
@@ -72,27 +20,156 @@ definitions:
       telepon:
         type: string
     type: object
+  dto.CreateJawabanDeteksiRequest:
+    properties:
+      evidence:
+        type: string
+      jawaban_deteksi:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_deteksi_id:
+        type: integer
+      perusahaan_id:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.CreateJawabanGulihRequest:
+    properties:
+      evidence:
+        type: string
+      jawaban_gulih:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_gulih_id:
+        type: integer
+      perusahaan_id:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.CreateJawabanIdentifikasiRequest:
+    properties:
+      evidence:
+        type: string
+      jawaban_identifikasi:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_identifikasi_id:
+        type: integer
+      perusahaan_id:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.CreateJawabanProteksiRequest:
+    properties:
+      evidence:
+        type: string
+      jawaban_proteksi:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_proteksi_id:
+        type: integer
+      perusahaan_id:
+        type: string
+      validasi:
+        type: string
+    type: object
   dto.CreateKategoriRequest:
     properties:
       domain_id:
-        type: string
+        type: integer
       nama_kategori:
         type: string
     type: object
-  dto.CreateProteksiData:
+  dto.CreatePertanyaanDeteksiRequest:
     properties:
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-      nilai_subdomain5:
-        type: number
-      nilai_subdomain6:
-        type: number
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_deteksi:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
+  dto.CreatePertanyaanGulihRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_gulih:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
+  dto.CreatePertanyaanIdentifikasiRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_identifikasi:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
+  dto.CreatePertanyaanProteksiRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_proteksi:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
     type: object
   dto.CreateRuangLingkupRequest:
     properties:
@@ -102,14 +179,14 @@ definitions:
   dto.CreateSubKategoriRequest:
     properties:
       kategori_id:
-        type: string
+        type: integer
       nama_sub_kategori:
         type: string
     type: object
   dto.DeteksiInIkas:
     properties:
       id:
-        type: string
+        type: integer
       kategori_tingkat_kematangan_domain:
         type: string
       nilai_deteksi:
@@ -121,12 +198,32 @@ definitions:
       nilai_subdomain3:
         type: number
     type: object
+  dto.DeteksiResponse:
+    properties:
+      id:
+        type: string
+      nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+    type: object
+  dto.DomainInfo:
+    properties:
+      id:
+        type: integer
+      nama_domain:
+        type: string
+    type: object
   dto.DomainResponse:
     properties:
       created_at:
         type: string
       id:
-        type: string
+        type: integer
       nama_domain:
         type: string
       updated_at:
@@ -135,7 +232,7 @@ definitions:
   dto.GulihInIkas:
     properties:
       id:
-        type: string
+        type: integer
       kategori_tingkat_kematangan_domain:
         type: string
       nilai_gulih:
@@ -149,10 +246,25 @@ definitions:
       nilai_subdomain4:
         type: number
     type: object
-  dto.IdentifikasiInIkas:
+  dto.GulihResponse:
     properties:
       id:
         type: string
+      nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+    type: object
+  dto.IdentifikasiInIkas:
+    properties:
+      id:
+        type: integer
       kategori_tingkat_kematangan_domain:
         type: string
       nilai_identifikasi:
@@ -168,8 +280,27 @@ definitions:
       nilai_subdomain5:
         type: number
     type: object
+  dto.IdentifikasiResponse:
+    properties:
+      id:
+        type: string
+      nilai_identiifasi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+    type: object
   dto.IkasResponse:
     properties:
+      created_at:
+        type: string
       deteksi:
         $ref: '#/definitions/dto.DeteksiInIkas'
       gulih:
@@ -196,6 +327,8 @@ definitions:
         type: number
       telepon:
         type: string
+      updated_at:
+        type: string
     type: object
   dto.ImportIkasResponse:
     properties:
@@ -210,16 +343,258 @@ definitions:
       success:
         type: boolean
     type: object
+  dto.JawabanDeteksiResponse:
+    properties:
+      created_at:
+        type: string
+      evidence:
+        type: string
+      id:
+        type: integer
+      jawaban_deteksi:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_deteksi:
+        $ref: '#/definitions/dto.PertanyaanDeteksiInfo'
+      perusahaan_id:
+        type: string
+      updated_at:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.JawabanIdentifikasiResponse:
+    properties:
+      created_at:
+        type: string
+      evidence:
+        type: string
+      id:
+        type: integer
+      jawaban_identifikasi:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_identifikasi:
+        $ref: '#/definitions/dto.PertanyaanIdentifikasiInfo'
+      perusahaan_id:
+        type: string
+      updated_at:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.JawabanProteksiResponse:
+    properties:
+      created_at:
+        type: string
+      evidence:
+        type: string
+      id:
+        type: integer
+      jawaban_proteksi:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_proteksi:
+        $ref: '#/definitions/dto.PertanyaanProteksiInfo'
+      perusahaan_id:
+        type: string
+      updated_at:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.KategoriInfo:
+    properties:
+      domain:
+        $ref: '#/definitions/dto.DomainInfo'
+      id:
+        type: integer
+      nama_kategori:
+        type: string
+    type: object
+  dto.KategoriMessageResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
   dto.KategoriResponse:
     properties:
       created_at:
         type: string
       domain_id:
-        type: string
+        type: integer
       id:
-        type: string
+        type: integer
       nama_kategori:
         type: string
+      updated_at:
+        type: string
+    type: object
+  dto.PertanyaanDeteksiInfo:
+    properties:
+      id:
+        type: integer
+      pertanyaan_deteksi:
+        type: string
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
+    type: object
+  dto.PertanyaanDeteksiMessageResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.PertanyaanDeteksiResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_deteksi:
+        type: string
+      ruang_lingkup:
+        $ref: '#/definitions/dto.RuangLingkupInfo'
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
+      updated_at:
+        type: string
+    type: object
+  dto.PertanyaanGulihMessageResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.PertanyaanGulihResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_gulih:
+        type: string
+      ruang_lingkup:
+        $ref: '#/definitions/dto.RuangLingkupInfo'
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
+      updated_at:
+        type: string
+    type: object
+  dto.PertanyaanIdentifikasiInfo:
+    properties:
+      id:
+        type: integer
+      pertanyaan_identifikasi:
+        type: string
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
+    type: object
+  dto.PertanyaanIdentifikasiMessageResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.PertanyaanIdentifikasiResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_identifikasi:
+        type: string
+      ruang_lingkup:
+        $ref: '#/definitions/dto.RuangLingkupInfo'
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
+      updated_at:
+        type: string
+    type: object
+  dto.PertanyaanProteksiInfo:
+    properties:
+      id:
+        type: integer
+      pertanyaan_proteksi:
+        type: string
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
+    type: object
+  dto.PertanyaanProteksiMessageResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.PertanyaanProteksiResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_proteksi:
+        type: string
+      ruang_lingkup:
+        $ref: '#/definitions/dto.RuangLingkupInfo'
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
       updated_at:
         type: string
     type: object
@@ -233,7 +608,7 @@ definitions:
   dto.ProteksiInIkas:
     properties:
       id:
-        type: string
+        type: integer
       kategori_tingkat_kematangan_domain:
         type: string
       nilai_proteksi:
@@ -251,112 +626,12 @@ definitions:
       nilai_subdomain6:
         type: number
     type: object
-  dto.RuangLingkupResponse:
+  dto.ProteksiResponse:
     properties:
-      created_at:
-        type: string
       id:
         type: string
-      nama_ruang_lingkup:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  dto.SubKategoriResponse:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: string
-      kategori_id:
-        type: string
-      nama_sub_kategori:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  dto.UpdateDeteksiData:
-    properties:
-      nilai_subdomain1:
+      nilai_proteksi:
         type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-    type: object
-  dto.UpdateDomainRequest:
-    properties:
-      nama_domain:
-        type: string
-    type: object
-  dto.UpdateGulihData:
-    properties:
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-    type: object
-  dto.UpdateIdentifikasiData:
-    properties:
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-      nilai_subdomain5:
-        type: number
-    type: object
-  dto.UpdateIkasRequest:
-    properties:
-      deteksi:
-        $ref: '#/definitions/dto.UpdateDeteksiData'
-      gulih:
-        $ref: '#/definitions/dto.UpdateGulihData'
-      id_deteksi:
-        type: string
-      id_gulih:
-        type: string
-      id_identifikasi:
-        type: string
-      id_perusahaan:
-        type: string
-      id_proteksi:
-        type: string
-      identifikasi:
-        allOf:
-        - $ref: '#/definitions/dto.UpdateIdentifikasiData'
-        description: Nested data untuk update subdomain
-      jabatan:
-        type: string
-      nilai_kematangan:
-        type: number
-      proteksi:
-        $ref: '#/definitions/dto.UpdateProteksiData'
-      responden:
-        type: string
-      tanggal:
-        type: string
-      target_nilai:
-        type: number
-      telepon:
-        type: string
-    type: object
-  dto.UpdateKategoriRequest:
-    properties:
-      domain_id:
-        type: string
-      nama_kategori:
-        type: string
-    type: object
-  dto.UpdateProteksiData:
-    properties:
       nilai_subdomain1:
         type: number
       nilai_subdomain2:
@@ -370,6 +645,208 @@ definitions:
       nilai_subdomain6:
         type: number
     type: object
+  dto.RuangLingkupInfo:
+    properties:
+      id:
+        type: integer
+      nama_ruang_lingkup:
+        type: string
+    type: object
+  dto.RuangLingkupResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      nama_ruang_lingkup:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.SubKategoriInfo:
+    properties:
+      id:
+        type: integer
+      kategori:
+        $ref: '#/definitions/dto.KategoriInfo'
+      nama_sub_kategori:
+        type: string
+    type: object
+  dto.SubKategoriMessageResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.SubKategoriResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      kategori_id:
+        type: integer
+      nama_sub_kategori:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.UpdateDomainRequest:
+    properties:
+      nama_domain:
+        type: string
+    type: object
+  dto.UpdateIkasRequest:
+    properties:
+      id_perusahaan:
+        type: string
+      jabatan:
+        type: string
+      responden:
+        type: string
+      tanggal:
+        type: string
+      target_nilai:
+        type: number
+      telepon:
+        type: string
+    type: object
+  dto.UpdateJawabanDeteksiRequest:
+    properties:
+      evidence:
+        type: string
+      jawaban_deteksi:
+        type: number
+      keterangan:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.UpdateJawabanGulihRequest:
+    properties:
+      evidence:
+        type: string
+      jawaban_gulih:
+        type: number
+      keterangan:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.UpdateJawabanIdentifikasiRequest:
+    properties:
+      evidence:
+        type: string
+      jawaban_identifikasi:
+        type: number
+      keterangan:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.UpdateJawabanProteksiRequest:
+    properties:
+      evidence:
+        type: string
+      jawaban_proteksi:
+        type: number
+      keterangan:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.UpdateKategoriRequest:
+    properties:
+      domain_id:
+        type: integer
+      nama_kategori:
+        type: string
+    type: object
+  dto.UpdatePertanyaanDeteksiRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_deteksi:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
+  dto.UpdatePertanyaanGulihRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_gulih:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
+  dto.UpdatePertanyaanIdentifikasiRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_identifikasi:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
+  dto.UpdatePertanyaanProteksiRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_proteksi:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
   dto.UpdateRuangLingkupRequest:
     properties:
       nama_ruang_lingkup:
@@ -378,7 +855,7 @@ definitions:
   dto.UpdateSubKategoriRequest:
     properties:
       kategori_id:
-        type: string
+        type: integer
       nama_sub_kategori:
         type: string
     type: object
@@ -420,44 +897,12 @@ definitions:
     - policies
     - role
     type: object
-  fortyfour-backend_internal_dto.CreateDeteksiRequest:
+  fortyfour-backend_internal_dto.ChatRequest:
     properties:
-      nilai_deteksi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-    type: object
-  fortyfour-backend_internal_dto.CreateGulihRequest:
-    properties:
-      nilai_gulih:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-    type: object
-  fortyfour-backend_internal_dto.CreateIdentifikasiRequest:
-    properties:
-      nilai_identifikasi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-      nilai_subdomain5:
-        type: number
+      message:
+        type: string
+      session_id:
+        type: string
     type: object
   fortyfour-backend_internal_dto.CreateJabatanRequest:
     properties:
@@ -489,23 +934,6 @@ definitions:
         type: string
       website:
         type: string
-    type: object
-  fortyfour-backend_internal_dto.CreateProteksiRequest:
-    properties:
-      nilai_proteksi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-      nilai_subdomain5:
-        type: number
-      nilai_subdomain6:
-        type: number
     type: object
   fortyfour-backend_internal_dto.CreateRoleRequest:
     properties:
@@ -668,6 +1096,8 @@ definitions:
         type: string
       file_rfc2350:
         type: string
+      file_str:
+        type: string
       id:
         type: string
       nama_csirt:
@@ -676,61 +1106,36 @@ definitions:
         $ref: '#/definitions/fortyfour-backend_internal_dto.PerusahaanResponse'
       photo_csirt:
         type: string
+      tanggal_kadaluarsa:
+        type: string
+      tanggal_registrasi:
+        type: string
+      tanggal_registrasi_ulang:
+        type: string
       telepon_csirt:
         type: string
       web_csirt:
         type: string
     type: object
-  fortyfour-backend_internal_dto.DeteksiResponse:
+  fortyfour-backend_internal_dto.DashboardSummary:
     properties:
-      id:
-        type: string
-      nilai_deteksi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
+      kse:
+        allOf:
+        - $ref: '#/definitions/fortyfour-backend_internal_dto.SeAgg'
+        description: 'Ikas   IkasAgg       `json:"ikas"` // TODO: re-enable ikas summary
+          when ikas table is ready'
+      kse_status:
+        $ref: '#/definitions/fortyfour-backend_internal_dto.SeStatusCount'
+      sektor_counts:
+        items:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.SectorCount'
+        type: array
     type: object
   fortyfour-backend_internal_dto.ErrorResponse:
     properties:
       message:
         example: invalid credentials
         type: string
-    type: object
-  fortyfour-backend_internal_dto.GulihResponse:
-    properties:
-      id:
-        type: string
-      nilai_deteksi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-    type: object
-  fortyfour-backend_internal_dto.IdentifikasiResponse:
-    properties:
-      id:
-        type: string
-      nilai_identiifasi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-      nilai_subdomain5:
-        type: number
     type: object
   fortyfour-backend_internal_dto.JabatanResponse:
     properties:
@@ -745,18 +1150,40 @@ definitions:
     type: object
   fortyfour-backend_internal_dto.LoginRequest:
     properties:
+      identifier:
+        type: string
       password:
         type: string
-      username:
-        type: string
     required:
+    - identifier
     - password
-    - username
     type: object
   fortyfour-backend_internal_dto.MessageResponse:
     properties:
       message:
         example: Logged out successfully
+        type: string
+    type: object
+  fortyfour-backend_internal_dto.NotificationListResponse:
+    properties:
+      notifications:
+        items:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.NotificationResponse'
+        type: array
+      unread_count:
+        type: integer
+    type: object
+  fortyfour-backend_internal_dto.NotificationResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      message:
+        type: string
+      read:
+        type: boolean
+      type:
         type: string
     type: object
   fortyfour-backend_internal_dto.PICResponse:
@@ -782,6 +1209,13 @@ definitions:
         type: string
     type: object
   fortyfour-backend_internal_dto.PerusahaanMiniResponse:
+    properties:
+      id:
+        type: string
+      nama_perusahaan:
+        type: string
+    type: object
+  fortyfour-backend_internal_dto.PerusahaanMinimalResponse:
     properties:
       id:
         type: string
@@ -821,25 +1255,6 @@ definitions:
     - action
     - resource
     type: object
-  fortyfour-backend_internal_dto.ProteksiResponse:
-    properties:
-      id:
-        type: string
-      nilai_proteksi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-      nilai_subdomain5:
-        type: number
-      nilai_subdomain6:
-        type: number
-    type: object
   fortyfour-backend_internal_dto.RegisterRequest:
     properties:
       email:
@@ -854,8 +1269,6 @@ definitions:
         type: string
       password:
         minLength: 8
-        type: string
-      role_id:
         type: string
       username:
         maxLength: 50
@@ -982,6 +1395,39 @@ definitions:
       updated_at:
         type: string
     type: object
+  fortyfour-backend_internal_dto.SeAgg:
+    properties:
+      rendah:
+        type: integer
+      strategis:
+        type: integer
+      this_month:
+        type: integer
+      tinggi:
+        type: integer
+      total_se:
+        type: integer
+    type: object
+  fortyfour-backend_internal_dto.SeStatusCount:
+    properties:
+      belum_mengisi_kse:
+        type: integer
+      sudah_mengisi_kse:
+        type: integer
+      total_perusahaan:
+        type: integer
+    type: object
+  fortyfour-backend_internal_dto.SectorCount:
+    properties:
+      id:
+        type: string
+      nama_sektor:
+        type: string
+      this_month:
+        type: integer
+      total:
+        type: integer
+    type: object
   fortyfour-backend_internal_dto.SektorResponse:
     properties:
       created_at:
@@ -1023,48 +1469,20 @@ definitions:
       updated_at:
         type: string
     type: object
-  fortyfour-backend_internal_dto.UpdateDeteksiRequest:
-    properties:
-      nilai_deteksi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-    type: object
-  fortyfour-backend_internal_dto.UpdateGulihRequest:
-    properties:
-      nilai_gulih:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-    type: object
-  fortyfour-backend_internal_dto.UpdateIdentifikasiRequest:
-    properties:
-      nilai_identifikasi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-      nilai_subdomain5:
-        type: number
-    type: object
   fortyfour-backend_internal_dto.UpdateJabatanRequest:
     properties:
       nama_jabatan:
+        type: string
+    type: object
+  fortyfour-backend_internal_dto.UpdateMeRequest:
+    properties:
+      display_name:
+        maxLength: 100
+        minLength: 1
+        type: string
+      email:
+        type: string
+      id_jabatan:
         type: string
     type: object
   fortyfour-backend_internal_dto.UpdatePICRequest:
@@ -1092,23 +1510,6 @@ definitions:
         type: string
       website:
         type: string
-    type: object
-  fortyfour-backend_internal_dto.UpdateProteksiRequest:
-    properties:
-      nilai_proteksi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-      nilai_subdomain5:
-        type: number
-      nilai_subdomain6:
-        type: number
     type: object
   fortyfour-backend_internal_dto.UpdateRoleRequest:
     properties:
@@ -1232,6 +1633,10 @@ definitions:
     type: object
   fortyfour-backend_internal_dto.UpdateUserRequest:
     properties:
+      display_name:
+        maxLength: 100
+        minLength: 1
+        type: string
       email:
         type: string
       id_jabatan:
@@ -1249,30 +1654,7 @@ definitions:
         type: string
       created_at:
         type: string
-      email:
-        type: string
-      foto_profile:
-        type: string
-      id:
-        type: string
-      id_jabatan:
-        type: string
-      jabatan_name:
-        type: string
-      role_id:
-        type: string
-      role_name:
-        type: string
-      updated_at:
-        type: string
-      username:
-        type: string
-    type: object
-  fortyfour-backend_internal_models.User:
-    properties:
-      banner:
-        type: string
-      created_at:
+      display_name:
         type: string
       email:
         type: string
@@ -1292,11 +1674,60 @@ definitions:
         type: string
       role_name:
         type: string
+      status:
+        type: string
       updated_at:
         type: string
       username:
         type: string
     type: object
+  fortyfour-backend_internal_models.User:
+    properties:
+      banner:
+        type: string
+      created_at:
+        type: string
+      display_name:
+        type: string
+      email:
+        type: string
+      foto_profile:
+        type: string
+      id:
+        type: string
+      id_jabatan:
+        type: string
+      id_perusahaan:
+        type: string
+      jabatan_name:
+        type: string
+      mfa_enabled:
+        type: boolean
+      password_changed_at:
+        type: string
+      role_id:
+        type: string
+      role_name:
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/fortyfour-backend_internal_models.UserStatus'
+        description: Security fields
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  fortyfour-backend_internal_models.UserStatus:
+    enum:
+    - Aktif
+    - Suspend
+    - Nonaktif
+    type: string
+    x-enum-varnames:
+    - UserStatusAktif
+    - UserStatusSuspend
+    - UserStatusNonaktif
   ikas_internal_dto.ErrorResponse:
     properties:
       error:
@@ -1304,6 +1735,8 @@ definitions:
     type: object
   ikas_internal_dto.MessageResponse:
     properties:
+      id:
+        type: integer
       message:
         type: string
     type: object
@@ -1468,27 +1901,81 @@ paths:
       summary: Remove Casbin policy
       tags:
       - Casbin
-  /api/csirt:
-    get:
-      description: Mengambil seluruh data CSIRT
-      produces:
+  /api/chat:
+    post:
+      consumes:
       - application/json
+      description: Mengirim pesan ke AI dan menerima respons secara streaming via
+        Server-Sent Events
+      parameters:
+      - description: Chat request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.ChatRequest'
+      produces:
+      - text/event-stream
       responses:
         "200":
-          description: OK
+          description: SSE stream
           schema:
-            items:
-              $ref: '#/definitions/fortyfour-backend_internal_dto.CsirtResponse'
-            type: array
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: List semua CSIRT
+      summary: Chat dengan AI (SSE streaming)
       tags:
-      - CSIRT
+      - Chat
+  /api/chat/delete-session:
+    delete:
+      consumes:
+      - application/json
+      description: Menghapus riwayat percakapan berdasarkan session ID
+      parameters:
+      - description: Session ID
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            session_id:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Hapus chat session
+      tags:
+      - Chat
+  /api/csirt:
     post:
       consumes:
       - multipart/form-data
@@ -1524,6 +2011,22 @@ paths:
         in: formData
         name: file_public_key_pgp
         type: file
+      - description: File STR CSIRT (nullable)
+        in: formData
+        name: file_str
+        type: file
+      - description: Tanggal Registrasi (YYYY-MM-DD)
+        in: formData
+        name: tanggal_registrasi
+        type: string
+      - description: Tanggal Kadaluarsa (YYYY-MM-DD)
+        in: formData
+        name: tanggal_kadaluarsa
+        type: string
+      - description: Tanggal Registrasi Ulang (YYYY-MM-DD)
+        in: formData
+        name: tanggal_registrasi_ulang
+        type: string
       produces:
       - application/json
       responses:
@@ -1623,6 +2126,22 @@ paths:
         in: formData
         name: file_public_key_pgp
         type: file
+      - description: File STR CSIRT (nullable)
+        in: formData
+        name: file_str
+        type: file
+      - description: Tanggal Registrasi (YYYY-MM-DD)
+        in: formData
+        name: tanggal_registrasi
+        type: string
+      - description: Tanggal Kadaluarsa (YYYY-MM-DD)
+        in: formData
+        name: tanggal_kadaluarsa
+        type: string
+      - description: Tanggal Registrasi Ulang (YYYY-MM-DD)
+        in: formData
+        name: tanggal_registrasi_ulang
+        type: string
       produces:
       - application/json
       responses:
@@ -1639,6 +2158,115 @@ paths:
       summary: Update CSIRT
       tags:
       - CSIRT
+  /api/csirt/{id}/export-pdf:
+    get:
+      description: Export data CSIRT berdasarkan ID. User hanya bisa akses CSIRT milik
+        perusahaannya.
+      parameters:
+      - description: CSIRT ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Export satu CSIRT ke PDF
+      tags:
+      - CSIRT Export
+  /api/csirt/export-pdf:
+    get:
+      description: 'Admin: export semua CSIRT, atau filter by id_perusahaan. User:
+        hanya milik perusahaannya.'
+      parameters:
+      - description: Filter by ID Perusahaan (admin only)
+        in: query
+        name: id_perusahaan
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Export semua CSIRT ke PDF
+      tags:
+      - CSIRT Export
+  /api/dashboard/summary:
+    get:
+      description: |-
+        Mengambil ringkasan data dashboard. Mendukung berbagai filter opsional.
+        Prioritas filter tanggal: from+to > year+quarter > year.
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: from
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: to
+        type: string
+      - description: Filter per tahun, misal 2025
+        in: query
+        name: year
+        type: string
+      - description: Filter per kuartal (1-4), harus digunakan bersama year
+        in: query
+        name: quarter
+        type: string
+      - description: Filter per sub-sektor (UUID)
+        in: query
+        name: sub_sektor_id
+        type: string
+      - description: 'Filter kategori SE: Strategis | Tinggi | Rendah'
+        in: query
+        name: kategori_se
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.DashboardSummary'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get dashboard summary
+      tags:
+      - Dashboard
   /api/deteksi:
     get:
       description: Mengambil seluruh data deteksi
@@ -1649,63 +2277,16 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/fortyfour-backend_internal_dto.DeteksiResponse'
+              $ref: '#/definitions/dto.DeteksiResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua deteksi
       tags:
       - Deteksi
-    post:
-      consumes:
-      - application/json
-      description: Membuat record deteksi
-      parameters:
-      - description: Data deteksi
-        in: body
-        name: deteksi
-        required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.CreateDeteksiRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.DeteksiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      summary: Tambah deteksi baru
-      tags:
-      - Deteksi
   /api/deteksi/{id}:
-    delete:
-      description: Menghapus data deteksi berdasarkan ID
-      parameters:
-      - description: Deteksi ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.MessageResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      summary: Hapus deteksi
-      tags:
-      - Deteksi
     get:
       parameters:
       - description: Deteksi ID
@@ -1719,42 +2300,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.DeteksiResponse'
+            $ref: '#/definitions/dto.DeteksiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil deteksi berdasarkan ID
-      tags:
-      - Deteksi
-    put:
-      consumes:
-      - application/json
-      description: Mengubah data deteksi berdasarkan ID
-      parameters:
-      - description: Deteksi ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Data update
-        in: body
-        name: deteksi
-        required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.UpdateDeteksiRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.DeteksiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      summary: Update deteksi
       tags:
       - Deteksi
   /api/events:
@@ -1798,63 +2349,16 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/fortyfour-backend_internal_dto.GulihResponse'
+              $ref: '#/definitions/dto.GulihResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua gulih
       tags:
       - Gulih
-    post:
-      consumes:
-      - application/json
-      description: Membuat record gulih
-      parameters:
-      - description: Data gulih
-        in: body
-        name: deteksi
-        required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.CreateGulihRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.GulihResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      summary: Tambah gulih baru
-      tags:
-      - Gulih
   /api/gulih/{id}:
-    delete:
-      description: Menghapus data gulih berdasarkan ID
-      parameters:
-      - description: Gulih ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.MessageResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      summary: Hapus gulih
-      tags:
-      - Gulih
     get:
       parameters:
       - description: Gulih ID
@@ -1868,42 +2372,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.GulihResponse'
+            $ref: '#/definitions/dto.GulihResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil gulih berdasarkan ID
-      tags:
-      - Gulih
-    put:
-      consumes:
-      - application/json
-      description: Mengubah data gulih berdasarkan ID
-      parameters:
-      - description: Gulih ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Data update
-        in: body
-        name: deteksi
-        required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.UpdateGulihRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.DeteksiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      summary: Update gulih
       tags:
       - Gulih
   /api/health:
@@ -1931,63 +2405,16 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/fortyfour-backend_internal_dto.IdentifikasiResponse'
+              $ref: '#/definitions/dto.IdentifikasiResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua identifikasi
       tags:
       - Identifikasi
-    post:
-      consumes:
-      - application/json
-      description: Membuat record identifikasi
-      parameters:
-      - description: Data identifikasi
-        in: body
-        name: identifikasi
-        required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.CreateIdentifikasiRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.IdentifikasiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      summary: Tambah identifikasi baru
-      tags:
-      - Identifikasi
   /api/identifikasi/{id}:
-    delete:
-      description: Menghapus data identifikasi berdasarkan ID
-      parameters:
-      - description: Identifikasi ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.MessageResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      summary: Hapus identifikasi
-      tags:
-      - Identifikasi
     get:
       description: Mengambil satu data identifikasi
       parameters:
@@ -2002,42 +2429,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.IdentifikasiResponse'
+            $ref: '#/definitions/dto.IdentifikasiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil identifikasi berdasarkan ID
-      tags:
-      - Identifikasi
-    put:
-      consumes:
-      - application/json
-      description: Mengubah data identifikasi berdasarkan ID
-      parameters:
-      - description: Identifikasi ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Data update
-        in: body
-        name: identifikasi
-        required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.UpdateIdentifikasiRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.IdentifikasiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      summary: Update identifikasi
       tags:
       - Identifikasi
   /api/jabatan:
@@ -2159,6 +2556,28 @@ paths:
       summary: Update jabatan
       tags:
       - Jabatan
+  /api/kelas:
+    get:
+      responses: {}
+      tags:
+      - LMS-Kelas
+    post:
+      responses: {}
+      tags:
+      - LMS-Kelas
+  /api/kelas/{id}:
+    delete:
+      responses: {}
+      tags:
+      - LMS-Kelas
+    get:
+      responses: {}
+      tags:
+      - LMS-Kelas
+    put:
+      responses: {}
+      tags:
+      - LMS-Kelas
   /api/login:
     post:
       consumes:
@@ -2287,7 +2706,7 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -2313,7 +2732,7 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -2535,6 +2954,518 @@ paths:
       summary: Import IKAS dari Excel
       tags:
       - Ikas
+  /api/maturity/jawaban-deteksi:
+    get:
+      description: Get all answers for detection questions, optionally filtered by
+        perusahaan_id or pertanyaan_deteksi_id
+      parameters:
+      - description: Filter by Perusahaan ID
+        in: query
+        name: perusahaan_id
+        type: string
+      - description: Filter by Pertanyaan Deteksi ID
+        in: query
+        name: pertanyaan_deteksi_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.JawabanDeteksiResponse'
+            type: array
+      summary: Get All Jawaban Deteksi
+      tags:
+      - Jawaban Deteksi
+    post:
+      consumes:
+      - application/json
+      description: Create a new answer for detection question
+      parameters:
+      - description: Jawaban Deteksi Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateJawabanDeteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.JawabanDeteksiResponse'
+      summary: Create Jawaban Deteksi
+      tags:
+      - Jawaban Deteksi
+  /api/maturity/jawaban-deteksi/{id}:
+    delete:
+      description: Delete a specific detection answer
+      parameters:
+      - description: Jawaban Deteksi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete Jawaban Deteksi
+      tags:
+      - Jawaban Deteksi
+    get:
+      description: Get a specific detection answer by its ID
+      parameters:
+      - description: Jawaban Deteksi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.JawabanDeteksiResponse'
+      summary: Get Jawaban Deteksi by ID
+      tags:
+      - Jawaban Deteksi
+    put:
+      consumes:
+      - application/json
+      description: Update an existing detection answer
+      parameters:
+      - description: Jawaban Deteksi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateJawabanDeteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.JawabanDeteksiResponse'
+      summary: Update Jawaban Deteksi
+      tags:
+      - Jawaban Deteksi
+  /api/maturity/jawaban-gulih:
+    get:
+      description: Get all answers for gulih questions, optionally filtered by perusahaan_id
+        or pertanyaan_gulih_id
+      parameters:
+      - description: Filter by Perusahaan ID
+        in: query
+        name: perusahaan_id
+        type: string
+      - description: Filter by Pertanyaan Gulih ID
+        in: query
+        name: pertanyaan_gulih_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get All Jawaban Gulih
+      tags:
+      - Jawaban Gulih
+    post:
+      consumes:
+      - application/json
+      description: Create a new answer for gulih question
+      parameters:
+      - description: Jawaban Gulih Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateJawabanGulihRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create Jawaban Gulih
+      tags:
+      - Jawaban Gulih
+  /api/maturity/jawaban-gulih/{id}:
+    delete:
+      description: Delete a specific gulih answer
+      parameters:
+      - description: Jawaban Gulih ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete Jawaban Gulih
+      tags:
+      - Jawaban Gulih
+    get:
+      description: Get a specific gulih answer by its ID
+      parameters:
+      - description: Jawaban Gulih ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get Jawaban Gulih by ID
+      tags:
+      - Jawaban Gulih
+    put:
+      consumes:
+      - application/json
+      description: Update an existing gulih answer
+      parameters:
+      - description: Jawaban Gulih ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateJawabanGulihRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update Jawaban Gulih
+      tags:
+      - Jawaban Gulih
+  /api/maturity/jawaban-identifikasi:
+    get:
+      description: Mengambil seluruh data jawaban identifikasi. Bisa difilter dengan
+        query param perusahaan_id atau pertanyaan_identifikasi_id
+      parameters:
+      - description: Filter by perusahaan ID
+        in: query
+        name: perusahaan_id
+        type: string
+      - description: Filter by pertanyaan identifikasi ID
+        in: query
+        name: pertanyaan_identifikasi_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.JawabanIdentifikasiResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua jawaban identifikasi
+      tags:
+      - JawabanIdentifikasi
+    post:
+      consumes:
+      - application/json
+      description: Membuat record jawaban identifikasi baru
+      parameters:
+      - description: Data jawaban identifikasi
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateJawabanIdentifikasiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.JawabanIdentifikasiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Tambah jawaban identifikasi baru
+      tags:
+      - JawabanIdentifikasi
+  /api/maturity/jawaban-identifikasi/{id}:
+    delete:
+      description: Menghapus data jawaban identifikasi berdasarkan ID
+      parameters:
+      - description: JawabanIdentifikasi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.MessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Hapus jawaban identifikasi
+      tags:
+      - JawabanIdentifikasi
+    get:
+      description: Mengambil satu data jawaban identifikasi
+      parameters:
+      - description: JawabanIdentifikasi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.JawabanIdentifikasiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ambil jawaban identifikasi berdasarkan ID
+      tags:
+      - JawabanIdentifikasi
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data jawaban identifikasi berdasarkan ID
+      parameters:
+      - description: JawabanIdentifikasi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateJawabanIdentifikasiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.JawabanIdentifikasiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Update jawaban identifikasi
+      tags:
+      - JawabanIdentifikasi
+  /api/maturity/jawaban-proteksi:
+    get:
+      description: Mengambil seluruh data jawaban proteksi. Bisa difilter dengan query
+        param perusahaan_id atau pertanyaan_proteksi_id
+      parameters:
+      - description: Filter by perusahaan ID
+        in: query
+        name: perusahaan_id
+        type: string
+      - description: Filter by pertanyaan proteksi ID
+        in: query
+        name: pertanyaan_proteksi_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.JawabanProteksiResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua jawaban proteksi
+      tags:
+      - JawabanProteksi
+    post:
+      consumes:
+      - application/json
+      description: Membuat record jawaban proteksi baru
+      parameters:
+      - description: Data jawaban proteksi
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateJawabanProteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.JawabanProteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Tambah jawaban proteksi baru
+      tags:
+      - JawabanProteksi
+  /api/maturity/jawaban-proteksi/{id}:
+    delete:
+      description: Menghapus data jawaban proteksi berdasarkan ID
+      parameters:
+      - description: JawabanProteksi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.MessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Hapus jawaban proteksi
+      tags:
+      - JawabanProteksi
+    get:
+      description: Mengambil satu data jawaban proteksi
+      parameters:
+      - description: JawabanProteksi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.JawabanProteksiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ambil jawaban proteksi berdasarkan ID
+      tags:
+      - JawabanProteksi
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data jawaban proteksi berdasarkan ID
+      parameters:
+      - description: JawabanProteksi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateJawabanProteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.JawabanProteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Update jawaban proteksi
+      tags:
+      - JawabanProteksi
   /api/maturity/kategori:
     get:
       description: Mengambil seluruh data kategori
@@ -2591,14 +3522,14 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.MessageResponse'
+            $ref: '#/definitions/dto.KategoriMessageResponse'
         "404":
           description: Not Found
           schema:
@@ -2617,7 +3548,7 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -2641,7 +3572,7 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       - description: Data update
         in: body
         name: kategori
@@ -2670,6 +3601,530 @@ paths:
       summary: Update kategori
       tags:
       - Kategori
+  /api/maturity/pertanyaan-deteksi:
+    get:
+      description: Mengambil seluruh data pertanyaan deteksi
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PertanyaanDeteksiResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua pertanyaan deteksi
+      tags:
+      - PertanyaanDeteksi
+    post:
+      consumes:
+      - application/json
+      description: Membuat record pertanyaan deteksi baru
+      parameters:
+      - description: Data pertanyaan deteksi
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePertanyaanDeteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.PertanyaanDeteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Tambah pertanyaan deteksi baru
+      tags:
+      - PertanyaanDeteksi
+  /api/maturity/pertanyaan-deteksi/{id}:
+    delete:
+      description: Menghapus data pertanyaan deteksi berdasarkan ID
+      parameters:
+      - description: PertanyaanDeteksi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PertanyaanDeteksiMessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Hapus pertanyaan deteksi
+      tags:
+      - PertanyaanDeteksi
+    get:
+      description: Mengambil satu data pertanyaan deteksi
+      parameters:
+      - description: PertanyaanDeteksi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PertanyaanDeteksiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ambil pertanyaan deteksi berdasarkan ID
+      tags:
+      - PertanyaanDeteksi
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data pertanyaan deteksi berdasarkan ID
+      parameters:
+      - description: PertanyaanDeteksi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePertanyaanDeteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PertanyaanDeteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Update pertanyaan deteksi
+      tags:
+      - PertanyaanDeteksi
+  /api/maturity/pertanyaan-gulih:
+    get:
+      description: Mengambil seluruh data pertanyaan gulih
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PertanyaanGulihResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua pertanyaan gulih
+      tags:
+      - PertanyaanGulih
+    post:
+      consumes:
+      - application/json
+      description: Membuat record pertanyaan gulih baru
+      parameters:
+      - description: Data pertanyaan gulih
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePertanyaanGulihRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.PertanyaanGulihResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Tambah pertanyaan gulih baru
+      tags:
+      - PertanyaanGulih
+  /api/maturity/pertanyaan-gulih/{id}:
+    delete:
+      description: Menghapus data pertanyaan gulih berdasarkan ID
+      parameters:
+      - description: PertanyaanGulih ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PertanyaanGulihMessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Hapus pertanyaan gulih
+      tags:
+      - PertanyaanGulih
+    get:
+      description: Mengambil satu data pertanyaan gulih
+      parameters:
+      - description: PertanyaanGulih ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PertanyaanGulihResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ambil pertanyaan gulih berdasarkan ID
+      tags:
+      - PertanyaanGulih
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data pertanyaan gulih berdasarkan ID
+      parameters:
+      - description: PertanyaanGulih ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePertanyaanGulihRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PertanyaanGulihResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Update pertanyaan gulih
+      tags:
+      - PertanyaanGulih
+  /api/maturity/pertanyaan-identifikasi:
+    get:
+      description: Mengambil seluruh data pertanyaan identifikasi
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PertanyaanIdentifikasiResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua pertanyaan identifikasi
+      tags:
+      - PertanyaanIdentifikasi
+    post:
+      consumes:
+      - application/json
+      description: Membuat record pertanyaan identifikasi baru
+      parameters:
+      - description: Data pertanyaan identifikasi
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePertanyaanIdentifikasiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.PertanyaanIdentifikasiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Tambah pertanyaan identifikasi baru
+      tags:
+      - PertanyaanIdentifikasi
+  /api/maturity/pertanyaan-identifikasi/{id}:
+    delete:
+      description: Menghapus data pertanyaan identifikasi berdasarkan ID
+      parameters:
+      - description: PertanyaanIdentifikasi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PertanyaanIdentifikasiMessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Hapus pertanyaan identifikasi
+      tags:
+      - PertanyaanIdentifikasi
+    get:
+      description: Mengambil satu data pertanyaan identifikasi
+      parameters:
+      - description: PertanyaanIdentifikasi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PertanyaanIdentifikasiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ambil pertanyaan identifikasi berdasarkan ID
+      tags:
+      - PertanyaanIdentifikasi
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data pertanyaan identifikasi berdasarkan ID
+      parameters:
+      - description: PertanyaanIdentifikasi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePertanyaanIdentifikasiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PertanyaanIdentifikasiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Update pertanyaan identifikasi
+      tags:
+      - PertanyaanIdentifikasi
+  /api/maturity/pertanyaan-proteksi:
+    get:
+      description: Mengambil seluruh data pertanyaan proteksi
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.PertanyaanProteksiResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua pertanyaan proteksi
+      tags:
+      - PertanyaanProteksi
+    post:
+      consumes:
+      - application/json
+      description: Membuat record pertanyaan proteksi baru
+      parameters:
+      - description: Data pertanyaan proteksi
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreatePertanyaanProteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.PertanyaanProteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Tambah pertanyaan proteksi baru
+      tags:
+      - PertanyaanProteksi
+  /api/maturity/pertanyaan-proteksi/{id}:
+    delete:
+      description: Menghapus data pertanyaan proteksi berdasarkan ID
+      parameters:
+      - description: PertanyaanProteksi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PertanyaanProteksiMessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Hapus pertanyaan proteksi
+      tags:
+      - PertanyaanProteksi
+    get:
+      description: Mengambil satu data pertanyaan proteksi
+      parameters:
+      - description: PertanyaanProteksi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PertanyaanProteksiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ambil pertanyaan proteksi berdasarkan ID
+      tags:
+      - PertanyaanProteksi
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data pertanyaan proteksi berdasarkan ID
+      parameters:
+      - description: PertanyaanProteksi ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data update
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdatePertanyaanProteksiRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.PertanyaanProteksiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Update pertanyaan proteksi
+      tags:
+      - PertanyaanProteksi
   /api/maturity/ruang-lingkup:
     get:
       description: Mengambil seluruh data ruang lingkup
@@ -2726,7 +4181,7 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -2752,7 +4207,7 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -2776,7 +4231,7 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       - description: Data update
         in: body
         name: ruangLingkup
@@ -2861,14 +4316,14 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.MessageResponse'
+            $ref: '#/definitions/dto.SubKategoriMessageResponse'
         "404":
           description: Not Found
           schema:
@@ -2887,7 +4342,7 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
@@ -2911,7 +4366,7 @@ paths:
         in: path
         name: id
         required: true
-        type: string
+        type: integer
       - description: Data update
         in: body
         name: subKategori
@@ -2942,24 +4397,126 @@ paths:
       - SubKategori
   /api/me:
     get:
-      description: Mengambil informasi user yang sedang login.
+      description: Mengambil data lengkap user yang sedang login (profil diri sendiri).
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/fortyfour-backend_internal_dto.UserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user profile
+      tags:
+      - Me
+    put:
+      consumes:
+      - application/json
+      description: User mengupdate display_name, email, dan jabatan miliknya
+      parameters:
+      - description: Data yang ingin diubah
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.UpdateMeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Get current user info
+      summary: Update profile sendiri
       tags:
       - Auth
+  /api/me/media:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload foto profile dan/atau banner sekaligus. Boleh kirim salah
+        satu atau keduanya.
+      parameters:
+      - description: Foto profile (jpg/jpeg/png, max 10MB)
+        in: formData
+        name: profile_photo
+        type: file
+      - description: Banner (jpg/jpeg/png, max 10MB)
+        in: formData
+        name: banner
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update foto profile dan/atau banner diri sendiri
+      tags:
+      - Me
+  /api/me/password:
+    put:
+      consumes:
+      - application/json
+      description: Mengubah password user yang sedang login. Wajib mengisi password
+        lama sebagai verifikasi.
+      parameters:
+      - description: Password lama dan baru
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.UpdateUserPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update password diri sendiri
+      tags:
+      - Me
   /api/mfa/enable:
     post:
       consumes:
@@ -3059,9 +4616,151 @@ paths:
       summary: Verify MFA
       tags:
       - Auth
+  /api/notifications:
+    delete:
+      description: Menghapus semua notifikasi milik user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete all notifications
+      tags:
+      - Notifications
+    get:
+      description: Mengambil semua notifikasi milik user yang sedang login
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.NotificationListResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get all notifications
+      tags:
+      - Notifications
+  /api/notifications/{id}:
+    delete:
+      description: Menghapus satu notifikasi berdasarkan ID
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a notification
+      tags:
+      - Notifications
+  /api/notifications/{id}/read:
+    patch:
+      description: Menandai satu notifikasi sebagai sudah dibaca
+      parameters:
+      - description: Notification ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Mark notification as read
+      tags:
+      - Notifications
+  /api/notifications/read-all:
+    patch:
+      description: Menandai semua notifikasi user sebagai sudah dibaca
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Mark all notifications as read
+      tags:
+      - Notifications
   /api/perusahaan:
     get:
-      description: Mengambil seluruh data perusahaan
+      description: Mengambil seluruh data perusahaan (AUTHENTICATED - full data)
       produces:
       - application/json
       responses:
@@ -3176,6 +4875,26 @@ paths:
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
       summary: Update perusahaan
+      tags:
+      - Perusahaan
+  /api/perusahaan/dropdown:
+    get:
+      description: Data minimal (id, nama) untuk dropdown di halaman register (PUBLIC
+        - no auth)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/fortyfour-backend_internal_dto.PerusahaanMinimalResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: List perusahaan untuk dropdown
       tags:
       - Perusahaan
   /api/pic:
@@ -3307,63 +5026,16 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/fortyfour-backend_internal_dto.ProteksiResponse'
+              $ref: '#/definitions/dto.ProteksiResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua proteksi
       tags:
       - Proteksi
-    post:
-      consumes:
-      - application/json
-      description: Membuat record proteksi
-      parameters:
-      - description: Data proteksi
-        in: body
-        name: proteksi
-        required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.CreateProteksiRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ProteksiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      summary: Tambah proteksi baru
-      tags:
-      - Proteksi
   /api/proteksi/{id}:
-    delete:
-      description: Menghapus data proteksi berdasarkan ID
-      parameters:
-      - description: Proteksi ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.MessageResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      summary: Hapus proteksi
-      tags:
-      - Proteksi
     get:
       description: Mengambil satu data proteksi
       parameters:
@@ -3378,42 +5050,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ProteksiResponse'
+            $ref: '#/definitions/dto.ProteksiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil proteksi berdasarkan ID
-      tags:
-      - Proteksi
-    put:
-      consumes:
-      - application/json
-      description: Mengubah data proteksi berdasarkan ID
-      parameters:
-      - description: Proteksi ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Data update
-        in: body
-        name: proteksi
-        required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.UpdateProteksiRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ProteksiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      summary: Update proteksi
       tags:
       - Proteksi
   /api/refresh:
@@ -3712,7 +5354,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get all sistem elektronik with kategorisasi
+      description: Admin mendapat semua SE. User hanya mendapat SE milik perusahaannya.
       produces:
       - application/json
       responses:
@@ -3720,6 +5362,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.SEListResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -3730,7 +5376,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create new sistem elektronik with kategorisasi
+      description: Create new sistem elektronik. User biasa otomatis menggunakan id_perusahaan
+        dari token.
       parameters:
       - description: SE Create Request
         in: body
@@ -3749,6 +5396,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
       summary: Create SE
       tags:
       - SE
@@ -3756,7 +5407,8 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Delete sistem elektronik
+      description: Delete sistem elektronik. User biasa hanya bisa hapus SE milik
+        perusahaannya.
       parameters:
       - description: SE ID
         in: path
@@ -3776,13 +5428,17 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
       summary: Delete SE
       tags:
       - SE
     get:
       consumes:
       - application/json
-      description: Get sistem elektronik by ID
+      description: Get sistem elektronik by ID. User hanya bisa akses SE milik perusahaannya.
       parameters:
       - description: SE ID
         in: path
@@ -3796,6 +5452,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.SEResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
@@ -3806,7 +5466,8 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update sistem elektronik
+      description: Update sistem elektronik. User biasa hanya bisa update SE milik
+        perusahaannya.
       parameters:
       - description: SE ID
         in: path
@@ -3830,9 +5491,71 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
       summary: Update SE
       tags:
       - SE
+  /api/se/{id}/export-pdf:
+    get:
+      description: Export data SE berdasarkan ID. User hanya bisa akses SE milik perusahaannya.
+      parameters:
+      - description: SE ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Export satu SE ke PDF
+      tags:
+      - SE Export
+  /api/se/export-pdf:
+    get:
+      description: 'Admin: export semua SE, atau filter by id_perusahaan. User: hanya
+        milik perusahaannya.'
+      parameters:
+      - description: Filter by ID Perusahaan (admin only)
+        in: query
+        name: id_perusahaan
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Export semua SE ke PDF
+      tags:
+      - SE Export
   /api/sektor:
     get:
       description: Mengambil seluruh data sektor beserta sub sektor
@@ -3875,7 +5598,7 @@ paths:
       summary: Ambil sektor berdasarkan ID
       tags:
       - Sektor
-  /api/sub-sektor:
+  /api/sub_sektor:
     get:
       description: Mengambil seluruh data sub sektor
       produces:
@@ -3894,7 +5617,7 @@ paths:
       summary: List semua sub sektor
       tags:
       - SubSektor
-  /api/sub-sektor/{id}:
+  /api/sub_sektor/{id}:
     get:
       description: Mengambil satu data sub sektor
       parameters:
@@ -3917,7 +5640,7 @@ paths:
       summary: Ambil sub sektor berdasarkan ID
       tags:
       - SubSektor
-  /api/sub-sektor/by-sektor/{id}:
+  /api/sub_sektor/by_sektor/{id}:
     get:
       description: Mengambil data sub sektor dalam satu sektor
       parameters:
@@ -4186,6 +5909,49 @@ paths:
       security:
       - BearerAuth: []
       summary: Update profile photo user
+      tags:
+      - Users
+  /api/users/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Admin mengubah status akun user (Aktif, Suspend, Nonaktif)
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status baru
+        in: body
+        name: body
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update status akun user
       tags:
       - Users
 securityDefinitions:
