@@ -1,0 +1,7 @@
+DROP TABLE IF EXISTS kuis_jawaban;
+DROP TABLE IF EXISTS kuis_attempt;
+DROP TABLE IF EXISTS user_materi_progress;
+DROP TABLE IF EXISTS pilihan_jawaban;
+DROP TABLE IF EXISTS soal;
+DROP TABLE IF EXISTS materi;
+DROP TABLE IF EXISTS kelas;

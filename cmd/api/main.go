@@ -151,6 +151,11 @@ func main() {
 	subSektorRepo := repository.NewSubSektorRepository(db)
 	seRepo := repository.NewSERepository(db)
 	dashboardRepo := repository.NewDashboardRepository(db)
+	kelasRepo := repository.NewKelasRepository(db)
+	materiRepo := repository.NewMateriRepository(db)
+	soalRepo := repository.NewSoalRepository(db)
+	kuisRepo := repository.NewKuisAttemptRepository(db)
+	progressRepo := repository.NewProgressRepository(db)
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret, true, cfg.Domain)
@@ -170,6 +175,10 @@ func main() {
 	seService := services.NewSEService(seRepo, redisClient)
 	seExportService := services.NewSEExportService(seService)
 	dashboardService := services.NewDashboardService(dashboardRepo, redisClient)
+	kelasSvc := services.NewKelasService(kelasRepo, materiRepo, progressRepo, redisClient)
+	materiSvc := services.NewMateriService(materiRepo, kelasRepo, progressRepo, redisClient)
+	soalSvc := services.NewSoalService(soalRepo, materiRepo, redisClient)
+	kuisSvc := services.NewKuisService(kuisRepo, soalRepo, materiRepo, progressRepo, redisClient)
 
 	// Initialize Handler
 	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService, userService, uploadPath)
@@ -192,6 +201,7 @@ func main() {
 	seHandler.SetExportHandler(seExportHandler)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
+	lmsHandler := handlers.NewLMSHandler(kelasSvc, materiSvc, soalSvc, kuisSvc, sseService)
 
 	// Proxy Handler for IKAS
 	ikasProxyHandler := handlers.NewProxyHandler("http://ikas:8081", cfg.InternalGatewayKey)
@@ -233,6 +243,7 @@ func main() {
 		dashboardHandler,
 		notificationHandler,
 		ikasProxyHandler,
+		lmsHandler,
 	)
 
 	// Start server
