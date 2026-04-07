@@ -7,6 +7,7 @@ import (
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/utils"
 	"net/http"
+	"strings"
 	"time"
 
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -52,6 +53,7 @@ func InitRouter(
 	dashboardH *handlers.DashboardHandler,
 	notificationH *handlers.NotificationHandler,
 	ikasProxyH *handlers.ProxyHandler,
+	lmsH *handlers.LMSHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -162,8 +164,108 @@ func InitRouter(
 	mux.HandleFunc("/api/chat", authM.Authenticate(chatHandler.Stream))
 	mux.HandleFunc("/api/chat/delete-session", authM.Authenticate(chatHandler.DeleteSession))
 
+	// ── LMS Routes ────────────────────────────────────────────────────────────
+	//
+	// USER & ADMIN (authenticated):
+	//   GET  /api/kelas                              → list kelas published
+	//   GET  /api/kelas/{id}                         → detail kelas + progress user
+	//   POST /api/materi/{id}/progress               → update progress video/pdf
+	//   POST /api/kuis/{id_materi}/start             → mulai kuis
+	//   POST /api/kuis/attempt/{id_attempt}/submit   → submit jawaban kuis
+	//   GET  /api/kuis/attempt/{id_attempt}/result   → lihat hasil kuis
+	//
+	// ADMIN ONLY (authenticated + casbin):
+	//   POST   /api/kelas                            → buat kelas baru
+	//   PUT    /api/kelas/{id}                       → update kelas
+	//   DELETE /api/kelas/{id}                       → hapus kelas
+	//   POST   /api/kelas/{id}/materi                → tambah materi ke kelas
+	//   PUT    /api/materi/{id}                      → update materi
+	//   DELETE /api/materi/{id}                      → hapus materi
+	//   GET    /api/materi/{id}/soal                 → list soal kuis (admin)
+	//   POST   /api/materi/{id}/soal                 → tambah soal ke kuis
+	//   PUT    /api/soal/{id}                        → update soal
+	//   DELETE /api/soal/{id}                        → hapus soal
+
+	// /api/kelas — GET (user & admin), POST (admin)
+	mux.HandleFunc("/api/kelas", authM.Authenticate(moderateLimiter.LimitByUser(
+		func(w http.ResponseWriter, r *http.Request) {
+			switch r.Method {
+			case http.MethodGet:
+				lmsH.ServeKelas(w, r)
+			case http.MethodPost:
+				casbinM.Authorize(lmsH.ServeKelas)(w, r)
+			default:
+				w.WriteHeader(http.StatusMethodNotAllowed)
+			}
+		},
+	)))
+
+	// /api/kelas/{id} dan /api/kelas/{id}/materi
+	mux.HandleFunc("/api/kelas/", authM.Authenticate(moderateLimiter.LimitByUser(
+		func(w http.ResponseWriter, r *http.Request) {
+			path := r.URL.Path
+
+			// /api/kelas/{id}/materi → POST admin
+			if strings.HasSuffix(path, "/materi") {
+				if r.Method == http.MethodPost {
+					casbinM.Authorize(lmsH.ServeMateriByKelas)(w, r)
+					return
+				}
+				w.WriteHeader(http.StatusMethodNotAllowed)
+				return
+			}
+
+			// /api/kelas/{id} → GET user & admin, PUT/DELETE admin
+			switch r.Method {
+			case http.MethodGet:
+				lmsH.ServeKelas(w, r)
+			case http.MethodPut, http.MethodDelete:
+				casbinM.Authorize(lmsH.ServeKelas)(w, r)
+			default:
+				w.WriteHeader(http.StatusMethodNotAllowed)
+			}
+		},
+	)))
+
+	// /api/materi/{id}, /api/materi/{id}/progress, /api/materi/{id}/soal
+	mux.HandleFunc("/api/materi/", authM.Authenticate(moderateLimiter.LimitByUser(
+		func(w http.ResponseWriter, r *http.Request) {
+			path := r.URL.Path
+
+			// /api/materi/{id}/progress → POST user & admin
+			if strings.HasSuffix(path, "/progress") {
+				if r.Method == http.MethodPost {
+					lmsH.ServeMateri(w, r)
+					return
+				}
+				w.WriteHeader(http.StatusMethodNotAllowed)
+				return
+			}
+
+			// /api/materi/{id}/soal → GET/POST admin
+			if strings.HasSuffix(path, "/soal") {
+				casbinM.Authorize(lmsH.ServeSoalByMateri)(w, r)
+				return
+			}
+
+			// /api/materi/{id} → PUT/DELETE admin
+			switch r.Method {
+			case http.MethodPut, http.MethodDelete:
+				casbinM.Authorize(lmsH.ServeMateri)(w, r)
+			default:
+				w.WriteHeader(http.StatusMethodNotAllowed)
+			}
+		},
+	)))
+
+	// /api/soal/{id} → PUT/DELETE admin
+	mux.HandleFunc("/api/soal/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(lmsH.ServeSoal))))
+
+	// /api/kuis/ — start, submit, result (user & admin)
+	mux.HandleFunc("/api/kuis/", authM.Authenticate(moderateLimiter.LimitByUser(lmsH.ServeKuis)))
+
 	// Swagger UI
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
-	return (mux)
+	return mux
 }
