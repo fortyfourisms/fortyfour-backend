@@ -17,7 +17,7 @@ type DomainResponse struct {
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
-type DomainMessageResponse struct {
+type MessageResponse struct {
 	ID      int    `json:"id,omitempty"`
 	Message string `json:"message"`
 }

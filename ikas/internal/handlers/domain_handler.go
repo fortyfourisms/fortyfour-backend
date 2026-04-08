@@ -143,7 +143,7 @@ func (h *DomainHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 201, dto.DomainMessageResponse{
+	utils.RespondJSON(w, 201, dto.MessageResponse{
 		Message: "Berhasil menyimpan data",
 	})
 }
@@ -190,7 +190,7 @@ func (h *DomainHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id 
 		return
 	}
 
-	utils.RespondJSON(w, 200, dto.DomainMessageResponse{
+	utils.RespondJSON(w, 200, dto.MessageResponse{
 		ID:      id,
 		Message: "Berhasil memperbarui data",
 	})
@@ -218,7 +218,7 @@ func (h *DomainHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id 
 		return
 	}
 
-	utils.RespondJSON(w, 200, dto.DomainMessageResponse{
+	utils.RespondJSON(w, 200, dto.MessageResponse{
 		ID:      id,
 		Message: "Berhasil menghapus data",
 	})
