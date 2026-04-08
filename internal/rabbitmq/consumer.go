@@ -149,6 +149,31 @@ func (c *Consumer) ConsumeIkasDeleted(ctx context.Context) error {
 	})
 }
 
+// consumeGenericIkasEvent handles common CRUD events dynamically
+func (c *Consumer) consumeGenericIkasEvent(ctx context.Context, queueName string, resource string, action string) error {
+	return c.Consume(ctx, queueName, func(ctx context.Context, body []byte) error {
+		var event map[string]interface{}
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		log.Printf("[%s] %s Event (from RabbitMQ): %+v", resource, action, event)
+		if c.sseService != nil {
+			userID, _ := event["user_id"].(string)
+			switch action {
+			case "Created":
+				c.sseService.NotifyCreate(resource, event, userID)
+			case "Updated":
+				c.sseService.NotifyUpdate(resource, event, userID)
+			case "Deleted":
+				c.sseService.NotifyDelete(resource, event, userID)
+			}
+		}
+
+		return nil
+	})
+}
+
 // StartAllConsumers
 func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 	consumers := []func(context.Context) error{
@@ -159,6 +184,42 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeIkasCreated,
 		c.ConsumeIkasUpdated,
 		c.ConsumeIkasDeleted,
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.ruang_lingkup.created", "ruang_lingkup", "Created")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.ruang_lingkup.updated", "ruang_lingkup", "Updated")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.ruang_lingkup.deleted", "ruang_lingkup", "Deleted")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.domain.created", "domain", "Created")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.domain.updated", "domain", "Updated")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.domain.deleted", "domain", "Deleted")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.kategori.created", "kategori", "Created")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.kategori.updated", "kategori", "Updated")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.kategori.deleted", "kategori", "Deleted")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.sub_kategori.created", "sub_kategori", "Created")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.sub_kategori.updated", "sub_kategori", "Updated")
+		},
+		func(ctx context.Context) error {
+			return c.consumeGenericIkasEvent(ctx, "main_api.sub_kategori.deleted", "sub_kategori", "Deleted")
+		},
 	}
 
 	for _, consumer := range consumers {

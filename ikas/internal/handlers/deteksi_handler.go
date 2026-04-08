@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	_ "ikas/internal/dto"
 	"ikas/internal/services"
 	"ikas/internal/utils"
 	"net/http"

@@ -6,7 +6,6 @@ import (
 	"errors"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
-	"ikas/internal/rabbitmq"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
 	"time"
@@ -14,16 +13,23 @@ import (
 	"github.com/rollbar/rollbar-go"
 )
 
+type JawabanIdentifikasiProducerInterface interface {
+	PublishJawabanIdentifikasiCreated(ctx context.Context, event interface{}) error
+	PublishJawabanIdentifikasiUpdated(ctx context.Context, event interface{}) error
+	PublishJawabanIdentifikasiDeleted(ctx context.Context, event interface{}) error
+	PublishIkasAuditLog(ctx context.Context, event interface{}) error
+}
+
 type JawabanIdentifikasiService struct {
 	repo     repository.JawabanIdentifikasiRepositoryInterface
 	ikasRepo repository.IkasRepositoryInterface
-	producer *rabbitmq.Producer
+	producer JawabanIdentifikasiProducerInterface
 }
 
 func NewJawabanIdentifikasiService(
 	repo repository.JawabanIdentifikasiRepositoryInterface,
 	ikasRepo repository.IkasRepositoryInterface,
-	producer *rabbitmq.Producer,
+	producer JawabanIdentifikasiProducerInterface,
 ) *JawabanIdentifikasiService {
 	return &JawabanIdentifikasiService{
 		repo:     repo,
@@ -34,7 +40,7 @@ func NewJawabanIdentifikasiService(
 
 var validValidasi = map[string]bool{"yes": true, "no": true}
 
-func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdentifikasiRequest) error {
+func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdentifikasiRequest, userRole string) error {
 	if req.PertanyaanIdentifikasiID <= 0 {
 		return errors.New("pertanyaan_identifikasi_id tidak valid")
 	}
@@ -55,6 +61,13 @@ func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdenti
 		return errors.New("jawaban_identifikasi harus bernilai antara 0 sampai 5")
 	}
 
+	// Restricted fields for non-admins
+	if userRole != "admin" {
+		if req.Validasi != nil || (req.Keterangan != nil && utils.NormalizeInput(*req.Keterangan) != "") {
+			return errors.New("hanya admin yang dapat mengisi field validasi dan keterangan")
+		}
+	}
+
 	if req.Validasi != nil {
 		if req.Evidence == nil || utils.NormalizeInput(*req.Evidence) == "" {
 			return errors.New("validasi hanya boleh diisi jika evidence ada")
@@ -67,10 +80,17 @@ func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdenti
 	return nil
 }
 
-func (s *JawabanIdentifikasiService) validateUpdate(req *dto.UpdateJawabanIdentifikasiRequest, existingEvidence *string) error {
+func (s *JawabanIdentifikasiService) validateUpdate(req *dto.UpdateJawabanIdentifikasiRequest, existingEvidence *string, userRole string) error {
 	// null = N/A (diperbolehkan), tapi jika diisi harus 0.00 - 5.00
 	if req.JawabanIdentifikasi != nil && (*req.JawabanIdentifikasi < 0 || *req.JawabanIdentifikasi > 5) {
 		return errors.New("jawaban_identifikasi harus bernilai antara 0 sampai 5, atau null untuk N/A")
+	}
+
+	// Restricted fields for non-admins
+	if userRole != "admin" {
+		if req.Validasi != nil || (req.Keterangan != nil && utils.NormalizeInput(*req.Keterangan) != "") {
+			return errors.New("hanya admin yang dapat mengubah field validasi dan keterangan")
+		}
 	}
 
 	if req.Validasi != nil {
@@ -89,8 +109,8 @@ func (s *JawabanIdentifikasiService) validateUpdate(req *dto.UpdateJawabanIdenti
 	return nil
 }
 
-func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiRequest) (string, error) {
-	if err := s.validateCreate(&req); err != nil {
+func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiRequest, userRole string) (string, error) {
+	if err := s.validateCreate(&req, userRole); err != nil {
 		return "", err
 	}
 
@@ -136,7 +156,7 @@ func (s *JawabanIdentifikasiService) GetAll() ([]dto.JawabanIdentifikasiResponse
 	return s.repo.GetAll()
 }
 
-func (s *JawabanIdentifikasiService) GetByID(id int) (*dto.JawabanIdentifikasiResponse, error) {
+func (s *JawabanIdentifikasiService) GetByID(id int, userRole string, userPerusahaanID string) (*dto.JawabanIdentifikasiResponse, error) {
 	if id <= 0 {
 		return nil, errors.New("format ID tidak valid")
 	}
@@ -147,6 +167,10 @@ func (s *JawabanIdentifikasiService) GetByID(id int) (*dto.JawabanIdentifikasiRe
 			return nil, errors.New("data tidak ditemukan")
 		}
 		return nil, err
+	}
+
+	if userRole != "admin" && data.PerusahaanID != userPerusahaanID {
+		return nil, errors.New("anda tidak memiliki akses ke data ini")
 	}
 
 	return data, nil
@@ -166,7 +190,7 @@ func (s *JawabanIdentifikasiService) GetByPertanyaan(pertanyaanID int) ([]dto.Ja
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }
 
-func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentifikasiRequest, userID string) error {
+func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentifikasiRequest, userID string, userRole string, userPerusahaanID string) error {
 	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
@@ -180,7 +204,11 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 		return err
 	}
 
-	if err := s.validateUpdate(&req, existing.Evidence); err != nil {
+	if userRole != "admin" && existing.PerusahaanID != userPerusahaanID {
+		return errors.New("anda tidak memiliki akses untuk mengubah data ini")
+	}
+
+	if err := s.validateUpdate(&req, existing.Evidence, userRole); err != nil {
 		return err
 	}
 
@@ -244,7 +272,7 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 	return nil
 }
 
-func (s *JawabanIdentifikasiService) Delete(id int, userID string) error {
+func (s *JawabanIdentifikasiService) Delete(id int, userID string, userRole string, userPerusahaanID string) error {
 	if id <= 0 {
 		return errors.New("format ID tidak valid")
 	}
@@ -256,6 +284,10 @@ func (s *JawabanIdentifikasiService) Delete(id int, userID string) error {
 			return errors.New("data tidak ditemukan")
 		}
 		return err
+	}
+
+	if userRole != "admin" && existing.PerusahaanID != userPerusahaanID {
+		return errors.New("anda tidak memiliki akses untuk menghapus data ini")
 	}
 
 	// Publish Delete Event (Pola 2)
