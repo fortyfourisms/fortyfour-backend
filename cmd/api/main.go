@@ -163,7 +163,7 @@ func main() {
 	authService := services.NewAuthService(userRepo, roleRepo, tokenService, notificationService)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo, redisClient, rmqProducer)
 	picService := services.NewPICService(picRepo, redisClient, rmqProducer)
-	jabatanService := services.NewJabatanService(jabatanRepo, redisClient)
+	jabatanService := services.NewJabatanService(jabatanRepo, redisClient, rmqProducer)
 	csirtService := services.NewCsirtService(csirtRepo, redisClient, rmqProducer)
 	csirtExportService := services.NewCsirtExportService(csirtService)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo, redisClient)

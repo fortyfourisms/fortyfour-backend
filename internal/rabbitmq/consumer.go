@@ -282,6 +282,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumePicCreated,
 		c.ConsumePicUpdated,
 		c.ConsumePicDeleted,
+		c.ConsumeJabatanCreated,
+		c.ConsumeJabatanUpdated,
+		c.ConsumeJabatanDeleted,
 	}
 
 	for _, consumer := range consumers {
@@ -358,6 +361,40 @@ func (c *Consumer) ConsumePicDeleted(ctx context.Context) error {
 			return err
 		}
 		c.sseService.NotifyDelete("pic", event.ID, "system")
+		return nil
+	})
+}
+
+// Jabatan
+func (c *Consumer) ConsumeJabatanCreated(ctx context.Context) error {
+	return c.Consume(ctx, "jabatan.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.JabatanCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyCreate("jabatan", event, "system")
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeJabatanUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "jabatan.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.JabatanUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyUpdate("jabatan", event, "system")
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeJabatanDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "jabatan.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.JabatanDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyDelete("jabatan", event.ID, "system")
 		return nil
 	})
 }
