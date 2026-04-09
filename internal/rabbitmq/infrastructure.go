@@ -105,7 +105,7 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		}
 	}
 
-	// // Declare Queues untuk Perusahaan
+	// Perusahaan
 	if err := rmq.DeclareExchange("perusahaan.events", "topic"); err != nil {
 		return err
 	}
@@ -120,13 +120,32 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		if _, err := rmq.DeclareQueue(q); err != nil {
 			return err
 		}
-		// Bind routing key matches queue name exactly for simplicity (perusahaan.created -> perusahaan.created)
 		if err := rmq.BindQueue(q, q, "perusahaan.events"); err != nil {
 			return err
 		}
 	}
 
-	log.Println("RabbitMQ infrastructure setup completed (Users, CSIRT, Perusahaan)")
+	// PIC
+	if err := rmq.DeclareExchange("pic.events", "topic"); err != nil {
+		return err
+	}
+
+	queuePic := []string{
+		"pic.created",
+		"pic.updated",
+		"pic.deleted",
+	}
+
+	for _, q := range queuePic {
+		if _, err := rmq.DeclareQueue(q); err != nil {
+			return err
+		}
+		if err := rmq.BindQueue(q, q, "pic.events"); err != nil {
+			return err
+		}
+	}
+
+	log.Println("RabbitMQ infrastructure setup completed (Users, CSIRT, Perusahaan, PIC)")
 
 	return nil
 }

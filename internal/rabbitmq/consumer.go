@@ -279,6 +279,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumePerusahaanCreated,
 		c.ConsumePerusahaanUpdated,
 		c.ConsumePerusahaanDeleted,
+		c.ConsumePicCreated,
+		c.ConsumePicUpdated,
+		c.ConsumePicDeleted,
 	}
 
 	for _, consumer := range consumers {
@@ -321,6 +324,40 @@ func (c *Consumer) ConsumePerusahaanDeleted(ctx context.Context) error {
 			return err
 		}
 		c.sseService.NotifyDelete("perusahaan", event.ID, "system")
+		return nil
+	})
+}
+
+// PIC
+func (c *Consumer) ConsumePicCreated(ctx context.Context) error {
+	return c.Consume(ctx, "pic.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.PicCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyCreate("pic", event, "system")
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumePicUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "pic.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.PicUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyUpdate("pic", event, "system")
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumePicDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "pic.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.PicDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyDelete("pic", event.ID, "system")
 		return nil
 	})
 }

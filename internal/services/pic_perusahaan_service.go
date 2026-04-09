@@ -1,23 +1,32 @@
 package services
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/dto/dto_event"
+	"fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
 )
 
 type PICService struct {
-	repo repository.PICRepositoryInterface
-	rc   cache.RedisInterface
+	repo     repository.PICRepositoryInterface
+	rc       cache.RedisInterface
+	producer *rabbitmq.Producer
 }
 
-func NewPICService(repo repository.PICRepositoryInterface, rc cache.RedisInterface) *PICService {
-	return &PICService{repo: repo, rc: rc}
+func NewPICService(repo repository.PICRepositoryInterface, rc cache.RedisInterface, producer *rabbitmq.Producer) *PICService {
+	return &PICService{
+		repo:     repo,
+		rc:       rc,
+		producer: producer,
+	}
 }
 
 func (s *PICService) Create(req dto.CreatePICRequest) (*dto.PICResponse, error) {
@@ -44,6 +53,24 @@ func (s *PICService) Create(req dto.CreatePICRequest) (*dto.PICResponse, error) 
 	cacheDelete(s.rc, keyList("pic"))
 	if result.Perusahaan != nil {
 		cacheDelete(s.rc, "pic_perusahaan_"+result.Perusahaan.ID)
+	}
+
+	if s.producer != nil {
+		go func() {
+			var perusahaanID string
+			if result.Perusahaan != nil {
+				perusahaanID = result.Perusahaan.ID
+			}
+
+			event := dto_event.PicCreatedEvent{
+				ID:           result.ID,
+				Nama:         result.Nama,
+				Telepon:      result.Telepon,
+				IDPerusahaan: perusahaanID,
+				CreatedAt:    time.Now(),
+			}
+			s.producer.PublishPicCreated(context.Background(), event)
+		}()
 	}
 
 	return result, nil
@@ -114,6 +141,24 @@ func (s *PICService) Update(id string, req dto.UpdatePICRequest) (*dto.PICRespon
 	if updated.Perusahaan != nil {
 		cacheDelete(s.rc, "pic_perusahaan_"+updated.Perusahaan.ID)
 	}
+
+	if s.producer != nil {
+		go func() {
+			var perusahaanID string
+			if updated.Perusahaan != nil {
+				perusahaanID = updated.Perusahaan.ID
+			}
+
+			event := dto_event.PicUpdatedEvent{
+				ID:           updated.ID,
+				Nama:         updated.Nama,
+				Telepon:      updated.Telepon,
+				IDPerusahaan: perusahaanID,
+				UpdatedAt:    time.Now(),
+			}
+			s.producer.PublishPicUpdated(context.Background(), event)
+		}()
+	}
 	return updated, nil
 }
 
@@ -129,6 +174,16 @@ func (s *PICService) Delete(id string) error {
 	cacheDelete(s.rc, keyList("pic"))
 	if existing != nil && existing.Perusahaan != nil {
 		cacheDelete(s.rc, "pic_perusahaan_"+existing.Perusahaan.ID)
+	}
+
+	if s.producer != nil {
+		go func() {
+			event := dto_event.PicDeletedEvent{
+				ID:        id,
+				DeletedAt: time.Now(),
+			}
+			s.producer.PublishPicDeleted(context.Background(), event)
+		}()
 	}
 
 	return nil

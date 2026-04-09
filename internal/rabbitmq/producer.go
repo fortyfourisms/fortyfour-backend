@@ -54,3 +54,14 @@ func (p *Producer) PublishPerusahaanUpdated(ctx context.Context, event dto_event
 func (p *Producer) PublishPerusahaanDeleted(ctx context.Context, event dto_event.PerusahaanDeletedEvent) error {
 	return p.Publish(ctx, "perusahaan.events", "perusahaan.deleted", event)
 }
+
+// PIC
+func (p *Producer) PublishPicCreated(ctx context.Context, event dto_event.PicCreatedEvent) error {
+	return p.Publish(ctx, "pic.events", "pic.created", event)
+}
+func (p *Producer) PublishPicUpdated(ctx context.Context, event dto_event.PicUpdatedEvent) error {
+	return p.Publish(ctx, "pic.events", "pic.updated", event)
+}
+func (p *Producer) PublishPicDeleted(ctx context.Context, event dto_event.PicDeletedEvent) error {
+	return p.Publish(ctx, "pic.events", "pic.deleted", event)
+}
