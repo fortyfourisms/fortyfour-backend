@@ -87,3 +87,14 @@ func (p *Producer) PublishSdmCsirtUpdated(ctx context.Context, event dto_event.S
 func (p *Producer) PublishSdmCsirtDeleted(ctx context.Context, event dto_event.SdmCsirtDeletedEvent) error {
 	return p.Publish(ctx, "sdm_csirt.events", "sdm_csirt.deleted", event)
 }
+
+// Role
+func (p *Producer) PublishRoleCreated(ctx context.Context, event dto_event.RoleCreatedEvent) error {
+	return p.Publish(ctx, "role.events", "role.created", event)
+}
+func (p *Producer) PublishRoleUpdated(ctx context.Context, event dto_event.RoleUpdatedEvent) error {
+	return p.Publish(ctx, "role.events", "role.updated", event)
+}
+func (p *Producer) PublishRoleDeleted(ctx context.Context, event dto_event.RoleDeletedEvent) error {
+	return p.Publish(ctx, "role.events", "role.deleted", event)
+}

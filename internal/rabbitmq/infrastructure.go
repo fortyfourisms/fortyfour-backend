@@ -185,7 +185,27 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		}
 	}
 
-	log.Println("RabbitMQ infrastructure setup completed (Users, CSIRT, Perusahaan, PIC, Jabatan, SDM CSIRT)")
+	// Role
+	if err := rmq.DeclareExchange("role.events", "topic"); err != nil {
+		return err
+	}
+
+	queueRole := []string{
+		"role.created",
+		"role.updated",
+		"role.deleted",
+	}
+
+	for _, q := range queueRole {
+		if _, err := rmq.DeclareQueue(q); err != nil {
+			return err
+		}
+		if err := rmq.BindQueue(q, q, "role.events"); err != nil {
+			return err
+		}
+	}
+
+	log.Println("RabbitMQ infrastructure setup completed (Users, CSIRT, Perusahaan, PIC, Jabatan, SDM CSIRT, Role)")
 
 	return nil
 }

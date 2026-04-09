@@ -288,6 +288,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeSdmCsirtCreated,
 		c.ConsumeSdmCsirtUpdated,
 		c.ConsumeSdmCsirtDeleted,
+		c.ConsumeRoleCreated,
+		c.ConsumeRoleUpdated,
+		c.ConsumeRoleDeleted,
 	}
 
 	for _, consumer := range consumers {
@@ -432,6 +435,40 @@ func (c *Consumer) ConsumeSdmCsirtDeleted(ctx context.Context) error {
 			return err
 		}
 		c.sseService.NotifyDelete("sdm_csirt", event.ID, "system")
+		return nil
+	})
+}
+
+// Role
+func (c *Consumer) ConsumeRoleCreated(ctx context.Context) error {
+	return c.Consume(ctx, "role.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.RoleCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyCreate("role", event, "system")
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeRoleUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "role.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.RoleUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyUpdate("role", event, "system")
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeRoleDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "role.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.RoleDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyDelete("role", event.ID, "system")
 		return nil
 	})
 }

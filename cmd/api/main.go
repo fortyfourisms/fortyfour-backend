@@ -168,7 +168,7 @@ func main() {
 	csirtExportService := services.NewCsirtExportService(csirtService)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo, redisClient, rmqProducer)
 	userService := services.NewUserService(userRepo, uploadPath, rmqProducer)
-	roleService := services.NewRoleService(roleRepo, redisClient)
+	roleService := services.NewRoleService(roleRepo, redisClient, rmqProducer)
 	chatService := services.NewChatService(chatRepo, geminiClient, db)
 	sektorService := services.NewSektorService(sektorRepo, redisClient)
 	subSektorService := services.NewSubSektorService(subSektorRepo, redisClient)
