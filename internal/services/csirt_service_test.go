@@ -63,6 +63,10 @@ func (m *mockCsirtRepo) GetByPerusahaan(idPerusahaan string) ([]dto.CsirtRespons
 	return []dto.CsirtResponse{}, nil
 }
 
+func (m *mockCsirtRepo) GetByPerusahaanModel(idPerusahaan string) (*models.Csirt, error) {
+	return nil, errors.New("not found")
+}
+
 /*
 =====================================
  TEST CREATE CSIRT - SUCCESS CASES
