@@ -149,6 +149,57 @@ func (c *Consumer) ConsumeIkasDeleted(ctx context.Context) error {
 	})
 }
 
+// ConsumeCsirtCreated
+func (c *Consumer) ConsumeCsirtCreated(ctx context.Context) error {
+	return c.Consume(ctx, "csirt.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.CsirtCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		log.Printf("CSIRT Created Event: %+v", event)
+		if c.sseService != nil {
+			c.sseService.NotifyCreate("csirt", event, "")
+		}
+
+		return nil
+	})
+}
+
+// ConsumeCsirtUpdated
+func (c *Consumer) ConsumeCsirtUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "csirt.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.CsirtUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		log.Printf("CSIRT Updated Event: %+v", event)
+		if c.sseService != nil {
+			c.sseService.NotifyUpdate("csirt", event, "")
+		}
+
+		return nil
+	})
+}
+
+// ConsumeCsirtDeleted
+func (c *Consumer) ConsumeCsirtDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "csirt.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.CsirtDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		log.Printf("CSIRT Deleted Event: %+v", event)
+		if c.sseService != nil {
+			c.sseService.NotifyDelete("csirt", event.ID, "")
+		}
+
+		return nil
+	})
+}
+
 // consumeGenericIkasEvent handles common CRUD events dynamically
 func (c *Consumer) consumeGenericIkasEvent(ctx context.Context, queueName string, resource string, action string) error {
 	return c.Consume(ctx, queueName, func(ctx context.Context, body []byte) error {
@@ -220,6 +271,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		func(ctx context.Context) error {
 			return c.consumeGenericIkasEvent(ctx, "main_api.sub_kategori.deleted", "sub_kategori", "Deleted")
 		},
+		c.ConsumeCsirtCreated,
+		c.ConsumeCsirtUpdated,
+		c.ConsumeCsirtDeleted,
 	}
 
 	for _, consumer := range consumers {

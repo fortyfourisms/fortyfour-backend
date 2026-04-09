@@ -74,6 +74,37 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		}
 	}
 
-	log.Println("Users RabbitMQ infrastructure setup completed")
+	// Declare Exchange untuk CSIRT events
+	if err := rmq.DeclareExchange("csirt.events", "topic"); err != nil {
+		return fmt.Errorf("failed to declare exchange: %w", err)
+	}
+
+	// Declare Queues untuk CSIRT
+	csirtQueues := []string{
+		"csirt.created",
+		"csirt.updated",
+		"csirt.deleted",
+	}
+
+	for _, queueName := range csirtQueues {
+		if _, err := rmq.DeclareQueue(queueName); err != nil {
+			return fmt.Errorf("failed to declare queue %s: %w", queueName, err)
+		}
+	}
+
+	// Bind Queues ke Exchange dengan routing keys
+	csirtBindings := map[string]string{
+		"csirt.created": "csirt.created",
+		"csirt.updated": "csirt.updated",
+		"csirt.deleted": "csirt.deleted",
+	}
+
+	for queueName, routingKey := range csirtBindings {
+		if err := rmq.BindQueue(queueName, routingKey, "csirt.events"); err != nil {
+			return fmt.Errorf("failed to bind queue %s: %w", queueName, err)
+		}
+	}
+
+	log.Println("RabbitMQ infrastructure setup completed (Users & CSIRT)")
 	return nil
 }

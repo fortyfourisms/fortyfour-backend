@@ -38,3 +38,18 @@ func (p *Producer) PublishUserDeleted(ctx context.Context, event dto_event.UserD
 func (p *Producer) PublishUserPasswordUpdated(ctx context.Context, event dto_event.UserPasswordUpdatedEvent) error {
 	return p.Publish(ctx, "users.events", "users.password_updated", event)
 }
+
+// PublishCsirtCreated
+func (p *Producer) PublishCsirtCreated(ctx context.Context, event dto_event.CsirtCreatedEvent) error {
+	return p.Publish(ctx, "csirt.events", "csirt.created", event)
+}
+
+// PublishCsirtUpdated
+func (p *Producer) PublishCsirtUpdated(ctx context.Context, event dto_event.CsirtUpdatedEvent) error {
+	return p.Publish(ctx, "csirt.events", "csirt.updated", event)
+}
+
+// PublishCsirtDeleted
+func (p *Producer) PublishCsirtDeleted(ctx context.Context, event dto_event.CsirtDeletedEvent) error {
+	return p.Publish(ctx, "csirt.events", "csirt.deleted", event)
+}
