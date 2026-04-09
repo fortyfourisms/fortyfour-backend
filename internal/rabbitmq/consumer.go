@@ -47,7 +47,6 @@ func (c *Consumer) ConsumeUserCreated(ctx context.Context) error {
 	})
 }
 
-
 func (c *Consumer) ConsumeUserUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "users.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.UserUpdatedEvent
@@ -63,7 +62,6 @@ func (c *Consumer) ConsumeUserUpdated(ctx context.Context) error {
 		return nil
 	})
 }
-
 
 func (c *Consumer) ConsumeUserDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "users.deleted", func(ctx context.Context, body []byte) error {
@@ -81,7 +79,6 @@ func (c *Consumer) ConsumeUserDeleted(ctx context.Context) error {
 	})
 }
 
-
 func (c *Consumer) ConsumeUserPasswordUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "users.password_updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.UserPasswordUpdatedEvent
@@ -97,7 +94,6 @@ func (c *Consumer) ConsumeUserPasswordUpdated(ctx context.Context) error {
 		return nil
 	})
 }
-
 
 // IKAS
 func (c *Consumer) ConsumeIkasCreated(ctx context.Context) error {
@@ -116,7 +112,6 @@ func (c *Consumer) ConsumeIkasCreated(ctx context.Context) error {
 	})
 }
 
-
 func (c *Consumer) ConsumeIkasUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "main_api.ikas.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasUpdatedEvent
@@ -133,7 +128,6 @@ func (c *Consumer) ConsumeIkasUpdated(ctx context.Context) error {
 	})
 }
 
-
 func (c *Consumer) ConsumeIkasDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "main_api.ikas.deleted", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasDeletedEvent
@@ -149,7 +143,6 @@ func (c *Consumer) ConsumeIkasDeleted(ctx context.Context) error {
 		return nil
 	})
 }
-
 
 // Csirt
 func (c *Consumer) ConsumeCsirtCreated(ctx context.Context) error {
@@ -168,7 +161,6 @@ func (c *Consumer) ConsumeCsirtCreated(ctx context.Context) error {
 	})
 }
 
-
 func (c *Consumer) ConsumeCsirtUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "csirt.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.CsirtUpdatedEvent
@@ -184,7 +176,6 @@ func (c *Consumer) ConsumeCsirtUpdated(ctx context.Context) error {
 		return nil
 	})
 }
-
 
 func (c *Consumer) ConsumeCsirtDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "csirt.deleted", func(ctx context.Context, body []byte) error {
@@ -291,6 +282,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeRoleCreated,
 		c.ConsumeRoleUpdated,
 		c.ConsumeRoleDeleted,
+		c.ConsumeSeCreated,
+		c.ConsumeSeUpdated,
+		c.ConsumeSeDeleted,
 	}
 
 	for _, consumer := range consumers {
@@ -469,6 +463,40 @@ func (c *Consumer) ConsumeRoleDeleted(ctx context.Context) error {
 			return err
 		}
 		c.sseService.NotifyDelete("role", event.ID, "system")
+		return nil
+	})
+}
+
+// SE
+func (c *Consumer) ConsumeSeCreated(ctx context.Context) error {
+	return c.Consume(ctx, "se.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.SeCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyCreate("se", event, "system")
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeSeUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "se.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.SeUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyUpdate("se", event, "system")
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeSeDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "se.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.SeDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyDelete("se", event.ID, "system")
 		return nil
 	})
 }

@@ -98,3 +98,14 @@ func (p *Producer) PublishRoleUpdated(ctx context.Context, event dto_event.RoleU
 func (p *Producer) PublishRoleDeleted(ctx context.Context, event dto_event.RoleDeletedEvent) error {
 	return p.Publish(ctx, "role.events", "role.deleted", event)
 }
+
+// SE
+func (p *Producer) PublishSeCreated(ctx context.Context, event dto_event.SeCreatedEvent) error {
+	return p.Publish(ctx, "se.events", "se.created", event)
+}
+func (p *Producer) PublishSeUpdated(ctx context.Context, event dto_event.SeUpdatedEvent) error {
+	return p.Publish(ctx, "se.events", "se.updated", event)
+}
+func (p *Producer) PublishSeDeleted(ctx context.Context, event dto_event.SeDeletedEvent) error {
+	return p.Publish(ctx, "se.events", "se.deleted", event)
+}

@@ -58,15 +58,15 @@ func main() {
 	defer db.Close()
 
 	// Run database migrations
-	if err := database.RunMigrations(database.Config{
-		Host:     cfg.Database.Host,
-		Port:     cfg.Database.Port,
-		User:     cfg.Database.User,
-		Password: cfg.Database.Password,
-		DBName:   cfg.Database.DBName,
-	}, "./migrations"); err != nil {
-		logger.FatalErr(err, "Failed to run database migrations")
-	}
+	// if err := database.RunMigrations(database.Config{
+	// 	Host:     cfg.Database.Host,
+	// 	Port:     cfg.Database.Port,
+	// 	User:     cfg.Database.User,
+	// 	Password: cfg.Database.Password,
+	// 	DBName:   cfg.Database.DBName,
+	// }, "./migrations"); err != nil {
+	// 	logger.FatalErr(err, "Failed to run database migrations")
+	// }
 
 	// Initialize Redis
 	redisClient, err := cache.NewRedisClient(cache.RedisConfig{
@@ -172,7 +172,7 @@ func main() {
 	chatService := services.NewChatService(chatRepo, geminiClient, db)
 	sektorService := services.NewSektorService(sektorRepo, redisClient)
 	subSektorService := services.NewSubSektorService(subSektorRepo, redisClient)
-	seService := services.NewSEService(seRepo, redisClient)
+	seService := services.NewSEService(seRepo, redisClient, rmqProducer)
 	seExportService := services.NewSEExportService(seService)
 	dashboardService := services.NewDashboardService(dashboardRepo, redisClient)
 	kelasSvc := services.NewKelasService(kelasRepo, materiRepo, progressRepo, redisClient)
