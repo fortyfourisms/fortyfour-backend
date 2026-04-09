@@ -30,6 +30,7 @@ type AuthService struct {
 	roleRepo     repository.RoleRepository
 	tokenService *TokenService
 	notifSvc     *NotificationService
+	strExpirySvc *STRExpiryService
 }
 
 func NewAuthService(
@@ -37,12 +38,14 @@ func NewAuthService(
 	roleRepo repository.RoleRepository,
 	tokenService *TokenService,
 	notifSvc *NotificationService,
+	strExpirySvc *STRExpiryService,
 ) *AuthService {
 	return &AuthService{
 		userRepo:     userRepo,
 		roleRepo:     roleRepo,
 		tokenService: tokenService,
 		notifSvc:     notifSvc,
+		strExpirySvc: strExpirySvc,
 	}
 }
 
@@ -300,6 +303,11 @@ func (s *AuthService) Login(identifier, password string) (*models.User, *dto.Tok
 			_ = s.notifSvc.Push(user.ID, models.NotifPasswordExpirySoon,
 				fmt.Sprintf("Password Anda akan kedaluwarsa dalam %d hari. Segera ganti password Anda.", days))
 		}
+	}
+
+	// Cek STR expiry untuk perusahaan user (async, tidak menghambat login)
+	if s.strExpirySvc != nil && user.IDPerusahaan != nil && *user.IDPerusahaan != "" {
+		go s.strExpirySvc.CheckAndNotify(user.ID, *user.IDPerusahaan)
 	}
 
 	// if MFA enabled — return user with nil tokens (handler will create pending token)

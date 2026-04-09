@@ -83,6 +83,7 @@ type CsirtRepositoryInterface interface {
 	GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error)
 	Update(id string, csirt models.Csirt) error
 	Delete(id string) error
+	GetByPerusahaanModel(idPerusahaan string) (*models.Csirt, error)
 }
 
 // SdmCsirtRepositoryInterface

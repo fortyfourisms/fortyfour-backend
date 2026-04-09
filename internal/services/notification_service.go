@@ -151,6 +151,22 @@ func (s *NotificationService) HasPasswordExpirySoonNotif(userID string) (bool, e
 	return false, nil
 }
 
+// HasSTRExpirySoonNotif mengecek apakah sudah ada notifikasi STR expiry soon
+// yang belum dibaca, untuk menghindari duplikasi notifikasi di setiap login
+func (s *NotificationService) HasSTRExpirySoonNotif(userID string) (bool, error) {
+	notifs, err := s.GetAll(userID)
+	if err != nil {
+		return false, err
+	}
+
+	for _, n := range notifs {
+		if n.Type == models.NotifSTRExpirySoon && !n.Read {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // save menyimpan kembali slice notifikasi ke Redis tanpa TTL
 func (s *NotificationService) save(userID string, notifs []models.Notification) error {
 	data, err := json.Marshal(notifs)

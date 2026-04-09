@@ -85,7 +85,7 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 	for rows.Next() {
 		var c models.Csirt
 		var telepon, photo, rfc, pgp, fileStr sql.NullString
-		var tglReg, tglKadaluarsa, tglRegUlang sql.NullString
+		var tglReg, tglKadaluarsa, tglRegUlang sql.NullTime
 		err := rows.Scan(
 			&c.ID,
 			&c.IdPerusahaan,
@@ -119,13 +119,16 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 			c.FileStr = &fileStr.String
 		}
 		if tglReg.Valid {
-			c.TanggalRegistrasi = &tglReg.String
+			s := tglReg.Time.Format("2006-01-02")
+			c.TanggalRegistrasi = &s
 		}
 		if tglKadaluarsa.Valid {
-			c.TanggalKadaluarsa = &tglKadaluarsa.String
+			s := tglKadaluarsa.Time.Format("2006-01-02")
+			c.TanggalKadaluarsa = &s
 		}
 		if tglRegUlang.Valid {
-			c.TanggalRegistrasiUlang = &tglRegUlang.String
+			s := tglRegUlang.Time.Format("2006-01-02")
+			c.TanggalRegistrasiUlang = &s
 		}
 		result = append(result, c)
 	}
@@ -146,7 +149,7 @@ func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 
 	var c models.Csirt
 	var telepon, photo, rfc, pgp, fileStr sql.NullString
-	var tglReg, tglKadaluarsa, tglRegUlang sql.NullString
+	var tglReg, tglKadaluarsa, tglRegUlang sql.NullTime
 	err := row.Scan(
 		&c.ID,
 		&c.IdPerusahaan,
@@ -180,13 +183,16 @@ func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 		c.FileStr = &fileStr.String
 	}
 	if tglReg.Valid {
-		c.TanggalRegistrasi = &tglReg.String
+		s := tglReg.Time.Format("2006-01-02")
+		c.TanggalRegistrasi = &s
 	}
 	if tglKadaluarsa.Valid {
-		c.TanggalKadaluarsa = &tglKadaluarsa.String
+		s := tglKadaluarsa.Time.Format("2006-01-02")
+		c.TanggalKadaluarsa = &s
 	}
 	if tglRegUlang.Valid {
-		c.TanggalRegistrasiUlang = &tglRegUlang.String
+		s := tglRegUlang.Time.Format("2006-01-02")
+		c.TanggalRegistrasiUlang = &s
 	}
 	return &c, nil
 }
@@ -389,6 +395,70 @@ DELETE
 func (r *CsirtRepository) Delete(id string) error {
 	_, err := r.db.Exec(`DELETE FROM csirt WHERE id = ?`, id)
 	return err
+}
+
+/*
+========================
+GET BY PERUSAHAAN (Model)
+========================
+*/
+// GetByPerusahaanModel mengembalikan data CSIRT model berdasarkan id_perusahaan.
+// Digunakan oleh STRExpiryService untuk mengecek tanggal kadaluarsa.
+func (r *CsirtRepository) GetByPerusahaanModel(idPerusahaan string) (*models.Csirt, error) {
+	row := r.db.QueryRow(`
+		SELECT id, id_perusahaan, nama_csirt, web_csirt, telepon_csirt,
+		       photo_csirt, file_rfc2350, file_public_key_pgp,
+		       file_str, tanggal_registrasi, tanggal_kadaluarsa, tanggal_registrasi_ulang
+		FROM csirt WHERE id_perusahaan = ? LIMIT 1`, idPerusahaan)
+
+	var c models.Csirt
+	var telepon, photo, rfc, pgp, fileStr sql.NullString
+	var tglReg, tglKadaluarsa, tglRegUlang sql.NullTime
+	err := row.Scan(
+		&c.ID,
+		&c.IdPerusahaan,
+		&c.NamaCsirt,
+		&c.WebCsirt,
+		&telepon,
+		&photo,
+		&rfc,
+		&pgp,
+		&fileStr,
+		&tglReg,
+		&tglKadaluarsa,
+		&tglRegUlang,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if telepon.Valid {
+		c.TeleponCsirt = &telepon.String
+	}
+	if photo.Valid {
+		c.PhotoCsirt = &photo.String
+	}
+	if rfc.Valid {
+		c.FileRFC2350 = &rfc.String
+	}
+	if pgp.Valid {
+		c.FilePublicKeyPGP = &pgp.String
+	}
+	if fileStr.Valid {
+		c.FileStr = &fileStr.String
+	}
+	if tglReg.Valid {
+		s := tglReg.Time.Format("2006-01-02")
+		c.TanggalRegistrasi = &s
+	}
+	if tglKadaluarsa.Valid {
+		s := tglKadaluarsa.Time.Format("2006-01-02")
+		c.TanggalKadaluarsa = &s
+	}
+	if tglRegUlang.Valid {
+		s := tglRegUlang.Time.Format("2006-01-02")
+		c.TanggalRegistrasiUlang = &s
+	}
+	return &c, nil
 }
 
 // nullableStr converts empty string to nil for nullable DB columns.
