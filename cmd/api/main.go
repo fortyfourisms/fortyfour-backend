@@ -9,7 +9,7 @@ import (
 	"fortyfour-backend/internal/config"
 	"fortyfour-backend/internal/handlers"
 	"fortyfour-backend/internal/middleware"
-	usersRmq "fortyfour-backend/internal/rabbitmq"
+	internalRmq "fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/routes"
 	"fortyfour-backend/internal/seeder"
@@ -92,9 +92,9 @@ func main() {
 	defer rmq.Close()
 	logger.Info("RabbitMQ initialized successfully")
 
-	// Setup RabbitMQ infrastructure (Users)
-	if err := usersRmq.SetupInfrastructure(rmq); err != nil {
-		logger.FatalErr(err, "Failed to setup Users RabbitMQ infrastructure")
+	// Setup RabbitMQ infrastructure
+	if err := internalRmq.SetupInfrastructure(rmq); err != nil {
+		logger.FatalErr(err, "Failed to setup RabbitMQ infrastructure")
 	}
 
 	logger.Info("RabbitMQ infrastructure initialized successfully")
@@ -104,17 +104,17 @@ func main() {
 	sharedConsumer := pkgRmq.NewConsumer(rmq.GetChannel())
 
 	// Wrap with specific Producer
-	usersProducer := usersRmq.NewProducer(sharedProducer)
+	rmqProducer := internalRmq.NewProducer(sharedProducer)
 
 	// Wrap with specific Consumer
-	usersConsumer := usersRmq.NewConsumer(sharedConsumer, sseService)
+	rmqConsumer := internalRmq.NewConsumer(sharedConsumer, sseService)
 
 	// Start consumers in background
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if err := usersConsumer.StartAllConsumers(ctx); err != nil {
-		logger.FatalErr(err, "Failed to start Users consumers")
+	if err := rmqConsumer.StartAllConsumers(ctx); err != nil {
+		logger.FatalErr(err, "Failed to start RabbitMQ consumers")
 	}
 
 	// Initialize Casbin Service with GORM Adapter
@@ -164,10 +164,10 @@ func main() {
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo, redisClient)
 	picService := services.NewPICService(picRepo, redisClient)
 	jabatanService := services.NewJabatanService(jabatanRepo, redisClient)
-	csirtService := services.NewCsirtService(csirtRepo, redisClient, usersProducer)
+	csirtService := services.NewCsirtService(csirtRepo, redisClient, rmqProducer)
 	csirtExportService := services.NewCsirtExportService(csirtService)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo, redisClient)
-	userService := services.NewUserService(userRepo, uploadPath, usersProducer)
+	userService := services.NewUserService(userRepo, uploadPath, rmqProducer)
 	roleService := services.NewRoleService(roleRepo, redisClient)
 	chatService := services.NewChatService(chatRepo, geminiClient, db)
 	sektorService := services.NewSektorService(sektorRepo, redisClient)
