@@ -30,7 +30,7 @@ func NewConsumer(c *rabbitmq.Consumer, sseService SSEBroadcaster) *Consumer {
 	}
 }
 
-// ConsumeUserCreated
+// Users
 func (c *Consumer) ConsumeUserCreated(ctx context.Context) error {
 	return c.Consume(ctx, "users.created", func(ctx context.Context, body []byte) error {
 		var event dto_event.UserCreatedEvent
@@ -47,7 +47,7 @@ func (c *Consumer) ConsumeUserCreated(ctx context.Context) error {
 	})
 }
 
-// ConsumeUserUpdated
+
 func (c *Consumer) ConsumeUserUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "users.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.UserUpdatedEvent
@@ -64,7 +64,7 @@ func (c *Consumer) ConsumeUserUpdated(ctx context.Context) error {
 	})
 }
 
-// ConsumeUserDeleted
+
 func (c *Consumer) ConsumeUserDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "users.deleted", func(ctx context.Context, body []byte) error {
 		var event dto_event.UserDeletedEvent
@@ -81,7 +81,7 @@ func (c *Consumer) ConsumeUserDeleted(ctx context.Context) error {
 	})
 }
 
-// ConsumeUserPasswordUpdated
+
 func (c *Consumer) ConsumeUserPasswordUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "users.password_updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.UserPasswordUpdatedEvent
@@ -98,7 +98,8 @@ func (c *Consumer) ConsumeUserPasswordUpdated(ctx context.Context) error {
 	})
 }
 
-// ConsumeIkasCreated
+
+// IKAS
 func (c *Consumer) ConsumeIkasCreated(ctx context.Context) error {
 	return c.Consume(ctx, "main_api.ikas.created", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasCreatedEvent
@@ -115,7 +116,7 @@ func (c *Consumer) ConsumeIkasCreated(ctx context.Context) error {
 	})
 }
 
-// ConsumeIkasUpdated
+
 func (c *Consumer) ConsumeIkasUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "main_api.ikas.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasUpdatedEvent
@@ -132,7 +133,7 @@ func (c *Consumer) ConsumeIkasUpdated(ctx context.Context) error {
 	})
 }
 
-// ConsumeIkasDeleted
+
 func (c *Consumer) ConsumeIkasDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "main_api.ikas.deleted", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasDeletedEvent
@@ -149,7 +150,8 @@ func (c *Consumer) ConsumeIkasDeleted(ctx context.Context) error {
 	})
 }
 
-// ConsumeCsirtCreated
+
+// Csirt
 func (c *Consumer) ConsumeCsirtCreated(ctx context.Context) error {
 	return c.Consume(ctx, "csirt.created", func(ctx context.Context, body []byte) error {
 		var event dto_event.CsirtCreatedEvent
@@ -166,7 +168,7 @@ func (c *Consumer) ConsumeCsirtCreated(ctx context.Context) error {
 	})
 }
 
-// ConsumeCsirtUpdated
+
 func (c *Consumer) ConsumeCsirtUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "csirt.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.CsirtUpdatedEvent
@@ -183,7 +185,7 @@ func (c *Consumer) ConsumeCsirtUpdated(ctx context.Context) error {
 	})
 }
 
-// ConsumeCsirtDeleted
+
 func (c *Consumer) ConsumeCsirtDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "csirt.deleted", func(ctx context.Context, body []byte) error {
 		var event dto_event.CsirtDeletedEvent
@@ -274,6 +276,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeCsirtCreated,
 		c.ConsumeCsirtUpdated,
 		c.ConsumeCsirtDeleted,
+		c.ConsumePerusahaanCreated,
+		c.ConsumePerusahaanUpdated,
+		c.ConsumePerusahaanDeleted,
 	}
 
 	for _, consumer := range consumers {
@@ -284,4 +289,38 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 
 	log.Println("All Main API consumers started successfully")
 	return nil
+}
+
+// Perusahaan
+func (c *Consumer) ConsumePerusahaanCreated(ctx context.Context) error {
+	return c.Consume(ctx, "perusahaan.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.PerusahaanCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyCreate("perusahaan", event, "system")
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumePerusahaanUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "perusahaan.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.PerusahaanUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyUpdate("perusahaan", event, "system")
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumePerusahaanDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "perusahaan.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.PerusahaanDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyDelete("perusahaan", event.ID, "system")
+		return nil
+	})
 }

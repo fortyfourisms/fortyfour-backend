@@ -161,7 +161,7 @@ func main() {
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret, true, cfg.Domain)
 	notificationService := services.NewNotificationService(redisClient)
 	authService := services.NewAuthService(userRepo, roleRepo, tokenService, notificationService)
-	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo, redisClient)
+	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo, redisClient, rmqProducer)
 	picService := services.NewPICService(picRepo, redisClient)
 	jabatanService := services.NewJabatanService(jabatanRepo, redisClient)
 	csirtService := services.NewCsirtService(csirtRepo, redisClient, rmqProducer)

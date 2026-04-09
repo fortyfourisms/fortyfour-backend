@@ -105,6 +105,28 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		}
 	}
 
-	log.Println("RabbitMQ infrastructure setup completed (Users & CSIRT)")
+	// // Declare Queues untuk Perusahaan
+	if err := rmq.DeclareExchange("perusahaan.events", "topic"); err != nil {
+		return err
+	}
+
+	queuePerusahaan := []string{
+		"perusahaan.created",
+		"perusahaan.updated",
+		"perusahaan.deleted",
+	}
+
+	for _, q := range queuePerusahaan {
+		if _, err := rmq.DeclareQueue(q); err != nil {
+			return err
+		}
+		// Bind routing key matches queue name exactly for simplicity (perusahaan.created -> perusahaan.created)
+		if err := rmq.BindQueue(q, q, "perusahaan.events"); err != nil {
+			return err
+		}
+	}
+
+	log.Println("RabbitMQ infrastructure setup completed (Users, CSIRT, Perusahaan)")
+
 	return nil
 }

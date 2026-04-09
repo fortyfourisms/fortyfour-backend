@@ -1,13 +1,17 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/dto/dto_event"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
 	"strings"
+	"time"
 
 	"github.com/google/uuid"
+	"fortyfour-backend/internal/rabbitmq"
 )
 
 type PerusahaanServiceInterface interface {
@@ -23,13 +27,15 @@ type PerusahaanService struct {
 	repo          repository.PerusahaanRepositoryInterface
 	subSektorRepo repository.SubSektorRepositoryInterface
 	rc            cache.RedisInterface
+	producer      *rabbitmq.Producer
 }
 
-func NewPerusahaanService(repo repository.PerusahaanRepositoryInterface, subSektorRepo repository.SubSektorRepositoryInterface, rc cache.RedisInterface) *PerusahaanService {
+func NewPerusahaanService(repo repository.PerusahaanRepositoryInterface, subSektorRepo repository.SubSektorRepositoryInterface, rc cache.RedisInterface, producer *rabbitmq.Producer) *PerusahaanService {
 	return &PerusahaanService{
 		repo:          repo,
 		subSektorRepo: subSektorRepo,
 		rc:            rc,
+		producer:      producer,
 	}
 }
 
@@ -63,6 +69,29 @@ func (s *PerusahaanService) Create(req dto.CreatePerusahaanRequest) (*dto.Perusa
 
 	cacheSet(s.rc, keyDetail("perusahaan", id), result, TTLDetail)
 	cacheDelete(s.rc, keyList("perusahaan"))
+
+	// Publish event
+	if s.producer != nil {
+		go func() {
+			var subSektorID string
+			if result.SubSektor != nil {
+				subSektorID = result.SubSektor.ID
+			}
+
+			event := dto_event.PerusahaanCreatedEvent{
+				ID:             result.ID,
+				Photo:          result.Photo,
+				NamaPerusahaan: result.NamaPerusahaan,
+				IDSubSektor:    subSektorID,
+				Alamat:         result.Alamat,
+				Telepon:        result.Telepon,
+				Email:          result.Email,
+				Website:        result.Website,
+				CreatedAt:      time.Now(),
+			}
+			s.producer.PublishPerusahaanCreated(context.Background(), event)
+		}()
+	}
 
 	return result, nil
 }
@@ -149,6 +178,29 @@ func (s *PerusahaanService) Update(id string, req dto.UpdatePerusahaanRequest) (
 	cacheDelete(s.rc, keyDetail("perusahaan", id))
 	cacheDelete(s.rc, keyList("perusahaan"))
 
+	// Publish event
+	if s.producer != nil {
+		go func() {
+			var subSektorID string
+			if perusahaan.SubSektor != nil {
+				subSektorID = perusahaan.SubSektor.ID
+			}
+
+			event := dto_event.PerusahaanUpdatedEvent{
+				ID:             perusahaan.ID,
+				Photo:          perusahaan.Photo,
+				NamaPerusahaan: perusahaan.NamaPerusahaan,
+				IDSubSektor:    subSektorID,
+				Alamat:         perusahaan.Alamat,
+				Telepon:        perusahaan.Telepon,
+				Email:          perusahaan.Email,
+				Website:        perusahaan.Website,
+				UpdatedAt:      time.Now(),
+			}
+			s.producer.PublishPerusahaanUpdated(context.Background(), event)
+		}()
+	}
+
 	return perusahaan, nil
 }
 
@@ -159,6 +211,17 @@ func (s *PerusahaanService) Delete(id string) error {
 
 	cacheDelete(s.rc, keyDetail("perusahaan", id))
 	cacheDelete(s.rc, keyList("perusahaan"))
+
+	// Publish event
+	if s.producer != nil {
+		go func() {
+			event := dto_event.PerusahaanDeletedEvent{
+				ID:        id,
+				DeletedAt: time.Now(),
+			}
+			s.producer.PublishPerusahaanDeleted(context.Background(), event)
+		}()
+	}
 
 	return nil
 }
