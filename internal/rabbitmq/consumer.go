@@ -285,6 +285,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeJabatanCreated,
 		c.ConsumeJabatanUpdated,
 		c.ConsumeJabatanDeleted,
+		c.ConsumeSdmCsirtCreated,
+		c.ConsumeSdmCsirtUpdated,
+		c.ConsumeSdmCsirtDeleted,
 	}
 
 	for _, consumer := range consumers {
@@ -395,6 +398,40 @@ func (c *Consumer) ConsumeJabatanDeleted(ctx context.Context) error {
 			return err
 		}
 		c.sseService.NotifyDelete("jabatan", event.ID, "system")
+		return nil
+	})
+}
+
+// SDM CSIRT
+func (c *Consumer) ConsumeSdmCsirtCreated(ctx context.Context) error {
+	return c.Consume(ctx, "sdm_csirt.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.SdmCsirtCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyCreate("sdm_csirt", event, "system")
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeSdmCsirtUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "sdm_csirt.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.SdmCsirtUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyUpdate("sdm_csirt", event, "system")
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeSdmCsirtDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "sdm_csirt.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.SdmCsirtDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+		c.sseService.NotifyDelete("sdm_csirt", event.ID, "system")
 		return nil
 	})
 }

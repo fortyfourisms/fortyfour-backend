@@ -76,3 +76,14 @@ func (p *Producer) PublishJabatanUpdated(ctx context.Context, event dto_event.Ja
 func (p *Producer) PublishJabatanDeleted(ctx context.Context, event dto_event.JabatanDeletedEvent) error {
 	return p.Publish(ctx, "jabatan.events", "jabatan.deleted", event)
 }
+
+// SDM CSIRT
+func (p *Producer) PublishSdmCsirtCreated(ctx context.Context, event dto_event.SdmCsirtCreatedEvent) error {
+	return p.Publish(ctx, "sdm_csirt.events", "sdm_csirt.created", event)
+}
+func (p *Producer) PublishSdmCsirtUpdated(ctx context.Context, event dto_event.SdmCsirtUpdatedEvent) error {
+	return p.Publish(ctx, "sdm_csirt.events", "sdm_csirt.updated", event)
+}
+func (p *Producer) PublishSdmCsirtDeleted(ctx context.Context, event dto_event.SdmCsirtDeletedEvent) error {
+	return p.Publish(ctx, "sdm_csirt.events", "sdm_csirt.deleted", event)
+}
