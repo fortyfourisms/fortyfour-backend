@@ -5,9 +5,9 @@ import (
 	"time"
 )
 
-// STRExpiryWarnDays adalah batas peringatan sebelum STR kadaluarsa (30 hari).
+// STRExpiryWarnDays adalah batas peringatan sebelum STR kadaluarsa (180 hari).
 // Ubah nilai ini jika ingin mengubah berapa hari sebelum kadaluarsa notifikasi dikirim.
-const STRExpiryWarnDays = 30
+const STRExpiryWarnDays = 180
 
 type Csirt struct {
 	ID                     string  `json:"id"`
