@@ -57,6 +57,19 @@ var defaultPolicies = []Policy{
 	{"user", "/api/perusahaan/:id", "GET"},
 	{"user", "/api/perusahaan/:id", "PUT"},
 
+	// Maturity (Pertanyaan)
+	{"user", "/api/maturity/pertanyaan-identifikasi", "GET"},
+	{"user", "/api/maturity/pertanyaan-identifikasi/:id", "GET"},
+
+	{"user", "/api/maturity/pertanyaan-proteksi", "GET"},
+	{"user", "/api/maturity/pertanyaan-proteksi/:id", "GET"},
+
+	{"user", "/api/maturity/pertanyaan-deteksi", "GET"},
+	{"user", "/api/maturity/pertanyaan-deteksi/:id", "GET"},
+
+	{"user", "/api/maturity/pertanyaan-gulih", "GET"},
+	{"user", "/api/maturity/pertanyaan-gulih/:id", "GET"},
+
 	// Maturity (Jawaban)
 	{"user", "/api/maturity/jawaban-identifikasi", "GET"},
 	{"user", "/api/maturity/jawaban-identifikasi", "POST"},
