@@ -7,8 +7,8 @@ import (
 
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/dto/dto_event"
-	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/rabbitmq"
+	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
 	"time"
 
