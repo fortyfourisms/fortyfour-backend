@@ -354,11 +354,6 @@ func printCsirtBlock(pdf *fpdf.Fpdf, csirt dto.CsirtResponse) {
 		tglKadaluarsa = csirt.TanggalKadaluarsa
 	}
 
-	tglRegUlang := "-"
-	if csirt.TanggalRegistrasiUlang != "" {
-		tglRegUlang = csirt.TanggalRegistrasiUlang
-	}
-
 	rows := [][]string{
 		{"Perusahaan", namaPerusahaan},
 		{"Nama CSIRT", csirt.NamaCsirt},
@@ -377,7 +372,6 @@ func printCsirtBlock(pdf *fpdf.Fpdf, csirt dto.CsirtResponse) {
 	tanggalRows := [][]string{
 		{"Tanggal Registrasi", tglReg},
 		{"Tanggal Kadaluarsa", tglKadaluarsa},
-		{"Tanggal Registrasi Ulang", tglRegUlang},
 	}
 	printRows(pdf, tanggalRows)
 }

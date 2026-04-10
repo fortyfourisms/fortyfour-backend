@@ -33,6 +33,7 @@ var defaultPolicies = []Policy{
 	{"user", "/api/csirt/:id", "GET"},
 	{"user", "/api/csirt/:id", "PUT"},
 	{"user", "/api/csirt/:id", "DELETE"},
+	{"user", "/api/csirt/:id/pgp-download", "GET"},
 
 	// SDM CSIRT
 	{"user", "/api/sdm_csirt", "GET"},

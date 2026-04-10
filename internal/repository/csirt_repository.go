@@ -30,14 +30,15 @@ CREATE
 func (r *CsirtRepository) Create(req dto.CreateCsirtRequest, id string) error {
 	_, err := r.db.Exec(`
 		INSERT INTO csirt (
-			id, id_perusahaan, nama_csirt, web_csirt, telepon_csirt,
+			id, id_perusahaan, nama_csirt, web_csirt, email_csirt, telepon_csirt,
 			photo_csirt, file_rfc2350, file_public_key_pgp,
-			file_str, tanggal_registrasi, tanggal_kadaluarsa, tanggal_registrasi_ulang
+			file_str, tanggal_registrasi, tanggal_kadaluarsa
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		id,
 		req.IdPerusahaan,
 		req.NamaCsirt,
 		req.WebCsirt,
+		nullableStr(req.EmailCsirt),
 		req.TeleponCsirt,
 		req.PhotoCsirt,
 		req.FileRFC2350,
@@ -45,7 +46,6 @@ func (r *CsirtRepository) Create(req dto.CreateCsirtRequest, id string) error {
 		nullableStr(req.FileStr),
 		nullableStr(req.TanggalRegistrasi),
 		nullableStr(req.TanggalKadaluarsa),
-		nullableStr(req.TanggalRegistrasiUlang),
 	)
 	return err
 }
@@ -71,9 +71,9 @@ GET ALL
 */
 func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 	rows, err := r.db.Query(`
-		SELECT id, id_perusahaan, nama_csirt, web_csirt, telepon_csirt,
+		SELECT id, id_perusahaan, nama_csirt, web_csirt, email_csirt, telepon_csirt,
 		       photo_csirt, file_rfc2350, file_public_key_pgp,
-		       file_str, tanggal_registrasi, tanggal_kadaluarsa, tanggal_registrasi_ulang
+		       file_str, tanggal_registrasi, tanggal_kadaluarsa
 		FROM csirt
 	`)
 	if err != nil {
@@ -84,13 +84,14 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 	var result []models.Csirt
 	for rows.Next() {
 		var c models.Csirt
-		var telepon, photo, rfc, pgp, fileStr sql.NullString
-		var tglReg, tglKadaluarsa, tglRegUlang sql.NullTime
+		var email, telepon, photo, rfc, pgp, fileStr sql.NullString
+		var tglReg, tglKadaluarsa sql.NullTime
 		err := rows.Scan(
 			&c.ID,
 			&c.IdPerusahaan,
 			&c.NamaCsirt,
 			&c.WebCsirt,
+			&email,
 			&telepon,
 			&photo,
 			&rfc,
@@ -98,10 +99,12 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 			&fileStr,
 			&tglReg,
 			&tglKadaluarsa,
-			&tglRegUlang,
 		)
 		if err != nil {
 			return nil, err
+		}
+		if email.Valid {
+			c.EmailCsirt = &email.String
 		}
 		if telepon.Valid {
 			c.TeleponCsirt = &telepon.String
@@ -126,10 +129,6 @@ func (r *CsirtRepository) GetAll() ([]models.Csirt, error) {
 			s := tglKadaluarsa.Time.Format("2006-01-02")
 			c.TanggalKadaluarsa = &s
 		}
-		if tglRegUlang.Valid {
-			s := tglRegUlang.Time.Format("2006-01-02")
-			c.TanggalRegistrasiUlang = &s
-		}
 		result = append(result, c)
 	}
 	return result, nil
@@ -142,19 +141,20 @@ GET BY ID
 */
 func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 	row := r.db.QueryRow(`
-		SELECT id, id_perusahaan, nama_csirt, web_csirt, telepon_csirt,
+		SELECT id, id_perusahaan, nama_csirt, web_csirt, email_csirt, telepon_csirt,
 		       photo_csirt, file_rfc2350, file_public_key_pgp,
-		       file_str, tanggal_registrasi, tanggal_kadaluarsa, tanggal_registrasi_ulang
+		       file_str, tanggal_registrasi, tanggal_kadaluarsa
 		FROM csirt WHERE id = ?`, id)
 
 	var c models.Csirt
-	var telepon, photo, rfc, pgp, fileStr sql.NullString
-	var tglReg, tglKadaluarsa, tglRegUlang sql.NullTime
+	var email, telepon, photo, rfc, pgp, fileStr sql.NullString
+	var tglReg, tglKadaluarsa sql.NullTime
 	err := row.Scan(
 		&c.ID,
 		&c.IdPerusahaan,
 		&c.NamaCsirt,
 		&c.WebCsirt,
+		&email,
 		&telepon,
 		&photo,
 		&rfc,
@@ -162,10 +162,12 @@ func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 		&fileStr,
 		&tglReg,
 		&tglKadaluarsa,
-		&tglRegUlang,
 	)
 	if err != nil {
 		return nil, err
+	}
+	if email.Valid {
+		c.EmailCsirt = &email.String
 	}
 	if telepon.Valid {
 		c.TeleponCsirt = &telepon.String
@@ -190,10 +192,6 @@ func (r *CsirtRepository) GetByID(id string) (*models.Csirt, error) {
 		s := tglKadaluarsa.Time.Format("2006-01-02")
 		c.TanggalKadaluarsa = &s
 	}
-	if tglRegUlang.Valid {
-		s := tglRegUlang.Time.Format("2006-01-02")
-		c.TanggalRegistrasiUlang = &s
-	}
 	return &c, nil
 }
 
@@ -206,17 +204,18 @@ func scanCsirtWithPerusahaan(scanner interface {
 	var perusahaan dto.PerusahaanResponse
 
 	var (
-		webCsirt, teleponCsirt, photoCsirt, fileRFC, filePGP sql.NullString
-		fileStr, tglReg, tglKadaluarsa, tglRegUlang          sql.NullString
-		photoPerusahaan, alamat, telepon, email, website     sql.NullString
-		subID, namaSubSektor, idSektor, namaSektor           sql.NullString
-		subCreatedAt, subUpdatedAt                           sql.NullString
+		webCsirt, emailCsirt, teleponCsirt, photoCsirt, fileRFC, filePGP sql.NullString
+		fileStr, tglReg, tglKadaluarsa                                    sql.NullString
+		photoPerusahaan, alamat, telepon, email, website                  sql.NullString
+		subID, namaSubSektor, idSektor, namaSektor                        sql.NullString
+		subCreatedAt, subUpdatedAt                                        sql.NullString
 	)
 
 	err := scanner.Scan(
 		&csirt.ID,
 		&csirt.NamaCsirt,
 		&webCsirt,
+		&emailCsirt,
 		&teleponCsirt,
 		&photoCsirt,
 		&fileRFC,
@@ -224,7 +223,6 @@ func scanCsirtWithPerusahaan(scanner interface {
 		&fileStr,
 		&tglReg,
 		&tglKadaluarsa,
-		&tglRegUlang,
 		&perusahaan.ID,
 		&photoPerusahaan,
 		&perusahaan.NamaPerusahaan,
@@ -252,7 +250,9 @@ func scanCsirtWithPerusahaan(scanner interface {
 	csirt.FileStr = nullStr(fileStr)
 	csirt.TanggalRegistrasi = nullStr(tglReg)
 	csirt.TanggalKadaluarsa = nullStr(tglKadaluarsa)
-	csirt.TanggalRegistrasiUlang = nullStr(tglRegUlang)
+	if emailCsirt.Valid {
+		csirt.EmailCsirt = &emailCsirt.String
+	}
 	if teleponCsirt.Valid {
 		csirt.TeleponCsirt = &teleponCsirt.String
 	}
@@ -280,9 +280,9 @@ func scanCsirtWithPerusahaan(scanner interface {
 
 const csirtWithPerusahaanQuery = `
 	SELECT 
-		c.id, c.nama_csirt, c.web_csirt, c.telepon_csirt, 
+		c.id, c.nama_csirt, c.web_csirt, c.email_csirt, c.telepon_csirt, 
 		c.photo_csirt, c.file_rfc2350, c.file_public_key_pgp,
-		c.file_str, c.tanggal_registrasi, c.tanggal_kadaluarsa, c.tanggal_registrasi_ulang,
+		c.file_str, c.tanggal_registrasi, c.tanggal_kadaluarsa,
 		p.id, p.photo, p.nama_perusahaan,
 		p.alamat, p.telepon, p.email, p.website,
 		p.created_at, p.updated_at,
@@ -363,17 +363,18 @@ func (r *CsirtRepository) Update(id string, c models.Csirt) error {
 		UPDATE csirt SET
 			nama_csirt = ?,
 			web_csirt = ?,
+			email_csirt = ?,
 			telepon_csirt = ?,
 			photo_csirt = ?,
 			file_rfc2350 = ?,
 			file_public_key_pgp = ?,
 			file_str = ?,
 			tanggal_registrasi = ?,
-			tanggal_kadaluarsa = ?,
-			tanggal_registrasi_ulang = ?
+			tanggal_kadaluarsa = ?
 		WHERE id = ?`,
 		c.NamaCsirt,
 		c.WebCsirt,
+		c.EmailCsirt,
 		c.TeleponCsirt,
 		c.PhotoCsirt,
 		c.FileRFC2350,
@@ -381,7 +382,6 @@ func (r *CsirtRepository) Update(id string, c models.Csirt) error {
 		c.FileStr,
 		c.TanggalRegistrasi,
 		c.TanggalKadaluarsa,
-		c.TanggalRegistrasiUlang,
 		id,
 	)
 	return err
@@ -406,19 +406,20 @@ GET BY PERUSAHAAN (Model)
 // Digunakan oleh STRExpiryService untuk mengecek tanggal kadaluarsa.
 func (r *CsirtRepository) GetByPerusahaanModel(idPerusahaan string) (*models.Csirt, error) {
 	row := r.db.QueryRow(`
-		SELECT id, id_perusahaan, nama_csirt, web_csirt, telepon_csirt,
+		SELECT id, id_perusahaan, nama_csirt, web_csirt, email_csirt, telepon_csirt,
 		       photo_csirt, file_rfc2350, file_public_key_pgp,
-		       file_str, tanggal_registrasi, tanggal_kadaluarsa, tanggal_registrasi_ulang
+		       file_str, tanggal_registrasi, tanggal_kadaluarsa
 		FROM csirt WHERE id_perusahaan = ? LIMIT 1`, idPerusahaan)
 
 	var c models.Csirt
-	var telepon, photo, rfc, pgp, fileStr sql.NullString
-	var tglReg, tglKadaluarsa, tglRegUlang sql.NullTime
+	var email, telepon, photo, rfc, pgp, fileStr sql.NullString
+	var tglReg, tglKadaluarsa sql.NullTime
 	err := row.Scan(
 		&c.ID,
 		&c.IdPerusahaan,
 		&c.NamaCsirt,
 		&c.WebCsirt,
+		&email,
 		&telepon,
 		&photo,
 		&rfc,
@@ -426,10 +427,12 @@ func (r *CsirtRepository) GetByPerusahaanModel(idPerusahaan string) (*models.Csi
 		&fileStr,
 		&tglReg,
 		&tglKadaluarsa,
-		&tglRegUlang,
 	)
 	if err != nil {
 		return nil, err
+	}
+	if email.Valid {
+		c.EmailCsirt = &email.String
 	}
 	if telepon.Valid {
 		c.TeleponCsirt = &telepon.String
@@ -453,10 +456,6 @@ func (r *CsirtRepository) GetByPerusahaanModel(idPerusahaan string) (*models.Csi
 	if tglKadaluarsa.Valid {
 		s := tglKadaluarsa.Time.Format("2006-01-02")
 		c.TanggalKadaluarsa = &s
-	}
-	if tglRegUlang.Valid {
-		s := tglRegUlang.Time.Format("2006-01-02")
-		c.TanggalRegistrasiUlang = &s
 	}
 	return &c, nil
 }

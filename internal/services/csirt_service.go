@@ -48,7 +48,9 @@ func (s *CsirtService) Create(req dto.CreateCsirtRequest) (*models.Csirt, error)
 		return nil, err
 	}
 
-	cacheSet(s.rc, keyDetail("csirt", id), result, TTLDetail)
+	// Jangan cache detail di sini — Create menyimpan *models.Csirt (tanpa Perusahaan),
+	// sedangkan GetByID mengharapkan dto.CsirtResponse (dengan Perusahaan).
+	// Biarkan GetByID yang meng-cache dengan tipe yang benar saat dipanggil.
 	cacheDelete(s.rc, keyList("csirt"))
 	cacheDelete(s.rc, "csirt:perusahaan:"+req.IdPerusahaan)
 
@@ -115,6 +117,9 @@ func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Cs
 	if req.WebCsirt != nil {
 		c.WebCsirt = *req.WebCsirt
 	}
+	if req.EmailCsirt != nil {
+		c.EmailCsirt = req.EmailCsirt
+	}
 	if req.TeleponCsirt != nil {
 		c.TeleponCsirt = req.TeleponCsirt
 	}
@@ -135,9 +140,6 @@ func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Cs
 	}
 	if req.TanggalKadaluarsa != nil {
 		c.TanggalKadaluarsa = req.TanggalKadaluarsa
-	}
-	if req.TanggalRegistrasiUlang != nil {
-		c.TanggalRegistrasiUlang = req.TanggalRegistrasiUlang
 	}
 
 	if err := s.repo.Update(id, *c); err != nil {

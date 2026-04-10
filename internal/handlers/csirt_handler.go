@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -42,6 +43,13 @@ func (h *CsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			utils.RespondError(w, 500, "Export handler tidak tersedia")
 		}
+		return
+	}
+
+	// Handle /{id}/pgp-download → download file PGP sebagai .asc
+	if strings.HasSuffix(id, "/pgp-download") {
+		csirtID := strings.TrimSuffix(id, "/pgp-download")
+		h.handlePGPDownload(w, r, csirtID)
 		return
 	}
 
@@ -121,6 +129,55 @@ func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id 
 	utils.RespondJSON(w, 200, data)
 }
 
+// @Summary Download file Public Key PGP CSIRT
+// @Description Mendownload file PGP (.asc) milik CSIRT berdasarkan ID
+// @Tags CSIRT
+// @Produce application/octet-stream
+// @Security BearerAuth
+// @Param id path string true "CSIRT ID"
+// @Success 200 {file} binary
+// @Failure 404 {object} dto.ErrorResponse
+// @Router /api/csirt/{id}/pgp-download [get]
+func (h *CsirtHandler) handlePGPDownload(w http.ResponseWriter, r *http.Request, id string) {
+	data, err := h.service.GetByID(id)
+	if err != nil {
+		logger.Error(err, "failed to get CSIRT for PGP download")
+		utils.RespondError(w, 404, "Data tidak ditemukan")
+		return
+	}
+
+	// Ownership check untuk user
+	role := middleware.GetRole(r.Context())
+	if role == "user" {
+		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
+		if data.Perusahaan.ID != idPerusahaan {
+			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
+			return
+		}
+	}
+
+	if data.FilePublicKeyPGP == "" {
+		utils.RespondError(w, 404, "File PGP tidak tersedia")
+		return
+	}
+
+	filePath := data.FilePublicKeyPGP
+	f, err := os.Open(filePath)
+	if err != nil {
+		logger.Error(err, "failed to open PGP file")
+		utils.RespondError(w, 404, "File PGP tidak ditemukan di server")
+		return
+	}
+	defer f.Close()
+
+	// Paksa nama file sebagai .asc saat didownload
+	downloadName := fmt.Sprintf("%s_pgp_key.asc", id)
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", downloadName))
+	w.Header().Set("Content-Type", "application/pgp-keys")
+	w.WriteHeader(http.StatusOK)
+	io.Copy(w, f)
+}
+
 // @Summary Tambah CSIRT baru
 // @Description Membuat record CSIRT baru dengan file upload
 // @Tags CSIRT
@@ -130,14 +187,14 @@ func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id 
 // @Param id_perusahaan formData string true "ID Perusahaan"
 // @Param nama_csirt formData string true "Nama CSIRT"
 // @Param web_csirt formData string false "Website CSIRT"
+// @Param email_csirt formData string false "Email CSIRT"
 // @Param telepon_csirt formData string false "Telepon CSIRT"
 // @Param photo_csirt formData file false "Photo CSIRT"
 // @Param file_rfc2350 formData file false "File RFC2350"
-// @Param file_public_key_pgp formData file false "File Public Key PGP"
+// @Param file_public_key_pgp formData file false "File Public Key PGP (.asc)"
 // @Param file_str formData file false "File STR CSIRT (nullable)"
 // @Param tanggal_registrasi formData string false "Tanggal Registrasi (YYYY-MM-DD)"
 // @Param tanggal_kadaluarsa formData string false "Tanggal Kadaluarsa (YYYY-MM-DD)"
-// @Param tanggal_registrasi_ulang formData string false "Tanggal Registrasi Ulang (YYYY-MM-DD)"
 // @Success 201 {object} dto.CsirtResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Router /api/csirt [post]
@@ -149,13 +206,13 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req := dto.CreateCsirtRequest{
-		IdPerusahaan:           r.FormValue("id_perusahaan"),
-		NamaCsirt:              r.FormValue("nama_csirt"),
-		WebCsirt:               r.FormValue("web_csirt"),
-		TeleponCsirt:           r.FormValue("telepon_csirt"),
-		TanggalRegistrasi:      r.FormValue("tanggal_registrasi"),
-		TanggalKadaluarsa:      r.FormValue("tanggal_kadaluarsa"),
-		TanggalRegistrasiUlang: r.FormValue("tanggal_registrasi_ulang"),
+		IdPerusahaan:      r.FormValue("id_perusahaan"),
+		NamaCsirt:         r.FormValue("nama_csirt"),
+		WebCsirt:          r.FormValue("web_csirt"),
+		EmailCsirt:        r.FormValue("email_csirt"),
+		TeleponCsirt:      r.FormValue("telepon_csirt"),
+		TanggalRegistrasi: r.FormValue("tanggal_registrasi"),
+		TanggalKadaluarsa: r.FormValue("tanggal_kadaluarsa"),
 	}
 
 	// User: paksa id_perusahaan dari JWT, tidak bisa diisi sembarangan
@@ -169,7 +226,7 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		req.IdPerusahaan = idPerusahaan
 	}
 
-	photoPath, err := saveUploadedFile(r, "photo_csirt", "uploads/csirt_photo")
+	photoPath, err := saveUploadedFile(r, "photo_csirt", "uploads/csirt_photo", "")
 	if err != nil {
 		logger.Error(err, "failed to upload CSIRT photo")
 		utils.RespondError(w, 400, err.Error())
@@ -177,7 +234,7 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	req.PhotoCsirt = photoPath
 
-	rfcPath, err := saveUploadedFile(r, "file_rfc2350", "uploads/rfc2350")
+	rfcPath, err := saveUploadedFile(r, "file_rfc2350", "uploads/rfc2350", "")
 	if err != nil {
 		logger.Error(err, "failed to upload RFC2350 file")
 		utils.RespondError(w, 400, err.Error())
@@ -185,7 +242,8 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	req.FileRFC2350 = rfcPath
 
-	pgpPath, err := saveUploadedFile(r, "file_public_key_pgp", "uploads/pgp")
+	// PGP: hanya terima file .asc
+	pgpPath, err := saveUploadedFile(r, "file_public_key_pgp", "uploads/pgp", ".asc")
 	if err != nil {
 		logger.Error(err, "failed to upload PGP key file")
 		utils.RespondError(w, 400, err.Error())
@@ -194,7 +252,7 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	req.FilePublicKeyPGP = pgpPath
 
 	// Upload file STR (nullable — tidak wajib)
-	strPath, err := saveUploadedFile(r, "file_str", "uploads/str_csirt")
+	strPath, err := saveUploadedFile(r, "file_str", "uploads/str_csirt", "")
 	if err != nil {
 		logger.Error(err, "failed to upload STR file")
 		utils.RespondError(w, 400, err.Error())
@@ -227,14 +285,14 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "CSIRT ID"
 // @Param nama_csirt formData string false "Nama CSIRT"
 // @Param web_csirt formData string false "Website CSIRT"
+// @Param email_csirt formData string false "Email CSIRT"
 // @Param telepon_csirt formData string false "Telepon CSIRT"
 // @Param photo_csirt formData file false "Photo CSIRT"
 // @Param file_rfc2350 formData file false "File RFC2350"
-// @Param file_public_key_pgp formData file false "File Public Key PGP"
+// @Param file_public_key_pgp formData file false "File Public Key PGP (.asc)"
 // @Param file_str formData file false "File STR CSIRT (nullable)"
 // @Param tanggal_registrasi formData string false "Tanggal Registrasi (YYYY-MM-DD)"
 // @Param tanggal_kadaluarsa formData string false "Tanggal Kadaluarsa (YYYY-MM-DD)"
-// @Param tanggal_registrasi_ulang formData string false "Tanggal Registrasi Ulang (YYYY-MM-DD)"
 // @Success 200 {object} dto.CsirtResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Router /api/csirt/{id} [put]
@@ -268,6 +326,9 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 	if v := r.FormValue("web_csirt"); v != "" {
 		req.WebCsirt = &v
 	}
+	if v := r.FormValue("email_csirt"); v != "" {
+		req.EmailCsirt = &v
+	}
 	if v := r.FormValue("telepon_csirt"); v != "" {
 		req.TeleponCsirt = &v
 	}
@@ -277,22 +338,25 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 	if v := r.FormValue("tanggal_kadaluarsa"); v != "" {
 		req.TanggalKadaluarsa = &v
 	}
-	if v := r.FormValue("tanggal_registrasi_ulang"); v != "" {
-		req.TanggalRegistrasiUlang = &v
-	}
 
-	if path, err := saveUploadedFile(r, "photo_csirt", "uploads/csirt_photo"); err == nil && path != "" {
+	if path, err := saveUploadedFile(r, "photo_csirt", "uploads/csirt_photo", ""); err == nil && path != "" {
 		req.PhotoCsirt = &path
 	}
 
-	if path, err := saveUploadedFile(r, "file_rfc2350", "uploads/rfc2350"); err == nil && path != "" {
+	if path, err := saveUploadedFile(r, "file_rfc2350", "uploads/rfc2350", ""); err == nil && path != "" {
 		req.FileRFC2350 = &path
 	}
 
-	if path, err := saveUploadedFile(r, "file_public_key_pgp", "uploads/pgp"); err == nil && path != "" {
+	// PGP: hanya terima file .asc
+	if path, err := saveUploadedFile(r, "file_public_key_pgp", "uploads/pgp", ".asc"); err != nil {
+		logger.Error(err, "failed to upload PGP key file")
+		utils.RespondError(w, 400, err.Error())
+		return
+	} else if path != "" {
 		req.FilePublicKeyPGP = &path
 	}
-	if path, err := saveUploadedFile(r, "file_str", "uploads/str_csirt"); err == nil && path != "" {
+
+	if path, err := saveUploadedFile(r, "file_str", "uploads/str_csirt", ""); err == nil && path != "" {
 		req.FileStr = &path
 	}
 
@@ -352,18 +416,28 @@ func (h *CsirtHandler) handleDelete(w http.ResponseWriter, r *http.Request, id s
 	utils.RespondJSON(w, 200, map[string]string{"message": "Delete success"})
 }
 
-func saveUploadedFile(r *http.Request, fieldName, uploadDir string) (string, error) {
+// saveUploadedFile menyimpan file yang diupload ke direktori tujuan.
+// Jika requiredExt tidak kosong (misal ".asc"), hanya file dengan ekstensi tersebut yang diterima.
+// Mengembalikan string kosong (tanpa error) jika field tidak ada di form.
+func saveUploadedFile(r *http.Request, fieldName, uploadDir, requiredExt string) (string, error) {
 	file, header, err := r.FormFile(fieldName)
 	if err != nil {
+		// Field tidak ada → bukan error, kembalikan string kosong
 		return "", nil
 	}
 	defer file.Close()
+
+	ext := strings.ToLower(filepath.Ext(header.Filename))
+
+	// Validasi ekstensi jika requiredExt diberikan
+	if requiredExt != "" && ext != strings.ToLower(requiredExt) {
+		return "", fmt.Errorf("file %s harus berformat %s, diterima: %s", fieldName, requiredExt, ext)
+	}
 
 	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
 		return "", err
 	}
 
-	ext := filepath.Ext(header.Filename)
 	filename := uuid.New().String() + ext
 	fullPath := filepath.Join(uploadDir, filename)
 

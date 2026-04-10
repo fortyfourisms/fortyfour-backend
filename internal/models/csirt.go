@@ -10,18 +10,18 @@ import (
 const STRExpiryWarnDays = 180
 
 type Csirt struct {
-	ID                     string  `json:"id"`
-	IdPerusahaan           string  `json:"id_perusahaan"`
-	NamaCsirt              string  `json:"nama_csirt"`
-	WebCsirt               string  `json:"web_csirt"`
-	TeleponCsirt           *string `json:"telepon_csirt"`
-	PhotoCsirt             *string `json:"photo_csirt"`
-	FileRFC2350            *string `json:"file_rfc2350"`
-	FilePublicKeyPGP       *string `json:"file_public_key_pgp"`
-	FileStr                *string `json:"file_str"`
-	TanggalRegistrasi      *string `json:"tanggal_registrasi"`
-	TanggalKadaluarsa      *string `json:"tanggal_kadaluarsa"`
-	TanggalRegistrasiUlang *string `json:"tanggal_registrasi_ulang"`
+	ID               string  `json:"id"`
+	IdPerusahaan     string  `json:"id_perusahaan"`
+	NamaCsirt        string  `json:"nama_csirt"`
+	WebCsirt         string  `json:"web_csirt"`
+	EmailCsirt       *string `json:"email_csirt"`
+	TeleponCsirt     *string `json:"telepon_csirt"`
+	PhotoCsirt       *string `json:"photo_csirt"`
+	FileRFC2350      *string `json:"file_rfc2350"`
+	FilePublicKeyPGP *string `json:"file_public_key_pgp"`
+	FileStr          *string `json:"file_str"`
+	TanggalRegistrasi  *string `json:"tanggal_registrasi"`
+	TanggalKadaluarsa  *string `json:"tanggal_kadaluarsa"`
 }
 
 // parseDate memparsing string tanggal dari database ke time.Time.
@@ -88,45 +88,6 @@ func (c *Csirt) IsSTRExpiringSoon() bool {
 // Mengembalikan 0 jika sudah expired atau tanggal tidak valid.
 func (c *Csirt) DaysUntilSTRExpiry() int {
 	t, ok := parseDate(c.TanggalKadaluarsa)
-	if !ok {
-		return 0
-	}
-	remaining := time.Until(t)
-	if remaining < 0 {
-		return 0
-	}
-	return int(remaining.Hours() / 24)
-}
-
-// ──────────────────────────────────────────────────────────
-//  Tanggal Registrasi Ulang helpers
-// ──────────────────────────────────────────────────────────
-
-// IsRegistrasiUlangPassed mengecek apakah tanggal_registrasi_ulang sudah lewat
-func (c *Csirt) IsRegistrasiUlangPassed() bool {
-	t, ok := parseDate(c.TanggalRegistrasiUlang)
-	if !ok {
-		return false
-	}
-	return time.Now().After(t)
-}
-
-// IsRegistrasiUlangSoon mengecek apakah tanggal_registrasi_ulang akan jatuh tempo
-// dalam STRExpiryWarnDays hari ke depan (belum lewat, tapi sudah dekat)
-func (c *Csirt) IsRegistrasiUlangSoon() bool {
-	t, ok := parseDate(c.TanggalRegistrasiUlang)
-	if !ok {
-		return false
-	}
-	now := time.Now()
-	warnDate := t.AddDate(0, 0, -STRExpiryWarnDays)
-	return now.After(warnDate) && now.Before(t)
-}
-
-// DaysUntilRegistrasiUlang mengembalikan sisa hari sebelum registrasi ulang.
-// Mengembalikan 0 jika sudah lewat atau tanggal tidak valid.
-func (c *Csirt) DaysUntilRegistrasiUlang() int {
-	t, ok := parseDate(c.TanggalRegistrasiUlang)
 	if !ok {
 		return 0
 	}

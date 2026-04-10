@@ -49,17 +49,13 @@ func (s *STRExpiryService) CheckAndNotify(userID, idPerusahaan string) {
 		return
 	}
 
-	logger.Infof("STR expiry check: CSIRT ditemukan — nama=%s, kadaluarsa=%v, reg_ulang=%v",
+	logger.Infof("STR expiry check: CSIRT ditemukan — nama=%s, kadaluarsa=%v",
 		csirt.NamaCsirt,
 		csirt.TanggalKadaluarsa,
-		csirt.TanggalRegistrasiUlang,
 	)
 
 	// ── Cek tanggal_kadaluarsa ──────────────────────────────────────────
 	s.checkTanggalKadaluarsa(userID, csirt)
-
-	// ── Cek tanggal_registrasi_ulang ────────────────────────────────────
-	s.checkTanggalRegistrasiUlang(userID, csirt)
 }
 
 // checkTanggalKadaluarsa mengecek apakah STR sudah atau akan kadaluarsa
@@ -107,50 +103,6 @@ func (s *STRExpiryService) checkTanggalKadaluarsa(userID string, csirt *models.C
 			}
 		} else {
 			logger.Info("STR expiry check: notif STR expiry soon sudah ada, skip duplikasi")
-		}
-	}
-}
-
-// checkTanggalRegistrasiUlang mengecek apakah tanggal registrasi ulang sudah atau akan jatuh tempo
-func (s *STRExpiryService) checkTanggalRegistrasiUlang(userID string, csirt *models.Csirt) {
-	if csirt.TanggalRegistrasiUlang == nil || *csirt.TanggalRegistrasiUlang == "" {
-		return
-	}
-
-	logger.Infof("STR expiry check: tanggal_registrasi_ulang=%s, passed=%v, soon=%v",
-		*csirt.TanggalRegistrasiUlang, csirt.IsRegistrasiUlangPassed(), csirt.IsRegistrasiUlangSoon())
-
-	if csirt.IsRegistrasiUlangPassed() {
-		// Tanggal registrasi ulang sudah lewat — push notif expired
-		hasNotif, _ := s.hasNotifByType(userID, models.NotifSTRExpired, "registrasi ulang")
-		if !hasNotif {
-			msg := fmt.Sprintf(
-				"Tanggal registrasi ulang STR CSIRT \"%s\" telah melewati batas waktu (%s). Segera lakukan registrasi ulang.",
-				csirt.NamaCsirt, *csirt.TanggalRegistrasiUlang,
-			)
-			if err := s.notifSvc.Push(userID, models.NotifSTRExpired, msg); err != nil {
-				logger.Error(err, "failed to push registration renewal expired notification")
-			} else {
-				logger.Info("STR expiry check: notif registrasi ulang expired berhasil di-push")
-			}
-		}
-		return
-	}
-
-	if csirt.IsRegistrasiUlangSoon() {
-		// Tanggal registrasi ulang mendekati — push notif soon
-		hasNotif, _ := s.hasNotifByType(userID, models.NotifSTRExpirySoon, "registrasi ulang")
-		if !hasNotif {
-			days := csirt.DaysUntilRegistrasiUlang()
-			msg := fmt.Sprintf(
-				"Tanggal registrasi ulang STR CSIRT \"%s\" tinggal %d hari lagi (tanggal %s). Segera lakukan registrasi ulang.",
-				csirt.NamaCsirt, days, *csirt.TanggalRegistrasiUlang,
-			)
-			if err := s.notifSvc.Push(userID, models.NotifSTRExpirySoon, msg); err != nil {
-				logger.Error(err, "failed to push registration renewal soon notification")
-			} else {
-				logger.Infof("STR expiry check: notif registrasi ulang soon berhasil di-push (sisa %d hari)", days)
-			}
 		}
 	}
 }
