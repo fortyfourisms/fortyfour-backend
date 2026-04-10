@@ -1,9 +1,13 @@
 package services
 
 import (
+	"context"
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/dto/dto_event"
+	"fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -18,12 +22,17 @@ type SdmCsirtServiceInterface interface {
 }
 
 type SdmCsirtService struct {
-	repo repository.SdmCsirtRepositoryInterface
-	rc   cache.RedisInterface
+	repo     repository.SdmCsirtRepositoryInterface
+	rc       cache.RedisInterface
+	producer *rabbitmq.Producer
 }
 
-func NewSdmCsirtService(repo repository.SdmCsirtRepositoryInterface, rc cache.RedisInterface) *SdmCsirtService {
-	return &SdmCsirtService{repo: repo, rc: rc}
+func NewSdmCsirtService(repo repository.SdmCsirtRepositoryInterface, rc cache.RedisInterface, producer *rabbitmq.Producer) *SdmCsirtService {
+	return &SdmCsirtService{
+		repo:     repo,
+		rc:       rc,
+		producer: producer,
+	}
 }
 
 func (s *SdmCsirtService) Create(req dto.CreateSdmCsirtRequest) (string, error) {
@@ -42,6 +51,27 @@ func (s *SdmCsirtService) Create(req dto.CreateSdmCsirtRequest) (string, error) 
 	cacheDelete(s.rc, keyList("sdm"))
 	if req.IdCsirt != nil {
 		cacheDelete(s.rc, "sdm_csirt_"+*req.IdCsirt)
+	}
+
+	if s.producer != nil {
+		go func() {
+			var idCsirt string
+			if result.Csirt != nil {
+				idCsirt = result.Csirt.ID
+			}
+
+			event := dto_event.SdmCsirtCreatedEvent{
+				ID:                result.ID,
+				IdCsirt:           idCsirt,
+				NamaPersonel:      result.NamaPersonel,
+				JabatanCsirt:      result.JabatanCsirt,
+				JabatanPerusahaan: result.JabatanPerusahaan,
+				Skill:             result.Skill,
+				Sertifikasi:       result.Sertifikasi,
+				CreatedAt:         time.Now(),
+			}
+			s.producer.PublishSdmCsirtCreated(context.Background(), event)
+		}()
 	}
 
 	return id, nil
@@ -130,6 +160,27 @@ func (s *SdmCsirtService) Update(id string, req dto.UpdateSdmCsirtRequest) error
 		cacheDelete(s.rc, "sdm_csirt_"+existing.Csirt.ID)
 	}
 
+	if s.producer != nil {
+		go func() {
+			var idCsirt string
+			if existing.Csirt != nil {
+				idCsirt = existing.Csirt.ID
+			}
+
+			event := dto_event.SdmCsirtUpdatedEvent{
+				ID:                existing.ID,
+				IdCsirt:           idCsirt,
+				NamaPersonel:      existing.NamaPersonel,
+				JabatanCsirt:      existing.JabatanCsirt,
+				JabatanPerusahaan: existing.JabatanPerusahaan,
+				Skill:             existing.Skill,
+				Sertifikasi:       existing.Sertifikasi,
+				UpdatedAt:         time.Now(),
+			}
+			s.producer.PublishSdmCsirtUpdated(context.Background(), event)
+		}()
+	}
+
 	return nil
 }
 
@@ -145,6 +196,22 @@ func (s *SdmCsirtService) Delete(id string) error {
 	cacheDelete(s.rc, keyList("sdm"))
 	if existing != nil && existing.Csirt != nil {
 		cacheDelete(s.rc, "sdm_csirt_"+existing.Csirt.ID)
+	}
+
+	if s.producer != nil {
+		go func() {
+			var idCsirt string
+			if existing != nil && existing.Csirt != nil {
+				idCsirt = existing.Csirt.ID
+			}
+
+			event := dto_event.SdmCsirtDeletedEvent{
+				ID:        id,
+				IdCsirt:   idCsirt,
+				DeletedAt: time.Now(),
+			}
+			s.producer.PublishSdmCsirtDeleted(context.Background(), event)
+		}()
 	}
 
 	return nil

@@ -181,7 +181,7 @@ func TestSdmCsirtHandler_Create_Success(t *testing.T) {
 	}
 
 	body, _ := json.Marshal(dto.CreateSdmCsirtRequest{
-		NamaPersonel: stringPtr("Charlie"),
+		NamaPersonel: strPtr("Charlie"),
 	})
 
 	handler := newSdmHandler(mockSvc)
@@ -226,7 +226,7 @@ func TestSdmCsirtHandler_Update_Success(t *testing.T) {
 	}
 
 	body, _ := json.Marshal(dto.UpdateSdmCsirtRequest{
-		NamaPersonel: stringPtr("Updated"),
+		NamaPersonel: strPtr("Updated"),
 	})
 
 	handler := newSdmHandler(mockSvc)

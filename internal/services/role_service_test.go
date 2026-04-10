@@ -16,7 +16,7 @@ import (
 
 func setupRoleService() (*RoleService, repository.RoleRepository) {
 	mockRepo := testhelpers.NewMockRoleRepository()
-	service := NewRoleService(mockRepo, nil)
+	service := NewRoleService(mockRepo, nil, nil)
 	return service, mockRepo
 }
 
@@ -224,7 +224,7 @@ func TestRoleService_Delete_NotFound(t *testing.T) {
 func TestRoleService_Create_InvalidatesCache(t *testing.T) {
 	rc := newRoleTestRedis()
 	mockRepo := testhelpers.NewMockRoleRepository()
-	service := NewRoleService(mockRepo, rc)
+	service := NewRoleService(mockRepo, rc, nil)
 
 	// Pre-populate list cache
 	setRoleCache(rc, keyList("role"), []*dto.RoleResponse{{ID: "lama", Name: "Lama"}})
@@ -250,7 +250,7 @@ func TestRoleService_Create_InvalidatesCache(t *testing.T) {
 func TestRoleService_GetByID_CacheHit_SkipRepo(t *testing.T) {
 	rc := newRoleTestRedis()
 	mockRepo := testhelpers.NewMockRoleRepository()
-	service := NewRoleService(mockRepo, rc)
+	service := NewRoleService(mockRepo, rc, nil)
 
 	cached := dto.RoleResponse{ID: "role-1", Name: "Dari Cache"}
 	setRoleCache(rc, keyDetail("role", "role-1"), cached)
@@ -268,7 +268,7 @@ func TestRoleService_GetByID_CacheHit_SkipRepo(t *testing.T) {
 func TestRoleService_GetByID_CacheMiss_SetsCache(t *testing.T) {
 	rc := newRoleTestRedis()
 	mockRepo := testhelpers.NewMockRoleRepository()
-	service := NewRoleService(mockRepo, rc)
+	service := NewRoleService(mockRepo, rc, nil)
 
 	role := &models.Role{ID: "role-db", Name: "Dari DB", CreatedAt: time.Now(), UpdatedAt: time.Now()}
 	mockRepo.Create(context.Background(), role)
@@ -305,7 +305,7 @@ func TestRoleService_GetAll_Empty(t *testing.T) {
 func TestRoleService_GetAll_CacheHit_SkipRepo(t *testing.T) {
 	rc := newRoleTestRedis()
 	mockRepo := testhelpers.NewMockRoleRepository()
-	service := NewRoleService(mockRepo, rc)
+	service := NewRoleService(mockRepo, rc, nil)
 
 	cached := []*dto.RoleResponse{{ID: "c1", Name: "Cache Role"}}
 	setRoleCache(rc, keyList("role"), cached)
@@ -328,7 +328,7 @@ func TestRoleService_GetAll_CacheHit_SkipRepo(t *testing.T) {
 func TestRoleService_GetAll_CacheMiss_SetsCache(t *testing.T) {
 	rc := newRoleTestRedis()
 	mockRepo := testhelpers.NewMockRoleRepository()
-	service := NewRoleService(mockRepo, rc)
+	service := NewRoleService(mockRepo, rc, nil)
 
 	mockRepo.Create(context.Background(), &models.Role{
 		ID: "r1", Name: "Role 1", CreatedAt: time.Now(), UpdatedAt: time.Now(),
@@ -417,7 +417,7 @@ func TestRoleService_Update_HanyaDescription(t *testing.T) {
 func TestRoleService_Update_InvalidatesCache(t *testing.T) {
 	rc := newRoleTestRedis()
 	mockRepo := testhelpers.NewMockRoleRepository()
-	service := NewRoleService(mockRepo, rc)
+	service := NewRoleService(mockRepo, rc, nil)
 
 	mockRepo.Create(context.Background(), &models.Role{
 		ID: "role-1", Name: "lama", CreatedAt: time.Now(), UpdatedAt: time.Now(),
@@ -449,7 +449,7 @@ func TestRoleService_Update_InvalidatesCache(t *testing.T) {
 func TestRoleService_Delete_InvalidatesCache(t *testing.T) {
 	rc := newRoleTestRedis()
 	mockRepo := testhelpers.NewMockRoleRepository()
-	service := NewRoleService(mockRepo, rc)
+	service := NewRoleService(mockRepo, rc, nil)
 
 	mockRepo.Create(context.Background(), &models.Role{
 		ID: "role-1", Name: "hapus-aku", CreatedAt: time.Now(), UpdatedAt: time.Now(),
