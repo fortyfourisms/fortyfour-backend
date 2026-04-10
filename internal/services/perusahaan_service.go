@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"fortyfour-backend/internal/rabbitmq"
+	"github.com/google/uuid"
 )
 
 type PerusahaanServiceInterface interface {
