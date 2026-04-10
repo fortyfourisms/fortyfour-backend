@@ -71,7 +71,6 @@ func makeCsirtResponse(namaCsirt string) dto.CsirtResponse {
 		FileStr:                "str.pdf",
 		TanggalRegistrasi:      "2024-01-01",
 		TanggalKadaluarsa:      "2025-01-01",
-		TanggalRegistrasiUlang: "2025-01-15",
 		Perusahaan: dto.PerusahaanResponse{
 			ID:             "perusahaan-1",
 			NamaPerusahaan: "PT Contoh Teknologi",
@@ -337,7 +336,6 @@ func TestGenerateCsirtPDF_NilOptionalFields(t *testing.T) {
 	csirt.PhotoCsirt = ""
 	csirt.TanggalRegistrasi = ""
 	csirt.TanggalKadaluarsa = ""
-	csirt.TanggalRegistrasiUlang = ""
 
 	result, err := GenerateCsirtPDF([]dto.CsirtResponse{csirt}, "")
 	require.NoError(t, err)

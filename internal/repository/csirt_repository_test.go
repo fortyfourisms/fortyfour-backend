@@ -50,7 +50,6 @@ func TestCsirtRepository_Create(t *testing.T) {
 			FileStr:                "uploads/str_csirt/str.pdf",
 			TanggalRegistrasi:      "2024-01-15",
 			TanggalKadaluarsa:      "2025-01-15",
-			TanggalRegistrasiUlang: "2025-01-20",
 		}
 		id := "csirt-123"
 
@@ -67,7 +66,6 @@ func TestCsirtRepository_Create(t *testing.T) {
 				req.FileStr,                // nullable — terisi
 				req.TanggalRegistrasi,      // nullable — terisi
 				req.TanggalKadaluarsa,      // nullable — terisi
-				req.TanggalRegistrasiUlang, // nullable — terisi
 			).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -158,14 +156,11 @@ func TestCsirtRepository_GetAll(t *testing.T) {
 		assert.Equal(t, "2024-01-15", *result[0].TanggalRegistrasi)
 		assert.NotNil(t, result[0].TanggalKadaluarsa)
 		assert.Equal(t, "2025-01-15", *result[0].TanggalKadaluarsa)
-		assert.NotNil(t, result[0].TanggalRegistrasiUlang)
-		assert.Equal(t, "2025-01-20", *result[0].TanggalRegistrasiUlang)
 
 		// csirt-2: field nullable → nil
 		assert.Nil(t, result[1].FileStr)
 		assert.Nil(t, result[1].TanggalRegistrasi)
 		assert.Nil(t, result[1].TanggalKadaluarsa)
-		assert.Nil(t, result[1].TanggalRegistrasiUlang)
 
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -233,8 +228,6 @@ func TestCsirtRepository_GetByID(t *testing.T) {
 		assert.Equal(t, "2024-03-01", *result.TanggalRegistrasi)
 		assert.NotNil(t, result.TanggalKadaluarsa)
 		assert.Equal(t, "2025-03-01", *result.TanggalKadaluarsa)
-		assert.NotNil(t, result.TanggalRegistrasiUlang)
-		assert.Equal(t, "2025-03-05", *result.TanggalRegistrasiUlang)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
@@ -255,7 +248,6 @@ func TestCsirtRepository_GetByID(t *testing.T) {
 		assert.Nil(t, result.FileStr)
 		assert.Nil(t, result.TanggalRegistrasi)
 		assert.Nil(t, result.TanggalKadaluarsa)
-		assert.Nil(t, result.TanggalRegistrasiUlang)
 	})
 
 	t.Run("not found", func(t *testing.T) {
@@ -325,7 +317,6 @@ func TestCsirtRepository_GetAllWithPerusahaan(t *testing.T) {
 		assert.Equal(t, "uploads/str_csirt/abc.pdf", result[0].FileStr)
 		assert.Equal(t, "2024-01-15", result[0].TanggalRegistrasi)
 		assert.Equal(t, "2025-01-15", result[0].TanggalKadaluarsa)
-		assert.Equal(t, "2025-01-20", result[0].TanggalRegistrasiUlang)
 		assert.NotNil(t, result[0].Perusahaan.SubSektor)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -353,7 +344,6 @@ func TestCsirtRepository_GetAllWithPerusahaan(t *testing.T) {
 		assert.Equal(t, "", result[0].FileStr)
 		assert.Equal(t, "", result[0].TanggalRegistrasi)
 		assert.Equal(t, "", result[0].TanggalKadaluarsa)
-		assert.Equal(t, "", result[0].TanggalRegistrasiUlang)
 		assert.Nil(t, result[0].Perusahaan.SubSektor)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -423,7 +413,6 @@ func TestCsirtRepository_GetByIDWithPerusahaan(t *testing.T) {
 		assert.Equal(t, "uploads/str_csirt/str.pdf", result.FileStr)
 		assert.Equal(t, "2024-03-01", result.TanggalRegistrasi)
 		assert.Equal(t, "2025-03-01", result.TanggalKadaluarsa)
-		assert.Equal(t, "2025-03-05", result.TanggalRegistrasiUlang)
 		assert.NotNil(t, result.Perusahaan.SubSektor)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -470,7 +459,6 @@ func TestCsirtRepository_Update(t *testing.T) {
 		fileStr := "uploads/str_csirt/new_str.pdf"
 		tglReg := "2024-06-01"
 		tglKad := "2025-06-01"
-		tglRegU := "2025-06-10"
 
 		csirt := models.Csirt{
 			NamaCsirt:              "CSIRT Updated",
@@ -482,7 +470,6 @@ func TestCsirtRepository_Update(t *testing.T) {
 			FileStr:                &fileStr,
 			TanggalRegistrasi:      &tglReg,
 			TanggalKadaluarsa:      &tglKad,
-			TanggalRegistrasiUlang: &tglRegU,
 		}
 
 		mock.ExpectExec("UPDATE csirt SET").
@@ -496,7 +483,6 @@ func TestCsirtRepository_Update(t *testing.T) {
 				csirt.FileStr,
 				csirt.TanggalRegistrasi,
 				csirt.TanggalKadaluarsa,
-				csirt.TanggalRegistrasiUlang,
 				id,
 			).
 			WillReturnResult(sqlmock.NewResult(0, 1))
@@ -524,7 +510,6 @@ func TestCsirtRepository_Update(t *testing.T) {
 				csirt.FileStr,                // nil
 				csirt.TanggalRegistrasi,      // nil
 				csirt.TanggalKadaluarsa,      // nil
-				csirt.TanggalRegistrasiUlang, // nil
 				id,
 			).
 			WillReturnResult(sqlmock.NewResult(0, 1))
@@ -648,7 +633,6 @@ func TestCsirtRepository_GetByPerusahaan(t *testing.T) {
 				assert.Equal(t, "uploads/str_csirt/str.pdf", result[0].FileStr)
 				assert.Equal(t, "2024-01-15", result[0].TanggalRegistrasi)
 				assert.Equal(t, "2025-01-15", result[0].TanggalKadaluarsa)
-				assert.Equal(t, "2025-01-20", result[0].TanggalRegistrasiUlang)
 				assert.NotNil(t, result[0].Perusahaan.SubSektor)
 			},
 		},
