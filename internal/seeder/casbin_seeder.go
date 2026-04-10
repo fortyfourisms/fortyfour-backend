@@ -57,6 +57,13 @@ var defaultPolicies = []Policy{
 	{"user", "/api/perusahaan/:id", "GET"},
 	{"user", "/api/perusahaan/:id", "PUT"},
 
+	// IKAS
+	{"user", "/api/maturity/ikas", "GET"},
+	{"user", "/api/maturity/ikas", "POST"},
+	{"user", "/api/maturity/ikas/:id", "GET"},
+	{"user", "/api/maturity/ikas/:id", "PUT"},
+	{"user", "/api/maturity/ikas/:id", "DELETE"},
+
 	// Maturity (Pertanyaan)
 	{"user", "/api/maturity/pertanyaan-identifikasi", "GET"},
 	{"user", "/api/maturity/pertanyaan-identifikasi/:id", "GET"},
