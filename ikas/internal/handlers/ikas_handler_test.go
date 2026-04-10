@@ -67,6 +67,11 @@ func (m *mockIkasRepository) GetIDByPerusahaanID(idPerusahaan string) (string, e
 	return args.Get(0).(string), args.Error(1)
 }
 
+func (m *mockIkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse, error) {
+	args := m.Called(perusahaanID)
+	return args.Get(0).([]dto.IkasResponse), args.Error(1)
+}
+
 func (m *mockIkasRepository) ParseExcelForImport(fileData []byte) (*dto.ParsedExcelData, error) {
 	args := m.Called(fileData)
 	if args.Get(0) == nil {

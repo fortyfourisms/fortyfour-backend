@@ -36,6 +36,14 @@ func (h *JawabanDeteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		perusahaanID := r.URL.Query().Get("perusahaan_id")
 
 		if userRole != "admin" {
+			if userPerusahaanID == "" || userPerusahaanID == "null" {
+				utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
+					"message": "Berhasil mengambil data",
+					"data":    []dto.JawabanDeteksiResponse{},
+					"total":   0,
+				})
+				return
+			}
 			// Override for non-admins
 			values := r.URL.Query()
 			values.Set("perusahaan_id", userPerusahaanID)

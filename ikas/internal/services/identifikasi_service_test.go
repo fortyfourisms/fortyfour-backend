@@ -16,8 +16,9 @@ import (
 //
 
 type mockIdentifikasiRepository struct {
-	GetAllFn  func() ([]models.Identifikasi, error)
-	GetByIDFn func(id string) (*models.Identifikasi, error)
+	GetAllFn          func() ([]models.Identifikasi, error)
+	GetByIDFn         func(id string) (*models.Identifikasi, error)
+	GetByPerusahaanFn func(perusahaanID string) ([]models.Identifikasi, error)
 }
 
 func (m *mockIdentifikasiRepository) GetAll() ([]models.Identifikasi, error) {
@@ -26,6 +27,10 @@ func (m *mockIdentifikasiRepository) GetAll() ([]models.Identifikasi, error) {
 
 func (m *mockIdentifikasiRepository) GetByID(id string) (*models.Identifikasi, error) {
 	return m.GetByIDFn(id)
+}
+
+func (m *mockIdentifikasiRepository) GetByPerusahaan(perusahaanID string) ([]models.Identifikasi, error) {
+	return m.GetByPerusahaanFn(perusahaanID)
 }
 
 // Compile-time check
@@ -73,7 +78,7 @@ func TestIdentifikasiService_GetByID_Success(t *testing.T) {
 
 	service := NewIdentifikasiService(repo)
 
-	result, err := service.GetByID("uuid-test")
+	result, err := service.GetByID("uuid-test", "admin", "")
 
 	assert.NoError(t, err)
 	assert.Equal(t, "uuid-test", result.ID)
@@ -88,7 +93,7 @@ func TestIdentifikasiService_GetByID_NotFound(t *testing.T) {
 
 	service := NewIdentifikasiService(repo)
 
-	result, err := service.GetByID("invalid-id")
+	result, err := service.GetByID("invalid-id", "admin", "")
 
 	assert.Error(t, err)
 	assert.Nil(t, result)

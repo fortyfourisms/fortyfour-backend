@@ -2,6 +2,7 @@ package models
 
 type Proteksi struct {
 	ID              string  `json:"id"`
+	PerusahaanID    string  `json:"perusahaan_id"`
 	NilaiProteksi   float64 `json:"nilai_proteksi"`
 	NilaiSubdomain1 float64 `json:"nilai_subdomain1"`
 	NilaiSubdomain2 float64 `json:"nilai_subdomain2"`

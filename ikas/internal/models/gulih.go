@@ -2,6 +2,7 @@ package models
 
 type Gulih struct {
 	ID              string  `json:"id"`
+	PerusahaanID    string  `json:"perusahaan_id"`
 	NilaiGulih      float64 `json:"nilai_gulih"`
 	NilaiSubdomain1 float64 `json:"nilai_subdomain1"`
 	NilaiSubdomain2 float64 `json:"nilai_subdomain2"`

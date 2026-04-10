@@ -15,8 +15,9 @@ import (
 
 // mockDeteksiRepository implements repository.DeteksiRepositoryInterface for testing purposes.
 type mockDeteksiRepository struct {
-	GetAllFn  func() ([]models.Deteksi, error)
-	GetByIDFn func(id string) (*models.Deteksi, error)
+	GetAllFn          func() ([]models.Deteksi, error)
+	GetByIDFn         func(id string) (*models.Deteksi, error)
+	GetByPerusahaanFn func(perusahaanID string) ([]models.Deteksi, error)
 }
 
 func (m *mockDeteksiRepository) GetAll() ([]models.Deteksi, error) {
@@ -25,6 +26,10 @@ func (m *mockDeteksiRepository) GetAll() ([]models.Deteksi, error) {
 
 func (m *mockDeteksiRepository) GetByID(id string) (*models.Deteksi, error) {
 	return m.GetByIDFn(id)
+}
+
+func (m *mockDeteksiRepository) GetByPerusahaan(perusahaanID string) ([]models.Deteksi, error) {
+	return m.GetByPerusahaanFn(perusahaanID)
 }
 
 var _ repository.DeteksiRepositoryInterface = (*mockDeteksiRepository)(nil)

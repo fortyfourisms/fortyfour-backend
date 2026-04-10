@@ -63,6 +63,10 @@ func (m *mockIkasRepo) ParseExcelForImport(b []byte) (*dto.ParsedExcelData, erro
 	return &dto.ParsedExcelData{}, nil
 }
 
+func (m *mockIkasRepo) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse, error) {
+	return []dto.IkasResponse{}, nil
+}
+
 // Mock methods for Excel import process in repo
 func (m *mockIkasRepo) SaveImportedData(id string, data *dto.CreateIkasRequest) error {
 	return nil
@@ -117,7 +121,7 @@ func TestIkasService_Update_Async(t *testing.T) {
 	}
 
 	// Update now returns nil error on nil producer
-	err := service.Update(context.Background(), "ikas-id", req, "test-user")
+	err := service.Update(context.Background(), "ikas-id", req, "test-user", "admin", "")
 	assert.NoError(t, err)
 }
 

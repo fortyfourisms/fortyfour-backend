@@ -16,8 +16,9 @@ import (
 //
 
 type mockGulihRepository struct {
-	GetAllFn  func() ([]models.Gulih, error)
-	GetByIDFn func(id string) (*models.Gulih, error)
+	GetAllFn          func() ([]models.Gulih, error)
+	GetByIDFn         func(id string) (*models.Gulih, error)
+	GetByPerusahaanFn func(perusahaanID string) ([]models.Gulih, error)
 }
 
 func (m *mockGulihRepository) GetAll() ([]models.Gulih, error) {
@@ -26,6 +27,10 @@ func (m *mockGulihRepository) GetAll() ([]models.Gulih, error) {
 
 func (m *mockGulihRepository) GetByID(id string) (*models.Gulih, error) {
 	return m.GetByIDFn(id)
+}
+
+func (m *mockGulihRepository) GetByPerusahaan(perusahaanID string) ([]models.Gulih, error) {
+	return m.GetByPerusahaanFn(perusahaanID)
 }
 
 // compile-time safety check
@@ -73,7 +78,7 @@ func TestGulihService_GetByID_Success(t *testing.T) {
 
 	service := NewGulihService(repo)
 
-	result, err := service.GetByID("uuid-test")
+	result, err := service.GetByID("uuid-test", "admin", "")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 90.0, result.NilaiGulih)
@@ -88,7 +93,7 @@ func TestGulihService_GetByID_NotFound(t *testing.T) {
 
 	service := NewGulihService(repo)
 
-	result, err := service.GetByID("invalid-id")
+	result, err := service.GetByID("invalid-id", "admin", "")
 
 	assert.Error(t, err)
 	assert.Nil(t, result)

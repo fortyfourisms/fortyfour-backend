@@ -37,6 +37,14 @@ func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 
 			// Implicit filtering for non-admins
 			if userRole != "admin" {
+				if userPerusahaanID == "" || userPerusahaanID == "null" {
+					utils.RespondJSON(w, 200, map[string]interface{}{
+						"message": "Berhasil mengambil data",
+						"data":    []dto.JawabanIdentifikasiResponse{},
+						"total":   0,
+					})
+					return
+				}
 				perusahaanID = userPerusahaanID
 			}
 

@@ -263,6 +263,211 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 	return result, nil
 }
 
+func (r *IkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse, error) {
+	query := `
+		SELECT 
+			i.id,
+			i.tanggal,
+			i.responden,
+			i.telepon,
+			i.jabatan,
+			i.nilai_kematangan,
+			i.target_nilai,
+			p.id,
+			p.nama_perusahaan,
+			iden.id,
+			iden.nilai_identifikasi,
+			iden.nilai_subdomain1,
+			iden.nilai_subdomain2,
+			iden.nilai_subdomain3,
+			iden.nilai_subdomain4,
+			iden.nilai_subdomain5,
+			prot.id,
+			prot.nilai_proteksi,
+			prot.nilai_subdomain1,
+			prot.nilai_subdomain2,
+			prot.nilai_subdomain3,
+			prot.nilai_subdomain4,
+			prot.nilai_subdomain5,
+			prot.nilai_subdomain6,
+			det.id,
+			det.nilai_deteksi,
+			det.nilai_subdomain1,
+			det.nilai_subdomain2,
+			det.nilai_subdomain3,
+			g.id,
+			g.nilai_gulih,
+			g.nilai_subdomain1,
+			g.nilai_subdomain2,
+			g.nilai_subdomain3,
+			g.nilai_subdomain4,
+			i.created_at,
+			i.updated_at
+		FROM ikas i
+		LEFT JOIN perusahaan p ON i.id_perusahaan = p.id
+		LEFT JOIN identifikasi iden ON i.id_identifikasi = iden.id
+		LEFT JOIN proteksi prot ON i.id_proteksi = prot.id
+		LEFT JOIN deteksi det ON i.id_deteksi = det.id
+		LEFT JOIN gulih g ON i.id_gulih = g.id
+		WHERE i.id_perusahaan = ?
+	`
+
+	rows, err := r.db.Query(query, perusahaanID)
+	if err != nil {
+		return nil, fmt.Errorf("query error: %v", err)
+	}
+	defer rows.Close()
+
+	var result []dto.IkasResponse
+
+	for rows.Next() {
+		var i dto.IkasResponse
+		var tanggal sql.NullString
+		var nilaiKematangan, targetNilai sql.NullFloat64
+		var perusahaanID, perusahaanNama sql.NullString
+		var idenID sql.NullInt64
+		var idenNilai, idenSub1, idenSub2, idenSub3, idenSub4, idenSub5 sql.NullFloat64
+		var protID sql.NullInt64
+		var protNilai, protSub1, protSub2, protSub3, protSub4, protSub5, protSub6 sql.NullFloat64
+		var detID sql.NullInt64
+		var detNilai, detSub1, detSub2, detSub3 sql.NullFloat64
+		var gulihID sql.NullInt64
+		var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
+		var createdAt, updatedAt sql.NullString
+
+		err := rows.Scan(
+			&i.ID,
+			&tanggal,
+			&i.Responden,
+			&i.Telepon,
+			&i.Jabatan,
+			&nilaiKematangan,
+			&targetNilai,
+			&perusahaanID,
+			&perusahaanNama,
+			&idenID,
+			&idenNilai,
+			&idenSub1,
+			&idenSub2,
+			&idenSub3,
+			&idenSub4,
+			&idenSub5,
+			&protID,
+			&protNilai,
+			&protSub1,
+			&protSub2,
+			&protSub3,
+			&protSub4,
+			&protSub5,
+			&protSub6,
+			&detID,
+			&detNilai,
+			&detSub1,
+			&detSub2,
+			&detSub3,
+			&gulihID,
+			&gulihNilai,
+			&gulihSub1,
+			&gulihSub2,
+			&gulihSub3,
+			&gulihSub4,
+			&createdAt,
+			&updatedAt,
+		)
+		if err != nil {
+			continue
+		}
+
+		if tanggal.Valid {
+			i.Tanggal = tanggal.String
+		}
+
+		if createdAt.Valid {
+			i.CreatedAt = createdAt.String
+		}
+
+		if updatedAt.Valid {
+			i.UpdatedAt = updatedAt.String
+		}
+
+		if targetNilai.Valid {
+			i.TargetNilai = targetNilai.Float64
+		}
+
+		{
+			i.NilaiKematangan = utils.RoundToTwo(
+				idenNilai.Float64*0.25 +
+					protNilai.Float64*0.30 +
+					detNilai.Float64*0.25 +
+					gulihNilai.Float64*0.20,
+			)
+		}
+
+		i.KategoriKematanganKeamananSiber = utils.GetKategoriTingkatKematangan(i.NilaiKematangan)
+
+		if perusahaanID.Valid && perusahaanNama.Valid {
+			i.Perusahaan = &dto.PerusahaanInIkas{
+				ID:             perusahaanID.String,
+				NamaPerusahaan: perusahaanNama.String,
+			}
+		}
+
+		if idenID.Valid {
+			i.Identifikasi = &dto.IdentifikasiInIkas{
+				ID:                              int(idenID.Int64),
+				NilaiIdentifikasi:               idenNilai.Float64,
+				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(idenNilai.Float64),
+				NilaiSubdomain1:                 idenSub1.Float64,
+				NilaiSubdomain2:                 idenSub2.Float64,
+				NilaiSubdomain3:                 idenSub3.Float64,
+				NilaiSubdomain4:                 idenSub4.Float64,
+				NilaiSubdomain5:                 idenSub5.Float64,
+			}
+		}
+
+		if protID.Valid {
+			i.Proteksi = &dto.ProteksiInIkas{
+				ID:                              int(protID.Int64),
+				NilaiProteksi:                   protNilai.Float64,
+				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(protNilai.Float64),
+				NilaiSubdomain1:                 protSub1.Float64,
+				NilaiSubdomain2:                 protSub2.Float64,
+				NilaiSubdomain3:                 protSub3.Float64,
+				NilaiSubdomain4:                 protSub4.Float64,
+				NilaiSubdomain5:                 protSub5.Float64,
+				NilaiSubdomain6:                 protSub6.Float64,
+			}
+		}
+
+		if detID.Valid {
+			i.Deteksi = &dto.DeteksiInIkas{
+				ID:                              int(detID.Int64),
+				NilaiDeteksi:                    detNilai.Float64,
+				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(detNilai.Float64),
+				NilaiSubdomain1:                 detSub1.Float64,
+				NilaiSubdomain2:                 detSub2.Float64,
+				NilaiSubdomain3:                 detSub3.Float64,
+			}
+		}
+
+		if gulihID.Valid {
+			i.Gulih = &dto.GulihInIkas{
+				ID:                              int(gulihID.Int64),
+				NilaiGulih:                      gulihNilai.Float64,
+				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(gulihNilai.Float64),
+				NilaiSubdomain1:                 gulihSub1.Float64,
+				NilaiSubdomain2:                 gulihSub2.Float64,
+				NilaiSubdomain3:                 gulihSub3.Float64,
+				NilaiSubdomain4:                 gulihSub4.Float64,
+			}
+		}
+
+		result = append(result, i)
+	}
+
+	return result, nil
+}
+
 func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	query := `
 		SELECT 

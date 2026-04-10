@@ -15,8 +15,9 @@ import (
 
 // mockIdentifikasiRepository implements repository.IdentifikasiRepositoryInterface for testing purposes.
 type mockIdentifikasiRepository struct {
-	GetAllFn  func() ([]models.Identifikasi, error)
-	GetByIDFn func(id string) (*models.Identifikasi, error)
+	GetAllFn          func() ([]models.Identifikasi, error)
+	GetByIDFn         func(id string) (*models.Identifikasi, error)
+	GetByPerusahaanFn func(perusahaanID string) ([]models.Identifikasi, error)
 }
 
 func (m *mockIdentifikasiRepository) GetAll() ([]models.Identifikasi, error) {
@@ -25,6 +26,10 @@ func (m *mockIdentifikasiRepository) GetAll() ([]models.Identifikasi, error) {
 
 func (m *mockIdentifikasiRepository) GetByID(id string) (*models.Identifikasi, error) {
 	return m.GetByIDFn(id)
+}
+
+func (m *mockIdentifikasiRepository) GetByPerusahaan(perusahaanID string) ([]models.Identifikasi, error) {
+	return m.GetByPerusahaanFn(perusahaanID)
 }
 
 var _ repository.IdentifikasiRepositoryInterface = (*mockIdentifikasiRepository)(nil)

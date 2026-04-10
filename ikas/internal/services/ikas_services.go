@@ -83,15 +83,29 @@ func (s *IkasService) GetAll() ([]dto.IkasResponse, error) {
 	return s.repo.GetAll()
 }
 
-func (s *IkasService) GetByID(id string) (*dto.IkasResponse, error) {
-	return s.repo.GetByID(id)
+func (s *IkasService) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse, error) {
+	return s.repo.GetByPerusahaan(perusahaanID)
 }
 
-func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasRequest, userID string) error {
+func (s *IkasService) GetByID(id string, userRole string, userPerusahaanID string) (*dto.IkasResponse, error) {
+	data, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if userRole != "admin" && data.Perusahaan != nil && data.Perusahaan.ID != userPerusahaanID {
+		return nil, fmt.Errorf("anda tidak memiliki akses ke data ini")
+	}
+	return data, nil
+}
+
+func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasRequest, userID string, userRole string, userPerusahaanID string) error {
 	// Check existence and get current state
 	current, err := s.repo.GetByID(id)
 	if err != nil {
 		return err
+	}
+	if userRole != "admin" && current.Perusahaan != nil && current.Perusahaan.ID != userPerusahaanID {
+		return fmt.Errorf("anda tidak memiliki akses untuk mengubah data ini")
 	}
 
 	// Change detection for audit log
@@ -151,11 +165,14 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 	return nil
 }
 
-func (s *IkasService) Delete(ctx context.Context, id string, userID string) error {
+func (s *IkasService) Delete(ctx context.Context, id string, userID string, userRole string, userPerusahaanID string) error {
 	// Check existence
-	_, err := s.repo.GetByID(id)
+	existing, err := s.repo.GetByID(id)
 	if err != nil {
 		return err
+	}
+	if userRole != "admin" && existing.Perusahaan != nil && existing.Perusahaan.ID != userPerusahaanID {
+		return fmt.Errorf("anda tidak memiliki akses untuk menghapus data ini")
 	}
 
 	// Publish delete event

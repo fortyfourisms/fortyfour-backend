@@ -15,8 +15,9 @@ import (
 
 // mockProteksiRepository implements repository.ProteksiRepositoryInterface for testing purposes.
 type mockProteksiRepository struct {
-	GetAllFn  func() ([]models.Proteksi, error)
-	GetByIDFn func(id string) (*models.Proteksi, error)
+	GetAllFn          func() ([]models.Proteksi, error)
+	GetByIDFn         func(id string) (*models.Proteksi, error)
+	GetByPerusahaanFn func(perusahaanID string) ([]models.Proteksi, error)
 }
 
 func (m *mockProteksiRepository) GetAll() ([]models.Proteksi, error) {
@@ -25,6 +26,10 @@ func (m *mockProteksiRepository) GetAll() ([]models.Proteksi, error) {
 
 func (m *mockProteksiRepository) GetByID(id string) (*models.Proteksi, error) {
 	return m.GetByIDFn(id)
+}
+
+func (m *mockProteksiRepository) GetByPerusahaan(perusahaanID string) ([]models.Proteksi, error) {
+	return m.GetByPerusahaanFn(perusahaanID)
 }
 
 var _ repository.ProteksiRepositoryInterface = (*mockProteksiRepository)(nil)
