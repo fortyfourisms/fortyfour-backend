@@ -59,6 +59,7 @@ func TestCsirtRepository_Create(t *testing.T) {
 				req.IdPerusahaan,
 				req.NamaCsirt,
 				req.WebCsirt,
+				nil,                        // EmailCsirt kosong → nullableStr → nil
 				req.TeleponCsirt,
 				req.PhotoCsirt,
 				req.FileRFC2350,
@@ -88,6 +89,7 @@ func TestCsirtRepository_Create(t *testing.T) {
 				req.IdPerusahaan,
 				req.NamaCsirt,
 				req.WebCsirt,
+				nil, // EmailCsirt kosong → nullableStr → nil
 				req.TeleponCsirt,
 				req.PhotoCsirt,
 				req.FileRFC2350,
@@ -95,7 +97,6 @@ func TestCsirtRepository_Create(t *testing.T) {
 				nil, // FileStr kosong → nullableStr → nil
 				nil, // TanggalRegistrasi kosong → nil
 				nil, // TanggalKadaluarsa kosong → nil
-				nil, // TanggalRegistrasiUlang kosong → nil
 			).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -129,19 +130,19 @@ func TestCsirtRepository_GetAll(t *testing.T) {
 	defer db.Close()
 
 	newCols := []string{
-		"id", "id_perusahaan", "nama_csirt", "web_csirt", "telepon_csirt",
+		"id", "id_perusahaan", "nama_csirt", "web_csirt", "email_csirt", "telepon_csirt",
 		"photo_csirt", "file_rfc2350", "file_public_key_pgp",
-		"file_str", "tanggal_registrasi", "tanggal_kadaluarsa", "tanggal_registrasi_ulang",
+		"file_str", "tanggal_registrasi", "tanggal_kadaluarsa",
 	}
 
 	t.Run("success — field baru terisi", func(t *testing.T) {
 		rows := sqlmock.NewRows(newCols).
-			AddRow("csirt-1", "perusahaan-1", "CSIRT 1", "https://csirt1.com", "021-111",
+			AddRow("csirt-1", "perusahaan-1", "CSIRT 1", "https://csirt1.com", nil, "021-111",
 				"photo1.jpg", "rfc1.pdf", "pgp1.key",
-				"uploads/str.pdf", "2024-01-15", "2025-01-15", "2025-01-20").
-			AddRow("csirt-2", "perusahaan-2", "CSIRT 2", "https://csirt2.com", "021-222",
+				"uploads/str.pdf", time.Date(2024, 1, 15, 0, 0, 0, 0, time.UTC), time.Date(2025, 1, 15, 0, 0, 0, 0, time.UTC)).
+			AddRow("csirt-2", "perusahaan-2", "CSIRT 2", "https://csirt2.com", nil, "021-222",
 				"photo2.jpg", "rfc2.pdf", "pgp2.key",
-				nil, nil, nil, nil) // field nullable kosong
+				nil, nil, nil) // field nullable kosong
 
 		mock.ExpectQuery("SELECT (.+) FROM csirt").WillReturnRows(rows)
 
@@ -202,17 +203,17 @@ func TestCsirtRepository_GetByID(t *testing.T) {
 	defer db.Close()
 
 	newCols := []string{
-		"id", "id_perusahaan", "nama_csirt", "web_csirt", "telepon_csirt",
+		"id", "id_perusahaan", "nama_csirt", "web_csirt", "email_csirt", "telepon_csirt",
 		"photo_csirt", "file_rfc2350", "file_public_key_pgp",
-		"file_str", "tanggal_registrasi", "tanggal_kadaluarsa", "tanggal_registrasi_ulang",
+		"file_str", "tanggal_registrasi", "tanggal_kadaluarsa",
 	}
 
 	t.Run("success — field baru terisi", func(t *testing.T) {
 		id := "csirt-123"
 		row := sqlmock.NewRows(newCols).
-			AddRow(id, "perusahaan-1", "CSIRT Test", "https://csirt.test.com", "021-12345",
+			AddRow(id, "perusahaan-1", "CSIRT Test", "https://csirt.test.com", nil, "021-12345",
 				"photo.jpg", "rfc.pdf", "pgp.key",
-				"uploads/str_csirt/str.pdf", "2024-03-01", "2025-03-01", "2025-03-05")
+				"uploads/str_csirt/str.pdf", time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC), time.Date(2025, 3, 1, 0, 0, 0, 0, time.UTC))
 
 		mock.ExpectQuery("SELECT (.+) FROM csirt WHERE id = ?").
 			WithArgs(id).
@@ -234,9 +235,9 @@ func TestCsirtRepository_GetByID(t *testing.T) {
 	t.Run("success — field nullable nil", func(t *testing.T) {
 		id := "csirt-456"
 		row := sqlmock.NewRows(newCols).
-			AddRow(id, "perusahaan-1", "CSIRT Null", "https://csirt.com", nil,
+			AddRow(id, "perusahaan-1", "CSIRT Null", "https://csirt.com", nil, nil,
 				nil, nil, nil,
-				nil, nil, nil, nil)
+				nil, nil, nil)
 
 		mock.ExpectQuery("SELECT (.+) FROM csirt WHERE id = ?").
 			WithArgs(id).
@@ -284,9 +285,9 @@ func TestCsirtRepository_GetAllWithPerusahaan(t *testing.T) {
 	defer db.Close()
 
 	joinCols := []string{
-		"c.id", "c.nama_csirt", "c.web_csirt", "c.telepon_csirt",
+		"c.id", "c.nama_csirt", "c.web_csirt", "c.email_csirt", "c.telepon_csirt",
 		"c.photo_csirt", "c.file_rfc2350", "c.file_public_key_pgp",
-		"c.file_str", "c.tanggal_registrasi", "c.tanggal_kadaluarsa", "c.tanggal_registrasi_ulang",
+		"c.file_str", "c.tanggal_registrasi", "c.tanggal_kadaluarsa",
 		"p.id", "p.photo", "p.nama_perusahaan",
 		"p.alamat", "p.telepon", "p.email", "p.website",
 		"p.created_at", "p.updated_at",
@@ -298,9 +299,9 @@ func TestCsirtRepository_GetAllWithPerusahaan(t *testing.T) {
 		now := time.Now()
 		rows := sqlmock.NewRows(joinCols).
 			AddRow(
-				"csirt-1", "CSIRT 1", "https://csirt1.com", "021-111",
+				"csirt-1", "CSIRT 1", "https://csirt1.com", nil, "021-111",
 				"photo1.jpg", "rfc1.pdf", "pgp1.key",
-				"uploads/str_csirt/abc.pdf", "2024-01-15", "2025-01-15", "2025-01-20",
+				"uploads/str_csirt/abc.pdf", "2024-01-15", "2025-01-15",
 				"perusahaan-1", "logo1.png", "PT Test 1",
 				"Jl. Test 1", "021-1111", "test1@test.com", "https://test1.com",
 				now, now,
@@ -325,9 +326,9 @@ func TestCsirtRepository_GetAllWithPerusahaan(t *testing.T) {
 		now := time.Now()
 		rows := sqlmock.NewRows(joinCols).
 			AddRow(
-				"csirt-2", "CSIRT 2", "https://csirt2.com", "021-222",
+				"csirt-2", "CSIRT 2", "https://csirt2.com", nil, "021-222",
 				"photo2.jpg", "rfc2.pdf", "pgp2.key",
-				nil, nil, nil, nil, // field baru semua NULL
+				nil, nil, nil, // field baru semua NULL
 				"perusahaan-2", "logo2.png", "PT Test 2",
 				"Jl. Test 2", "021-2222", "test2@test.com", "https://test2.com",
 				now, now,
@@ -377,9 +378,9 @@ func TestCsirtRepository_GetByIDWithPerusahaan(t *testing.T) {
 	defer db.Close()
 
 	joinCols := []string{
-		"c.id", "c.nama_csirt", "c.web_csirt", "c.telepon_csirt",
+		"c.id", "c.nama_csirt", "c.web_csirt", "c.email_csirt", "c.telepon_csirt",
 		"c.photo_csirt", "c.file_rfc2350", "c.file_public_key_pgp",
-		"c.file_str", "c.tanggal_registrasi", "c.tanggal_kadaluarsa", "c.tanggal_registrasi_ulang",
+		"c.file_str", "c.tanggal_registrasi", "c.tanggal_kadaluarsa",
 		"p.id", "p.photo", "p.nama_perusahaan",
 		"p.alamat", "p.telepon", "p.email", "p.website",
 		"p.created_at", "p.updated_at",
@@ -392,9 +393,9 @@ func TestCsirtRepository_GetByIDWithPerusahaan(t *testing.T) {
 		now := time.Now()
 		row := sqlmock.NewRows(joinCols).
 			AddRow(
-				id, "CSIRT Test", "https://csirt.test.com", "021-12345",
+				id, "CSIRT Test", "https://csirt.test.com", nil, "021-12345",
 				"photo.jpg", "rfc.pdf", "pgp.key",
-				"uploads/str_csirt/str.pdf", "2024-03-01", "2025-03-01", "2025-03-05",
+				"uploads/str_csirt/str.pdf", "2024-03-01", "2025-03-01",
 				"perusahaan-1", "logo.png", "PT Test",
 				"Jl. Test", "021-1111", "test@test.com", "https://test.com",
 				now, now,
@@ -476,6 +477,7 @@ func TestCsirtRepository_Update(t *testing.T) {
 			WithArgs(
 				csirt.NamaCsirt,
 				csirt.WebCsirt,
+				csirt.EmailCsirt,
 				csirt.TeleponCsirt,
 				csirt.PhotoCsirt,
 				csirt.FileRFC2350,
@@ -503,6 +505,7 @@ func TestCsirtRepository_Update(t *testing.T) {
 			WithArgs(
 				csirt.NamaCsirt,
 				csirt.WebCsirt,
+				csirt.EmailCsirt,
 				csirt.TeleponCsirt,
 				csirt.PhotoCsirt,
 				csirt.FileRFC2350,
@@ -590,9 +593,9 @@ func TestCsirtRepository_Delete(t *testing.T) {
 
 func TestCsirtRepository_GetByPerusahaan(t *testing.T) {
 	joinCols := []string{
-		"c.id", "c.nama_csirt", "c.web_csirt", "c.telepon_csirt",
+		"c.id", "c.nama_csirt", "c.web_csirt", "c.email_csirt", "c.telepon_csirt",
 		"c.photo_csirt", "c.file_rfc2350", "c.file_public_key_pgp",
-		"c.file_str", "c.tanggal_registrasi", "c.tanggal_kadaluarsa", "c.tanggal_registrasi_ulang",
+		"c.file_str", "c.tanggal_registrasi", "c.tanggal_kadaluarsa",
 		"p.id", "p.photo", "p.nama_perusahaan",
 		"p.alamat", "p.telepon", "p.email", "p.website",
 		"p.created_at", "p.updated_at",
@@ -615,9 +618,9 @@ func TestCsirtRepository_GetByPerusahaan(t *testing.T) {
 				now := time.Now()
 				rows := sqlmock.NewRows(joinCols).
 					AddRow(
-						"csirt-1", "CSIRT ABC", "https://csirt.abc.com", "021-111",
+						"csirt-1", "CSIRT ABC", "https://csirt.abc.com", nil, "021-111",
 						"photo.jpg", "rfc.pdf", "pgp.key",
-						"uploads/str_csirt/str.pdf", "2024-01-15", "2025-01-15", "2025-01-20",
+						"uploads/str_csirt/str.pdf", "2024-01-15", "2025-01-15",
 						"perusahaan-1", "logo.png", "PT ABC",
 						"Jl. Test 1", "021-1111", "info@abc.com", "https://abc.com",
 						now, now,
@@ -643,9 +646,9 @@ func TestCsirtRepository_GetByPerusahaan(t *testing.T) {
 				now := time.Now()
 				rows := sqlmock.NewRows(joinCols).
 					AddRow(
-						"csirt-2", "CSIRT XYZ", "https://csirt.xyz.com", "021-222",
+						"csirt-2", "CSIRT XYZ", "https://csirt.xyz.com", nil, "021-222",
 						"photo2.jpg", "rfc2.pdf", "pgp2.key",
-						nil, nil, nil, nil, // field baru NULL
+						nil, nil, nil, // field baru NULL
 						"perusahaan-2", "logo2.png", "PT XYZ",
 						"Jl. Test 2", "021-2222", "info@xyz.com", "https://xyz.com",
 						now, now,

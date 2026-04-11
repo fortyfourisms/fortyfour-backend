@@ -1,10 +1,14 @@
 package services
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/dto/dto_event"
 	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
 
@@ -21,12 +25,13 @@ type CsirtServiceInterface interface {
 }
 
 type CsirtService struct {
-	repo repository.CsirtRepositoryInterface
-	rc   cache.RedisInterface
+	repo     repository.CsirtRepositoryInterface
+	rc       cache.RedisInterface
+	producer *rabbitmq.Producer
 }
 
-func NewCsirtService(repo repository.CsirtRepositoryInterface, rc cache.RedisInterface) *CsirtService {
-	return &CsirtService{repo: repo, rc: rc}
+func NewCsirtService(repo repository.CsirtRepositoryInterface, rc cache.RedisInterface, producer *rabbitmq.Producer) *CsirtService {
+	return &CsirtService{repo: repo, rc: rc, producer: producer}
 }
 
 func (s *CsirtService) Create(req dto.CreateCsirtRequest) (*models.Csirt, error) {
@@ -53,6 +58,25 @@ func (s *CsirtService) Create(req dto.CreateCsirtRequest) (*models.Csirt, error)
 	// Biarkan GetByID yang meng-cache dengan tipe yang benar saat dipanggil.
 	cacheDelete(s.rc, keyList("csirt"))
 	cacheDelete(s.rc, "csirt:perusahaan:"+req.IdPerusahaan)
+
+	// Publish CsirtCreated event
+	if s.producer != nil {
+		go func() {
+			tglReg := ""
+			if result.TanggalRegistrasi != nil {
+				tglReg = *result.TanggalRegistrasi
+			}
+			event := dto_event.CsirtCreatedEvent{
+				ID:                result.ID,
+				IdPerusahaan:      result.IdPerusahaan,
+				NamaCsirt:         result.NamaCsirt,
+				WebCsirt:          result.WebCsirt,
+				TanggalRegistrasi: tglReg,
+				CreatedAt:         time.Now(),
+			}
+			s.producer.PublishCsirtCreated(context.Background(), event)
+		}()
+	}
 
 	return result, nil
 }
@@ -150,6 +174,25 @@ func (s *CsirtService) Update(id string, req dto.UpdateCsirtRequest) (*models.Cs
 	cacheDelete(s.rc, keyList("csirt"))
 	cacheDelete(s.rc, "csirt:perusahaan:"+c.IdPerusahaan)
 
+	// Publish CsirtUpdated event
+	if s.producer != nil {
+		go func() {
+			tglReg := ""
+			if c.TanggalRegistrasi != nil {
+				tglReg = *c.TanggalRegistrasi
+			}
+			event := dto_event.CsirtUpdatedEvent{
+				ID:                c.ID,
+				IdPerusahaan:      c.IdPerusahaan,
+				NamaCsirt:         c.NamaCsirt,
+				WebCsirt:          c.WebCsirt,
+				TanggalRegistrasi: tglReg,
+				UpdatedAt:         time.Now(),
+			}
+			s.producer.PublishCsirtUpdated(context.Background(), event)
+		}()
+	}
+
 	return c, nil
 }
 
@@ -165,6 +208,17 @@ func (s *CsirtService) Delete(id string) error {
 	cacheDelete(s.rc, keyList("csirt"))
 	if existing != nil {
 		cacheDelete(s.rc, "csirt:perusahaan:"+existing.IdPerusahaan)
+	}
+
+	// Publish CsirtDeleted event
+	if s.producer != nil {
+		go func() {
+			event := dto_event.CsirtDeletedEvent{
+				ID:        id,
+				DeletedAt: time.Now(),
+			}
+			s.producer.PublishCsirtDeleted(context.Background(), event)
+		}()
 	}
 
 	return nil

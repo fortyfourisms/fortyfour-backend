@@ -86,7 +86,7 @@ func TestCsirtService_Create_Success(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
 		NamaCsirt: "CSIRT Test",
@@ -124,7 +124,7 @@ func TestCsirtService_Create_SuccessWithAllFields(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
 		NamaCsirt:              "CSIRT Advanced",
@@ -174,7 +174,7 @@ func TestCsirtService_Create_NewFieldsNullable_WhenEmpty(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
 		NamaCsirt:    "CSIRT Minimal",
@@ -211,7 +211,7 @@ func TestCsirtService_Create_OnlyTanggalRegistrasi(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
 		NamaCsirt:         "CSIRT Reg Only",
@@ -245,7 +245,7 @@ func TestCsirtService_Create_WithFileStrOnly(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
 		NamaCsirt:    "CSIRT STR Only",
@@ -276,7 +276,7 @@ func TestCsirtService_Create_EmptyName_RepositoryRejects(t *testing.T) {
 			return errors.New("nama_csirt tidak boleh kosong")
 		},
 	}
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
 		NamaCsirt: "",
@@ -293,7 +293,7 @@ func TestCsirtService_Create_InvalidPhoneNumber_RepositoryRejects(t *testing.T) 
 			return errors.New("nomor telepon tidak valid")
 		},
 	}
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
 		NamaCsirt:    "CSIRT Test",
@@ -310,7 +310,7 @@ func TestCsirtService_Create_InvalidWebsite_RepositoryRejects(t *testing.T) {
 			return errors.New("format website tidak valid")
 		},
 	}
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
 		NamaCsirt: "CSIRT Test",
@@ -334,7 +334,7 @@ func TestCsirtService_Create_RepositoryError_CreateFailed(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
 		NamaCsirt: "CSIRT Test",
@@ -355,7 +355,7 @@ func TestCsirtService_Create_RepositoryError_GetByIDFailed(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
 		NamaCsirt: "CSIRT Test",
@@ -372,7 +372,7 @@ func TestCsirtService_Create_DuplicatePerusahaan(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
 		IdPerusahaan: "perusahaan-123",
@@ -391,7 +391,7 @@ func TestCsirtService_Create_DuplicateCSIRTName(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
 		NamaCsirt: "CSIRT Existing",
@@ -426,7 +426,7 @@ func TestCsirtService_GetAll_Success(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.GetAll()
 
@@ -443,7 +443,7 @@ func TestCsirtService_GetAll_EmptyResult(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.GetAll()
 
@@ -459,7 +459,7 @@ func TestCsirtService_GetAll_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.GetAll()
 
@@ -487,7 +487,7 @@ func TestCsirtService_GetByID_Success(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.GetByID("csirt-123")
 
@@ -521,7 +521,7 @@ func TestCsirtService_GetByID_ReturnsNewFields(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.GetByID("csirt-123")
 
@@ -543,7 +543,7 @@ func TestCsirtService_GetByID_NewFieldsNullWhenNotSet(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.GetByID("csirt-123")
 
@@ -561,7 +561,7 @@ func TestCsirtService_GetByID_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.GetByID("invalid-id")
 
@@ -580,7 +580,7 @@ func TestCsirtService_GetByID_EmptyID(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.GetByID("")
 
@@ -595,7 +595,7 @@ func TestCsirtService_GetByID_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.GetByID("csirt-123")
 
@@ -622,7 +622,7 @@ func TestCsirtService_Update_Success(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	newName := "New CSIRT Name"
 	res, err := service.Update("csirt-1", dto.UpdateCsirtRequest{
@@ -650,7 +650,7 @@ func TestCsirtService_Update_PartialUpdate(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	// Hanya update web
 	newWeb := "https://new.csirt.com"
@@ -688,7 +688,7 @@ func TestCsirtService_Update_AllFields(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	newName := "New Name"
 	newWeb := "https://newcsirt.com"
@@ -743,7 +743,7 @@ func TestCsirtService_Update_OnlyTanggalKadaluarsa(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Update("csirt-1", dto.UpdateCsirtRequest{
 		TanggalKadaluarsa: &tglKad,
@@ -778,7 +778,7 @@ func TestCsirtService_Update_FileStr_ReplacesExisting(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Update("csirt-1", dto.UpdateCsirtRequest{
 		FileStr: &newFileStr,
@@ -814,7 +814,7 @@ func TestCsirtService_Update_NewFieldsNotProvided_ExistingValuesKept(t *testing.
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	// Hanya update nama, field baru tidak disertakan
 	newName := "CSIRT Diperbarui"
@@ -847,7 +847,7 @@ func TestCsirtService_Update_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	newName := "New CSIRT"
 	res, err := service.Update("invalid-id", dto.UpdateCsirtRequest{
@@ -869,7 +869,7 @@ func TestCsirtService_Update_InvalidWebsite_RepositoryRejects(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	invalidWeb := "not-a-url"
 	res, err := service.Update("csirt-1", dto.UpdateCsirtRequest{
@@ -890,7 +890,7 @@ func TestCsirtService_Update_EmptyName_RepositoryRejects(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	emptyName := ""
 	res, err := service.Update("csirt-1", dto.UpdateCsirtRequest{
@@ -911,7 +911,7 @@ func TestCsirtService_Update_RepositoryError_UpdateFailed(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	newName := "New CSIRT"
 	res, err := service.Update("csirt-1", dto.UpdateCsirtRequest{
@@ -932,7 +932,7 @@ func TestCsirtService_Update_DuplicateName(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	duplicateName := "CSIRT B" // Assuming already exists
 	res, err := service.Update("csirt-1", dto.UpdateCsirtRequest{
@@ -956,7 +956,7 @@ func TestCsirtService_Delete_Success(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	err := service.Delete("csirt-1")
 
@@ -970,7 +970,7 @@ func TestCsirtService_Delete_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	err := service.Delete("invalid-id")
 
@@ -988,7 +988,7 @@ func TestCsirtService_Delete_EmptyID(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	err := service.Delete("")
 
@@ -1002,7 +1002,7 @@ func TestCsirtService_Delete_RepositoryError(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	err := service.Delete("csirt-1")
 
@@ -1017,7 +1017,7 @@ func TestCsirtService_Delete_HasRelatedData(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	err := service.Delete("csirt-1")
 
@@ -1044,7 +1044,7 @@ func TestCsirtService_Create_SpecialCharactersInName(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
 		NamaCsirt: "CSIRT @#$%",
@@ -1067,7 +1067,7 @@ func TestCsirtService_Update_NoFieldsToUpdate(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	// Update tanpa field apapun
 	res, err := service.Update("csirt-1", dto.UpdateCsirtRequest{})
@@ -1094,7 +1094,7 @@ func TestCsirtService_GetAll_WithPerusahaanRelation(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.GetAll()
 
@@ -1129,7 +1129,7 @@ func TestCsirtService_GetAll_IncludesNewFields(t *testing.T) {
 		},
 	}
 
-	service := NewCsirtService(repo, nil)
+	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.GetAll()
 

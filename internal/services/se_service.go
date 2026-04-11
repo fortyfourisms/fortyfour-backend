@@ -1,12 +1,16 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"strings"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/dto/dto_event"
+	"fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -21,12 +25,17 @@ type SEService interface {
 }
 
 type seService struct {
-	repo repository.SERepositoryInterface
-	rc   cache.RedisInterface
+	repo     repository.SERepositoryInterface
+	rc       cache.RedisInterface
+	producer *rabbitmq.Producer
 }
 
-func NewSEService(repo repository.SERepositoryInterface, rc cache.RedisInterface) SEService {
-	return &seService{repo: repo, rc: rc}
+func NewSEService(repo repository.SERepositoryInterface, rc cache.RedisInterface, producer *rabbitmq.Producer) SEService {
+	return &seService{
+		repo:     repo,
+		rc:       rc,
+		producer: producer,
+	}
 }
 
 /* =======================
@@ -78,6 +87,35 @@ func (s *seService) Create(req dto.CreateSERequest) (*dto.SEResponse, error) {
 	cacheSet(s.rc, keyDetail("se", id), result, TTLDetail)
 	cacheDelete(s.rc, keyList("se"))
 	cacheDelete(s.rc, "se:perusahaan:"+req.IDPerusahaan)
+
+	if s.producer != nil {
+		go func() {
+			s.producer.PublishSeCreated(context.Background(), dto_event.SeCreatedEvent{
+				ID:                              result.ID,
+				IDPerusahaan:                    result.IDPerusahaan,
+				IDSubSektor:                     result.IDSubSektor,
+				IDCsirt:                         result.IDCsirt,
+				NilaiInvestasi:                  result.NilaiInvestasi,
+				AnggaranOperasional:             result.AnggaranOperasional,
+				KepatuhanPeraturan:              result.KepatuhanPeraturan,
+				TeknikKriptografi:               result.TeknikKriptografi,
+				JumlahPengguna:                  result.JumlahPengguna,
+				DataPribadi:                     result.DataPribadi,
+				KlasifikasiData:                 result.KlasifikasiData,
+				KekritisanProses:                result.KekritisanProses,
+				DampakKegagalan:                 result.DampakKegagalan,
+				PotensiKerugiandanDampakNegatif: result.PotensiKerugiandanDampakNegatif,
+				NamaSE:                          result.NamaSE,
+				IpSE:                            result.IpSE,
+				AsNumberSE:                      result.AsNumberSE,
+				PengelolaSE:                     result.PengelolaSE,
+				FiturSE:                         result.FiturSE,
+				TotalBobot:                      result.TotalBobot,
+				KategoriSE:                      result.KategoriSE,
+				CreatedAt:                       time.Now(),
+			})
+		}()
+	}
 
 	return result, nil
 }
@@ -193,6 +231,35 @@ func (s *seService) Update(id string, req dto.UpdateSERequest) (*dto.SEResponse,
 		existing.PengelolaSE = *req.PengelolaSE
 	}
 
+	if s.producer != nil {
+		go func() {
+			s.producer.PublishSeUpdated(context.Background(), dto_event.SeUpdatedEvent{
+				ID:                              existing.ID,
+				IDPerusahaan:                    existing.IDPerusahaan,
+				IDSubSektor:                     existing.IDSubSektor,
+				IDCsirt:                         existing.IDCsirt,
+				NilaiInvestasi:                  existing.NilaiInvestasi,
+				AnggaranOperasional:             existing.AnggaranOperasional,
+				KepatuhanPeraturan:              existing.KepatuhanPeraturan,
+				TeknikKriptografi:               existing.TeknikKriptografi,
+				JumlahPengguna:                  existing.JumlahPengguna,
+				DataPribadi:                     existing.DataPribadi,
+				KlasifikasiData:                 existing.KlasifikasiData,
+				KekritisanProses:                existing.KekritisanProses,
+				DampakKegagalan:                 existing.DampakKegagalan,
+				PotensiKerugiandanDampakNegatif: existing.PotensiKerugiandanDampakNegatif,
+				NamaSE:                          existing.NamaSE,
+				IpSE:                            existing.IpSE,
+				AsNumberSE:                      existing.AsNumberSE,
+				PengelolaSE:                     existing.PengelolaSE,
+				FiturSE:                         existing.FiturSE,
+				TotalBobot:                      existing.TotalBobot,
+				KategoriSE:                      existing.KategoriSE,
+				UpdatedAt:                       time.Now(),
+			})
+		}()
+	}
+
 	return existing, nil
 }
 
@@ -216,6 +283,16 @@ func (s *seService) Delete(id string) error {
 	cacheDelete(s.rc, keyList("se"))
 	if existing != nil {
 		cacheDelete(s.rc, "se:perusahaan:"+existing.IDPerusahaan)
+
+		if s.producer != nil {
+			go func() {
+				s.producer.PublishSeDeleted(context.Background(), dto_event.SeDeletedEvent{
+					ID:           id,
+					IDPerusahaan: existing.IDPerusahaan,
+					DeletedAt:    time.Now(),
+				})
+			}()
+		}
 	}
 
 	return nil
