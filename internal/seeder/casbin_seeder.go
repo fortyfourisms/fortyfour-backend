@@ -58,6 +58,38 @@ var defaultPolicies = []Policy{
 	{"user", "/api/perusahaan/:id", "GET"},
 	{"user", "/api/perusahaan/:id", "PUT"},
 
+	// Ruang Lingkup (master — read only untuk user)
+	{"user", "/api/maturity/ruang-lingkup", "GET"},
+	{"user", "/api/maturity/ruang-lingkup/:id", "GET"},
+ 
+	// Domain (master — read only untuk user)
+	{"user", "/api/maturity/domain", "GET"},
+	{"user", "/api/maturity/domain/:id", "GET"},
+ 
+	// Kategori (master — read only untuk user)
+	{"user", "/api/maturity/kategori", "GET"},
+	{"user", "/api/maturity/kategori/:id", "GET"},
+ 
+	// Sub Kategori (master — read only untuk user)
+	{"user", "/api/maturity/sub-kategori", "GET"},
+	{"user", "/api/maturity/sub-kategori/:id", "GET"},
+ 
+	// Identifikasi (master — read only untuk user)
+	{"user", "/api/maturity/identifikasi", "GET"},
+	{"user", "/api/maturity/identifikasi/:id", "GET"},
+ 
+	// Proteksi (master — read only untuk user)
+	{"user", "/api/maturity/proteksi", "GET"},
+	{"user", "/api/maturity/proteksi/:id", "GET"},
+ 
+	// Deteksi (master — read only untuk user)
+	{"user", "/api/maturity/deteksi", "GET"},
+	{"user", "/api/maturity/deteksi/:id", "GET"},
+ 
+	// Gulih (master — read only untuk user)
+	{"user", "/api/maturity/gulih", "GET"},
+	{"user", "/api/maturity/gulih/:id", "GET"},
+
 	// Maturity (Jawaban)
 	{"user", "/api/maturity/jawaban-identifikasi", "GET"},
 	{"user", "/api/maturity/jawaban-identifikasi", "POST"},
@@ -82,6 +114,21 @@ var defaultPolicies = []Policy{
 	{"user", "/api/maturity/jawaban-gulih/:id", "GET"},
 	{"user", "/api/maturity/jawaban-gulih/:id", "PUT"},
 	// {"user", "/api/maturity/jawaban-gulih/:id", "DELETE"},
+
+	// ── LMS ──────────────────────────────────────────────────────────────────
+	// user bisa melihat kelas, detail kelas, update progress, dan mengikuti kuis.
+ 
+	// Kelas (user bisa lihat list & detail)
+	{"user", "/api/kelas", "GET"},
+	{"user", "/api/kelas/:id", "GET"},
+ 
+	// Materi — progress update (user)
+	{"user", "/api/materi/:id/progress", "POST"},
+ 
+	// Kuis — start, submit, result (user)
+	{"user", "/api/kuis/:id_materi/start", "POST"},
+	{"user", "/api/kuis/attempt/:id_attempt/submit", "POST"},
+	{"user", "/api/kuis/attempt/:id_attempt/result", "GET"},
 }
 
 // SeedCasbinPolicies memastikan semua default policy ada di database.
