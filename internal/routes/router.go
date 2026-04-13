@@ -119,15 +119,17 @@ func InitRouter(
 	mux.HandleFunc("/api/role/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(roleH)))))
 
 	// Route CSIRT
+	// "/api/csirt/" menangkap semua sub-path termasuk {id}/export-pdf.
+	// Di dalam handler, path yang mengandung "export-pdf" diarahkan ke csirtExportH,
+	// sisanya ke csirtH (CRUD) — ini satu-satunya cara karena Go ServeMux tidak support wildcard.
 	mux.HandleFunc("/api/csirt", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(csirtH)))))
-	mux.HandleFunc("/api/csirt/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(csirtH)))))
-
-	// Route CSIRT Export PDF
-	// GET /api/csirt/export-pdf                        → semua (admin) atau milik perusahaan sendiri (user)
-	// GET /api/csirt/export-pdf?id_perusahaan=xxx      → admin: filter perusahaan tertentu
-	// GET /api/csirt/{id}/export-pdf                   → export satu CSIRT by ID
-	mux.HandleFunc("/api/csirt/export-pdf", authM.Authenticate(utils.AdaptHandler(csirtExportH)))
-	mux.HandleFunc("/api/csirt/export-pdf/", authM.Authenticate(utils.AdaptHandler(csirtExportH)))
+	mux.HandleFunc("/api/csirt/", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, "export-pdf") {
+			utils.AdaptHandler(csirtExportH)(w, r)
+		} else {
+			casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(csirtH)))(w, r)
+		}
+	}))
 
 	// Route SDM_CSIRT
 	mux.HandleFunc("/api/sdm_csirt", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
@@ -142,15 +144,17 @@ func InitRouter(
 	mux.HandleFunc("/api/sub_sektor/", authM.Authenticate(utils.AdaptHandler(subsectorH)))
 
 	// Route SE
+	// "/api/se/" menangkap semua sub-path termasuk {id}/export-pdf.
+	// Di dalam handler, path yang mengandung "export-pdf" diarahkan ke seExportH,
+	// sisanya ke seH (CRUD).
 	mux.HandleFunc("/api/se", authM.Authenticate(utils.AdaptHandler(seH)))
-	mux.HandleFunc("/api/se/", authM.Authenticate(utils.AdaptHandler(seH)))
-
-	// Route SE Export PDF
-	// GET /api/se/export-pdf                        → semua SE (admin) atau milik perusahaan sendiri (user)
-	// GET /api/se/export-pdf?id_perusahaan=xxx      → admin: filter perusahaan tertentu
-	// GET /api/se/{id}/export-pdf                   → export satu SE by ID
-	mux.HandleFunc("/api/se/export-pdf", authM.Authenticate(utils.AdaptHandler(seExportH)))
-	mux.HandleFunc("/api/se/export-pdf/", authM.Authenticate(utils.AdaptHandler(seExportH)))
+	mux.HandleFunc("/api/se/", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, "export-pdf") {
+			utils.AdaptHandler(seExportH)(w, r)
+		} else {
+			utils.AdaptHandler(seH)(w, r)
+		}
+	}))
 
 	// Route Dashboard
 	// Summary: counts per sektor + ikas + se
