@@ -121,14 +121,42 @@ var defaultPolicies = []Policy{
 	// Kelas (user bisa lihat list & detail)
 	{"user", "/api/kelas", "GET"},
 	{"user", "/api/kelas/:id", "GET"},
+
+	// Kelas → kuis list (user bisa lihat)
+	{"user", "/api/kelas/:id/kuis", "GET"},
+
+	// Kelas → sertifikat (user)
+	{"user", "/api/kelas/:id/sertifikat", "GET"},
+	{"user", "/api/kelas/:id/sertifikat/generate", "POST"},
  
 	// Materi — progress update (user)
 	{"user", "/api/materi/:id/progress", "POST"},
+
+	// Materi — file pendukung (user bisa lihat)
+	{"user", "/api/materi/:id/file-pendukung", "GET"},
+
+	// Materi — diskusi (user bisa CRUD diskusi sendiri)
+	{"user", "/api/materi/:id/diskusi", "GET"},
+	{"user", "/api/materi/:id/diskusi", "POST"},
+	{"user", "/api/diskusi/:id", "PUT"},
+	{"user", "/api/diskusi/:id", "DELETE"},
+
+	// Materi — catatan pribadi (user)
+	{"user", "/api/materi/:id/catatan", "GET"},
+	{"user", "/api/materi/:id/catatan", "PUT"},
+
+	// File pendukung — download (user)
+	{"user", "/api/file-pendukung/:id/download", "GET"},
  
 	// Kuis — start, submit, result (user)
-	{"user", "/api/kuis/:id_materi/start", "POST"},
+	{"user", "/api/kuis/:id_kuis/start", "POST"},
 	{"user", "/api/kuis/attempt/:id_attempt/submit", "POST"},
 	{"user", "/api/kuis/attempt/:id_attempt/result", "GET"},
+
+	// Sertifikat (user)
+	{"user", "/api/sertifikat/me", "GET"},
+	{"user", "/api/sertifikat/:id", "GET"},
+	{"user", "/api/sertifikat/:id/download", "GET"},
 }
 
 // SeedCasbinPolicies memastikan semua default policy ada di database.
