@@ -18,7 +18,8 @@ import (
 type mockIdentifikasiRepository struct {
 	GetAllFn      func() ([]models.Identifikasi, error)
 	GetByIDFn     func(id string) (*models.Identifikasi, error)
-	GetByIkasIDFn func(ikasID string) ([]models.Identifikasi, error)
+	GetByIkasIDFn        func(ikasID string) ([]models.Identifikasi, error)
+	GetByPerusahaanIDFn  func(perusahaanID string) ([]models.Identifikasi, error)
 }
 
 func (m *mockIdentifikasiRepository) GetAll() ([]models.Identifikasi, error) {
@@ -32,6 +33,13 @@ func (m *mockIdentifikasiRepository) GetByID(id string) (*models.Identifikasi, e
 func (m *mockIdentifikasiRepository) GetByIkasID(ikasID string) ([]models.Identifikasi, error) {
 	if m.GetByIkasIDFn != nil {
 		return m.GetByIkasIDFn(ikasID)
+	}
+	return nil, nil
+}
+
+func (m *mockIdentifikasiRepository) GetByPerusahaanID(perusahaanID string) ([]models.Identifikasi, error) {
+	if m.GetByPerusahaanIDFn != nil {
+		return m.GetByPerusahaanIDFn(perusahaanID)
 	}
 	return nil, nil
 }

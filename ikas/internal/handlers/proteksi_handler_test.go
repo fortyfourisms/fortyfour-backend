@@ -19,7 +19,8 @@ import (
 type mockProteksiRepository struct {
 	GetAllFn      func() ([]models.Proteksi, error)
 	GetByIDFn     func(id string) (*models.Proteksi, error)
-	GetByIkasIDFn func(ikasID string) ([]models.Proteksi, error)
+	GetByIkasIDFn        func(ikasID string) ([]models.Proteksi, error)
+	GetByPerusahaanIDFn  func(perusahaanID string) ([]models.Proteksi, error)
 }
 
 func (m *mockProteksiRepository) GetAll() ([]models.Proteksi, error) {
@@ -33,6 +34,13 @@ func (m *mockProteksiRepository) GetByID(id string) (*models.Proteksi, error) {
 func (m *mockProteksiRepository) GetByIkasID(ikasID string) ([]models.Proteksi, error) {
 	if m.GetByIkasIDFn != nil {
 		return m.GetByIkasIDFn(ikasID)
+	}
+	return nil, nil
+}
+
+func (m *mockProteksiRepository) GetByPerusahaanID(perusahaanID string) ([]models.Proteksi, error) {
+	if m.GetByPerusahaanIDFn != nil {
+		return m.GetByPerusahaanIDFn(perusahaanID)
 	}
 	return nil, nil
 }
@@ -109,6 +117,8 @@ func TestProteksiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 	handler := setupProteksiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/proteksi/uuid-test", nil)
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -133,6 +143,8 @@ func TestProteksiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 	handler := setupProteksiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/proteksi/invalid-id", nil)
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)

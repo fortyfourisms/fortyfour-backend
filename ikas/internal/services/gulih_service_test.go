@@ -18,7 +18,8 @@ import (
 type mockGulihRepository struct {
 	GetAllFn      func() ([]models.Gulih, error)
 	GetByIDFn     func(id string) (*models.Gulih, error)
-	GetByIkasIDFn func(ikasID string) ([]models.Gulih, error)
+	GetByIkasIDFn        func(ikasID string) ([]models.Gulih, error)
+	GetByPerusahaanIDFn  func(perusahaanID string) ([]models.Gulih, error)
 }
 
 func (m *mockGulihRepository) GetAll() ([]models.Gulih, error) {
@@ -32,6 +33,13 @@ func (m *mockGulihRepository) GetByID(id string) (*models.Gulih, error) {
 func (m *mockGulihRepository) GetByIkasID(ikasID string) ([]models.Gulih, error) {
 	if m.GetByIkasIDFn != nil {
 		return m.GetByIkasIDFn(ikasID)
+	}
+	return nil, nil
+}
+
+func (m *mockGulihRepository) GetByPerusahaanID(perusahaanID string) ([]models.Gulih, error) {
+	if m.GetByPerusahaanIDFn != nil {
+		return m.GetByPerusahaanIDFn(perusahaanID)
 	}
 	return nil, nil
 }

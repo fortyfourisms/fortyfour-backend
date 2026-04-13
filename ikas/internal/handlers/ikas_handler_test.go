@@ -164,8 +164,8 @@ func TestIkasHandler_ServeHTTP_Create_Success(t *testing.T) {
 	producer := new(mockIkasProducer)
 	handler := setupIkasHandler(repo, producer)
 
-	createReq := dto.CreateIkasRequest{IDPerusahaan: "1", Responden: "User"}
-	repo.On("CheckExistsByPerusahaanID", "1").Return(false, nil)
+	createReq := dto.CreateIkasRequest{IDPerusahaan: "1", Responden: "User", Tanggal: "2026-01-01"}
+	repo.On("CheckExistsByPerusahaanIDAndYear", "1", 2026).Return(false, nil)
 
 	producer.On("PublishIkasCreated", mock.Anything, mock.MatchedBy(func(e dto_event.IkasCreatedEvent) bool {
 		return e.IDPerusahaan == "1" && e.UserID == "user-123"
@@ -176,7 +176,9 @@ func TestIkasHandler_ServeHTTP_Create_Success(t *testing.T) {
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/ikas", bytes.NewBuffer(body))
-	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, "user-123"))
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(context.WithValue(ctx, middleware.UserIDKey, "user-123"))
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -199,16 +201,19 @@ func TestIkasHandler_ServeHTTP_Create_ExistsOrError(t *testing.T) {
 	repo := new(mockIkasRepository)
 	handler := setupIkasHandler(repo, nil)
 
-	createReq := dto.CreateIkasRequest{IDPerusahaan: "1"}
-	repo.On("CheckExistsByPerusahaanID", "1").Return(true, nil) // Conflict
+	createReq := dto.CreateIkasRequest{IDPerusahaan: "1", Tanggal: "2026-01-01"}
+	repo.On("CheckExistsByPerusahaanIDAndYear", "1", 2026).Return(true, nil) // Conflict
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/ikas", bytes.NewBuffer(body))
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusBadRequest, w.Code) // The handler currently maps this to 400
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 func TestIkasHandler_ServeHTTP_Update_Success(t *testing.T) {
@@ -230,7 +235,9 @@ func TestIkasHandler_ServeHTTP_Update_Success(t *testing.T) {
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/ikas/123", bytes.NewBuffer(body))
-	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, "user-123"))
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(context.WithValue(ctx, middleware.UserIDKey, "user-123"))
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -257,6 +264,9 @@ func TestIkasHandler_ServeHTTP_Update_NotFound(t *testing.T) {
 
 	body, _ := json.Marshal(dto.UpdateIkasRequest{})
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/ikas/123", bytes.NewBuffer(body))
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -272,6 +282,9 @@ func TestIkasHandler_ServeHTTP_Update_SystemError(t *testing.T) {
 
 	body, _ := json.Marshal(dto.UpdateIkasRequest{})
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/ikas/123", bytes.NewBuffer(body))
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -290,6 +303,9 @@ func TestIkasHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/ikas/123", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(context.WithValue(ctx, middleware.UserIDKey, "user-123"))
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -403,13 +419,16 @@ func TestIkasHandler_ServeHTTP_Import_Success(t *testing.T) {
 	}
 
 	repo.On("ParseExcelForImport", mock.Anything).Return(importData, nil)
-	repo.On("CheckExistsByPerusahaanID", "1").Return(false, nil) // Create IKAS
+	repo.On("CheckExistsByPerusahaanIDAndYear", "1", 2026).Return(false, nil) // Create IKAS
 
 	producer.On("PublishIkasCreated", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishJawabanIdentifikasiCreated", mock.Anything, mock.Anything).Return(nil)
 
 	req := createMultipartRequest(t, "file", "test.xlsx", []byte("dummy data"))
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -429,9 +448,12 @@ func TestIkasHandler_ServeHTTP_Import_SystemError(t *testing.T) {
 	}
 
 	repo.On("ParseExcelForImport", mock.Anything).Return(importData, nil)
-	repo.On("CheckExistsByPerusahaanID", "1").Return(false, errors.New("db error"))
+	repo.On("CheckExistsByPerusahaanIDAndYear", "1", 2026).Return(false, errors.New("db error"))
 
 	req := createMultipartRequest(t, "file", "test.xlsx", []byte("dummy data"))
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)

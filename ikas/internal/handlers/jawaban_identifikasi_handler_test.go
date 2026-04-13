@@ -110,6 +110,10 @@ func (m *mockJawabanIdentifikasiRepository) FlushBuffer(perusahaanID string) err
 	args := m.Called(perusahaanID)
 	return args.Error(0)
 }
+func (m *mockJawabanIdentifikasiRepository) GetByPerusahaanID(perusahaanID string) ([]dto.JawabanIdentifikasiResponse, error) {
+	args := m.Called(perusahaanID)
+	return args.Get(0).([]dto.JawabanIdentifikasiResponse), args.Error(1)
+}
 
 // Ensure mock compatibility
 var _ repository.JawabanIdentifikasiRepositoryInterface = (*mockJawabanIdentifikasiRepository)(nil)
@@ -161,7 +165,8 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 	ikasRepo := new(mockIkasRepository)
 	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil)
 
-	repo.On("GetByID", 1).Return(&dto.JawabanIdentifikasiResponse{ID: 1}, nil)
+	repo.On("GetByID", 1).Return(&dto.JawabanIdentifikasiResponse{ID: 1, IkasID: "ikas1"}, nil)
+	ikasRepo.On("GetByID", "ikas1").Return(&dto.IkasResponse{ID: "ikas1", Perusahaan: &dto.PerusahaanInIkas{ID: "p1"}}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-identifikasi/1", nil)
 	// Inject admin role
@@ -182,6 +187,9 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_GetByID_NotFound(t *testing.T) {
 	repo.On("GetByID", 1).Return((*dto.JawabanIdentifikasiResponse)(nil), errors.New("data tidak ditemukan"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-identifikasi/1", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -196,6 +204,9 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 	repo.On("GetByID", 1).Return((*dto.JawabanIdentifikasiResponse)(nil), errors.New("db error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-identifikasi/1", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -267,8 +278,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Update_Success(t *testing.T) {
 
 	existing := &dto.JawabanIdentifikasiResponse{ID: 1, IkasID: "uuid1", JawabanIdentifikasi: jidFloat64Ptr(3.0)}
 	repo.On("GetByID", 1).Return(existing, nil)
-	// mockIkasRepository.GetIDByPerusahaanID used to exist, but now it's shared mock.Mock
-	ikasRepo.On("GetIDByPerusahaanID", "uuid1").Return("ikas1", nil)
+	ikasRepo.On("GetByID", "uuid1").Return(&dto.IkasResponse{ID: "uuid1", Perusahaan: &dto.PerusahaanInIkas{ID: "ikas1"}}, nil)
 	producer.On("PublishJawabanIdentifikasiUpdated", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 
@@ -295,6 +305,9 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Update_NotFound(t *testing.T) {
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/jawaban-identifikasi/1", bytes.NewReader(body))
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -316,11 +329,14 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, producer)
 
 	repo.On("GetByID", 1).Return(&dto.JawabanIdentifikasiResponse{ID: 1, IkasID: "uuid1"}, nil)
-	ikasRepo.On("GetIDByPerusahaanID", "uuid1").Return("ikas1", nil)
+	ikasRepo.On("GetByID", "uuid1").Return(&dto.IkasResponse{ID: "uuid1", Perusahaan: &dto.PerusahaanInIkas{ID: "ikas1"}}, nil)
 	producer.On("PublishJawabanIdentifikasiDeleted", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-identifikasi/1", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -334,6 +350,9 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Delete_NotFound(t *testing.T) {
 	repo.On("GetByID", 1).Return((*dto.JawabanIdentifikasiResponse)(nil), errors.New("data tidak ditemukan"))
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-identifikasi/1", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
