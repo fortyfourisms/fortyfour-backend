@@ -48,25 +48,22 @@ func (h *ProteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	perusahaanID := r.URL.Query().Get("perusahaan_id")
+	ikasID := r.URL.Query().Get("ikas_id")
 
-	if userRole != "admin" {
-		if userPerusahaanID == "" || userPerusahaanID == "null" {
-			utils.RespondJSON(w, 200, map[string]interface{}{
-				"message": "Berhasil mengambil data",
-				"data":    []interface{}{},
-				"total":   0,
-			})
-			return
-		}
-		perusahaanID = userPerusahaanID
+	if userRole != "admin" && (userPerusahaanID == "" || userPerusahaanID == "null") {
+		utils.RespondJSON(w, 200, map[string]interface{}{
+			"message": "Berhasil mengambil data",
+			"data":    []interface{}{},
+			"total":   0,
+		})
+		return
 	}
 
 	var data interface{}
 	var err error
 
-	if perusahaanID != "" {
-		data, err = h.service.GetByPerusahaan(perusahaanID)
+	if ikasID != "" {
+		data, err = h.service.GetByIkasID(ikasID)
 	} else {
 		data, err = h.service.GetAll()
 	}

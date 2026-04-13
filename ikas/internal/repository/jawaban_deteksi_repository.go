@@ -13,17 +13,17 @@ type JawabanDeteksiRepositoryInterface interface {
 	Create(req dto.CreateJawabanDeteksiRequest) (int64, error)
 	GetAll() ([]dto.JawabanDeteksiResponse, error)
 	GetByID(id int) (*dto.JawabanDeteksiResponse, error)
-	GetByPerusahaan(perusahaanID string) ([]dto.JawabanDeteksiResponse, error)
+	GetByIkasID(ikasID string) ([]dto.JawabanDeteksiResponse, error)
 	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanDeteksiResponse, error)
 	Update(id int, req dto.UpdateJawabanDeteksiRequest) error
 	Delete(id int) error
-	CheckPertanyaanExists(id int) (bool, error)
-	CheckPerusahaanExists(id string) (bool, error)
-	CheckDuplicate(perusahaanID string, pertanyaanID int, excludeID int) (bool, error)
-	RecalculateDeteksi(perusahaanID string) error
+	CheckPertanyaanExists(pertanyaanID int) (bool, error)
+	CheckIkasExists(ikasID string) (bool, error)
+	CheckDuplicate(ikasID string, pertanyaanID int, excludeID int) (bool, error)
+	RecalculateDeteksi(ikasID string) error
 	UpsertToBuffer(req dto.CreateJawabanDeteksiRequest) error
-	GetBufferCount(perusahaanID string) (int, error)
-	FlushBuffer(perusahaanID string) error
+	GetBufferCount(ikasID string) (int, error)
+	FlushBuffer(ikasID string) error
 }
 
 type JawabanDeteksiRepository struct {
@@ -37,7 +37,7 @@ func NewJawabanDeteksiRepository(db *sql.DB) *JawabanDeteksiRepository {
 const jawabanDeteksiSelectQuery = `
 	SELECT 
 		jd.id, 
-		jd.perusahaan_id, 
+		jd.ikas_id, 
 		jd.jawaban_deteksi, 
 		jd.evidence, 
 		jd.validasi, 
@@ -61,7 +61,7 @@ func scanJawabanDeteksi(row interface {
 	var item dto.JawabanDeteksiResponse
 	err := row.Scan(
 		&item.ID,
-		&item.PerusahaanID,
+		&item.IkasID,
 		&item.JawabanDeteksi,
 		&item.Evidence,
 		&item.Validasi,
@@ -82,12 +82,12 @@ func scanJawabanDeteksi(row interface {
 
 func (r *JawabanDeteksiRepository) Create(req dto.CreateJawabanDeteksiRequest) (int64, error) {
 	query := `INSERT INTO jawaban_deteksi 
-		(pertanyaan_deteksi_id, perusahaan_id, jawaban_deteksi, evidence, validasi, keterangan)
+		(pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan)
 		VALUES (?, ?, ?, ?, ?, ?)`
 
-	result, err := r.db.Exec(query,
+	res, err := r.db.Exec(query,
 		req.PertanyaanDeteksiID,
-		req.PerusahaanID,
+		req.IkasID,
 		req.JawabanDeteksi,
 		req.Evidence,
 		req.Validasi,
@@ -98,7 +98,7 @@ func (r *JawabanDeteksiRepository) Create(req dto.CreateJawabanDeteksiRequest) (
 		return 0, err
 	}
 
-	return result.LastInsertId()
+	return res.LastInsertId()
 }
 
 func (r *JawabanDeteksiRepository) GetAll() ([]dto.JawabanDeteksiResponse, error) {
@@ -137,9 +137,10 @@ func (r *JawabanDeteksiRepository) GetByID(id int) (*dto.JawabanDeteksiResponse,
 	return &item, nil
 }
 
-func (r *JawabanDeteksiRepository) GetByPerusahaan(perusahaanID string) ([]dto.JawabanDeteksiResponse, error) {
-	query := jawabanDeteksiSelectQuery + ` WHERE jd.perusahaan_id = ? ORDER BY jd.created_at ASC`
-	rows, err := r.db.Query(query, perusahaanID)
+func (r *JawabanDeteksiRepository) GetByIkasID(ikasID string) ([]dto.JawabanDeteksiResponse, error) {
+	query := jawabanDeteksiSelectQuery + ` WHERE jd.ikas_id = ? ORDER BY jd.created_at ASC`
+
+	rows, err := r.db.Query(query, ikasID)
 	if err != nil {
 		rollbar.Error(err)
 		return nil, err
@@ -224,9 +225,9 @@ func (r *JawabanDeteksiRepository) Delete(id int) error {
 	return err
 }
 
-func (r *JawabanDeteksiRepository) CheckPertanyaanExists(id int) (bool, error) {
+func (r *JawabanDeteksiRepository) CheckPertanyaanExists(pertanyaanID int) (bool, error) {
 	var count int
-	err := r.db.QueryRow(`SELECT COUNT(*) FROM pertanyaan_deteksi WHERE id = ?`, id).Scan(&count)
+	err := r.db.QueryRow(`SELECT COUNT(*) FROM pertanyaan_deteksi WHERE id = ?`, pertanyaanID).Scan(&count)
 	if err != nil {
 		rollbar.Error(err)
 		return false, err
@@ -234,9 +235,9 @@ func (r *JawabanDeteksiRepository) CheckPertanyaanExists(id int) (bool, error) {
 	return count > 0, nil
 }
 
-func (r *JawabanDeteksiRepository) CheckPerusahaanExists(id string) (bool, error) {
+func (r *JawabanDeteksiRepository) CheckIkasExists(ikasID string) (bool, error) {
 	var count int
-	err := r.db.QueryRow(`SELECT COUNT(*) FROM perusahaan WHERE id = ?`, id).Scan(&count)
+	err := r.db.QueryRow(`SELECT COUNT(*) FROM ikas WHERE id = ?`, ikasID).Scan(&count)
 	if err != nil {
 		rollbar.Error(err)
 		return false, err
@@ -244,10 +245,12 @@ func (r *JawabanDeteksiRepository) CheckPerusahaanExists(id string) (bool, error
 	return count > 0, nil
 }
 
-func (r *JawabanDeteksiRepository) CheckDuplicate(perusahaanID string, pertanyaanID int, excludeID int) (bool, error) {
+func (r *JawabanDeteksiRepository) CheckDuplicate(ikasID string, pertanyaanID int, excludeID int) (bool, error) {
 	var count int
-	query := `SELECT COUNT(*) FROM jawaban_deteksi WHERE perusahaan_id = ? AND pertanyaan_deteksi_id = ?`
-	args := []interface{}{perusahaanID, pertanyaanID}
+
+	query := `SELECT COUNT(*) FROM jawaban_deteksi
+		WHERE ikas_id = ? AND pertanyaan_deteksi_id = ?`
+	args := []interface{}{ikasID, pertanyaanID}
 
 	if excludeID != 0 {
 		query += ` AND id != ?`
@@ -262,18 +265,19 @@ func (r *JawabanDeteksiRepository) CheckDuplicate(perusahaanID string, pertanyaa
 	return count > 0, nil
 }
 
-func (r *JawabanDeteksiRepository) RecalculateDeteksi(perusahaanID string) error {
+func (r *JawabanDeteksiRepository) RecalculateDeteksi(ikasID string) error {
+	// Query rata-rata jawaban per kategori_id untuk assessment tertentu
 	query := `
 		SELECT k.id AS kategori_id, ROUND(AVG(jd.jawaban_deteksi), 2) AS avg_nilai
 		FROM jawaban_deteksi jd
 		JOIN pertanyaan_deteksi pd ON jd.pertanyaan_deteksi_id = pd.id
 		JOIN sub_kategori sk ON pd.sub_kategori_id = sk.id
 		JOIN kategori k ON sk.kategori_id = k.id
-		WHERE jd.perusahaan_id = ? AND jd.jawaban_deteksi IS NOT NULL
+		WHERE jd.ikas_id = ? AND jd.jawaban_deteksi IS NOT NULL
 		GROUP BY k.id
 		ORDER BY k.id`
 
-	rows, err := r.db.Query(query, perusahaanID)
+	rows, err := r.db.Query(query, ikasID)
 	if err != nil {
 		rollbar.Error(err)
 		return err
@@ -296,11 +300,12 @@ func (r *JawabanDeteksiRepository) RecalculateDeteksi(perusahaanID string) error
 		}
 	}
 
+	// Hitung rata-rata keseluruhan (nilai_deteksi)
 	nilaiDeteksi := utils.RoundToTwo((subdomain[12] + subdomain[13] + subdomain[14]) / 3.0)
 
 	upsertQuery := `
 		INSERT INTO deteksi 
-			(perusahaan_id, nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3)
+			(ikas_id, nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3)
 		VALUES (?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE
 			nilai_deteksi = VALUES(nilai_deteksi),
@@ -309,7 +314,7 @@ func (r *JawabanDeteksiRepository) RecalculateDeteksi(perusahaanID string) error
 			nilai_subdomain3 = VALUES(nilai_subdomain3)`
 
 	_, err = r.db.Exec(upsertQuery,
-		perusahaanID,
+		ikasID,
 		nilaiDeteksi,
 		subdomain[12], subdomain[13], subdomain[14],
 	)
@@ -319,13 +324,13 @@ func (r *JawabanDeteksiRepository) RecalculateDeteksi(perusahaanID string) error
 	}
 
 	var deteksiID int
-	err = r.db.QueryRow(`SELECT id FROM deteksi WHERE perusahaan_id = ?`, perusahaanID).Scan(&deteksiID)
+	err = r.db.QueryRow(`SELECT id FROM deteksi WHERE ikas_id = ?`, ikasID).Scan(&deteksiID)
 	if err != nil {
 		rollbar.Error(err)
 		return err
 	}
 
-	_, err = r.db.Exec(`UPDATE ikas SET id_deteksi = ? WHERE id_perusahaan = ?`, deteksiID, perusahaanID)
+	_, err = r.db.Exec(`UPDATE ikas SET id_deteksi = ? WHERE id = ?`, deteksiID, ikasID)
 	if err != nil {
 		rollbar.Error(err)
 		return err
@@ -343,11 +348,11 @@ func (r *JawabanDeteksiRepository) RecalculateDeteksi(perusahaanID string) error
 			COALESCE(det.nilai_deteksi, 0) * 0.25 + 
 			COALESCE(g.nilai_gulih, 0) * 0.20
 		, 2)
-		WHERE i.id_perusahaan = ? AND (
+		WHERE i.id = ? AND (
 			iden.id IS NOT NULL OR prot.id IS NOT NULL OR det.id IS NOT NULL OR g.id IS NOT NULL
 		)`
 
-	_, err = r.db.Exec(updateKematanganQuery, perusahaanID)
+	_, err = r.db.Exec(updateKematanganQuery, ikasID)
 	if err != nil {
 		rollbar.Error(err)
 		return err
@@ -358,7 +363,7 @@ func (r *JawabanDeteksiRepository) RecalculateDeteksi(perusahaanID string) error
 
 func (r *JawabanDeteksiRepository) UpsertToBuffer(req dto.CreateJawabanDeteksiRequest) error {
 	query := `INSERT INTO jawaban_deteksi_buffer 
-		(pertanyaan_deteksi_id, perusahaan_id, jawaban_deteksi, evidence, validasi, keterangan)
+		(pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan)
 		VALUES (?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE 
 		jawaban_deteksi = VALUES(jawaban_deteksi),
@@ -368,7 +373,7 @@ func (r *JawabanDeteksiRepository) UpsertToBuffer(req dto.CreateJawabanDeteksiRe
 
 	_, err := r.db.Exec(query,
 		req.PertanyaanDeteksiID,
-		req.PerusahaanID,
+		req.IkasID,
 		req.JawabanDeteksi,
 		req.Evidence,
 		req.Validasi,
@@ -377,14 +382,14 @@ func (r *JawabanDeteksiRepository) UpsertToBuffer(req dto.CreateJawabanDeteksiRe
 	return err
 }
 
-func (r *JawabanDeteksiRepository) GetBufferCount(perusahaanID string) (int, error) {
+func (r *JawabanDeteksiRepository) GetBufferCount(ikasID string) (int, error) {
 	var count int
-	query := `SELECT COUNT(*) FROM jawaban_deteksi_buffer WHERE perusahaan_id = ?`
-	err := r.db.QueryRow(query, perusahaanID).Scan(&count)
+	query := `SELECT COUNT(*) FROM jawaban_deteksi_buffer WHERE ikas_id = ?`
+	err := r.db.QueryRow(query, ikasID).Scan(&count)
 	return count, err
 }
 
-func (r *JawabanDeteksiRepository) FlushBuffer(perusahaanID string) error {
+func (r *JawabanDeteksiRepository) FlushBuffer(ikasID string) error {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
@@ -392,20 +397,20 @@ func (r *JawabanDeteksiRepository) FlushBuffer(perusahaanID string) error {
 	defer tx.Rollback()
 
 	moveQuery := `INSERT INTO jawaban_deteksi 
-		(pertanyaan_deteksi_id, perusahaan_id, jawaban_deteksi, evidence, validasi, keterangan)
-		SELECT pertanyaan_deteksi_id, perusahaan_id, jawaban_deteksi, evidence, validasi, keterangan
-		FROM jawaban_deteksi_buffer WHERE perusahaan_id = ?
+		(pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan)
+		SELECT pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan
+		FROM jawaban_deteksi_buffer WHERE ikas_id = ?
 		ON DUPLICATE KEY UPDATE 
 		jawaban_deteksi = VALUES(jawaban_deteksi),
 		evidence = VALUES(evidence),
 		validasi = VALUES(validasi),
 		keterangan = VALUES(keterangan)`
 
-	if _, err := tx.Exec(moveQuery, perusahaanID); err != nil {
+	if _, err := tx.Exec(moveQuery, ikasID); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec(`DELETE FROM jawaban_deteksi_buffer WHERE perusahaan_id = ?`, perusahaanID); err != nil {
+	if _, err := tx.Exec(`DELETE FROM jawaban_deteksi_buffer WHERE ikas_id = ?`, ikasID); err != nil {
 		return err
 	}
 

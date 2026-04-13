@@ -4,7 +4,7 @@ import "time"
 
 type CreateJawabanGulihRequest struct {
 	PertanyaanGulihID int      `json:"pertanyaan_gulih_id"`
-	PerusahaanID      string   `json:"perusahaan_id"`
+	IkasID           string   `json:"ikas_id"`
 	JawabanGulih      *float64 `json:"jawaban_gulih"`
 	Evidence          *string  `json:"evidence,omitempty"`
 	Validasi          *string  `json:"validasi,omitempty"`
@@ -27,7 +27,7 @@ type PertanyaanGulihInfo struct {
 type JawabanGulihResponse struct {
 	ID              int                 `json:"id"`
 	PertanyaanGulih PertanyaanGulihInfo `json:"pertanyaan_gulih"`
-	PerusahaanID    string              `json:"perusahaan_id"`
+	IkasID          string              `json:"ikas_id"`
 	JawabanGulih    *float64            `json:"jawaban_gulih"`
 	Evidence        *string             `json:"evidence"`
 	Validasi        *string             `json:"validasi"`

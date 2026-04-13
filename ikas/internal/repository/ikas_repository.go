@@ -31,7 +31,6 @@ func NewIkasRepository(db *sql.DB) *IkasRepository {
 
 // Update method Create untuk menerima nilai_kematangan (inisiasi IKAS)
 func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string, nilaiKematangan float64) error {
-
 	query := `INSERT INTO ikas
 		(id, id_perusahaan, id_identifikasi, id_proteksi, id_deteksi, id_gulih, tanggal, responden, telepon, jabatan,
 		nilai_kematangan, target_nilai)
@@ -714,12 +713,13 @@ func (r *IkasRepository) Update(id string, req dto.UpdateIkasRequest) error {
 }
 
 func (r *IkasRepository) Delete(id string) error {
-	// Get perusahaan ID
-	var perusahaanID string
-	err := r.db.QueryRow(`SELECT id_perusahaan FROM ikas WHERE id = ?`, id).Scan(&perusahaanID)
+	// 1. Ambil data ikas untuk mendapatkan ID domain yang terkait
+	var idenID, protID, detID, gulIHID sql.NullInt64
+	queryGet := `SELECT id_identifikasi, id_proteksi, id_deteksi, id_gulih FROM ikas WHERE id = ?`
+	err := r.db.QueryRow(queryGet, id).Scan(&idenID, &protID, &detID, &gulIHID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil // Sudah tidak ada
+			return nil
 		}
 		return err
 	}
@@ -731,7 +731,7 @@ func (r *IkasRepository) Delete(id string) error {
 	}
 	defer tx.Rollback()
 
-	// Delete buffer data
+	// 2. Delete buffer data by ikas_id
 	tablesBuffer := []string{
 		"jawaban_identifikasi_buffer",
 		"jawaban_proteksi_buffer",
@@ -739,12 +739,12 @@ func (r *IkasRepository) Delete(id string) error {
 		"jawaban_gulih_buffer",
 	}
 	for _, table := range tablesBuffer {
-		if _, err := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE perusahaan_id = ?`, table), perusahaanID); err != nil {
+		if _, err := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE ikas_id = ?`, table), id); err != nil {
 			return fmt.Errorf("error deleting from %s: %v", table, err)
 		}
 	}
 
-	// Delete main answers
+	// 3. Delete main answers by ikas_id
 	tablesJawaban := []string{
 		"jawaban_identifikasi",
 		"jawaban_proteksi",
@@ -752,26 +752,35 @@ func (r *IkasRepository) Delete(id string) error {
 		"jawaban_gulih",
 	}
 	for _, table := range tablesJawaban {
-		if _, err := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE perusahaan_id = ?`, table), perusahaanID); err != nil {
+		if _, err := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE ikas_id = ?`, table), id); err != nil {
 			return fmt.Errorf("error deleting from %s: %v", table, err)
 		}
 	}
 
-	// Delete ikas
+	// 4. Delete ikas (lebih dulu agar FK tidak bermasalah jika ada restriksi)
 	if _, err := tx.Exec(`DELETE FROM ikas WHERE id = ?`, id); err != nil {
 		return fmt.Errorf("error deleting from ikas: %v", err)
 	}
 
-	// Delete domain data
-	tablesDomain := []string{
-		"identifikasi",
-		"proteksi",
-		"deteksi",
-		"gulih",
+	// 5. Delete domain data by specific ID (bukan perusahaan_id lagi)
+	if idenID.Valid {
+		if _, err := tx.Exec(`DELETE FROM identifikasi WHERE id = ?`, idenID.Int64); err != nil {
+			return fmt.Errorf("error deleting from identifikasi: %v", err)
+		}
 	}
-	for _, table := range tablesDomain {
-		if _, err := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE perusahaan_id = ?`, table), perusahaanID); err != nil {
-			return fmt.Errorf("error deleting from %s: %v", table, err)
+	if protID.Valid {
+		if _, err := tx.Exec(`DELETE FROM proteksi WHERE id = ?`, protID.Int64); err != nil {
+			return fmt.Errorf("error deleting from proteksi: %v", err)
+		}
+	}
+	if detID.Valid {
+		if _, err := tx.Exec(`DELETE FROM deteksi WHERE id = ?`, detID.Int64); err != nil {
+			return fmt.Errorf("error deleting from deteksi: %v", err)
+		}
+	}
+	if gulIHID.Valid {
+		if _, err := tx.Exec(`DELETE FROM gulih WHERE id = ?`, gulIHID.Int64); err != nil {
+			return fmt.Errorf("error deleting from gulih: %v", err)
 		}
 	}
 
@@ -874,13 +883,39 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.ParsedExcelD
 		return nil, fmt.Errorf("perusahaan anda belum terdaftar: '%s'", namaPerusahaan)
 	}
 
-	// VALIDASI: Cek apakah data IKAS untuk perusahaan ini sudah ada
-	exists, err := r.CheckExistsByPerusahaanID(idPerusahaan)
+	// Tanggal dari D18 (Perlu diekstrak lebih awal untuk validasi tahun)
+	tanggalStr, err := getCellString(sheet2, "D18")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca tanggal (Sheet 2, D18): %v", err)
+	}
+
+	// Extract year from date for duplicate check
+	var tahun int
+	if tanggalStr != "" {
+		if excelDate, err := strconv.ParseFloat(tanggalStr, 64); err == nil {
+			parsedTime, err := excelize.ExcelDateToTime(excelDate, false)
+			if err == nil {
+				tahun = parsedTime.Year()
+			}
+		} else {
+			parsedTime, err := parseMultipleDateFormats(tanggalStr)
+			if err == nil {
+				tahun = parsedTime.Year()
+			}
+		}
+	}
+
+	if tahun == 0 {
+		tahun = time.Now().Year()
+	}
+
+	// VALIDASI: Cek apakah data IKAS untuk perusahaan ini sudah ada di tahun tersebut
+	exists, err := r.CheckExistsByPerusahaanIDAndYear(idPerusahaan, tahun)
 	if err != nil {
 		return nil, fmt.Errorf("error validasi duplikasi data: %v", err)
 	}
 	if exists {
-		return nil, fmt.Errorf("Data IKAS untuk perusahaan '%s' sudah ada. Anda tidak dapat melakukan import lagi, silakan hubungi admin untuk melakukan update data.", namaPerusahaan)
+		return nil, fmt.Errorf("Data IKAS untuk perusahaan '%s' pada tahun %d sudah ada. Anda tidak dapat melakukan import lagi.", namaPerusahaan, tahun)
 	}
 
 	// Telepon dari D10
@@ -905,12 +940,6 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.ParsedExcelD
 	targetNilai, err := getCellFloat(sheet2, "D15")
 	if err != nil {
 		return nil, fmt.Errorf("error membaca target_nilai (Sheet 2, D15): %v", err)
-	}
-
-	// Tanggal dari D18
-	tanggalStr, err := getCellString(sheet2, "D18")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca tanggal (Sheet 2, D18): %v", err)
 	}
 
 	var tanggal string
@@ -1038,15 +1067,21 @@ func (r *IkasRepository) FindPerusahaanByName(namaPerusahaan string) (string, er
 }
 
 // CheckExistsByPerusahaanID mengecek apakah data IKAS untuk perusahaan tersebut sudah ada
-func (r *IkasRepository) CheckExistsByPerusahaanID(idPerusahaan string) (bool, error) {
+func (r *IkasRepository) CheckExistsByPerusahaanID(id string) (bool, error) {
 	var count int
-	query := `SELECT COUNT(*) FROM ikas WHERE id_perusahaan = ?`
-
-	err := r.db.QueryRow(query, idPerusahaan).Scan(&count)
+	err := r.db.QueryRow("SELECT COUNT(*) FROM ikas WHERE id_perusahaan = ?", id).Scan(&count)
 	if err != nil {
 		return false, err
 	}
+	return count > 0, nil
+}
 
+func (r *IkasRepository) CheckExistsByPerusahaanIDAndYear(id string, year int) (bool, error) {
+	var count int
+	err := r.db.QueryRow("SELECT COUNT(*) FROM ikas WHERE id_perusahaan = ? AND YEAR(tanggal) = ?", id, year).Scan(&count)
+	if err != nil {
+		return false, err
+	}
 	return count > 0, nil
 }
 

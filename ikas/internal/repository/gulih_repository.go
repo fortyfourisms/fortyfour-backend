@@ -15,7 +15,7 @@ func NewGulihRepository(db *sql.DB) *GulihRepository {
 
 func (r *GulihRepository) GetAll() ([]models.Gulih, error) {
 	rows, err := r.db.Query(`
-		SELECT id, perusahaan_id, nilai_gulih, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4
+		SELECT id, ikas_id, nilai_gulih, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4
 		FROM gulih`)
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func (r *GulihRepository) GetAll() ([]models.Gulih, error) {
 		var g models.Gulih
 		rows.Scan(
 			&g.ID,
-			&g.PerusahaanID,
+			&g.IkasID,
 			&g.NilaiGulih,
 			&g.NilaiSubdomain1,
 			&g.NilaiSubdomain2,
@@ -39,10 +39,10 @@ func (r *GulihRepository) GetAll() ([]models.Gulih, error) {
 	return result, nil
 }
 
-func (r *GulihRepository) GetByPerusahaan(perusahaanID string) ([]models.Gulih, error) {
+func (r *GulihRepository) GetByIkasID(ikasID string) ([]models.Gulih, error) {
 	rows, err := r.db.Query(`
-		SELECT id, perusahaan_id, nilai_gulih, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4
-		FROM gulih WHERE perusahaan_id = ?`, perusahaanID)
+		SELECT id, ikas_id, nilai_gulih, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4
+		FROM gulih WHERE ikas_id = ?`, ikasID)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (r *GulihRepository) GetByPerusahaan(perusahaanID string) ([]models.Gulih, 
 		var g models.Gulih
 		rows.Scan(
 			&g.ID,
-			&g.PerusahaanID,
+			&g.IkasID,
 			&g.NilaiGulih,
 			&g.NilaiSubdomain1,
 			&g.NilaiSubdomain2,
@@ -67,13 +67,13 @@ func (r *GulihRepository) GetByPerusahaan(perusahaanID string) ([]models.Gulih, 
 
 func (r *GulihRepository) GetByID(id string) (*models.Gulih, error) {
 	row := r.db.QueryRow(`
-		SELECT id, perusahaan_id, nilai_gulih, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4
+		SELECT id, ikas_id, nilai_gulih, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4
 		FROM gulih WHERE id = ?`, id)
 
 	var g models.Gulih
 	if err := row.Scan(
 		&g.ID,
-		&g.PerusahaanID,
+		&g.IkasID,
 		&g.NilaiGulih,
 		&g.NilaiSubdomain1,
 		&g.NilaiSubdomain2,

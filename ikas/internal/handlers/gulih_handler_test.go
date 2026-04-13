@@ -15,9 +15,9 @@ import (
 
 // mockGulihRepository implements repository.GulihRepositoryInterface for testing purposes.
 type mockGulihRepository struct {
-	GetAllFn          func() ([]models.Gulih, error)
-	GetByIDFn         func(id string) (*models.Gulih, error)
-	GetByPerusahaanFn func(perusahaanID string) ([]models.Gulih, error)
+	GetAllFn      func() ([]models.Gulih, error)
+	GetByIDFn     func(id string) (*models.Gulih, error)
+	GetByIkasIDFn func(ikasID string) ([]models.Gulih, error)
 }
 
 func (m *mockGulihRepository) GetAll() ([]models.Gulih, error) {
@@ -28,8 +28,11 @@ func (m *mockGulihRepository) GetByID(id string) (*models.Gulih, error) {
 	return m.GetByIDFn(id)
 }
 
-func (m *mockGulihRepository) GetByPerusahaan(perusahaanID string) ([]models.Gulih, error) {
-	return m.GetByPerusahaanFn(perusahaanID)
+func (m *mockGulihRepository) GetByIkasID(ikasID string) ([]models.Gulih, error) {
+	if m.GetByIkasIDFn != nil {
+		return m.GetByIkasIDFn(ikasID)
+	}
+	return nil, nil
 }
 
 var _ repository.GulihRepositoryInterface = (*mockGulihRepository)(nil)

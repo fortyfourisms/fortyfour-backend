@@ -57,6 +57,11 @@ func (m *mockIkasRepository) CheckExistsByPerusahaanID(perusahaanID string) (boo
 	return args.Get(0).(bool), args.Error(1)
 }
 
+func (m *mockIkasRepository) CheckExistsByPerusahaanIDAndYear(id string, year int) (bool, error) {
+	args := m.Called(id, year)
+	return args.Get(0).(bool), args.Error(1)
+}
+
 func (m *mockIkasRepository) FindPerusahaanByName(namaPerusahaan string) (string, error) {
 	args := m.Called(namaPerusahaan)
 	return args.Get(0).(string), args.Error(1)

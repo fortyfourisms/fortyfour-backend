@@ -29,27 +29,25 @@ func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 	case http.MethodGet:
 		if id == 0 {
 			// Cek query params untuk filter
-			perusahaanID := r.URL.Query().Get("perusahaan_id")
+			ikasID := r.URL.Query().Get("ikas_id")
 			pertanyaanID := r.URL.Query().Get("pertanyaan_identifikasi_id")
 
+			// Access validation should be handled by providing user details to the service.
+			// Handlers should collect userRole and userPerusahaanID and pass them.
 			userRole, _ := r.Context().Value(middleware.Role).(string)
 			userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-			// Implicit filtering for non-admins
-			if userRole != "admin" {
-				if userPerusahaanID == "" || userPerusahaanID == "null" {
-					utils.RespondJSON(w, 200, map[string]interface{}{
-						"message": "Berhasil mengambil data",
-						"data":    []dto.JawabanIdentifikasiResponse{},
-						"total":   0,
-					})
-					return
-				}
-				perusahaanID = userPerusahaanID
+			if userRole != "admin" && (userPerusahaanID == "" || userPerusahaanID == "null") {
+				utils.RespondJSON(w, 200, map[string]interface{}{
+					"message": "Berhasil mengambil data",
+					"data":    []dto.JawabanIdentifikasiResponse{},
+					"total":   0,
+				})
+				return
 			}
 
-			if perusahaanID != "" {
-				h.handleGetByPerusahaan(w, r, perusahaanID)
+			if ikasID != "" {
+				h.handleGetByIkasID(w, r, ikasID)
 			} else if pertanyaanID != "" {
 				idInt, err := utils.StringToInt(pertanyaanID)
 				if err != nil {
@@ -111,11 +109,11 @@ func (h *JawabanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, _ *http
 	})
 }
 
-func (h *JawabanIdentifikasiHandler) handleGetByPerusahaan(w http.ResponseWriter, _ *http.Request, perusahaanID string) {
-	data, err := h.service.GetByPerusahaan(perusahaanID)
+func (h *JawabanIdentifikasiHandler) handleGetByIkasID(w http.ResponseWriter, _ *http.Request, ikasID string) {
+	data, err := h.service.GetByIkasID(ikasID)
 	if err != nil {
 		rollbar.Error(err)
-		if err.Error() == "format perusahaan_id tidak valid" {
+		if err.Error() == "format ikas_id tidak valid" {
 			utils.RespondError(w, 400, err.Error())
 		} else {
 			utils.RespondError(w, 500, err.Error())
@@ -216,16 +214,16 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 		switch err.Error() {
 		case "pertanyaan_identifikasi_id tidak boleh kosong",
 			"format pertanyaan_identifikasi_id tidak valid",
-			"perusahaan_id tidak boleh kosong",
-			"format perusahaan_id tidak valid",
+			"ikas_id tidak boleh kosong",
+			"format ikas_id tidak valid",
 			"jawaban_identifikasi tidak boleh kosong",
 			"validasi hanya boleh diisi jika evidence ada",
 			"validasi hanya boleh berisi 'yes' atau 'no'":
 			utils.RespondError(w, 400, err.Error())
 		case "pertanyaan_identifikasi_id tidak ditemukan",
-			"perusahaan_id tidak ditemukan":
+			"ikas_id tidak ditemukan":
 			utils.RespondError(w, 404, err.Error())
-		case "pertanyaan ini sudah pernah diisi oleh perusahaan Anda":
+		case "pertanyaan ini sudah pernah diisi untuk asesmen ini":
 			utils.RespondError(w, 409, err.Error())
 		default:
 			utils.RespondError(w, 500, err.Error())

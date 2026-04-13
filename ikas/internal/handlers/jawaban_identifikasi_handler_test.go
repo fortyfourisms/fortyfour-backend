@@ -65,7 +65,7 @@ func (m *mockJawabanIdentifikasiRepository) GetByID(id int) (*dto.JawabanIdentif
 	}
 	return args.Get(0).(*dto.JawabanIdentifikasiResponse), args.Error(1)
 }
-func (m *mockJawabanIdentifikasiRepository) GetByPerusahaan(perusahaanID string) ([]dto.JawabanIdentifikasiResponse, error) {
+func (m *mockJawabanIdentifikasiRepository) GetByIkasID(perusahaanID string) ([]dto.JawabanIdentifikasiResponse, error) {
 	args := m.Called(perusahaanID)
 	return args.Get(0).([]dto.JawabanIdentifikasiResponse), args.Error(1)
 }
@@ -85,7 +85,7 @@ func (m *mockJawabanIdentifikasiRepository) CheckPertanyaanExists(id int) (bool,
 	args := m.Called(id)
 	return args.Get(0).(bool), args.Error(1)
 }
-func (m *mockJawabanIdentifikasiRepository) CheckPerusahaanExists(id string) (bool, error) {
+func (m *mockJawabanIdentifikasiRepository) CheckIkasExists(id string) (bool, error) {
 	args := m.Called(id)
 	return args.Get(0).(bool), args.Error(1)
 }
@@ -197,12 +197,12 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Create_Success(t *testing.T) {
 
 	createReq := dto.CreateJawabanIdentifikasiRequest{
 		PertanyaanIdentifikasiID: 1,
-		PerusahaanID:             "550e8400-e29b-41d4-a716-446655440000",
+		IkasID:             "550e8400-e29b-41d4-a716-446655440000",
 		JawabanIdentifikasi:      jidFloat64Ptr(3.0),
 	}
 
 	repo.On("CheckPertanyaanExists", 1).Return(true, nil)
-	repo.On("CheckPerusahaanExists", "550e8400-e29b-41d4-a716-446655440000").Return(true, nil)
+	repo.On("CheckIkasExists", "550e8400-e29b-41d4-a716-446655440000").Return(true, nil)
 	repo.On("CheckDuplicate", "550e8400-e29b-41d4-a716-446655440000", 1, 0).Return(false, nil)
 	producer.On("PublishJawabanIdentifikasiCreated", mock.Anything, mock.Anything).Return(nil)
 
@@ -229,7 +229,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Create_ValidationError(t *testing.
 
 	createReq := dto.CreateJawabanIdentifikasiRequest{
 		PertanyaanIdentifikasiID: 1,
-		PerusahaanID:             "550e8400-e29b-41d4-a716-446655440000",
+		IkasID:             "550e8400-e29b-41d4-a716-446655440000",
 	}
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/jawaban-identifikasi", bytes.NewReader(body))
@@ -248,7 +248,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Update_Success(t *testing.T) {
 		JawabanIdentifikasi: jidFloat64Ptr(4.0),
 	}
 
-	existing := &dto.JawabanIdentifikasiResponse{ID: 1, PerusahaanID: "uuid1", JawabanIdentifikasi: jidFloat64Ptr(3.0)}
+	existing := &dto.JawabanIdentifikasiResponse{ID: 1, IkasID: "uuid1", JawabanIdentifikasi: jidFloat64Ptr(3.0)}
 	repo.On("GetByID", 1).Return(existing, nil)
 	ikasRepo.On("GetIDByPerusahaanID", "uuid1").Return("ikas1", nil)
 	producer.On("PublishJawabanIdentifikasiUpdated", mock.Anything, mock.Anything).Return(nil)
@@ -294,7 +294,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	producer := new(mockJawabanIdentifikasiProducer)
 	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, producer)
 
-	repo.On("GetByID", 1).Return(&dto.JawabanIdentifikasiResponse{ID: 1, PerusahaanID: "uuid1"}, nil)
+	repo.On("GetByID", 1).Return(&dto.JawabanIdentifikasiResponse{ID: 1, IkasID: "uuid1"}, nil)
 	ikasRepo.On("GetIDByPerusahaanID", "uuid1").Return("ikas1", nil)
 	producer.On("PublishJawabanIdentifikasiDeleted", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)

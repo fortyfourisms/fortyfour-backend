@@ -14,7 +14,7 @@ func NewProteksiRepository(db *sql.DB) *ProteksiRepository {
 }
 
 func (r *ProteksiRepository) GetAll() ([]models.Proteksi, error) {
-	query := `SELECT id, perusahaan_id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
+	query := `SELECT id, ikas_id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
 	          nilai_subdomain3, nilai_subdomain4, nilai_subdomain5, nilai_subdomain6 
 	          FROM proteksi 
 	          ORDER BY id DESC`
@@ -30,7 +30,7 @@ func (r *ProteksiRepository) GetAll() ([]models.Proteksi, error) {
 		var proteksi models.Proteksi
 		err := rows.Scan(
 			&proteksi.ID,
-			&proteksi.PerusahaanID,
+			&proteksi.IkasID,
 			&proteksi.NilaiProteksi,
 			&proteksi.NilaiSubdomain1,
 			&proteksi.NilaiSubdomain2,
@@ -48,14 +48,14 @@ func (r *ProteksiRepository) GetAll() ([]models.Proteksi, error) {
 	return proteksiList, nil
 }
 
-func (r *ProteksiRepository) GetByPerusahaan(perusahaanID string) ([]models.Proteksi, error) {
-	query := `SELECT id, perusahaan_id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
+func (r *ProteksiRepository) GetByIkasID(ikasID string) ([]models.Proteksi, error) {
+	query := `SELECT id, ikas_id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
 	          nilai_subdomain3, nilai_subdomain4, nilai_subdomain5, nilai_subdomain6 
 	          FROM proteksi 
-	          WHERE perusahaan_id = ?
+	          WHERE ikas_id = ?
 	          ORDER BY id DESC`
 
-	rows, err := r.db.Query(query, perusahaanID)
+	rows, err := r.db.Query(query, ikasID)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (r *ProteksiRepository) GetByPerusahaan(perusahaanID string) ([]models.Prot
 		var proteksi models.Proteksi
 		err := rows.Scan(
 			&proteksi.ID,
-			&proteksi.PerusahaanID,
+			&proteksi.IkasID,
 			&proteksi.NilaiProteksi,
 			&proteksi.NilaiSubdomain1,
 			&proteksi.NilaiSubdomain2,
@@ -86,14 +86,14 @@ func (r *ProteksiRepository) GetByPerusahaan(perusahaanID string) ([]models.Prot
 
 func (r *ProteksiRepository) GetByID(id string) (*models.Proteksi, error) {
 	var proteksi models.Proteksi
-	query := `SELECT id, perusahaan_id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
+	query := `SELECT id, ikas_id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
 	          nilai_subdomain3, nilai_subdomain4, nilai_subdomain5, nilai_subdomain6 
 	          FROM proteksi 
 	          WHERE id = ?`
 
 	err := r.db.QueryRow(query, id).Scan(
 		&proteksi.ID,
-		&proteksi.PerusahaanID,
+		&proteksi.IkasID,
 		&proteksi.NilaiProteksi,
 		&proteksi.NilaiSubdomain1,
 		&proteksi.NilaiSubdomain2,

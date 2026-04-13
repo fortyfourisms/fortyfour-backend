@@ -13,17 +13,17 @@ type JawabanGulihRepositoryInterface interface {
 	Create(req dto.CreateJawabanGulihRequest) (int64, error)
 	GetAll() ([]dto.JawabanGulihResponse, error)
 	GetByID(id int) (*dto.JawabanGulihResponse, error)
-	GetByPerusahaan(perusahaanID string) ([]dto.JawabanGulihResponse, error)
+	GetByIkasID(ikasID string) ([]dto.JawabanGulihResponse, error)
 	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanGulihResponse, error)
 	Update(id int, req dto.UpdateJawabanGulihRequest) error
 	Delete(id int) error
-	CheckPertanyaanExists(id int) (bool, error)
-	CheckPerusahaanExists(id string) (bool, error)
-	CheckDuplicate(perusahaanID string, pertanyaanID int, excludeID int) (bool, error)
-	RecalculateGulih(perusahaanID string) error
+	CheckPertanyaanExists(pertanyaanID int) (bool, error)
+	CheckIkasExists(ikasID string) (bool, error)
+	CheckDuplicate(ikasID string, pertanyaanID int, excludeID int) (bool, error)
+	RecalculateGulih(ikasID string) error
 	UpsertToBuffer(req dto.CreateJawabanGulihRequest) error
-	GetBufferCount(perusahaanID string) (int, error)
-	FlushBuffer(perusahaanID string) error
+	GetBufferCount(ikasID string) (int, error)
+	FlushBuffer(ikasID string) error
 }
 
 type JawabanGulihRepository struct {
@@ -37,7 +37,7 @@ func NewJawabanGulihRepository(db *sql.DB) *JawabanGulihRepository {
 const jawabanGulihSelectQuery = `
 	SELECT 
 		jg.id, 
-		jg.perusahaan_id, 
+		jg.ikas_id, 
 		jg.jawaban_gulih, 
 		jg.evidence, 
 		jg.validasi, 
@@ -61,7 +61,7 @@ func scanJawabanGulih(row interface {
 	var item dto.JawabanGulihResponse
 	err := row.Scan(
 		&item.ID,
-		&item.PerusahaanID,
+		&item.IkasID,
 		&item.JawabanGulih,
 		&item.Evidence,
 		&item.Validasi,
@@ -82,12 +82,12 @@ func scanJawabanGulih(row interface {
 
 func (r *JawabanGulihRepository) Create(req dto.CreateJawabanGulihRequest) (int64, error) {
 	query := `INSERT INTO jawaban_gulih 
-		(pertanyaan_gulih_id, perusahaan_id, jawaban_gulih, evidence, validasi, keterangan)
+		(pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan)
 		VALUES (?, ?, ?, ?, ?, ?)`
 
-	result, err := r.db.Exec(query,
+	res, err := r.db.Exec(query,
 		req.PertanyaanGulihID,
-		req.PerusahaanID,
+		req.IkasID,
 		req.JawabanGulih,
 		req.Evidence,
 		req.Validasi,
@@ -98,7 +98,7 @@ func (r *JawabanGulihRepository) Create(req dto.CreateJawabanGulihRequest) (int6
 		return 0, err
 	}
 
-	return result.LastInsertId()
+	return res.LastInsertId()
 }
 
 func (r *JawabanGulihRepository) GetAll() ([]dto.JawabanGulihResponse, error) {
@@ -137,9 +137,10 @@ func (r *JawabanGulihRepository) GetByID(id int) (*dto.JawabanGulihResponse, err
 	return &item, nil
 }
 
-func (r *JawabanGulihRepository) GetByPerusahaan(perusahaanID string) ([]dto.JawabanGulihResponse, error) {
-	query := jawabanGulihSelectQuery + ` WHERE jg.perusahaan_id = ? ORDER BY jg.created_at ASC`
-	rows, err := r.db.Query(query, perusahaanID)
+func (r *JawabanGulihRepository) GetByIkasID(ikasID string) ([]dto.JawabanGulihResponse, error) {
+	query := jawabanGulihSelectQuery + ` WHERE jg.ikas_id = ? ORDER BY jg.created_at ASC`
+
+	rows, err := r.db.Query(query, ikasID)
 	if err != nil {
 		rollbar.Error(err)
 		return nil, err
@@ -224,9 +225,9 @@ func (r *JawabanGulihRepository) Delete(id int) error {
 	return err
 }
 
-func (r *JawabanGulihRepository) CheckPertanyaanExists(id int) (bool, error) {
+func (r *JawabanGulihRepository) CheckPertanyaanExists(pertanyaanID int) (bool, error) {
 	var count int
-	err := r.db.QueryRow(`SELECT COUNT(*) FROM pertanyaan_gulih WHERE id = ?`, id).Scan(&count)
+	err := r.db.QueryRow(`SELECT COUNT(*) FROM pertanyaan_gulih WHERE id = ?`, pertanyaanID).Scan(&count)
 	if err != nil {
 		rollbar.Error(err)
 		return false, err
@@ -234,9 +235,9 @@ func (r *JawabanGulihRepository) CheckPertanyaanExists(id int) (bool, error) {
 	return count > 0, nil
 }
 
-func (r *JawabanGulihRepository) CheckPerusahaanExists(id string) (bool, error) {
+func (r *JawabanGulihRepository) CheckIkasExists(ikasID string) (bool, error) {
 	var count int
-	err := r.db.QueryRow(`SELECT COUNT(*) FROM perusahaan WHERE id = ?`, id).Scan(&count)
+	err := r.db.QueryRow(`SELECT COUNT(*) FROM ikas WHERE id = ?`, ikasID).Scan(&count)
 	if err != nil {
 		rollbar.Error(err)
 		return false, err
@@ -244,10 +245,12 @@ func (r *JawabanGulihRepository) CheckPerusahaanExists(id string) (bool, error) 
 	return count > 0, nil
 }
 
-func (r *JawabanGulihRepository) CheckDuplicate(perusahaanID string, pertanyaanID int, excludeID int) (bool, error) {
+func (r *JawabanGulihRepository) CheckDuplicate(ikasID string, pertanyaanID int, excludeID int) (bool, error) {
 	var count int
-	query := `SELECT COUNT(*) FROM jawaban_gulih WHERE perusahaan_id = ? AND pertanyaan_gulih_id = ?`
-	args := []interface{}{perusahaanID, pertanyaanID}
+
+	query := `SELECT COUNT(*) FROM jawaban_gulih
+		WHERE ikas_id = ? AND pertanyaan_gulih_id = ?`
+	args := []interface{}{ikasID, pertanyaanID}
 
 	if excludeID != 0 {
 		query += ` AND id != ?`
@@ -262,18 +265,19 @@ func (r *JawabanGulihRepository) CheckDuplicate(perusahaanID string, pertanyaanI
 	return count > 0, nil
 }
 
-func (r *JawabanGulihRepository) RecalculateGulih(perusahaanID string) error {
+func (r *JawabanGulihRepository) RecalculateGulih(ikasID string) error {
+	// Query rata-rata jawaban per kategori_id untuk assessment tertentu
 	query := `
 		SELECT k.id AS kategori_id, ROUND(AVG(jg.jawaban_gulih), 2) AS avg_nilai
 		FROM jawaban_gulih jg
 		JOIN pertanyaan_gulih pg ON jg.pertanyaan_gulih_id = pg.id
 		JOIN sub_kategori sk ON pg.sub_kategori_id = sk.id
 		JOIN kategori k ON sk.kategori_id = k.id
-		WHERE jg.perusahaan_id = ? AND jg.jawaban_gulih IS NOT NULL
+		WHERE jg.ikas_id = ? AND jg.jawaban_gulih IS NOT NULL
 		GROUP BY k.id
 		ORDER BY k.id`
 
-	rows, err := r.db.Query(query, perusahaanID)
+	rows, err := r.db.Query(query, ikasID)
 	if err != nil {
 		rollbar.Error(err)
 		return err
@@ -301,7 +305,7 @@ func (r *JawabanGulihRepository) RecalculateGulih(perusahaanID string) error {
 
 	upsertQuery := `
 		INSERT INTO gulih 
-			(perusahaan_id, nilai_gulih, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4)
+			(ikas_id, nilai_gulih, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4)
 		VALUES (?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE
 			nilai_gulih = VALUES(nilai_gulih),
@@ -311,7 +315,7 @@ func (r *JawabanGulihRepository) RecalculateGulih(perusahaanID string) error {
 			nilai_subdomain4 = VALUES(nilai_subdomain4)`
 
 	_, err = r.db.Exec(upsertQuery,
-		perusahaanID,
+		ikasID,
 		nilaiGulih,
 		subdomain[15], subdomain[16], subdomain[17], subdomain[18],
 	)
@@ -321,13 +325,13 @@ func (r *JawabanGulihRepository) RecalculateGulih(perusahaanID string) error {
 	}
 
 	var gulihID int
-	err = r.db.QueryRow(`SELECT id FROM gulih WHERE perusahaan_id = ?`, perusahaanID).Scan(&gulihID)
+	err = r.db.QueryRow(`SELECT id FROM gulih WHERE ikas_id = ?`, ikasID).Scan(&gulihID)
 	if err != nil {
 		rollbar.Error(err)
 		return err
 	}
 
-	_, err = r.db.Exec(`UPDATE ikas SET id_gulih = ? WHERE id_perusahaan = ?`, gulihID, perusahaanID)
+	_, err = r.db.Exec(`UPDATE ikas SET id_gulih = ? WHERE id = ?`, gulihID, ikasID)
 	if err != nil {
 		rollbar.Error(err)
 		return err
@@ -345,11 +349,11 @@ func (r *JawabanGulihRepository) RecalculateGulih(perusahaanID string) error {
 			COALESCE(det.nilai_deteksi, 0) * 0.25 + 
 			COALESCE(g.nilai_gulih, 0) * 0.20
 		, 2)
-		WHERE i.id_perusahaan = ? AND (
+		WHERE i.id = ? AND (
 			iden.id IS NOT NULL OR prot.id IS NOT NULL OR det.id IS NOT NULL OR g.id IS NOT NULL
 		)`
 
-	_, err = r.db.Exec(updateKematanganQuery, perusahaanID)
+	_, err = r.db.Exec(updateKematanganQuery, ikasID)
 	if err != nil {
 		rollbar.Error(err)
 		return err
@@ -360,7 +364,7 @@ func (r *JawabanGulihRepository) RecalculateGulih(perusahaanID string) error {
 
 func (r *JawabanGulihRepository) UpsertToBuffer(req dto.CreateJawabanGulihRequest) error {
 	query := `INSERT INTO jawaban_gulih_buffer 
-		(pertanyaan_gulih_id, perusahaan_id, jawaban_gulih, evidence, validasi, keterangan)
+		(pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan)
 		VALUES (?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE 
 		jawaban_gulih = VALUES(jawaban_gulih),
@@ -370,7 +374,7 @@ func (r *JawabanGulihRepository) UpsertToBuffer(req dto.CreateJawabanGulihReques
 
 	_, err := r.db.Exec(query,
 		req.PertanyaanGulihID,
-		req.PerusahaanID,
+		req.IkasID,
 		req.JawabanGulih,
 		req.Evidence,
 		req.Validasi,
@@ -379,14 +383,14 @@ func (r *JawabanGulihRepository) UpsertToBuffer(req dto.CreateJawabanGulihReques
 	return err
 }
 
-func (r *JawabanGulihRepository) GetBufferCount(perusahaanID string) (int, error) {
+func (r *JawabanGulihRepository) GetBufferCount(ikasID string) (int, error) {
 	var count int
-	query := `SELECT COUNT(*) FROM jawaban_gulih_buffer WHERE perusahaan_id = ?`
-	err := r.db.QueryRow(query, perusahaanID).Scan(&count)
+	query := `SELECT COUNT(*) FROM jawaban_gulih_buffer WHERE ikas_id = ?`
+	err := r.db.QueryRow(query, ikasID).Scan(&count)
 	return count, err
 }
 
-func (r *JawabanGulihRepository) FlushBuffer(perusahaanID string) error {
+func (r *JawabanGulihRepository) FlushBuffer(ikasID string) error {
 	tx, err := r.db.Begin()
 	if err != nil {
 		return err
@@ -394,20 +398,20 @@ func (r *JawabanGulihRepository) FlushBuffer(perusahaanID string) error {
 	defer tx.Rollback()
 
 	moveQuery := `INSERT INTO jawaban_gulih 
-		(pertanyaan_gulih_id, perusahaan_id, jawaban_gulih, evidence, validasi, keterangan)
-		SELECT pertanyaan_gulih_id, perusahaan_id, jawaban_gulih, evidence, validasi, keterangan
-		FROM jawaban_gulih_buffer WHERE perusahaan_id = ?
+		(pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan)
+		SELECT pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan
+		FROM jawaban_gulih_buffer WHERE ikas_id = ?
 		ON DUPLICATE KEY UPDATE 
 		jawaban_gulih = VALUES(jawaban_gulih),
 		evidence = VALUES(evidence),
 		validasi = VALUES(validasi),
 		keterangan = VALUES(keterangan)`
 
-	if _, err := tx.Exec(moveQuery, perusahaanID); err != nil {
+	if _, err := tx.Exec(moveQuery, ikasID); err != nil {
 		return err
 	}
 
-	if _, err := tx.Exec(`DELETE FROM jawaban_gulih_buffer WHERE perusahaan_id = ?`, perusahaanID); err != nil {
+	if _, err := tx.Exec(`DELETE FROM jawaban_gulih_buffer WHERE ikas_id = ?`, ikasID); err != nil {
 		return err
 	}
 

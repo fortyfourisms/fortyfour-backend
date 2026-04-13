@@ -36,13 +36,21 @@ func NewIkasService(repo repository.IkasRepositoryInterface, producer IkasProduc
 }
 
 func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id string, userID string) error {
-	// Check if IKAS for this company already exists
-	exists, err := s.repo.CheckExistsByPerusahaanID(req.IDPerusahaan)
+	// Extract year from Tanggal for yearly uniqueness check
+	var tahun int
+	if t, err := time.Parse("2006-01-02", req.Tanggal); err == nil {
+		tahun = t.Year()
+	} else {
+		// Fallback to current year if format is invalid (should be validated by now)
+		tahun = time.Now().Year()
+	}
+
+	exists, err := s.repo.CheckExistsByPerusahaanIDAndYear(req.IDPerusahaan, tahun)
 	if err != nil {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("Data IKAS untuk perusahaan ini sudah ada")
+		return fmt.Errorf("Data IKAS untuk perusahaan ini di tahun %d sudah ada", tahun)
 	}
 
 	event := dto_event.IkasCreatedEvent{
@@ -217,13 +225,13 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 	}
 
 	// 2. Publish events for each subdomain to trigger automatic processing
-	perusahaanID := excelData.IkasRequest.IDPerusahaan
-
+	// pass NEW ID (ikasID) instead of perusahaanID
+	
 	// Identifikasi
 	for _, ans := range excelData.JawabanIdentifikasi {
 		event := dto.CreateJawabanIdentifikasiRequest{
 			PertanyaanIdentifikasiID: ans.PertanyaanID,
-			PerusahaanID:             perusahaanID,
+			IkasID:                   newID,
 			JawabanIdentifikasi:      &ans.Jawaban,
 		}
 		s.producer.PublishJawabanIdentifikasiCreated(context.Background(), event)
@@ -233,7 +241,7 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 	for _, ans := range excelData.JawabanProteksi {
 		event := dto.CreateJawabanProteksiRequest{
 			PertanyaanProteksiID: ans.PertanyaanID,
-			PerusahaanID:         perusahaanID,
+			IkasID:               newID,
 			JawabanProteksi:      &ans.Jawaban,
 		}
 		s.producer.PublishJawabanProteksiCreated(context.Background(), event)
@@ -243,7 +251,7 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 	for _, ans := range excelData.JawabanDeteksi {
 		event := dto.CreateJawabanDeteksiRequest{
 			PertanyaanDeteksiID: ans.PertanyaanID,
-			PerusahaanID:        perusahaanID,
+			IkasID:              newID,
 			JawabanDeteksi:      &ans.Jawaban,
 		}
 		s.producer.PublishJawabanDeteksiCreated(context.Background(), event)
@@ -253,7 +261,7 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 	for _, ans := range excelData.JawabanGulih {
 		event := dto.CreateJawabanGulihRequest{
 			PertanyaanGulihID: ans.PertanyaanID,
-			PerusahaanID:      perusahaanID,
+			IkasID:            newID,
 			JawabanGulih:      &ans.Jawaban,
 		}
 		s.producer.PublishJawabanGulihCreated(context.Background(), event)

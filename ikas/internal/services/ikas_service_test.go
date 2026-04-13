@@ -27,6 +27,13 @@ func (m *mockIkasRepo) CheckExistsByPerusahaanID(idPerusahaan string) (bool, err
 	return false, nil
 }
 
+func (m *mockIkasRepo) CheckExistsByPerusahaanIDAndYear(id string, year int) (bool, error) {
+	if id == "perusahaan-ada" {
+		return true, nil
+	}
+	return false, nil
+}
+
 func (m *mockIkasRepo) GetIDByPerusahaanID(idPerusahaan string) (string, error) {
 	return "ikas-id", nil
 }
@@ -102,7 +109,8 @@ func TestIkasService_Create_Duplicate(t *testing.T) {
 
 	err := service.Create(context.Background(), req, "ikas-id", "test-user")
 	assert.Error(t, err)
-	assert.Equal(t, "Data IKAS untuk perusahaan ini sudah ada", err.Error())
+	// Update expected error message to match yearly validation
+	assert.Contains(t, err.Error(), "sudah ada")
 }
 
 /*

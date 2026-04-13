@@ -14,7 +14,7 @@ type JawabanProteksiUpdatedEvent struct {
 
 // JawabanProteksiDeletedEvent
 type JawabanProteksiDeletedEvent struct {
-	ID           int       `json:"id"`
-	PerusahaanID string    `json:"perusahaan_id"`
-	DeletedAt    time.Time `json:"deleted_at"`
+	ID        int       `json:"id"`
+	IkasID    string    `json:"ikas_id"`
+	DeletedAt time.Time `json:"deleted_at"`
 }

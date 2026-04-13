@@ -15,7 +15,7 @@ func NewDeteksiRepository(db *sql.DB) *DeteksiRepository {
 
 func (r *DeteksiRepository) GetAll() ([]models.Deteksi, error) {
 	rows, err := r.db.Query(`
-		SELECT id, perusahaan_id, nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3 
+		SELECT id, ikas_id, nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3 
 		FROM deteksi
 	`)
 	if err != nil {
@@ -28,7 +28,7 @@ func (r *DeteksiRepository) GetAll() ([]models.Deteksi, error) {
 		var d models.Deteksi
 		rows.Scan(
 			&d.ID,
-			&d.PerusahaanID,
+			&d.IkasID,
 			&d.NilaiDeteksi,
 			&d.NilaiSubdomain1,
 			&d.NilaiSubdomain2,
@@ -39,10 +39,10 @@ func (r *DeteksiRepository) GetAll() ([]models.Deteksi, error) {
 	return result, nil
 }
 
-func (r *DeteksiRepository) GetByPerusahaan(perusahaanID string) ([]models.Deteksi, error) {
+func (r *DeteksiRepository) GetByIkasID(ikasID string) ([]models.Deteksi, error) {
 	rows, err := r.db.Query(`
-		SELECT id, perusahaan_id, nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3 
-		FROM deteksi WHERE perusahaan_id = ?`, perusahaanID)
+		SELECT id, ikas_id, nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3 
+		FROM deteksi WHERE ikas_id = ?`, ikasID)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (r *DeteksiRepository) GetByPerusahaan(perusahaanID string) ([]models.Detek
 		var d models.Deteksi
 		rows.Scan(
 			&d.ID,
-			&d.PerusahaanID,
+			&d.IkasID,
 			&d.NilaiDeteksi,
 			&d.NilaiSubdomain1,
 			&d.NilaiSubdomain2,
@@ -66,13 +66,13 @@ func (r *DeteksiRepository) GetByPerusahaan(perusahaanID string) ([]models.Detek
 
 func (r *DeteksiRepository) GetByID(id string) (*models.Deteksi, error) {
 	row := r.db.QueryRow(`
-		SELECT id, perusahaan_id, nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3
+		SELECT id, ikas_id, nilai_deteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3
 		FROM deteksi WHERE id = ?`, id)
 
 	var d models.Deteksi
 	err := row.Scan(
 		&d.ID,
-		&d.PerusahaanID,
+		&d.IkasID,
 		&d.NilaiDeteksi,
 		&d.NilaiSubdomain1,
 		&d.NilaiSubdomain2,
