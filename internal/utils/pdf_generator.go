@@ -311,6 +311,13 @@ func printRows(pdf *fpdf.Fpdf, rows [][]string) {
 	}
 }
 
+func statusAda(s string) string {
+	if s != "" {
+		return "Ada"
+	}
+	return "-"
+}
+
 func printCsirtBlock(pdf *fpdf.Fpdf, csirt dto.CsirtResponse) {
 	printSectionTitle(pdf, "Informasi CSIRT")
 
@@ -319,29 +326,14 @@ func printCsirtBlock(pdf *fpdf.Fpdf, csirt dto.CsirtResponse) {
 		namaPerusahaan = csirt.Perusahaan.ID
 	}
 
+	email := "-"
+	if csirt.EmailCsirt != nil && *csirt.EmailCsirt != "" {
+		email = *csirt.EmailCsirt
+	}
+
 	telepon := "-"
 	if csirt.TeleponCsirt != nil && *csirt.TeleponCsirt != "" {
 		telepon = *csirt.TeleponCsirt
-	}
-
-	fileRFC := "-"
-	if csirt.FileRFC2350 != "" {
-		fileRFC = csirt.FileRFC2350
-	}
-
-	filePGP := "-"
-	if csirt.FilePublicKeyPGP != "" {
-		filePGP = csirt.FilePublicKeyPGP
-	}
-
-	photo := "-"
-	if csirt.PhotoCsirt != "" {
-		photo = csirt.PhotoCsirt
-	}
-
-	fileStr := "-"
-	if csirt.FileStr != "" {
-		fileStr = csirt.FileStr
 	}
 
 	tglReg := "-"
@@ -358,11 +350,12 @@ func printCsirtBlock(pdf *fpdf.Fpdf, csirt dto.CsirtResponse) {
 		{"Perusahaan", namaPerusahaan},
 		{"Nama CSIRT", csirt.NamaCsirt},
 		{"Website CSIRT", csirt.WebCsirt},
+		{"Email CSIRT", email},
 		{"Telepon CSIRT", telepon},
-		{"Photo CSIRT", photo},
-		{"File RFC2350", fileRFC},
-		{"File Public Key PGP", filePGP},
-		{"File STR", fileStr},
+		{"Photo CSIRT", statusAda(csirt.PhotoCsirt)},
+		{"File RFC2350", statusAda(csirt.FileRFC2350)},
+		{"File Public Key PGP", statusAda(csirt.FilePublicKeyPGP)},
+		{"File STR (Sertifikat)", statusAda(csirt.FileStr)},
 	}
 	printRows(pdf, rows)
 
