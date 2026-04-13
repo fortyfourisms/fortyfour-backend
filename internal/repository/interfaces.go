@@ -135,13 +135,31 @@ type MateriRepositoryInterface interface {
 	Create(materi *models.Materi) error
 	FindByID(id string) (*models.Materi, error)
 	FindByKelas(idKelas string) ([]models.Materi, error)
-	// FindByKelasBeforeUrutan dipakai untuk cek prerequisite kuis:
-	// ambil semua materi dalam kelas dengan urutan < urutanKuis
-	FindByKelasBeforeUrutan(idKelas string, urutan int) ([]models.Materi, error)
 	Update(materi *models.Materi) error
 	Delete(id string) error
 	// ReorderUrutan dipakai saat materi dihapus agar urutan tetap rapi
 	ReorderUrutan(idKelas string) error
+}
+
+// ── File Pendukung ───────────────────────────────────────────────────────────
+
+type FilePendukungRepositoryInterface interface {
+	Create(fp *models.FilePendukung) error
+	FindByMateri(idMateri string) ([]models.FilePendukung, error)
+	FindByID(id string) (*models.FilePendukung, error)
+	Delete(id string) error
+}
+
+// ── Kuis ─────────────────────────────────────────────────────────────────────
+
+type KuisRepositoryInterface interface {
+	Create(kuis *models.Kuis) error
+	FindByID(id string) (*models.Kuis, error)
+	FindByKelas(idKelas string) ([]models.Kuis, error)
+	FindByMateri(idMateri string) (*models.Kuis, error)
+	FindFinalByKelas(idKelas string) (*models.Kuis, error)
+	Update(kuis *models.Kuis) error
+	Delete(id string) error
 }
 
 // ── Soal ─────────────────────────────────────────────────────────────────────
@@ -149,7 +167,7 @@ type MateriRepositoryInterface interface {
 type SoalRepositoryInterface interface {
 	Create(soal *models.Soal, pilihan []models.PilihanJawaban) error
 	FindByID(id string) (*models.Soal, error)
-	FindByMateri(idMateri string) ([]models.Soal, error)
+	FindByKuis(idKuis string) ([]models.Soal, error)
 	Update(soal *models.Soal, pilihan []models.PilihanJawaban) error
 	Delete(id string) error
 
@@ -166,8 +184,8 @@ type ProgressRepositoryInterface interface {
 	Upsert(progress *models.UserMateriProgress) error
 	FindByUserAndMateri(idUser, idMateri string) (*models.UserMateriProgress, error)
 	FindByUserAndKelas(idUser, idKelas string) ([]models.UserMateriProgress, error)
-	// HasCompletedAnyMedia cek apakah user sudah selesai minimal 1 video/pdf dalam kelas
-	HasCompletedAnyMedia(idUser, idKelas string) (bool, error)
+	// HasCompletedAllMateri cek apakah user sudah selesai semua materi dalam kelas
+	HasCompletedAllMateri(idUser, idKelas string) (bool, error)
 }
 
 // ── Kuis Attempt ─────────────────────────────────────────────────────────────
@@ -175,24 +193,45 @@ type ProgressRepositoryInterface interface {
 type KuisAttemptRepositoryInterface interface {
 	Create(attempt *models.KuisAttempt) error
 	FindByID(id string) (*models.KuisAttempt, error)
-	FindByUserAndMateri(idUser, idMateri string) ([]models.KuisAttempt, error)
-	// FindLatestByUserAndMateri untuk cek apakah ada attempt yang belum selesai
-	FindLatestByUserAndMateri(idUser, idMateri string) (*models.KuisAttempt, error)
-	Finish(id string, skor float64, totalBenar int, jawaban []models.KuisJawaban) error
+	FindByUserAndKuis(idUser, idKuis string) ([]models.KuisAttempt, error)
+	// FindLatestByUserAndKuis untuk cek apakah ada attempt yang belum selesai
+	FindLatestByUserAndKuis(idUser, idKuis string) (*models.KuisAttempt, error)
+	Finish(id string, skor float64, totalBenar int, isPassed bool, jawaban []models.KuisJawaban) error
+	// HasPassedAllKuisInKelas cek apakah user sudah lulus semua kuis (non-final) dalam kelas
+	HasPassedAllKuisInKelas(idUser, idKelas string) (bool, error)
 
 	// FindJawabanByAttempt untuk tampilkan detail hasil
 	FindJawabanByAttempt(idAttempt string) ([]models.KuisJawaban, error)
 }
 
-// ── Interface gabungan untuk LMS service ─────────────────────────────────────
+// ── Diskusi ──────────────────────────────────────────────────────────────────
 
-// Pastikan semua interface ini diimplementasikan di masing-masing repository file.
-// Contoh:
-//   var _ KelasRepositoryInterface   = (*KelasRepository)(nil)
-//   var _ MateriRepositoryInterface  = (*MateriRepository)(nil)
-//   var _ SoalRepositoryInterface    = (*SoalRepository)(nil)
-//   var _ ProgressRepositoryInterface = (*ProgressRepository)(nil)
-//   var _ KuisAttemptRepositoryInterface = (*KuisAttemptRepository)(nil)
+type DiskusiRepositoryInterface interface {
+	Create(diskusi *models.Diskusi) error
+	FindByMateri(idMateri string) ([]models.Diskusi, error)
+	FindByID(id string) (*models.Diskusi, error)
+	Update(diskusi *models.Diskusi) error
+	Delete(id string) error
+	// FindReplies untuk memuat replies secara nested
+	FindReplies(idParent string) ([]models.Diskusi, error)
+}
+
+// ── Catatan Pribadi ──────────────────────────────────────────────────────────
+
+type CatatanRepositoryInterface interface {
+	Upsert(catatan *models.CatatanPribadi) error
+	FindByUserAndMateri(idUser, idMateri string) (*models.CatatanPribadi, error)
+	Delete(id string) error
+}
+
+// ── Sertifikat ───────────────────────────────────────────────────────────────
+
+type SertifikatRepositoryInterface interface {
+	Create(sertifikat *models.Sertifikat) error
+	FindByUserAndKelas(idUser, idKelas string) (*models.Sertifikat, error)
+	FindByID(id string) (*models.Sertifikat, error)
+	FindByUser(idUser string) ([]models.Sertifikat, error)
+}
 
 // DTOnya tidak dipakai langsung di interface ini, tapi diimport
 // agar tetap terkompilasi jika ada helper yang butuh dto.

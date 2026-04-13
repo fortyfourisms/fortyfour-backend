@@ -26,9 +26,9 @@ func (r *SoalRepository) Create(soal *models.Soal, pilihan []models.PilihanJawab
 	defer tx.Rollback()
 
 	_, err = tx.Exec(
-		`INSERT INTO soal (id, id_materi, pertanyaan, urutan, created_at)
+		`INSERT INTO soal (id, id_kuis, pertanyaan, urutan, created_at)
 		 VALUES (?, ?, ?, ?, NOW())`,
-		soal.ID, soal.IDMateri, soal.Pertanyaan, soal.Urutan,
+		soal.ID, soal.IDKuis, soal.Pertanyaan, soal.Urutan,
 	)
 	if err != nil {
 		return err
@@ -50,7 +50,7 @@ func (r *SoalRepository) Create(soal *models.Soal, pilihan []models.PilihanJawab
 
 func (r *SoalRepository) FindByID(id string) (*models.Soal, error) {
 	row := r.db.QueryRow(
-		`SELECT id, id_materi, pertanyaan, urutan, created_at FROM soal WHERE id = ?`, id,
+		`SELECT id, id_kuis, pertanyaan, urutan, created_at FROM soal WHERE id = ?`, id,
 	)
 	soal, err := scanSoal(row)
 	if err != nil {
@@ -65,10 +65,10 @@ func (r *SoalRepository) FindByID(id string) (*models.Soal, error) {
 	return soal, nil
 }
 
-func (r *SoalRepository) FindByMateri(idMateri string) ([]models.Soal, error) {
+func (r *SoalRepository) FindByKuis(idKuis string) ([]models.Soal, error) {
 	rows, err := r.db.Query(
-		`SELECT id, id_materi, pertanyaan, urutan, created_at
-		 FROM soal WHERE id_materi = ? ORDER BY urutan ASC`, idMateri,
+		`SELECT id, id_kuis, pertanyaan, urutan, created_at
+		 FROM soal WHERE id_kuis = ? ORDER BY urutan ASC`, idKuis,
 	)
 	if err != nil {
 		return nil, err
@@ -78,7 +78,7 @@ func (r *SoalRepository) FindByMateri(idMateri string) ([]models.Soal, error) {
 	var soalList []models.Soal
 	for rows.Next() {
 		var s models.Soal
-		if err := rows.Scan(&s.ID, &s.IDMateri, &s.Pertanyaan, &s.Urutan, &s.CreatedAt); err != nil {
+		if err := rows.Scan(&s.ID, &s.IDKuis, &s.Pertanyaan, &s.Urutan, &s.CreatedAt); err != nil {
 			return nil, err
 		}
 		pilihan, err := r.findPilihanBySoal(s.ID)
@@ -179,7 +179,7 @@ func (r *SoalRepository) findPilihanBySoal(idSoal string) ([]models.PilihanJawab
 
 func scanSoal(row *sql.Row) (*models.Soal, error) {
 	var s models.Soal
-	err := row.Scan(&s.ID, &s.IDMateri, &s.Pertanyaan, &s.Urutan, &s.CreatedAt)
+	err := row.Scan(&s.ID, &s.IDKuis, &s.Pertanyaan, &s.Urutan, &s.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
