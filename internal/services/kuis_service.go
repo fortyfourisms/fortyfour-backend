@@ -13,74 +13,164 @@ import (
 )
 
 type KuisService struct {
-	repo         repository.KuisAttemptRepositoryInterface
+	attemptRepo  repository.KuisAttemptRepositoryInterface
 	soalRepo     repository.SoalRepositoryInterface
-	materiRepo   repository.MateriRepositoryInterface
+	kuisRepo     repository.KuisRepositoryInterface
 	progressRepo repository.ProgressRepositoryInterface
 	rc           cache.RedisInterface
 }
 
 func NewKuisService(
-	repo repository.KuisAttemptRepositoryInterface,
+	attemptRepo repository.KuisAttemptRepositoryInterface,
 	soalRepo repository.SoalRepositoryInterface,
-	materiRepo repository.MateriRepositoryInterface,
+	kuisRepo repository.KuisRepositoryInterface,
 	progressRepo repository.ProgressRepositoryInterface,
 	rc cache.RedisInterface,
 ) *KuisService {
 	return &KuisService{
-		repo:         repo,
+		attemptRepo:  attemptRepo,
 		soalRepo:     soalRepo,
-		materiRepo:   materiRepo,
+		kuisRepo:     kuisRepo,
 		progressRepo: progressRepo,
 		rc:           rc,
 	}
 }
 
-// ── Start Kuis ────────────────────────────────────────────────────────────────
+// ── Admin: CRUD Kuis ──────────────────────────────────────────────────────────
 
-// Start memvalidasi prerequisite lalu membuat attempt baru.
-// User harus sudah menyelesaikan minimal 1 video ATAU 1 pdf dalam kelas yang sama.
-func (s *KuisService) Start(userID, materiID string) (*dto.StartKuisResponse, error) {
-	// 1. Pastikan materi ada dan bertipe kuis
-	materi, err := s.materiRepo.FindByID(materiID)
+func (s *KuisService) CreateKuis(idKelas string, req dto.CreateKuisRequest) (*dto.KuisResponse, error) {
+	kuis := &models.Kuis{
+		ID:           uuid.New().String(),
+		IDKelas:      idKelas,
+		IDMateri:     req.IDMateri,
+		Judul:        req.Judul,
+		Deskripsi:    req.Deskripsi,
+		DurasiMenit:  req.DurasiMenit,
+		PassingGrade: req.PassingGrade,
+		IsFinal:      req.IsFinal,
+		Urutan:       req.Urutan,
+	}
+
+	// Validasi: hanya boleh ada 1 kuis final per kelas
+	if kuis.IsFinal {
+		existing, err := s.kuisRepo.FindFinalByKelas(idKelas)
+		if err == nil && existing != nil {
+			return nil, errors.New("sudah ada kuis akhir untuk kelas ini")
+		}
+		kuis.IDMateri = nil // kuis final tidak terikat ke materi
+	}
+
+	if err := s.kuisRepo.Create(kuis); err != nil {
+		return nil, err
+	}
+
+	return mapKuisToResponse(kuis), nil
+}
+
+func (s *KuisService) UpdateKuis(id string, req dto.UpdateKuisRequest) (*dto.KuisResponse, error) {
+	kuis, err := s.kuisRepo.FindByID(id)
 	if err != nil {
-		return nil, errors.New("materi tidak ditemukan")
-	}
-	if materi.Tipe != models.MateriTipeKuis {
-		return nil, errors.New("materi ini bukan bertipe kuis")
+		return nil, errors.New("kuis tidak ditemukan")
 	}
 
-	// 2. Cek prerequisite: user harus sudah selesai minimal 1 video/pdf dalam kelas
-	hasCompleted, err := s.progressRepo.HasCompletedAnyMedia(userID, materi.IDKelas)
+	if req.Judul != nil {
+		kuis.Judul = *req.Judul
+	}
+	if req.Deskripsi != nil {
+		kuis.Deskripsi = req.Deskripsi
+	}
+	if req.DurasiMenit != nil {
+		kuis.DurasiMenit = req.DurasiMenit
+	}
+	if req.PassingGrade != nil {
+		kuis.PassingGrade = *req.PassingGrade
+	}
+	if req.IsFinal != nil {
+		kuis.IsFinal = *req.IsFinal
+	}
+	if req.Urutan != nil {
+		kuis.Urutan = *req.Urutan
+	}
+
+	if err := s.kuisRepo.Update(kuis); err != nil {
+		return nil, err
+	}
+
+	return mapKuisToResponse(kuis), nil
+}
+
+func (s *KuisService) DeleteKuis(id string) error {
+	if _, err := s.kuisRepo.FindByID(id); err != nil {
+		return errors.New("kuis tidak ditemukan")
+	}
+	return s.kuisRepo.Delete(id)
+}
+
+func (s *KuisService) GetKuisByKelas(idKelas string) ([]dto.KuisResponse, error) {
+	kuisList, err := s.kuisRepo.FindByKelas(idKelas)
 	if err != nil {
 		return nil, err
 	}
-	if !hasCompleted {
-		return nil, errors.New("selesaikan setidaknya satu materi (video atau pdf) sebelum mengerjakan kuis")
+
+	result := make([]dto.KuisResponse, 0, len(kuisList))
+	for _, k := range kuisList {
+		k := k
+		result = append(result, *mapKuisToResponse(&k))
+	}
+	return result, nil
+}
+
+// ── User: Start Kuis ──────────────────────────────────────────────────────────
+
+// Start memvalidasi prerequisite lalu membuat attempt baru.
+func (s *KuisService) Start(userID, kuisID string) (*dto.StartKuisResponse, error) {
+	// 1. Pastikan kuis ada
+	kuis, err := s.kuisRepo.FindByID(kuisID)
+	if err != nil {
+		return nil, errors.New("kuis tidak ditemukan")
 	}
 
-	// 3. Cek apakah ada attempt yang belum selesai (belum di-submit)
-	latest, err := s.repo.FindLatestByUserAndMateri(userID, materiID)
+	// 2. Cek prerequisite untuk kuis akhir
+	if kuis.IsFinal {
+		// Semua materi harus selesai
+		allDone, err := s.progressRepo.HasCompletedAllMateri(userID, kuis.IDKelas)
+		if err != nil {
+			return nil, err
+		}
+		if !allDone {
+			return nil, errors.New("selesaikan semua materi sebelum mengerjakan kuis akhir")
+		}
+		// Semua kuis non-final harus lulus
+		allPassed, err := s.attemptRepo.HasPassedAllKuisInKelas(userID, kuis.IDKelas)
+		if err != nil {
+			return nil, err
+		}
+		if !allPassed {
+			return nil, errors.New("lulus semua kuis per-materi sebelum mengerjakan kuis akhir")
+		}
+	}
+
+	// 3. Cek apakah ada attempt yang belum selesai
+	latest, err := s.attemptRepo.FindLatestByUserAndKuis(userID, kuisID)
 	if err == nil && latest != nil && latest.FinishedAt == nil {
-		// Kembalikan attempt yang sudah ada + soal-soalnya
-		return s.buildStartResponse(latest.ID, materiID)
+		return s.buildStartResponse(latest.ID, kuisID)
 	}
 
 	// 4. Buat attempt baru
 	attempt := &models.KuisAttempt{
-		ID:       uuid.New().String(),
-		IDUser:   userID,
-		IDMateri: materiID,
+		ID:     uuid.New().String(),
+		IDUser: userID,
+		IDKuis: kuisID,
 	}
-	if err := s.repo.Create(attempt); err != nil {
+	if err := s.attemptRepo.Create(attempt); err != nil {
 		return nil, err
 	}
 
-	return s.buildStartResponse(attempt.ID, materiID)
+	return s.buildStartResponse(attempt.ID, kuisID)
 }
 
-func (s *KuisService) buildStartResponse(attemptID, materiID string) (*dto.StartKuisResponse, error) {
-	soalList, err := s.soalRepo.FindByMateri(materiID)
+func (s *KuisService) buildStartResponse(attemptID, kuisID string) (*dto.StartKuisResponse, error) {
+	soalList, err := s.soalRepo.FindByKuis(kuisID)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +178,6 @@ func (s *KuisService) buildStartResponse(attemptID, materiID string) (*dto.Start
 		return nil, errors.New("kuis ini belum memiliki soal")
 	}
 
-	// Map ke SoalUserResponse — is_correct disembunyikan
 	soalResp := make([]dto.SoalUserResponse, 0, len(soalList))
 	for _, soal := range soalList {
 		pilihan := make([]dto.PilihanUserResponse, 0, len(soal.Pilihan))
@@ -109,17 +198,16 @@ func (s *KuisService) buildStartResponse(attemptID, materiID string) (*dto.Start
 
 	return &dto.StartKuisResponse{
 		AttemptID: attemptID,
-		IDMateri:  materiID,
+		IDKuis:    kuisID,
 		Soal:      soalResp,
 	}, nil
 }
 
-// ── Submit Kuis ───────────────────────────────────────────────────────────────
+// ── User: Submit Kuis ─────────────────────────────────────────────────────────
 
-// Submit menerima jawaban user, menghitung skor, dan menyimpan hasilnya.
 func (s *KuisService) Submit(userID, attemptID string, req dto.SubmitKuisRequest) (*dto.KuisResultResponse, error) {
-	// 1. Validasi attempt milik user dan belum selesai
-	attempt, err := s.repo.FindByID(attemptID)
+	// 1. Validasi attempt
+	attempt, err := s.attemptRepo.FindByID(attemptID)
 	if err != nil {
 		return nil, errors.New("attempt tidak ditemukan")
 	}
@@ -130,24 +218,27 @@ func (s *KuisService) Submit(userID, attemptID string, req dto.SubmitKuisRequest
 		return nil, errors.New("kuis ini sudah pernah dikerjakan")
 	}
 
-	// 2. Ambil semua soal kuis ini
-	soalList, err := s.soalRepo.FindByMateri(attempt.IDMateri)
+	// 2. Ambil kuis & soal
+	kuis, err := s.kuisRepo.FindByID(attempt.IDKuis)
+	if err != nil {
+		return nil, errors.New("kuis tidak ditemukan")
+	}
+
+	soalList, err := s.soalRepo.FindByKuis(attempt.IDKuis)
 	if err != nil {
 		return nil, err
 	}
 
-	// Buat map idSoal -> soal untuk lookup cepat
 	soalMap := make(map[string]*models.Soal, len(soalList))
 	for i := range soalList {
 		soalMap[soalList[i].ID] = &soalList[i]
 	}
 
-	// 3. Validasi: semua soal harus dijawab, tidak boleh lebih
+	// 3. Validasi jawaban
 	if len(req.Jawaban) != len(soalList) {
 		return nil, errors.New("jumlah jawaban tidak sesuai dengan jumlah soal")
 	}
 
-	// Pastikan tidak ada soal yang dijawab dua kali
 	answeredSoal := make(map[string]bool, len(req.Jawaban))
 	for _, j := range req.Jawaban {
 		if answeredSoal[j.IDSoal] {
@@ -167,17 +258,14 @@ func (s *KuisService) Submit(userID, attemptID string, req dto.SubmitKuisRequest
 			return nil, errors.New("soal dengan id " + j.IDSoal + " tidak ditemukan dalam kuis ini")
 		}
 
-		// Ambil pilihan yang dipilih user
 		pilihanUser, err := s.soalRepo.FindPilihanByID(j.IDPilihan)
 		if err != nil {
 			return nil, errors.New("pilihan jawaban tidak ditemukan")
 		}
-		// Pastikan pilihan ini memang milik soal yang bersangkutan
 		if pilihanUser.IDSoal != j.IDSoal {
 			return nil, errors.New("pilihan jawaban tidak sesuai dengan soal")
 		}
 
-		// Ambil pilihan benar untuk feedback
 		pilihanBenar, err := s.soalRepo.FindCorrectPilihan(j.IDSoal)
 		if err != nil {
 			return nil, err
@@ -206,9 +294,10 @@ func (s *KuisService) Submit(userID, attemptID string, req dto.SubmitKuisRequest
 	}
 
 	skor := float64(totalBenar) / float64(len(soalList)) * 100
+	isPassed := skor >= kuis.PassingGrade
 
 	// 5. Simpan hasil
-	if err := s.repo.Finish(attemptID, skor, totalBenar, jawabanModels); err != nil {
+	if err := s.attemptRepo.Finish(attemptID, skor, totalBenar, isPassed, jawabanModels); err != nil {
 		return nil, err
 	}
 
@@ -218,6 +307,7 @@ func (s *KuisService) Submit(userID, attemptID string, req dto.SubmitKuisRequest
 		Skor:       skor,
 		TotalSoal:  len(soalList),
 		TotalBenar: totalBenar,
+		IsPassed:   isPassed,
 		FinishedAt: now.Format(time.RFC3339),
 		Detail:     detailHasil,
 	}, nil
@@ -225,9 +315,8 @@ func (s *KuisService) Submit(userID, attemptID string, req dto.SubmitKuisRequest
 
 // ── Get Result ────────────────────────────────────────────────────────────────
 
-// GetResult mengembalikan hasil attempt yang sudah selesai.
 func (s *KuisService) GetResult(userID, attemptID string) (*dto.KuisResultResponse, error) {
-	attempt, err := s.repo.FindByID(attemptID)
+	attempt, err := s.attemptRepo.FindByID(attemptID)
 	if err != nil {
 		return nil, errors.New("attempt tidak ditemukan")
 	}
@@ -238,14 +327,12 @@ func (s *KuisService) GetResult(userID, attemptID string) (*dto.KuisResultRespon
 		return nil, errors.New("kuis belum selesai dikerjakan")
 	}
 
-	// Ambil jawaban user
-	jawabanList, err := s.repo.FindJawabanByAttempt(attemptID)
+	jawabanList, err := s.attemptRepo.FindJawabanByAttempt(attemptID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Ambil soal untuk tampilkan pertanyaan dan pilihan benar
-	soalList, err := s.soalRepo.FindByMateri(attempt.IDMateri)
+	soalList, err := s.soalRepo.FindByKuis(attempt.IDKuis)
 	if err != nil {
 		return nil, err
 	}
@@ -281,22 +368,26 @@ func (s *KuisService) GetResult(userID, attemptID string) (*dto.KuisResultRespon
 		Skor:       attempt.Skor,
 		TotalSoal:  attempt.TotalSoal,
 		TotalBenar: attempt.TotalBenar,
+		IsPassed:   attempt.IsPassed,
 		FinishedAt: attempt.FinishedAt.Format(time.RFC3339),
 		Detail:     detail,
 	}, nil
 }
 
-// ── Riwayat Attempt ───────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
-// GetAttemptsByUser mengembalikan semua attempt user untuk satu kuis.
-// Berguna jika kuis diizinkan untuk diulang.
-func (s *KuisService) GetAttemptsByUser(userID, materiID string) ([]models.KuisAttempt, error) {
-	materi, err := s.materiRepo.FindByID(materiID)
-	if err != nil {
-		return nil, errors.New("materi tidak ditemukan")
+func mapKuisToResponse(k *models.Kuis) *dto.KuisResponse {
+	return &dto.KuisResponse{
+		ID:           k.ID,
+		IDKelas:      k.IDKelas,
+		IDMateri:     k.IDMateri,
+		Judul:        k.Judul,
+		Deskripsi:    k.Deskripsi,
+		DurasiMenit:  k.DurasiMenit,
+		PassingGrade: k.PassingGrade,
+		IsFinal:      k.IsFinal,
+		Urutan:       k.Urutan,
+		CreatedAt:    k.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:    k.UpdatedAt.Format(time.RFC3339),
 	}
-	if materi.Tipe != models.MateriTipeKuis {
-		return nil, errors.New("materi ini bukan bertipe kuis")
-	}
-	return s.repo.FindByUserAndMateri(userID, materiID)
 }

@@ -14,59 +14,41 @@ import (
 )
 
 type KelasService struct {
-	repo         repository.KelasRepositoryInterface
-	materiRepo   repository.MateriRepositoryInterface
-	progressRepo repository.ProgressRepositoryInterface
-	rc           cache.RedisInterface
+	repo            repository.KelasRepositoryInterface
+	materiRepo      repository.MateriRepositoryInterface
+	progressRepo    repository.ProgressRepositoryInterface
+	kuisRepo        repository.KuisRepositoryInterface
+	attemptRepo     repository.KuisAttemptRepositoryInterface
+	sertifikatRepo  repository.SertifikatRepositoryInterface
+	fpRepo          repository.FilePendukungRepositoryInterface
+	rc              cache.RedisInterface
 }
 
 func NewKelasService(
 	repo repository.KelasRepositoryInterface,
 	materiRepo repository.MateriRepositoryInterface,
 	progressRepo repository.ProgressRepositoryInterface,
+	kuisRepo repository.KuisRepositoryInterface,
+	attemptRepo repository.KuisAttemptRepositoryInterface,
+	sertifikatRepo repository.SertifikatRepositoryInterface,
+	fpRepo repository.FilePendukungRepositoryInterface,
 	rc cache.RedisInterface,
 ) *KelasService {
 	return &KelasService{
-		repo:         repo,
-		materiRepo:   materiRepo,
-		progressRepo: progressRepo,
-		rc:           rc,
-	}
-}
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-func mapKelasToResponse(k *models.Kelas) *dto.KelasResponse {
-	return &dto.KelasResponse{
-		ID:        k.ID,
-		Judul:     k.Judul,
-		Deskripsi: k.Deskripsi,
-		Thumbnail: k.Thumbnail,
-		Status:    k.Status,
-		CreatedBy: k.CreatedBy,
-		CreatedAt: k.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: k.UpdatedAt.Format(time.RFC3339),
-	}
-}
-
-func mapMateriToResponse(m *models.Materi) dto.MateriResponse {
-	return dto.MateriResponse{
-		ID:          m.ID,
-		IDKelas:     m.IDKelas,
-		Judul:       m.Judul,
-		Tipe:        m.Tipe,
-		Urutan:      m.Urutan,
-		YoutubeID:   m.YoutubeID,
-		PDFPath:     m.PDFPath,
-		DurasiDetik: m.DurasiDetik,
-		CreatedAt:   m.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:   m.UpdatedAt.Format(time.RFC3339),
+		repo:           repo,
+		materiRepo:     materiRepo,
+		progressRepo:   progressRepo,
+		kuisRepo:       kuisRepo,
+		attemptRepo:    attemptRepo,
+		sertifikatRepo: sertifikatRepo,
+		fpRepo:         fpRepo,
+		rc:             rc,
 	}
 }
 
 // ── Admin: CRUD Kelas ─────────────────────────────────────────────────────────
 
-func (s *KelasService) Create(req dto.CreateKelasRequest, createdBy string) (*dto.KelasResponse, error) {
+func (s *KelasService) Create(req dto.CreateKelasRequest, userID string) (*dto.KelasResponse, error) {
 	judul := strings.TrimSpace(req.Judul)
 	if judul == "" {
 		return nil, errors.New("judul wajib diisi")
@@ -78,7 +60,7 @@ func (s *KelasService) Create(req dto.CreateKelasRequest, createdBy string) (*dt
 		Deskripsi: req.Deskripsi,
 		Thumbnail: req.Thumbnail,
 		Status:    models.KelasStatusDraft,
-		CreatedBy: createdBy,
+		CreatedBy: userID,
 	}
 
 	if err := s.repo.Create(kelas); err != nil {
@@ -86,7 +68,8 @@ func (s *KelasService) Create(req dto.CreateKelasRequest, createdBy string) (*dt
 	}
 
 	cacheDelete(s.rc, keyList("kelas"))
-	return mapKelasToResponse(kelas), nil
+	resp := mapKelasToResponse(kelas)
+	return resp, nil
 }
 
 func (s *KelasService) Update(id string, req dto.UpdateKelasRequest) (*dto.KelasResponse, error) {
@@ -116,33 +99,34 @@ func (s *KelasService) Update(id string, req dto.UpdateKelasRequest) (*dto.Kelas
 		return nil, err
 	}
 
-	cacheDelete(s.rc, keyDetail("kelas", id))
 	cacheDelete(s.rc, keyList("kelas"))
-	return mapKelasToResponse(kelas), nil
+	cacheDelete(s.rc, keyDetail("kelas", id))
+	resp := mapKelasToResponse(kelas)
+	return resp, nil
 }
 
 func (s *KelasService) Delete(id string) error {
 	if _, err := s.repo.FindByID(id); err != nil {
 		return errors.New("kelas tidak ditemukan")
 	}
-
 	if err := s.repo.Delete(id); err != nil {
 		return err
 	}
-
-	cacheDelete(s.rc, keyDetail("kelas", id))
 	cacheDelete(s.rc, keyList("kelas"))
+	cacheDelete(s.rc, keyDetail("kelas", id))
 	return nil
 }
 
-// ── User & Admin: Read Kelas ──────────────────────────────────────────────────
+// ── GetAll ────────────────────────────────────────────────────────────────────
 
-// GetAll mengembalikan list kelas.
-// Jika onlyPublished=true (untuk user biasa), hanya tampilkan yang published.
 func (s *KelasService) GetAll(onlyPublished bool) ([]dto.KelasResponse, error) {
-	key := keyList("kelas")
+	cacheKey := keyList("kelas")
+	if onlyPublished {
+		cacheKey = keyList("kelas:published")
+	}
+
 	var cached []dto.KelasResponse
-	if cacheGet(s.rc, key, &cached) {
+	if cacheGet(s.rc, cacheKey, &cached) {
 		return cached, nil
 	}
 
@@ -157,12 +141,12 @@ func (s *KelasService) GetAll(onlyPublished bool) ([]dto.KelasResponse, error) {
 		result = append(result, *mapKelasToResponse(&k))
 	}
 
-	cacheSet(s.rc, key, result, TTLList)
+	cacheSet(s.rc, cacheKey, result, TTLList)
 	return result, nil
 }
 
-// GetDetail mengembalikan detail kelas beserta daftar materi.
-// Jika userID tidak kosong, progress user juga disertakan.
+// ── GetDetail (dengan materi, kuis, progress, sertifikat) ─────────────────────
+
 func (s *KelasService) GetDetail(id, userID string) (*dto.KelasResponse, error) {
 	kelas, err := s.repo.FindByID(id)
 	if err != nil {
@@ -171,70 +155,192 @@ func (s *KelasService) GetDetail(id, userID string) (*dto.KelasResponse, error) 
 
 	resp := mapKelasToResponse(kelas)
 
-	// Ambil semua materi dalam kelas
+	// Load materi
 	materiList, err := s.materiRepo.FindByKelas(id)
-	if err != nil {
-		return nil, err
-	}
-
-	// Ambil progress user jika ada
-	var progressMap map[string]*models.UserMateriProgress
-	if userID != "" {
-		progressList, err := s.progressRepo.FindByUserAndKelas(userID, id)
-		if err == nil {
-			progressMap = make(map[string]*models.UserMateriProgress, len(progressList))
-			for i := range progressList {
-				progressMap[progressList[i].IDMateri] = &progressList[i]
+	if err == nil {
+		// Load progress user
+		progressMap := make(map[string]*models.UserMateriProgress)
+		if userID != "" {
+			progressList, err := s.progressRepo.FindByUserAndKelas(userID, id)
+			if err == nil {
+				for i := range progressList {
+					progressMap[progressList[i].IDMateri] = &progressList[i]
+				}
 			}
 		}
-	}
 
-	materiSelesai := 0
-	kuisSelesai := false
+		materiResponses := make([]dto.MateriResponse, 0, len(materiList))
+		for _, m := range materiList {
+			m := m
+			mr := mapMateriToResponse(&m)
 
-	materiResponses := make([]dto.MateriResponse, 0, len(materiList))
-	for _, m := range materiList {
-		mr := mapMateriToResponse(&m)
-
-		// Inject progress ke response materi
-		if progressMap != nil {
+			// Inject progress
 			if p, ok := progressMap[m.ID]; ok {
 				mr.IsCompleted = p.IsCompleted
 				mr.LastWatchedSeconds = p.LastWatchedSeconds
 			}
-		}
 
-		// Hitung ringkasan progress
-		if mr.IsCompleted {
-			if m.Tipe == models.MateriTipeVideo || m.Tipe == models.MateriTipePDF {
-				materiSelesai++
+			// Load file pendukung
+			fps, err := s.fpRepo.FindByMateri(m.ID)
+			if err == nil && len(fps) > 0 {
+				fpResponses := make([]dto.FilePendukungResponse, 0, len(fps))
+				for _, fp := range fps {
+					fpResponses = append(fpResponses, dto.FilePendukungResponse{
+						ID:        fp.ID,
+						IDMateri:  fp.IDMateri,
+						NamaFile:  fp.NamaFile,
+						FilePath:  fp.FilePath,
+						Ukuran:    fp.Ukuran,
+						CreatedAt: fp.CreatedAt.Format(time.RFC3339),
+					})
+				}
+				mr.FilePendukung = fpResponses
 			}
-			if m.Tipe == models.MateriTipeKuis {
-				kuisSelesai = true
-			}
-		}
 
-		materiResponses = append(materiResponses, mr)
+			// Load kuis per-materi
+			kuis, err := s.kuisRepo.FindByMateri(m.ID)
+			if err == nil && kuis != nil {
+				kr := mapKuisToResponse(kuis)
+				mr.Kuis = kr
+			}
+
+			materiResponses = append(materiResponses, mr)
+		}
+		resp.Materi = materiResponses
 	}
 
-	resp.Materi = materiResponses
-
-	// Ringkasan progress keseluruhan kelas
-	if userID != "" {
-		totalMedia := 0
-		for _, m := range materiList {
-			if m.Tipe != models.MateriTipeKuis {
-				totalMedia++
-			}
+	// Load kuis list
+	kuisList, err := s.kuisRepo.FindByKelas(id)
+	if err == nil {
+		kuisResponses := make([]dto.KuisResponse, 0, len(kuisList))
+		for _, k := range kuisList {
+			k := k
+			kuisResponses = append(kuisResponses, *mapKuisToResponse(&k))
 		}
-		isSelesai := materiSelesai == totalMedia && totalMedia > 0 && kuisSelesai
-		resp.Progress = &dto.KelasProgress{
-			TotalMateri:    totalMedia,
-			MateriSelesai:  materiSelesai,
-			KuisSelesai:    kuisSelesai,
-			IsKelasSelesai: isSelesai,
+		resp.KuisList = kuisResponses
+	}
+
+	// Hitung progress
+	if userID != "" {
+		progress := s.calculateProgress(userID, id, materiList, kuisList)
+		resp.Progress = progress
+
+		// Cek sertifikat
+		cert, err := s.sertifikatRepo.FindByUserAndKelas(userID, id)
+		if err == nil && cert != nil {
+			resp.Sertifikat = &dto.SertifikatResponse{
+				ID:              cert.ID,
+				NomorSertifikat: cert.NomorSertifikat,
+				IDKelas:         cert.IDKelas,
+				IDUser:          cert.IDUser,
+				NamaPeserta:     cert.NamaPeserta,
+				NamaKelas:       cert.NamaKelas,
+				TanggalTerbit:   cert.TanggalTerbit.Format("2006-01-02"),
+				PDFPath:         cert.PDFPath,
+				CreatedAt:       cert.CreatedAt.Format(time.RFC3339),
+			}
 		}
 	}
 
 	return resp, nil
+}
+
+// ── Progress Calculation ──────────────────────────────────────────────────────
+
+func (s *KelasService) calculateProgress(userID, kelasID string, materiList []models.Materi, kuisList []models.Kuis) *dto.KelasProgress {
+	progress := &dto.KelasProgress{
+		TotalMateri: len(materiList),
+	}
+
+	// Materi selesai
+	progressList, err := s.progressRepo.FindByUserAndKelas(userID, kelasID)
+	if err == nil {
+		for _, p := range progressList {
+			if p.IsCompleted {
+				progress.MateriSelesai++
+			}
+		}
+	}
+
+	// Kuis
+	totalKuis := 0
+	kuisLulus := 0
+	kuisAkhirLulus := false
+
+	for _, k := range kuisList {
+		if k.IsFinal {
+			// Cek kuis akhir
+			attempts, err := s.attemptRepo.FindByUserAndKuis(userID, k.ID)
+			if err == nil {
+				for _, a := range attempts {
+					if a.IsPassed {
+						kuisAkhirLulus = true
+						break
+					}
+				}
+			}
+		} else {
+			totalKuis++
+			// Cek apakah sudah lulus
+			attempts, err := s.attemptRepo.FindByUserAndKuis(userID, k.ID)
+			if err == nil {
+				for _, a := range attempts {
+					if a.IsPassed {
+						kuisLulus++
+						break
+					}
+				}
+			}
+		}
+	}
+
+	progress.TotalKuis = totalKuis
+	progress.KuisLulus = kuisLulus
+	progress.KuisAkhirLulus = kuisAkhirLulus
+
+	// Persentase
+	totalItems := progress.TotalMateri + progress.TotalKuis
+	if totalItems > 0 {
+		completedItems := progress.MateriSelesai + progress.KuisLulus
+		progress.PersentaseProgress = float64(completedItems) / float64(totalItems) * 100
+	}
+
+	// Kelas selesai = semua materi + semua kuis + kuis akhir lulus
+	progress.IsKelasSelesai = progress.MateriSelesai >= progress.TotalMateri &&
+		progress.KuisLulus >= progress.TotalKuis &&
+		kuisAkhirLulus
+
+	return progress
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+func mapKelasToResponse(k *models.Kelas) *dto.KelasResponse {
+	return &dto.KelasResponse{
+		ID:        k.ID,
+		Judul:     k.Judul,
+		Deskripsi: k.Deskripsi,
+		Thumbnail: k.Thumbnail,
+		Status:    k.Status,
+		CreatedBy: k.CreatedBy,
+		CreatedAt: k.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: k.UpdatedAt.Format(time.RFC3339),
+	}
+}
+
+func mapMateriToResponse(m *models.Materi) dto.MateriResponse {
+	return dto.MateriResponse{
+		ID:               m.ID,
+		IDKelas:          m.IDKelas,
+		Judul:            m.Judul,
+		Tipe:             m.Tipe,
+		Urutan:           m.Urutan,
+		YoutubeID:        m.YoutubeID,
+		DurasiDetik:      m.DurasiDetik,
+		KontenHTML:       m.KontenHTML,
+		DeskripsiSingkat: m.DeskripsiSingkat,
+		Kategori:         m.Kategori,
+		CreatedAt:        m.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:        m.UpdatedAt.Format(time.RFC3339),
+	}
 }
