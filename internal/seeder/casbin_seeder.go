@@ -64,6 +64,22 @@ var defaultPolicies = []Policy{
 	{"user", "/api/maturity/ikas/:id", "PUT"},
 	{"user", "/api/maturity/ikas/:id", "DELETE"},
 
+	// Domain Identifikasi
+	{"user", "/api/maturity/identifikasi", "GET"},
+	{"user", "/api/maturity/identifikasi/:id", "GET"},
+
+	// Domain Proteksi
+	{"user", "/api/maturity/proteksi", "GET"},
+	{"user", "/api/maturity/proteksi/:id", "GET"},
+
+	// Domain Deteksi
+	{"user", "/api/maturity/deteksi", "GET"},
+	{"user", "/api/maturity/deteksi/:id", "GET"},
+
+	// Domain Gulih
+	{"user", "/api/maturity/gulih", "GET"},
+	{"user", "/api/maturity/gulih/:id", "GET"},
+
 	// Maturity (Pertanyaan)
 	{"user", "/api/maturity/pertanyaan-identifikasi", "GET"},
 	{"user", "/api/maturity/pertanyaan-identifikasi/:id", "GET"},
