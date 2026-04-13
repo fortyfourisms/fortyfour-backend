@@ -63,9 +63,13 @@ func (h *GulihHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if ikasID != "" {
-		data, err = h.service.GetByIkasID(ikasID)
+		data, err = h.service.GetByIkasID(ikasID, userRole, userPerusahaanID)
 	} else {
-		data, err = h.service.GetAll()
+		if userRole != "admin" {
+			data, err = h.service.GetByPerusahaanID(userPerusahaanID, userRole, userPerusahaanID)
+		} else {
+			data, err = h.service.GetAll(userRole)
+		}
 	}
 
 	if err != nil {

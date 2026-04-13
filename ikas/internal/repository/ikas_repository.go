@@ -1094,3 +1094,12 @@ func (r *IkasRepository) GetIDByPerusahaanID(idPerusahaan string) (string, error
 	}
 	return id, nil
 }
+func (r *IkasRepository) CheckOwnership(ikasID string, perusahaanID string) (bool, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM ikas WHERE id = ? AND id_perusahaan = ?`
+	err := r.db.QueryRow(query, ikasID, perusahaanID).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}

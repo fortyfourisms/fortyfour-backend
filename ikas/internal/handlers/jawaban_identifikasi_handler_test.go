@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"ikas/internal/dto"
+	"ikas/internal/middleware"
 	"ikas/internal/repository"
 	"ikas/internal/services"
 	"net/http"
@@ -127,6 +128,10 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	repo.On("GetAll").Return([]dto.JawabanIdentifikasiResponse{{ID: 1}}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-identifikasi", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -141,6 +146,10 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 	repo.On("GetAll").Return([]dto.JawabanIdentifikasiResponse{}, errors.New("db error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-identifikasi", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -155,6 +164,10 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 	repo.On("GetByID", 1).Return(&dto.JawabanIdentifikasiResponse{ID: 1}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-identifikasi/1", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -208,6 +221,10 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Create_Success(t *testing.T) {
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/jawaban-identifikasi", bytes.NewReader(body))
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -250,13 +267,17 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Update_Success(t *testing.T) {
 
 	existing := &dto.JawabanIdentifikasiResponse{ID: 1, IkasID: "uuid1", JawabanIdentifikasi: jidFloat64Ptr(3.0)}
 	repo.On("GetByID", 1).Return(existing, nil)
+	// mockIkasRepository.GetIDByPerusahaanID used to exist, but now it's shared mock.Mock
 	ikasRepo.On("GetIDByPerusahaanID", "uuid1").Return("ikas1", nil)
 	producer.On("PublishJawabanIdentifikasiUpdated", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/jawaban-identifikasi/1", bytes.NewReader(body))
-	req.Header.Set("X-User-ID", "user1")
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(context.WithValue(ctx, middleware.UserIDKey, "user1"))
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)

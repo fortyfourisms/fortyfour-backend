@@ -54,3 +54,24 @@ func (r *IdentifikasiRepository) GetByID(id string) (*models.Identifikasi, error
 	}
 	return &i, nil
 }
+func (r *IdentifikasiRepository) GetByPerusahaanID(perusahaanID string) ([]models.Identifikasi, error) {
+	query := `
+		SELECT t.id, t.ikas_id, t.nilai_identifikasi, t.nilai_subdomain1, t.nilai_subdomain2, t.nilai_subdomain3, t.nilai_subdomain4, t.nilai_subdomain5 
+		FROM identifikasi t
+		JOIN ikas i ON t.ikas_id = i.id
+		WHERE i.id_perusahaan = ?
+	`
+	rows, err := r.db.Query(query, perusahaanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []models.Identifikasi
+	for rows.Next() {
+		var i models.Identifikasi
+		rows.Scan(&i.ID, &i.IkasID, &i.NilaiIdentifikasi, &i.NilaiSubdomain1, &i.NilaiSubdomain2, &i.NilaiSubdomain3, &i.NilaiSubdomain4, &i.NilaiSubdomain5)
+		result = append(result, i)
+	}
+	return result, nil
+}

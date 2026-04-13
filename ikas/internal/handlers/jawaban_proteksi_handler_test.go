@@ -129,6 +129,10 @@ func TestJawabanProteksiHandler_GetAll_Success(t *testing.T) {
 	repo.On("GetAll").Return([]dto.JawabanProteksiResponse{{ID: 1}}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-proteksi", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -143,6 +147,10 @@ func TestJawabanProteksiHandler_GetAll_Error(t *testing.T) {
 	repo.On("GetAll").Return([]dto.JawabanProteksiResponse{}, errors.New("db error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-proteksi", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -159,6 +167,10 @@ func TestJawabanProteksiHandler_GetByIkasID_Success(t *testing.T) {
 	repo.On("GetByIkasID", "550e8400-e29b-41d4-a716-446655440000").Return([]dto.JawabanProteksiResponse{{ID: 1}}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-proteksi?perusahaan_id=550e8400-e29b-41d4-a716-446655440000", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -185,6 +197,10 @@ func TestJawabanProteksiHandler_GetByIkasID_Error(t *testing.T) {
 	repo.On("GetByIkasID", "550e8400-e29b-41d4-a716-446655440000").Return([]dto.JawabanProteksiResponse{}, errors.New("db error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-proteksi?perusahaan_id=550e8400-e29b-41d4-a716-446655440000", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -309,6 +325,10 @@ func TestJawabanProteksiHandler_Create_Success(t *testing.T) {
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/jawaban-proteksi", bytes.NewReader(body))
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -467,7 +487,10 @@ func TestJawabanProteksiHandler_Update_Success(t *testing.T) {
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/jawaban-proteksi/1", bytes.NewReader(body))
-	req = req.WithContext(context.WithValue(req.Context(), middleware.UserIDKey, "user1"))
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(context.WithValue(ctx, middleware.UserIDKey, "user1"))
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)

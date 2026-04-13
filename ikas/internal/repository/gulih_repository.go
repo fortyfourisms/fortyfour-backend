@@ -85,3 +85,31 @@ func (r *GulihRepository) GetByID(id string) (*models.Gulih, error) {
 
 	return &g, nil
 }
+func (r *GulihRepository) GetByPerusahaanID(perusahaanID string) ([]models.Gulih, error) {
+	query := `
+		SELECT t.id, t.ikas_id, t.nilai_gulih, t.nilai_subdomain1, t.nilai_subdomain2, t.nilai_subdomain3, t.nilai_subdomain4
+		FROM gulih t
+		JOIN ikas i ON t.ikas_id = i.id
+		WHERE i.id_perusahaan = ?`
+	rows, err := r.db.Query(query, perusahaanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []models.Gulih
+	for rows.Next() {
+		var g models.Gulih
+		rows.Scan(
+			&g.ID,
+			&g.IkasID,
+			&g.NilaiGulih,
+			&g.NilaiSubdomain1,
+			&g.NilaiSubdomain2,
+			&g.NilaiSubdomain3,
+			&g.NilaiSubdomain4,
+		)
+		result = append(result, g)
+	}
+	return result, nil
+}

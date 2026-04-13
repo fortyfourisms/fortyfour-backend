@@ -32,6 +32,7 @@ type IkasRepositoryInterface interface {
 	FindPerusahaanByName(namaPerusahaan string) (string, error)
 	CheckExistsByPerusahaanID(idPerusahaan string) (bool, error)
 	CheckExistsByPerusahaanIDAndYear(idPerusahaan string, year int) (bool, error)
+	CheckOwnership(ikasID string, perusahaanID string) (bool, error)
 	GetIDByPerusahaanID(idPerusahaan string) (string, error)
 }
 
@@ -91,6 +92,7 @@ type IdentifikasiRepositoryInterface interface {
 	GetAll() ([]models.Identifikasi, error)
 	GetByID(id string) (*models.Identifikasi, error)
 	GetByIkasID(ikasID string) ([]models.Identifikasi, error)
+	GetByPerusahaanID(perusahaanID string) ([]models.Identifikasi, error)
 }
 
 // ProteksiRepositoryInterface
@@ -98,6 +100,7 @@ type ProteksiRepositoryInterface interface {
 	GetAll() ([]models.Proteksi, error)
 	GetByID(id string) (*models.Proteksi, error)
 	GetByIkasID(ikasID string) ([]models.Proteksi, error)
+	GetByPerusahaanID(perusahaanID string) ([]models.Proteksi, error)
 }
 
 // DeteksiRepositoryInterface
@@ -105,6 +108,7 @@ type DeteksiRepositoryInterface interface {
 	GetAll() ([]models.Deteksi, error)
 	GetByID(id string) (*models.Deteksi, error)
 	GetByIkasID(ikasID string) ([]models.Deteksi, error)
+	GetByPerusahaanID(perusahaanID string) ([]models.Deteksi, error)
 }
 
 // GulihRepositoryInterface
@@ -112,4 +116,5 @@ type GulihRepositoryInterface interface {
 	GetAll() ([]models.Gulih, error)
 	GetByID(id string) (*models.Gulih, error)
 	GetByIkasID(ikasID string) ([]models.Gulih, error)
+	GetByPerusahaanID(perusahaanID string) ([]models.Gulih, error)
 }

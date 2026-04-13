@@ -7,6 +7,7 @@ import (
 	"ikas/internal/services"
 	"ikas/internal/utils"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/rollbar/rollbar-go"
@@ -34,18 +35,6 @@ func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 
 			// Access validation should be handled by providing user details to the service.
 			// Handlers should collect userRole and userPerusahaanID and pass them.
-			userRole, _ := r.Context().Value(middleware.Role).(string)
-			userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
-
-			if userRole != "admin" && (userPerusahaanID == "" || userPerusahaanID == "null") {
-				utils.RespondJSON(w, 200, map[string]interface{}{
-					"message": "Berhasil mengambil data",
-					"data":    []dto.JawabanIdentifikasiResponse{},
-					"total":   0,
-				})
-				return
-			}
-
 			if ikasID != "" {
 				h.handleGetByIkasID(w, r, ikasID)
 			} else if pertanyaanID != "" {
@@ -95,8 +84,39 @@ func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 //	@Success      200  {array}   dto.JawabanIdentifikasiResponse
 //	@Failure      500  {object}  dto.ErrorResponse
 //	@Router       /api/maturity/jawaban-identifikasi [get]
-func (h *JawabanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
-	data, err := h.service.GetAll()
+func (h *JawabanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+	ikasID := r.URL.Query().Get("ikas_id")
+	pertanyaanIDStr := r.URL.Query().Get("pertanyaan_identifikasi_id")
+
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	if userRole != "admin" && (userPerusahaanID == "" || userPerusahaanID == "null") {
+		utils.RespondJSON(w, 200, map[string]interface{}{
+			"message": "Berhasil mengambil data",
+			"data":    []dto.JawabanIdentifikasiResponse{},
+			"total":   0,
+		})
+		return
+	}
+
+	var data []dto.JawabanIdentifikasiResponse
+	var err error
+
+	if ikasID != "" {
+		h.handleGetByIkasID(w, r, ikasID)
+		return
+	} else if pertanyaanIDStr != "" {
+		pID, _ := strconv.Atoi(pertanyaanIDStr)
+		data, err = h.service.GetByPertanyaan(pID)
+	} else {
+		if userRole != "admin" {
+			data, err = h.service.GetByPerusahaanID(userPerusahaanID, userRole, userPerusahaanID)
+		} else {
+			data, err = h.service.GetAll(userRole)
+		}
+	}
+
 	if err != nil {
 		rollbar.Error(err)
 		utils.RespondError(w, 500, err.Error())
@@ -109,8 +129,10 @@ func (h *JawabanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, _ *http
 	})
 }
 
-func (h *JawabanIdentifikasiHandler) handleGetByIkasID(w http.ResponseWriter, _ *http.Request, ikasID string) {
-	data, err := h.service.GetByIkasID(ikasID)
+func (h *JawabanIdentifikasiHandler) handleGetByIkasID(w http.ResponseWriter, r *http.Request, ikasID string) {
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+	data, err := h.service.GetByIkasID(ikasID, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		if err.Error() == "format ikas_id tidak valid" {
@@ -203,12 +225,10 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 		return
 	}
 
-	userRole := ""
-	if val := r.Context().Value(middleware.Role); val != nil {
-		userRole = val.(string)
-	}
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	msg, err := h.service.Create(req, userRole)
+	msg, err := h.service.Create(req, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {

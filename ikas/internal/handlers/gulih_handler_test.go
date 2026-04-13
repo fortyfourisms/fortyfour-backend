@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"ikas/internal/middleware"
 	"ikas/internal/models"
 	"ikas/internal/repository"
 	"ikas/internal/services"
@@ -37,8 +39,8 @@ func (m *mockGulihRepository) GetByIkasID(ikasID string) ([]models.Gulih, error)
 
 var _ repository.GulihRepositoryInterface = (*mockGulihRepository)(nil)
 
-func setupGulihHandler(repo repository.GulihRepositoryInterface) *GulihHandler {
-	service := services.NewGulihService(repo)
+func setupGulihHandler(repo repository.GulihRepositoryInterface, ikasRepo repository.IkasRepositoryInterface) *GulihHandler {
+	service := services.NewGulihService(repo, ikasRepo)
 	return NewGulihHandler(service)
 }
 
@@ -51,9 +53,14 @@ func TestGulihHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := setupGulihHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupGulihHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/gulih", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -75,9 +82,14 @@ func TestGulihHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 			return nil, errors.New("database error")
 		},
 	}
-	handler := setupGulihHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupGulihHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/gulih", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -93,7 +105,8 @@ func TestGulihHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := setupGulihHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupGulihHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/gulih/uuid-test", nil)
 	w := httptest.NewRecorder()
@@ -116,7 +129,8 @@ func TestGulihHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 			return nil, errors.New("data tidak ditemukan")
 		},
 	}
-	handler := setupGulihHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupGulihHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/gulih/invalid-id", nil)
 	w := httptest.NewRecorder()
@@ -128,7 +142,8 @@ func TestGulihHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 
 func TestGulihHandler_ServeHTTP_MethodNotAllowed(t *testing.T) {
 	repo := &mockGulihRepository{}
-	handler := setupGulihHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupGulihHandler(repo, ikasRepo)
 
 	methods := []string{http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodPatch}
 

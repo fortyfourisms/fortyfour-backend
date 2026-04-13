@@ -74,9 +74,12 @@ func (m *mockIkasRepo) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse,
 	return []dto.IkasResponse{}, nil
 }
 
-// Mock methods for Excel import process in repo
 func (m *mockIkasRepo) SaveImportedData(id string, data *dto.CreateIkasRequest) error {
 	return nil
+}
+
+func (m *mockIkasRepo) CheckOwnership(ikasID string, perusahaanID string) (bool, error) {
+	return true, nil
 }
 
 /*
@@ -131,6 +134,22 @@ func TestIkasService_Update_Async(t *testing.T) {
 	// Update now returns nil error on nil producer
 	err := service.Update(context.Background(), "ikas-id", req, "test-user", "admin", "")
 	assert.NoError(t, err)
+}
+
+func TestIkasService_GetAll_Admin(t *testing.T) {
+	repo := &mockIkasRepo{}
+	service := NewIkasService(repo, nil)
+
+	_, err := service.GetAll("admin")
+	assert.NoError(t, err)
+}
+
+func TestIkasService_GetAll_NonAdmin(t *testing.T) {
+	repo := &mockIkasRepo{}
+	service := NewIkasService(repo, nil)
+
+	_, err := service.GetAll("user")
+	assert.Error(t, err)
 }
 
 /*

@@ -36,7 +36,6 @@ func (m *mockProteksiRepository) GetByIkasID(ikasID string) ([]models.Proteksi, 
 	return nil, nil
 }
 
-// compile-time safety check
 var _ repository.ProteksiRepositoryInterface = (*mockProteksiRepository)(nil)
 
 //
@@ -49,18 +48,24 @@ func TestProteksiService_GetAll_Success(t *testing.T) {
 	repo := &mockProteksiRepository{
 		GetAllFn: func() ([]models.Proteksi, error) {
 			return []models.Proteksi{
-				{ID: "1", NilaiProteksi: 70},
-				{ID: "2", NilaiProteksi: 80},
+				{ID: "1"},
+				{ID: "2"},
 			}, nil
 		},
 	}
+	ikasRepo := new(mockIkasRepository)
 
-	service := NewProteksiService(repo)
+	service := NewProteksiService(repo, ikasRepo)
 
-	result, err := service.GetAll()
+	// Admin can see all
+	data, err := service.GetAll("admin")
 
 	assert.NoError(t, err)
-	assert.Len(t, result, 2)
+	assert.Len(t, data, 2)
+
+	// Non-admin should fail
+	_, err = service.GetAll("user")
+	assert.Error(t, err)
 }
 
 //
@@ -79,7 +84,8 @@ func TestProteksiService_GetByID_Success(t *testing.T) {
 		},
 	}
 
-	service := NewProteksiService(repo)
+	ikasRepo := new(mockIkasRepository)
+	service := NewProteksiService(repo, ikasRepo)
 
 	result, err := service.GetByID("uuid-test", "admin", "")
 
@@ -94,7 +100,8 @@ func TestProteksiService_GetByID_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewProteksiService(repo)
+	ikasRepo := &mockIkasRepository{}
+	service := NewProteksiService(repo, ikasRepo)
 
 	result, err := service.GetByID("invalid-id", "admin", "")
 

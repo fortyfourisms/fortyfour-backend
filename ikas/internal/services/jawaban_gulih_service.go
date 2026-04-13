@@ -107,7 +107,7 @@ func (s *JawabanGulihService) validateUpdate(req *dto.UpdateJawabanGulihRequest,
 	return nil
 }
 
-func (s *JawabanGulihService) Create(req dto.CreateJawabanGulihRequest, userRole string) (string, error) {
+func (s *JawabanGulihService) Create(req dto.CreateJawabanGulihRequest, userRole string, userPerusahaanID string) (string, error) {
 	if err := s.validateCreate(&req, userRole); err != nil {
 		return "", err
 	}
@@ -130,6 +130,18 @@ func (s *JawabanGulihService) Create(req dto.CreateJawabanGulihRequest, userRole
 		return "", errors.New("ikas_id tidak ditemukan")
 	}
 
+	// VALIDASI KEPEMILIKAN
+	if userRole != "admin" {
+		owned, err := s.ikasRepo.CheckOwnership(req.IkasID, userPerusahaanID)
+		if err != nil {
+			rollbar.Error(err)
+			return "", err
+		}
+		if !owned {
+			return "", errors.New("anda tidak memiliki akses ke data asesmen ini")
+		}
+	}
+
 	// Synchronous Duplicate Check (Pola 2 Refinement)
 	isDuplicate, err := s.repo.CheckDuplicate(req.IkasID, req.PertanyaanGulihID, 0)
 	if err != nil {
@@ -149,7 +161,10 @@ func (s *JawabanGulihService) Create(req dto.CreateJawabanGulihRequest, userRole
 	return "Berhasil menyimpan data", nil
 }
 
-func (s *JawabanGulihService) GetAll() ([]dto.JawabanGulihResponse, error) {
+func (s *JawabanGulihService) GetAll(userRole string) ([]dto.JawabanGulihResponse, error) {
+	if userRole != "admin" {
+		return nil, errors.New("anda tidak memiliki akses untuk melihat semua data")
+	}
 	return s.repo.GetAll()
 }
 
@@ -179,11 +194,31 @@ func (s *JawabanGulihService) GetByID(id int, userRole string, userPerusahaanID 
 	return data, nil
 }
 
-func (s *JawabanGulihService) GetByIkasID(ikasID string) ([]dto.JawabanGulihResponse, error) {
+func (s *JawabanGulihService) GetByIkasID(ikasID string, userRole string, userPerusahaanID string) ([]dto.JawabanGulihResponse, error) {
 	if !utils.IsValidUUID(ikasID) {
 		return nil, errors.New("format ikas_id tidak valid")
 	}
+
+	if userRole != "admin" {
+		owned, err := s.ikasRepo.CheckOwnership(ikasID, userPerusahaanID)
+		if err != nil {
+			return nil, err
+		}
+		if !owned {
+			return nil, errors.New("anda tidak memiliki akses ke data asesmen ini")
+		}
+	}
+
 	return s.repo.GetByIkasID(ikasID)
+}
+
+func (s *JawabanGulihService) GetByPerusahaanID(perusahaanID string, userRole string, userPerusahaanID string) ([]dto.JawabanGulihResponse, error) {
+	if userRole != "admin" {
+		if perusahaanID != userPerusahaanID {
+			return nil, errors.New("anda tidak memiliki akses ke data perusahaan ini")
+		}
+	}
+	return s.repo.GetByPerusahaanID(perusahaanID)
 }
 
 func (s *JawabanGulihService) GetByPertanyaan(pertanyaanID int) ([]dto.JawabanGulihResponse, error) {

@@ -83,3 +83,31 @@ func (r *DeteksiRepository) GetByID(id string) (*models.Deteksi, error) {
 	}
 	return &d, nil
 }
+func (r *DeteksiRepository) GetByPerusahaanID(perusahaanID string) ([]models.Deteksi, error) {
+	query := `
+		SELECT t.id, t.ikas_id, t.nilai_deteksi, t.nilai_subdomain1, t.nilai_subdomain2, t.nilai_subdomain3 
+		FROM deteksi t
+		JOIN ikas i ON t.ikas_id = i.id
+		WHERE i.id_perusahaan = ?
+	`
+	rows, err := r.db.Query(query, perusahaanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []models.Deteksi
+	for rows.Next() {
+		var d models.Deteksi
+		rows.Scan(
+			&d.ID,
+			&d.IkasID,
+			&d.NilaiDeteksi,
+			&d.NilaiSubdomain1,
+			&d.NilaiSubdomain2,
+			&d.NilaiSubdomain3,
+		)
+		result = append(result, d)
+	}
+	return result, nil
+}

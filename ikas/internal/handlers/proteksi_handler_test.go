@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"ikas/internal/middleware"
 	"ikas/internal/models"
 	"ikas/internal/repository"
 	"ikas/internal/services"
@@ -37,8 +39,8 @@ func (m *mockProteksiRepository) GetByIkasID(ikasID string) ([]models.Proteksi, 
 
 var _ repository.ProteksiRepositoryInterface = (*mockProteksiRepository)(nil)
 
-func setupProteksiHandler(repo repository.ProteksiRepositoryInterface) *ProteksiHandler {
-	service := services.NewProteksiService(repo)
+func setupProteksiHandler(repo repository.ProteksiRepositoryInterface, ikasRepo repository.IkasRepositoryInterface) *ProteksiHandler {
+	service := services.NewProteksiService(repo, ikasRepo)
 	return NewProteksiHandler(service)
 }
 
@@ -51,9 +53,14 @@ func TestProteksiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := setupProteksiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupProteksiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/proteksi", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -75,9 +82,14 @@ func TestProteksiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 			return nil, errors.New("database error")
 		},
 	}
-	handler := setupProteksiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupProteksiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/proteksi", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -93,7 +105,8 @@ func TestProteksiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := setupProteksiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupProteksiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/proteksi/uuid-test", nil)
 	w := httptest.NewRecorder()
@@ -116,7 +129,8 @@ func TestProteksiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 			return nil, errors.New("data tidak ditemukan")
 		},
 	}
-	handler := setupProteksiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupProteksiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/proteksi/invalid-id", nil)
 	w := httptest.NewRecorder()
@@ -128,7 +142,8 @@ func TestProteksiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 
 func TestProteksiHandler_ServeHTTP_MethodNotAllowed(t *testing.T) {
 	repo := &mockProteksiRepository{}
-	handler := setupProteksiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupProteksiHandler(repo, ikasRepo)
 
 	methods := []string{http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodPatch}
 

@@ -29,29 +29,6 @@ func (h *JawabanDeteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	case method == http.MethodPost && path == "/api/maturity/jawaban-deteksi":
 		h.handleCreate(w, r)
 	case method == http.MethodGet && path == "/api/maturity/jawaban-deteksi":
-		// Implicitly filter by PerusahaanID if user is not admin
-		userRole, _ := r.Context().Value(middleware.Role).(string)
-		userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
-
-		perusahaanID := r.URL.Query().Get("perusahaan_id")
-
-		if userRole != "admin" {
-			if userPerusahaanID == "" || userPerusahaanID == "null" {
-				utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-					"message": "Berhasil mengambil data",
-					"data":    []dto.JawabanDeteksiResponse{},
-					"total":   0,
-				})
-				return
-			}
-			// Override for non-admins
-			values := r.URL.Query()
-			values.Set("perusahaan_id", userPerusahaanID)
-			r.URL.RawQuery = values.Encode()
-		} else if perusahaanID != "" {
-			// Leave as is for admin filtering
-		}
-
 		h.handleGetAll(w, r)
 	case method == http.MethodGet && strings.HasPrefix(path, "/api/maturity/jawaban-deteksi/"):
 		h.handleGetByID(w, r)
@@ -78,12 +55,10 @@ func (h *JawabanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.Requ
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
-	userRole := ""
-	if val := r.Context().Value(middleware.Role); val != nil {
-		userRole = val.(string)
-	}
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	msg, err := h.service.Create(req, userRole)
+	msg, err := h.service.Create(req, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -122,6 +97,18 @@ func (h *JawabanDeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Requ
 	ikasID := r.URL.Query().Get("ikas_id")
 	pertanyaanIDStr := r.URL.Query().Get("pertanyaan_deteksi_id")
 
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	if userRole != "admin" && (userPerusahaanID == "" || userPerusahaanID == "null") {
+		utils.RespondJSON(w, 200, map[string]interface{}{
+			"message": "Berhasil mengambil data",
+			"data":    []dto.JawabanDeteksiResponse{},
+			"total":   0,
+		})
+		return
+	}
+
 	var data []dto.JawabanDeteksiResponse
 	var err error
 
@@ -132,7 +119,11 @@ func (h *JawabanDeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Requ
 		pID, _ := strconv.Atoi(pertanyaanIDStr)
 		data, err = h.service.GetByPertanyaan(pID)
 	} else {
-		data, err = h.service.GetAll()
+		if userRole != "admin" {
+			data, err = h.service.GetByPerusahaanID(userPerusahaanID, userRole, userPerusahaanID)
+		} else {
+			data, err = h.service.GetAll(userRole)
+		}
 	}
 
 	if err != nil {
@@ -147,8 +138,10 @@ func (h *JawabanDeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Requ
 	})
 }
 
-func (h *JawabanDeteksiHandler) handleGetByIkasID(w http.ResponseWriter, _ *http.Request, ikasID string) {
-	data, err := h.service.GetByIkasID(ikasID)
+func (h *JawabanDeteksiHandler) handleGetByIkasID(w http.ResponseWriter, r *http.Request, ikasID string) {
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+	data, err := h.service.GetByIkasID(ikasID, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		if err.Error() == "format ikas_id tidak valid" {

@@ -14,6 +14,7 @@ type JawabanGulihRepositoryInterface interface {
 	GetAll() ([]dto.JawabanGulihResponse, error)
 	GetByID(id int) (*dto.JawabanGulihResponse, error)
 	GetByIkasID(ikasID string) ([]dto.JawabanGulihResponse, error)
+	GetByPerusahaanID(perusahaanID string) ([]dto.JawabanGulihResponse, error)
 	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanGulihResponse, error)
 	Update(id int, req dto.UpdateJawabanGulihRequest) error
 	Delete(id int) error
@@ -141,6 +142,32 @@ func (r *JawabanGulihRepository) GetByIkasID(ikasID string) ([]dto.JawabanGulihR
 	query := jawabanGulihSelectQuery + ` WHERE jg.ikas_id = ? ORDER BY jg.created_at ASC`
 
 	rows, err := r.db.Query(query, ikasID)
+	if err != nil {
+		rollbar.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []dto.JawabanGulihResponse
+	for rows.Next() {
+		item, err := scanJawabanGulih(rows)
+		if err != nil {
+			rollbar.Error(err)
+			continue
+		}
+		results = append(results, item)
+	}
+
+	return results, nil
+}
+
+func (r *JawabanGulihRepository) GetByPerusahaanID(perusahaanID string) ([]dto.JawabanGulihResponse, error) {
+	query := jawabanGulihSelectQuery + ` 
+		JOIN ikas i ON jg.ikas_id = i.id 
+		WHERE i.id_perusahaan = ? 
+		ORDER BY jg.created_at ASC`
+
+	rows, err := r.db.Query(query, perusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		return nil, err

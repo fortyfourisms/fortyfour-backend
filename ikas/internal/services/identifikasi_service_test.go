@@ -36,7 +36,6 @@ func (m *mockIdentifikasiRepository) GetByIkasID(ikasID string) ([]models.Identi
 	return nil, nil
 }
 
-// Compile-time check
 var _ repository.IdentifikasiRepositoryInterface = (*mockIdentifikasiRepository)(nil)
 
 //
@@ -54,13 +53,19 @@ func TestIdentifikasiService_GetAll_Success(t *testing.T) {
 			}, nil
 		},
 	}
+	ikasRepo := new(mockIkasRepository)
 
-	service := NewIdentifikasiService(repo)
+	service := NewIdentifikasiService(repo, ikasRepo)
 
-	data, err := service.GetAll()
+	// Admin can see all
+	data, err := service.GetAll("admin")
 
 	assert.NoError(t, err)
 	assert.Len(t, data, 2)
+
+	// Non-admin should fail
+	_, err = service.GetAll("user")
+	assert.Error(t, err)
 }
 
 //
@@ -79,7 +84,8 @@ func TestIdentifikasiService_GetByID_Success(t *testing.T) {
 		},
 	}
 
-	service := NewIdentifikasiService(repo)
+	ikasRepo := new(mockIkasRepository)
+	service := NewIdentifikasiService(repo, ikasRepo)
 
 	result, err := service.GetByID("uuid-test", "admin", "")
 
@@ -94,7 +100,8 @@ func TestIdentifikasiService_GetByID_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewIdentifikasiService(repo)
+	ikasRepo := &mockIkasRepository{}
+	service := NewIdentifikasiService(repo, ikasRepo)
 
 	result, err := service.GetByID("invalid-id", "admin", "")
 

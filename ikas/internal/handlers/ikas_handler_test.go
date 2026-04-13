@@ -19,72 +19,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// mockIkasRepository implements repository.IkasRepositoryInterface
-type mockIkasRepository struct {
-	mock.Mock
-}
-
-func (m *mockIkasRepository) Create(req dto.CreateIkasRequest, id string, nilaiKematangan float64) error {
-	args := m.Called(req, id, nilaiKematangan)
-	return args.Error(0)
-}
-
-func (m *mockIkasRepository) GetAll() ([]dto.IkasResponse, error) {
-	args := m.Called()
-	return args.Get(0).([]dto.IkasResponse), args.Error(1)
-}
-
-func (m *mockIkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
-	args := m.Called(id)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*dto.IkasResponse), args.Error(1)
-}
-
-func (m *mockIkasRepository) Update(id string, req dto.UpdateIkasRequest) error {
-	args := m.Called(id, req)
-	return args.Error(0)
-}
-
-func (m *mockIkasRepository) Delete(id string) error {
-	args := m.Called(id)
-	return args.Error(0)
-}
-
-func (m *mockIkasRepository) CheckExistsByPerusahaanID(perusahaanID string) (bool, error) {
-	args := m.Called(perusahaanID)
-	return args.Get(0).(bool), args.Error(1)
-}
-
-func (m *mockIkasRepository) CheckExistsByPerusahaanIDAndYear(id string, year int) (bool, error) {
-	args := m.Called(id, year)
-	return args.Get(0).(bool), args.Error(1)
-}
-
-func (m *mockIkasRepository) FindPerusahaanByName(namaPerusahaan string) (string, error) {
-	args := m.Called(namaPerusahaan)
-	return args.Get(0).(string), args.Error(1)
-}
-
-func (m *mockIkasRepository) GetIDByPerusahaanID(idPerusahaan string) (string, error) {
-	args := m.Called(idPerusahaan)
-	return args.Get(0).(string), args.Error(1)
-}
-
-func (m *mockIkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse, error) {
-	args := m.Called(perusahaanID)
-	return args.Get(0).([]dto.IkasResponse), args.Error(1)
-}
-
-func (m *mockIkasRepository) ParseExcelForImport(fileData []byte) (*dto.ParsedExcelData, error) {
-	args := m.Called(fileData)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*dto.ParsedExcelData), args.Error(1)
-}
-
 // mockIkasProducer implements services.IkasProducerInterface
 type mockIkasProducer struct {
 	mock.Mock
@@ -153,6 +87,10 @@ func TestIkasHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	repo.On("GetAll").Return(expectedData, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/ikas", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -171,6 +109,10 @@ func TestIkasHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 	repo.On("GetAll").Return([]dto.IkasResponse{}, errors.New("db error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/ikas", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -187,6 +129,10 @@ func TestIkasHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 	repo.On("GetByID", "123").Return(expectedData, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/ikas/123", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -202,6 +148,10 @@ func TestIkasHandler_ServeHTTP_GetByID_NotFound(t *testing.T) {
 	repo.On("GetByID", "123").Return((*dto.IkasResponse)(nil), errors.New("data tidak ditemukan"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/ikas/123", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)

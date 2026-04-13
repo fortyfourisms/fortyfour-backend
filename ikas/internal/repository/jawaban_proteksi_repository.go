@@ -14,6 +14,7 @@ type JawabanProteksiRepositoryInterface interface {
 	GetAll() ([]dto.JawabanProteksiResponse, error)
 	GetByID(id int) (*dto.JawabanProteksiResponse, error)
 	GetByIkasID(ikasID string) ([]dto.JawabanProteksiResponse, error)
+	GetByPerusahaanID(perusahaanID string) ([]dto.JawabanProteksiResponse, error)
 	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanProteksiResponse, error)
 	Update(id int, req dto.UpdateJawabanProteksiRequest) error
 	Delete(id int) error
@@ -139,6 +140,32 @@ func (r *JawabanProteksiRepository) GetByIkasID(ikasID string) ([]dto.JawabanPro
 	query := jawabanProteksiSelectQuery + ` WHERE jp.ikas_id = ? ORDER BY jp.created_at ASC`
 
 	rows, err := r.db.Query(query, ikasID)
+	if err != nil {
+		rollbar.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []dto.JawabanProteksiResponse
+	for rows.Next() {
+		item, err := scanJawabanProteksi(rows)
+		if err != nil {
+			rollbar.Error(err)
+			continue
+		}
+		result = append(result, item)
+	}
+
+	return result, nil
+}
+
+func (r *JawabanProteksiRepository) GetByPerusahaanID(perusahaanID string) ([]dto.JawabanProteksiResponse, error) {
+	query := jawabanProteksiSelectQuery + ` 
+		JOIN ikas i ON jp.ikas_id = i.id 
+		WHERE i.id_perusahaan = ? 
+		ORDER BY jp.created_at ASC`
+
+	rows, err := r.db.Query(query, perusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		return nil, err

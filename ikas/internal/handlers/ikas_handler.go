@@ -98,7 +98,7 @@ func (h *IkasHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	if perusahaanID != "" && perusahaanID != "null" {
 		data, err = h.service.GetByPerusahaan(perusahaanID)
 	} else {
-		data, err = h.service.GetAll()
+		data, err = h.service.GetAll(userRole)
 	}
 
 	if err != nil {

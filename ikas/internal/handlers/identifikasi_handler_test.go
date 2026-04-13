@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"ikas/internal/middleware"
 	"ikas/internal/models"
 	"ikas/internal/repository"
 	"ikas/internal/services"
@@ -37,8 +39,8 @@ func (m *mockIdentifikasiRepository) GetByIkasID(ikasID string) ([]models.Identi
 
 var _ repository.IdentifikasiRepositoryInterface = (*mockIdentifikasiRepository)(nil)
 
-func setupIdentifikasiHandler(repo repository.IdentifikasiRepositoryInterface) *IdentifikasiHandler {
-	service := services.NewIdentifikasiService(repo)
+func setupIdentifikasiHandler(repo repository.IdentifikasiRepositoryInterface, ikasRepo repository.IkasRepositoryInterface) *IdentifikasiHandler {
+	service := services.NewIdentifikasiService(repo, ikasRepo)
 	return NewIdentifikasiHandler(service)
 }
 
@@ -51,9 +53,14 @@ func TestIdentifikasiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := setupIdentifikasiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupIdentifikasiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/identifikasi", nil)
+	// Inject admin role so GetAll works without ikas_id
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -75,9 +82,14 @@ func TestIdentifikasiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 			return nil, errors.New("database error")
 		},
 	}
-	handler := setupIdentifikasiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupIdentifikasiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/identifikasi", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -93,7 +105,8 @@ func TestIdentifikasiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := setupIdentifikasiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupIdentifikasiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/identifikasi/uuid-test", nil)
 	w := httptest.NewRecorder()
@@ -116,7 +129,8 @@ func TestIdentifikasiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 			return nil, errors.New("data tidak ditemukan")
 		},
 	}
-	handler := setupIdentifikasiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupIdentifikasiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/identifikasi/invalid-id", nil)
 	w := httptest.NewRecorder()
@@ -128,7 +142,8 @@ func TestIdentifikasiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 
 func TestIdentifikasiHandler_ServeHTTP_MethodNotAllowed(t *testing.T) {
 	repo := &mockIdentifikasiRepository{}
-	handler := setupIdentifikasiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupIdentifikasiHandler(repo, ikasRepo)
 
 	methods := []string{http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodPatch}
 

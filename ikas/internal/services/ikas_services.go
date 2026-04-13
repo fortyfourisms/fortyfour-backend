@@ -87,9 +87,13 @@ func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id 
 	return nil
 }
 
-func (s *IkasService) GetAll() ([]dto.IkasResponse, error) {
+func (s *IkasService) GetAll(userRole string) ([]dto.IkasResponse, error) {
+	if userRole != "admin" {
+		return nil, fmt.Errorf("anda tidak memiliki akses untuk melihat semua data")
+	}
 	return s.repo.GetAll()
 }
+
 
 func (s *IkasService) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse, error) {
 	return s.repo.GetByPerusahaan(perusahaanID)
