@@ -1,25 +1,51 @@
 package dto
 
+// RESPONSE MASTER RISIKO
 type RisikoResponse struct {
 	ID         int    `json:"id"`
-	NamaRisiko string `json:"nama_risiko"`
+	Kode       string `json:"kode"`
+	Nama       string `json:"nama"`
 	Deskripsi  string `json:"deskripsi"`
 }
 
-// INPUT JAWABAN RISIKO
-type CreateRisikoJawabanRequest struct {
+// STEP 1: ELIGIBILITY
+type EligibilityRequest struct {
+	RespondenID   int  `json:"responden_id"`
+	RisikoID      int  `json:"risiko_id"`
+	PernahTerjadi bool `json:"pernah_terjadi"`
+}
+
+// STEP 2A: ALASAN (JIKA TIDAK)
+type AlasanRequest struct {
+	RespondenID int    `json:"responden_id"`
+	RisikoID    int    `json:"risiko_id"`
+	Alasan      string `json:"alasan"`
+}
+
+// STEP 2B: DAMPAK (JIKA YA)
+type DampakRequest struct {
 	RespondenID int `json:"responden_id"`
 	RisikoID    int `json:"risiko_id"`
 
-	PernahTerjadi string `json:"pernah_terjadi"`
+	DampakReputasi    string `json:"dampak_reputasi"`    // ENUM
+	DampakOperasional string `json:"dampak_operasional"` // ENUM
+	DampakFinansial   string `json:"dampak_finansial"`   // ENUM
+	DampakHukum       string `json:"dampak_hukum"`       // ENUM
 
-	DampakReputasi    string `json:"dampak_reputasi"`
-	DampakOperasional string `json:"dampak_operasional"`
-	DampakFinansial   string `json:"dampak_finansial"`
-	DampakHukum       string `json:"dampak_hukum"`
+	Frekuensi string `json:"frekuensi"` // ENUM
+}
 
-	Frekuensi string `json:"frekuensi"`
+// STEP 2C: PENGENDALIAN
+type PengendalianRequest struct {
+	RespondenID int  `json:"responden_id"`
+	RisikoID    int  `json:"risiko_id"`
 
-	AdaPengendalian       string `json:"ada_pengendalian"`
-	DeskripsiPengendalian string `json:"deskripsi_pengendalian"`
+	AdaPengendalian bool   `json:"ada_pengendalian"`
+	Deskripsi       string `json:"deskripsi_pengendalian,omitempty"`
+}
+
+// RESPONSE GENERIC
+type RisikoStepResponse struct {
+	NextStep string `json:"next_step"`
+	Message  string `json:"message,omitempty"`
 }
