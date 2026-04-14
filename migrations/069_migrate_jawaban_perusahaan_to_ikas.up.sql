@@ -66,35 +66,35 @@ ALTER TABLE jawaban_gulih_buffer DROP INDEX uq_jawaban_gulih_buffer;
 ALTER TABLE jawaban_gulih_buffer DROP COLUMN perusahaan_id;
 ALTER TABLE jawaban_gulih_buffer ADD UNIQUE KEY uq_jawaban_gulih_buffer (ikas_id, pertanyaan_gulih_id);
 
--- 3. Update Tabel Domain Summary (Identifikasi, Proteksi, Deteksi, Gulih)
--- Kita harus menghapus constraint unik perusahaan agar bisa punya banyak data summary (1 per asesmen)
+-- -- 3. Update Tabel Domain Summary (Identifikasi, Proteksi, Deteksi, Gulih)
+-- -- Kita harus menghapus constraint unik perusahaan agar bisa punya banyak data summary (1 per asesmen)
 
--- Identifikasi Table
-ALTER TABLE identifikasi ADD COLUMN ikas_id CHAR(36) AFTER perusahaan_id;
-UPDATE identifikasi iden JOIN ikas i ON iden.perusahaan_id = i.id_perusahaan SET iden.ikas_id = i.id;
-ALTER TABLE identifikasi DROP FOREIGN KEY fk_identifikasi_perusahaan;
-ALTER TABLE identifikasi DROP INDEX uq_identifikasi_perusahaan;
-ALTER TABLE identifikasi DROP COLUMN perusahaan_id;
-ALTER TABLE identifikasi ADD UNIQUE KEY uq_identifikasi_ikas (ikas_id);
+-- -- Identifikasi Table
+-- ALTER TABLE identifikasi ADD COLUMN ikas_id CHAR(36) AFTER perusahaan_id;
+-- UPDATE identifikasi iden JOIN ikas i ON iden.perusahaan_id = i.id_perusahaan SET iden.ikas_id = i.id;
+-- ALTER TABLE identifikasi DROP FOREIGN KEY fk_identifikasi_perusahaan;
+-- ALTER TABLE identifikasi DROP INDEX uq_identifikasi_perusahaan;
+-- ALTER TABLE identifikasi DROP COLUMN perusahaan_id;
+-- ALTER TABLE identifikasi ADD UNIQUE KEY uq_identifikasi_ikas (ikas_id);
 
--- Proteksi Table
-ALTER TABLE proteksi ADD COLUMN ikas_id CHAR(36) AFTER perusahaan_id;
-UPDATE proteksi prot JOIN ikas i ON prot.perusahaan_id = i.id_perusahaan SET prot.ikas_id = i.id;
-ALTER TABLE proteksi DROP FOREIGN KEY fk_proteksi_perusahaan;
-ALTER TABLE proteksi DROP INDEX uq_proteksi_perusahaan;
-ALTER TABLE proteksi DROP COLUMN perusahaan_id;
-ALTER TABLE proteksi ADD UNIQUE KEY uq_proteksi_ikas (ikas_id);
+-- -- Proteksi Table
+-- ALTER TABLE proteksi ADD COLUMN ikas_id CHAR(36) AFTER perusahaan_id;
+-- UPDATE proteksi prot JOIN ikas i ON prot.perusahaan_id = i.id_perusahaan SET prot.ikas_id = i.id;
+-- ALTER TABLE proteksi DROP FOREIGN KEY fk_proteksi_perusahaan;
+-- ALTER TABLE proteksi DROP INDEX uq_proteksi_perusahaan;
+-- ALTER TABLE proteksi DROP COLUMN perusahaan_id;
+-- ALTER TABLE proteksi ADD UNIQUE KEY uq_proteksi_ikas (ikas_id);
 
--- Deteksi Table
-ALTER TABLE deteksi ADD COLUMN ikas_id CHAR(36) AFTER perusahaan_id;
-UPDATE deteksi det JOIN ikas i ON det.perusahaan_id = i.id_perusahaan SET det.ikas_id = i.id;
-ALTER TABLE deteksi DROP INDEX uq_deteksi_perusahaan;
-ALTER TABLE deteksi DROP COLUMN perusahaan_id;
-ALTER TABLE deteksi ADD UNIQUE KEY uq_deteksi_ikas (ikas_id);
+-- -- Deteksi Table
+-- ALTER TABLE deteksi ADD COLUMN ikas_id CHAR(36) AFTER perusahaan_id;
+-- UPDATE deteksi det JOIN ikas i ON det.perusahaan_id = i.id_perusahaan SET det.ikas_id = i.id;
+-- ALTER TABLE deteksi DROP INDEX uq_deteksi_perusahaan;
+-- ALTER TABLE deteksi DROP COLUMN perusahaan_id;
+-- ALTER TABLE deteksi ADD UNIQUE KEY uq_deteksi_ikas (ikas_id);
 
--- Gulih Table
-ALTER TABLE gulih ADD COLUMN ikas_id CHAR(36) AFTER perusahaan_id;
-UPDATE gulih g JOIN ikas i ON g.perusahaan_id = i.id_perusahaan SET g.ikas_id = i.id;
-ALTER TABLE gulih DROP INDEX uq_gulih_perusahaan;
-ALTER TABLE gulih DROP COLUMN perusahaan_id;
-ALTER TABLE gulih ADD UNIQUE KEY uq_gulih_ikas (ikas_id);
+-- -- Gulih Table
+-- ALTER TABLE gulih ADD COLUMN ikas_id CHAR(36) AFTER perusahaan_id;
+-- UPDATE gulih g JOIN ikas i ON g.perusahaan_id = i.id_perusahaan SET g.ikas_id = i.id;
+-- ALTER TABLE gulih DROP INDEX uq_gulih_perusahaan;
+-- ALTER TABLE gulih DROP COLUMN perusahaan_id;
+-- ALTER TABLE gulih ADD UNIQUE KEY uq_gulih_ikas (ikas_id);
