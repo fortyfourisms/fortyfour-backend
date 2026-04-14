@@ -518,14 +518,16 @@ func (h *UserHandler) handleUpdateStatus(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	if err := h.service.UpdateStatus(id, models.UserStatus(req.Status)); err != nil {
+	resp, err := h.service.UpdateStatus(id, models.UserStatus(req.Status))
+	if err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]string{
-		"message": "Status akun berhasil diubah menjadi " + req.Status,
-	})
+	userID := h.getUserID(r)
+	h.sseService.NotifyUpdate("users", resp, userID)
+
+	utils.RespondJSON(w, http.StatusOK, resp)
 }
 
 func (h *UserHandler) getUserID(r *http.Request) string {
