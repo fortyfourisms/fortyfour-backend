@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"survey/internal/models"
+	"strconv"
+
+	"survey/internal/dto"
 	"survey/internal/repository"
 	"survey/internal/services"
 )
@@ -17,20 +19,12 @@ func NewRisikoHandler(svc *services.RisikoService) *RisikoHandler {
 	return &RisikoHandler{svc: svc}
 }
 
-// POST /api/survey/risk/ip-theft/eligibility
-// STEP 1 — Pertanyaan awal:
-//   "Apakah perusahaan Anda berpotensi mengalami atau pernah mengalami
-//    insiden pencurian Intellectual Property?"
-// Request:
-//   { "respondent_id": "R001", "has_experienced": true|false }
-// Response:
-//   { "next_step": "show_detail" }   ← jika Ya
-//   { "next_step": "show_reason" }   ← jika Tidak
-
+// STEP 1: ELIGIBILITY
 func (h *RisikoHandler) SubmitEligibility(w http.ResponseWriter, r *http.Request) {
-	var req models.EligibilityRequest
+	var req dto.EligibilityRequest
+
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
@@ -40,192 +34,132 @@ func (h *RisikoHandler) SubmitEligibility(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	writeJSON(w, http.StatusOK, models.APIResponse{
-		Success: true,
-		Message: "Jawaban eligibilitas berhasil disimpan",
-		Data:    result,
-	})
+	writeJSON(w, http.StatusOK, result)
 }
 
-// POST /api/survey/risk/ip-theft/reason
-// STEP 2a — Alur "Tidak"
-// Syarat: has_experienced = false
-// Pertanyaan:
-//   "Mengapa perusahaan Anda tidak berpotensi mengalami atau tidak pernah
-//    mengalami insiden pencurian Intellectual Property?"
-// Request:
-//   { "respondent_id": "R001", "reason": "..." }
-// Setelah ini → Risiko 1 selesai, tombol Berikutnya aktif
+// STEP 2A: ALASAN (JIKA TIDAK)
+func (h *RisikoHandler) SubmitAlasan(w http.ResponseWriter, r *http.Request) {
+	var req dto.AlasanRequest
 
-func (h *RisikoHandler) SubmitReason(w http.ResponseWriter, r *http.Request) {
-	var req models.ReasonRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	result, err := h.svc.ProcessReason(req)
+	result, err := h.svc.ProcessAlasan(req)
 	if err != nil {
 		writeError(w, resolveErrorStatus(err), err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, models.APIResponse{
-		Success: true,
-		Message: "Alasan berhasil disimpan. Risiko 1 selesai.",
-		Data:    result,
-	})
+	writeJSON(w, http.StatusOK, result)
 }
 
-// POST /api/survey/risk/ip-theft/detail
-// STEP 2b — Alur "Ya"
-// Syarat: has_experienced = true
-// Pertanyaan:
-//   1. "Seberapa besar dampak dari pencurian Intellectual Property perusahaan?"
-//      (matrix Reputasi / Operasional / Finansial / Hukum, nilai 1–4)
-//   2. "Seberapa sering dalam setahun risiko pencurian IP berpotensi terjadi?"
-//      (Kecil=1, Sedang=2, Besar=3, Sangat Besar=4)
-// Request:
-//   {
-//     "respondent_id": "R001",
-//     "impact": {
-//       "reputation": 3, "operational": 2, "financial": 4, "legal": 2
-//     },
-//     "frequency": 3
-//   }
-// Response → next_step: "show_control"
-//   UI harus menampilkan pertanyaan tindakan pengendalian (Step 2c)
-//   sebelum tombol Berikutnya diaktifkan
+// STEP 2B: DAMPAK (JIKA YA)
+func (h *RisikoHandler) SubmitDampak(w http.ResponseWriter, r *http.Request) {
+	var req dto.DampakRequest
 
-func (h *RisikoHandler) SubmitDetail(w http.ResponseWriter, r *http.Request) {
-	var req models.DetailRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	result, err := h.svc.ProcessDetail(req)
+	result, err := h.svc.ProcessDampak(req)
 	if err != nil {
 		writeError(w, resolveErrorStatus(err), err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, models.APIResponse{
-		Success: true,
-		Message: "Dampak dan frekuensi berhasil disimpan",
-		Data:    result, // { next_step: "show_control" }
-	})
+	writeJSON(w, http.StatusOK, result)
 }
 
-// POST /api/survey/risk/ip-theft/control
-// STEP 2c — Alur "Ya", sub-branching tindakan pengendalian
-// Syarat: has_experienced = true AND step 2b sudah diisi
-// Pertanyaan wajib:
-//   "Apa perusahaan Anda telah memiliki tindakan pengendalian terhadap
-//    risiko pencurian Intellectual Property?"
-//   ● Ya  → wajib mengisi:
-//            "Apa tindakan pengendalian yang telah dilakukan oleh perusahaan Anda
-//             terhadap risiko pencurian Intellectual Property perusahaan?"
-//   ● Tidak → tidak ada pertanyaan lanjutan, tombol Berikutnya langsung aktif
-// Request (has_control = Ya):
-//   {
-//     "respondent_id": "R001",
-//     "has_control": true,
-//     "control_measures": "Enkripsi data, NDA karyawan, monitoring akses sistem"
-//   }
-// Request (has_control = Tidak):
-//   {
-//     "respondent_id": "R001",
-//     "has_control": false
-//   }
-// Response → next_step: "finish"  (tombol Berikutnya aktif, Risiko 1 selesai)
+// STEP 2C: PENGENDALIAN
+func (h *RisikoHandler) SubmitPengendalian(w http.ResponseWriter, r *http.Request) {
+	var req dto.PengendalianRequest
 
-func (h *RisikoHandler) SubmitControl(w http.ResponseWriter, r *http.Request) {
-	var req models.ControlRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	result, err := h.svc.ProcessControl(req)
+	result, err := h.svc.ProcessPengendalian(req)
 	if err != nil {
 		writeError(w, resolveErrorStatus(err), err.Error())
 		return
 	}
 
-	msg := "Tindakan pengendalian disimpan. Risiko 1 selesai."
-	if !req.HasControl {
-		msg = "Tidak ada tindakan pengendalian. Risiko 1 selesai."
+	msg := "Tindakan pengendalian berhasil disimpan"
+	if !req.AdaPengendalian {
+		msg = "Tidak ada pengendalian, risiko selesai"
 	}
 
-	writeJSON(w, http.StatusOK, models.APIResponse{
-		Success: true,
-		Message: msg,
-		Data:    result, // { next_step: "finish" }
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"message":   msg,
+		"next_step": "finish",
 	})
 }
 
-// GET /api/survey/risk/ip-theft/{respondent_id}
+// GET BY RESPONDEN ID
 func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request) {
-	respondentID := r.PathValue("respondent_id")
-	if respondentID == "" {
-		writeError(w, http.StatusBadRequest, "respondent_id diperlukan")
+	idStr := r.PathValue("respondent_id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "respondent_id harus angka")
 		return
 	}
 
-	result, err := h.svc.GetResponse(respondentID)
+	result, err := h.svc.GetByRespondentID(id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			writeError(w, http.StatusNotFound, "Data tidak ditemukan")
+			writeError(w, http.StatusNotFound, "data tidak ditemukan")
 			return
 		}
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, models.APIResponse{Success: true, Data: result})
+	writeJSON(w, http.StatusOK, result)
 }
 
-// GET /api/survey/progress/{respondent_id}
+// GET PROGRESS
 func (h *RisikoHandler) GetProgress(w http.ResponseWriter, r *http.Request) {
-	respondentID := r.PathValue("respondent_id")
-	if respondentID == "" {
-		writeError(w, http.StatusBadRequest, "respondent_id diperlukan")
+	idStr := r.PathValue("respondent_id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "respondent_id harus angka")
 		return
 	}
 
-	progress, err := h.svc.GetProgress(respondentID)
+	result, err := h.svc.GetProgress(id)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, models.APIResponse{Success: true, Data: progress})
+	writeJSON(w, http.StatusOK, result)
 }
 
-// POST /api/survey/navigate
-// Body: { "respondent_id": "R001", "direction": "next"|"previous", "current_risk": 1 }
+// NAVIGATE
 func (h *RisikoHandler) Navigate(w http.ResponseWriter, r *http.Request) {
-	var req models.NavigateRequest
+	var req dto.NavigateRequest
+
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	progress, err := h.svc.Navigate(req)
+	result, err := h.svc.Navigate(req)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, models.APIResponse{
-		Success: true,
-		Message: "Navigasi berhasil",
-		Data:    progress,
-	})
+	writeJSON(w, http.StatusOK, result)
 }
 
-// Helpers
+// HELPERS
 func decodeJSON(r *http.Request, dst interface{}) error {
 	defer r.Body.Close()
 	return json.NewDecoder(r.Body).Decode(dst)
@@ -238,7 +172,10 @@ func writeJSON(w http.ResponseWriter, status int, body interface{}) {
 }
 
 func writeError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, models.APIResponse{Success: false, Message: message})
+	writeJSON(w, status, map[string]interface{}{
+		"success": false,
+		"message": message,
+	})
 }
 
 func resolveErrorStatus(err error) int {
