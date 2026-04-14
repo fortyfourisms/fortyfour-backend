@@ -120,6 +120,10 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 		return fmt.Errorf("anda tidak memiliki akses untuk mengubah data ini")
 	}
 
+	if current.IsValidated {
+		return fmt.Errorf("data asesmen ini sudah divalidasi dan tidak dapat diubah")
+	}
+
 	// Change detection for audit log
 	changes := make(map[string]interface{})
 	if req.IDPerusahaan != nil && *req.IDPerusahaan != current.Perusahaan.ID {
@@ -185,6 +189,10 @@ func (s *IkasService) Delete(ctx context.Context, id string, userID string, user
 	}
 	if userRole != "admin" && existing.Perusahaan != nil && existing.Perusahaan.ID != userPerusahaanID {
 		return fmt.Errorf("anda tidak memiliki akses untuk menghapus data ini")
+	}
+
+	if existing.IsValidated && userRole != "admin" {
+		return fmt.Errorf("data asesmen ini sudah divalidasi dan tidak dapat dihapus")
 	}
 
 	// Publish delete event
@@ -272,4 +280,39 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 	}
 
 	return newID, nil
+}
+func (s *IkasService) ValidateIkas(ctx context.Context, id string, status bool) error {
+	// Existence Check
+	existing, err := s.repo.GetByID(id)
+	if err != nil {
+		return err
+	}
+
+	if existing.IsValidated == status {
+		return nil // Already in target state
+	}
+
+	// Update status
+	if err := s.repo.UpdateValidationStatus(id, status); err != nil {
+		return err
+	}
+
+	// Audit Log
+	action := "VALIDATE_IKAS"
+	if !status {
+		action = "UNVALIDATE_IKAS"
+	}
+
+	auditEvent := dto_event.IkasAuditLogEvent{
+		IkasID:    id,
+		UserID:    "system_admin", // TODO: Pass user ID if possible
+		Action:    action,
+		Changes:   map[string]interface{}{"is_validated": status},
+		Timestamp: time.Now(),
+	}
+	if s.producer != nil {
+		_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
+	}
+
+	return nil
 }

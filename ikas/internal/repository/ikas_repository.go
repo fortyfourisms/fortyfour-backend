@@ -88,6 +88,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			g.nilai_subdomain2,
 			g.nilai_subdomain3,
 			g.nilai_subdomain4,
+			i.is_validated,
 			i.created_at,
 			i.updated_at
 		FROM ikas i
@@ -119,6 +120,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 		var detNilai, detSub1, detSub2, detSub3 sql.NullFloat64
 		var gulihID sql.NullInt64
 		var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
+		var isValidated sql.NullBool
 		var createdAt, updatedAt sql.NullString
 
 		err := rows.Scan(
@@ -157,11 +159,16 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			&gulihSub2,
 			&gulihSub3,
 			&gulihSub4,
+			&isValidated,
 			&createdAt,
 			&updatedAt,
 		)
 		if err != nil {
 			continue
+		}
+
+		if isValidated.Valid {
+			i.IsValidated = isValidated.Bool
 		}
 
 		if tanggal.Valid {
@@ -300,6 +307,7 @@ func (r *IkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasRespons
 			g.nilai_subdomain2,
 			g.nilai_subdomain3,
 			g.nilai_subdomain4,
+			i.is_validated,
 			i.created_at,
 			i.updated_at
 		FROM ikas i
@@ -332,6 +340,7 @@ func (r *IkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasRespons
 		var detNilai, detSub1, detSub2, detSub3 sql.NullFloat64
 		var gulihID sql.NullInt64
 		var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
+		var isValidated sql.NullBool
 		var createdAt, updatedAt sql.NullString
 
 		err := rows.Scan(
@@ -370,11 +379,16 @@ func (r *IkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasRespons
 			&gulihSub2,
 			&gulihSub3,
 			&gulihSub4,
+			&isValidated,
 			&createdAt,
 			&updatedAt,
 		)
 		if err != nil {
 			continue
+		}
+
+		if isValidated.Valid {
+			i.IsValidated = isValidated.Bool
 		}
 
 		if tanggal.Valid {
@@ -505,6 +519,7 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 			g.nilai_subdomain2,
 			g.nilai_subdomain3,
 			g.nilai_subdomain4,
+			i.is_validated,
 			i.created_at,
 			i.updated_at
 		FROM ikas i
@@ -530,6 +545,7 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	var detNilai, detSub1, detSub2, detSub3 sql.NullFloat64
 	var gulihID sql.NullInt64
 	var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
+	var isValidated sql.NullBool
 	var createdAt, updatedAt sql.NullString
 
 	err := row.Scan(
@@ -568,11 +584,16 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 		&gulihSub2,
 		&gulihSub3,
 		&gulihSub4,
+		&isValidated,
 		&createdAt,
 		&updatedAt,
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if isValidated.Valid {
+		i.IsValidated = isValidated.Bool
 	}
 
 	if tanggal.Valid {
@@ -1102,4 +1123,23 @@ func (r *IkasRepository) CheckOwnership(ikasID string, perusahaanID string) (boo
 		return false, err
 	}
 	return count > 0, nil
+}
+
+func (r *IkasRepository) UpdateValidationStatus(id string, status bool) error {
+	query := `UPDATE ikas SET is_validated = ? WHERE id = ?`
+	_, err := r.db.Exec(query, status, id)
+	return err
+}
+
+func (r *IkasRepository) IsLocked(id string) (bool, error) {
+	var locked bool
+	query := `SELECT is_validated FROM ikas WHERE id = ?`
+	err := r.db.QueryRow(query, id).Scan(&locked)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+	return locked, nil
 }

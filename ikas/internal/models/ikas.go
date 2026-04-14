@@ -15,6 +15,7 @@ type Ikas struct {
 	IDProteksi      string    `json:"id_proteksi"`
 	IDDeteksi       string    `json:"id_deteksi"`
 	IDGulih         string    `json:"id_gulih"`
+	IsValidated     bool      `json:"is_validated"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
 }

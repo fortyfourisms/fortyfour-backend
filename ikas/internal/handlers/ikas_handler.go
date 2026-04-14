@@ -53,7 +53,12 @@ func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
-		h.handleUpdate(w, r, id)
+		if strings.HasSuffix(id, "/validate") {
+			realID := strings.TrimSuffix(id, "/validate")
+			h.handleValidate(w, r, realID)
+		} else {
+			h.handleUpdate(w, r, id)
+		}
 	case http.MethodDelete:
 		if id == "" {
 			utils.RespondError(w, 400, "ID wajib")
@@ -314,5 +319,32 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 		"success": true,
 		"message": "Berhasil menyimpan data",
 		"id":      newID,
+	})
+}
+func (h *IkasHandler) handleValidate(w http.ResponseWriter, r *http.Request, id string) {
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	if userRole != "admin" {
+		utils.RespondError(w, 403, "Hanya admin yang dapat melakukan validasi final")
+		return
+	}
+
+	var req dto.ValidasiIkasRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, 400, "Format request tidak valid: "+err.Error())
+		return
+	}
+
+	if err := h.service.ValidateIkas(r.Context(), id, req.Status); err != nil {
+		utils.RespondError(w, 500, err.Error())
+		return
+	}
+
+	msg := "Berhasil melakukan validasi final"
+	if !req.Status {
+		msg = "Berhasil membuka validasi final"
+	}
+
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": msg,
 	})
 }

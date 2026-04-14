@@ -34,6 +34,8 @@ type IkasRepositoryInterface interface {
 	CheckExistsByPerusahaanIDAndYear(idPerusahaan string, year int) (bool, error)
 	CheckOwnership(ikasID string, perusahaanID string) (bool, error)
 	GetIDByPerusahaanID(idPerusahaan string) (string, error)
+	UpdateValidationStatus(id string, status bool) error
+	IsLocked(id string) (bool, error)
 }
 
 // RuangLingkupRepositoryInterface

@@ -144,6 +144,16 @@ func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiReq
 		}
 	}
 
+	// CHECK LOCK
+	locked, err := s.ikasRepo.IsLocked(req.IkasID)
+	if err != nil {
+		rollbar.Error(err)
+		return "", err
+	}
+	if locked {
+		return "", errors.New("data asesmen ini sudah divalidasi dan tidak dapat diubah")
+	}
+
 	// Synchronous Duplicate Check (Pola 2 Refinement)
 	// Check if already exists in the MAIN table
 	isDuplicate, err := s.repo.CheckDuplicate(req.IkasID, req.PertanyaanIdentifikasiID, 0)
@@ -261,6 +271,10 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 		return errors.New("anda tidak memiliki akses untuk mengubah data ini")
 	}
 
+	if ikasData.IsValidated {
+		return errors.New("data asesmen ini sudah divalidasi dan tidak dapat diubah")
+	}
+
 	if err := s.validateUpdate(&req, existing.Evidence, userRole); err != nil {
 		return err
 	}
@@ -344,6 +358,10 @@ func (s *JawabanIdentifikasiService) Delete(id int, userID string, userRole stri
 
 	if userRole != "admin" && ikasData.Perusahaan.ID != userPerusahaanID {
 		return errors.New("anda tidak memiliki akses untuk menghapus data ini")
+	}
+
+	if ikasData.IsValidated {
+		return errors.New("data asesmen ini sudah divalidasi dan tidak dapat dihapus")
 	}
 
 	// Publish Delete Event (Pola 2)
