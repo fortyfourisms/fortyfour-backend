@@ -57,6 +57,42 @@ var defaultPolicies = []Policy{
 	{"user", "/api/perusahaan/:id", "GET"},
 	{"user", "/api/perusahaan/:id", "PUT"},
 
+	// IKAS
+	{"user", "/api/maturity/ikas", "GET"},
+	{"user", "/api/maturity/ikas", "POST"},
+	{"user", "/api/maturity/ikas/:id", "GET"},
+	{"user", "/api/maturity/ikas/:id", "PUT"},
+	{"user", "/api/maturity/ikas/:id", "DELETE"},
+
+	// Domain Identifikasi
+	{"user", "/api/maturity/identifikasi", "GET"},
+	{"user", "/api/maturity/identifikasi/:id", "GET"},
+
+	// Domain Proteksi
+	{"user", "/api/maturity/proteksi", "GET"},
+	{"user", "/api/maturity/proteksi/:id", "GET"},
+
+	// Domain Deteksi
+	{"user", "/api/maturity/deteksi", "GET"},
+	{"user", "/api/maturity/deteksi/:id", "GET"},
+
+	// Domain Gulih
+	{"user", "/api/maturity/gulih", "GET"},
+	{"user", "/api/maturity/gulih/:id", "GET"},
+
+	// Maturity (Pertanyaan)
+	{"user", "/api/maturity/pertanyaan-identifikasi", "GET"},
+	{"user", "/api/maturity/pertanyaan-identifikasi/:id", "GET"},
+
+	{"user", "/api/maturity/pertanyaan-proteksi", "GET"},
+	{"user", "/api/maturity/pertanyaan-proteksi/:id", "GET"},
+
+	{"user", "/api/maturity/pertanyaan-deteksi", "GET"},
+	{"user", "/api/maturity/pertanyaan-deteksi/:id", "GET"},
+
+	{"user", "/api/maturity/pertanyaan-gulih", "GET"},
+	{"user", "/api/maturity/pertanyaan-gulih/:id", "GET"},
+
 	// Maturity (Jawaban)
 	{"user", "/api/maturity/jawaban-identifikasi", "GET"},
 	{"user", "/api/maturity/jawaban-identifikasi", "POST"},

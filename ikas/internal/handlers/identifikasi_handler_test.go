@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"ikas/internal/middleware"
 	"ikas/internal/models"
 	"ikas/internal/repository"
 	"ikas/internal/services"
@@ -15,8 +17,10 @@ import (
 
 // mockIdentifikasiRepository implements repository.IdentifikasiRepositoryInterface for testing purposes.
 type mockIdentifikasiRepository struct {
-	GetAllFn  func() ([]models.Identifikasi, error)
-	GetByIDFn func(id string) (*models.Identifikasi, error)
+	GetAllFn      func() ([]models.Identifikasi, error)
+	GetByIDFn     func(id string) (*models.Identifikasi, error)
+	GetByIkasIDFn        func(ikasID string) ([]models.Identifikasi, error)
+	GetByPerusahaanIDFn  func(perusahaanID string) ([]models.Identifikasi, error)
 }
 
 func (m *mockIdentifikasiRepository) GetAll() ([]models.Identifikasi, error) {
@@ -27,10 +31,24 @@ func (m *mockIdentifikasiRepository) GetByID(id string) (*models.Identifikasi, e
 	return m.GetByIDFn(id)
 }
 
+func (m *mockIdentifikasiRepository) GetByIkasID(ikasID string) ([]models.Identifikasi, error) {
+	if m.GetByIkasIDFn != nil {
+		return m.GetByIkasIDFn(ikasID)
+	}
+	return nil, nil
+}
+
+func (m *mockIdentifikasiRepository) GetByPerusahaanID(perusahaanID string) ([]models.Identifikasi, error) {
+	if m.GetByPerusahaanIDFn != nil {
+		return m.GetByPerusahaanIDFn(perusahaanID)
+	}
+	return nil, nil
+}
+
 var _ repository.IdentifikasiRepositoryInterface = (*mockIdentifikasiRepository)(nil)
 
-func setupIdentifikasiHandler(repo repository.IdentifikasiRepositoryInterface) *IdentifikasiHandler {
-	service := services.NewIdentifikasiService(repo)
+func setupIdentifikasiHandler(repo repository.IdentifikasiRepositoryInterface, ikasRepo repository.IkasRepositoryInterface) *IdentifikasiHandler {
+	service := services.NewIdentifikasiService(repo, ikasRepo)
 	return NewIdentifikasiHandler(service)
 }
 
@@ -43,9 +61,14 @@ func TestIdentifikasiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := setupIdentifikasiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupIdentifikasiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/identifikasi", nil)
+	// Inject admin role so GetAll works without ikas_id
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -67,9 +90,14 @@ func TestIdentifikasiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 			return nil, errors.New("database error")
 		},
 	}
-	handler := setupIdentifikasiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupIdentifikasiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/identifikasi", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -85,9 +113,12 @@ func TestIdentifikasiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := setupIdentifikasiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupIdentifikasiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/identifikasi/uuid-test", nil)
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -108,9 +139,12 @@ func TestIdentifikasiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 			return nil, errors.New("data tidak ditemukan")
 		},
 	}
-	handler := setupIdentifikasiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupIdentifikasiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/identifikasi/invalid-id", nil)
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -120,7 +154,8 @@ func TestIdentifikasiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 
 func TestIdentifikasiHandler_ServeHTTP_MethodNotAllowed(t *testing.T) {
 	repo := &mockIdentifikasiRepository{}
-	handler := setupIdentifikasiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupIdentifikasiHandler(repo, ikasRepo)
 
 	methods := []string{http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodPatch}
 

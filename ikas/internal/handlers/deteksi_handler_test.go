@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"ikas/internal/middleware"
 	"ikas/internal/models"
 	"ikas/internal/repository"
 	"ikas/internal/services"
@@ -15,8 +17,10 @@ import (
 
 // mockDeteksiRepository implements repository.DeteksiRepositoryInterface for testing purposes.
 type mockDeteksiRepository struct {
-	GetAllFn  func() ([]models.Deteksi, error)
-	GetByIDFn func(id string) (*models.Deteksi, error)
+	GetAllFn      func() ([]models.Deteksi, error)
+	GetByIDFn     func(id string) (*models.Deteksi, error)
+	GetByIkasIDFn        func(ikasID string) ([]models.Deteksi, error)
+	GetByPerusahaanIDFn  func(perusahaanID string) ([]models.Deteksi, error)
 }
 
 func (m *mockDeteksiRepository) GetAll() ([]models.Deteksi, error) {
@@ -27,10 +31,24 @@ func (m *mockDeteksiRepository) GetByID(id string) (*models.Deteksi, error) {
 	return m.GetByIDFn(id)
 }
 
+func (m *mockDeteksiRepository) GetByIkasID(ikasID string) ([]models.Deteksi, error) {
+	if m.GetByIkasIDFn != nil {
+		return m.GetByIkasIDFn(ikasID)
+	}
+	return nil, nil
+}
+
+func (m *mockDeteksiRepository) GetByPerusahaanID(perusahaanID string) ([]models.Deteksi, error) {
+	if m.GetByPerusahaanIDFn != nil {
+		return m.GetByPerusahaanIDFn(perusahaanID)
+	}
+	return nil, nil
+}
+
 var _ repository.DeteksiRepositoryInterface = (*mockDeteksiRepository)(nil)
 
-func setupDeteksiHandler(repo repository.DeteksiRepositoryInterface) *DeteksiHandler {
-	service := services.NewDeteksiService(repo)
+func setupDeteksiHandler(repo repository.DeteksiRepositoryInterface, ikasRepo repository.IkasRepositoryInterface) *DeteksiHandler {
+	service := services.NewDeteksiService(repo, ikasRepo)
 	return NewDeteksiHandler(service)
 }
 
@@ -43,9 +61,14 @@ func TestDeteksiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := setupDeteksiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupDeteksiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/deteksi", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -67,9 +90,14 @@ func TestDeteksiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 			return nil, errors.New("database error")
 		},
 	}
-	handler := setupDeteksiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupDeteksiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/deteksi", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -86,9 +114,12 @@ func TestDeteksiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := setupDeteksiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupDeteksiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/deteksi/uuid-test", nil)
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -109,9 +140,12 @@ func TestDeteksiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 			return nil, errors.New("data tidak ditemukan")
 		},
 	}
-	handler := setupDeteksiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupDeteksiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/deteksi/invalid-id", nil)
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -121,7 +155,8 @@ func TestDeteksiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 
 func TestDeteksiHandler_ServeHTTP_MethodNotAllowed(t *testing.T) {
 	repo := &mockDeteksiRepository{}
-	handler := setupDeteksiHandler(repo)
+	ikasRepo := &mockIkasRepository{}
+	handler := setupDeteksiHandler(repo, ikasRepo)
 
 	methods := []string{http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodPatch}
 

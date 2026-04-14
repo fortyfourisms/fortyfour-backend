@@ -16,8 +16,10 @@ import (
 //
 
 type mockDeteksiRepository struct {
-	GetAllFn  func() ([]models.Deteksi, error)
-	GetByIDFn func(id string) (*models.Deteksi, error)
+	GetAllFn      func() ([]models.Deteksi, error)
+	GetByIDFn     func(id string) (*models.Deteksi, error)
+	GetByIkasIDFn        func(ikasID string) ([]models.Deteksi, error)
+	GetByPerusahaanIDFn  func(perusahaanID string) ([]models.Deteksi, error)
 }
 
 func (m *mockDeteksiRepository) GetAll() ([]models.Deteksi, error) {
@@ -28,7 +30,20 @@ func (m *mockDeteksiRepository) GetByID(id string) (*models.Deteksi, error) {
 	return m.GetByIDFn(id)
 }
 
-// compile-time safety check
+func (m *mockDeteksiRepository) GetByIkasID(ikasID string) ([]models.Deteksi, error) {
+	if m.GetByIkasIDFn != nil {
+		return m.GetByIkasIDFn(ikasID)
+	}
+	return nil, nil
+}
+
+func (m *mockDeteksiRepository) GetByPerusahaanID(perusahaanID string) ([]models.Deteksi, error) {
+	if m.GetByPerusahaanIDFn != nil {
+		return m.GetByPerusahaanIDFn(perusahaanID)
+	}
+	return nil, nil
+}
+
 var _ repository.DeteksiRepositoryInterface = (*mockDeteksiRepository)(nil)
 
 //
@@ -41,18 +56,24 @@ func TestDeteksiService_GetAll_Success(t *testing.T) {
 	repo := &mockDeteksiRepository{
 		GetAllFn: func() ([]models.Deteksi, error) {
 			return []models.Deteksi{
-				{ID: "1", NilaiDeteksi: 70},
-				{ID: "2", NilaiDeteksi: 80},
+				{ID: "1"},
+				{ID: "2"},
 			}, nil
 		},
 	}
+	ikasRepo := new(mockIkasRepository)
 
-	service := NewDeteksiService(repo)
+	service := NewDeteksiService(repo, ikasRepo)
 
-	result, err := service.GetAll()
+	// Admin can see all
+	data, err := service.GetAll("admin")
 
 	assert.NoError(t, err)
-	assert.Len(t, result, 2)
+	assert.Len(t, data, 2)
+
+	// Non-admin should fail
+	_, err = service.GetAll("user")
+	assert.Error(t, err)
 }
 
 //
@@ -71,9 +92,10 @@ func TestDeteksiService_GetByID_Success(t *testing.T) {
 		},
 	}
 
-	service := NewDeteksiService(repo)
+	ikasRepo := new(mockIkasRepository)
+	service := NewDeteksiService(repo, ikasRepo)
 
-	result, err := service.GetByID("uuid-test")
+	result, err := service.GetByID("uuid-test", "admin", "")
 
 	assert.NoError(t, err)
 	assert.Equal(t, 90.0, result.NilaiDeteksi)
@@ -86,9 +108,10 @@ func TestDeteksiService_GetByID_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewDeteksiService(repo)
+	ikasRepo := &mockIkasRepository{}
+	service := NewDeteksiService(repo, ikasRepo)
 
-	result, err := service.GetByID("invalid-id")
+	result, err := service.GetByID("invalid-id", "admin", "")
 
 	assert.Error(t, err)
 	assert.Nil(t, result)

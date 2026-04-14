@@ -29,21 +29,6 @@ func (h *JawabanGulihHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	case method == http.MethodPost && path == "/api/maturity/jawaban-gulih":
 		h.handleCreate(w, r)
 	case method == http.MethodGet && path == "/api/maturity/jawaban-gulih":
-		// Implicitly filter by PerusahaanID if user is not admin
-		userRole, _ := r.Context().Value(middleware.Role).(string)
-		userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
-
-		perusahaanID := r.URL.Query().Get("perusahaan_id")
-
-		if userRole != "admin" {
-			// Override for non-admins
-			values := r.URL.Query()
-			values.Set("perusahaan_id", userPerusahaanID)
-			r.URL.RawQuery = values.Encode()
-		} else if perusahaanID != "" {
-			// Leave as is for admin filtering
-		}
-
 		h.handleGetAll(w, r)
 	case method == http.MethodGet && strings.HasPrefix(path, "/api/maturity/jawaban-gulih/"):
 		h.handleGetByID(w, r)
@@ -70,26 +55,24 @@ func (h *JawabanGulihHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
-	userRole := ""
-	if val := r.Context().Value(middleware.Role); val != nil {
-		userRole = val.(string)
-	}
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	msg, err := h.service.Create(req, userRole)
+	msg, err := h.service.Create(req, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
 		case "pertanyaan_gulih_id tidak valid",
-			"perusahaan_id tidak boleh kosong",
-			"format perusahaan_id tidak valid",
+			"ikas_id tidak boleh kosong",
+			"format ikas_id tidak valid",
 			"jawaban_gulih harus bernilai antara 0 sampai 5, atau null untuk N/A",
 			"validasi hanya boleh diisi jika evidence ada",
 			"validasi hanya boleh berisi 'yes' atau 'no'":
 			utils.RespondError(w, 400, err.Error())
 		case "pertanyaan_gulih_id tidak ditemukan",
-			"perusahaan_id tidak ditemukan":
+			"ikas_id tidak ditemukan":
 			utils.RespondError(w, 404, err.Error())
-		case "pertanyaan ini sudah pernah diisi oleh perusahaan Anda":
+		case "pertanyaan ini sudah pernah diisi untuk asesmen ini":
 			utils.RespondError(w, 409, err.Error())
 		default:
 			utils.RespondError(w, 500, err.Error())
@@ -111,19 +94,35 @@ func (h *JawabanGulihHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 // @Success 200 {object} map[string]interface{}
 // @Router /api/maturity/jawaban-gulih [get]
 func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
-	perusahaanID := r.URL.Query().Get("perusahaan_id")
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	if userRole != "admin" && (userPerusahaanID == "" || userPerusahaanID == "null") {
+		utils.RespondJSON(w, 200, map[string]interface{}{
+			"message": "Berhasil mengambil data",
+			"data":    []dto.JawabanGulihResponse{},
+			"total":   0,
+		})
+		return
+	}
+
+	ikasID := r.URL.Query().Get("ikas_id")
 	pertanyaanIDStr := r.URL.Query().Get("pertanyaan_gulih_id")
 
 	var data []dto.JawabanGulihResponse
 	var err error
 
-	if perusahaanID != "" {
-		data, err = h.service.GetByPerusahaan(perusahaanID)
+	if ikasID != "" {
+		data, err = h.service.GetByIkasID(ikasID, userRole, userPerusahaanID)
 	} else if pertanyaanIDStr != "" {
 		pID, _ := strconv.Atoi(pertanyaanIDStr)
 		data, err = h.service.GetByPertanyaan(pID)
 	} else {
-		data, err = h.service.GetAll()
+		if userRole != "admin" {
+			data, err = h.service.GetByPerusahaanID(userPerusahaanID, userRole, userPerusahaanID)
+		} else {
+			data, err = h.service.GetAll(userRole)
+		}
 	}
 
 	if err != nil {

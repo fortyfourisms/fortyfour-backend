@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"ikas/internal/middleware"
 	"ikas/internal/models"
 	"ikas/internal/repository"
 	"ikas/internal/services"
@@ -15,8 +17,10 @@ import (
 
 // mockProteksiRepository implements repository.ProteksiRepositoryInterface for testing purposes.
 type mockProteksiRepository struct {
-	GetAllFn  func() ([]models.Proteksi, error)
-	GetByIDFn func(id string) (*models.Proteksi, error)
+	GetAllFn      func() ([]models.Proteksi, error)
+	GetByIDFn     func(id string) (*models.Proteksi, error)
+	GetByIkasIDFn        func(ikasID string) ([]models.Proteksi, error)
+	GetByPerusahaanIDFn  func(perusahaanID string) ([]models.Proteksi, error)
 }
 
 func (m *mockProteksiRepository) GetAll() ([]models.Proteksi, error) {
@@ -27,10 +31,24 @@ func (m *mockProteksiRepository) GetByID(id string) (*models.Proteksi, error) {
 	return m.GetByIDFn(id)
 }
 
+func (m *mockProteksiRepository) GetByIkasID(ikasID string) ([]models.Proteksi, error) {
+	if m.GetByIkasIDFn != nil {
+		return m.GetByIkasIDFn(ikasID)
+	}
+	return nil, nil
+}
+
+func (m *mockProteksiRepository) GetByPerusahaanID(perusahaanID string) ([]models.Proteksi, error) {
+	if m.GetByPerusahaanIDFn != nil {
+		return m.GetByPerusahaanIDFn(perusahaanID)
+	}
+	return nil, nil
+}
+
 var _ repository.ProteksiRepositoryInterface = (*mockProteksiRepository)(nil)
 
-func setupProteksiHandler(repo repository.ProteksiRepositoryInterface) *ProteksiHandler {
-	service := services.NewProteksiService(repo)
+func setupProteksiHandler(repo repository.ProteksiRepositoryInterface, ikasRepo repository.IkasRepositoryInterface) *ProteksiHandler {
+	service := services.NewProteksiService(repo, ikasRepo)
 	return NewProteksiHandler(service)
 }
 
@@ -43,9 +61,14 @@ func TestProteksiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := setupProteksiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupProteksiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/proteksi", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -67,9 +90,14 @@ func TestProteksiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 			return nil, errors.New("database error")
 		},
 	}
-	handler := setupProteksiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupProteksiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/proteksi", nil)
+	// Inject admin role
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
+
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -85,9 +113,12 @@ func TestProteksiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	handler := setupProteksiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupProteksiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/proteksi/uuid-test", nil)
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -108,9 +139,12 @@ func TestProteksiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 			return nil, errors.New("data tidak ditemukan")
 		},
 	}
-	handler := setupProteksiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupProteksiHandler(repo, ikasRepo)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/proteksi/invalid-id", nil)
+	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -120,7 +154,8 @@ func TestProteksiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 
 func TestProteksiHandler_ServeHTTP_MethodNotAllowed(t *testing.T) {
 	repo := &mockProteksiRepository{}
-	handler := setupProteksiHandler(repo)
+	ikasRepo := new(mockIkasRepository)
+	handler := setupProteksiHandler(repo, ikasRepo)
 
 	methods := []string{http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodPatch}
 
