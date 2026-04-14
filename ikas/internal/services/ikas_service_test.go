@@ -82,6 +82,14 @@ func (m *mockIkasRepo) CheckOwnership(ikasID string, perusahaanID string) (bool,
 	return true, nil
 }
 
+func (m *mockIkasRepo) UpdateValidationStatus(id string, status bool) error {
+	return nil
+}
+
+func (m *mockIkasRepo) IsLocked(id string) (bool, error) {
+	return false, nil
+}
+
 /*
 ========================================
  TEST CREATE

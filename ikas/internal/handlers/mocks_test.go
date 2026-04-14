@@ -76,4 +76,14 @@ func (m *mockIkasRepository) ParseExcelForImport(fileData []byte) (*dto.ParsedEx
 	return args.Get(0).(*dto.ParsedExcelData), args.Error(1)
 }
 
+func (m *mockIkasRepository) UpdateValidationStatus(id string, status bool) error {
+	args := m.Called(id, status)
+	return args.Error(0)
+}
+
+func (m *mockIkasRepository) IsLocked(id string) (bool, error) {
+	args := m.Called(id)
+	return args.Bool(0), args.Error(1)
+}
+
 var _ repository.IkasRepositoryInterface = (*mockIkasRepository)(nil)
