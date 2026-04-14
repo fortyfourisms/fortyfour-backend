@@ -325,7 +325,7 @@ func TestJawabanGulihHandler_Create_Success(t *testing.T) {
 
 	createReq := dto.CreateJawabanGulihRequest{
 		PertanyaanGulihID: 1,
-		IkasID:      "550e8400-e29b-41d4-a716-446655440000",
+		IkasID:            "550e8400-e29b-41d4-a716-446655440000",
 		JawabanGulih:      jgFloat64Ptr(3.0),
 	}
 
@@ -371,7 +371,7 @@ func TestJawabanGulihHandler_Create_PertanyaanNotFound(t *testing.T) {
 
 	createReq := dto.CreateJawabanGulihRequest{
 		PertanyaanGulihID: 1,
-		IkasID:      "550e8400-e29b-41d4-a716-446655440000",
+		IkasID:            "550e8400-e29b-41d4-a716-446655440000",
 		JawabanGulih:      jgFloat64Ptr(3.0),
 	}
 	repo.On("CheckPertanyaanExists", 1).Return(false, nil)
@@ -391,7 +391,7 @@ func TestJawabanGulihHandler_Create_PerusahaanNotFound(t *testing.T) {
 
 	createReq := dto.CreateJawabanGulihRequest{
 		PertanyaanGulihID: 1,
-		IkasID:      "550e8400-e29b-41d4-a716-446655440000",
+		IkasID:            "550e8400-e29b-41d4-a716-446655440000",
 		JawabanGulih:      jgFloat64Ptr(3.0),
 	}
 	repo.On("CheckPertanyaanExists", 1).Return(true, nil)
@@ -412,7 +412,7 @@ func TestJawabanGulihHandler_Create_Duplicate(t *testing.T) {
 
 	createReq := dto.CreateJawabanGulihRequest{
 		PertanyaanGulihID: 1,
-		IkasID:      "550e8400-e29b-41d4-a716-446655440000",
+		IkasID:            "550e8400-e29b-41d4-a716-446655440000",
 		JawabanGulih:      jgFloat64Ptr(3.0),
 	}
 	repo.On("CheckPertanyaanExists", 1).Return(true, nil)
@@ -435,7 +435,7 @@ func TestJawabanGulihHandler_Create_ServerError(t *testing.T) {
 
 	createReq := dto.CreateJawabanGulihRequest{
 		PertanyaanGulihID: 1,
-		IkasID:      "550e8400-e29b-41d4-a716-446655440000",
+		IkasID:            "550e8400-e29b-41d4-a716-446655440000",
 		JawabanGulih:      jgFloat64Ptr(3.0),
 	}
 	repo.On("CheckPertanyaanExists", 1).Return(true, nil)

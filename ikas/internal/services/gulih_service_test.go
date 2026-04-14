@@ -16,10 +16,10 @@ import (
 //
 
 type mockGulihRepository struct {
-	GetAllFn      func() ([]models.Gulih, error)
-	GetByIDFn     func(id string) (*models.Gulih, error)
-	GetByIkasIDFn        func(ikasID string) ([]models.Gulih, error)
-	GetByPerusahaanIDFn  func(perusahaanID string) ([]models.Gulih, error)
+	GetAllFn            func() ([]models.Gulih, error)
+	GetByIDFn           func(id string) (*models.Gulih, error)
+	GetByIkasIDFn       func(ikasID string) ([]models.Gulih, error)
+	GetByPerusahaanIDFn func(perusahaanID string) ([]models.Gulih, error)
 }
 
 func (m *mockGulihRepository) GetAll() ([]models.Gulih, error) {

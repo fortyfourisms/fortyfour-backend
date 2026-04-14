@@ -94,7 +94,6 @@ func (s *IkasService) GetAll(userRole string) ([]dto.IkasResponse, error) {
 	return s.repo.GetAll()
 }
 
-
 func (s *IkasService) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse, error) {
 	return s.repo.GetByPerusahaan(perusahaanID)
 }
@@ -238,7 +237,7 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 
 	// 2. Publish events for each subdomain to trigger automatic processing
 	// pass NEW ID (ikasID) instead of perusahaanID
-	
+
 	// Identifikasi
 	for _, ans := range excelData.JawabanIdentifikasi {
 		event := dto.CreateJawabanIdentifikasiRequest{

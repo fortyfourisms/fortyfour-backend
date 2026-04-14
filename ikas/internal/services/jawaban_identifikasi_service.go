@@ -181,7 +181,6 @@ func (s *JawabanIdentifikasiService) GetAll(userRole string) ([]dto.JawabanIdent
 	return s.repo.GetAll()
 }
 
-
 func (s *JawabanIdentifikasiService) GetByID(id int, userRole string, userPerusahaanID string) (*dto.JawabanIdentifikasiResponse, error) {
 	if id <= 0 {
 		return nil, errors.New("format ID tidak valid")
@@ -196,10 +195,10 @@ func (s *JawabanIdentifikasiService) GetByID(id int, userRole string, userPerusa
 	}
 
 	// Note: checking access now by comparing ikas session rather than perusahaan_id directly
-	// but since we don't have the link here easily without fetching ikas, 
+	// but since we don't have the link here easily without fetching ikas,
 	// we might need a more robust check if needed.
 	// For now, let's assume if they have the ikas_id they might have access, or fetch ikas to check company.
-	
+
 	// Fetch ikas to check ownership
 	ikasData, err := s.ikasRepo.GetByID(data.IkasID)
 	if err != nil {

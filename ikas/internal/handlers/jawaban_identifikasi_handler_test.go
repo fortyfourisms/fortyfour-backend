@@ -221,7 +221,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Create_Success(t *testing.T) {
 
 	createReq := dto.CreateJawabanIdentifikasiRequest{
 		PertanyaanIdentifikasiID: 1,
-		IkasID:             "550e8400-e29b-41d4-a716-446655440000",
+		IkasID:                   "550e8400-e29b-41d4-a716-446655440000",
 		JawabanIdentifikasi:      jidFloat64Ptr(3.0),
 	}
 
@@ -257,7 +257,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Create_ValidationError(t *testing.
 
 	createReq := dto.CreateJawabanIdentifikasiRequest{
 		PertanyaanIdentifikasiID: 1,
-		IkasID:             "550e8400-e29b-41d4-a716-446655440000",
+		IkasID:                   "550e8400-e29b-41d4-a716-446655440000",
 	}
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/jawaban-identifikasi", bytes.NewReader(body))
