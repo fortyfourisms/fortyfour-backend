@@ -74,6 +74,158 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		}
 	}
 
-	log.Println("Users RabbitMQ infrastructure setup completed")
+	// Declare Exchange untuk CSIRT events
+	if err := rmq.DeclareExchange("csirt.events", "topic"); err != nil {
+		return fmt.Errorf("failed to declare exchange: %w", err)
+	}
+
+	// Declare Queues untuk CSIRT
+	csirtQueues := []string{
+		"csirt.created",
+		"csirt.updated",
+		"csirt.deleted",
+	}
+
+	for _, queueName := range csirtQueues {
+		if _, err := rmq.DeclareQueue(queueName); err != nil {
+			return fmt.Errorf("failed to declare queue %s: %w", queueName, err)
+		}
+	}
+
+	// Bind Queues ke Exchange dengan routing keys
+	csirtBindings := map[string]string{
+		"csirt.created": "csirt.created",
+		"csirt.updated": "csirt.updated",
+		"csirt.deleted": "csirt.deleted",
+	}
+
+	for queueName, routingKey := range csirtBindings {
+		if err := rmq.BindQueue(queueName, routingKey, "csirt.events"); err != nil {
+			return fmt.Errorf("failed to bind queue %s: %w", queueName, err)
+		}
+	}
+
+	// Perusahaan
+	if err := rmq.DeclareExchange("perusahaan.events", "topic"); err != nil {
+		return err
+	}
+
+	queuePerusahaan := []string{
+		"perusahaan.created",
+		"perusahaan.updated",
+		"perusahaan.deleted",
+	}
+
+	for _, q := range queuePerusahaan {
+		if _, err := rmq.DeclareQueue(q); err != nil {
+			return err
+		}
+		if err := rmq.BindQueue(q, q, "perusahaan.events"); err != nil {
+			return err
+		}
+	}
+
+	// PIC
+	if err := rmq.DeclareExchange("pic.events", "topic"); err != nil {
+		return err
+	}
+
+	queuePic := []string{
+		"pic.created",
+		"pic.updated",
+		"pic.deleted",
+	}
+
+	for _, q := range queuePic {
+		if _, err := rmq.DeclareQueue(q); err != nil {
+			return err
+		}
+		if err := rmq.BindQueue(q, q, "pic.events"); err != nil {
+			return err
+		}
+	}
+
+	// Jabatan
+	if err := rmq.DeclareExchange("jabatan.events", "topic"); err != nil {
+		return err
+	}
+
+	queueJabatan := []string{
+		"jabatan.created",
+		"jabatan.updated",
+		"jabatan.deleted",
+	}
+
+	for _, q := range queueJabatan {
+		if _, err := rmq.DeclareQueue(q); err != nil {
+			return err
+		}
+		if err := rmq.BindQueue(q, q, "jabatan.events"); err != nil {
+			return err
+		}
+	}
+
+	// SDM CSIRT
+	if err := rmq.DeclareExchange("sdm_csirt.events", "topic"); err != nil {
+		return err
+	}
+
+	queueSdmCsirt := []string{
+		"sdm_csirt.created",
+		"sdm_csirt.updated",
+		"sdm_csirt.deleted",
+	}
+
+	for _, q := range queueSdmCsirt {
+		if _, err := rmq.DeclareQueue(q); err != nil {
+			return err
+		}
+		if err := rmq.BindQueue(q, q, "sdm_csirt.events"); err != nil {
+			return err
+		}
+	}
+
+	// Role
+	if err := rmq.DeclareExchange("role.events", "topic"); err != nil {
+		return err
+	}
+
+	queueRole := []string{
+		"role.created",
+		"role.updated",
+		"role.deleted",
+	}
+
+	for _, q := range queueRole {
+		if _, err := rmq.DeclareQueue(q); err != nil {
+			return err
+		}
+		if err := rmq.BindQueue(q, q, "role.events"); err != nil {
+			return err
+		}
+	}
+
+	// SE
+	if err := rmq.DeclareExchange("se.events", "topic"); err != nil {
+		return err
+	}
+
+	queueSE := []string{
+		"se.created",
+		"se.updated",
+		"se.deleted",
+	}
+
+	for _, q := range queueSE {
+		if _, err := rmq.DeclareQueue(q); err != nil {
+			return err
+		}
+		if err := rmq.BindQueue(q, q, "se.events"); err != nil {
+			return err
+		}
+	}
+
+	log.Println("RabbitMQ infrastructure setup completed (Users, CSIRT, Perusahaan, PIC, Jabatan, SDM CSIRT, Role, SE)")
+
 	return nil
 }

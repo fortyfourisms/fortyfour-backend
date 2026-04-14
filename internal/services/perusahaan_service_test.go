@@ -115,7 +115,7 @@ func TestCreatePerusahaan_Success(t *testing.T) {
 		},
 	}
 
-	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil)
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil, nil)
 
 	req := dto.CreatePerusahaanRequest{
 		NamaPerusahaan: &nama,
@@ -134,7 +134,7 @@ func TestCreatePerusahaan_Success(t *testing.T) {
 func TestCreatePerusahaan_ValidationFailed_NamaKosong(t *testing.T) {
 	perusahaanRepo := &mockPerusahaanRepository{}
 	subSektorRepo := &mockSubSektorRepository{}
-	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil)
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil, nil)
 
 	idSubSektor := "sub-sektor-id-123"
 	req := dto.CreatePerusahaanRequest{
@@ -166,7 +166,7 @@ func TestCreatePerusahaan_ValidationFailed_SubSektorKosong(t *testing.T) {
 	}
 
 	subSektorRepo := &mockSubSektorRepository{}
-	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil)
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil, nil)
 
 	req := dto.CreatePerusahaanRequest{
 		NamaPerusahaan: &nama,
@@ -190,7 +190,7 @@ func TestCreatePerusahaan_SubSektorNotFound(t *testing.T) {
 		},
 	}
 
-	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil)
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil, nil)
 
 	nama := "PT ABC"
 	idSubSektor := "invalid-sub-sektor-id"
@@ -226,7 +226,7 @@ func TestCreatePerusahaan_RepoFailed(t *testing.T) {
 		},
 	}
 
-	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil)
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil, nil)
 
 	req := dto.CreatePerusahaanRequest{
 		NamaPerusahaan: &nama,
@@ -272,7 +272,7 @@ func TestGetAllPerusahaan_Success(t *testing.T) {
 	}
 
 	subSektorRepo := &mockSubSektorRepository{}
-	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil)
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil, nil)
 
 	data, err := service.GetAll()
 
@@ -299,7 +299,7 @@ func TestGetPerusahaanByID_Success(t *testing.T) {
 	}
 
 	subSektorRepo := &mockSubSektorRepository{}
-	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil)
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil, nil)
 
 	result, err := service.GetByID("123")
 
@@ -338,7 +338,7 @@ func TestUpdatePerusahaan_Success(t *testing.T) {
 	}
 
 	subSektorRepo := &mockSubSektorRepository{}
-	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil)
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil, nil)
 
 	req := dto.UpdatePerusahaanRequest{
 		NamaPerusahaan: &newNama,
@@ -385,7 +385,7 @@ func TestUpdatePerusahaan_UpdateSubSektor_Success(t *testing.T) {
 		},
 	}
 
-	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil)
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil, nil)
 
 	req := dto.UpdatePerusahaanRequest{
 		IDSubSektor: &newSubSektorID,
@@ -421,7 +421,7 @@ func TestUpdatePerusahaan_InvalidSubSektor(t *testing.T) {
 		},
 	}
 
-	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil)
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil, nil)
 
 	req := dto.UpdatePerusahaanRequest{
 		IDSubSektor: &invalidSubSektorID,
@@ -448,7 +448,7 @@ func TestDeletePerusahaan_Success(t *testing.T) {
 	}
 
 	subSektorRepo := &mockSubSektorRepository{}
-	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil)
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil, nil)
 
 	err := service.Delete("123")
 
@@ -463,7 +463,7 @@ func TestDeletePerusahaan_Failed(t *testing.T) {
 	}
 
 	subSektorRepo := &mockSubSektorRepository{}
-	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil)
+	service := NewPerusahaanService(perusahaanRepo, subSektorRepo, nil, nil)
 
 	err := service.Delete("123")
 
@@ -480,7 +480,7 @@ func TestDeletePerusahaan_Failed(t *testing.T) {
 func TestCreatePerusahaan_NamaKosong_Error(t *testing.T) {
 	nama := "   "
 	idSubSektor := "sub-1"
-	service := NewPerusahaanService(&mockPerusahaanRepository{}, &mockSubSektorRepository{}, nil)
+	service := NewPerusahaanService(&mockPerusahaanRepository{}, &mockSubSektorRepository{}, nil, nil)
 
 	result, err := service.Create(dto.CreatePerusahaanRequest{
 		NamaPerusahaan: &nama,
@@ -500,7 +500,7 @@ func TestCreatePerusahaan_GetByIDAfterCreate_Error(t *testing.T) {
 			return nil, errors.New("tidak ditemukan setelah create")
 		},
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil, nil)
 
 	result, err := service.Create(dto.CreatePerusahaanRequest{NamaPerusahaan: &nama})
 
@@ -519,7 +519,7 @@ func TestCreatePerusahaan_InvalidatesListCache(t *testing.T) {
 			return &dto.PerusahaanResponse{ID: id, NamaPerusahaan: nama}, nil
 		},
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, rc)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, rc, nil)
 
 	_, err := service.Create(dto.CreatePerusahaanRequest{NamaPerusahaan: &nama})
 
@@ -546,7 +546,7 @@ func TestGetAllPerusahaan_CacheHit_SkipRepo(t *testing.T) {
 			return nil, errors.New("tidak boleh dipanggil")
 		},
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, rc)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, rc, nil)
 
 	result, err := service.GetAll()
 
@@ -563,7 +563,7 @@ func TestGetAllPerusahaan_CacheMiss_SetsCache(t *testing.T) {
 			return []dto.PerusahaanResponse{{ID: "db-1", NamaPerusahaan: "PT DB"}}, nil
 		},
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, rc)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, rc, nil)
 
 	_, err := service.GetAll()
 
@@ -578,7 +578,7 @@ func TestGetAllPerusahaan_RepoError(t *testing.T) {
 			return nil, errors.New("db timeout")
 		},
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil, nil)
 
 	result, err := service.GetAll()
 
@@ -603,7 +603,7 @@ func TestGetPerusahaanByID_CacheHit_SkipRepo(t *testing.T) {
 			return nil, errors.New("tidak boleh dipanggil")
 		},
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, rc)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, rc, nil)
 
 	result, err := service.GetByID("p-1")
 
@@ -619,7 +619,7 @@ func TestGetPerusahaanByID_CacheMiss_SetsCache(t *testing.T) {
 			return &dto.PerusahaanResponse{ID: id, NamaPerusahaan: "PT DB"}, nil
 		},
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, rc)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, rc, nil)
 
 	_, err := service.GetByID("p-1")
 
@@ -634,7 +634,7 @@ func TestGetPerusahaanByID_RepoError(t *testing.T) {
 			return nil, errors.New("not found")
 		},
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil, nil)
 
 	result, err := service.GetByID("invalid")
 
@@ -654,7 +654,7 @@ func TestGetByNama_Success(t *testing.T) {
 			return &dto.PerusahaanResponse{ID: "p-1", NamaPerusahaan: nama}, nil
 		},
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil, nil)
 
 	result, err := service.GetByNama("PT ABC")
 
@@ -668,7 +668,7 @@ func TestGetByNama_NotFound(t *testing.T) {
 			return nil, errors.New("perusahaan not found")
 		},
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil, nil)
 
 	result, err := service.GetByNama("PT Tidak Ada")
 
@@ -688,7 +688,7 @@ func TestUpdatePerusahaan_GetByIDError(t *testing.T) {
 			return nil, errors.New("perusahaan not found")
 		},
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil, nil)
 
 	nama := "PT Baru"
 	result, err := service.Update("invalid", dto.UpdatePerusahaanRequest{NamaPerusahaan: &nama})
@@ -706,7 +706,7 @@ func TestUpdatePerusahaan_RepoUpdateError(t *testing.T) {
 			return errors.New("update failed")
 		},
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil, nil)
 
 	nama := "PT Baru"
 	result, err := service.Update("p-1", dto.UpdatePerusahaanRequest{NamaPerusahaan: &nama})
@@ -723,7 +723,7 @@ func TestUpdatePerusahaan_UpdateAllOptionalFields(t *testing.T) {
 		},
 		UpdateFn: func(id string, p dto.PerusahaanResponse) error { return nil },
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, nil, nil)
 
 	alamat := "Jl. Test 1"
 	telepon := "08123456789"
@@ -759,7 +759,7 @@ func TestUpdatePerusahaan_InvalidatesCache(t *testing.T) {
 		},
 		UpdateFn: func(id string, p dto.PerusahaanResponse) error { return nil },
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, rc)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, rc, nil)
 
 	_, err := service.Update("p-1", dto.UpdatePerusahaanRequest{NamaPerusahaan: &nama})
 
@@ -784,7 +784,7 @@ func TestDeletePerusahaan_InvalidatesCache(t *testing.T) {
 	perusahaanRepo := &mockPerusahaanRepository{
 		DeleteFn: func(id string) error { return nil },
 	}
-	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, rc)
+	service := NewPerusahaanService(perusahaanRepo, &mockSubSektorRepository{}, rc, nil)
 
 	err := service.Delete("p-1")
 

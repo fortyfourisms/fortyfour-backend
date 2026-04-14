@@ -5,18 +5,26 @@ import (
 	"database/sql"
 	"errors"
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/dto/dto_event"
 	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
+	"time"
 )
 
 type RoleService struct {
-	repo repository.RoleRepository
-	rc   cache.RedisInterface
+	repo     repository.RoleRepository
+	rc       cache.RedisInterface
+	producer *rabbitmq.Producer
 }
 
-func NewRoleService(repo repository.RoleRepository, rc cache.RedisInterface) *RoleService {
-	return &RoleService{repo: repo, rc: rc}
+func NewRoleService(repo repository.RoleRepository, rc cache.RedisInterface, producer *rabbitmq.Producer) *RoleService {
+	return &RoleService{
+		repo:     repo,
+		rc:       rc,
+		producer: producer,
+	}
 }
 
 func (s *RoleService) Create(req dto.CreateRoleRequest) (*dto.RoleResponse, error) {
@@ -43,6 +51,18 @@ func (s *RoleService) Create(req dto.CreateRoleRequest) (*dto.RoleResponse, erro
 	result := s.toResponse(role)
 	cacheSet(s.rc, keyDetail("role", role.ID), result, TTLDetail)
 	cacheDelete(s.rc, keyList("role"))
+
+	if s.producer != nil {
+		go func() {
+			event := dto_event.RoleCreatedEvent{
+				ID:          result.ID,
+				Name:        result.Name,
+				Description: result.Description,
+				CreatedAt:   time.Now(),
+			}
+			s.producer.PublishRoleCreated(context.Background(), event)
+		}()
+	}
 
 	return result, nil
 }
@@ -127,7 +147,21 @@ func (s *RoleService) Update(id string, req dto.UpdateRoleRequest) (*dto.RoleRes
 	cacheDelete(s.rc, keyDetail("role", id))
 	cacheDelete(s.rc, keyList("role"))
 
-	return s.toResponse(role), nil
+	result := s.toResponse(role)
+
+	if s.producer != nil {
+		go func() {
+			event := dto_event.RoleUpdatedEvent{
+				ID:          result.ID,
+				Name:        result.Name,
+				Description: result.Description,
+				UpdatedAt:   time.Now(),
+			}
+			s.producer.PublishRoleUpdated(context.Background(), event)
+		}()
+	}
+
+	return result, nil
 }
 
 func (s *RoleService) Delete(id string) error {
@@ -143,6 +177,16 @@ func (s *RoleService) Delete(id string) error {
 
 	cacheDelete(s.rc, keyDetail("role", id))
 	cacheDelete(s.rc, keyList("role"))
+
+	if s.producer != nil {
+		go func() {
+			event := dto_event.RoleDeletedEvent{
+				ID:        id,
+				DeletedAt: time.Now(),
+			}
+			s.producer.PublishRoleDeleted(context.Background(), event)
+		}()
+	}
 
 	return nil
 }

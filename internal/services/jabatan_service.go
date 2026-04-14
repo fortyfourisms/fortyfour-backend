@@ -1,10 +1,14 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/dto/dto_event"
+	"fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
 
@@ -12,12 +16,17 @@ import (
 )
 
 type JabatanService struct {
-	repo repository.JabatanRepositoryInterface
-	rc   cache.RedisInterface
+	repo     repository.JabatanRepositoryInterface
+	rc       cache.RedisInterface
+	producer *rabbitmq.Producer
 }
 
-func NewJabatanService(repo repository.JabatanRepositoryInterface, rc cache.RedisInterface) *JabatanService {
-	return &JabatanService{repo: repo, rc: rc}
+func NewJabatanService(repo repository.JabatanRepositoryInterface, rc cache.RedisInterface, producer *rabbitmq.Producer) *JabatanService {
+	return &JabatanService{
+		repo:     repo,
+		rc:       rc,
+		producer: producer,
+	}
 }
 
 func (s *JabatanService) Create(req dto.CreateJabatanRequest) (*dto.JabatanResponse, error) {
@@ -37,6 +46,17 @@ func (s *JabatanService) Create(req dto.CreateJabatanRequest) (*dto.JabatanRespo
 
 	cacheSet(s.rc, keyDetail("jabatan", id), result, TTLDetail)
 	cacheDelete(s.rc, keyList("jabatan"))
+
+	if s.producer != nil {
+		go func() {
+			event := dto_event.JabatanCreatedEvent{
+				ID:          result.ID,
+				NamaJabatan: result.NamaJabatan,
+				CreatedAt:   time.Now(),
+			}
+			s.producer.PublishJabatanCreated(context.Background(), event)
+		}()
+	}
 
 	return result, nil
 }
@@ -90,6 +110,17 @@ func (s *JabatanService) Update(id string, req dto.UpdateJabatanRequest) (*dto.J
 	cacheDelete(s.rc, keyDetail("jabatan", id))
 	cacheDelete(s.rc, keyList("jabatan"))
 
+	if s.producer != nil {
+		go func() {
+			event := dto_event.JabatanUpdatedEvent{
+				ID:          jabatan.ID,
+				NamaJabatan: jabatan.NamaJabatan,
+				UpdatedAt:   time.Now(),
+			}
+			s.producer.PublishJabatanUpdated(context.Background(), event)
+		}()
+	}
+
 	return jabatan, nil
 }
 
@@ -100,6 +131,16 @@ func (s *JabatanService) Delete(id string) error {
 
 	cacheDelete(s.rc, keyDetail("jabatan", id))
 	cacheDelete(s.rc, keyList("jabatan"))
+
+	if s.producer != nil {
+		go func() {
+			event := dto_event.JabatanDeletedEvent{
+				ID:        id,
+				DeletedAt: time.Now(),
+			}
+			s.producer.PublishJabatanDeleted(context.Background(), event)
+		}()
+	}
 
 	return nil
 }

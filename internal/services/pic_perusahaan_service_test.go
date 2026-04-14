@@ -83,7 +83,7 @@ func TestPICService_Create_Success(t *testing.T) {
 		},
 	}
 
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	req := dto.CreatePICRequest{
 		Nama:         &nama,
@@ -101,7 +101,7 @@ func TestPICService_Create_Success(t *testing.T) {
 
 func TestPICService_Create_ValidationError(t *testing.T) {
 	repo := &mockPICRepository{}
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	req := dto.CreatePICRequest{}
 
@@ -127,7 +127,7 @@ func TestPICService_GetAll_Success(t *testing.T) {
 		},
 	}
 
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	result, err := service.GetAll()
 
@@ -155,7 +155,7 @@ func TestPICService_GetByID_Success(t *testing.T) {
 		},
 	}
 
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	result, err := service.GetByID("uuid-test")
 
@@ -171,7 +171,7 @@ func TestPICService_GetByID_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	result, err := service.GetByID("invalid-id")
 
@@ -200,7 +200,7 @@ func TestPICService_Update_Success(t *testing.T) {
 		},
 	}
 
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	req := dto.UpdatePICRequest{
 		Nama: &namaBaru,
@@ -234,7 +234,7 @@ func TestPICService_Delete_Success(t *testing.T) {
 		},
 	}
 
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	err := service.Delete("uuid-test")
 
@@ -250,7 +250,7 @@ func TestPICService_Delete_Success(t *testing.T) {
 func TestPICService_Create_NamaNil_Error(t *testing.T) {
 	idPerusahaan := "uuid-perusahaan"
 	repo := &mockPICRepository{}
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	req := dto.CreatePICRequest{
 		IDPerusahaan: &idPerusahaan,
@@ -268,7 +268,7 @@ func TestPICService_Create_NamaKosong_Error(t *testing.T) {
 	nama := "   "
 	idPerusahaan := "uuid-perusahaan"
 	repo := &mockPICRepository{}
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	req := dto.CreatePICRequest{
 		Nama:         &nama,
@@ -285,7 +285,7 @@ func TestPICService_Create_NamaKosong_Error(t *testing.T) {
 func TestPICService_Create_IDPerusahaanNil_Error(t *testing.T) {
 	nama := "John Doe"
 	repo := &mockPICRepository{}
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	req := dto.CreatePICRequest{
 		Nama: &nama,
@@ -303,7 +303,7 @@ func TestPICService_Create_IDPerusahaanKosong_Error(t *testing.T) {
 	nama := "John Doe"
 	idPerusahaan := ""
 	repo := &mockPICRepository{}
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	req := dto.CreatePICRequest{
 		Nama:         &nama,
@@ -326,7 +326,7 @@ func TestPICService_Create_RepoError(t *testing.T) {
 			return errors.New("db error")
 		},
 	}
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	req := dto.CreatePICRequest{
 		Nama:         &nama,
@@ -352,7 +352,7 @@ func TestPICService_Create_GetByIDError(t *testing.T) {
 			return nil, errors.New("data tidak ditemukan setelah create")
 		},
 	}
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	req := dto.CreatePICRequest{
 		Nama:         &nama,
@@ -377,7 +377,7 @@ func TestPICService_GetAll_Error(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	result, err := service.GetAll()
 
@@ -401,7 +401,7 @@ func TestPICService_GetAll_CacheHit_SkipRepo(t *testing.T) {
 			return nil, errors.New("seharusnya tidak dipanggil")
 		},
 	}
-	service := NewPICService(repo, rc)
+	service := NewPICService(repo, rc, nil)
 
 	result, err := service.GetAll()
 
@@ -422,7 +422,7 @@ func TestPICService_GetAll_CacheMiss_HitRepo_ThenSetCache(t *testing.T) {
 			}, nil
 		},
 	}
-	service := NewPICService(repo, rc)
+	service := NewPICService(repo, rc, nil)
 
 	result, err := service.GetAll()
 
@@ -452,7 +452,7 @@ func TestPICService_GetByID_CacheHit_SkipRepo(t *testing.T) {
 			return nil, errors.New("seharusnya tidak dipanggil")
 		},
 	}
-	service := NewPICService(repo, rc)
+	service := NewPICService(repo, rc, nil)
 
 	result, err := service.GetByID("pic-1")
 
@@ -469,7 +469,7 @@ func TestPICService_GetByID_CacheMiss_HitRepo_ThenSetCache(t *testing.T) {
 			return &dto.PICResponse{ID: id, Nama: "PIC dari DB"}, nil
 		},
 	}
-	service := NewPICService(repo, rc)
+	service := NewPICService(repo, rc, nil)
 
 	result, err := service.GetByID("pic-1")
 
@@ -495,7 +495,7 @@ func TestPICService_Update_RepoError(t *testing.T) {
 			return errors.New("update failed")
 		},
 	}
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	result, err := service.Update("uuid-test", dto.UpdatePICRequest{Nama: &namaBaru})
 
@@ -515,7 +515,7 @@ func TestPICService_Update_GetByIDError(t *testing.T) {
 			return nil, errors.New("data tidak ditemukan")
 		},
 	}
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	result, err := service.Update("uuid-test", dto.UpdatePICRequest{Nama: &namaBaru})
 
@@ -538,7 +538,7 @@ func TestPICService_Update_InvalidatesCache(t *testing.T) {
 			return &dto.PICResponse{ID: id, Nama: namaBaru}, nil
 		},
 	}
-	service := NewPICService(repo, rc)
+	service := NewPICService(repo, rc, nil)
 
 	_, err := service.Update("uuid-test", dto.UpdatePICRequest{Nama: &namaBaru})
 
@@ -566,7 +566,7 @@ func TestPICService_Delete_Error(t *testing.T) {
 			return errors.New("delete failed")
 		},
 	}
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	err := service.Delete("uuid-test")
 
@@ -587,7 +587,7 @@ func TestPICService_Delete_InvalidatesCache(t *testing.T) {
 			return nil
 		},
 	}
-	service := NewPICService(repo, rc)
+	service := NewPICService(repo, rc, nil)
 
 	err := service.Delete("uuid-test")
 
@@ -660,7 +660,7 @@ func TestPICService_GetByPerusahaan_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	result, err := service.GetByPerusahaan("perusahaan-1")
 
@@ -676,7 +676,7 @@ func TestPICService_GetByPerusahaan_EmptyResult(t *testing.T) {
 			return []dto.PICResponse{}, nil
 		},
 	}
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	result, err := service.GetByPerusahaan("perusahaan-kosong")
 
@@ -690,7 +690,7 @@ func TestPICService_GetByPerusahaan_RepositoryError(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	service := NewPICService(repo, nil)
+	service := NewPICService(repo, nil, nil)
 
 	result, err := service.GetByPerusahaan("perusahaan-1")
 
@@ -711,7 +711,7 @@ func TestPICService_GetByPerusahaan_CacheHit_SkipRepo(t *testing.T) {
 			return []dto.PICResponse{}, nil
 		},
 	}
-	service := NewPICService(repo, rc)
+	service := NewPICService(repo, rc, nil)
 
 	result, err := service.GetByPerusahaan("perusahaan-1")
 
@@ -731,7 +731,7 @@ func TestPICService_GetByPerusahaan_CacheMiss_SetsCache(t *testing.T) {
 			return []dto.PICResponse{{ID: "pic-1", Nama: "From DB"}}, nil
 		},
 	}
-	service := NewPICService(repo, rc)
+	service := NewPICService(repo, rc, nil)
 
 	result, err := service.GetByPerusahaan("perusahaan-1")
 

@@ -67,7 +67,7 @@ func (m *MockSERepository) GetByPerusahaan(idPerusahaan string) ([]dto.SERespons
 
 func setupSEService() (SEService, *MockSERepository) {
 	mockRepo := new(MockSERepository)
-	service := NewSEService(mockRepo, nil)
+	service := NewSEService(mockRepo, nil, nil)
 	return service, mockRepo
 }
 
