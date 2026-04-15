@@ -710,3 +710,98 @@ func TestSdmCsirtService_Create_WithSkillSet(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, id)
 }
+
+/*
+=====================================
+ TEST GET SDM CSIRT BY CSIRT ID
+=====================================
+*/
+
+func TestSdmCsirtService_GetByCsirt_Success(t *testing.T) {
+	repo := &mockSdmCsirtRepo{
+		GetByCsirtFn: func(idCsirt string) ([]dto.SdmCsirtResponse, error) {
+			return []dto.SdmCsirtResponse{
+				{
+					ID:           "sdm-1",
+					NamaPersonel: "Andi",
+					JabatanCsirt: "Analyst",
+					Csirt: &dto.CsirtMiniResponse{
+						ID:        idCsirt,
+						NamaCsirt: "CSIRT Test",
+					},
+				},
+				{
+					ID:           "sdm-2",
+					NamaPersonel: "Budi",
+					JabatanCsirt: "Manager",
+					Csirt: &dto.CsirtMiniResponse{
+						ID:        idCsirt,
+						NamaCsirt: "CSIRT Test",
+					},
+				},
+			}, nil
+		},
+	}
+
+	service := NewSdmCsirtService(repo, nil, nil)
+
+	res, err := service.GetByCsirt("csirt-123")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+	assert.Len(t, res, 2)
+	assert.Equal(t, "Andi", res[0].NamaPersonel)
+	assert.Equal(t, "Budi", res[1].NamaPersonel)
+	assert.Equal(t, "csirt-123", res[0].Csirt.ID)
+}
+
+func TestSdmCsirtService_GetByCsirt_EmptyResult(t *testing.T) {
+	repo := &mockSdmCsirtRepo{
+		GetByCsirtFn: func(idCsirt string) ([]dto.SdmCsirtResponse, error) {
+			return []dto.SdmCsirtResponse{}, nil
+		},
+	}
+
+	service := NewSdmCsirtService(repo, nil, nil)
+
+	res, err := service.GetByCsirt("csirt-tanpa-sdm")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+	assert.Len(t, res, 0)
+}
+
+func TestSdmCsirtService_GetByCsirt_RepositoryError(t *testing.T) {
+	repo := &mockSdmCsirtRepo{
+		GetByCsirtFn: func(idCsirt string) ([]dto.SdmCsirtResponse, error) {
+			return nil, errors.New("database timeout")
+		},
+	}
+
+	service := NewSdmCsirtService(repo, nil, nil)
+
+	res, err := service.GetByCsirt("csirt-123")
+
+	assert.Error(t, err)
+	assert.Nil(t, res)
+	assert.Equal(t, "database timeout", err.Error())
+}
+
+func TestSdmCsirtService_GetByCsirt_EmptyID(t *testing.T) {
+	repo := &mockSdmCsirtRepo{
+		GetByCsirtFn: func(idCsirt string) ([]dto.SdmCsirtResponse, error) {
+			if idCsirt == "" {
+				return nil, errors.New("id csirt tidak boleh kosong")
+			}
+			return []dto.SdmCsirtResponse{}, nil
+		},
+	}
+
+	service := NewSdmCsirtService(repo, nil, nil)
+
+	res, err := service.GetByCsirt("")
+
+	assert.Error(t, err)
+	assert.Nil(t, res)
+}
+

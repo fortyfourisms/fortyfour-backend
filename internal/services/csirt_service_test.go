@@ -23,6 +23,7 @@ type mockCsirtRepo struct {
 	GetByIDWithPerusahaanFn func(id string) (*dto.CsirtResponse, error)
 	UpdateFn                func(id string, csirt models.Csirt) error
 	DeleteFn                func(id string) error
+	GetByPerusahaanFn       func(idPerusahaan string) ([]dto.CsirtResponse, error)
 }
 
 func (m *mockCsirtRepo) Create(req dto.CreateCsirtRequest, id string) error {
@@ -60,6 +61,9 @@ func (m *mockCsirtRepo) Delete(id string) error {
 }
 
 func (m *mockCsirtRepo) GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error) {
+	if m.GetByPerusahaanFn != nil {
+		return m.GetByPerusahaanFn(idPerusahaan)
+	}
 	return []dto.CsirtResponse{}, nil
 }
 
@@ -1140,3 +1144,84 @@ func TestCsirtService_GetAll_IncludesNewFields(t *testing.T) {
 	assert.Equal(t, "", res[1].TanggalRegistrasi)
 	assert.Equal(t, "", res[1].FileStr)
 }
+
+/*
+=====================================
+ TEST GET CSIRT BY PERUSAHAAN
+=====================================
+*/
+
+func TestCsirtService_GetByPerusahaan_Success(t *testing.T) {
+	telepon := "081234567890"
+	repo := &mockCsirtRepo{
+		GetByPerusahaanFn: func(idPerusahaan string) ([]dto.CsirtResponse, error) {
+			return []dto.CsirtResponse{
+				{
+					ID:           "csirt-1",
+					NamaCsirt:    "CSIRT Perusahaan A",
+					TeleponCsirt: &telepon,
+				},
+			}, nil
+		},
+	}
+
+	service := NewCsirtService(repo, nil, nil)
+
+	res, err := service.GetByPerusahaan("perusahaan-123")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+	assert.Len(t, res, 1)
+	assert.Equal(t, "CSIRT Perusahaan A", res[0].NamaCsirt)
+	assert.Equal(t, "csirt-1", res[0].ID)
+}
+
+func TestCsirtService_GetByPerusahaan_EmptyResult(t *testing.T) {
+	repo := &mockCsirtRepo{
+		GetByPerusahaanFn: func(idPerusahaan string) ([]dto.CsirtResponse, error) {
+			return []dto.CsirtResponse{}, nil
+		},
+	}
+
+	service := NewCsirtService(repo, nil, nil)
+
+	res, err := service.GetByPerusahaan("perusahaan-tanpa-csirt")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+	assert.Len(t, res, 0)
+}
+
+func TestCsirtService_GetByPerusahaan_RepositoryError(t *testing.T) {
+	repo := &mockCsirtRepo{
+		GetByPerusahaanFn: func(idPerusahaan string) ([]dto.CsirtResponse, error) {
+			return nil, errors.New("database error")
+		},
+	}
+
+	service := NewCsirtService(repo, nil, nil)
+
+	res, err := service.GetByPerusahaan("perusahaan-123")
+
+	assert.Error(t, err)
+	assert.Nil(t, res)
+	assert.Equal(t, "database error", err.Error())
+}
+
+func TestCsirtService_GetByPerusahaan_EmptyID(t *testing.T) {
+	repo := &mockCsirtRepo{
+		GetByPerusahaanFn: func(idPerusahaan string) ([]dto.CsirtResponse, error) {
+			if idPerusahaan == "" {
+				return nil, errors.New("id perusahaan tidak boleh kosong")
+			}
+			return []dto.CsirtResponse{}, nil
+		},
+	}
+
+	service := NewCsirtService(repo, nil, nil)
+
+	res, err := service.GetByPerusahaan("")
+
+	assert.Error(t, err)
+	assert.Nil(t, res)
+}

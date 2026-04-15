@@ -291,6 +291,188 @@ func TestGenerateSertifikat_KuisAkhirBelumLulus(t *testing.T) {
 	assert.Contains(t, err.Error(), "belum lulus kuis akhir")
 }
 
+func TestGenerateSertifikat_Success_TanpaKuisAkhir(t *testing.T) {
+	now := time.Now()
+	displayName := "John Doe"
+	var createdSertifikat *models.Sertifikat
+
+	sertRepo := &mockSertifikatRepo{
+		FindByUserAndKelasFn: func(idUser, idKelas string) (*models.Sertifikat, error) {
+			return nil, errors.New("not found")
+		},
+		CreateFn: func(s *models.Sertifikat) error {
+			createdSertifikat = s
+			return nil
+		},
+	}
+	kelasRepo := &mockKelasRepoSert{
+		FindByIDFn: func(id string) (*models.Kelas, error) {
+			return &models.Kelas{ID: id, Judul: "Kelas Golang", CreatedAt: now, UpdatedAt: now}, nil
+		},
+	}
+	userRepo := &mockUserRepoSert{
+		FindByIDFn: func(id string) (*models.User, error) {
+			return &models.User{ID: id, Username: "johndoe", DisplayName: &displayName}, nil
+		},
+	}
+	progressRepo := &mockProgressRepoSert{
+		HasCompletedAllMateriFn: func(idUser, idKelas string) (bool, error) { return true, nil },
+	}
+	attemptRepo := &mockAttemptRepoSert{
+		HasPassedAllKuisInKelasFn: func(idUser, idKelas string) (bool, error) { return true, nil },
+	}
+	kuisRepo := &mockKuisRepoSert{
+		FindFinalByKelasFn: func(idKelas string) (*models.Kuis, error) {
+			return nil, errors.New("not found") // tidak ada kuis akhir
+		},
+	}
+	svc := NewSertifikatService(sertRepo, kelasRepo, progressRepo, attemptRepo, kuisRepo, userRepo)
+
+	resp, err := svc.Generate("user-1", "kelas-1")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "John Doe", resp.NamaPeserta)
+	assert.Equal(t, "Kelas Golang", resp.NamaKelas)
+	assert.NotEmpty(t, resp.NomorSertifikat)
+	assert.Contains(t, resp.NomorSertifikat, "CERT/")
+	assert.NotEmpty(t, resp.ID)
+	assert.NotEmpty(t, resp.TanggalTerbit)
+	// Verifikasi create dipanggil
+	assert.NotNil(t, createdSertifikat)
+	assert.Equal(t, "kelas-1", createdSertifikat.IDKelas)
+	assert.Equal(t, "user-1", createdSertifikat.IDUser)
+}
+
+func TestGenerateSertifikat_Success_DenganKuisAkhirLulus(t *testing.T) {
+	now := time.Now()
+
+	sertRepo := &mockSertifikatRepo{
+		FindByUserAndKelasFn: func(idUser, idKelas string) (*models.Sertifikat, error) {
+			return nil, errors.New("not found")
+		},
+		CreateFn: func(s *models.Sertifikat) error { return nil },
+	}
+	kelasRepo := &mockKelasRepoSert{
+		FindByIDFn: func(id string) (*models.Kelas, error) {
+			return &models.Kelas{ID: id, Judul: "Kelas Security", CreatedAt: now, UpdatedAt: now}, nil
+		},
+	}
+	userRepo := &mockUserRepoSert{
+		FindByIDFn: func(id string) (*models.User, error) {
+			return &models.User{ID: id, Username: "janedoe"}, nil
+		},
+	}
+	progressRepo := &mockProgressRepoSert{
+		HasCompletedAllMateriFn: func(idUser, idKelas string) (bool, error) { return true, nil },
+	}
+	attemptRepo := &mockAttemptRepoSert{
+		HasPassedAllKuisInKelasFn: func(idUser, idKelas string) (bool, error) { return true, nil },
+		FindByUserAndKuisFn: func(idUser, idKuis string) ([]models.KuisAttempt, error) {
+			return []models.KuisAttempt{
+				{ID: "att-1", IsPassed: false},
+				{ID: "att-2", IsPassed: true}, // lulus di percobaan kedua
+			}, nil
+		},
+	}
+	kuisRepo := &mockKuisRepoSert{
+		FindFinalByKelasFn: func(idKelas string) (*models.Kuis, error) {
+			return &models.Kuis{ID: "final-kuis-1", IDKelas: idKelas, IsFinal: true, CreatedAt: now, UpdatedAt: now}, nil
+		},
+	}
+	svc := NewSertifikatService(sertRepo, kelasRepo, progressRepo, attemptRepo, kuisRepo, userRepo)
+
+	resp, err := svc.Generate("user-1", "kelas-1")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	// Tanpa DisplayName → pakai Username
+	assert.Equal(t, "janedoe", resp.NamaPeserta)
+	assert.Equal(t, "Kelas Security", resp.NamaKelas)
+	assert.Contains(t, resp.NomorSertifikat, "CERT/")
+}
+
+func TestGenerateSertifikat_Success_UsesDisplayNameOverUsername(t *testing.T) {
+	now := time.Now()
+	displayName := "Admin Budi"
+
+	sertRepo := &mockSertifikatRepo{
+		FindByUserAndKelasFn: func(idUser, idKelas string) (*models.Sertifikat, error) {
+			return nil, errors.New("not found")
+		},
+		CreateFn: func(s *models.Sertifikat) error { return nil },
+	}
+	kelasRepo := &mockKelasRepoSert{
+		FindByIDFn: func(id string) (*models.Kelas, error) {
+			return &models.Kelas{ID: id, Judul: "Go Advanced", CreatedAt: now, UpdatedAt: now}, nil
+		},
+	}
+	userRepo := &mockUserRepoSert{
+		FindByIDFn: func(id string) (*models.User, error) {
+			return &models.User{ID: id, Username: "budi123", DisplayName: &displayName}, nil
+		},
+	}
+	progressRepo := &mockProgressRepoSert{
+		HasCompletedAllMateriFn: func(idUser, idKelas string) (bool, error) { return true, nil },
+	}
+	attemptRepo := &mockAttemptRepoSert{
+		HasPassedAllKuisInKelasFn: func(idUser, idKelas string) (bool, error) { return true, nil },
+	}
+	kuisRepo := &mockKuisRepoSert{
+		FindFinalByKelasFn: func(idKelas string) (*models.Kuis, error) {
+			return nil, errors.New("not found")
+		},
+	}
+	svc := NewSertifikatService(sertRepo, kelasRepo, progressRepo, attemptRepo, kuisRepo, userRepo)
+
+	resp, err := svc.Generate("user-1", "kelas-1")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "Admin Budi", resp.NamaPeserta, "harus pakai DisplayName, bukan Username")
+}
+
+func TestGenerateSertifikat_CreateRepoError(t *testing.T) {
+	now := time.Now()
+
+	sertRepo := &mockSertifikatRepo{
+		FindByUserAndKelasFn: func(idUser, idKelas string) (*models.Sertifikat, error) {
+			return nil, errors.New("not found")
+		},
+		CreateFn: func(s *models.Sertifikat) error {
+			return errors.New("database full")
+		},
+	}
+	kelasRepo := &mockKelasRepoSert{
+		FindByIDFn: func(id string) (*models.Kelas, error) {
+			return &models.Kelas{ID: id, Judul: "Go", CreatedAt: now, UpdatedAt: now}, nil
+		},
+	}
+	userRepo := &mockUserRepoSert{
+		FindByIDFn: func(id string) (*models.User, error) {
+			return &models.User{ID: id, Username: "test"}, nil
+		},
+	}
+	progressRepo := &mockProgressRepoSert{
+		HasCompletedAllMateriFn: func(idUser, idKelas string) (bool, error) { return true, nil },
+	}
+	attemptRepo := &mockAttemptRepoSert{
+		HasPassedAllKuisInKelasFn: func(idUser, idKelas string) (bool, error) { return true, nil },
+	}
+	kuisRepo := &mockKuisRepoSert{
+		FindFinalByKelasFn: func(idKelas string) (*models.Kuis, error) {
+			return nil, errors.New("not found")
+		},
+	}
+	svc := NewSertifikatService(sertRepo, kelasRepo, progressRepo, attemptRepo, kuisRepo, userRepo)
+
+	resp, err := svc.Generate("user-1", "kelas-1")
+
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Contains(t, err.Error(), "database full")
+}
+
 /*
 =====================================
  TEST GET BY USER AND KELAS

@@ -430,6 +430,78 @@ func TestNotificationService_HasPasswordExpirySoonNotif_ReturnsFalseForOtherType
 }
 
 // ============================================================
+// TEST: HasSTRExpirySoonNotif
+// ============================================================
+
+func TestNotificationService_HasSTRExpirySoonNotif_ReturnsTrueIfUnread(t *testing.T) {
+	rc := newNotifTestRedis()
+	notifs := []models.Notification{
+		{ID: "n1", Type: models.NotifSTRExpirySoon, Read: false},
+	}
+	seedNotifications(rc, "u1", notifs)
+
+	svc := NewNotificationService(rc)
+	has, err := svc.HasSTRExpirySoonNotif("u1")
+
+	require.NoError(t, err)
+	assert.True(t, has)
+}
+
+func TestNotificationService_HasSTRExpirySoonNotif_ReturnsFalseIfRead(t *testing.T) {
+	rc := newNotifTestRedis()
+	notifs := []models.Notification{
+		{ID: "n1", Type: models.NotifSTRExpirySoon, Read: true}, // sudah dibaca
+	}
+	seedNotifications(rc, "u1", notifs)
+
+	svc := NewNotificationService(rc)
+	has, err := svc.HasSTRExpirySoonNotif("u1")
+
+	require.NoError(t, err)
+	assert.False(t, has, "notif yang sudah dibaca tidak dihitung")
+}
+
+func TestNotificationService_HasSTRExpirySoonNotif_ReturnsFalseIfNoNotif(t *testing.T) {
+	svc := NewNotificationService(newNotifTestRedis())
+
+	has, err := svc.HasSTRExpirySoonNotif("u1")
+
+	require.NoError(t, err)
+	assert.False(t, has)
+}
+
+func TestNotificationService_HasSTRExpirySoonNotif_ReturnsFalseForOtherType(t *testing.T) {
+	rc := newNotifTestRedis()
+	notifs := []models.Notification{
+		{ID: "n1", Type: models.NotifSTRExpired, Read: false}, // bukan STRExpirySoon
+	}
+	seedNotifications(rc, "u1", notifs)
+
+	svc := NewNotificationService(rc)
+	has, err := svc.HasSTRExpirySoonNotif("u1")
+
+	require.NoError(t, err)
+	assert.False(t, has)
+}
+
+func TestNotificationService_HasSTRExpirySoonNotif_MixedNotifs_FindsCorrectOne(t *testing.T) {
+	rc := newNotifTestRedis()
+	notifs := []models.Notification{
+		{ID: "n1", Type: models.NotifPasswordExpirySoon, Read: false},
+		{ID: "n2", Type: models.NotifLoginFailed, Read: false},
+		{ID: "n3", Type: models.NotifSTRExpirySoon, Read: false},
+		{ID: "n4", Type: models.NotifSTRExpired, Read: false},
+	}
+	seedNotifications(rc, "u1", notifs)
+
+	svc := NewNotificationService(rc)
+	has, err := svc.HasSTRExpirySoonNotif("u1")
+
+	require.NoError(t, err)
+	assert.True(t, has, "harus menemukan NotifSTRExpirySoon di antara notif lain")
+}
+
+// ============================================================
 // TEST: IsolatePerUser
 // ============================================================
 
