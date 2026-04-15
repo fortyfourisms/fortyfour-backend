@@ -1,6 +1,6 @@
 -- 1. Tambah kolom ikas_id setelah perusahaan_id
 ALTER TABLE deteksi 
-ADD COLUMN ikas_id CHAR(36) AFTER perusahaan_id;
+ADD COLUMN IF NOT EXISTS ikas_id CHAR(36) AFTER perusahaan_id;
 
 -- 2. Mapping data dari perusahaan_id → ikas_id
 UPDATE deteksi det
