@@ -19,16 +19,16 @@ var _ MateriRepositoryInterface = (*MateriRepository)(nil)
 
 func (r *MateriRepository) Create(m *models.Materi) error {
 	_, err := r.db.Exec(
-		`INSERT INTO materi (id, id_kelas, judul, tipe, urutan, youtube_id, pdf_path, durasi_detik, created_at, updated_at)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-		m.ID, m.IDKelas, m.Judul, m.Tipe, m.Urutan, m.YoutubeID, m.PDFPath, m.DurasiDetik,
+		`INSERT INTO materi (id, id_kelas, judul, tipe, urutan, youtube_id, durasi_detik, konten_html, deskripsi_singkat, kategori, created_at, updated_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+		m.ID, m.IDKelas, m.Judul, m.Tipe, m.Urutan, m.YoutubeID, m.DurasiDetik, m.KontenHTML, m.DeskripsiSingkat, m.Kategori,
 	)
 	return err
 }
 
 func (r *MateriRepository) FindByID(id string) (*models.Materi, error) {
 	row := r.db.QueryRow(
-		`SELECT id, id_kelas, judul, tipe, urutan, youtube_id, pdf_path, durasi_detik, created_at, updated_at
+		`SELECT id, id_kelas, judul, tipe, urutan, youtube_id, durasi_detik, konten_html, deskripsi_singkat, kategori, created_at, updated_at
 		 FROM materi WHERE id = ?`, id,
 	)
 	return scanMateri(row)
@@ -36,21 +36,8 @@ func (r *MateriRepository) FindByID(id string) (*models.Materi, error) {
 
 func (r *MateriRepository) FindByKelas(idKelas string) ([]models.Materi, error) {
 	rows, err := r.db.Query(
-		`SELECT id, id_kelas, judul, tipe, urutan, youtube_id, pdf_path, durasi_detik, created_at, updated_at
+		`SELECT id, id_kelas, judul, tipe, urutan, youtube_id, durasi_detik, konten_html, deskripsi_singkat, kategori, created_at, updated_at
 		 FROM materi WHERE id_kelas = ? ORDER BY urutan ASC`, idKelas,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	return scanMateriRows(rows)
-}
-
-func (r *MateriRepository) FindByKelasBeforeUrutan(idKelas string, urutan int) ([]models.Materi, error) {
-	rows, err := r.db.Query(
-		`SELECT id, id_kelas, judul, tipe, urutan, youtube_id, pdf_path, durasi_detik, created_at, updated_at
-		 FROM materi WHERE id_kelas = ? AND urutan < ? ORDER BY urutan ASC`,
-		idKelas, urutan,
 	)
 	if err != nil {
 		return nil, err
@@ -61,9 +48,9 @@ func (r *MateriRepository) FindByKelasBeforeUrutan(idKelas string, urutan int) (
 
 func (r *MateriRepository) Update(m *models.Materi) error {
 	_, err := r.db.Exec(
-		`UPDATE materi SET judul=?, urutan=?, youtube_id=?, pdf_path=?, durasi_detik=?, updated_at=NOW()
+		`UPDATE materi SET judul=?, urutan=?, youtube_id=?, durasi_detik=?, konten_html=?, deskripsi_singkat=?, kategori=?, updated_at=NOW()
 		 WHERE id=?`,
-		m.Judul, m.Urutan, m.YoutubeID, m.PDFPath, m.DurasiDetik, m.ID,
+		m.Judul, m.Urutan, m.YoutubeID, m.DurasiDetik, m.KontenHTML, m.DeskripsiSingkat, m.Kategori, m.ID,
 	)
 	return err
 }
@@ -112,11 +99,11 @@ func (r *MateriRepository) ReorderUrutan(idKelas string) error {
 
 func scanMateri(row *sql.Row) (*models.Materi, error) {
 	var m models.Materi
-	var youtubeID, pdfPath sql.NullString
+	var youtubeID, kontenHTML, deskripsiSingkat, kategori sql.NullString
 	var durasiDetik sql.NullInt64
 	err := row.Scan(
 		&m.ID, &m.IDKelas, &m.Judul, &m.Tipe, &m.Urutan,
-		&youtubeID, &pdfPath, &durasiDetik,
+		&youtubeID, &durasiDetik, &kontenHTML, &deskripsiSingkat, &kategori,
 		&m.CreatedAt, &m.UpdatedAt,
 	)
 	if err != nil {
@@ -125,12 +112,18 @@ func scanMateri(row *sql.Row) (*models.Materi, error) {
 	if youtubeID.Valid {
 		m.YoutubeID = &youtubeID.String
 	}
-	if pdfPath.Valid {
-		m.PDFPath = &pdfPath.String
-	}
 	if durasiDetik.Valid {
 		d := int(durasiDetik.Int64)
 		m.DurasiDetik = &d
+	}
+	if kontenHTML.Valid {
+		m.KontenHTML = &kontenHTML.String
+	}
+	if deskripsiSingkat.Valid {
+		m.DeskripsiSingkat = &deskripsiSingkat.String
+	}
+	if kategori.Valid {
+		m.Kategori = &kategori.String
 	}
 	return &m, nil
 }
@@ -139,11 +132,11 @@ func scanMateriRows(rows *sql.Rows) ([]models.Materi, error) {
 	var result []models.Materi
 	for rows.Next() {
 		var m models.Materi
-		var youtubeID, pdfPath sql.NullString
+		var youtubeID, kontenHTML, deskripsiSingkat, kategori sql.NullString
 		var durasiDetik sql.NullInt64
 		if err := rows.Scan(
 			&m.ID, &m.IDKelas, &m.Judul, &m.Tipe, &m.Urutan,
-			&youtubeID, &pdfPath, &durasiDetik,
+			&youtubeID, &durasiDetik, &kontenHTML, &deskripsiSingkat, &kategori,
 			&m.CreatedAt, &m.UpdatedAt,
 		); err != nil {
 			return nil, err
@@ -151,12 +144,18 @@ func scanMateriRows(rows *sql.Rows) ([]models.Materi, error) {
 		if youtubeID.Valid {
 			m.YoutubeID = &youtubeID.String
 		}
-		if pdfPath.Valid {
-			m.PDFPath = &pdfPath.String
-		}
 		if durasiDetik.Valid {
 			d := int(durasiDetik.Int64)
 			m.DurasiDetik = &d
+		}
+		if kontenHTML.Valid {
+			m.KontenHTML = &kontenHTML.String
+		}
+		if deskripsiSingkat.Valid {
+			m.DeskripsiSingkat = &deskripsiSingkat.String
+		}
+		if kategori.Valid {
+			m.Kategori = &kategori.String
 		}
 		result = append(result, m)
 	}

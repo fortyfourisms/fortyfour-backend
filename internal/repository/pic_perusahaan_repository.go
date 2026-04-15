@@ -18,12 +18,13 @@ func NewPICRepository(db *sql.DB) *PICRepository {
 func (r *PICRepository) Create(req dto.CreatePICRequest, id string) error {
 	_, err := r.db.Exec(`
         INSERT INTO pic_perusahaan
-        (id, nama, telepon, id_perusahaan)
-        VALUES (?, ?, ?, ?)
+        (id, nama, telepon, email, id_perusahaan)
+        VALUES (?, ?, ?, ?, ?)
     `,
 		id,
 		utils.ValueOrNull(req.Nama),
 		utils.ValueOrNull(req.Telepon),
+		utils.ValueOrNull(req.Email),
 		utils.ValueOrNull(req.IDPerusahaan),
 	)
 	return err
@@ -34,7 +35,8 @@ func (r *PICRepository) GetAll() ([]dto.PICResponse, error) {
         SELECT 
             p.id, 
             p.nama, 
-            p.telepon, 
+            p.telepon,
+            p.email,
             p.created_at, 
             p.updated_at,
             per.id,
@@ -53,11 +55,13 @@ func (r *PICRepository) GetAll() ([]dto.PICResponse, error) {
 		var p dto.PICResponse
 		var perusahaanID sql.NullString
 		var namaPerusahaan sql.NullString
+		var email sql.NullString
 
 		err := rows.Scan(
 			&p.ID,
 			&p.Nama,
 			&p.Telepon,
+			&email,
 			&p.CreatedAt,
 			&p.UpdatedAt,
 			&perusahaanID,
@@ -67,7 +71,10 @@ func (r *PICRepository) GetAll() ([]dto.PICResponse, error) {
 			continue
 		}
 
-		// Jika perusahaan ada, tambahkan ke response
+		if email.Valid {
+			p.Email = email.String
+		}
+
 		if perusahaanID.Valid && namaPerusahaan.Valid {
 			p.Perusahaan = &dto.PerusahaanInPIC{
 				ID:             perusahaanID.String,
@@ -86,7 +93,8 @@ func (r *PICRepository) GetByID(id string) (*dto.PICResponse, error) {
         SELECT 
             p.id, 
             p.nama, 
-            p.telepon, 
+            p.telepon,
+            p.email,
             p.created_at, 
             p.updated_at,
             per.id,
@@ -99,22 +107,26 @@ func (r *PICRepository) GetByID(id string) (*dto.PICResponse, error) {
 	var p dto.PICResponse
 	var perusahaanID sql.NullString
 	var namaPerusahaan sql.NullString
+	var email sql.NullString
 
 	err := row.Scan(
 		&p.ID,
 		&p.Nama,
 		&p.Telepon,
+		&email,
 		&p.CreatedAt,
 		&p.UpdatedAt,
 		&perusahaanID,
 		&namaPerusahaan,
 	)
-
 	if err != nil {
 		return nil, err
 	}
 
-	// Jika perusahaan ada, tambahkan ke response
+	if email.Valid {
+		p.Email = email.String
+	}
+
 	if perusahaanID.Valid && namaPerusahaan.Valid {
 		p.Perusahaan = &dto.PerusahaanInPIC{
 			ID:             perusahaanID.String,
@@ -137,6 +149,10 @@ func (r *PICRepository) Update(id string, req dto.UpdatePICRequest) error {
 	if req.Telepon != nil {
 		updates = append(updates, "telepon=?")
 		args = append(args, *req.Telepon)
+	}
+	if req.Email != nil {
+		updates = append(updates, "email=?")
+		args = append(args, *req.Email)
 	}
 	if req.IDPerusahaan != nil {
 		updates = append(updates, "id_perusahaan=?")
@@ -186,7 +202,8 @@ func (r *PICRepository) GetByPerusahaan(idPerusahaan string) ([]dto.PICResponse,
         SELECT 
             p.id, 
             p.nama, 
-            p.telepon, 
+            p.telepon,
+            p.email,
             p.created_at, 
             p.updated_at,
             per.id,
@@ -205,11 +222,13 @@ func (r *PICRepository) GetByPerusahaan(idPerusahaan string) ([]dto.PICResponse,
 		var p dto.PICResponse
 		var perusahaanID sql.NullString
 		var namaPerusahaan sql.NullString
+		var email sql.NullString
 
 		err := rows.Scan(
 			&p.ID,
 			&p.Nama,
 			&p.Telepon,
+			&email,
 			&p.CreatedAt,
 			&p.UpdatedAt,
 			&perusahaanID,
@@ -217,6 +236,10 @@ func (r *PICRepository) GetByPerusahaan(idPerusahaan string) ([]dto.PICResponse,
 		)
 		if err != nil {
 			continue
+		}
+
+		if email.Valid {
+			p.Email = email.String
 		}
 
 		if perusahaanID.Valid && namaPerusahaan.Valid {

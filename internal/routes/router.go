@@ -119,15 +119,17 @@ func InitRouter(
 	mux.HandleFunc("/api/role/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(roleH)))))
 
 	// Route CSIRT
+	// "/api/csirt/" menangkap semua sub-path termasuk {id}/export-pdf.
+	// Di dalam handler, path yang mengandung "export-pdf" diarahkan ke csirtExportH,
+	// sisanya ke csirtH (CRUD) — ini satu-satunya cara karena Go ServeMux tidak support wildcard.
 	mux.HandleFunc("/api/csirt", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(csirtH)))))
-	mux.HandleFunc("/api/csirt/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(csirtH)))))
-
-	// Route CSIRT Export PDF
-	// GET /api/csirt/export-pdf                        → semua (admin) atau milik perusahaan sendiri (user)
-	// GET /api/csirt/export-pdf?id_perusahaan=xxx      → admin: filter perusahaan tertentu
-	// GET /api/csirt/{id}/export-pdf                   → export satu CSIRT by ID
-	mux.HandleFunc("/api/csirt/export-pdf", authM.Authenticate(utils.AdaptHandler(csirtExportH)))
-	mux.HandleFunc("/api/csirt/export-pdf/", authM.Authenticate(utils.AdaptHandler(csirtExportH)))
+	mux.HandleFunc("/api/csirt/", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, "export-pdf") {
+			utils.AdaptHandler(csirtExportH)(w, r)
+		} else {
+			casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(csirtH)))(w, r)
+		}
+	}))
 
 	// Route SDM_CSIRT
 	mux.HandleFunc("/api/sdm_csirt", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
@@ -142,15 +144,17 @@ func InitRouter(
 	mux.HandleFunc("/api/sub_sektor/", authM.Authenticate(utils.AdaptHandler(subsectorH)))
 
 	// Route SE
+	// "/api/se/" menangkap semua sub-path termasuk {id}/export-pdf.
+	// Di dalam handler, path yang mengandung "export-pdf" diarahkan ke seExportH,
+	// sisanya ke seH (CRUD).
 	mux.HandleFunc("/api/se", authM.Authenticate(utils.AdaptHandler(seH)))
-	mux.HandleFunc("/api/se/", authM.Authenticate(utils.AdaptHandler(seH)))
-
-	// Route SE Export PDF
-	// GET /api/se/export-pdf                        → semua SE (admin) atau milik perusahaan sendiri (user)
-	// GET /api/se/export-pdf?id_perusahaan=xxx      → admin: filter perusahaan tertentu
-	// GET /api/se/{id}/export-pdf                   → export satu SE by ID
-	mux.HandleFunc("/api/se/export-pdf", authM.Authenticate(utils.AdaptHandler(seExportH)))
-	mux.HandleFunc("/api/se/export-pdf/", authM.Authenticate(utils.AdaptHandler(seExportH)))
+	mux.HandleFunc("/api/se/", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, "export-pdf") {
+			utils.AdaptHandler(seExportH)(w, r)
+		} else {
+			utils.AdaptHandler(seH)(w, r)
+		}
+	}))
 
 	// Route Dashboard
 	// Summary: counts per sektor + ikas + se
@@ -167,12 +171,24 @@ func InitRouter(
 	// ── LMS Routes ────────────────────────────────────────────────────────────
 	//
 	// USER & ADMIN (authenticated):
-	//   GET  /api/kelas                              → list kelas published
-	//   GET  /api/kelas/{id}                         → detail kelas + progress user
-	//   POST /api/materi/{id}/progress               → update progress video/pdf
-	//   POST /api/kuis/{id_materi}/start             → mulai kuis
+	//   GET  /api/kelas                              → list kelas (user: published only)
+	//   GET  /api/kelas/{id}                         → detail kelas + materi + progress
+	//   POST /api/materi/{id}/progress               → update progress video/teks
+	//   GET  /api/materi/{id}/file-pendukung         → list file pendukung (PDF)
+	//   GET  /api/materi/{id}/diskusi                → list diskusi per materi
+	//   POST /api/materi/{id}/diskusi                → buat diskusi/reply
+	//   GET  /api/materi/{id}/catatan                → get catatan pribadi
+	//   PUT  /api/materi/{id}/catatan                → upsert catatan pribadi
+	//   GET  /api/kelas/{id}/kuis                    → list kuis dalam kelas
+	//   POST /api/kuis/{id_kuis}/start               → mulai kuis
 	//   POST /api/kuis/attempt/{id_attempt}/submit   → submit jawaban kuis
 	//   GET  /api/kuis/attempt/{id_attempt}/result   → lihat hasil kuis
+	//   GET  /api/kelas/{id}/sertifikat              → cek sertifikat user
+	//   POST /api/kelas/{id}/sertifikat/generate     → generate sertifikat
+	//   GET  /api/sertifikat/me                      → list sertifikat user
+	//   GET  /api/sertifikat/{id}                    → detail sertifikat
+	//   GET  /api/sertifikat/{id}/download           → download PDF sertifikat
+	//   GET  /api/file-pendukung/{id}/download       → download file pendukung
 	//
 	// ADMIN ONLY (authenticated + casbin):
 	//   POST   /api/kelas                            → buat kelas baru
@@ -181,8 +197,13 @@ func InitRouter(
 	//   POST   /api/kelas/{id}/materi                → tambah materi ke kelas
 	//   PUT    /api/materi/{id}                      → update materi
 	//   DELETE /api/materi/{id}                      → hapus materi
-	//   GET    /api/materi/{id}/soal                 → list soal kuis (admin)
-	//   POST   /api/materi/{id}/soal                 → tambah soal ke kuis
+	//   POST   /api/materi/{id}/file-pendukung       → upload file pendukung
+	//   DELETE /api/file-pendukung/{id}              → hapus file pendukung
+	//   POST   /api/kelas/{id}/kuis                  → buat kuis (per-materi/final)
+	//   PUT    /api/kuis/{id}                        → update kuis
+	//   DELETE /api/kuis/{id}                        → hapus kuis
+	//   GET    /api/kuis/{id_kuis}/soal              → list soal kuis (admin)
+	//   POST   /api/kuis/{id_kuis}/soal              → tambah soal ke kuis
 	//   PUT    /api/soal/{id}                        → update soal
 	//   DELETE /api/soal/{id}                        → hapus soal
 
@@ -200,7 +221,7 @@ func InitRouter(
 		},
 	)))
 
-	// /api/kelas/{id} dan /api/kelas/{id}/materi
+	// /api/kelas/{id}, /api/kelas/{id}/materi, /api/kelas/{id}/kuis, /api/kelas/{id}/sertifikat
 	mux.HandleFunc("/api/kelas/", authM.Authenticate(moderateLimiter.LimitByUser(
 		func(w http.ResponseWriter, r *http.Request) {
 			path := r.URL.Path
@@ -212,6 +233,25 @@ func InitRouter(
 					return
 				}
 				w.WriteHeader(http.StatusMethodNotAllowed)
+				return
+			}
+
+			// /api/kelas/{id}/kuis → GET (user & admin), POST (admin)
+			if strings.Contains(path, "/kuis") {
+				switch r.Method {
+				case http.MethodGet:
+					lmsH.ServeKelas(w, r)
+				case http.MethodPost:
+					casbinM.Authorize(lmsH.ServeKelas)(w, r)
+				default:
+					w.WriteHeader(http.StatusMethodNotAllowed)
+				}
+				return
+			}
+
+			// /api/kelas/{id}/sertifikat → GET/POST user
+			if strings.Contains(path, "/sertifikat") {
+				lmsH.ServeKelas(w, r)
 				return
 			}
 
@@ -227,24 +267,40 @@ func InitRouter(
 		},
 	)))
 
-	// /api/materi/{id}, /api/materi/{id}/progress, /api/materi/{id}/soal
+	// /api/materi/{id}, /api/materi/{id}/progress, /api/materi/{id}/file-pendukung,
+	// /api/materi/{id}/diskusi, /api/materi/{id}/catatan
 	mux.HandleFunc("/api/materi/", authM.Authenticate(moderateLimiter.LimitByUser(
 		func(w http.ResponseWriter, r *http.Request) {
 			path := r.URL.Path
 
 			// /api/materi/{id}/progress → POST user & admin
-			if strings.HasSuffix(path, "/progress") {
-				if r.Method == http.MethodPost {
-					lmsH.ServeMateri(w, r)
-					return
-				}
-				w.WriteHeader(http.StatusMethodNotAllowed)
+			if strings.Contains(path, "/progress") {
+				lmsH.ServeMateri(w, r)
 				return
 			}
 
-			// /api/materi/{id}/soal → GET/POST admin
-			if strings.HasSuffix(path, "/soal") {
-				casbinM.Authorize(lmsH.ServeSoalByMateri)(w, r)
+			// /api/materi/{id}/file-pendukung → GET user, POST admin
+			if strings.Contains(path, "/file-pendukung") {
+				switch r.Method {
+				case http.MethodGet:
+					lmsH.ServeMateri(w, r)
+				case http.MethodPost:
+					casbinM.Authorize(lmsH.ServeMateri)(w, r)
+				default:
+					w.WriteHeader(http.StatusMethodNotAllowed)
+				}
+				return
+			}
+
+			// /api/materi/{id}/diskusi → GET/POST user
+			if strings.Contains(path, "/diskusi") {
+				lmsH.ServeMateri(w, r)
+				return
+			}
+
+			// /api/materi/{id}/catatan → GET/PUT user
+			if strings.Contains(path, "/catatan") {
+				lmsH.ServeMateri(w, r)
 				return
 			}
 
@@ -258,11 +314,54 @@ func InitRouter(
 		},
 	)))
 
+	// /api/file-pendukung/{id} → DELETE admin, /api/file-pendukung/{id}/download → GET user
+	mux.HandleFunc("/api/file-pendukung/", authM.Authenticate(moderateLimiter.LimitByUser(
+		func(w http.ResponseWriter, r *http.Request) {
+			path := r.URL.Path
+			if strings.HasSuffix(path, "/download") && r.Method == http.MethodGet {
+				lmsH.ServeFilePendukung(w, r)
+				return
+			}
+			casbinM.Authorize(lmsH.ServeFilePendukung)(w, r)
+		},
+	)))
+
+	// /api/diskusi/{id} → PUT/DELETE user
+	mux.HandleFunc("/api/diskusi/", authM.Authenticate(moderateLimiter.LimitByUser(lmsH.ServeDiskusi)))
+
 	// /api/soal/{id} → PUT/DELETE admin
 	mux.HandleFunc("/api/soal/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(lmsH.ServeSoal))))
 
-	// /api/kuis/ — start, submit, result (user & admin)
-	mux.HandleFunc("/api/kuis/", authM.Authenticate(moderateLimiter.LimitByUser(lmsH.ServeKuis)))
+	// /api/kuis/ — admin CRUD + user start/submit/result + soal management
+	mux.HandleFunc("/api/kuis/", authM.Authenticate(moderateLimiter.LimitByUser(
+		func(w http.ResponseWriter, r *http.Request) {
+			path := r.URL.Path
+
+			// User routes: start, attempt/submit, attempt/result
+			if strings.Contains(path, "/start") || strings.Contains(path, "/attempt/") {
+				lmsH.ServeKuis(w, r)
+				return
+			}
+
+			// /api/kuis/{id}/soal → GET/POST admin
+			if strings.Contains(path, "/soal") {
+				casbinM.Authorize(lmsH.ServeKuis)(w, r)
+				return
+			}
+
+			// PUT/DELETE admin
+			switch r.Method {
+			case http.MethodPut, http.MethodDelete:
+				casbinM.Authorize(lmsH.ServeKuis)(w, r)
+			default:
+				lmsH.ServeKuis(w, r)
+			}
+		},
+	)))
+
+	// /api/sertifikat → user routes
+	mux.HandleFunc("/api/sertifikat/", authM.Authenticate(moderateLimiter.LimitByUser(lmsH.ServeSertifikat)))
+	mux.HandleFunc("/api/sertifikat", authM.Authenticate(moderateLimiter.LimitByUser(lmsH.ServeSertifikat)))
 
 	// Swagger UI
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)

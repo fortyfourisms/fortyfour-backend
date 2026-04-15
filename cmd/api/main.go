@@ -154,13 +154,19 @@ func main() {
 	kelasRepo := repository.NewKelasRepository(db)
 	materiRepo := repository.NewMateriRepository(db)
 	soalRepo := repository.NewSoalRepository(db)
-	kuisRepo := repository.NewKuisAttemptRepository(db)
+	kuisAttemptRepo := repository.NewKuisAttemptRepository(db)
 	progressRepo := repository.NewProgressRepository(db)
+	kuisRepo := repository.NewKuisRepository(db)
+	fpRepo := repository.NewFilePendukungRepository(db)
+	diskusiRepo := repository.NewDiskusiRepository(db)
+	catatanRepo := repository.NewCatatanRepository(db)
+	sertifikatRepo := repository.NewSertifikatRepository(db)
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret, true, cfg.Domain)
 	notificationService := services.NewNotificationService(redisClient)
-	authService := services.NewAuthService(userRepo, roleRepo, tokenService, notificationService)
+	strExpiryService := services.NewSTRExpiryService(csirtRepo, notificationService)
+	authService := services.NewAuthService(userRepo, roleRepo, tokenService, notificationService, strExpiryService)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo, redisClient, rmqProducer)
 	picService := services.NewPICService(picRepo, redisClient, rmqProducer)
 	jabatanService := services.NewJabatanService(jabatanRepo, redisClient, rmqProducer)
@@ -175,10 +181,14 @@ func main() {
 	seService := services.NewSEService(seRepo, redisClient, rmqProducer)
 	seExportService := services.NewSEExportService(seService)
 	dashboardService := services.NewDashboardService(dashboardRepo, redisClient)
-	kelasSvc := services.NewKelasService(kelasRepo, materiRepo, progressRepo, redisClient)
+	kelasSvc := services.NewKelasService(kelasRepo, materiRepo, progressRepo, kuisRepo, kuisAttemptRepo, sertifikatRepo, fpRepo, redisClient)
 	materiSvc := services.NewMateriService(materiRepo, kelasRepo, progressRepo, redisClient)
-	soalSvc := services.NewSoalService(soalRepo, materiRepo, redisClient)
-	kuisSvc := services.NewKuisService(kuisRepo, soalRepo, materiRepo, progressRepo, redisClient)
+	soalSvc := services.NewSoalService(soalRepo, kuisRepo, redisClient)
+	kuisSvc := services.NewKuisService(kuisAttemptRepo, soalRepo, kuisRepo, progressRepo, redisClient)
+	fpSvc := services.NewFilePendukungService(fpRepo, materiRepo, redisClient)
+	diskusiSvc := services.NewDiskusiService(diskusiRepo, userRepo)
+	catatanSvc := services.NewCatatanService(catatanRepo)
+	sertifikatSvc := services.NewSertifikatService(sertifikatRepo, kelasRepo, progressRepo, kuisAttemptRepo, kuisRepo, userRepo)
 
 	// Initialize Handler
 	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService, userService, uploadPath)
@@ -201,7 +211,7 @@ func main() {
 	seHandler.SetExportHandler(seExportHandler)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
-	lmsHandler := handlers.NewLMSHandler(kelasSvc, materiSvc, soalSvc, kuisSvc, sseService)
+	lmsHandler := handlers.NewLMSHandler(kelasSvc, materiSvc, soalSvc, kuisSvc, fpSvc, diskusiSvc, catatanSvc, sertifikatSvc, sseService)
 
 	// Proxy Handler for IKAS
 	ikasProxyHandler := handlers.NewProxyHandler("http://ikas:8081", cfg.InternalGatewayKey)

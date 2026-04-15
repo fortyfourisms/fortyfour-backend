@@ -176,20 +176,47 @@ func TestSEExportHandler_ExportAll_User_Success(t *testing.T) {
 	mockSvc.AssertExpectations(t)
 }
 
-func TestSEExportHandler_ExportAll_User_QueryParamIgnored(t *testing.T) {
-	// query param id_perusahaan harus diabaikan untuk user — selalu pakai dari JWT
+func TestSEExportHandler_ExportAll_User_QueryParamOwnPerusahaan(t *testing.T) {
+	// user boleh kirim id_perusahaan miliknya sendiri di query param — tetap sukses
 	mockSvc := new(mockSEExportService)
 	mockSvc.On("ExportByPerusahaanPDF", "p-user").Return(fakePDF, nil)
 
 	h := NewSEExportHandler(mockSvc)
-	req := httptest.NewRequest(http.MethodGet, "/api/se/export-pdf?id_perusahaan=p-lain", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/se/export-pdf?id_perusahaan=p-user", nil)
 	req = withExportUserCtx(req, "p-user")
 	w := httptest.NewRecorder()
 
 	h.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	// pastikan ExportByPerusahaanPDF dipanggil dengan p-user, bukan p-lain
+	mockSvc.AssertExpectations(t)
+}
+
+func TestSEExportHandler_ExportAll_User_QueryParamOtherPerusahaan_Forbidden(t *testing.T) {
+	// user yang kirim id_perusahaan milik perusahaan lain harus dapat 403
+	h := NewSEExportHandler(new(mockSEExportService))
+	req := httptest.NewRequest(http.MethodGet, "/api/se/export-pdf?id_perusahaan=p-lain", nil)
+	req = withExportUserCtx(req, "p-user")
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+func TestSEExportHandler_ExportAll_User_NoQueryParam_Success(t *testing.T) {
+	// user tanpa query param tetap bisa export miliknya sendiri
+	mockSvc := new(mockSEExportService)
+	mockSvc.On("ExportByPerusahaanPDF", "p-user").Return(fakePDF, nil)
+
+	h := NewSEExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/se/export-pdf", nil)
+	req = withExportUserCtx(req, "p-user")
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
 	mockSvc.AssertExpectations(t)
 }
 
@@ -366,12 +393,41 @@ func TestCsirtExportHandler_ExportAll_User_Success(t *testing.T) {
 	mockSvc.AssertExpectations(t)
 }
 
-func TestCsirtExportHandler_ExportAll_User_QueryParamIgnored(t *testing.T) {
+func TestCsirtExportHandler_ExportAll_User_QueryParamOwnPerusahaan(t *testing.T) {
+	// user boleh kirim id_perusahaan miliknya sendiri di query param — tetap sukses
 	mockSvc := new(mockCsirtExportService)
 	mockSvc.On("ExportByPerusahaanPDF", "p-user").Return(fakePDF, nil)
 
 	h := NewCsirtExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/csirt/export-pdf?id_perusahaan=p-user", nil)
+	req = withExportUserCtx(req, "p-user")
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockSvc.AssertExpectations(t)
+}
+
+func TestCsirtExportHandler_ExportAll_User_QueryParamOtherPerusahaan_Forbidden(t *testing.T) {
+	// user yang kirim id_perusahaan milik perusahaan lain harus dapat 403
+	h := NewCsirtExportHandler(new(mockCsirtExportService))
 	req := httptest.NewRequest(http.MethodGet, "/api/csirt/export-pdf?id_perusahaan=p-lain", nil)
+	req = withExportUserCtx(req, "p-user")
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
+}
+
+func TestCsirtExportHandler_ExportAll_User_NoQueryParam_Success(t *testing.T) {
+	// user tanpa query param tetap bisa export miliknya sendiri
+	mockSvc := new(mockCsirtExportService)
+	mockSvc.On("ExportByPerusahaanPDF", "p-user").Return(fakePDF, nil)
+
+	h := NewCsirtExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/csirt/export-pdf", nil)
 	req = withExportUserCtx(req, "p-user")
 	w := httptest.NewRecorder()
 

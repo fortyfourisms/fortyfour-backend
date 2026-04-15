@@ -33,6 +33,7 @@ var defaultPolicies = []Policy{
 	{"user", "/api/csirt/:id", "GET"},
 	{"user", "/api/csirt/:id", "PUT"},
 	{"user", "/api/csirt/:id", "DELETE"},
+	{"user", "/api/csirt/:id/pgp-download", "GET"},
 
 	// SDM CSIRT
 	{"user", "/api/sdm_csirt", "GET"},
@@ -57,6 +58,24 @@ var defaultPolicies = []Policy{
 	{"user", "/api/perusahaan/:id", "GET"},
 	{"user", "/api/perusahaan/:id", "PUT"},
 
+	// ── MATURITY ─────────────────────────────────────────────────────────────
+
+	// Ruang Lingkup (master — read only untuk user)
+	{"user", "/api/maturity/ruang-lingkup", "GET"},
+	{"user", "/api/maturity/ruang-lingkup/:id", "GET"},
+
+	// Domain (master — read only untuk user)
+	{"user", "/api/maturity/domain", "GET"},
+	{"user", "/api/maturity/domain/:id", "GET"},
+
+	// Kategori (master — read only untuk user)
+	{"user", "/api/maturity/kategori", "GET"},
+	{"user", "/api/maturity/kategori/:id", "GET"},
+
+	// Sub Kategori (master — read only untuk user)
+	{"user", "/api/maturity/sub-kategori", "GET"},
+	{"user", "/api/maturity/sub-kategori/:id", "GET"},
+
 	// IKAS
 	{"user", "/api/maturity/ikas", "GET"},
 	{"user", "/api/maturity/ikas", "POST"},
@@ -64,23 +83,23 @@ var defaultPolicies = []Policy{
 	{"user", "/api/maturity/ikas/:id", "PUT"},
 	{"user", "/api/maturity/ikas/:id", "DELETE"},
 
-	// Domain Identifikasi
+	// Domain Identifikasi (read only untuk user)
 	{"user", "/api/maturity/identifikasi", "GET"},
 	{"user", "/api/maturity/identifikasi/:id", "GET"},
 
-	// Domain Proteksi
+	// Domain Proteksi (read only untuk user)
 	{"user", "/api/maturity/proteksi", "GET"},
 	{"user", "/api/maturity/proteksi/:id", "GET"},
 
-	// Domain Deteksi
+	// Domain Deteksi (read only untuk user)
 	{"user", "/api/maturity/deteksi", "GET"},
 	{"user", "/api/maturity/deteksi/:id", "GET"},
 
-	// Domain Gulih
+	// Domain Gulih (read only untuk user)
 	{"user", "/api/maturity/gulih", "GET"},
 	{"user", "/api/maturity/gulih/:id", "GET"},
 
-	// Maturity (Pertanyaan)
+	// Maturity (Pertanyaan — read only untuk user)
 	{"user", "/api/maturity/pertanyaan-identifikasi", "GET"},
 	{"user", "/api/maturity/pertanyaan-identifikasi/:id", "GET"},
 
@@ -117,6 +136,49 @@ var defaultPolicies = []Policy{
 	{"user", "/api/maturity/jawaban-gulih/:id", "GET"},
 	{"user", "/api/maturity/jawaban-gulih/:id", "PUT"},
 	// {"user", "/api/maturity/jawaban-gulih/:id", "DELETE"},
+
+	// ── LMS ──────────────────────────────────────────────────────────────────
+	// user bisa melihat kelas, detail kelas, update progress, dan mengikuti kuis.
+ 
+	// Kelas (user bisa lihat list & detail)
+	{"user", "/api/kelas", "GET"},
+	{"user", "/api/kelas/:id", "GET"},
+
+	// Kelas → kuis list (user bisa lihat)
+	{"user", "/api/kelas/:id/kuis", "GET"},
+
+	// Kelas → sertifikat (user)
+	{"user", "/api/kelas/:id/sertifikat", "GET"},
+	{"user", "/api/kelas/:id/sertifikat/generate", "POST"},
+ 
+	// Materi — progress update (user)
+	{"user", "/api/materi/:id/progress", "POST"},
+
+	// Materi — file pendukung (user bisa lihat)
+	{"user", "/api/materi/:id/file-pendukung", "GET"},
+
+	// Materi — diskusi (user bisa CRUD diskusi sendiri)
+	{"user", "/api/materi/:id/diskusi", "GET"},
+	{"user", "/api/materi/:id/diskusi", "POST"},
+	{"user", "/api/diskusi/:id", "PUT"},
+	{"user", "/api/diskusi/:id", "DELETE"},
+
+	// Materi — catatan pribadi (user)
+	{"user", "/api/materi/:id/catatan", "GET"},
+	{"user", "/api/materi/:id/catatan", "PUT"},
+
+	// File pendukung — download (user)
+	{"user", "/api/file-pendukung/:id/download", "GET"},
+ 
+	// Kuis — start, submit, result (user)
+	{"user", "/api/kuis/:id_kuis/start", "POST"},
+	{"user", "/api/kuis/attempt/:id_attempt/submit", "POST"},
+	{"user", "/api/kuis/attempt/:id_attempt/result", "GET"},
+
+	// Sertifikat (user)
+	{"user", "/api/sertifikat/me", "GET"},
+	{"user", "/api/sertifikat/:id", "GET"},
+	{"user", "/api/sertifikat/:id/download", "GET"},
 }
 
 // SeedCasbinPolicies memastikan semua default policy ada di database.

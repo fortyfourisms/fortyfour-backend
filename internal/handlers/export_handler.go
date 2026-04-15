@@ -87,13 +87,18 @@ func (h *SEExportHandler) handleExportAll(w http.ResponseWriter, r *http.Request
 			pdfBytes, err = h.exportService.ExportAllPDF()
 		}
 	} else {
-		// User biasa: paksa pakai id_perusahaan dari JWT, query param diabaikan
-		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
-		if idPerusahaan == "" {
+		idFromJWT := middleware.GetIDPerusahaan(r.Context())
+		if idFromJWT == "" {
 			utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
 			return
 		}
-		pdfBytes, err = h.exportService.ExportByPerusahaanPDF(idPerusahaan)
+		// Jika user menyertakan query param id_perusahaan, validasi bahwa itu miliknya sendiri
+		idFromQuery := strings.TrimSpace(r.URL.Query().Get("id_perusahaan"))
+		if idFromQuery != "" && idFromQuery != idFromJWT {
+			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data perusahaan tersebut")
+			return
+		}
+		pdfBytes, err = h.exportService.ExportByPerusahaanPDF(idFromJWT)
 	}
 
 	if err != nil {
@@ -222,12 +227,18 @@ func (h *CsirtExportHandler) handleExportAll(w http.ResponseWriter, r *http.Requ
 			pdfBytes, err = h.exportService.ExportAllPDF()
 		}
 	} else {
-		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
-		if idPerusahaan == "" {
+		idFromJWT := middleware.GetIDPerusahaan(r.Context())
+		if idFromJWT == "" {
 			utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
 			return
 		}
-		pdfBytes, err = h.exportService.ExportByPerusahaanPDF(idPerusahaan)
+		// Jika user menyertakan query param id_perusahaan, validasi bahwa itu miliknya sendiri
+		idFromQuery := strings.TrimSpace(r.URL.Query().Get("id_perusahaan"))
+		if idFromQuery != "" && idFromQuery != idFromJWT {
+			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data perusahaan tersebut")
+			return
+		}
+		pdfBytes, err = h.exportService.ExportByPerusahaanPDF(idFromJWT)
 	}
 
 	if err != nil {

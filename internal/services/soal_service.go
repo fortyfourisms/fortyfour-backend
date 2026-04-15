@@ -13,28 +13,24 @@ import (
 )
 
 type SoalService struct {
-	repo       repository.SoalRepositoryInterface
-	materiRepo repository.MateriRepositoryInterface
-	rc         cache.RedisInterface
+	repo     repository.SoalRepositoryInterface
+	kuisRepo repository.KuisRepositoryInterface
+	rc       cache.RedisInterface
 }
 
 func NewSoalService(
 	repo repository.SoalRepositoryInterface,
-	materiRepo repository.MateriRepositoryInterface,
+	kuisRepo repository.KuisRepositoryInterface,
 	rc cache.RedisInterface,
 ) *SoalService {
-	return &SoalService{repo: repo, materiRepo: materiRepo, rc: rc}
+	return &SoalService{repo: repo, kuisRepo: kuisRepo, rc: rc}
 }
 
 // ── Admin: CRUD Soal ──────────────────────────────────────────────────────────
 
-func (s *SoalService) Create(idMateri string, req dto.CreateSoalRequest) (*dto.SoalResponse, error) {
-	materi, err := s.materiRepo.FindByID(idMateri)
-	if err != nil {
-		return nil, errors.New("materi tidak ditemukan")
-	}
-	if materi.Tipe != models.MateriTipeKuis {
-		return nil, errors.New("materi ini bukan bertipe kuis")
+func (s *SoalService) Create(idKuis string, req dto.CreateSoalRequest) (*dto.SoalResponse, error) {
+	if _, err := s.kuisRepo.FindByID(idKuis); err != nil {
+		return nil, errors.New("kuis tidak ditemukan")
 	}
 
 	pertanyaan := strings.TrimSpace(req.Pertanyaan)
@@ -47,7 +43,7 @@ func (s *SoalService) Create(idMateri string, req dto.CreateSoalRequest) (*dto.S
 
 	soal := &models.Soal{
 		ID:         uuid.New().String(),
-		IDMateri:   idMateri,
+		IDKuis:     idKuis,
 		Pertanyaan: pertanyaan,
 		Urutan:     req.Urutan,
 	}
@@ -102,9 +98,9 @@ func (s *SoalService) Delete(id string) error {
 	return s.repo.Delete(id)
 }
 
-// GetByMateri untuk admin (tampilkan is_correct)
-func (s *SoalService) GetByMateri(idMateri string) ([]dto.SoalResponse, error) {
-	soalList, err := s.repo.FindByMateri(idMateri)
+// GetByKuis untuk admin (tampilkan is_correct)
+func (s *SoalService) GetByKuis(idKuis string) ([]dto.SoalResponse, error) {
+	soalList, err := s.repo.FindByKuis(idKuis)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +167,7 @@ func toSoalResponse(soal *models.Soal) *dto.SoalResponse {
 	}
 	return &dto.SoalResponse{
 		ID:         soal.ID,
-		IDMateri:   soal.IDMateri,
+		IDKuis:     soal.IDKuis,
 		Pertanyaan: soal.Pertanyaan,
 		Urutan:     soal.Urutan,
 		Pilihan:    pilihan,

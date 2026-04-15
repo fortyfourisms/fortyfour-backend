@@ -10,6 +10,8 @@ const (
 	NotifPasswordExpirySoon NotificationType = "password_expiry_soon"
 	NotifPasswordExpired    NotificationType = "password_expired"
 	NotifAccountSuspended   NotificationType = "account_suspended"
+	NotifSTRExpirySoon      NotificationType = "str_expiry_soon"
+	NotifSTRExpired         NotificationType = "str_expired"
 )
 
 // Notification adalah struktur notifikasi yang disimpan di Redis

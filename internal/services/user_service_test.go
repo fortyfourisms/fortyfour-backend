@@ -572,12 +572,25 @@ func TestUserService_UpdateStatus_Aktif_Success(t *testing.T) {
 	service, mockRepo := setupUserService()
 
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	user.Status = models.UserStatusSuspend
+	user.LoginAttempts = 5
 	_ = mockRepo.Create(user)
 
-	err := service.UpdateStatus("user-1", "Aktif")
+	resp, err := service.UpdateStatus("user-1", "Aktif")
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
+	}
+	if resp == nil {
+		t.Fatal("expected response, got nil")
+	}
+	if resp.Status != "Aktif" {
+		t.Errorf("expected status 'Aktif', got '%s'", resp.Status)
+	}
+	// Pastikan login_attempts ter-reset
+	updatedUser, _ := mockRepo.FindByID("user-1")
+	if updatedUser.LoginAttempts != 0 {
+		t.Errorf("expected login_attempts 0 after reactivation, got %d", updatedUser.LoginAttempts)
 	}
 }
 
@@ -587,10 +600,16 @@ func TestUserService_UpdateStatus_Suspend_Success(t *testing.T) {
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
 	_ = mockRepo.Create(user)
 
-	err := service.UpdateStatus("user-1", "Suspend")
+	resp, err := service.UpdateStatus("user-1", "Suspend")
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
+	}
+	if resp == nil {
+		t.Fatal("expected response, got nil")
+	}
+	if resp.Status != "Suspend" {
+		t.Errorf("expected status 'Suspend', got '%s'", resp.Status)
 	}
 }
 
@@ -600,10 +619,16 @@ func TestUserService_UpdateStatus_Nonaktif_Success(t *testing.T) {
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
 	_ = mockRepo.Create(user)
 
-	err := service.UpdateStatus("user-1", "Nonaktif")
+	resp, err := service.UpdateStatus("user-1", "Nonaktif")
 
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
+	}
+	if resp == nil {
+		t.Fatal("expected response, got nil")
+	}
+	if resp.Status != "Nonaktif" {
+		t.Errorf("expected status 'Nonaktif', got '%s'", resp.Status)
 	}
 }
 
@@ -613,10 +638,13 @@ func TestUserService_UpdateStatus_InvalidStatus(t *testing.T) {
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
 	_ = mockRepo.Create(user)
 
-	err := service.UpdateStatus("user-1", "InvalidStatus")
+	resp, err := service.UpdateStatus("user-1", "InvalidStatus")
 
 	if err == nil {
 		t.Fatal("expected error for invalid status, got nil")
+	}
+	if resp != nil {
+		t.Error("expected nil response on error")
 	}
 	if err.Error() != "status tidak valid, pilihan: Aktif, Suspend, Nonaktif" {
 		t.Errorf("unexpected error message: %v", err)
@@ -626,10 +654,13 @@ func TestUserService_UpdateStatus_InvalidStatus(t *testing.T) {
 func TestUserService_UpdateStatus_UserNotFound(t *testing.T) {
 	service, _ := setupUserService()
 
-	err := service.UpdateStatus("nonexistent-id", "Aktif")
+	resp, err := service.UpdateStatus("nonexistent-id", "Aktif")
 
 	if err == nil {
 		t.Fatal("expected error for nonexistent user, got nil")
+	}
+	if resp != nil {
+		t.Error("expected nil response on error")
 	}
 }
 
@@ -1005,9 +1036,12 @@ func TestUserService_UpdateStatus_StatusReflectedInGetByID(t *testing.T) {
 	user.Status = models.UserStatusAktif
 	_ = mockRepo.Create(user)
 
-	err := service.UpdateStatus("id-upd", models.UserStatusSuspend)
+	resp, err := service.UpdateStatus("id-upd", models.UserStatusSuspend)
 	if err != nil {
 		t.Fatalf("UpdateStatus gagal: %v", err)
+	}
+	if resp.Status != string(models.UserStatusSuspend) {
+		t.Errorf("expected status 'Suspend' dari response UpdateStatus, got '%s'", resp.Status)
 	}
 
 	result, err := service.GetByID("id-upd")

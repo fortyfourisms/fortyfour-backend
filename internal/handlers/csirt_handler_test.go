@@ -320,7 +320,6 @@ func TestCsirtHandler_Create_WithTanggalFields_Success(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, w.Code)
 	assert.Equal(t, "2024-01-15", capturedReq.TanggalRegistrasi)
 	assert.Equal(t, "2025-01-15", capturedReq.TanggalKadaluarsa)
-	assert.Equal(t, "2025-01-20", capturedReq.TanggalRegistrasiUlang)
 }
 
 func TestCsirtHandler_Create_WithoutTanggal_FileStrNullable(t *testing.T) {
@@ -351,7 +350,6 @@ func TestCsirtHandler_Create_WithoutTanggal_FileStrNullable(t *testing.T) {
 	// Semua field nullable harusnya empty string (akan jadi NULL di DB via nullableStr)
 	assert.Equal(t, "", capturedReq.TanggalRegistrasi)
 	assert.Equal(t, "", capturedReq.TanggalKadaluarsa)
-	assert.Equal(t, "", capturedReq.TanggalRegistrasiUlang)
 	assert.Equal(t, "", capturedReq.FileStr)
 }
 
@@ -417,8 +415,6 @@ func TestCsirtHandler_Update_WithTanggalFields_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.NotNil(t, capturedReq.TanggalKadaluarsa)
 	assert.Equal(t, "2026-06-30", *capturedReq.TanggalKadaluarsa)
-	assert.NotNil(t, capturedReq.TanggalRegistrasiUlang)
-	assert.Equal(t, "2026-07-01", *capturedReq.TanggalRegistrasiUlang)
 	// tanggal_registrasi tidak dikirim → harus nil (tidak diupdate)
 	assert.Nil(t, capturedReq.TanggalRegistrasi)
 }
@@ -477,7 +473,6 @@ func TestCsirtHandler_Update_NoNewTanggal_FieldsRemainNil(t *testing.T) {
 	// Tanggal tidak dikirim → semua nil → tidak di-update di service
 	assert.Nil(t, capturedReq.TanggalRegistrasi)
 	assert.Nil(t, capturedReq.TanggalKadaluarsa)
-	assert.Nil(t, capturedReq.TanggalRegistrasiUlang)
 	assert.Nil(t, capturedReq.FileStr)
 }
 
@@ -773,7 +768,6 @@ func TestCsirtHandler_GetByID_AsUser_OtherPerusahaan_Forbidden(t *testing.T) {
 func TestCsirtHandler_GetByID_AsUser_ReturnsNewFields(t *testing.T) {
 	tglReg := "2024-01-15"
 	tglKad := "2025-01-15"
-	tglRU := "2025-01-20"
 	mockSvc := &mockCsirtService{
 		GetByIDFn: func(id string) (*dto.CsirtResponse, error) {
 			return &dto.CsirtResponse{
@@ -781,7 +775,6 @@ func TestCsirtHandler_GetByID_AsUser_ReturnsNewFields(t *testing.T) {
 				NamaCsirt:              "CSIRT ABC",
 				TanggalRegistrasi:      tglReg,
 				TanggalKadaluarsa:      tglKad,
-				TanggalRegistrasiUlang: tglRU,
 				FileStr:                "uploads/str_csirt/abc.pdf",
 				Perusahaan:             dto.PerusahaanResponse{ID: "perusahaan-abc"},
 			}, nil
@@ -801,7 +794,6 @@ func TestCsirtHandler_GetByID_AsUser_ReturnsNewFields(t *testing.T) {
 	json.NewDecoder(w.Body).Decode(&resp)
 	assert.Equal(t, tglReg, resp.TanggalRegistrasi)
 	assert.Equal(t, tglKad, resp.TanggalKadaluarsa)
-	assert.Equal(t, tglRU, resp.TanggalRegistrasiUlang)
 	assert.Equal(t, "uploads/str_csirt/abc.pdf", resp.FileStr)
 }
 

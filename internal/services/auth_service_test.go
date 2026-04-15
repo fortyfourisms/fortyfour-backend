@@ -248,7 +248,7 @@ func TestNewAuthService(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewAuthService(tt.userRepo, newMockRoleRepo(), tt.tokenService, newNotifSvc())
+			got := NewAuthService(tt.userRepo, newMockRoleRepo(), tt.tokenService, newNotifSvc(), nil)
 			if got == nil {
 				t.Errorf("NewAuthService() returned nil")
 			}
@@ -266,7 +266,7 @@ func TestNewAuthService(t *testing.T) {
 // Sebelumnya test ini tidak menyertakan keduanya dan akan lolos, sekarang akan error.
 
 func TestRegister_Success(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	namaPerusahaan := "PT Test Sukses"
 	user, token, err := auth.Register(
@@ -288,7 +288,7 @@ func TestRegister_UsernameExists(t *testing.T) {
 	repo := newMockUserRepo()
 	repo.users["user"] = &models.User{Username: "user"}
 
-	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	namaPerusahaan := "PT Test"
 	if _, _, err := auth.Register(
@@ -303,7 +303,7 @@ func TestRegister_EmailExists(t *testing.T) {
 	repo := newMockUserRepo()
 	repo.users["u1"] = &models.User{Email: "mail@test.com"}
 
-	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	namaPerusahaan := "PT Test"
 	if _, _, err := auth.Register(
@@ -315,7 +315,7 @@ func TestRegister_EmailExists(t *testing.T) {
 }
 
 func TestRegister_WeakPassword(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	namaPerusahaan := "PT Test"
 	if _, _, err := auth.Register(
@@ -330,7 +330,7 @@ func TestRegister_CreateError(t *testing.T) {
 	repo := newMockUserRepo()
 	repo.failCreate = true
 
-	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	namaPerusahaan := "PT Test"
 	if _, _, err := auth.Register(
@@ -394,7 +394,7 @@ func TestAuthService_Register_EmptyFields(t *testing.T) {
 			userRepo := testhelpers.NewMockUserRepository()
 			redis := testhelpers.NewMockRedisClient()
 			tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-			s := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc())
+			s := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc(), nil)
 
 			_, _, gotErr := s.Register(
 				dto.RegisterRequest{
@@ -424,7 +424,7 @@ func TestAuthService_Register_WithJabatan(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc())
+	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc(), nil)
 
 	idJabatan := "jabatan-456"
 	namaPerusahaan := "PT Jabatan Test"
@@ -461,7 +461,7 @@ func TestAuthService_Register_DuplicateUsername(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc())
+	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc(), nil)
 
 	namaPerusahaan1 := "PT Pertama"
 	authService.Register(
@@ -486,7 +486,7 @@ func TestAuthService_Register_DuplicateUsername(t *testing.T) {
 // NEW: Test validasi wajib perusahaan saat register
 
 func TestRegister_NoPerusahaan_ShouldFail(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	_, _, err := auth.Register(
 		dto.RegisterRequest{
@@ -507,7 +507,7 @@ func TestRegister_NoPerusahaan_ShouldFail(t *testing.T) {
 }
 
 func TestRegister_BothPerusahaanFields_ShouldFail(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	namaPerusahaan := "PT Test"
 	idPerusahaan := "perusahaan-123"
@@ -531,7 +531,7 @@ func TestRegister_BothPerusahaanFields_ShouldFail(t *testing.T) {
 }
 
 func TestRegister_WithNamaPerusahaan_Success(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	namaPerusahaan := "PT Baru Sekali"
 	user, token, err := auth.Register(
@@ -561,7 +561,7 @@ func TestRegister_WithIDPerusahaan_Success(t *testing.T) {
 	namaP := "PT Sudah Ada"
 	p, _ := perusahaanSvc.Create(dto.CreatePerusahaanRequest{NamaPerusahaan: &namaP})
 
-	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	user, token, err := auth.Register(
 		dto.RegisterRequest{
@@ -594,7 +594,7 @@ func TestRegister_WithIDPerusahaan_AlreadyHasUser_ShouldFail(t *testing.T) {
 		IDPerusahaan: &p.ID,
 	}
 
-	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	_, _, err := auth.Register(
 		dto.RegisterRequest{
@@ -632,7 +632,7 @@ func TestLogin_Success(t *testing.T) {
 		PasswordChangedAt: time.Now(),
 	}
 
-	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	if u, tkn, err := auth.Login("user", "XyZ#91!kLmPq"); err != nil || u == nil || tkn == nil {
 		t.Fatal("login success expected")
@@ -640,7 +640,7 @@ func TestLogin_Success(t *testing.T) {
 }
 
 func TestLogin_UserNotFound(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	if _, _, err := auth.Login("x", "pass"); err == nil {
 		t.Fatal("expected user not found")
@@ -656,7 +656,7 @@ func TestLogin_WrongPassword(t *testing.T) {
 		Password: string(hash),
 	}
 
-	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	if _, _, err := auth.Login("u", "wrong"); err == nil {
 		t.Fatal("expected wrong password error")
@@ -671,7 +671,7 @@ func TestLogin_TokenError(t *testing.T) {
 	hash, _ := bcrypt.GenerateFromPassword([]byte("pass"), bcrypt.DefaultCost)
 	repo.users["u"] = &models.User{Username: "u", Password: string(hash)}
 
-	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(redis, "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(redis, "secret", false, "localhost"), newNotifSvc(), nil)
 
 	if _, _, err := auth.Login("u", "pass"); err == nil {
 		t.Fatal("expected token error")
@@ -682,7 +682,7 @@ func TestAuthService_Login_Success_Detailed(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc())
+	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc(), nil)
 
 	namaPerusahaan := "PT Login Test"
 	authService.Register(
@@ -729,7 +729,7 @@ func TestAuthService_Login_MFAEnabled_ReturnsNilTokens(t *testing.T) {
 		PasswordChangedAt: time.Now(),
 	}
 
-	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	user, tokens, err := auth.Login("user", "XyZ#91!kLmPq")
 
@@ -748,7 +748,7 @@ func TestAuthService_Login_InvalidUsername(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc())
+	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc(), nil)
 
 	namaPerusahaan := "PT Test"
 	authService.Register(
@@ -770,7 +770,7 @@ func TestAuthService_Login_InvalidPassword(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc())
+	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc(), nil)
 
 	namaPerusahaan := "PT Test"
 	authService.Register(
@@ -798,7 +798,7 @@ func TestLogout_Success(t *testing.T) {
 	redis := newMockRedis()
 	redis.store["refresh_token:token"] = "x"
 
-	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(redis, "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(redis, "secret", false, "localhost"), newNotifSvc(), nil)
 
 	if err := auth.Logout("token"); err != nil {
 		t.Fatal("logout success expected")
@@ -806,7 +806,7 @@ func TestLogout_Success(t *testing.T) {
 }
 
 func TestLogout_TokenNotExists(t *testing.T) {
-	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
 	if err := auth.Logout("missing"); err != nil {
 		t.Fatal("no error expected for missing token")
@@ -818,7 +818,7 @@ func TestLogout_DeleteError(t *testing.T) {
 	redis.store["refresh_token:token"] = "x"
 	redis.failDelete = true
 
-	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(redis, "secret", false, "localhost"), newNotifSvc())
+	auth := NewAuthService(newMockUserRepo(), newMockRoleRepo(), NewTokenService(redis, "secret", false, "localhost"), newNotifSvc(), nil)
 
 	if err := auth.Logout("token"); err == nil {
 		t.Fatal("expected delete error")
@@ -829,7 +829,7 @@ func TestAuthService_Logout_Success_Detailed(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
-	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc())
+	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc(), nil)
 
 	namaPerusahaan := "PT Logout Test"
 	_, tokens, err := authService.Register(
@@ -872,7 +872,7 @@ func setupAuthService() (*AuthService, *mockUserRepo, *mockRedis) {
 	repo := newMockUserRepo()
 	redis := newMockRedis()
 	tokenSvc := NewTokenService(redis, "test-secret", false, "localhost")
-	svc := NewAuthService(repo, newMockRoleRepo(), tokenSvc, newNotifSvc())
+	svc := NewAuthService(repo, newMockRoleRepo(), tokenSvc, newNotifSvc(), nil)
 	return svc, repo, redis
 }
 
@@ -1472,6 +1472,7 @@ func TestRegister_RoleDefaultNotFound(t *testing.T) {
 		roleRepo,
 		NewTokenService(newMockRedis(), "secret", false, "localhost"),
 		newNotifSvc(),
+		nil,
 	)
 
 	namaPerusahaan := "PT Test"
@@ -1500,6 +1501,7 @@ func TestRegister_RoleDefaultNil(t *testing.T) {
 		roleRepo,
 		NewTokenService(newMockRedis(), "secret", false, "localhost"),
 		newNotifSvc(),
+		nil,
 	)
 
 	namaPerusahaan := "PT Test 2"
@@ -1528,6 +1530,7 @@ func TestRegister_RoleIDAssignedFromDatabase(t *testing.T) {
 		roleRepo,
 		NewTokenService(newMockRedis(), "secret", false, "localhost"),
 		newNotifSvc(),
+		nil,
 	)
 
 	namaPerusahaan := "PT Verify Role"
