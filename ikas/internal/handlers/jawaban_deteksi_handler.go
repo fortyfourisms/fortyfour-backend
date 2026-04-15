@@ -29,21 +29,6 @@ func (h *JawabanDeteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	case method == http.MethodPost && path == "/api/maturity/jawaban-deteksi":
 		h.handleCreate(w, r)
 	case method == http.MethodGet && path == "/api/maturity/jawaban-deteksi":
-		// Implicitly filter by PerusahaanID if user is not admin
-		userRole, _ := r.Context().Value(middleware.Role).(string)
-		userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
-
-		perusahaanID := r.URL.Query().Get("perusahaan_id")
-
-		if userRole != "admin" {
-			// Override for non-admins
-			values := r.URL.Query()
-			values.Set("perusahaan_id", userPerusahaanID)
-			r.URL.RawQuery = values.Encode()
-		} else if perusahaanID != "" {
-			// Leave as is for admin filtering
-		}
-
 		h.handleGetAll(w, r)
 	case method == http.MethodGet && strings.HasPrefix(path, "/api/maturity/jawaban-deteksi/"):
 		h.handleGetByID(w, r)
@@ -70,26 +55,24 @@ func (h *JawabanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.Requ
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request payload")
 		return
 	}
-	userRole := ""
-	if val := r.Context().Value(middleware.Role); val != nil {
-		userRole = val.(string)
-	}
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	msg, err := h.service.Create(req, userRole)
+	msg, err := h.service.Create(req, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
 		case "pertanyaan_deteksi_id tidak valid",
-			"perusahaan_id tidak boleh kosong",
-			"format perusahaan_id tidak valid",
+			"ikas_id tidak boleh kosong",
+			"format ikas_id tidak valid",
 			"jawaban_deteksi harus bernilai antara 0 sampai 5, atau null untuk N/A",
 			"validasi hanya boleh diisi jika evidence ada",
 			"validasi hanya boleh berisi 'yes' atau 'no'":
 			utils.RespondError(w, 400, err.Error())
 		case "pertanyaan_deteksi_id tidak ditemukan",
-			"perusahaan_id tidak ditemukan":
+			"ikas_id tidak ditemukan":
 			utils.RespondError(w, 404, err.Error())
-		case "pertanyaan ini sudah pernah diisi oleh perusahaan Anda":
+		case "pertanyaan ini sudah pernah diisi untuk asesmen ini":
 			utils.RespondError(w, 409, err.Error())
 		default:
 			utils.RespondError(w, 500, err.Error())
@@ -103,27 +86,44 @@ func (h *JawabanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.Requ
 }
 
 // @Summary Get All Jawaban Deteksi
-// @Description Get all answers for detection questions, optionally filtered by perusahaan_id or pertanyaan_deteksi_id
+// @Description Get all answers for detection questions, optionally filtered by ikas_id or pertanyaan_deteksi_id
 // @Tags Jawaban Deteksi
 // @Produce json
-// @Param perusahaan_id query string false "Filter by Perusahaan ID"
+// @Param ikas_id query string false "Filter by Ikas ID"
 // @Param pertanyaan_deteksi_id query int false "Filter by Pertanyaan Deteksi ID"
 // @Success 200 {array} dto.JawabanDeteksiResponse
 // @Router /api/maturity/jawaban-deteksi [get]
 func (h *JawabanDeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
-	perusahaanID := r.URL.Query().Get("perusahaan_id")
+	ikasID := r.URL.Query().Get("ikas_id")
 	pertanyaanIDStr := r.URL.Query().Get("pertanyaan_deteksi_id")
+
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	if userRole != "admin" && (userPerusahaanID == "" || userPerusahaanID == "null") {
+		utils.RespondJSON(w, 200, map[string]interface{}{
+			"message": "Berhasil mengambil data",
+			"data":    []dto.JawabanDeteksiResponse{},
+			"total":   0,
+		})
+		return
+	}
 
 	var data []dto.JawabanDeteksiResponse
 	var err error
 
-	if perusahaanID != "" {
-		data, err = h.service.GetByPerusahaan(perusahaanID)
+	if ikasID != "" {
+		h.handleGetByIkasID(w, r, ikasID)
+		return
 	} else if pertanyaanIDStr != "" {
 		pID, _ := strconv.Atoi(pertanyaanIDStr)
 		data, err = h.service.GetByPertanyaan(pID)
 	} else {
-		data, err = h.service.GetAll()
+		if userRole != "admin" {
+			data, err = h.service.GetByPerusahaanID(userPerusahaanID, userRole, userPerusahaanID)
+		} else {
+			data, err = h.service.GetAll(userRole)
+		}
 	}
 
 	if err != nil {
@@ -132,6 +132,26 @@ func (h *JawabanDeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Requ
 	}
 
 	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
+		"message": "Berhasil mengambil data",
+		"data":    data,
+		"total":   len(data),
+	})
+}
+
+func (h *JawabanDeteksiHandler) handleGetByIkasID(w http.ResponseWriter, r *http.Request, ikasID string) {
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+	data, err := h.service.GetByIkasID(ikasID, userRole, userPerusahaanID)
+	if err != nil {
+		rollbar.Error(err)
+		if err.Error() == "format ikas_id tidak valid" {
+			utils.RespondError(w, 400, err.Error())
+		} else {
+			utils.RespondError(w, 500, err.Error())
+		}
+		return
+	}
+	utils.RespondJSON(w, 200, map[string]interface{}{
 		"message": "Berhasil mengambil data",
 		"data":    data,
 		"total":   len(data),
@@ -153,9 +173,9 @@ func (h *JawabanDeteksiHandler) handleGetByID(w http.ResponseWriter, r *http.Req
 	}
 
 	userRole, _ := r.Context().Value(middleware.Role).(string)
-	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+	userIkasID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	resp, err := h.service.GetByID(id, userRole, userPerusahaanID)
+	resp, err := h.service.GetByID(id, userRole, userIkasID)
 	if err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "data tidak ditemukan" {
@@ -203,12 +223,12 @@ func (h *JawabanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Requ
 		userRole = val.(string)
 	}
 
-	userPerusahaanID := ""
+	userIkasID := ""
 	if val := r.Context().Value(middleware.PerusahaanIDKey); val != nil {
-		userPerusahaanID = val.(string)
+		userIkasID = val.(string)
 	}
 
-	err = h.service.Update(id, req, userID, userRole, userPerusahaanID)
+	err = h.service.Update(id, req, userID, userRole, userIkasID)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -251,9 +271,9 @@ func (h *JawabanDeteksiHandler) handleDelete(w http.ResponseWriter, r *http.Requ
 	}
 
 	userRole, _ := r.Context().Value(middleware.Role).(string)
-	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+	userIkasID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	if err := h.service.Delete(id, userID, userRole, userPerusahaanID); err != nil {
+	if err := h.service.Delete(id, userID, userRole, userIkasID); err != nil {
 		rollbar.Error(err)
 		if err.Error() == "data tidak ditemukan" {
 			utils.RespondError(w, 404, err.Error())

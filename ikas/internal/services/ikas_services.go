@@ -36,13 +36,21 @@ func NewIkasService(repo repository.IkasRepositoryInterface, producer IkasProduc
 }
 
 func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id string, userID string) error {
-	// Check if IKAS for this company already exists
-	exists, err := s.repo.CheckExistsByPerusahaanID(req.IDPerusahaan)
+	// Extract year from Tanggal for yearly uniqueness check
+	var tahun int
+	if t, err := time.Parse("2006-01-02", req.Tanggal); err == nil {
+		tahun = t.Year()
+	} else {
+		// Fallback to current year if format is invalid (should be validated by now)
+		tahun = time.Now().Year()
+	}
+
+	exists, err := s.repo.CheckExistsByPerusahaanIDAndYear(req.IDPerusahaan, tahun)
 	if err != nil {
 		return err
 	}
 	if exists {
-		return fmt.Errorf("Data IKAS untuk perusahaan ini sudah ada")
+		return fmt.Errorf("Data IKAS untuk perusahaan ini di tahun %d sudah ada", tahun)
 	}
 
 	event := dto_event.IkasCreatedEvent{
@@ -79,19 +87,40 @@ func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id 
 	return nil
 }
 
-func (s *IkasService) GetAll() ([]dto.IkasResponse, error) {
+func (s *IkasService) GetAll(userRole string) ([]dto.IkasResponse, error) {
+	if userRole != "admin" {
+		return nil, fmt.Errorf("anda tidak memiliki akses untuk melihat semua data")
+	}
 	return s.repo.GetAll()
 }
 
-func (s *IkasService) GetByID(id string) (*dto.IkasResponse, error) {
-	return s.repo.GetByID(id)
+func (s *IkasService) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse, error) {
+	return s.repo.GetByPerusahaan(perusahaanID)
 }
 
-func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasRequest, userID string) error {
+func (s *IkasService) GetByID(id string, userRole string, userPerusahaanID string) (*dto.IkasResponse, error) {
+	data, err := s.repo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if userRole != "admin" && data.Perusahaan != nil && data.Perusahaan.ID != userPerusahaanID {
+		return nil, fmt.Errorf("anda tidak memiliki akses ke data ini")
+	}
+	return data, nil
+}
+
+func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasRequest, userID string, userRole string, userPerusahaanID string) error {
 	// Check existence and get current state
 	current, err := s.repo.GetByID(id)
 	if err != nil {
 		return err
+	}
+	if userRole != "admin" && current.Perusahaan != nil && current.Perusahaan.ID != userPerusahaanID {
+		return fmt.Errorf("anda tidak memiliki akses untuk mengubah data ini")
+	}
+
+	if current.IsValidated {
+		return fmt.Errorf("data asesmen ini sudah divalidasi dan tidak dapat diubah")
 	}
 
 	// Change detection for audit log
@@ -151,11 +180,18 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 	return nil
 }
 
-func (s *IkasService) Delete(ctx context.Context, id string, userID string) error {
+func (s *IkasService) Delete(ctx context.Context, id string, userID string, userRole string, userPerusahaanID string) error {
 	// Check existence
-	_, err := s.repo.GetByID(id)
+	existing, err := s.repo.GetByID(id)
 	if err != nil {
 		return err
+	}
+	if userRole != "admin" && existing.Perusahaan != nil && existing.Perusahaan.ID != userPerusahaanID {
+		return fmt.Errorf("anda tidak memiliki akses untuk menghapus data ini")
+	}
+
+	if existing.IsValidated && userRole != "admin" {
+		return fmt.Errorf("data asesmen ini sudah divalidasi dan tidak dapat dihapus")
 	}
 
 	// Publish delete event
@@ -200,13 +236,13 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 	}
 
 	// 2. Publish events for each subdomain to trigger automatic processing
-	perusahaanID := excelData.IkasRequest.IDPerusahaan
+	// pass NEW ID (ikasID) instead of perusahaanID
 
 	// Identifikasi
 	for _, ans := range excelData.JawabanIdentifikasi {
 		event := dto.CreateJawabanIdentifikasiRequest{
 			PertanyaanIdentifikasiID: ans.PertanyaanID,
-			PerusahaanID:             perusahaanID,
+			IkasID:                   newID,
 			JawabanIdentifikasi:      &ans.Jawaban,
 		}
 		s.producer.PublishJawabanIdentifikasiCreated(context.Background(), event)
@@ -216,7 +252,7 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 	for _, ans := range excelData.JawabanProteksi {
 		event := dto.CreateJawabanProteksiRequest{
 			PertanyaanProteksiID: ans.PertanyaanID,
-			PerusahaanID:         perusahaanID,
+			IkasID:               newID,
 			JawabanProteksi:      &ans.Jawaban,
 		}
 		s.producer.PublishJawabanProteksiCreated(context.Background(), event)
@@ -226,7 +262,7 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 	for _, ans := range excelData.JawabanDeteksi {
 		event := dto.CreateJawabanDeteksiRequest{
 			PertanyaanDeteksiID: ans.PertanyaanID,
-			PerusahaanID:        perusahaanID,
+			IkasID:              newID,
 			JawabanDeteksi:      &ans.Jawaban,
 		}
 		s.producer.PublishJawabanDeteksiCreated(context.Background(), event)
@@ -236,11 +272,46 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 	for _, ans := range excelData.JawabanGulih {
 		event := dto.CreateJawabanGulihRequest{
 			PertanyaanGulihID: ans.PertanyaanID,
-			PerusahaanID:      perusahaanID,
+			IkasID:            newID,
 			JawabanGulih:      &ans.Jawaban,
 		}
 		s.producer.PublishJawabanGulihCreated(context.Background(), event)
 	}
 
 	return newID, nil
+}
+func (s *IkasService) ValidateIkas(ctx context.Context, id string, status bool) error {
+	// Existence Check
+	existing, err := s.repo.GetByID(id)
+	if err != nil {
+		return err
+	}
+
+	if existing.IsValidated == status {
+		return nil // Already in target state
+	}
+
+	// Update status
+	if err := s.repo.UpdateValidationStatus(id, status); err != nil {
+		return err
+	}
+
+	// Audit Log
+	action := "VALIDATE_IKAS"
+	if !status {
+		action = "UNVALIDATE_IKAS"
+	}
+
+	auditEvent := dto_event.IkasAuditLogEvent{
+		IkasID:    id,
+		UserID:    "system_admin", // TODO: Pass user ID if possible
+		Action:    action,
+		Changes:   map[string]interface{}{"is_validated": status},
+		Timestamp: time.Now(),
+	}
+	if s.producer != nil {
+		_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
+	}
+
+	return nil
 }

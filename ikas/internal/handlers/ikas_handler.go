@@ -53,7 +53,12 @@ func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
-		h.handleUpdate(w, r, id)
+		if strings.HasSuffix(id, "/validate") {
+			realID := strings.TrimSuffix(id, "/validate")
+			h.handleValidate(w, r, realID)
+		} else {
+			h.handleUpdate(w, r, id)
+		}
 	case http.MethodDelete:
 		if id == "" {
 			utils.RespondError(w, 400, "ID wajib")
@@ -73,12 +78,41 @@ func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // @Success      200  {array}  dto.IkasResponse
 // @Failure      500  {object} dto.ErrorResponse
 // @Router       /api/maturity/ikas [get]
-func (h *IkasHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
-	data, err := h.service.GetAll()
+func (h *IkasHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+	perusahaanID := r.URL.Query().Get("perusahaan_id")
+
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	// Implicit filtering for non-admins
+	if userRole != "admin" {
+		if userPerusahaanID == "" || userPerusahaanID == "null" {
+			utils.RespondJSON(w, 200, map[string]interface{}{
+				"message": "Berhasil mengambil data",
+				"data":    []dto.IkasResponse{},
+				"total":   0,
+			})
+			return
+		}
+		perusahaanID = userPerusahaanID
+	}
+
+	var data []dto.IkasResponse
+	var err error
+
+	if perusahaanID != "" && perusahaanID != "null" {
+		data, err = h.service.GetByPerusahaan(perusahaanID)
+	} else {
+		data, err = h.service.GetAll(userRole)
+	}
+
 	if err != nil {
 		logger.Error(err, "operation failed")
 		utils.RespondError(w, 500, err.Error())
 		return
+	}
+	if data == nil {
+		data = []dto.IkasResponse{}
 	}
 	utils.RespondJSON(w, 200, map[string]interface{}{
 		"message": "Berhasil mengambil data",
@@ -96,11 +130,18 @@ func (h *IkasHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 // @Success      200  {object} dto.IkasResponse
 // @Failure      404  {object} dto.ErrorResponse
 // @Router       /api/maturity/ikas/{id} [get]
-func (h *IkasHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
-	data, err := h.service.GetByID(id)
+func (h *IkasHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	data, err := h.service.GetByID(id, userRole, userPerusahaanID)
 	if err != nil {
 		logger.Error(err, "operation failed")
-		utils.RespondError(w, 404, "Data tidak ditemukan")
+		if strings.Contains(err.Error(), "tidak memiliki akses") {
+			utils.RespondError(w, 403, err.Error())
+		} else {
+			utils.RespondError(w, 404, "Data tidak ditemukan")
+		}
 		return
 	}
 	utils.RespondJSON(w, 200, map[string]interface{}{
@@ -162,10 +203,14 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 	}
 
 	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
-	err := h.service.Update(r.Context(), id, req, userID)
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+	err := h.service.Update(r.Context(), id, req, userID, userRole, userPerusahaanID)
 	if err != nil {
 		logger.Error(err, "operation failed")
-		if strings.Contains(err.Error(), "no rows") {
+		if strings.Contains(err.Error(), "tidak memiliki akses") {
+			utils.RespondError(w, 403, err.Error())
+		} else if strings.Contains(err.Error(), "no rows") {
 			utils.RespondError(w, 404, "Data tidak ditemukan")
 		} else {
 			utils.RespondError(w, 400, err.Error())
@@ -190,9 +235,13 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 // @Router       /api/maturity/ikas/{id} [delete]
 func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
-	if err := h.service.Delete(r.Context(), id, userID); err != nil {
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+	if err := h.service.Delete(r.Context(), id, userID, userRole, userPerusahaanID); err != nil {
 		logger.Error(err, "operation failed")
-		if strings.Contains(err.Error(), "no rows") {
+		if strings.Contains(err.Error(), "tidak memiliki akses") {
+			utils.RespondError(w, 403, err.Error())
+		} else if strings.Contains(err.Error(), "no rows") {
 			utils.RespondError(w, 404, "Data tidak ditemukan")
 		} else {
 			utils.RespondError(w, 400, err.Error())
@@ -270,5 +319,32 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 		"success": true,
 		"message": "Berhasil menyimpan data",
 		"id":      newID,
+	})
+}
+func (h *IkasHandler) handleValidate(w http.ResponseWriter, r *http.Request, id string) {
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	if userRole != "admin" {
+		utils.RespondError(w, 403, "Hanya admin yang dapat melakukan validasi final")
+		return
+	}
+
+	var req dto.ValidasiIkasRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, 400, "Format request tidak valid: "+err.Error())
+		return
+	}
+
+	if err := h.service.ValidateIkas(r.Context(), id, req.Status); err != nil {
+		utils.RespondError(w, 500, err.Error())
+		return
+	}
+
+	msg := "Berhasil melakukan validasi final"
+	if !req.Status {
+		msg = "Berhasil membuka validasi final"
+	}
+
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": msg,
 	})
 }

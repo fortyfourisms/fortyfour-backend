@@ -7,6 +7,9 @@ import (
 	"net/http"
 
 	"fortyfour-backend/pkg/logger"
+	"ikas/internal/middleware"
+	"ikas/internal/models"
+	"strings"
 )
 
 type DeteksiHandler struct {
@@ -41,17 +44,54 @@ func (h *DeteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // @Success      200  {array}  dto.DeteksiResponse
 // @Failure      500  {object} dto.ErrorResponse
 // @Router       /api/deteksi [get]
-func (h *DeteksiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
-	data, err := h.service.GetAll()
+func (h *DeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	ikasID := r.URL.Query().Get("ikas_id")
+
+	if userRole != "admin" && (userPerusahaanID == "" || userPerusahaanID == "null") {
+		utils.RespondJSON(w, 200, map[string]interface{}{
+			"message": "Berhasil mengambil data",
+			"data":    []interface{}{},
+			"total":   0,
+		})
+		return
+	}
+
+	var data interface{}
+	var err error
+
+	if ikasID != "" {
+		data, err = h.service.GetByIkasID(ikasID, userRole, userPerusahaanID)
+	} else {
+		if userRole != "admin" {
+			data, err = h.service.GetByPerusahaanID(userPerusahaanID, userRole, userPerusahaanID)
+		} else {
+			data, err = h.service.GetAll(userRole)
+		}
+	}
+
 	if err != nil {
 		logger.Error(err, "operation failed")
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
+
+	total := 0
+	if data != nil {
+		switch v := data.(type) {
+		case []models.Deteksi:
+			total = len(v)
+		case *models.Deteksi:
+			total = 1
+		}
+	}
+
 	utils.RespondJSON(w, 200, map[string]interface{}{
 		"message": "Berhasil mengambil data",
 		"data":    data,
-		"total":   len(data),
+		"total":   total,
 	})
 }
 
@@ -63,11 +103,18 @@ func (h *DeteksiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 // @Success      200  {object} dto.DeteksiResponse
 // @Failure      404  {object} dto.ErrorResponse
 // @Router       /api/deteksi/{id} [get]
-func (h *DeteksiHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
-	data, err := h.service.GetByID(id)
+func (h *DeteksiHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	data, err := h.service.GetByID(id, userRole, userPerusahaanID)
 	if err != nil {
 		logger.Error(err, "operation failed")
-		utils.RespondError(w, 404, "Data tidak ditemukan")
+		if strings.Contains(err.Error(), "tidak memiliki akses") {
+			utils.RespondError(w, 403, err.Error())
+		} else {
+			utils.RespondError(w, 404, "Data tidak ditemukan")
+		}
 		return
 	}
 	utils.RespondJSON(w, 200, map[string]interface{}{

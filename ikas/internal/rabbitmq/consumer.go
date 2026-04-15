@@ -197,7 +197,7 @@ func (c *Consumer) ConsumeJawabanIdentifikasiCreated(ctx context.Context) error 
 
 		// 1. Validate mandatory fields (Poison Pill Prevention)
 		if req.JawabanIdentifikasi == nil {
-			log.Printf("❌ Skipping invalid message from jawaban.identifikasi.created: jawaban_identifikasi is null. Perusahaan: %s, Question: %d", req.PerusahaanID, req.PertanyaanIdentifikasiID)
+			log.Printf("❌ Skipping invalid message from jawaban.identifikasi.created: jawaban_identifikasi is null. Ikas: %s, Question: %d", req.IkasID, req.PertanyaanIdentifikasiID)
 			return nil // Acknowledge to remove from queue
 		}
 
@@ -214,25 +214,25 @@ func (c *Consumer) ConsumeJawabanIdentifikasiCreated(ctx context.Context) error 
 			return err
 		}
 
-		currentCount, err := c.jawabanIdentifikasiRepo.GetBufferCount(req.PerusahaanID)
+		currentCount, err := c.jawabanIdentifikasiRepo.GetBufferCount(req.IkasID)
 		if err != nil {
 			log.Printf("Error getting buffer count: %v", err)
 			return err
 		}
 
 		if currentCount >= totalQuestions {
-			log.Printf("All questions answered for Perusahaan %s (%d/%d). Flushing buffer...", req.PerusahaanID, currentCount, totalQuestions)
+			log.Printf("All questions answered for IkasID %s (%d/%d). Flushing buffer...", req.IkasID, currentCount, totalQuestions)
 			// 3. Flush buffer to main table
-			if err := c.jawabanIdentifikasiRepo.FlushBuffer(req.PerusahaanID); err != nil {
+			if err := c.jawabanIdentifikasiRepo.FlushBuffer(req.IkasID); err != nil {
 				log.Printf("Error flushing buffer: %v", err)
 				return err
 			}
 			// 4. Recalculate scores
-			log.Printf("Recalculating scores for Perusahaan %s", req.PerusahaanID)
-			return c.jawabanIdentifikasiRepo.RecalculateIdentifikasi(req.PerusahaanID)
+			log.Printf("Recalculating scores for IkasID %s", req.IkasID)
+			return c.jawabanIdentifikasiRepo.RecalculateIdentifikasi(req.IkasID)
 		}
 
-		log.Printf("Progress for Perusahaan %s: %d/%d", req.PerusahaanID, currentCount, totalQuestions)
+		log.Printf("Progress for IkasID %s: %d/%d", req.IkasID, currentCount, totalQuestions)
 		return nil
 	})
 }
@@ -259,7 +259,7 @@ func (c *Consumer) ConsumeJawabanIdentifikasiUpdated(ctx context.Context) error 
 		}
 
 		// 3. Recalculate scores
-		return c.jawabanIdentifikasiRepo.RecalculateIdentifikasi(resp.PerusahaanID)
+		return c.jawabanIdentifikasiRepo.RecalculateIdentifikasi(resp.IkasID)
 	})
 }
 
@@ -279,7 +279,7 @@ func (c *Consumer) ConsumeJawabanIdentifikasiDeleted(ctx context.Context) error 
 		}
 
 		// 2. Recalculate scores
-		return c.jawabanIdentifikasiRepo.RecalculateIdentifikasi(event.PerusahaanID)
+		return c.jawabanIdentifikasiRepo.RecalculateIdentifikasi(event.IkasID)
 	})
 }
 
@@ -296,7 +296,7 @@ func (c *Consumer) ConsumeJawabanProteksiCreated(ctx context.Context) error {
 
 		// 1. Validate mandatory fields (Poison Pill Prevention)
 		if req.JawabanProteksi == nil {
-			log.Printf("❌ Skipping invalid message from jawaban.proteksi.created: jawaban_proteksi is null. Perusahaan: %s, Question: %d", req.PerusahaanID, req.PertanyaanProteksiID)
+			log.Printf("❌ Skipping invalid message from jawaban.proteksi.created: jawaban_proteksi is null. Ikas: %s, Question: %d", req.IkasID, req.PertanyaanProteksiID)
 			return nil // Acknowledge to remove from queue
 		}
 
@@ -313,25 +313,25 @@ func (c *Consumer) ConsumeJawabanProteksiCreated(ctx context.Context) error {
 			return err
 		}
 
-		currentCount, err := c.jawabanProteksiRepo.GetBufferCount(req.PerusahaanID)
+		currentCount, err := c.jawabanProteksiRepo.GetBufferCount(req.IkasID)
 		if err != nil {
 			log.Printf("Error getting buffer count: %v", err)
 			return err
 		}
 
 		if currentCount >= totalQuestions {
-			log.Printf("All questions answered for Perusahaan %s (%d/%d). Flushing buffer...", req.PerusahaanID, currentCount, totalQuestions)
+			log.Printf("All questions answered for IkasID %s (%d/%d). Flushing buffer...", req.IkasID, currentCount, totalQuestions)
 			// 3. Flush buffer to main table
-			if err := c.jawabanProteksiRepo.FlushBuffer(req.PerusahaanID); err != nil {
+			if err := c.jawabanProteksiRepo.FlushBuffer(req.IkasID); err != nil {
 				log.Printf("Error flushing buffer: %v", err)
 				return err
 			}
 			// 4. Recalculate scores
-			log.Printf("Recalculating scores for Perusahaan %s", req.PerusahaanID)
-			return c.jawabanProteksiRepo.RecalculateProteksi(req.PerusahaanID)
+			log.Printf("Recalculating scores for IkasID %s", req.IkasID)
+			return c.jawabanProteksiRepo.RecalculateProteksi(req.IkasID)
 		}
 
-		log.Printf("Progress for Perusahaan %s: %d/%d", req.PerusahaanID, currentCount, totalQuestions)
+		log.Printf("Progress for IkasID %s: %d/%d", req.IkasID, currentCount, totalQuestions)
 		return nil
 	})
 }
@@ -358,7 +358,7 @@ func (c *Consumer) ConsumeJawabanProteksiUpdated(ctx context.Context) error {
 		}
 
 		// 3. Recalculate scores
-		return c.jawabanProteksiRepo.RecalculateProteksi(resp.PerusahaanID)
+		return c.jawabanProteksiRepo.RecalculateProteksi(resp.IkasID)
 	})
 }
 
@@ -378,7 +378,7 @@ func (c *Consumer) ConsumeJawabanProteksiDeleted(ctx context.Context) error {
 		}
 
 		// 2. Recalculate scores
-		return c.jawabanProteksiRepo.RecalculateProteksi(event.PerusahaanID)
+		return c.jawabanProteksiRepo.RecalculateProteksi(event.IkasID)
 	})
 }
 
@@ -395,7 +395,7 @@ func (c *Consumer) ConsumeJawabanDeteksiCreated(ctx context.Context) error {
 
 		// 1. Validate mandatory fields (Poison Pill Prevention)
 		if req.JawabanDeteksi == nil {
-			log.Printf("❌ Skipping invalid message from jawaban.deteksi.created: jawaban_deteksi is null. Perusahaan: %s, Question: %d", req.PerusahaanID, req.PertanyaanDeteksiID)
+			log.Printf("❌ Skipping invalid message from jawaban.deteksi.created: jawaban_deteksi is null. Ikas: %s, Question: %d", req.IkasID, req.PertanyaanDeteksiID)
 			return nil // Acknowledge to remove from queue
 		}
 
@@ -412,25 +412,25 @@ func (c *Consumer) ConsumeJawabanDeteksiCreated(ctx context.Context) error {
 			return err
 		}
 
-		currentCount, err := c.jawabanDeteksiRepo.GetBufferCount(req.PerusahaanID)
+		currentCount, err := c.jawabanDeteksiRepo.GetBufferCount(req.IkasID)
 		if err != nil {
 			log.Printf("Error getting buffer count: %v", err)
 			return err
 		}
 
 		if currentCount >= totalQuestions {
-			log.Printf("All questions answered for Perusahaan %s (%d/%d). Flushing buffer...", req.PerusahaanID, currentCount, totalQuestions)
+			log.Printf("All questions answered for IkasID %s (%d/%d). Flushing buffer...", req.IkasID, currentCount, totalQuestions)
 			// 3. Flush buffer to main table
-			if err := c.jawabanDeteksiRepo.FlushBuffer(req.PerusahaanID); err != nil {
+			if err := c.jawabanDeteksiRepo.FlushBuffer(req.IkasID); err != nil {
 				log.Printf("Error flushing buffer: %v", err)
 				return err
 			}
 			// 4. Recalculate scores
-			log.Printf("Recalculating scores for Perusahaan %s", req.PerusahaanID)
-			return c.jawabanDeteksiRepo.RecalculateDeteksi(req.PerusahaanID)
+			log.Printf("Recalculating scores for IkasID %s", req.IkasID)
+			return c.jawabanDeteksiRepo.RecalculateDeteksi(req.IkasID)
 		}
 
-		log.Printf("Progress for Perusahaan %s: %d/%d", req.PerusahaanID, currentCount, totalQuestions)
+		log.Printf("Progress for IkasID %s: %d/%d", req.IkasID, currentCount, totalQuestions)
 		return nil
 	})
 }
@@ -457,7 +457,7 @@ func (c *Consumer) ConsumeJawabanDeteksiUpdated(ctx context.Context) error {
 		}
 
 		// 3. Recalculate scores
-		return c.jawabanDeteksiRepo.RecalculateDeteksi(resp.PerusahaanID)
+		return c.jawabanDeteksiRepo.RecalculateDeteksi(resp.IkasID)
 	})
 }
 
@@ -477,7 +477,7 @@ func (c *Consumer) ConsumeJawabanDeteksiDeleted(ctx context.Context) error {
 		}
 
 		// 2. Recalculate scores
-		return c.jawabanDeteksiRepo.RecalculateDeteksi(event.PerusahaanID)
+		return c.jawabanDeteksiRepo.RecalculateDeteksi(event.IkasID)
 	})
 }
 
@@ -494,7 +494,7 @@ func (c *Consumer) ConsumeJawabanGulihCreated(ctx context.Context) error {
 
 		// 1. Validate mandatory fields (Poison Pill Prevention)
 		if req.JawabanGulih == nil {
-			log.Printf("❌ Skipping invalid message from jawaban.gulih.created: jawaban_gulih is null. Perusahaan: %s, Question: %d", req.PerusahaanID, req.PertanyaanGulihID)
+			log.Printf("❌ Skipping invalid message from jawaban.gulih.created: jawaban_gulih is null. Ikas: %s, Question: %d", req.IkasID, req.PertanyaanGulihID)
 			return nil // Acknowledge to remove from queue
 		}
 
@@ -511,25 +511,25 @@ func (c *Consumer) ConsumeJawabanGulihCreated(ctx context.Context) error {
 			return err
 		}
 
-		currentCount, err := c.jawabanGulihRepo.GetBufferCount(req.PerusahaanID)
+		currentCount, err := c.jawabanGulihRepo.GetBufferCount(req.IkasID)
 		if err != nil {
 			log.Printf("Error getting buffer count: %v", err)
 			return err
 		}
 
 		if currentCount >= totalQuestions {
-			log.Printf("All questions answered for Perusahaan %s (%d/%d). Flushing buffer...", req.PerusahaanID, currentCount, totalQuestions)
+			log.Printf("All questions answered for IkasID %s (%d/%d). Flushing buffer...", req.IkasID, currentCount, totalQuestions)
 			// 3. Flush buffer to main table
-			if err := c.jawabanGulihRepo.FlushBuffer(req.PerusahaanID); err != nil {
+			if err := c.jawabanGulihRepo.FlushBuffer(req.IkasID); err != nil {
 				log.Printf("Error flushing buffer: %v", err)
 				return err
 			}
 			// 4. Recalculate scores
-			log.Printf("Recalculating scores for Perusahaan %s", req.PerusahaanID)
-			return c.jawabanGulihRepo.RecalculateGulih(req.PerusahaanID)
+			log.Printf("Recalculating scores for IkasID %s", req.IkasID)
+			return c.jawabanGulihRepo.RecalculateGulih(req.IkasID)
 		}
 
-		log.Printf("Progress for Perusahaan %s: %d/%d", req.PerusahaanID, currentCount, totalQuestions)
+		log.Printf("Progress for IkasID %s: %d/%d", req.IkasID, currentCount, totalQuestions)
 		return nil
 	})
 }
@@ -556,7 +556,7 @@ func (c *Consumer) ConsumeJawabanGulihUpdated(ctx context.Context) error {
 		}
 
 		// 3. Recalculate scores
-		return c.jawabanGulihRepo.RecalculateGulih(resp.PerusahaanID)
+		return c.jawabanGulihRepo.RecalculateGulih(resp.IkasID)
 	})
 }
 
@@ -576,7 +576,7 @@ func (c *Consumer) ConsumeJawabanGulihDeleted(ctx context.Context) error {
 		}
 
 		// 2. Recalculate scores
-		return c.jawabanGulihRepo.RecalculateGulih(event.PerusahaanID)
+		return c.jawabanGulihRepo.RecalculateGulih(event.IkasID)
 	})
 }
 

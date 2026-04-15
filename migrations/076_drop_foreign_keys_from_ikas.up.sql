@@ -1,0 +1,5 @@
+ALTER TABLE ikas 
+DROP FOREIGN KEY ikas_ibfk_2,
+DROP FOREIGN KEY ikas_ibfk_3,
+DROP FOREIGN KEY ikas_ibfk_4,
+DROP FOREIGN KEY ikas_ibfk_5;

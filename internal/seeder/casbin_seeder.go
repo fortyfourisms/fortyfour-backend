@@ -58,37 +58,59 @@ var defaultPolicies = []Policy{
 	{"user", "/api/perusahaan/:id", "GET"},
 	{"user", "/api/perusahaan/:id", "PUT"},
 
+	// ── MATURITY ─────────────────────────────────────────────────────────────
+
 	// Ruang Lingkup (master — read only untuk user)
 	{"user", "/api/maturity/ruang-lingkup", "GET"},
 	{"user", "/api/maturity/ruang-lingkup/:id", "GET"},
- 
+
 	// Domain (master — read only untuk user)
 	{"user", "/api/maturity/domain", "GET"},
 	{"user", "/api/maturity/domain/:id", "GET"},
- 
+
 	// Kategori (master — read only untuk user)
 	{"user", "/api/maturity/kategori", "GET"},
 	{"user", "/api/maturity/kategori/:id", "GET"},
- 
+
 	// Sub Kategori (master — read only untuk user)
 	{"user", "/api/maturity/sub-kategori", "GET"},
 	{"user", "/api/maturity/sub-kategori/:id", "GET"},
- 
-	// Identifikasi (master — read only untuk user)
+
+	// IKAS
+	{"user", "/api/maturity/ikas", "GET"},
+	{"user", "/api/maturity/ikas", "POST"},
+	{"user", "/api/maturity/ikas/:id", "GET"},
+	{"user", "/api/maturity/ikas/:id", "PUT"},
+	{"user", "/api/maturity/ikas/:id", "DELETE"},
+
+	// Domain Identifikasi (read only untuk user)
 	{"user", "/api/maturity/identifikasi", "GET"},
 	{"user", "/api/maturity/identifikasi/:id", "GET"},
- 
-	// Proteksi (master — read only untuk user)
+
+	// Domain Proteksi (read only untuk user)
 	{"user", "/api/maturity/proteksi", "GET"},
 	{"user", "/api/maturity/proteksi/:id", "GET"},
- 
-	// Deteksi (master — read only untuk user)
+
+	// Domain Deteksi (read only untuk user)
 	{"user", "/api/maturity/deteksi", "GET"},
 	{"user", "/api/maturity/deteksi/:id", "GET"},
- 
-	// Gulih (master — read only untuk user)
+
+	// Domain Gulih (read only untuk user)
 	{"user", "/api/maturity/gulih", "GET"},
 	{"user", "/api/maturity/gulih/:id", "GET"},
+
+	// Maturity (Pertanyaan — read only untuk user)
+	{"user", "/api/maturity/pertanyaan-identifikasi", "GET"},
+	{"user", "/api/maturity/pertanyaan-identifikasi/:id", "GET"},
+
+	{"user", "/api/maturity/pertanyaan-proteksi", "GET"},
+	{"user", "/api/maturity/pertanyaan-proteksi/:id", "GET"},
+
+	{"user", "/api/maturity/pertanyaan-deteksi", "GET"},
+	{"user", "/api/maturity/pertanyaan-deteksi/:id", "GET"},
+
+	{"user", "/api/maturity/pertanyaan-gulih", "GET"},
+	{"user", "/api/maturity/pertanyaan-gulih/:id", "GET"},
 
 	// Maturity (Jawaban)
 	{"user", "/api/maturity/jawaban-identifikasi", "GET"},

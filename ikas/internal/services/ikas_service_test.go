@@ -27,6 +27,13 @@ func (m *mockIkasRepo) CheckExistsByPerusahaanID(idPerusahaan string) (bool, err
 	return false, nil
 }
 
+func (m *mockIkasRepo) CheckExistsByPerusahaanIDAndYear(id string, year int) (bool, error) {
+	if id == "perusahaan-ada" {
+		return true, nil
+	}
+	return false, nil
+}
+
 func (m *mockIkasRepo) GetIDByPerusahaanID(idPerusahaan string) (string, error) {
 	return "ikas-id", nil
 }
@@ -63,9 +70,24 @@ func (m *mockIkasRepo) ParseExcelForImport(b []byte) (*dto.ParsedExcelData, erro
 	return &dto.ParsedExcelData{}, nil
 }
 
-// Mock methods for Excel import process in repo
+func (m *mockIkasRepo) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse, error) {
+	return []dto.IkasResponse{}, nil
+}
+
 func (m *mockIkasRepo) SaveImportedData(id string, data *dto.CreateIkasRequest) error {
 	return nil
+}
+
+func (m *mockIkasRepo) CheckOwnership(ikasID string, perusahaanID string) (bool, error) {
+	return true, nil
+}
+
+func (m *mockIkasRepo) UpdateValidationStatus(id string, status bool) error {
+	return nil
+}
+
+func (m *mockIkasRepo) IsLocked(id string) (bool, error) {
+	return false, nil
 }
 
 /*
@@ -98,7 +120,8 @@ func TestIkasService_Create_Duplicate(t *testing.T) {
 
 	err := service.Create(context.Background(), req, "ikas-id", "test-user")
 	assert.Error(t, err)
-	assert.Equal(t, "Data IKAS untuk perusahaan ini sudah ada", err.Error())
+	// Update expected error message to match yearly validation
+	assert.Contains(t, err.Error(), "sudah ada")
 }
 
 /*
@@ -117,8 +140,24 @@ func TestIkasService_Update_Async(t *testing.T) {
 	}
 
 	// Update now returns nil error on nil producer
-	err := service.Update(context.Background(), "ikas-id", req, "test-user")
+	err := service.Update(context.Background(), "ikas-id", req, "test-user", "admin", "")
 	assert.NoError(t, err)
+}
+
+func TestIkasService_GetAll_Admin(t *testing.T) {
+	repo := &mockIkasRepo{}
+	service := NewIkasService(repo, nil)
+
+	_, err := service.GetAll("admin")
+	assert.NoError(t, err)
+}
+
+func TestIkasService_GetAll_NonAdmin(t *testing.T) {
+	repo := &mockIkasRepo{}
+	service := NewIkasService(repo, nil)
+
+	_, err := service.GetAll("user")
+	assert.Error(t, err)
 }
 
 /*

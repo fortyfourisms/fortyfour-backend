@@ -170,6 +170,8 @@ func TestDomainHandler_ServeHTTP_Create_Success(t *testing.T) {
 
 	createReq := dto.CreateDomainRequest{NamaDomain: "Domain Finance"}
 	repo.On("CheckDuplicateName", "Domain Finance", 0).Return(false, nil)
+	repo.On("Create", createReq).Return(int64(1), nil)
+	repo.On("GetByID", 1).Return(&dto.DomainResponse{ID: 1, NamaDomain: "Domain Finance"}, nil)
 	producer.On("PublishDomainCreated", mock.Anything, mock.MatchedBy(func(e dto_event.DomainCreatedEvent) bool {
 		return e.Request.NamaDomain == "Domain Finance"
 	})).Return(nil)
@@ -230,15 +232,16 @@ func TestDomainHandler_ServeHTTP_Create_PublishError(t *testing.T) {
 
 	createReq := dto.CreateDomainRequest{NamaDomain: "Domain"}
 	repo.On("CheckDuplicateName", "Domain", 0).Return(false, nil)
+	repo.On("Create", createReq).Return(int64(1), nil)
+	repo.On("GetByID", 1).Return(&dto.DomainResponse{ID: 1, NamaDomain: "Domain"}, nil)
 	producer.On("PublishDomainCreated", mock.Anything, mock.Anything).Return(errors.New("publish error"))
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/domain", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
-
 	handler.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusCreated, w.Code)
 }
 
 func TestDomainHandler_ServeHTTP_Update_Success(t *testing.T) {
@@ -249,6 +252,7 @@ func TestDomainHandler_ServeHTTP_Update_Success(t *testing.T) {
 	updateReq := dto.UpdateDomainRequest{NamaDomain: strPtr("Domain Finance")}
 	repo.On("GetByID", 1).Return(&dto.DomainResponse{ID: 1}, nil)
 	repo.On("CheckDuplicateName", "Domain Finance", 1).Return(false, nil)
+	repo.On("Update", 1, updateReq).Return(nil)
 	producer.On("PublishDomainUpdated", mock.Anything, mock.MatchedBy(func(e dto_event.DomainUpdatedEvent) bool {
 		return e.ID == 1 && *e.Request.NamaDomain == "Domain Finance"
 	})).Return(nil)
@@ -293,17 +297,19 @@ func TestDomainHandler_ServeHTTP_Update_Duplicate(t *testing.T) {
 	producer := new(mockDomainProducer)
 	handler := setupDomainHandler(repo, producer)
 
+	updateReq := dto.UpdateDomainRequest{NamaDomain: strPtr("Domain Finance")}
 	repo.On("GetByID", 1).Return(&dto.DomainResponse{ID: 1}, nil)
 	repo.On("CheckDuplicateName", "Domain Finance", 1).Return(false, nil)
+	repo.On("Update", 1, updateReq).Return(nil)
 	producer.On("PublishDomainUpdated", mock.Anything, mock.Anything).Return(errors.New("db error"))
 
-	body, _ := json.Marshal(dto.UpdateDomainRequest{NamaDomain: strPtr("Domain Finance")})
+	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/domain/1", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 }
 
 func TestDomainHandler_ServeHTTP_Update_ValidationError(t *testing.T) {
@@ -345,6 +351,7 @@ func TestDomainHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	handler := setupDomainHandler(repo, producer)
 
 	repo.On("GetByID", 1).Return(&dto.DomainResponse{ID: 1}, nil)
+	repo.On("Delete", 1).Return(nil)
 	producer.On("PublishDomainDeleted", mock.Anything, mock.MatchedBy(func(e dto_event.DomainDeletedEvent) bool {
 		return e.ID == 1
 	})).Return(nil)
