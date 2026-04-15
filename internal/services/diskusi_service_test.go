@@ -14,12 +14,12 @@ import (
 // ── Mock Repositories for Diskusi ────────────────────────────────────────────
 
 type mockDiskusiRepo struct {
-	CreateFn      func(diskusi *models.Diskusi) error
+	CreateFn       func(diskusi *models.Diskusi) error
 	FindByMateriFn func(idMateri string) ([]models.Diskusi, error)
-	FindByIDFn    func(id string) (*models.Diskusi, error)
-	UpdateFn      func(diskusi *models.Diskusi) error
-	DeleteFn      func(id string) error
-	FindRepliesFn func(idParent string) ([]models.Diskusi, error)
+	FindByIDFn     func(id string) (*models.Diskusi, error)
+	UpdateFn       func(diskusi *models.Diskusi) error
+	DeleteFn       func(id string) error
+	FindRepliesFn  func(idParent string) ([]models.Diskusi, error)
 }
 
 func (m *mockDiskusiRepo) Create(diskusi *models.Diskusi) error { return m.CreateFn(diskusi) }
@@ -28,7 +28,7 @@ func (m *mockDiskusiRepo) FindByMateri(idMateri string) ([]models.Diskusi, error
 }
 func (m *mockDiskusiRepo) FindByID(id string) (*models.Diskusi, error) { return m.FindByIDFn(id) }
 func (m *mockDiskusiRepo) Update(diskusi *models.Diskusi) error        { return m.UpdateFn(diskusi) }
-func (m *mockDiskusiRepo) Delete(id string) error                     { return m.DeleteFn(id) }
+func (m *mockDiskusiRepo) Delete(id string) error                      { return m.DeleteFn(id) }
 func (m *mockDiskusiRepo) FindReplies(idParent string) ([]models.Diskusi, error) {
 	if m.FindRepliesFn != nil {
 		return m.FindRepliesFn(idParent)
@@ -55,7 +55,7 @@ func (m *mockUserRepoDiskusi) UpdatePassword(id, hp string) error       { return
 func (m *mockUserRepoDiskusi) GetPasswordByID(id string) (string, error) {
 	return "", errors.New("not found")
 }
-func (m *mockUserRepoDiskusi) Delete(id string) error                         { return nil }
+func (m *mockUserRepoDiskusi) Delete(id string) error                             { return nil }
 func (m *mockUserRepoDiskusi) EmailExists(email string, ex *string) (bool, error) { return false, nil }
 func (m *mockUserRepoDiskusi) UsernameExists(un string, ex *string) (bool, error) { return false, nil }
 func (m *mockUserRepoDiskusi) SetMFA(uid string, s *string, e bool) error         { return nil }

@@ -25,15 +25,15 @@ import (
 //   /api/sertifikat        → sertifikat user
 
 type LMSHandler struct {
-	kelasSvc     *services.KelasService
-	materiSvc    *services.MateriService
-	soalSvc      *services.SoalService
-	kuisSvc      *services.KuisService
-	fpSvc        *services.FilePendukungService
-	diskusiSvc   *services.DiskusiService
-	catatanSvc   *services.CatatanService
+	kelasSvc      *services.KelasService
+	materiSvc     *services.MateriService
+	soalSvc       *services.SoalService
+	kuisSvc       *services.KuisService
+	fpSvc         *services.FilePendukungService
+	diskusiSvc    *services.DiskusiService
+	catatanSvc    *services.CatatanService
 	sertifikatSvc *services.SertifikatService
-	sseSvc       *services.SSEService
+	sseSvc        *services.SSEService
 }
 
 func NewLMSHandler(

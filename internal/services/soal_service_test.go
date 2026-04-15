@@ -26,8 +26,10 @@ type mockSoalRepo struct {
 func (m *mockSoalRepo) Create(soal *models.Soal, pilihan []models.PilihanJawaban) error {
 	return m.CreateFn(soal, pilihan)
 }
-func (m *mockSoalRepo) FindByID(id string) (*models.Soal, error)          { return m.FindByIDFn(id) }
-func (m *mockSoalRepo) FindByKuis(idKuis string) ([]models.Soal, error)   { return m.FindByKuisFn(idKuis) }
+func (m *mockSoalRepo) FindByID(id string) (*models.Soal, error) { return m.FindByIDFn(id) }
+func (m *mockSoalRepo) FindByKuis(idKuis string) ([]models.Soal, error) {
+	return m.FindByKuisFn(idKuis)
+}
 func (m *mockSoalRepo) Update(soal *models.Soal, pilihan []models.PilihanJawaban) error {
 	return m.UpdateFn(soal, pilihan)
 }
@@ -49,8 +51,8 @@ type mockKuisRepoSoal struct {
 	FindByIDFn func(id string) (*models.Kuis, error)
 }
 
-func (m *mockKuisRepoSoal) Create(kuis *models.Kuis) error { return nil }
-func (m *mockKuisRepoSoal) FindByID(id string) (*models.Kuis, error) { return m.FindByIDFn(id) }
+func (m *mockKuisRepoSoal) Create(kuis *models.Kuis) error                    { return nil }
+func (m *mockKuisRepoSoal) FindByID(id string) (*models.Kuis, error)          { return m.FindByIDFn(id) }
 func (m *mockKuisRepoSoal) FindByKelas(idKelas string) ([]models.Kuis, error) { return nil, nil }
 func (m *mockKuisRepoSoal) FindByMateri(idMateri string) (*models.Kuis, error) {
 	return nil, errors.New("not found")

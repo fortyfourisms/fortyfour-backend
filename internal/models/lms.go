@@ -32,18 +32,18 @@ const (
 )
 
 type Materi struct {
-	ID              string     `json:"id"`
-	IDKelas         string     `json:"id_kelas"`
-	Judul           string     `json:"judul"`
-	Tipe            MateriTipe `json:"tipe"`
-	Urutan          int        `json:"urutan"`
-	YoutubeID       *string    `json:"youtube_id,omitempty"`       // hanya tipe video
-	DurasiDetik     *int       `json:"durasi_detik,omitempty"`     // hanya tipe video
-	KontenHTML      *string    `json:"konten_html,omitempty"`      // rich content (blog-style)
-	DeskripsiSingkat *string   `json:"deskripsi_singkat,omitempty"`
-	Kategori        *string    `json:"kategori,omitempty"`
-	CreatedAt       time.Time  `json:"created_at"`
-	UpdatedAt       time.Time  `json:"updated_at"`
+	ID               string     `json:"id"`
+	IDKelas          string     `json:"id_kelas"`
+	Judul            string     `json:"judul"`
+	Tipe             MateriTipe `json:"tipe"`
+	Urutan           int        `json:"urutan"`
+	YoutubeID        *string    `json:"youtube_id,omitempty"`   // hanya tipe video
+	DurasiDetik      *int       `json:"durasi_detik,omitempty"` // hanya tipe video
+	KontenHTML       *string    `json:"konten_html,omitempty"`  // rich content (blog-style)
+	DeskripsiSingkat *string    `json:"deskripsi_singkat,omitempty"`
+	Kategori         *string    `json:"kategori,omitempty"`
+	CreatedAt        time.Time  `json:"created_at"`
+	UpdatedAt        time.Time  `json:"updated_at"`
 }
 
 // ── File Pendukung (PDF) ─────────────────────────────────────────────────────
@@ -153,13 +153,13 @@ type CatatanPribadi struct {
 // ── Sertifikat ───────────────────────────────────────────────────────────────
 
 type Sertifikat struct {
-	ID               string    `json:"id"`
-	NomorSertifikat  string    `json:"nomor_sertifikat"`
-	IDKelas          string    `json:"id_kelas"`
-	IDUser           string    `json:"id_user"`
-	NamaPeserta      string    `json:"nama_peserta"`
-	NamaKelas        string    `json:"nama_kelas"`
-	TanggalTerbit    time.Time `json:"tanggal_terbit"`
-	PDFPath          *string   `json:"pdf_path,omitempty"`
-	CreatedAt        time.Time `json:"created_at"`
+	ID              string    `json:"id"`
+	NomorSertifikat string    `json:"nomor_sertifikat"`
+	IDKelas         string    `json:"id_kelas"`
+	IDUser          string    `json:"id_user"`
+	NamaPeserta     string    `json:"nama_peserta"`
+	NamaKelas       string    `json:"nama_kelas"`
+	TanggalTerbit   time.Time `json:"tanggal_terbit"`
+	PDFPath         *string   `json:"pdf_path,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
 }

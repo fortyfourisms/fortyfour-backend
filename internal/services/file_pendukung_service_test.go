@@ -13,10 +13,10 @@ import (
 // ── Mock Repositories for FilePendukung ──────────────────────────────────────
 
 type mockFilePendukungRepo struct {
-	CreateFn      func(fp *models.FilePendukung) error
+	CreateFn       func(fp *models.FilePendukung) error
 	FindByMateriFn func(idMateri string) ([]models.FilePendukung, error)
-	FindByIDFn    func(id string) (*models.FilePendukung, error)
-	DeleteFn      func(id string) error
+	FindByIDFn     func(id string) (*models.FilePendukung, error)
+	DeleteFn       func(id string) error
 }
 
 func (m *mockFilePendukungRepo) Create(fp *models.FilePendukung) error { return m.CreateFn(fp) }
@@ -32,12 +32,12 @@ type mockMateriRepoFP struct {
 	FindByIDFn func(id string) (*models.Materi, error)
 }
 
-func (m *mockMateriRepoFP) Create(materi *models.Materi) error             { return nil }
-func (m *mockMateriRepoFP) FindByID(id string) (*models.Materi, error)     { return m.FindByIDFn(id) }
+func (m *mockMateriRepoFP) Create(materi *models.Materi) error                  { return nil }
+func (m *mockMateriRepoFP) FindByID(id string) (*models.Materi, error)          { return m.FindByIDFn(id) }
 func (m *mockMateriRepoFP) FindByKelas(idKelas string) ([]models.Materi, error) { return nil, nil }
-func (m *mockMateriRepoFP) Update(materi *models.Materi) error             { return nil }
-func (m *mockMateriRepoFP) Delete(id string) error                         { return nil }
-func (m *mockMateriRepoFP) ReorderUrutan(idKelas string) error             { return nil }
+func (m *mockMateriRepoFP) Update(materi *models.Materi) error                  { return nil }
+func (m *mockMateriRepoFP) Delete(id string) error                              { return nil }
+func (m *mockMateriRepoFP) ReorderUrutan(idKelas string) error                  { return nil }
 
 /*
 =====================================

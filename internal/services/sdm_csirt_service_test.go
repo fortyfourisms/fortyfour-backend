@@ -804,4 +804,3 @@ func TestSdmCsirtService_GetByCsirt_EmptyID(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, res)
 }
-

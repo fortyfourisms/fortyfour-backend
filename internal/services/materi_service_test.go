@@ -22,7 +22,7 @@ type mockMateriRepo struct {
 	ReorderUrutanFn func(idKelas string) error
 }
 
-func (m *mockMateriRepo) Create(materi *models.Materi) error { return m.CreateFn(materi) }
+func (m *mockMateriRepo) Create(materi *models.Materi) error         { return m.CreateFn(materi) }
 func (m *mockMateriRepo) FindByID(id string) (*models.Materi, error) { return m.FindByIDFn(id) }
 func (m *mockMateriRepo) FindByKelas(idKelas string) ([]models.Materi, error) {
 	if m.FindByKelasFn != nil {
@@ -43,11 +43,11 @@ type mockKelasRepoMateri struct {
 	FindByIDFn func(id string) (*models.Kelas, error)
 }
 
-func (m *mockKelasRepoMateri) Create(k *models.Kelas) error                      { return nil }
+func (m *mockKelasRepoMateri) Create(k *models.Kelas) error                       { return nil }
 func (m *mockKelasRepoMateri) FindByID(id string) (*models.Kelas, error)          { return m.FindByIDFn(id) }
 func (m *mockKelasRepoMateri) FindAll(onlyPublished bool) ([]models.Kelas, error) { return nil, nil }
-func (m *mockKelasRepoMateri) Update(k *models.Kelas) error                      { return nil }
-func (m *mockKelasRepoMateri) Delete(id string) error                            { return nil }
+func (m *mockKelasRepoMateri) Update(k *models.Kelas) error                       { return nil }
+func (m *mockKelasRepoMateri) Delete(id string) error                             { return nil }
 
 type mockProgressRepoMateri struct {
 	FindByUserAndMateriFn func(idUser, idMateri string) (*models.UserMateriProgress, error)

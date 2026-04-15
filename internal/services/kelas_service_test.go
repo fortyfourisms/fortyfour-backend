@@ -14,11 +14,11 @@ import (
 // ── Mock Repositories for Kelas ──────────────────────────────────────────────
 
 type mockKelasRepo struct {
-	CreateFn  func(kelas *models.Kelas) error
+	CreateFn   func(kelas *models.Kelas) error
 	FindByIDFn func(id string) (*models.Kelas, error)
-	FindAllFn func(onlyPublished bool) ([]models.Kelas, error)
-	UpdateFn  func(kelas *models.Kelas) error
-	DeleteFn  func(id string) error
+	FindAllFn  func(onlyPublished bool) ([]models.Kelas, error)
+	UpdateFn   func(kelas *models.Kelas) error
+	DeleteFn   func(id string) error
 }
 
 func (m *mockKelasRepo) Create(kelas *models.Kelas) error          { return m.CreateFn(kelas) }
@@ -70,13 +70,15 @@ func (m *mockProgressRepoKelas) HasCompletedAllMateri(idUser, idKelas string) (b
 }
 
 type mockKuisRepoKelas struct {
-	FindByKelasFn    func(idKelas string) ([]models.Kuis, error)
-	FindByMateriFn   func(idMateri string) (*models.Kuis, error)
+	FindByKelasFn      func(idKelas string) ([]models.Kuis, error)
+	FindByMateriFn     func(idMateri string) (*models.Kuis, error)
 	FindFinalByKelasFn func(idKelas string) (*models.Kuis, error)
 }
 
-func (m *mockKuisRepoKelas) Create(kuis *models.Kuis) error              { return nil }
-func (m *mockKuisRepoKelas) FindByID(id string) (*models.Kuis, error)    { return nil, errors.New("not found") }
+func (m *mockKuisRepoKelas) Create(kuis *models.Kuis) error { return nil }
+func (m *mockKuisRepoKelas) FindByID(id string) (*models.Kuis, error) {
+	return nil, errors.New("not found")
+}
 func (m *mockKuisRepoKelas) FindByKelas(idKelas string) ([]models.Kuis, error) {
 	return m.FindByKelasFn(idKelas)
 }

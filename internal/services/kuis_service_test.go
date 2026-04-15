@@ -14,13 +14,13 @@ import (
 // ── Mock Repositories for Kuis ───────────────────────────────────────────────
 
 type mockKuisAttemptRepo struct {
-	CreateFn                 func(a *models.KuisAttempt) error
-	FindByIDFn               func(id string) (*models.KuisAttempt, error)
-	FindByUserAndKuisFn      func(idUser, idKuis string) ([]models.KuisAttempt, error)
+	CreateFn                  func(a *models.KuisAttempt) error
+	FindByIDFn                func(id string) (*models.KuisAttempt, error)
+	FindByUserAndKuisFn       func(idUser, idKuis string) ([]models.KuisAttempt, error)
 	FindLatestByUserAndKuisFn func(idUser, idKuis string) (*models.KuisAttempt, error)
-	FinishFn                 func(id string, skor float64, totalBenar int, isPassed bool, jawaban []models.KuisJawaban) error
+	FinishFn                  func(id string, skor float64, totalBenar int, isPassed bool, jawaban []models.KuisJawaban) error
 	HasPassedAllKuisInKelasFn func(idUser, idKelas string) (bool, error)
-	FindJawabanByAttemptFn   func(idAttempt string) ([]models.KuisJawaban, error)
+	FindJawabanByAttemptFn    func(idAttempt string) ([]models.KuisJawaban, error)
 }
 
 func (m *mockKuisAttemptRepo) Create(a *models.KuisAttempt) error { return m.CreateFn(a) }
@@ -53,8 +53,8 @@ func (m *mockKuisAttemptRepo) FindJawabanByAttempt(idAttempt string) ([]models.K
 }
 
 type mockSoalRepoKuis struct {
-	FindByKuisFn       func(idKuis string) ([]models.Soal, error)
-	FindPilihanByIDFn  func(idPilihan string) (*models.PilihanJawaban, error)
+	FindByKuisFn         func(idKuis string) ([]models.Soal, error)
+	FindPilihanByIDFn    func(idPilihan string) (*models.PilihanJawaban, error)
 	FindCorrectPilihanFn func(idSoal string) (*models.PilihanJawaban, error)
 }
 
@@ -88,7 +88,7 @@ type mockKuisRepoForKuis struct {
 	DeleteFn           func(id string) error
 }
 
-func (m *mockKuisRepoForKuis) Create(kuis *models.Kuis) error { return m.CreateFn(kuis) }
+func (m *mockKuisRepoForKuis) Create(kuis *models.Kuis) error           { return m.CreateFn(kuis) }
 func (m *mockKuisRepoForKuis) FindByID(id string) (*models.Kuis, error) { return m.FindByIDFn(id) }
 func (m *mockKuisRepoForKuis) FindByKelas(idKelas string) ([]models.Kuis, error) {
 	if m.FindByKelasFn != nil {

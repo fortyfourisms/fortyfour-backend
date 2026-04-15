@@ -14,12 +14,12 @@ import (
 )
 
 type SertifikatService struct {
-	repo        repository.SertifikatRepositoryInterface
-	kelasRepo   repository.KelasRepositoryInterface
+	repo         repository.SertifikatRepositoryInterface
+	kelasRepo    repository.KelasRepositoryInterface
 	progressRepo repository.ProgressRepositoryInterface
-	attemptRepo repository.KuisAttemptRepositoryInterface
-	kuisRepo    repository.KuisRepositoryInterface
-	userRepo    repository.UserRepositoryInterface
+	attemptRepo  repository.KuisAttemptRepositoryInterface
+	kuisRepo     repository.KuisRepositoryInterface
+	userRepo     repository.UserRepositoryInterface
 }
 
 func NewSertifikatService(

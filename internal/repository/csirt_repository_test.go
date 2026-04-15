@@ -40,16 +40,16 @@ func TestCsirtRepository_Create(t *testing.T) {
 
 	t.Run("success — semua field terisi termasuk yang baru", func(t *testing.T) {
 		req := dto.CreateCsirtRequest{
-			IdPerusahaan:           "perusahaan-123",
-			NamaCsirt:              "CSIRT Test",
-			WebCsirt:               "https://csirt.test.com",
-			TeleponCsirt:           "021-12345678",
-			PhotoCsirt:             "photo.jpg",
-			FileRFC2350:            "rfc2350.pdf",
-			FilePublicKeyPGP:       "pgp.key",
-			FileStr:                "uploads/str_csirt/str.pdf",
-			TanggalRegistrasi:      "2024-01-15",
-			TanggalKadaluarsa:      "2025-01-15",
+			IdPerusahaan:      "perusahaan-123",
+			NamaCsirt:         "CSIRT Test",
+			WebCsirt:          "https://csirt.test.com",
+			TeleponCsirt:      "021-12345678",
+			PhotoCsirt:        "photo.jpg",
+			FileRFC2350:       "rfc2350.pdf",
+			FilePublicKeyPGP:  "pgp.key",
+			FileStr:           "uploads/str_csirt/str.pdf",
+			TanggalRegistrasi: "2024-01-15",
+			TanggalKadaluarsa: "2025-01-15",
 		}
 		id := "csirt-123"
 
@@ -59,14 +59,14 @@ func TestCsirtRepository_Create(t *testing.T) {
 				req.IdPerusahaan,
 				req.NamaCsirt,
 				req.WebCsirt,
-				nil,                        // EmailCsirt kosong → nullableStr → nil
+				nil, // EmailCsirt kosong → nullableStr → nil
 				req.TeleponCsirt,
 				req.PhotoCsirt,
 				req.FileRFC2350,
 				req.FilePublicKeyPGP,
-				req.FileStr,                // nullable — terisi
-				req.TanggalRegistrasi,      // nullable — terisi
-				req.TanggalKadaluarsa,      // nullable — terisi
+				req.FileStr,           // nullable — terisi
+				req.TanggalRegistrasi, // nullable — terisi
+				req.TanggalKadaluarsa, // nullable — terisi
 			).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -462,15 +462,15 @@ func TestCsirtRepository_Update(t *testing.T) {
 		tglKad := "2025-06-01"
 
 		csirt := models.Csirt{
-			NamaCsirt:              "CSIRT Updated",
-			WebCsirt:               "https://csirt.updated.com",
-			TeleponCsirt:           &telepon,
-			PhotoCsirt:             &photo,
-			FileRFC2350:            &rfc,
-			FilePublicKeyPGP:       &pgp,
-			FileStr:                &fileStr,
-			TanggalRegistrasi:      &tglReg,
-			TanggalKadaluarsa:      &tglKad,
+			NamaCsirt:         "CSIRT Updated",
+			WebCsirt:          "https://csirt.updated.com",
+			TeleponCsirt:      &telepon,
+			PhotoCsirt:        &photo,
+			FileRFC2350:       &rfc,
+			FilePublicKeyPGP:  &pgp,
+			FileStr:           &fileStr,
+			TanggalRegistrasi: &tglReg,
+			TanggalKadaluarsa: &tglKad,
 		}
 
 		mock.ExpectExec("UPDATE csirt SET").
@@ -510,9 +510,9 @@ func TestCsirtRepository_Update(t *testing.T) {
 				csirt.PhotoCsirt,
 				csirt.FileRFC2350,
 				csirt.FilePublicKeyPGP,
-				csirt.FileStr,                // nil
-				csirt.TanggalRegistrasi,      // nil
-				csirt.TanggalKadaluarsa,      // nil
+				csirt.FileStr,           // nil
+				csirt.TanggalRegistrasi, // nil
+				csirt.TanggalKadaluarsa, // nil
 				id,
 			).
 			WillReturnResult(sqlmock.NewResult(0, 1))

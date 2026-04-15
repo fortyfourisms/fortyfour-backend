@@ -36,7 +36,7 @@ func (m *mockCsirtRepoSTR) GetByIDWithPerusahaan(id string) (*dto.CsirtResponse,
 	return nil, errors.New("not found")
 }
 func (m *mockCsirtRepoSTR) Update(id string, csirt models.Csirt) error { return nil }
-func (m *mockCsirtRepoSTR) Delete(id string) error                    { return nil }
+func (m *mockCsirtRepoSTR) Delete(id string) error                     { return nil }
 func (m *mockCsirtRepoSTR) GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error) {
 	return nil, nil
 }

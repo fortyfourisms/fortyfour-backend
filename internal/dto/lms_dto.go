@@ -28,20 +28,20 @@ type KelasResponse struct {
 	UpdatedAt string             `json:"updated_at"`
 
 	// Disertakan saat GET detail
-	Materi      []MateriResponse `json:"materi,omitempty"`
-	KuisList    []KuisResponse   `json:"kuis_list,omitempty"`
-	Progress    *KelasProgress   `json:"progress,omitempty"` // progress user saat ini
-	Sertifikat  *SertifikatResponse `json:"sertifikat,omitempty"`
+	Materi     []MateriResponse    `json:"materi,omitempty"`
+	KuisList   []KuisResponse      `json:"kuis_list,omitempty"`
+	Progress   *KelasProgress      `json:"progress,omitempty"` // progress user saat ini
+	Sertifikat *SertifikatResponse `json:"sertifikat,omitempty"`
 }
 
 // KelasProgress adalah ringkasan progress user dalam satu kelas
 type KelasProgress struct {
-	TotalMateri       int  `json:"total_materi"`
-	MateriSelesai     int  `json:"materi_selesai"`
-	TotalKuis         int  `json:"total_kuis"`
-	KuisLulus         int  `json:"kuis_lulus"`
-	KuisAkhirLulus    bool `json:"kuis_akhir_lulus"`
-	IsKelasSelesai    bool `json:"is_kelas_selesai"`
+	TotalMateri        int     `json:"total_materi"`
+	MateriSelesai      int     `json:"materi_selesai"`
+	TotalKuis          int     `json:"total_kuis"`
+	KuisLulus          int     `json:"kuis_lulus"`
+	KuisAkhirLulus     bool    `json:"kuis_akhir_lulus"`
+	IsKelasSelesai     bool    `json:"is_kelas_selesai"`
 	PersentaseProgress float64 `json:"persentase_progress"`
 }
 
@@ -284,13 +284,13 @@ type CatatanPribadiResponse struct {
 // ── Sertifikat ───────────────────────────────────────────────────────────────
 
 type SertifikatResponse struct {
-	ID              string `json:"id"`
-	NomorSertifikat string `json:"nomor_sertifikat"`
-	IDKelas         string `json:"id_kelas"`
-	IDUser          string `json:"id_user"`
-	NamaPeserta     string `json:"nama_peserta"`
-	NamaKelas       string `json:"nama_kelas"`
-	TanggalTerbit   string `json:"tanggal_terbit"`
+	ID              string  `json:"id"`
+	NomorSertifikat string  `json:"nomor_sertifikat"`
+	IDKelas         string  `json:"id_kelas"`
+	IDUser          string  `json:"id_user"`
+	NamaPeserta     string  `json:"nama_peserta"`
+	NamaKelas       string  `json:"nama_kelas"`
+	TanggalTerbit   string  `json:"tanggal_terbit"`
 	PDFPath         *string `json:"pdf_path,omitempty"`
-	CreatedAt       string `json:"created_at"`
+	CreatedAt       string  `json:"created_at"`
 }

@@ -34,11 +34,11 @@ type mockKelasRepoSert struct {
 	FindByIDFn func(id string) (*models.Kelas, error)
 }
 
-func (m *mockKelasRepoSert) Create(k *models.Kelas) error                      { return nil }
+func (m *mockKelasRepoSert) Create(k *models.Kelas) error                       { return nil }
 func (m *mockKelasRepoSert) FindByID(id string) (*models.Kelas, error)          { return m.FindByIDFn(id) }
 func (m *mockKelasRepoSert) FindAll(onlyPublished bool) ([]models.Kelas, error) { return nil, nil }
-func (m *mockKelasRepoSert) Update(k *models.Kelas) error                      { return nil }
-func (m *mockKelasRepoSert) Delete(id string) error                            { return nil }
+func (m *mockKelasRepoSert) Update(k *models.Kelas) error                       { return nil }
+func (m *mockKelasRepoSert) Delete(id string) error                             { return nil }
 
 type mockProgressRepoSert struct {
 	HasCompletedAllMateriFn func(idUser, idKelas string) (bool, error)
@@ -87,8 +87,10 @@ type mockKuisRepoSert struct {
 	FindFinalByKelasFn func(idKelas string) (*models.Kuis, error)
 }
 
-func (m *mockKuisRepoSert) Create(kuis *models.Kuis) error           { return nil }
-func (m *mockKuisRepoSert) FindByID(id string) (*models.Kuis, error) { return nil, errors.New("not found") }
+func (m *mockKuisRepoSert) Create(kuis *models.Kuis) error { return nil }
+func (m *mockKuisRepoSert) FindByID(id string) (*models.Kuis, error) {
+	return nil, errors.New("not found")
+}
 func (m *mockKuisRepoSert) FindByKelas(idKelas string) ([]models.Kuis, error) { return nil, nil }
 func (m *mockKuisRepoSert) FindByMateri(idMateri string) (*models.Kuis, error) {
 	return nil, errors.New("not found")
@@ -118,15 +120,15 @@ func (m *mockUserRepoSert) UpdatePassword(id, hp string) error       { return ni
 func (m *mockUserRepoSert) GetPasswordByID(id string) (string, error) {
 	return "", errors.New("not found")
 }
-func (m *mockUserRepoSert) Delete(id string) error                           { return nil }
-func (m *mockUserRepoSert) EmailExists(email string, ex *string) (bool, error)   { return false, nil }
-func (m *mockUserRepoSert) UsernameExists(un string, ex *string) (bool, error)   { return false, nil }
-func (m *mockUserRepoSert) SetMFA(uid string, s *string, e bool) error           { return nil }
-func (m *mockUserRepoSert) ExistsByPerusahaan(idP string) (bool, error)          { return false, nil }
-func (m *mockUserRepoSert) UpdateStatus(uid string, s models.UserStatus) error   { return nil }
-func (m *mockUserRepoSert) IncrementLoginAttempts(uid string) (int, error)       { return 0, nil }
-func (m *mockUserRepoSert) ResetLoginAttempts(uid string) error                  { return nil }
-func (m *mockUserRepoSert) UpdatePasswordChangedAt(uid string) error             { return nil }
+func (m *mockUserRepoSert) Delete(id string) error                             { return nil }
+func (m *mockUserRepoSert) EmailExists(email string, ex *string) (bool, error) { return false, nil }
+func (m *mockUserRepoSert) UsernameExists(un string, ex *string) (bool, error) { return false, nil }
+func (m *mockUserRepoSert) SetMFA(uid string, s *string, e bool) error         { return nil }
+func (m *mockUserRepoSert) ExistsByPerusahaan(idP string) (bool, error)        { return false, nil }
+func (m *mockUserRepoSert) UpdateStatus(uid string, s models.UserStatus) error { return nil }
+func (m *mockUserRepoSert) IncrementLoginAttempts(uid string) (int, error)     { return 0, nil }
+func (m *mockUserRepoSert) ResetLoginAttempts(uid string) error                { return nil }
+func (m *mockUserRepoSert) UpdatePasswordChangedAt(uid string) error           { return nil }
 
 /*
 =====================================

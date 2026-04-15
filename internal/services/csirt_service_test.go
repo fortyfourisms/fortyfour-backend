@@ -116,14 +116,14 @@ func TestCsirtService_Create_SuccessWithAllFields(t *testing.T) {
 		},
 		GetByIDFn: func(id string) (*models.Csirt, error) {
 			return &models.Csirt{
-				ID:                     id,
-				NamaCsirt:              "CSIRT Advanced",
-				TeleponCsirt:           &telepon,
-				WebCsirt:               "https://csirt.example.com",
-				IdPerusahaan:           "perusahaan-123",
-				FileStr:                &fileStr,
-				TanggalRegistrasi:      &tglReg,
-				TanggalKadaluarsa:      &tglKad,
+				ID:                id,
+				NamaCsirt:         "CSIRT Advanced",
+				TeleponCsirt:      &telepon,
+				WebCsirt:          "https://csirt.example.com",
+				IdPerusahaan:      "perusahaan-123",
+				FileStr:           &fileStr,
+				TanggalRegistrasi: &tglReg,
+				TanggalKadaluarsa: &tglKad,
 			}, nil
 		},
 	}
@@ -131,13 +131,13 @@ func TestCsirtService_Create_SuccessWithAllFields(t *testing.T) {
 	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
-		NamaCsirt:              "CSIRT Advanced",
-		TeleponCsirt:           "081234567890",
-		WebCsirt:               "https://csirt.example.com",
-		IdPerusahaan:           "perusahaan-123",
-		FileStr:                fileStr,
-		TanggalRegistrasi:      tglReg,
-		TanggalKadaluarsa:      tglKad,
+		NamaCsirt:         "CSIRT Advanced",
+		TeleponCsirt:      "081234567890",
+		WebCsirt:          "https://csirt.example.com",
+		IdPerusahaan:      "perusahaan-123",
+		FileStr:           fileStr,
+		TanggalRegistrasi: tglReg,
+		TanggalKadaluarsa: tglKad,
 	})
 
 	assert.NoError(t, err)
@@ -515,12 +515,12 @@ func TestCsirtService_GetByID_ReturnsNewFields(t *testing.T) {
 	repo := &mockCsirtRepo{
 		GetByIDWithPerusahaanFn: func(id string) (*dto.CsirtResponse, error) {
 			return &dto.CsirtResponse{
-				ID:                     id,
-				NamaCsirt:              "CSIRT Lengkap",
-				TeleponCsirt:           &telepon,
-				FileStr:                fileStr,
-				TanggalRegistrasi:      tglReg,
-				TanggalKadaluarsa:      tglKad,
+				ID:                id,
+				NamaCsirt:         "CSIRT Lengkap",
+				TeleponCsirt:      &telepon,
+				FileStr:           fileStr,
+				TanggalRegistrasi: tglReg,
+				TanggalKadaluarsa: tglKad,
 			}, nil
 		},
 	}
@@ -699,12 +699,12 @@ func TestCsirtService_Update_AllFields(t *testing.T) {
 	newPhone := "082222222222"
 
 	res, err := service.Update("csirt-1", dto.UpdateCsirtRequest{
-		NamaCsirt:              &newName,
-		WebCsirt:               &newWeb,
-		TeleponCsirt:           &newPhone,
-		TanggalRegistrasi:      &tglReg,
-		TanggalKadaluarsa:      &tglKad,
-		FileStr:                &fileStr,
+		NamaCsirt:         &newName,
+		WebCsirt:          &newWeb,
+		TeleponCsirt:      &newPhone,
+		TanggalRegistrasi: &tglReg,
+		TanggalKadaluarsa: &tglKad,
+		FileStr:           &fileStr,
 	})
 
 	assert.NoError(t, err)
@@ -1224,4 +1224,4 @@ func TestCsirtService_GetByPerusahaan_EmptyID(t *testing.T) {
 
 	assert.Error(t, err)
 	assert.Nil(t, res)
-}
+}

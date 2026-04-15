@@ -139,7 +139,7 @@ var defaultPolicies = []Policy{
 
 	// ── LMS ──────────────────────────────────────────────────────────────────
 	// user bisa melihat kelas, detail kelas, update progress, dan mengikuti kuis.
- 
+
 	// Kelas (user bisa lihat list & detail)
 	{"user", "/api/kelas", "GET"},
 	{"user", "/api/kelas/:id", "GET"},
@@ -150,7 +150,7 @@ var defaultPolicies = []Policy{
 	// Kelas → sertifikat (user)
 	{"user", "/api/kelas/:id/sertifikat", "GET"},
 	{"user", "/api/kelas/:id/sertifikat/generate", "POST"},
- 
+
 	// Materi — progress update (user)
 	{"user", "/api/materi/:id/progress", "POST"},
 
@@ -169,7 +169,7 @@ var defaultPolicies = []Policy{
 
 	// File pendukung — download (user)
 	{"user", "/api/file-pendukung/:id/download", "GET"},
- 
+
 	// Kuis — start, submit, result (user)
 	{"user", "/api/kuis/:id_kuis/start", "POST"},
 	{"user", "/api/kuis/attempt/:id_attempt/submit", "POST"},

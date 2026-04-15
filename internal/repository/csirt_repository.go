@@ -205,10 +205,10 @@ func scanCsirtWithPerusahaan(scanner interface {
 
 	var (
 		webCsirt, emailCsirt, teleponCsirt, photoCsirt, fileRFC, filePGP sql.NullString
-		fileStr, tglReg, tglKadaluarsa                                    sql.NullString
-		photoPerusahaan, alamat, telepon, email, website                  sql.NullString
-		subID, namaSubSektor, idSektor, namaSektor                        sql.NullString
-		subCreatedAt, subUpdatedAt                                        sql.NullString
+		fileStr, tglReg, tglKadaluarsa                                   sql.NullString
+		photoPerusahaan, alamat, telepon, email, website                 sql.NullString
+		subID, namaSubSektor, idSektor, namaSektor                       sql.NullString
+		subCreatedAt, subUpdatedAt                                       sql.NullString
 	)
 
 	err := scanner.Scan(

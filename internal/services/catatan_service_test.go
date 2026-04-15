@@ -14,9 +14,9 @@ import (
 // ── Mock Repository for Catatan ──────────────────────────────────────────────
 
 type mockCatatanRepo struct {
-	UpsertFn             func(catatan *models.CatatanPribadi) error
+	UpsertFn              func(catatan *models.CatatanPribadi) error
 	FindByUserAndMateriFn func(idUser, idMateri string) (*models.CatatanPribadi, error)
-	DeleteFn             func(id string) error
+	DeleteFn              func(id string) error
 }
 
 func (m *mockCatatanRepo) Upsert(catatan *models.CatatanPribadi) error {

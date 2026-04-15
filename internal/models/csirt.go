@@ -10,18 +10,18 @@ import (
 const STRExpiryWarnDays = 180
 
 type Csirt struct {
-	ID               string  `json:"id"`
-	IdPerusahaan     string  `json:"id_perusahaan"`
-	NamaCsirt        string  `json:"nama_csirt"`
-	WebCsirt         string  `json:"web_csirt"`
-	EmailCsirt       *string `json:"email_csirt"`
-	TeleponCsirt     *string `json:"telepon_csirt"`
-	PhotoCsirt       *string `json:"photo_csirt"`
-	FileRFC2350      *string `json:"file_rfc2350"`
-	FilePublicKeyPGP *string `json:"file_public_key_pgp"`
-	FileStr          *string `json:"file_str"`
-	TanggalRegistrasi  *string `json:"tanggal_registrasi"`
-	TanggalKadaluarsa  *string `json:"tanggal_kadaluarsa"`
+	ID                string  `json:"id"`
+	IdPerusahaan      string  `json:"id_perusahaan"`
+	NamaCsirt         string  `json:"nama_csirt"`
+	WebCsirt          string  `json:"web_csirt"`
+	EmailCsirt        *string `json:"email_csirt"`
+	TeleponCsirt      *string `json:"telepon_csirt"`
+	PhotoCsirt        *string `json:"photo_csirt"`
+	FileRFC2350       *string `json:"file_rfc2350"`
+	FilePublicKeyPGP  *string `json:"file_public_key_pgp"`
+	FileStr           *string `json:"file_str"`
+	TanggalRegistrasi *string `json:"tanggal_registrasi"`
+	TanggalKadaluarsa *string `json:"tanggal_kadaluarsa"`
 }
 
 // parseDate memparsing string tanggal dari database ke time.Time.
@@ -44,9 +44,9 @@ func parseDate(s *string) (time.Time, bool) {
 		"2006-01-02 15:04:05 -0700 MST",           // time.Time.String() — output parseTime=true dengan timezone
 		"2006-01-02 15:04:05 -0700 -07",           // variasi time.Time.String() tanpa named timezone
 		time.RFC3339,                              // 2006-01-02T15:04:05Z07:00
-		"2006-01-02T15:04:05Z",                   // ISO 8601 dengan Z
-		"2006-01-02T15:04:05-07:00",              // ISO 8601 dengan offset
-		"2006-01-02 15:04:05",                    // datetime tanpa timezone
+		"2006-01-02T15:04:05Z",                    // ISO 8601 dengan Z
+		"2006-01-02T15:04:05-07:00",               // ISO 8601 dengan offset
+		"2006-01-02 15:04:05",                     // datetime tanpa timezone
 		"2006-01-02 15:04:05.999999999 -0700 MST", // time.Time.String() dengan nanosecond
 	}
 

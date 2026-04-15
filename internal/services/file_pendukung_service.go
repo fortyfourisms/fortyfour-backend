@@ -13,9 +13,9 @@ import (
 )
 
 type FilePendukungService struct {
-	repo      repository.FilePendukungRepositoryInterface
+	repo       repository.FilePendukungRepositoryInterface
 	materiRepo repository.MateriRepositoryInterface
-	rc        cache.RedisInterface
+	rc         cache.RedisInterface
 }
 
 func NewFilePendukungService(

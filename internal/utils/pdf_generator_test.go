@@ -62,17 +62,17 @@ func makeCsirtResponse(namaCsirt string) dto.CsirtResponse {
 	telepon := "+62812345678"
 	email := "csirt@contoh.id"
 	return dto.CsirtResponse{
-		ID:                     "csirt-1",
-		NamaCsirt:              namaCsirt,
-		WebCsirt:               "https://csirt.contoh.id",
-		EmailCsirt:             &email,
-		TeleponCsirt:           &telepon,
-		PhotoCsirt:             "photo.jpg",
-		FileRFC2350:            "rfc2350.pdf",
-		FilePublicKeyPGP:       "key.pgp",
-		FileStr:                "str.pdf",
-		TanggalRegistrasi:      "2024-01-01",
-		TanggalKadaluarsa:      "2025-01-01",
+		ID:                "csirt-1",
+		NamaCsirt:         namaCsirt,
+		WebCsirt:          "https://csirt.contoh.id",
+		EmailCsirt:        &email,
+		TeleponCsirt:      &telepon,
+		PhotoCsirt:        "photo.jpg",
+		FileRFC2350:       "rfc2350.pdf",
+		FilePublicKeyPGP:  "key.pgp",
+		FileStr:           "str.pdf",
+		TanggalRegistrasi: "2024-01-01",
+		TanggalKadaluarsa: "2025-01-01",
 		Perusahaan: dto.PerusahaanResponse{
 			ID:             "perusahaan-1",
 			NamaPerusahaan: "PT Contoh Teknologi",
@@ -550,10 +550,10 @@ func TestGenerateCsirtPDF_NoFilesUploaded(t *testing.T) {
 func TestGenerateCsirtPDF_PartialFilesUploaded(t *testing.T) {
 	// Sebagian file ada, sebagian tidak
 	csirt := makeCsirtResponse("CSIRT Sebagian File")
-	csirt.PhotoCsirt = "photo.jpg"  // Ada
-	csirt.FileRFC2350 = ""           // -
+	csirt.PhotoCsirt = "photo.jpg"     // Ada
+	csirt.FileRFC2350 = ""             // -
 	csirt.FilePublicKeyPGP = "key.pgp" // Ada
-	csirt.FileStr = ""               // -
+	csirt.FileStr = ""                 // -
 
 	result, err := GenerateCsirtPDF([]dto.CsirtResponse{csirt}, "")
 	require.NoError(t, err)

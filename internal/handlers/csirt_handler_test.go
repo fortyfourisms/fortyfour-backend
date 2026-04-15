@@ -771,12 +771,12 @@ func TestCsirtHandler_GetByID_AsUser_ReturnsNewFields(t *testing.T) {
 	mockSvc := &mockCsirtService{
 		GetByIDFn: func(id string) (*dto.CsirtResponse, error) {
 			return &dto.CsirtResponse{
-				ID:                     id,
-				NamaCsirt:              "CSIRT ABC",
-				TanggalRegistrasi:      tglReg,
-				TanggalKadaluarsa:      tglKad,
-				FileStr:                "uploads/str_csirt/abc.pdf",
-				Perusahaan:             dto.PerusahaanResponse{ID: "perusahaan-abc"},
+				ID:                id,
+				NamaCsirt:         "CSIRT ABC",
+				TanggalRegistrasi: tglReg,
+				TanggalKadaluarsa: tglKad,
+				FileStr:           "uploads/str_csirt/abc.pdf",
+				Perusahaan:        dto.PerusahaanResponse{ID: "perusahaan-abc"},
 			}, nil
 		},
 	}

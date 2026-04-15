@@ -149,9 +149,9 @@ func dummySEResponse(id, idPerusahaan, namaPerusahaan string) dto.SEResponse {
 func dummyCsirtResponse(id, idPerusahaan, namaPerusahaan string) dto.CsirtResponse {
 	email := "csirt@test.id"
 	return dto.CsirtResponse{
-		ID:        id,
-		NamaCsirt: "CSIRT Test",
-		WebCsirt:  "https://csirt.test",
+		ID:         id,
+		NamaCsirt:  "CSIRT Test",
+		WebCsirt:   "https://csirt.test",
 		EmailCsirt: &email,
 		Perusahaan: dto.PerusahaanResponse{
 			ID:             idPerusahaan,
