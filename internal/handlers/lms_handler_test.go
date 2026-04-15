@@ -661,3 +661,554 @@ func TestGetUserID(t *testing.T) {
 	req = withUserCtx(req, "user-123", "user")
 	assert.Equal(t, "user-123", getUserID(req))
 }
+
+// ════════════════════════════════════════════════════════════════════════════
+// TEST MATERI — success paths
+// ════════════════════════════════════════════════════════════════════════════
+
+func TestLMSHandler_MateriCreate_Success(t *testing.T) {
+	handler := setupLMSHandler()
+	konten := "<p>Hello</p>"
+	body, _ := json.Marshal(dto.CreateMateriRequest{
+		Judul: "Intro Teks", Tipe: "teks", Urutan: 1, KontenHTML: &konten,
+	})
+	req := httptest.NewRequest(http.MethodPost, "/api/kelas/k-1/materi", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "admin-1", "admin")
+	w := httptest.NewRecorder()
+	handler.ServeKelas(w, req)
+	assert.Equal(t, http.StatusCreated, w.Code)
+}
+
+func TestLMSHandler_MateriCreate_InvalidBody(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodPost, "/api/kelas/k-1/materi", bytes.NewBuffer([]byte("bad")))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeKelas(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestLMSHandler_MateriUpdate_Success_Response(t *testing.T) {
+	handler := setupLMSHandler()
+	judul := "Updated"
+	body, _ := json.Marshal(dto.UpdateMateriRequest{Judul: &judul})
+	req := httptest.NewRequest(http.MethodPut, "/api/materi/m-1", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "admin-1", "admin")
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "m-1")
+}
+
+func TestLMSHandler_MateriDelete_Success_Response(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodDelete, "/api/materi/m-1", nil)
+	req = withUserCtx(req, "admin-1", "admin")
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "berhasil dihapus")
+}
+
+func TestLMSHandler_MateriProgress_Success(t *testing.T) {
+	handler := setupLMSHandler()
+	body, _ := json.Marshal(dto.UpdateProgressRequest{IsCompleted: true})
+	req := httptest.NewRequest(http.MethodPost, "/api/materi/m-1/progress", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestLMSHandler_MateriUpdate_InvalidBody(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodPut, "/api/materi/m-1", bytes.NewBuffer([]byte("bad")))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TEST SOAL — success paths
+// ════════════════════════════════════════════════════════════════════════════
+
+func TestLMSHandler_SoalGetByKuis_Success(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodGet, "/api/kuis/kuis-1/soal", nil)
+	w := httptest.NewRecorder()
+	handler.ServeKuis(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestLMSHandler_SoalCreate_Success(t *testing.T) {
+	now := time.Now()
+	kuisRepo := &lmsKuisRepo{
+		CreateFn: func(k *models.Kuis) error { return nil },
+		FindByIDFn: func(id string) (*models.Kuis, error) {
+			return &models.Kuis{ID: id, IDKelas: "k-1", Judul: "Test", CreatedAt: now, UpdatedAt: now}, nil
+		},
+		FindByKelasFn: func(idKelas string) ([]models.Kuis, error) { return nil, nil },
+		FindFinalByKelasFn: func(idKelas string) (*models.Kuis, error) { return nil, errors.New("not found") },
+		UpdateFn: func(k *models.Kuis) error { return nil },
+		DeleteFn: func(id string) error { return nil },
+	}
+	soalRepo := &lmsSoalRepo{
+		CreateFn: func(s *models.Soal, p []models.PilihanJawaban) error { return nil },
+		FindByIDFn: func(id string) (*models.Soal, error) { return nil, errors.New("not found") },
+		FindByKuisFn: func(idKuis string) ([]models.Soal, error) { return nil, nil },
+		UpdateFn: func(s *models.Soal, p []models.PilihanJawaban) error { return nil },
+		DeleteFn: func(id string) error { return nil },
+	}
+	soalSvc := services.NewSoalService(soalRepo, kuisRepo, nil)
+	kuisSvc := services.NewKuisService(&lmsAttemptRepo{}, soalRepo, kuisRepo, &lmsProgressRepo{}, nil)
+	sseSvc := services.NewSSEService()
+	h := NewLMSHandler(nil, nil, soalSvc, kuisSvc, nil, nil, nil, nil, sseSvc)
+
+	body, _ := json.Marshal(dto.CreateSoalRequest{
+		Pertanyaan: "Apa itu Go?",
+		Urutan:     1,
+		Pilihan: []dto.CreatePilihanRequest{
+			{Teks: "Bahasa", IsCorrect: true, Urutan: 1},
+			{Teks: "Framework", IsCorrect: false, Urutan: 2},
+		},
+	})
+	req := httptest.NewRequest(http.MethodPost, "/api/kuis/kuis-1/soal", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	h.ServeKuis(w, req)
+	assert.Equal(t, http.StatusCreated, w.Code)
+}
+
+func TestLMSHandler_SoalCreate_InvalidBody(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodPost, "/api/kuis/kuis-1/soal", bytes.NewBuffer([]byte("bad")))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeKuis(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestLMSHandler_SoalUpdate_InvalidBody(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodPut, "/api/soal/s-1", bytes.NewBuffer([]byte("bad")))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeSoal(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestLMSHandler_SoalUpdate_NoID(t *testing.T) {
+	handler := setupLMSHandler()
+	body, _ := json.Marshal(dto.UpdateSoalRequest{})
+	req := httptest.NewRequest(http.MethodPut, "/api/soal", bytes.NewBuffer(body))
+	w := httptest.NewRecorder()
+	handler.ServeSoal(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TEST KUIS — success & error paths
+// ════════════════════════════════════════════════════════════════════════════
+
+func TestLMSHandler_KuisGetByKelas_Success(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodGet, "/api/kelas/k-1/kuis", nil)
+	w := httptest.NewRecorder()
+	handler.ServeKelas(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestLMSHandler_KuisCreate_Success(t *testing.T) {
+	handler := setupLMSHandler()
+	body, _ := json.Marshal(dto.CreateKuisRequest{
+		Judul: "Kuis Bab 1", PassingGrade: 70, Urutan: 1,
+	})
+	req := httptest.NewRequest(http.MethodPost, "/api/kelas/k-1/kuis", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeKelas(w, req)
+	assert.Equal(t, http.StatusCreated, w.Code)
+}
+
+func TestLMSHandler_KuisCreate_InvalidBody(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodPost, "/api/kelas/k-1/kuis", bytes.NewBuffer([]byte("bad")))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeKelas(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestLMSHandler_KuisUpdate_InvalidBody(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodPut, "/api/kuis/kuis-1", bytes.NewBuffer([]byte("bad")))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	handler.ServeKuis(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestLMSHandler_KuisDelete_Success(t *testing.T) {
+	now := time.Now()
+	kelasRepo := newDefaultKelasRepo()
+	materiRepo := newDefaultMateriRepo()
+	kuisRepo := &lmsKuisRepo{
+		CreateFn:   func(k *models.Kuis) error { return nil },
+		FindByIDFn: func(id string) (*models.Kuis, error) {
+			return &models.Kuis{ID: id, IDKelas: "k-1", Judul: "Test Kuis", CreatedAt: now, UpdatedAt: now}, nil
+		},
+		FindByKelasFn: func(idKelas string) ([]models.Kuis, error) { return nil, nil },
+		FindFinalByKelasFn: func(idKelas string) (*models.Kuis, error) { return nil, errors.New("not found") },
+		UpdateFn:   func(k *models.Kuis) error { return nil },
+		DeleteFn:   func(id string) error { return nil },
+	}
+	soalRepo := &lmsSoalRepo{
+		CreateFn: func(s *models.Soal, p []models.PilihanJawaban) error { return nil },
+		FindByIDFn: func(id string) (*models.Soal, error) { return nil, errors.New("not found") },
+		FindByKuisFn: func(idKuis string) ([]models.Soal, error) { return nil, nil },
+		UpdateFn: func(s *models.Soal, p []models.PilihanJawaban) error { return nil },
+		DeleteFn: func(id string) error { return nil },
+	}
+	kuisSvc := services.NewKuisService(&lmsAttemptRepo{}, soalRepo, kuisRepo, &lmsProgressRepo{}, nil)
+	kelasSvc := services.NewKelasService(kelasRepo, materiRepo, &lmsProgressRepo{}, kuisRepo, &lmsAttemptRepo{}, &lmsSertifikatRepo{
+		CreateFn: func(s *models.Sertifikat) error { return nil },
+		FindByUserAndKelasFn: func(a, b string) (*models.Sertifikat, error) { return nil, errors.New("not found") },
+		FindByIDFn: func(id string) (*models.Sertifikat, error) { return nil, errors.New("not found") },
+		FindByUserFn: func(id string) ([]models.Sertifikat, error) { return nil, nil },
+	}, &lmsFPRepo{
+		CreateFn: func(fp *models.FilePendukung) error { return nil },
+		FindByMateriFn: func(id string) ([]models.FilePendukung, error) { return nil, nil },
+		FindByIDFn: func(id string) (*models.FilePendukung, error) { return nil, errors.New("not found") },
+		DeleteFn: func(id string) error { return nil },
+	}, nil)
+	sseSvc := services.NewSSEService()
+	h := NewLMSHandler(kelasSvc, nil, nil, kuisSvc, nil, nil, nil, nil, sseSvc)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/kuis/kuis-1", nil)
+	w := httptest.NewRecorder()
+	h.ServeKuis(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "berhasil dihapus")
+}
+
+func TestLMSHandler_KuisMethodNotAllowed(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodPatch, "/api/kuis/kuis-1", nil)
+	w := httptest.NewRecorder()
+	handler.ServeKuis(w, req)
+	assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TEST DISKUSI — success paths
+// ════════════════════════════════════════════════════════════════════════════
+
+func TestLMSHandler_DiskusiCreate_Success(t *testing.T) {
+	handler := setupLMSHandler()
+	body, _ := json.Marshal(dto.CreateDiskusiRequest{Konten: "Halo ini diskusi"})
+	req := httptest.NewRequest(http.MethodPost, "/api/materi/m-1/diskusi", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusCreated, w.Code)
+}
+
+func TestLMSHandler_DiskusiCreate_Unauthorized(t *testing.T) {
+	handler := setupLMSHandler()
+	body, _ := json.Marshal(dto.CreateDiskusiRequest{Konten: "test"})
+	req := httptest.NewRequest(http.MethodPost, "/api/materi/m-1/diskusi", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	// no user context
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestLMSHandler_DiskusiCreate_InvalidBody(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodPost, "/api/materi/m-1/diskusi", bytes.NewBuffer([]byte("bad")))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestLMSHandler_DiskusiGetByMateri_Success(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodGet, "/api/materi/m-1/diskusi", nil)
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestLMSHandler_DiskusiUpdate_Success(t *testing.T) {
+	now := time.Now()
+	diskusiRepo := &lmsDiskusiRepo{
+		CreateFn: func(d *models.Diskusi) error { return nil },
+		FindByMateriFn: func(idMateri string) ([]models.Diskusi, error) { return nil, nil },
+		FindByIDFn: func(id string) (*models.Diskusi, error) {
+			return &models.Diskusi{ID: id, IDUser: "user-1", Konten: "Old", CreatedAt: now, UpdatedAt: now}, nil
+		},
+		UpdateFn: func(d *models.Diskusi) error { return nil },
+		DeleteFn: func(id string) error { return nil },
+	}
+	userRepo := &lmsUserRepo{
+		FindByIDFn: func(id string) (*models.User, error) {
+			return &models.User{ID: id, Username: "testuser"}, nil
+		},
+	}
+	diskusiSvc := services.NewDiskusiService(diskusiRepo, userRepo)
+	sseSvc := services.NewSSEService()
+	h := NewLMSHandler(nil, nil, nil, nil, nil, diskusiSvc, nil, nil, sseSvc)
+
+	body, _ := json.Marshal(dto.UpdateDiskusiRequest{Konten: "Updated"})
+	req := httptest.NewRequest(http.MethodPut, "/api/diskusi/d-1", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	h.ServeDiskusi(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestLMSHandler_DiskusiDelete_Success(t *testing.T) {
+	now := time.Now()
+	diskusiRepo := &lmsDiskusiRepo{
+		CreateFn: func(d *models.Diskusi) error { return nil },
+		FindByMateriFn: func(idMateri string) ([]models.Diskusi, error) { return nil, nil },
+		FindByIDFn: func(id string) (*models.Diskusi, error) {
+			return &models.Diskusi{ID: id, IDUser: "user-1", Konten: "Test", CreatedAt: now, UpdatedAt: now}, nil
+		},
+		UpdateFn: func(d *models.Diskusi) error { return nil },
+		DeleteFn: func(id string) error { return nil },
+	}
+	userRepo := &lmsUserRepo{
+		FindByIDFn: func(id string) (*models.User, error) {
+			return &models.User{ID: id, Username: "testuser"}, nil
+		},
+	}
+	diskusiSvc := services.NewDiskusiService(diskusiRepo, userRepo)
+	sseSvc := services.NewSSEService()
+	h := NewLMSHandler(nil, nil, nil, nil, nil, diskusiSvc, nil, nil, sseSvc)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/diskusi/d-1", nil)
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	h.ServeDiskusi(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "berhasil dihapus")
+}
+
+func TestLMSHandler_DiskusiUpdate_InvalidBody(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodPut, "/api/diskusi/d-1", bytes.NewBuffer([]byte("bad")))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	handler.ServeDiskusi(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TEST CATATAN — success paths
+// ════════════════════════════════════════════════════════════════════════════
+
+func TestLMSHandler_CatatanGet_Unauthorized(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodGet, "/api/materi/m-1/catatan", nil)
+	// no user
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestLMSHandler_CatatanGet_NotFound(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodGet, "/api/materi/m-1/catatan", nil)
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	// Default mock returns not found
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
+
+func TestLMSHandler_CatatanGet_Success(t *testing.T) {
+	now := time.Now()
+	catatanRepo := &lmsCatatanRepo{
+		UpsertFn: func(c *models.CatatanPribadi) error { return nil },
+		FindByUserAndMateriFn: func(idUser, idMateri string) (*models.CatatanPribadi, error) {
+			return &models.CatatanPribadi{ID: "c-1", IDUser: idUser, IDMateri: idMateri, Konten: "Catatan saya", CreatedAt: now, UpdatedAt: now}, nil
+		},
+	}
+	catatanSvc := services.NewCatatanService(catatanRepo)
+	materiRepo := newDefaultMateriRepo()
+	materiSvc := services.NewMateriService(materiRepo, newDefaultKelasRepo(), &lmsProgressRepo{}, nil)
+	sseSvc := services.NewSSEService()
+	h := NewLMSHandler(nil, materiSvc, nil, nil, nil, nil, catatanSvc, nil, sseSvc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/materi/m-1/catatan", nil)
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	h.ServeMateri(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "Catatan saya")
+}
+
+func TestLMSHandler_CatatanUpsert_Unauthorized(t *testing.T) {
+	handler := setupLMSHandler()
+	body, _ := json.Marshal(dto.UpsertCatatanRequest{Konten: "catatan"})
+	req := httptest.NewRequest(http.MethodPut, "/api/materi/m-1/catatan", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	// no user
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestLMSHandler_CatatanUpsert_Success(t *testing.T) {
+	now := time.Now()
+	catatanRepo := &lmsCatatanRepo{
+		UpsertFn: func(c *models.CatatanPribadi) error { return nil },
+		FindByUserAndMateriFn: func(idUser, idMateri string) (*models.CatatanPribadi, error) {
+			return &models.CatatanPribadi{ID: "c-1", IDUser: idUser, IDMateri: idMateri, Konten: "old", CreatedAt: now, UpdatedAt: now}, nil
+		},
+	}
+	catatanSvc := services.NewCatatanService(catatanRepo)
+	materiSvc := services.NewMateriService(newDefaultMateriRepo(), newDefaultKelasRepo(), &lmsProgressRepo{}, nil)
+	sseSvc := services.NewSSEService()
+	h := NewLMSHandler(nil, materiSvc, nil, nil, nil, nil, catatanSvc, nil, sseSvc)
+
+	body, _ := json.Marshal(dto.UpsertCatatanRequest{Konten: "Catatan baru"})
+	req := httptest.NewRequest(http.MethodPut, "/api/materi/m-1/catatan", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	h.ServeMateri(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestLMSHandler_CatatanUpsert_InvalidBody(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodPut, "/api/materi/m-1/catatan", bytes.NewBuffer([]byte("bad")))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestLMSHandler_CatatanMethodNotAllowed(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodDelete, "/api/materi/m-1/catatan", nil)
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TEST FILE PENDUKUNG — success paths
+// ════════════════════════════════════════════════════════════════════════════
+
+func TestLMSHandler_FilePendukungGetByMateri_Success(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodGet, "/api/materi/m-1/file-pendukung", nil)
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestLMSHandler_FilePendukungByMateri_MethodNotAllowed(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodDelete, "/api/materi/m-1/file-pendukung", nil)
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+}
+
+func TestLMSHandler_FilePendukungDownload_NotFound(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodGet, "/api/file-pendukung/fp-1/download", nil)
+	w := httptest.NewRecorder()
+	handler.ServeFilePendukung(w, req)
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// TEST SERTIFIKAT — success paths
+// ════════════════════════════════════════════════════════════════════════════
+
+func TestLMSHandler_SertifikatGenerate_Unauthorized(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodPost, "/api/kelas/k-1/sertifikat/generate", nil)
+	// no user
+	w := httptest.NewRecorder()
+	handler.ServeKelas(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestLMSHandler_SertifikatGetByKelas_Unauthorized(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodGet, "/api/kelas/k-1/sertifikat", nil)
+	// no user
+	w := httptest.NewRecorder()
+	handler.ServeKelas(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestLMSHandler_SertifikatGetByKelas_NotFound(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodGet, "/api/kelas/k-1/sertifikat", nil)
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	handler.ServeKelas(w, req)
+	// mock returns not found
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
+
+func TestLMSHandler_SertifikatByKelas_MethodNotAllowed(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodDelete, "/api/kelas/k-1/sertifikat", nil)
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	handler.ServeKelas(w, req)
+	assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+}
+
+func TestLMSHandler_SertifikatDownload_NotFound(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodGet, "/api/sertifikat/invalid/download", nil)
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	handler.ServeSertifikat(w, req)
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
+
+func TestLMSHandler_SertifikatGetByID_Success(t *testing.T) {
+	now := time.Now()
+	sertRepo := &lmsSertifikatRepo{
+		CreateFn: func(s *models.Sertifikat) error { return nil },
+		FindByUserAndKelasFn: func(a, b string) (*models.Sertifikat, error) { return nil, errors.New("not found") },
+		FindByIDFn: func(id string) (*models.Sertifikat, error) {
+			return &models.Sertifikat{
+				ID: id, NomorSertifikat: "CERT/001", NamaPeserta: "John",
+				NamaKelas: "Go", TanggalTerbit: now, CreatedAt: now,
+			}, nil
+		},
+		FindByUserFn: func(id string) ([]models.Sertifikat, error) { return nil, nil },
+	}
+	sertSvc := services.NewSertifikatService(sertRepo, nil, nil, nil, nil, nil)
+	sseSvc := services.NewSSEService()
+	h := NewLMSHandler(nil, nil, nil, nil, nil, nil, nil, sertSvc, sseSvc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/sertifikat/cert-1", nil)
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	h.ServeSertifikat(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "CERT/001")
+}
