@@ -6,6 +6,7 @@ import (
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
+	"ikas/internal/utils"
 	"time"
 
 	"github.com/google/uuid"
@@ -62,7 +63,109 @@ func NewIkasService(
 	}
 }
 
+func (s *IkasService) validateCreate(req *dto.CreateIkasRequest) error {
+	req.IDPerusahaan = utils.NormalizeInput(req.IDPerusahaan)
+	if req.IDPerusahaan == "" {
+		return fmt.Errorf("id_perusahaan tidak boleh kosong")
+	}
+	if !utils.IsValidUUID(req.IDPerusahaan) {
+		return fmt.Errorf("format id_perusahaan tidak valid")
+	}
+
+	req.Responden = utils.NormalizeInput(req.Responden)
+	if req.Responden == "" {
+		return fmt.Errorf("responden tidak boleh kosong")
+	}
+
+	req.Telepon = utils.NormalizeInput(req.Telepon)
+	if req.Telepon == "" {
+		return fmt.Errorf("telepon tidak boleh kosong")
+	}
+
+	req.Jabatan = utils.NormalizeInput(req.Jabatan)
+	if req.Jabatan == "" {
+		return fmt.Errorf("jabatan tidak boleh kosong")
+	}
+
+	if req.TargetNilai < 0 || req.TargetNilai > 5 {
+		return fmt.Errorf("target_nilai harus bernilai antara 0 sampai 5")
+	}
+
+	if req.Tanggal != "" {
+		if _, err := time.Parse("2006-01-02", req.Tanggal); err != nil {
+			return fmt.Errorf("format tanggal tidak valid (harus YYYY-MM-DD)")
+		}
+	}
+
+	return nil
+}
+
+func (s *IkasService) validateUpdate(req *dto.UpdateIkasRequest) error {
+	if req.IDPerusahaan != nil {
+		normalized := utils.NormalizeInput(*req.IDPerusahaan)
+		req.IDPerusahaan = &normalized
+		if *req.IDPerusahaan == "" {
+			return fmt.Errorf("id_perusahaan tidak boleh kosong")
+		}
+		if !utils.IsValidUUID(*req.IDPerusahaan) {
+			return fmt.Errorf("format id_perusahaan tidak valid")
+		}
+	}
+
+	if req.Responden != nil {
+		normalized := utils.NormalizeInput(*req.Responden)
+		req.Responden = &normalized
+		if *req.Responden == "" {
+			return fmt.Errorf("responden tidak boleh kosong")
+		}
+	}
+
+	if req.Telepon != nil {
+		normalized := utils.NormalizeInput(*req.Telepon)
+		req.Telepon = &normalized
+		if *req.Telepon == "" {
+			return fmt.Errorf("telepon tidak boleh kosong")
+		}
+	}
+
+	if req.Jabatan != nil {
+		normalized := utils.NormalizeInput(*req.Jabatan)
+		req.Jabatan = &normalized
+		if *req.Jabatan == "" {
+			return fmt.Errorf("jabatan tidak boleh kosong")
+		}
+	}
+
+	if req.TargetNilai != nil {
+		if *req.TargetNilai < 0 || *req.TargetNilai > 5 {
+			return fmt.Errorf("target_nilai harus bernilai antara 0 sampai 5")
+		}
+	}
+
+	if req.Tanggal != nil && *req.Tanggal != "" {
+		if _, err := time.Parse("2006-01-02", *req.Tanggal); err != nil {
+			return fmt.Errorf("format tanggal tidak valid (harus YYYY-MM-DD)")
+		}
+	}
+
+	return nil
+}
+
 func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id string, userID string) error {
+	// 1. Synchronous Validation
+	if err := s.validateCreate(&req); err != nil {
+		return err
+	}
+
+	// 2. Synchronous Existence Check (Perusahaan)
+	perusahaanExists, err := s.repo.CheckExistsByPerusahaanID(req.IDPerusahaan)
+	if err != nil {
+		return err
+	}
+	if !perusahaanExists {
+		return fmt.Errorf("perusahaan dengan ID %s tidak ditemukan", req.IDPerusahaan)
+	}
+
 	// Extract year from Tanggal for yearly uniqueness check
 	var tahun int
 	if t, err := time.Parse("2006-01-02", req.Tanggal); err == nil {
@@ -137,18 +240,34 @@ func (s *IkasService) GetByID(id string, userRole string, userPerusahaanID strin
 }
 
 func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasRequest, userID string, userRole string, userPerusahaanID string) (string, error) {
-	// 1. Get existing IKAS meta
+	// 1. Synchronous Validation
+	if err := s.validateUpdate(&req); err != nil {
+		return id, err
+	}
+
+	// 2. Get existing IKAS meta
 	current, err := s.repo.GetByID(id)
 	if err != nil {
 		return id, err
 	}
 
-	// 2. Cross-Perusahaan Check (Security)
+	// 3. Cross-Perusahaan Check (Security)
 	if userRole != "admin" && current.Perusahaan != nil && current.Perusahaan.ID != userPerusahaanID {
 		return id, fmt.Errorf("anda tidak memiliki akses untuk mengubah data ini")
 	}
 
-	// 3. Validation Check (LOCKED)
+	// 4. Check if new IDPerusahaan exists (if provided)
+	if req.IDPerusahaan != nil && *req.IDPerusahaan != "" && *req.IDPerusahaan != current.Perusahaan.ID {
+		exists, err := s.repo.CheckExistsByPerusahaanID(*req.IDPerusahaan)
+		if err != nil {
+			return id, err
+		}
+		if !exists {
+			return id, fmt.Errorf("perusahaan dengan ID %s tidak ditemukan", *req.IDPerusahaan)
+		}
+	}
+
+	// 5. Validation Check (LOCKED)
 	if current.IsValidated {
 		return id, fmt.Errorf("data asesmen ini sudah divalidasi dan tidak dapat diubah")
 	}
