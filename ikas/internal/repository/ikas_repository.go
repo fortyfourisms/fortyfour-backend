@@ -36,10 +36,18 @@ func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string, nilaiKemat
 		nilai_kematangan, target_nilai)
 		VALUES (?, ?, NULL, NULL, NULL, NULL, ?, ?, ?, ?, ?, ?)`
 
+	// Konversi string kosong ke NULL agar tidak menyebabkan Error 1292 di MySQL
+	var tanggal interface{}
+	if strings.TrimSpace(req.Tanggal) == "" {
+		tanggal = nil
+	} else {
+		tanggal = req.Tanggal
+	}
+
 	_, err := r.db.Exec(query,
 		id,
 		req.IDPerusahaan,
-		req.Tanggal,
+		tanggal,
 		req.Responden,
 		req.Telepon,
 		req.Jabatan,

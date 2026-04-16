@@ -154,7 +154,7 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 	}
 
 	// 4. YEARLY CARRY-OVER DETECTION
-	// Parse current record year
+	// Parse current record year — utamakan kolom tanggal, fallback ke created_at jika kosong
 	var existingYear int
 	dateStr := current.Tanggal
 	if len(dateStr) > 10 {
@@ -162,6 +162,17 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 	}
 	if t, err := time.Parse("2006-01-02", dateStr); err == nil {
 		existingYear = t.Year()
+	}
+
+	// Fallback: jika tanggal kosong/invalid, gunakan created_at sebagai pengecek tahun
+	if existingYear == 0 && current.CreatedAt != "" {
+		caStr := current.CreatedAt
+		if len(caStr) > 10 {
+			caStr = caStr[:10]
+		}
+		if t, err := time.Parse("2006-01-02", caStr); err == nil {
+			existingYear = t.Year()
+		}
 	}
 
 	// Determine target year (Default to current system year)
