@@ -115,11 +115,23 @@ func (m *mockJawabanIdentifikasiRepository) GetByPerusahaanID(perusahaanID strin
 	return args.Get(0).([]dto.JawabanIdentifikasiResponse), args.Error(1)
 }
 
+func (m *mockJawabanIdentifikasiRepository) CloneByIkasID(oldIkasID string, newIkasID string) error {
+	return nil
+}
+
 // Ensure mock compatibility
 var _ repository.JawabanIdentifikasiRepositoryInterface = (*mockJawabanIdentifikasiRepository)(nil)
 var _ services.JawabanIdentifikasiProducerInterface = (*mockJawabanIdentifikasiProducer)(nil)
 
 func setupJawabanIdentifikasiHandler(repo *mockJawabanIdentifikasiRepository, ikasRepo *mockIkasRepository, producer *mockJawabanIdentifikasiProducer) *JawabanIdentifikasiHandler {
+	if ikasRepo != nil {
+		ikasRepo.On("IsLocked", mock.Anything).Return(false, nil).Maybe()
+		ikasRepo.On("GetByID", mock.Anything).Return(&dto.IkasResponse{
+			ID: "uuid1",
+			Perusahaan: &dto.PerusahaanInIkas{ID: "1"},
+		}, nil).Maybe()
+		ikasRepo.On("CheckOwnership", mock.Anything, mock.Anything).Return(true, nil).Maybe()
+	}
 	service := services.NewJawabanIdentifikasiService(repo, ikasRepo, producer)
 	return NewJawabanIdentifikasiHandler(service)
 }

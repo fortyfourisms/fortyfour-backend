@@ -55,7 +55,13 @@ func (m *mockIkasRepo) GetByID(id string) (*dto.IkasResponse, error) {
 	return &dto.IkasResponse{
 		ID:              id,
 		NilaiKematangan: 75,
+		Tanggal:         "2026-01-01",
+		Perusahaan:      &dto.PerusahaanInIkas{ID: "1"},
 	}, nil
+}
+
+func (m *mockIkasRepo) GetLatestByPerusahaan(perusahaanID string) (*dto.IkasResponse, error) {
+	return nil, nil
 }
 
 func (m *mockIkasRepo) Update(id string, req dto.UpdateIkasRequest) error {
@@ -86,6 +92,14 @@ func (m *mockIkasRepo) UpdateValidationStatus(id string, status bool) error {
 	return nil
 }
 
+func (m *mockIkasRepo) CreateInitial(sourceID, targetID, targetDate string) error {
+	return nil
+}
+
+func (m *mockIkasRepo) UpdateDomainLinks(ikasID, identifikasiID, proteksiID, deteksiID, gulihID string) error {
+	return nil
+}
+
 func (m *mockIkasRepo) IsLocked(id string) (bool, error) {
 	return false, nil
 }
@@ -99,7 +113,7 @@ func (m *mockIkasRepo) IsLocked(id string) (bool, error) {
 func TestIkasService_Create_Success(t *testing.T) {
 	repo := &mockIkasRepo{}
 	// Nil producer for test
-	service := NewIkasService(repo, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	req := dto.CreateIkasRequest{
 		IDPerusahaan: "1",
@@ -112,7 +126,7 @@ func TestIkasService_Create_Success(t *testing.T) {
 
 func TestIkasService_Create_Duplicate(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	req := dto.CreateIkasRequest{
 		IDPerusahaan: "perusahaan-ada",
@@ -132,7 +146,7 @@ func TestIkasService_Create_Duplicate(t *testing.T) {
 
 func TestIkasService_Update_Async(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	val := 10.0
 	req := dto.UpdateIkasRequest{
@@ -140,13 +154,13 @@ func TestIkasService_Update_Async(t *testing.T) {
 	}
 
 	// Update now returns nil error on nil producer
-	err := service.Update(context.Background(), "ikas-id", req, "test-user", "admin", "")
+	_, err := service.Update(context.Background(), "ikas-id", req, "test-user", "admin", "")
 	assert.NoError(t, err)
 }
 
 func TestIkasService_GetAll_Admin(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	_, err := service.GetAll("admin")
 	assert.NoError(t, err)
@@ -154,7 +168,7 @@ func TestIkasService_GetAll_Admin(t *testing.T) {
 
 func TestIkasService_GetAll_NonAdmin(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	_, err := service.GetAll("user")
 	assert.Error(t, err)
@@ -168,7 +182,7 @@ func TestIkasService_GetAll_NonAdmin(t *testing.T) {
 
 func TestIkasService_ImportFromExcel_Async(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	id, err := service.ImportFromExcel(context.Background(), []byte("fake excel"), "test-user")
 	assert.NoError(t, err) // Should work and return generated ID

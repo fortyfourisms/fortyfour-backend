@@ -24,14 +24,41 @@ type IkasProducerInterface interface {
 }
 
 type IkasService struct {
-	repo     repository.IkasRepositoryInterface
-	producer IkasProducerInterface
+	repo              repository.IkasRepositoryInterface
+	identifikasiRepo  repository.IdentifikasiRepositoryInterface
+	proteksiRepo      repository.ProteksiRepositoryInterface
+	deteksiRepo       repository.DeteksiRepositoryInterface
+	gulihRepo         repository.GulihRepositoryInterface
+	jawabanIdenRepo   repository.JawabanIdentifikasiRepositoryInterface
+	jawabanProtRepo   repository.JawabanProteksiRepositoryInterface
+	jawabanDetRepo    repository.JawabanDeteksiRepositoryInterface
+	jawabanGulihRepo  repository.JawabanGulihRepositoryInterface
+	producer          IkasProducerInterface
 }
 
-func NewIkasService(repo repository.IkasRepositoryInterface, producer IkasProducerInterface) *IkasService {
+func NewIkasService(
+	repo repository.IkasRepositoryInterface,
+	identifikasiRepo repository.IdentifikasiRepositoryInterface,
+	proteksiRepo repository.ProteksiRepositoryInterface,
+	deteksiRepo repository.DeteksiRepositoryInterface,
+	gulihRepo repository.GulihRepositoryInterface,
+	jawabanIdenRepo repository.JawabanIdentifikasiRepositoryInterface,
+	jawabanProtRepo repository.JawabanProteksiRepositoryInterface,
+	jawabanDetRepo repository.JawabanDeteksiRepositoryInterface,
+	jawabanGulihRepo repository.JawabanGulihRepositoryInterface,
+	producer IkasProducerInterface,
+) *IkasService {
 	return &IkasService{
-		repo:     repo,
-		producer: producer,
+		repo:              repo,
+		identifikasiRepo:  identifikasiRepo,
+		proteksiRepo:      proteksiRepo,
+		deteksiRepo:       deteksiRepo,
+		gulihRepo:         gulihRepo,
+		jawabanIdenRepo:   jawabanIdenRepo,
+		jawabanProtRepo:   jawabanProtRepo,
+		jawabanDetRepo:    jawabanDetRepo,
+		jawabanGulihRepo:  jawabanGulihRepo,
+		producer:          producer,
 	}
 }
 
@@ -109,21 +136,74 @@ func (s *IkasService) GetByID(id string, userRole string, userPerusahaanID strin
 	return data, nil
 }
 
-func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasRequest, userID string, userRole string, userPerusahaanID string) error {
-	// Check existence and get current state
+func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasRequest, userID string, userRole string, userPerusahaanID string) (string, error) {
+	// 1. Get existing IKAS meta
 	current, err := s.repo.GetByID(id)
 	if err != nil {
-		return err
+		return id, err
 	}
+
+	// 2. Cross-Perusahaan Check (Security)
 	if userRole != "admin" && current.Perusahaan != nil && current.Perusahaan.ID != userPerusahaanID {
-		return fmt.Errorf("anda tidak memiliki akses untuk mengubah data ini")
+		return id, fmt.Errorf("anda tidak memiliki akses untuk mengubah data ini")
 	}
 
+	// 3. Validation Check (LOCKED)
 	if current.IsValidated {
-		return fmt.Errorf("data asesmen ini sudah divalidasi dan tidak dapat diubah")
+		return id, fmt.Errorf("data asesmen ini sudah divalidasi dan tidak dapat diubah")
 	}
 
-	// Change detection for audit log
+	// 4. YEARLY CARRY-OVER DETECTION
+	// Parse current record year
+	var existingYear int
+	dateStr := current.Tanggal
+	if len(dateStr) > 10 {
+		dateStr = dateStr[:10] // Take only YYYY-MM-DD
+	}
+	if t, err := time.Parse("2006-01-02", dateStr); err == nil {
+		existingYear = t.Year()
+	}
+
+	// Determine target year (Default to current system year)
+	targetYear := time.Now().Year()
+
+	// If we are updating an old year record and it's currently a new year
+	if existingYear < targetYear {
+		// Check if a record for the target year already exists
+		latest, err := s.repo.GetLatestByPerusahaan(current.Perusahaan.ID)
+		if err != nil {
+			return id, err
+		}
+
+		var latestYear int
+		if latest != nil {
+			lDate := latest.Tanggal
+			if len(lDate) > 10 {
+				lDate = lDate[:10]
+			}
+			if t, err := time.Parse("2006-01-02", lDate); err == nil {
+				latestYear = t.Year()
+			}
+		}
+
+		// If the latest record is still an old year record, we trigger Cloning
+		if latestYear < targetYear {
+			newID, err := s.handleCarryOver(ctx, id, targetYear)
+			if err != nil {
+				return id, fmt.Errorf("Gagal melakukan carry-over data: %v", err)
+			}
+			id = newID // Re-point update to the new ID
+		} else if latest != nil && latestYear == targetYear {
+			// Jika record untuk tahun saat ini sudah ada, pastikan tidak terkunci sebelum di-update
+			if latest.IsValidated {
+				return id, fmt.Errorf("Data asesmen tahun berjalan untuk perusahaan %s sudah divalidasi dan tidak dapat diubah meskipun diakses menggunakan data tahun sebelumnya", current.Perusahaan.NamaPerusahaan)
+			}
+			// Redirect update ke record tahun ini
+			id = latest.ID
+		}
+	}
+
+	// 5. Update process on the resolved 'id'
 	changes := make(map[string]interface{})
 	if req.IDPerusahaan != nil && *req.IDPerusahaan != current.Perusahaan.ID {
 		changes["id_perusahaan"] = map[string]interface{}{"old": current.Perusahaan.ID, "new": *req.IDPerusahaan}
@@ -145,7 +225,7 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 	}
 
 	if s.producer == nil {
-		return nil
+		return id, nil
 	}
 
 	// Publish audit log if there are changes
@@ -174,10 +254,59 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 	}
 
 	if err := s.producer.PublishIkasUpdated(ctx, event); err != nil {
-		return err
+		return id, err
 	}
 
-	return nil
+	return id, nil
+}
+
+func (s *IkasService) handleCarryOver(ctx context.Context, sourceID string, targetYear int) (string, error) {
+	newID := uuid.New().String()
+	targetDate := fmt.Sprintf("%d-01-01", targetYear)
+
+	// 1. Phase 1: Create Initial Ikas Record (parents must exist before children)
+	if err := s.repo.CreateInitial(sourceID, newID, targetDate); err != nil {
+		return "", err
+	}
+
+	// 2. Phase 2: Clone Score Summaries (these now reference the existing newID)
+	newIden, err := s.identifikasiRepo.CloneByIkasID(sourceID, newID)
+	if err != nil {
+		return "", err
+	}
+	newProt, err := s.proteksiRepo.CloneByIkasID(sourceID, newID)
+	if err != nil {
+		return "", err
+	}
+	newDet, err := s.deteksiRepo.CloneByIkasID(sourceID, newID)
+	if err != nil {
+		return "", err
+	}
+	newGulih, err := s.gulihRepo.CloneByIkasID(sourceID, newID)
+	if err != nil {
+		return "", err
+	}
+
+	// 3. Phase 3: Update Ikas Record with domain score links
+	if err := s.repo.UpdateDomainLinks(newID, newIden, newProt, newDet, newGulih); err != nil {
+		return "", err
+	}
+
+	// 4. Phase 4: Clone all Answers (mass copy)
+	if err := s.jawabanIdenRepo.CloneByIkasID(sourceID, newID); err != nil {
+		return "", err
+	}
+	if err := s.jawabanProtRepo.CloneByIkasID(sourceID, newID); err != nil {
+		return "", err
+	}
+	if err := s.jawabanDetRepo.CloneByIkasID(sourceID, newID); err != nil {
+		return "", err
+	}
+	if err := s.jawabanGulihRepo.CloneByIkasID(sourceID, newID); err != nil {
+		return "", err
+	}
+
+	return newID, nil
 }
 
 func (s *IkasService) Delete(ctx context.Context, id string, userID string, userRole string, userPerusahaanID string) error {

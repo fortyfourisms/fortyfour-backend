@@ -25,6 +25,7 @@ type JawabanDeteksiRepositoryInterface interface {
 	UpsertToBuffer(req dto.CreateJawabanDeteksiRequest) error
 	GetBufferCount(ikasID string) (int, error)
 	FlushBuffer(ikasID string) error
+	CloneByIkasID(sourceID, targetID string) error
 }
 
 type JawabanDeteksiRepository struct {
@@ -442,4 +443,21 @@ func (r *JawabanDeteksiRepository) FlushBuffer(ikasID string) error {
 	}
 
 	return tx.Commit()
+}
+
+func (r *JawabanDeteksiRepository) CloneByIkasID(sourceID, targetID string) error {
+	query := `
+		INSERT INTO jawaban_deteksi 
+			(pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan)
+		SELECT 
+			pertanyaan_deteksi_id, ?, jawaban_deteksi, evidence, validasi, keterangan
+		FROM jawaban_deteksi 
+		WHERE ikas_id = ?`
+
+	_, err := r.db.Exec(query, targetID, sourceID)
+	if err != nil {
+		rollbar.Error(err)
+		return err
+	}
+	return nil
 }

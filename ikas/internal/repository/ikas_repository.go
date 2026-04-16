@@ -1143,3 +1143,48 @@ func (r *IkasRepository) IsLocked(id string) (bool, error) {
 	}
 	return locked, nil
 }
+
+func (r *IkasRepository) GetLatestByPerusahaan(perusahaanID string) (*dto.IkasResponse, error) {
+	// Query the most recent IKAS by date for a given company
+	query := `
+		SELECT id, tanggal, responden, telepon, jabatan, nilai_kematangan, target_nilai, is_validated
+		FROM ikas WHERE id_perusahaan = ? ORDER BY tanggal DESC LIMIT 1`
+
+	var ikas dto.IkasResponse
+	err := r.db.QueryRow(query, perusahaanID).Scan(
+		&ikas.ID, &ikas.Tanggal, &ikas.Responden, &ikas.Telepon, &ikas.Jabatan,
+		&ikas.NilaiKematangan, &ikas.TargetNilai, &ikas.IsValidated,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &ikas, nil
+}
+
+func (r *IkasRepository) CreateInitial(sourceID, targetID, targetDate string) error {
+	query := `
+		INSERT INTO ikas
+			(id, id_perusahaan, tanggal, responden, telepon, jabatan, nilai_kematangan, target_nilai, is_validated)
+		SELECT 
+			?, id_perusahaan, ?, responden, telepon, jabatan, nilai_kematangan, target_nilai, false
+		FROM ikas 
+		WHERE id = ?`
+
+	_, err := r.db.Exec(query, targetID, targetDate, sourceID)
+	return err
+}
+
+func (r *IkasRepository) UpdateDomainLinks(ikasID, idIden, idProt, idDet, idGulih string) error {
+	query := `
+		UPDATE ikas 
+		SET id_identifikasi = ?, id_proteksi = ?, id_deteksi = ?, id_gulih = ?
+		WHERE id = ?`
+
+	_, err := r.db.Exec(query, idIden, idProt, idDet, idGulih, ikasID)
+	return err
+}

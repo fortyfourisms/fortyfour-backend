@@ -177,6 +177,8 @@ func TestKategoriHandler_ServeHTTP_Create_Success(t *testing.T) {
 	createReq := dto.CreateKategoriRequest{DomainID: 1, NamaKategori: "Kategori Finance"}
 	repo.On("CheckDomainExists", 1).Return(true, nil)
 	repo.On("CheckDuplicateName", 1, "Kategori Finance", 0).Return(false, nil)
+	repo.On("Create", createReq).Return(int64(1), nil)
+	repo.On("GetByID", 1).Return(&dto.KategoriResponse{ID: 1, NamaKategori: "Kategori Finance"}, nil)
 	producer.On("PublishKategoriCreated", mock.Anything, mock.MatchedBy(func(e dto_event.KategoriCreatedEvent) bool {
 		return e.Request.NamaKategori == "Kategori Finance"
 	})).Return(nil)
@@ -255,6 +257,7 @@ func TestKategoriHandler_ServeHTTP_Create_PublishError(t *testing.T) {
 	createReq := dto.CreateKategoriRequest{DomainID: 1, NamaKategori: "Kategori Test"}
 	repo.On("CheckDomainExists", 1).Return(true, nil)
 	repo.On("CheckDuplicateName", 1, "Kategori Test", 0).Return(false, nil)
+	repo.On("Create", createReq).Return(int64(1), nil)
 	producer.On("PublishKategoriCreated", mock.Anything, mock.Anything).Return(errors.New("publish error"))
 
 	body, _ := json.Marshal(createReq)
@@ -274,6 +277,7 @@ func TestKategoriHandler_ServeHTTP_Update_Success(t *testing.T) {
 	updateReq := dto.UpdateKategoriRequest{NamaKategori: katStrPtr("Kategori Finance")}
 	repo.On("GetByID", 1).Return(&dto.KategoriResponse{ID: 1, DomainID: 1}, nil)
 	repo.On("CheckDuplicateName", 1, "Kategori Finance", 1).Return(false, nil)
+	repo.On("Update", 1, updateReq).Return(nil)
 	producer.On("PublishKategoriUpdated", mock.Anything, mock.MatchedBy(func(e dto_event.KategoriUpdatedEvent) bool {
 		return e.ID == 1 && *e.Request.NamaKategori == "Kategori Finance"
 	})).Return(nil)
@@ -370,7 +374,10 @@ func TestKategoriHandler_ServeHTTP_Update_PublishError(t *testing.T) {
 
 	repo.On("GetByID", 1).Return(&dto.KategoriResponse{ID: 1, DomainID: 1}, nil)
 	repo.On("CheckDuplicateName", 1, "Kategori Finance", 1).Return(false, nil)
-	producer.On("PublishKategoriUpdated", mock.Anything, mock.Anything).Return(errors.New("db error"))
+	repo.On("Update", 1, mock.Anything).Return(nil)
+	producer.On("PublishKategoriUpdated", mock.Anything, mock.MatchedBy(func(e dto_event.KategoriUpdatedEvent) bool {
+		return e.ID == 1
+	})).Return(errors.New("db error"))
 
 	body, _ := json.Marshal(dto.UpdateKategoriRequest{NamaKategori: katStrPtr("Kategori Finance")})
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/kategori/1", bytes.NewBuffer(body))
@@ -387,6 +394,7 @@ func TestKategoriHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	handler := setupKategoriHandler(repo, producer)
 
 	repo.On("GetByID", 1).Return(&dto.KategoriResponse{ID: 1}, nil)
+	repo.On("Delete", 1).Return(nil)
 	producer.On("PublishKategoriDeleted", mock.Anything, mock.MatchedBy(func(e dto_event.KategoriDeletedEvent) bool {
 		return e.ID == 1
 	})).Return(nil)
