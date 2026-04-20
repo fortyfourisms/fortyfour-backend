@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"ikas/internal/models"
+	"strconv"
 )
 
 type ProteksiRepository struct {
@@ -147,4 +148,26 @@ func (r *ProteksiRepository) GetByPerusahaanID(perusahaanID string) ([]models.Pr
 	}
 
 	return proteksiList, nil
+}
+
+func (r *ProteksiRepository) CloneByIkasID(sourceIkasID, targetIkasID string) (string, error) {
+	query := `
+		INSERT INTO proteksi 
+			(ikas_id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4, nilai_subdomain5, nilai_subdomain6)
+		SELECT 
+			?, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4, nilai_subdomain5, nilai_subdomain6
+		FROM proteksi 
+		WHERE ikas_id = ?`
+
+	res, err := r.db.Exec(query, targetIkasID, sourceIkasID)
+	if err != nil {
+		return "", err
+	}
+
+	lastID, err := res.LastInsertId()
+	if err != nil {
+		return "", err
+	}
+
+	return strconv.FormatInt(lastID, 10), nil
 }

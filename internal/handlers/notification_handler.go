@@ -9,6 +9,7 @@ import (
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
+	"strconv"
 )
 
 type NotificationHandler struct {
@@ -69,7 +70,7 @@ func (h *NotificationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 // @Tags         Notifications
 // @Security     BearerAuth
 // @Produce      json
-// @Param        id  path  string  true  "Notification ID"
+// @Param        id  path  uint64  true  "Notification ID"
 // @Success      200  {object}  map[string]string
 // @Failure      400  {object}  dto.ErrorResponse
 // @Failure      401  {object}  dto.ErrorResponse
@@ -82,10 +83,16 @@ func (h *NotificationHandler) MarkRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notifID := strings.TrimPrefix(r.URL.Path, "/api/notifications/")
-	notifID = strings.TrimSuffix(notifID, "/read")
-	if notifID == "" {
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/notifications/")
+	idStr = strings.TrimSuffix(idStr, "/read")
+	if idStr == "" {
 		utils.RespondError(w, http.StatusBadRequest, "notification id wajib diisi")
+		return
+	}
+
+	notifID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "invalid notification id format")
 		return
 	}
 
@@ -128,7 +135,7 @@ func (h *NotificationHandler) MarkAllRead(w http.ResponseWriter, r *http.Request
 // @Tags         Notifications
 // @Security     BearerAuth
 // @Produce      json
-// @Param        id  path  string  true  "Notification ID"
+// @Param        id  path  uint64  true  "Notification ID"
 // @Success      200  {object}  map[string]string
 // @Failure      400  {object}  dto.ErrorResponse
 // @Failure      401  {object}  dto.ErrorResponse
@@ -141,10 +148,16 @@ func (h *NotificationHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notifID := strings.TrimPrefix(r.URL.Path, "/api/notifications/")
-	notifID = strings.TrimSuffix(notifID, "/")
-	if notifID == "" {
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/notifications/")
+	idStr = strings.TrimSuffix(idStr, "/")
+	if idStr == "" {
 		utils.RespondError(w, http.StatusBadRequest, "notification id wajib diisi")
+		return
+	}
+
+	notifID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "invalid notification id format")
 		return
 	}
 

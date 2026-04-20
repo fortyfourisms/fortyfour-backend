@@ -73,8 +73,20 @@ func (m *mockIkasProducer) PublishJawabanGulihCreated(ctx context.Context, event
 var _ repository.IkasRepositoryInterface = (*mockIkasRepository)(nil)
 var _ services.IkasProducerInterface = (*mockIkasProducer)(nil)
 
-func setupIkasHandler(repo *mockIkasRepository, producer *mockIkasProducer) *IkasHandler {
-	service := services.NewIkasService(repo, producer)
+
+func setupIkasHandler(repo repository.IkasRepositoryInterface, producer services.IkasProducerInterface) *IkasHandler {
+	service := services.NewIkasService(
+		repo,
+		nil, // identifikasiRepo
+		nil, // proteksiRepo
+		nil, // deteksiRepo
+		nil, // gulihRepo
+		nil, // jawabanIdentifikasiRepo
+		nil, // jawabanProteksiRepo
+		nil, // jawabanDeteksiRepo
+		nil, // jawabanGulihRepo
+		producer,
+	)
 	return NewIkasHandler(service)
 }
 
@@ -226,9 +238,11 @@ func TestIkasHandler_ServeHTTP_Update_Success(t *testing.T) {
 
 	current := &dto.IkasResponse{
 		ID:         "123",
+		Tanggal:    "2026-01-01",
 		Perusahaan: &dto.PerusahaanInIkas{ID: "1"},
 	}
 	repo.On("GetByID", "123").Return(current, nil)
+	repo.On("GetLatestByPerusahaan", "1").Return((*dto.IkasResponse)(nil), nil)
 
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasUpdated", mock.Anything, mock.Anything).Return(nil)

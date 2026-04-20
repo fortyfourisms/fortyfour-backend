@@ -132,12 +132,13 @@ func (s *KategoriService) Create(req dto.CreateKategoriRequest) (*dto.KategoriRe
 		return nil, err
 	}
 
-	go func() {
-		_ = s.producer.PublishKategoriCreated(context.Background(), dto_event.KategoriCreatedEvent{
-			Request:   req,
-			CreatedAt: time.Now(),
-		})
-	}()
+	err = s.producer.PublishKategoriCreated(context.Background(), dto_event.KategoriCreatedEvent{
+		Request:   req,
+		CreatedAt: time.Now(),
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	return s.repo.GetByID(int(newID))
 }
@@ -206,13 +207,14 @@ func (s *KategoriService) Update(id int, req dto.UpdateKategoriRequest) (*dto.Ka
 		return nil, err
 	}
 
-	go func() {
-		_ = s.producer.PublishKategoriUpdated(context.Background(), dto_event.KategoriUpdatedEvent{
-			ID:        id,
-			Request:   req,
-			UpdatedAt: time.Now(),
-		})
-	}()
+	err = s.producer.PublishKategoriUpdated(context.Background(), dto_event.KategoriUpdatedEvent{
+		ID:        id,
+		Request:   req,
+		UpdatedAt: time.Now(),
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	return nil, nil
 }
@@ -231,12 +233,13 @@ func (s *KategoriService) Delete(id int) error {
 		return err
 	}
 
-	go func() {
-		_ = s.producer.PublishKategoriDeleted(context.Background(), dto_event.KategoriDeletedEvent{
-			ID:        id,
-			DeletedAt: time.Now(),
-		})
-	}()
+	err = s.producer.PublishKategoriDeleted(context.Background(), dto_event.KategoriDeletedEvent{
+		ID:        id,
+		DeletedAt: time.Now(),
+	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

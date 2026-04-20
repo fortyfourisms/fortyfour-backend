@@ -205,7 +205,8 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
-	err := h.service.Update(r.Context(), id, req, userID, userRole, userPerusahaanID)
+
+	updatedID, err := h.service.Update(r.Context(), id, req, userID, userRole, userPerusahaanID)
 	if err != nil {
 		logger.Error(err, "operation failed")
 		if strings.Contains(err.Error(), "tidak memiliki akses") {
@@ -220,7 +221,7 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 
 	utils.RespondJSON(w, 200, map[string]interface{}{
 		"message": "Berhasil menyimpan data",
-		"id":      id,
+		"id":      updatedID,
 	})
 }
 

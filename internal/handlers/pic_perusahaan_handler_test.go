@@ -23,7 +23,7 @@ import (
 
 func setupPICHandler() (*PICHandler, repository.PICRepositoryInterface, *services.SSEService) {
 	mockRepo := testhelpers.NewMockPICRepository()
-	sseService := services.NewSSEService()
+	sseService := services.NewSSEService(nil)
 	picService := services.NewPICService(mockRepo, nil, nil)
 	handler := NewPICHandler(picService, sseService)
 	return handler, mockRepo, sseService

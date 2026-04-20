@@ -20,7 +20,7 @@ import (
 
 func setupRoleHandler() (*RoleHandler, repository.RoleRepository, *services.SSEService) {
 	mockRepo := testhelpers.NewMockRoleRepository()
-	sseService := services.NewSSEService()
+	sseService := services.NewSSEService(nil)
 	roleService := services.NewRoleService(mockRepo, nil, nil)
 	handler := NewRoleHandler(roleService, sseService)
 	return handler, mockRepo, sseService

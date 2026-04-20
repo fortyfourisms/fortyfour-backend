@@ -336,7 +336,7 @@ func setupLMSHandler() *LMSHandler {
 	diskusiSvc := services.NewDiskusiService(diskusiRepo, userRepo)
 	catatanSvc := services.NewCatatanService(catatanRepo)
 	sertifikatSvc := services.NewSertifikatService(sertifikatRepo, kelasRepo, &lmsProgressRepo{}, &lmsAttemptRepo{}, kuisRepo, userRepo)
-	sseSvc := services.NewSSEService()
+	sseSvc := services.NewSSEService(nil)
 
 	return NewLMSHandler(kelasSvc, materiSvc, soalSvc, kuisSvc, fpSvc, diskusiSvc, catatanSvc, sertifikatSvc, sseSvc)
 }
@@ -397,7 +397,7 @@ func TestLMSHandler_KelasGetDetail_NotFound(t *testing.T) {
 		FindByIDFn:     func(id string) (*models.FilePendukung, error) { return nil, errors.New("not found") },
 		DeleteFn:       func(id string) error { return nil },
 	}, nil)
-	sseSvc := services.NewSSEService()
+	sseSvc := services.NewSSEService(nil)
 	h := NewLMSHandler(kelasSvc, nil, nil, nil, nil, nil, nil, nil, sseSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/kelas/invalid", nil)
@@ -835,7 +835,7 @@ func TestLMSHandler_SoalCreate_Success(t *testing.T) {
 	}
 	soalSvc := services.NewSoalService(soalRepo, kuisRepo, nil)
 	kuisSvc := services.NewKuisService(&lmsAttemptRepo{}, soalRepo, kuisRepo, &lmsProgressRepo{}, nil)
-	sseSvc := services.NewSSEService()
+	sseSvc := services.NewSSEService(nil)
 	h := NewLMSHandler(nil, nil, soalSvc, kuisSvc, nil, nil, nil, nil, sseSvc)
 
 	body, _ := json.Marshal(dto.CreateSoalRequest{
@@ -955,7 +955,7 @@ func TestLMSHandler_KuisDelete_Success(t *testing.T) {
 		FindByIDFn:     func(id string) (*models.FilePendukung, error) { return nil, errors.New("not found") },
 		DeleteFn:       func(id string) error { return nil },
 	}, nil)
-	sseSvc := services.NewSSEService()
+	sseSvc := services.NewSSEService(nil)
 	h := NewLMSHandler(kelasSvc, nil, nil, kuisSvc, nil, nil, nil, nil, sseSvc)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/kuis/kuis-1", nil)
@@ -1034,7 +1034,7 @@ func TestLMSHandler_DiskusiUpdate_Success(t *testing.T) {
 		},
 	}
 	diskusiSvc := services.NewDiskusiService(diskusiRepo, userRepo)
-	sseSvc := services.NewSSEService()
+	sseSvc := services.NewSSEService(nil)
 	h := NewLMSHandler(nil, nil, nil, nil, nil, diskusiSvc, nil, nil, sseSvc)
 
 	body, _ := json.Marshal(dto.UpdateDiskusiRequest{Konten: "Updated"})
@@ -1063,7 +1063,7 @@ func TestLMSHandler_DiskusiDelete_Success(t *testing.T) {
 		},
 	}
 	diskusiSvc := services.NewDiskusiService(diskusiRepo, userRepo)
-	sseSvc := services.NewSSEService()
+	sseSvc := services.NewSSEService(nil)
 	h := NewLMSHandler(nil, nil, nil, nil, nil, diskusiSvc, nil, nil, sseSvc)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/diskusi/d-1", nil)
@@ -1118,7 +1118,7 @@ func TestLMSHandler_CatatanGet_Success(t *testing.T) {
 	catatanSvc := services.NewCatatanService(catatanRepo)
 	materiRepo := newDefaultMateriRepo()
 	materiSvc := services.NewMateriService(materiRepo, newDefaultKelasRepo(), &lmsProgressRepo{}, nil)
-	sseSvc := services.NewSSEService()
+	sseSvc := services.NewSSEService(nil)
 	h := NewLMSHandler(nil, materiSvc, nil, nil, nil, nil, catatanSvc, nil, sseSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/materi/m-1/catatan", nil)
@@ -1150,7 +1150,7 @@ func TestLMSHandler_CatatanUpsert_Success(t *testing.T) {
 	}
 	catatanSvc := services.NewCatatanService(catatanRepo)
 	materiSvc := services.NewMateriService(newDefaultMateriRepo(), newDefaultKelasRepo(), &lmsProgressRepo{}, nil)
-	sseSvc := services.NewSSEService()
+	sseSvc := services.NewSSEService(nil)
 	h := NewLMSHandler(nil, materiSvc, nil, nil, nil, nil, catatanSvc, nil, sseSvc)
 
 	body, _ := json.Marshal(dto.UpsertCatatanRequest{Konten: "Catatan baru"})
@@ -1272,7 +1272,7 @@ func TestLMSHandler_SertifikatGetByID_Success(t *testing.T) {
 		FindByUserFn: func(id string) ([]models.Sertifikat, error) { return nil, nil },
 	}
 	sertSvc := services.NewSertifikatService(sertRepo, nil, nil, nil, nil, nil)
-	sseSvc := services.NewSSEService()
+	sseSvc := services.NewSSEService(nil)
 	h := NewLMSHandler(nil, nil, nil, nil, nil, nil, nil, sertSvc, sseSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/sertifikat/cert-1", nil)

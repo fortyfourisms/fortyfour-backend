@@ -45,6 +45,10 @@ func (m *mockGulihRepository) GetByPerusahaanID(perusahaanID string) ([]models.G
 	return nil, nil
 }
 
+func (m *mockGulihRepository) CloneByIkasID(oldIkasID string, newIkasID string) (string, error) {
+	return "", nil
+}
+
 var _ repository.GulihRepositoryInterface = (*mockGulihRepository)(nil)
 
 func setupGulihHandler(repo repository.GulihRepositoryInterface, ikasRepo repository.IkasRepositoryInterface) *GulihHandler {
