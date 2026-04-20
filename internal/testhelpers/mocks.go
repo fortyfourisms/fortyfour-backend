@@ -1008,8 +1008,9 @@ func (m *MockPerusahaanService) Delete(id string) error {
  // ============================================================
  
  type MockNotificationRepository struct {
- 	Notifications map[string][]models.Notification; FindAllByUserIDFn func(userID string) ([]models.Notification, error)
- 	mu            sync.RWMutex
+ 	Notifications     map[string][]models.Notification
+ 	FindAllByUserIDFn func(userID string) ([]models.Notification, error)
+ 	mu                sync.RWMutex
  }
  
  func NewMockNotificationRepository() *MockNotificationRepository {
@@ -1021,6 +1022,9 @@ func (m *MockPerusahaanService) Delete(id string) error {
  func (m *MockNotificationRepository) Create(notif *models.Notification) error {
  	m.mu.Lock()
  	defer m.mu.Unlock()
+ 	if notif.ID == 0 {
+ 		notif.ID = int64(len(m.Notifications[notif.UserID]) + 1)
+ 	}
  	m.Notifications[notif.UserID] = append([]models.Notification{*notif}, m.Notifications[notif.UserID]...)
  	return nil
  }
@@ -1038,7 +1042,7 @@ func (m *MockPerusahaanService) Delete(id string) error {
  	return notifs, nil
  }
  
- func (m *MockNotificationRepository) MarkRead(userID, notifID string) error {
+ func (m *MockNotificationRepository) MarkRead(userID string, notifID int64) error {
  	m.mu.Lock()
  	defer m.mu.Unlock()
  	notifs, ok := m.Notifications[userID]
@@ -1065,7 +1069,7 @@ func (m *MockPerusahaanService) Delete(id string) error {
  	return nil
  }
  
- func (m *MockNotificationRepository) Delete(userID, notifID string) error {
+ func (m *MockNotificationRepository) Delete(userID string, notifID int64) error {
  	m.mu.Lock()
  	defer m.mu.Unlock()
  	notifs, ok := m.Notifications[userID]

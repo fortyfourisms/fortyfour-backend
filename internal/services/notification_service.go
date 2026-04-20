@@ -5,8 +5,6 @@ package services
  
  	"fortyfour-backend/internal/models"
  	"fortyfour-backend/internal/repository"
- 
- 	"github.com/google/uuid"
  )
  
  // NotificationService mengelola notifikasi user di MySQL (history)
@@ -26,7 +24,6 @@ package services
  // Push menambahkan notifikasi baru ke database
  func (s *NotificationService) Push(userID string, notifType models.NotificationType, message string) error {
  	newNotif := &models.Notification{
- 		ID:        uuid.New().String(),
  		UserID:    userID,
  		Type:      notifType,
  		Message:   message,
@@ -38,7 +35,7 @@ package services
  }
  
  // MarkRead menandai satu notifikasi sebagai sudah dibaca
- func (s *NotificationService) MarkRead(userID, notifID string) error {
+ func (s *NotificationService) MarkRead(userID string, notifID int64) error {
  	return s.repo.MarkRead(userID, notifID)
  }
  
@@ -48,7 +45,7 @@ package services
  }
  
  // Delete menghapus satu notifikasi berdasarkan ID
- func (s *NotificationService) Delete(userID, notifID string) error {
+ func (s *NotificationService) Delete(userID string, notifID int64) error {
  	return s.repo.Delete(userID, notifID)
  }
  

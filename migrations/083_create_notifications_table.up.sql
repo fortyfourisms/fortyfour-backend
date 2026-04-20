@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS notifications (
-    id VARCHAR(36) PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     user_id VARCHAR(36) NOT NULL,
     type VARCHAR(50) NOT NULL,
     message TEXT NOT NULL,

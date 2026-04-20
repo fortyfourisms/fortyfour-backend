@@ -209,7 +209,7 @@ package services
  	// Seed notifikasi expired yang sudah ada (unread)
  	existing := []models.Notification{
  		{
- 			ID:      "existing-1",
+ 			ID:      1,
  			UserID:  "user-1",
  			Type:    models.NotifSTRExpired,
  			Message: "STR CSIRT \"CSIRT Dup\" telah melewati tanggal kadaluarsa (" + yesterday + "). Segera lakukan perpanjangan.",
@@ -223,7 +223,7 @@ package services
  
  	notifs, _ := notifSvc.GetAll("user-1")
  	assert.Len(t, notifs, 1, "notif duplikat tidak boleh di-push ulang")
- 	assert.Equal(t, "existing-1", notifs[0].ID, "notif lama tetap ada")
+ 	assert.Equal(t, int64(1), notifs[0].ID, "notif lama tetap ada")
  }
  
  func TestSTRExpiryService_CheckAndNotify_DuplikasiExpiringSoon_TidakPushUlang(t *testing.T) {
@@ -243,7 +243,7 @@ package services
  	// Seed notifikasi expirySoon yang sudah ada (unread)
  	existing := []models.Notification{
  		{
- 			ID:      "existing-soon-1",
+ 			ID:      2,
  			UserID:  "user-1",
  			Type:    models.NotifSTRExpirySoon,
  			Message: "STR hampir kadaluarsa",
@@ -276,7 +276,7 @@ package services
  	// Seed notifikasi expired yang sudah dibaca (Read: true)
  	existing := []models.Notification{
  		{
- 			ID:      "read-1",
+ 			ID:      101,
  			UserID:  "user-1",
  			Type:    models.NotifSTRExpired,
  			Message: "pesan lama kadaluarsa",
@@ -320,7 +320,7 @@ package services
  	svc := NewSTRExpiryService(nil, notifSvc)
  
  	notifs := []models.Notification{
- 		{ID: "n1", Type: models.NotifSTRExpired, Message: "STR kadaluarsa sudah lewat", Read: false},
+ 		{ID: 201, Type: models.NotifSTRExpired, Message: "STR kadaluarsa sudah lewat", Read: false},
  	}
  	repo.Notifications["user-1"] = notifs
  
@@ -335,7 +335,7 @@ package services
  	svc := NewSTRExpiryService(nil, notifSvc)
  
  	notifs := []models.Notification{
- 		{ID: "n1", Type: models.NotifSTRExpired, Message: "STR kadaluarsa sudah lewat", Read: true},
+ 		{ID: 201, Type: models.NotifSTRExpired, Message: "STR kadaluarsa sudah lewat", Read: true},
  	}
  	repo.Notifications["user-1"] = notifs
  
@@ -350,7 +350,7 @@ package services
  	svc := NewSTRExpiryService(nil, notifSvc)
  
  	notifs := []models.Notification{
- 		{ID: "n1", Type: models.NotifSTRExpired, Message: "STR registrasi ulang sudah lewat", Read: false},
+ 		{ID: 201, Type: models.NotifSTRExpired, Message: "STR registrasi ulang sudah lewat", Read: false},
  	}
  	repo.Notifications["user-1"] = notifs
  
@@ -376,7 +376,7 @@ package services
  	svc := NewSTRExpiryService(nil, notifSvc)
  
  	notifs := []models.Notification{
- 		{ID: "n1", Type: models.NotifLoginFailed, Message: "Login gagal kadaluarsa", Read: false},
+ 		{ID: 201, Type: models.NotifLoginFailed, Message: "Login gagal kadaluarsa", Read: false},
  	}
  	repo.Notifications["user-1"] = notifs
  
@@ -420,7 +420,7 @@ package services
  	// Seed notifikasi expired yang sudah ada (dengan keyword "kadaluarsa"), unread
  	existingNotifs := []models.Notification{
  		{
- 			ID:      "existing-1",
+ 			ID:      1,
  			UserID:  "user-1",
  			Type:    models.NotifSTRExpired,
  			Message: "STR kadaluarsa sudah lewat",

@@ -238,9 +238,9 @@ type SertifikatRepositoryInterface interface {
 type NotificationRepositoryInterface interface {
 	Create(notif *models.Notification) error
 	FindAllByUserID(userID string) ([]models.Notification, error)
-	MarkRead(userID, notifID string) error
+	MarkRead(userID string, notifID int64) error
 	MarkAllRead(userID string) error
-	Delete(userID, notifID string) error
+	Delete(userID string, notifID int64) error
 	DeleteAllByUserID(userID string) error
 }
 

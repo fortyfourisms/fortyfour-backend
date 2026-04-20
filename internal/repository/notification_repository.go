@@ -15,11 +15,19 @@ package repository
  
  func (r *NotificationRepository) Create(notif *models.Notification) error {
  	query := `
- 		INSERT INTO notifications (id, user_id, type, message, is_read, created_at)
- 		VALUES (?, ?, ?, ?, ?, NOW())
+ 		INSERT INTO notifications (user_id, type, message, is_read, created_at)
+ 		VALUES (?, ?, ?, ?, NOW())
  	`
- 	_, err := r.db.Exec(query, notif.ID, notif.UserID, notif.Type, notif.Message, notif.Read)
- 	return err
+ 	res, err := r.db.Exec(query, notif.UserID, notif.Type, notif.Message, notif.Read)
+ 	if err != nil {
+ 		return err
+ 	}
+ 
+ 	id, err := res.LastInsertId()
+ 	if err == nil {
+ 		notif.ID = id
+ 	}
+ 	return nil
  }
  
  func (r *NotificationRepository) FindAllByUserID(userID string) ([]models.Notification, error) {
@@ -47,7 +55,7 @@ package repository
  	return notifs, nil
  }
  
- func (r *NotificationRepository) MarkRead(userID, notifID string) error {
+ func (r *NotificationRepository) MarkRead(userID string, notifID int64) error {
  	query := `UPDATE notifications SET is_read = TRUE WHERE id = ? AND user_id = ?`
  	_, err := r.db.Exec(query, notifID, userID)
  	return err
@@ -59,7 +67,7 @@ package repository
  	return err
  }
  
- func (r *NotificationRepository) Delete(userID, notifID string) error {
+ func (r *NotificationRepository) Delete(userID string, notifID int64) error {
  	query := `DELETE FROM notifications WHERE id = ? AND user_id = ?`
  	_, err := r.db.Exec(query, notifID, userID)
  	return err
