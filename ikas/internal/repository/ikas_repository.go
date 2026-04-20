@@ -1107,7 +1107,9 @@ func (r *IkasRepository) CheckExistsByPerusahaanID(id string) (bool, error) {
 
 func (r *IkasRepository) CheckExistsByPerusahaanIDAndYear(id string, year int) (bool, error) {
 	var count int
-	err := r.db.QueryRow("SELECT COUNT(*) FROM ikas WHERE id_perusahaan = ? AND YEAR(tanggal) = ?", id, year).Scan(&count)
+	// Gunakan COALESCE(tanggal, created_at) untuk menangani kasus di mana tanggal asesmen kosong (NULL)
+	query := "SELECT COUNT(*) FROM ikas WHERE id_perusahaan = ? AND YEAR(COALESCE(tanggal, created_at)) = ?"
+	err := r.db.QueryRow(query, id, year).Scan(&count)
 	if err != nil {
 		return false, err
 	}

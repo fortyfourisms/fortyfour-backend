@@ -17,18 +17,16 @@ import (
 type mockIkasRepo struct{}
 
 func (m *mockIkasRepo) FindPerusahaanByName(namaPerusahaan string) (string, error) {
-	return "perusahaan-id-1", nil
+	return "e39d8349-6aad-4315-998c-4d3799e49a92", nil
 }
 
 func (m *mockIkasRepo) CheckExistsByPerusahaanID(idPerusahaan string) (bool, error) {
-	if idPerusahaan == "perusahaan-ada" {
-		return true, nil
-	}
-	return false, nil
+	// Always return true for valid-looking UUIDs in tests
+	return true, nil
 }
 
 func (m *mockIkasRepo) CheckExistsByPerusahaanIDAndYear(id string, year int) (bool, error) {
-	if id == "perusahaan-ada" {
+	if id == "e39d8349-6aad-4315-998c-4d3799e49a92" {
 		return true, nil
 	}
 	return false, nil
@@ -56,7 +54,7 @@ func (m *mockIkasRepo) GetByID(id string) (*dto.IkasResponse, error) {
 		ID:              id,
 		NilaiKematangan: 75,
 		Tanggal:         "2026-01-01",
-		Perusahaan:      &dto.PerusahaanInIkas{ID: "1"},
+		Perusahaan:      &dto.PerusahaanInIkas{ID: "e39d8349-6aad-4315-998c-4d3799e49a92"},
 	}, nil
 }
 
@@ -73,7 +71,15 @@ func (m *mockIkasRepo) Delete(id string) error {
 }
 
 func (m *mockIkasRepo) ParseExcelForImport(b []byte) (*dto.ParsedExcelData, error) {
-	return &dto.ParsedExcelData{}, nil
+	return &dto.ParsedExcelData{
+		IkasRequest: dto.CreateIkasRequest{
+			IDPerusahaan: "7d7ae6c3-eae1-4e66-bc3e-c75af9c9302c",
+			Responden:    "Test Responden",
+			Telepon:      "081234567890",
+			Jabatan:      "CIO",
+			TargetNilai:  3.0,
+		},
+	}, nil
 }
 
 func (m *mockIkasRepo) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse, error) {
@@ -112,14 +118,16 @@ func (m *mockIkasRepo) IsLocked(id string) (bool, error) {
 
 func TestIkasService_Create_Success(t *testing.T) {
 	repo := &mockIkasRepo{}
-	// Nil producer for test
 	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	req := dto.CreateIkasRequest{
-		IDPerusahaan: "1",
+		IDPerusahaan: "7d7ae6c3-eae1-4e66-bc3e-c75af9c9302c",
+		Responden:    "Test Responden",
+		Telepon:      "081234567890",
+		Jabatan:      "CIO",
+		TargetNilai:  3.0,
 	}
 
-	// This should return nil now because producer check skips it
 	err := service.Create(context.Background(), req, "ikas-id", "test-user")
 	assert.NoError(t, err)
 }
@@ -129,12 +137,15 @@ func TestIkasService_Create_Duplicate(t *testing.T) {
 	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	req := dto.CreateIkasRequest{
-		IDPerusahaan: "perusahaan-ada",
+		IDPerusahaan: "e39d8349-6aad-4315-998c-4d3799e49a92", // ID that returns true for duplicate check in mock
+		Responden:    "Test Responden",
+		Telepon:      "081234567890",
+		Jabatan:      "CIO",
+		TargetNilai:  3.0,
 	}
 
 	err := service.Create(context.Background(), req, "ikas-id", "test-user")
 	assert.Error(t, err)
-	// Update expected error message to match yearly validation
 	assert.Contains(t, err.Error(), "sudah ada")
 }
 
@@ -148,12 +159,11 @@ func TestIkasService_Update_Async(t *testing.T) {
 	repo := &mockIkasRepo{}
 	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
-	val := 10.0
+	val := 3.0
 	req := dto.UpdateIkasRequest{
 		TargetNilai: &val,
 	}
 
-	// Update now returns nil error on nil producer
 	_, err := service.Update(context.Background(), "ikas-id", req, "test-user", "admin", "")
 	assert.NoError(t, err)
 }
@@ -185,6 +195,6 @@ func TestIkasService_ImportFromExcel_Async(t *testing.T) {
 	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	id, err := service.ImportFromExcel(context.Background(), []byte("fake excel"), "test-user")
-	assert.NoError(t, err) // Should work and return generated ID
+	assert.NoError(t, err)
 	assert.NotEmpty(t, id)
 }
