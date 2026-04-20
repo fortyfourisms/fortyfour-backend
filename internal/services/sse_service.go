@@ -8,9 +8,9 @@ import (
 	"strings"
 	"sync"
 	"time"
- 
- 	"fortyfour-backend/internal/models"
- )
+
+	"fortyfour-backend/internal/models"
+)
 
 // Event types
 const (
@@ -45,12 +45,12 @@ type Client struct {
 
 // SSEService manages SSE connections and broadcasts
 type SSEService struct {
-	clients      map[string]*Client
-	mu           sync.RWMutex
-	broadcast    chan SSEEvent
-	register     chan *Client
-	unregister   chan *Client
-	pingInterval       time.Duration
+	clients             map[string]*Client
+	mu                  sync.RWMutex
+	broadcast           chan SSEEvent
+	register            chan *Client
+	unregister          chan *Client
+	pingInterval        time.Duration
 	notificationService *NotificationService
 }
 
