@@ -63,6 +63,14 @@ func (s *MateriService) Create(idKelas string, req dto.CreateMateriRequest) (*dt
 		return nil, errors.New("tipe tidak valid, harus: video atau teks")
 	}
 
+	// Validasi: urutan tidak boleh duplikat dalam kelas ini
+	existingMateri, _ := s.repo.FindByKelas(idKelas)
+	for _, m := range existingMateri {
+		if m.Urutan == req.Urutan {
+			return nil, errors.New("urutan sudah digunakan oleh materi lain dalam kelas ini")
+		}
+	}
+
 	materi := &models.Materi{
 		ID:               uuid.New().String(),
 		IDKelas:          idKelas,
@@ -99,6 +107,13 @@ func (s *MateriService) Update(id string, req dto.UpdateMateriRequest) (*dto.Mat
 		materi.Judul = trimmed
 	}
 	if req.Urutan != nil {
+		// Validasi: urutan tidak boleh duplikat dalam kelas ini
+		existingMateri, _ := s.repo.FindByKelas(materi.IDKelas)
+		for _, m := range existingMateri {
+			if m.Urutan == *req.Urutan && m.ID != materi.ID {
+				return nil, errors.New("urutan sudah digunakan oleh materi lain dalam kelas ini")
+			}
+		}
 		materi.Urutan = *req.Urutan
 	}
 	if req.YoutubeID != nil {

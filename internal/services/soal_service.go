@@ -41,6 +41,14 @@ func (s *SoalService) Create(idKuis string, req dto.CreateSoalRequest) (*dto.Soa
 		return nil, err
 	}
 
+	// Validasi: urutan tidak boleh duplikat dalam kuis ini
+	existingSoal, _ := s.repo.FindByKuis(idKuis)
+	for _, soal := range existingSoal {
+		if soal.Urutan == req.Urutan {
+			return nil, errors.New("urutan sudah digunakan oleh soal lain dalam kuis ini")
+		}
+	}
+
 	soal := &models.Soal{
 		ID:         uuid.New().String(),
 		IDKuis:     idKuis,
@@ -72,6 +80,13 @@ func (s *SoalService) Update(id string, req dto.UpdateSoalRequest) (*dto.SoalRes
 		soal.Pertanyaan = trimmed
 	}
 	if req.Urutan != nil {
+		// Validasi: urutan tidak boleh duplikat dalam kuis ini
+		existingSoal, _ := s.repo.FindByKuis(soal.IDKuis)
+		for _, s := range existingSoal {
+			if s.Urutan == *req.Urutan && s.ID != soal.ID {
+				return nil, errors.New("urutan sudah digunakan oleh soal lain dalam kuis ini")
+			}
+		}
 		soal.Urutan = *req.Urutan
 	}
 

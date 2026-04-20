@@ -50,6 +50,7 @@ func InitRouter(
 	subsectorH *handlers.SubSektorHandler,
 	seH *handlers.SEHandler,
 	seExportH *handlers.SEExportHandler,
+	seEditReqH *handlers.SEEditRequestHandler,
 	dashboardH *handlers.DashboardHandler,
 	notificationH *handlers.NotificationHandler,
 	ikasProxyH *handlers.ProxyHandler,
@@ -144,13 +145,24 @@ func InitRouter(
 	mux.HandleFunc("/api/sub_sektor/", authM.Authenticate(utils.AdaptHandler(subsectorH)))
 
 	// Route SE
-	// "/api/se/" menangkap semua sub-path termasuk {id}/export-pdf.
+	// "/api/se/" menangkap semua sub-path termasuk {id}/export-pdf, {id}/request-edit, edit-requests.
 	// Di dalam handler, path yang mengandung "export-pdf" diarahkan ke seExportH,
+	// "edit-requests" dan "request-edit" diarahkan ke seEditReqH,
 	// sisanya ke seH (CRUD).
 	mux.HandleFunc("/api/se", authM.Authenticate(utils.AdaptHandler(seH)))
 	mux.HandleFunc("/api/se/", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
 		if strings.Contains(r.URL.Path, "export-pdf") {
 			utils.AdaptHandler(seExportH)(w, r)
+		} else if strings.HasPrefix(r.URL.Path, "/api/se/edit-requests") {
+			utils.AdaptHandler(seEditReqH)(w, r)
+		} else if strings.HasSuffix(r.URL.Path, "/request-edit") {
+			id := strings.TrimPrefix(r.URL.Path, "/api/se/")
+			id = strings.TrimSuffix(id, "/request-edit")
+			if r.Method == http.MethodPost {
+				seEditReqH.HandleRequestEdit(w, r, id)
+			} else {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+			}
 		} else {
 			utils.AdaptHandler(seH)(w, r)
 		}
@@ -227,21 +239,26 @@ func InitRouter(
 			path := r.URL.Path
 
 			// /api/kelas/{id}/materi → POST admin
-			if strings.HasSuffix(path, "/materi") {
-				if r.Method == http.MethodPost {
-					casbinM.Authorize(lmsH.ServeMateriByKelas)(w, r)
-					return
+			// /api/kelas/{id}/materi/{id_materi} → PUT/DELETE admin
+			if strings.Contains(path, "/materi") {
+				switch r.Method {
+				case http.MethodPost:
+					casbinM.Authorize(lmsH.ServeKelas)(w, r)
+				case http.MethodPut, http.MethodDelete:
+					casbinM.Authorize(lmsH.ServeKelas)(w, r)
+				default:
+					w.WriteHeader(http.StatusMethodNotAllowed)
 				}
-				w.WriteHeader(http.StatusMethodNotAllowed)
 				return
 			}
 
 			// /api/kelas/{id}/kuis → GET (user & admin), POST (admin)
+			// /api/kelas/{id}/kuis/{id_kuis} → PUT/DELETE admin
 			if strings.Contains(path, "/kuis") {
 				switch r.Method {
 				case http.MethodGet:
 					lmsH.ServeKelas(w, r)
-				case http.MethodPost:
+				case http.MethodPost, http.MethodPut, http.MethodDelete:
 					casbinM.Authorize(lmsH.ServeKelas)(w, r)
 				default:
 					w.WriteHeader(http.StatusMethodNotAllowed)

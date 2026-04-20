@@ -112,6 +112,7 @@ type CreateKuisRequest struct {
 	PassingGrade float64 `json:"passing_grade" validate:"required,min=0,max=100"`
 	IsFinal      bool    `json:"is_final"`
 	Urutan       int     `json:"urutan" validate:"required,min=1"`
+	MaxAttempt   int     `json:"max_attempt"` // 0 = unlimited
 }
 
 type UpdateKuisRequest struct {
@@ -121,6 +122,7 @@ type UpdateKuisRequest struct {
 	PassingGrade *float64 `json:"passing_grade,omitempty" validate:"omitempty,min=0,max=100"`
 	IsFinal      *bool    `json:"is_final,omitempty"`
 	Urutan       *int     `json:"urutan,omitempty"`
+	MaxAttempt   *int     `json:"max_attempt,omitempty"`
 }
 
 type KuisResponse struct {
@@ -133,6 +135,7 @@ type KuisResponse struct {
 	PassingGrade float64 `json:"passing_grade"`
 	IsFinal      bool    `json:"is_final"`
 	Urutan       int     `json:"urutan"`
+	MaxAttempt   int     `json:"max_attempt"`
 	CreatedAt    string  `json:"created_at"`
 	UpdatedAt    string  `json:"updated_at"`
 

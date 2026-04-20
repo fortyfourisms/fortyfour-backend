@@ -80,10 +80,37 @@ func trimID(path, prefix string) string {
 func (h *LMSHandler) ServeKelas(w http.ResponseWriter, r *http.Request) {
 	id := trimID(r.URL.Path, "/api/kelas")
 
-	// Handle nested routes: /api/kelas/{id}/materi
+	// Handle nested routes: /api/kelas/{id}/materi or /api/kelas/{id}/materi/{id_materi}
 	if strings.Contains(id, "/materi") {
-		idKelas := strings.Split(id, "/materi")[0]
-		h.materiCreate(w, r, idKelas)
+		parts := strings.SplitN(id, "/materi", 2)
+		idKelas := parts[0]
+		materiSuffix := ""
+		if len(parts) > 1 {
+			materiSuffix = strings.TrimPrefix(parts[1], "/")
+		}
+
+		switch r.Method {
+		case http.MethodPost:
+			if materiSuffix != "" {
+				utils.RespondError(w, 400, "ID materi tidak diperlukan untuk create")
+				return
+			}
+			h.materiCreate(w, r, idKelas)
+		case http.MethodPut:
+			if materiSuffix == "" {
+				utils.RespondError(w, 400, "ID materi wajib untuk update")
+				return
+			}
+			h.materiUpdate(w, r, materiSuffix)
+		case http.MethodDelete:
+			if materiSuffix == "" {
+				utils.RespondError(w, 400, "ID materi wajib untuk delete")
+				return
+			}
+			h.materiDelete(w, r, materiSuffix)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
 		return
 	}
 
@@ -568,10 +595,21 @@ func (h *LMSHandler) serveKuisByKelas(w http.ResponseWriter, r *http.Request, id
 		h.kuisGetByKelas(w, r, idKelas)
 	case http.MethodPost:
 		h.kuisCreate(w, r, idKelas)
+	case http.MethodPut:
+		if suffix == "" {
+			utils.RespondError(w, 400, "ID kuis wajib untuk update")
+			return
+		}
+		h.kuisUpdate(w, r, suffix)
+	case http.MethodDelete:
+		if suffix == "" {
+			utils.RespondError(w, 400, "ID kuis wajib untuk delete")
+			return
+		}
+		h.kuisDeleteHandler(w, r, suffix)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
-	_ = suffix // reserved for future use
 }
 
 func (h *LMSHandler) ServeKuis(w http.ResponseWriter, r *http.Request) {
