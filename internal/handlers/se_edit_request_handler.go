@@ -38,6 +38,13 @@ func (h *SEEditRequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+// @Summary		List SE edit requests
+// @Description	Admin melihat semua request pending. User melihat request miliknya.
+// @Tags			SE - Edit Request
+// @Produce		json
+// @Success		200	{array}		dto.SEEditRequestResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/se/edit-requests [get]
 func (h *SEEditRequestHandler) handleList(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
@@ -69,6 +76,17 @@ func (h *SEEditRequestHandler) handleList(w http.ResponseWriter, r *http.Request
 	utils.RespondJSON(w, 200, data)
 }
 
+// @Summary		Review SE edit request
+// @Description	Admin approve atau reject request edit SE. Approve akan otomatis update data SE.
+// @Tags			SE - Edit Request
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string						true	"ID Edit Request"
+// @Param			request	body		dto.ReviewSEEditRequestDTO	true	"Status dan catatan admin"
+// @Success		200		{object}	dto.SEEditRequestResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		403		{object}	dto.ErrorResponse
+// @Router			/api/se/edit-requests/{id}/review [put]
 func (h *SEEditRequestHandler) handleReview(w http.ResponseWriter, r *http.Request, id string) {
 	role := middleware.GetRole(r.Context())
 	if role != "admin" {
@@ -92,6 +110,17 @@ func (h *SEEditRequestHandler) handleReview(w http.ResponseWriter, r *http.Reque
 }
 
 // HandleRequestEdit handles POST /api/se/{id}/request-edit
+//
+//	@Summary		Submit request edit SE
+//	@Description	User mengajukan permintaan perubahan data SE beserta alasan.
+//	@Tags			SE - Edit Request
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string						true	"ID SE"
+//	@Param			request	body		dto.CreateSEEditRequestDTO	true	"Data perubahan dan alasan"
+//	@Success		201		{object}	dto.SEEditRequestResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Router			/api/se/{id}/request-edit [post]
 func (h *SEEditRequestHandler) HandleRequestEdit(w http.ResponseWriter, r *http.Request, idSE string) {
 	userID := ""
 	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {

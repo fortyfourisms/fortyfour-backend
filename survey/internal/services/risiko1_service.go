@@ -5,7 +5,6 @@ import (
 
 	"survey/internal/models"
 	"survey/internal/repository"
-	"survey/validator"
 )
 
 type RisikoService struct {

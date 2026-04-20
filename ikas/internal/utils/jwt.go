@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"fortyfour-backend/pkg/logger"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 

@@ -22,14 +22,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// @title IKAS API
-// @version 1.0
-// @description API documentation for IKAS (Indeks Kematangan Keamanan Siber) service.
-// @host localhost:8081
-// @BasePath /
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
+// @title						IKAS API
+// @version					1.0
+// @description				API documentation for IKAS (Indeks Kematangan Keamanan Siber) service.
+// @host						localhost:8081
+// @BasePath					/
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
 func main() {
 	// load env
 	if err := godotenv.Load(); err != nil {

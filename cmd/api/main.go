@@ -23,14 +23,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// @title Fortyfour Backend API
-// @version 1.0
-// @description API documentation for Fortyfour Backend - main auth and management service.
-// @host localhost:8080
-// @BasePath /
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
+// @title						Fortyfour Backend API
+// @version					1.0
+// @description				API documentation for Fortyfour Backend - main auth and management service.
+// @host						localhost:8080
+// @BasePath					/
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
 func main() {
 
 	// Load env

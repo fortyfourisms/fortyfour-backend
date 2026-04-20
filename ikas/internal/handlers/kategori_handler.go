@@ -56,13 +56,13 @@ func (h *KategoriHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // GetAllKategori godoc
 //
-//	@Summary      List semua kategori
-//	@Description  Mengambil seluruh data kategori
-//	@Tags         Kategori
-//	@Produce      json
-//	@Success      200  {array}   dto.KategoriResponse
-//	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/maturity/kategori [get]
+//	@Summary		List semua kategori
+//	@Description	Mengambil seluruh data kategori
+//	@Tags			Kategori
+//	@Produce		json
+//	@Success		200	{array}		dto.KategoriResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/kategori [get]
 func (h *KategoriHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -79,14 +79,14 @@ func (h *KategoriHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 
 // GetKategoriByID godoc
 //
-//	@Summary      Ambil kategori berdasarkan ID
-//	@Description  Mengambil satu data kategori
-//	@Tags         Kategori
-//	@Produce      json
-//	@Param        id   path      int  true  "Kategori ID"
-//	@Success      200  {object}  dto.KategoriResponse
-//	@Failure      404  {object}  dto.ErrorResponse
-//	@Router       /api/maturity/kategori/{id} [get]
+//	@Summary		Ambil kategori berdasarkan ID
+//	@Description	Mengambil satu data kategori
+//	@Tags			Kategori
+//	@Produce		json
+//	@Param			id	path		int	true	"Kategori ID"
+//	@Success		200	{object}	dto.KategoriResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/kategori/{id} [get]
 func (h *KategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id int) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -106,16 +106,16 @@ func (h *KategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, 
 
 // CreateKategori godoc
 //
-//	@Summary      Tambah kategori baru
-//	@Description  Membuat record kategori baru
-//	@Tags         Kategori
-//	@Accept       json
-//	@Produce      json
-//	@Param        kategori  body      dto.CreateKategoriRequest  true  "Data kategori"
-//	@Success      201       {object}  dto.KategoriResponse
-//	@Failure      400       {object}  dto.ErrorResponse
-//	@Failure      409       {object}  dto.ErrorResponse
-//	@Router       /api/maturity/kategori [post]
+//	@Summary		Tambah kategori baru
+//	@Description	Membuat record kategori baru
+//	@Tags			Kategori
+//	@Accept			json
+//	@Produce		json
+//	@Param			kategori	body		dto.CreateKategoriRequest	true	"Data kategori"
+//	@Success		201			{object}	dto.KategoriResponse
+//	@Failure		400			{object}	dto.ErrorResponse
+//	@Failure		409			{object}	dto.ErrorResponse
+//	@Router			/api/maturity/kategori [post]
 func (h *KategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateKategoriRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -154,18 +154,18 @@ func (h *KategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 // UpdateKategori godoc
 //
-//	@Summary      Update kategori
-//	@Description  Mengubah data kategori berdasarkan ID
-//	@Tags         Kategori
-//	@Accept       json
-//	@Produce      json
-//	@Param        id        path      int                    true  "Kategori ID"
-//	@Param        kategori  body      dto.UpdateKategoriRequest true  "Data update"
-//	@Success      200       {object}  dto.KategoriResponse
-//	@Failure      400       {object}  dto.ErrorResponse
-//	@Failure      404       {object}  dto.ErrorResponse
-//	@Failure      409       {object}  dto.ErrorResponse
-//	@Router       /api/maturity/kategori/{id} [put]
+//	@Summary		Update kategori
+//	@Description	Mengubah data kategori berdasarkan ID
+//	@Tags			Kategori
+//	@Accept			json
+//	@Produce		json
+//	@Param			id			path		int							true	"Kategori ID"
+//	@Param			kategori	body		dto.UpdateKategoriRequest	true	"Data update"
+//	@Success		200			{object}	dto.KategoriResponse
+//	@Failure		400			{object}	dto.ErrorResponse
+//	@Failure		404			{object}	dto.ErrorResponse
+//	@Failure		409			{object}	dto.ErrorResponse
+//	@Router			/api/maturity/kategori/{id} [put]
 func (h *KategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id int) {
 	var req dto.UpdateKategoriRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -207,15 +207,15 @@ func (h *KategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 
 // DeleteKategori godoc
 //
-//	@Summary      Hapus kategori
-//	@Description  Menghapus data kategori berdasarkan ID
-//	@Tags         Kategori
-//	@Produce      json
-//	@Param        id   path      int  true  "Kategori ID"
-//	@Success      200  {object}  dto.KategoriMessageResponse
-//	@Failure      404  {object}  dto.ErrorResponse
-//	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/maturity/kategori/{id} [delete]
+//	@Summary		Hapus kategori
+//	@Description	Menghapus data kategori berdasarkan ID
+//	@Tags			Kategori
+//	@Produce		json
+//	@Param			id	path		int	true	"Kategori ID"
+//	@Success		200	{object}	dto.KategoriMessageResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/kategori/{id} [delete]
 func (h *KategoriHandler) handleDelete(w http.ResponseWriter, r *http.Request, id int) {
 	if err := h.service.Delete(id); err != nil {
 		logger.Error(err, "operation failed")

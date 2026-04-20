@@ -35,13 +35,14 @@ func (h *SektorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllSektor godoc
-// @Summary      List semua sektor
-// @Description  Mengambil seluruh data sektor beserta sub sektor
-// @Tags         Sektor
-// @Produce      json
-// @Success      200  {array}  dto.SektorResponse
-// @Failure      500  {object} dto.ErrorResponse
-// @Router       /api/sektor [get]
+//
+//	@Summary		List semua sektor
+//	@Description	Mengambil seluruh data sektor beserta sub sektor
+//	@Tags			Sektor
+//	@Produce		json
+//	@Success		200	{array}		dto.SektorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/sektor [get]
 func (h *SektorHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -52,14 +53,15 @@ func (h *SektorHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 }
 
 // GetSektorByID godoc
-// @Summary      Ambil sektor berdasarkan ID
-// @Description  Mengambil satu data sektor beserta sub sektor
-// @Tags         Sektor
-// @Produce      json
-// @Param        id   path      string  true  "Sektor ID"
-// @Success      200  {object} dto.SektorResponse
-// @Failure      404  {object} dto.ErrorResponse
-// @Router       /api/sektor/{id} [get]
+//
+//	@Summary		Ambil sektor berdasarkan ID
+//	@Description	Mengambil satu data sektor beserta sub sektor
+//	@Tags			Sektor
+//	@Produce		json
+//	@Param			id	path		string	true	"Sektor ID"
+//	@Success		200	{object}	dto.SektorResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Router			/api/sektor/{id} [get]
 func (h *SektorHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {

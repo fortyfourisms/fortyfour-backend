@@ -41,14 +41,14 @@ func (h *JawabanGulihHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-// @Summary Create Jawaban Gulih
-// @Description Create a new answer for gulih question
-// @Tags Jawaban Gulih
-// @Accept json
-// @Produce json
-// @Param request body dto.CreateJawabanGulihRequest true "Jawaban Gulih Request"
-// @Success 201 {object} map[string]interface{}
-// @Router /api/maturity/jawaban-gulih [post]
+// @Summary		Create Jawaban Gulih
+// @Description	Create a new answer for gulih question
+// @Tags			Jawaban Gulih
+// @Accept			json
+// @Produce		json
+// @Param			request	body		dto.CreateJawabanGulihRequest	true	"Jawaban Gulih Request"
+// @Success		201		{object}	map[string]interface{}
+// @Router			/api/maturity/jawaban-gulih [post]
 func (h *JawabanGulihHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateJawabanGulihRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -85,14 +85,14 @@ func (h *JawabanGulihHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 	})
 }
 
-// @Summary Get All Jawaban Gulih
-// @Description Get all answers for gulih questions, optionally filtered by perusahaan_id or pertanyaan_gulih_id
-// @Tags Jawaban Gulih
-// @Produce json
-// @Param perusahaan_id query string false "Filter by Perusahaan ID"
-// @Param pertanyaan_gulih_id query int false "Filter by Pertanyaan Gulih ID"
-// @Success 200 {object} map[string]interface{}
-// @Router /api/maturity/jawaban-gulih [get]
+// @Summary		Get All Jawaban Gulih
+// @Description	Get all answers for gulih questions, optionally filtered by perusahaan_id or pertanyaan_gulih_id
+// @Tags			Jawaban Gulih
+// @Produce		json
+// @Param			perusahaan_id		query		string	false	"Filter by Perusahaan ID"
+// @Param			pertanyaan_gulih_id	query		int		false	"Filter by Pertanyaan Gulih ID"
+// @Success		200					{object}	map[string]interface{}
+// @Router			/api/maturity/jawaban-gulih [get]
 func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
@@ -137,13 +137,13 @@ func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 	})
 }
 
-// @Summary Get Jawaban Gulih by ID
-// @Description Get a specific gulih answer by its ID
-// @Tags Jawaban Gulih
-// @Produce json
-// @Param id path int true "Jawaban Gulih ID"
-// @Success 200 {object} map[string]interface{}
-// @Router /api/maturity/jawaban-gulih/{id} [get]
+// @Summary		Get Jawaban Gulih by ID
+// @Description	Get a specific gulih answer by its ID
+// @Tags			Jawaban Gulih
+// @Produce		json
+// @Param			id	path		int	true	"Jawaban Gulih ID"
+// @Success		200	{object}	map[string]interface{}
+// @Router			/api/maturity/jawaban-gulih/{id} [get]
 func (h *JawabanGulihHandler) handleGetByID(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.ExtractIntID(r.URL.Path, "jawaban-gulih")
 	if err != nil {
@@ -170,15 +170,15 @@ func (h *JawabanGulihHandler) handleGetByID(w http.ResponseWriter, r *http.Reque
 	})
 }
 
-// @Summary Update Jawaban Gulih
-// @Description Update an existing gulih answer
-// @Tags Jawaban Gulih
-// @Accept json
-// @Produce json
-// @Param id path int true "Jawaban Gulih ID"
-// @Param request body dto.UpdateJawabanGulihRequest true "Update Request"
-// @Success 200 {object} map[string]interface{}
-// @Router /api/maturity/jawaban-gulih/{id} [put]
+// @Summary		Update Jawaban Gulih
+// @Description	Update an existing gulih answer
+// @Tags			Jawaban Gulih
+// @Accept			json
+// @Produce		json
+// @Param			id		path		int								true	"Jawaban Gulih ID"
+// @Param			request	body		dto.UpdateJawabanGulihRequest	true	"Update Request"
+// @Success		200		{object}	map[string]interface{}
+// @Router			/api/maturity/jawaban-gulih/{id} [put]
 func (h *JawabanGulihHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.ExtractIntID(r.URL.Path, "jawaban-gulih")
 	if err != nil {
@@ -230,13 +230,13 @@ func (h *JawabanGulihHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 	})
 }
 
-// @Summary Delete Jawaban Gulih
-// @Description Delete a specific gulih answer
-// @Tags Jawaban Gulih
-// @Produce json
-// @Param id path int true "Jawaban Gulih ID"
-// @Success 200 {object} map[string]interface{}
-// @Router /api/maturity/jawaban-gulih/{id} [delete]
+// @Summary		Delete Jawaban Gulih
+// @Description	Delete a specific gulih answer
+// @Tags			Jawaban Gulih
+// @Produce		json
+// @Param			id	path		int	true	"Jawaban Gulih ID"
+// @Success		200	{object}	map[string]interface{}
+// @Router			/api/maturity/jawaban-gulih/{id} [delete]
 func (h *JawabanGulihHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.ExtractIntID(r.URL.Path, "jawaban-gulih")
 	if err != nil {

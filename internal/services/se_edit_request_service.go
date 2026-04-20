@@ -22,9 +22,9 @@ type SEEditRequestService interface {
 }
 
 type seEditRequestService struct {
-	repo    repository.SEEditRequestRepositoryInterface
-	seRepo  repository.SERepositoryInterface
-	seSvc   SEService
+	repo   repository.SEEditRequestRepositoryInterface
+	seRepo repository.SERepositoryInterface
+	seSvc  SEService
 }
 
 func NewSEEditRequestService(

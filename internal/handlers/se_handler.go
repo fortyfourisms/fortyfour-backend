@@ -64,15 +64,15 @@ func (h *SEHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// @Summary Get all SE
-// @Description Admin mendapat semua SE. User hanya mendapat SE milik perusahaannya.
-// @Tags SE
-// @Accept json
-// @Produce json
-// @Success 200 {object} dto.SEListResponse
-// @Failure 403 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /api/se [get]
+// @Summary		Get all SE
+// @Description	Admin mendapat semua SE. User hanya mendapat SE milik perusahaannya.
+// @Tags			SE
+// @Accept			json
+// @Produce		json
+// @Success		200	{object}	dto.SEListResponse
+// @Failure		403	{object}	dto.ErrorResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/se [get]
 func (h *SEHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
@@ -102,16 +102,16 @@ func (h *SEHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 200, data)
 }
 
-// @Summary Get SE by ID
-// @Description Get sistem elektronik by ID. User hanya bisa akses SE milik perusahaannya.
-// @Tags SE
-// @Accept json
-// @Produce json
-// @Param id path string true "SE ID"
-// @Success 200 {object} dto.SEResponse
-// @Failure 403 {object} dto.ErrorResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Router /api/se/{id} [get]
+// @Summary		Get SE by ID
+// @Description	Get sistem elektronik by ID. User hanya bisa akses SE milik perusahaannya.
+// @Tags			SE
+// @Accept			json
+// @Produce		json
+// @Param			id	path		string	true	"SE ID"
+// @Success		200	{object}	dto.SEResponse
+// @Failure		403	{object}	dto.ErrorResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/se/{id} [get]
 func (h *SEHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -132,16 +132,16 @@ func (h *SEHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id str
 	utils.RespondJSON(w, 200, data)
 }
 
-// @Summary Create SE
-// @Description Create new sistem elektronik. User biasa otomatis menggunakan id_perusahaan dari token.
-// @Tags SE
-// @Accept json
-// @Produce json
-// @Param request body dto.CreateSERequest true "SE Create Request"
-// @Success 201 {object} dto.SEResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 403 {object} dto.ErrorResponse
-// @Router /api/se [post]
+// @Summary		Create SE
+// @Description	Create new sistem elektronik. User biasa otomatis menggunakan id_perusahaan dari token.
+// @Tags			SE
+// @Accept			json
+// @Produce		json
+// @Param			request	body		dto.CreateSERequest	true	"SE Create Request"
+// @Success		201		{object}	dto.SEResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		403		{object}	dto.ErrorResponse
+// @Router			/api/se [post]
 func (h *SEHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateSERequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -175,17 +175,17 @@ func (h *SEHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 201, resp)
 }
 
-// @Summary Update SE
-// @Description Update sistem elektronik. User biasa hanya bisa update SE milik perusahaannya.
-// @Tags SE
-// @Accept json
-// @Produce json
-// @Param id path string true "SE ID"
-// @Param request body dto.UpdateSERequest true "SE Update Request"
-// @Success 200 {object} dto.SEResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 403 {object} dto.ErrorResponse
-// @Router /api/se/{id} [put]
+// @Summary		Update SE
+// @Description	Update sistem elektronik. User biasa hanya bisa update SE milik perusahaannya.
+// @Tags			SE
+// @Accept			json
+// @Produce		json
+// @Param			id		path		string				true	"SE ID"
+// @Param			request	body		dto.UpdateSERequest	true	"SE Update Request"
+// @Success		200		{object}	dto.SEResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		403		{object}	dto.ErrorResponse
+// @Router			/api/se/{id} [put]
 func (h *SEHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	// Validasi ownership sebelum update untuk user
 	role := middleware.GetRole(r.Context())
@@ -223,16 +223,16 @@ func (h *SEHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id stri
 	utils.RespondJSON(w, 200, resp)
 }
 
-// @Summary Delete SE
-// @Description Delete sistem elektronik. User biasa hanya bisa hapus SE milik perusahaannya.
-// @Tags SE
-// @Accept json
-// @Produce json
-// @Param id path string true "SE ID"
-// @Success 200 {object} map[string]string
-// @Failure 403 {object} dto.ErrorResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/se/{id} [delete]
+// @Summary		Delete SE
+// @Description	Delete sistem elektronik. User biasa hanya bisa hapus SE milik perusahaannya.
+// @Tags			SE
+// @Accept			json
+// @Produce		json
+// @Param			id	path		string	true	"SE ID"
+// @Success		200	{object}	map[string]string
+// @Failure		403	{object}	dto.ErrorResponse
+// @Failure		400	{object}	dto.ErrorResponse
+// @Router			/api/se/{id} [delete]
 func (h *SEHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	// Validasi ownership sebelum delete untuk user
 	role := middleware.GetRole(r.Context())
