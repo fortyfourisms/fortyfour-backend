@@ -21,6 +21,16 @@ func (r *seRepository) Create(
 	totalBobot int,
 	kategori string,
 ) error {
+	// Konversi empty string ke NULL untuk optional FK fields
+	var idSubSektor interface{} = req.IDSubSektor
+	if req.IDSubSektor == "" {
+		idSubSektor = nil
+	}
+	var idCsirt interface{} = req.IDCsirt
+	if req.IDCsirt == "" {
+		idCsirt = nil
+	}
+
 	_, err := r.db.Exec(`
 		INSERT INTO se (
 			id,
@@ -48,8 +58,8 @@ func (r *seRepository) Create(
 	`,
 		id,
 		req.IDPerusahaan,
-		req.IDSubSektor,
-		req.IDCsirt,
+		idSubSektor,
+		idCsirt,
 		req.NilaiInvestasi,
 		req.AnggaranOperasional,
 		req.KepatuhanPeraturan,
@@ -439,11 +449,19 @@ func (r *seRepository) Update(
 	}
 	if req.IDSubSektor != nil {
 		updates = append(updates, "id_sub_sektor = ?")
-		params = append(params, *req.IDSubSektor)
+		if *req.IDSubSektor == "" {
+			params = append(params, nil)
+		} else {
+			params = append(params, *req.IDSubSektor)
+		}
 	}
 	if req.IDCsirt != nil {
 		updates = append(updates, "id_csirt = ?")
-		params = append(params, *req.IDCsirt)
+		if *req.IDCsirt == "" {
+			params = append(params, nil)
+		} else {
+			params = append(params, *req.IDCsirt)
+		}
 	}
 	if req.NamaSE != nil {
 		updates = append(updates, "nama_se = ?")
