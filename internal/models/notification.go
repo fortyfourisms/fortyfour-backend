@@ -12,9 +12,12 @@ const (
 	NotifAccountSuspended   NotificationType = "account_suspended"
 	NotifSTRExpirySoon      NotificationType = "str_expiry_soon"
 	NotifSTRExpired         NotificationType = "str_expired"
+	NotifResourceCreated    NotificationType = "resource_created"
+	NotifResourceUpdated    NotificationType = "resource_updated"
+	NotifResourceDeleted    NotificationType = "resource_deleted"
 )
 
-// Notification adalah struktur notifikasi yang disimpan di Redis
+// Notification adalah struktur notifikasi yang disimpan di MySQL
 type Notification struct {
 	ID        string           `json:"id"`
 	UserID    string           `json:"user_id"`

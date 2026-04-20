@@ -15,7 +15,7 @@ import (
 )
 
 func setupSSEServiceWithClients(t *testing.T, n int) *services.SSEService {
-	svc := services.NewSSEService()
+	svc := services.NewSSEService(nil)
 	// register n clients
 	for i := 0; i < n; i++ {
 		c := &services.Client{
@@ -41,7 +41,7 @@ func setupSSEServiceWithClients(t *testing.T, n int) *services.SSEService {
 }
 
 func TestSSEHandler_GetStats_NoClients(t *testing.T) {
-	svc := services.NewSSEService()
+	svc := services.NewSSEService(nil)
 	h := &SSEHandler{sseService: svc}
 
 	req := httptest.NewRequest(http.MethodGet, "/sse/stats", nil)
@@ -100,7 +100,7 @@ func TestSSEHandler_GetStats_WithClients(t *testing.T) {
 // ============================================================
 
 func TestSSEHandler_GetStats_ContentTypeJSON(t *testing.T) {
-	h := &SSEHandler{sseService: services.NewSSEService()}
+	h := &SSEHandler{sseService: services.NewSSEService(nil)}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/events/stats", nil)
 	rr := httptest.NewRecorder()
@@ -136,7 +136,7 @@ func TestSSEHandler_GetStats_MultipleClients(t *testing.T) {
 // ============================================================
 
 func TestSSEHandler_HandleSSE_SetsSSEHeaders(t *testing.T) {
-	svc := services.NewSSEService()
+	svc := services.NewSSEService(nil)
 	h := NewSSEHandler(svc)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -163,7 +163,7 @@ func TestSSEHandler_HandleSSE_SetsSSEHeaders(t *testing.T) {
 }
 
 func TestSSEHandler_HandleSSE_SendsInitialConnectedEvent(t *testing.T) {
-	svc := services.NewSSEService()
+	svc := services.NewSSEService(nil)
 	h := NewSSEHandler(svc)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -206,7 +206,7 @@ func TestSSEHandler_HandleSSE_SendsInitialConnectedEvent(t *testing.T) {
 }
 
 func TestSSEHandler_HandleSSE_ClientIDDiInitialData(t *testing.T) {
-	svc := services.NewSSEService()
+	svc := services.NewSSEService(nil)
 	h := NewSSEHandler(svc)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -245,7 +245,7 @@ func TestSSEHandler_HandleSSE_ClientIDDiInitialData(t *testing.T) {
 }
 
 func TestSSEHandler_HandleSSE_RegistersAndUnregistersClient(t *testing.T) {
-	svc := services.NewSSEService()
+	svc := services.NewSSEService(nil)
 	h := NewSSEHandler(svc)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -287,7 +287,7 @@ func TestSSEHandler_HandleSSE_RegistersAndUnregistersClient(t *testing.T) {
 }
 
 func TestSSEHandler_HandleSSE_UserIDFromContext(t *testing.T) {
-	svc := services.NewSSEService()
+	svc := services.NewSSEService(nil)
 	h := NewSSEHandler(svc)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -313,7 +313,7 @@ func TestSSEHandler_HandleSSE_UserIDFromContext(t *testing.T) {
 }
 
 func TestSSEHandler_HandleSSE_TanpaUserIDContext(t *testing.T) {
-	svc := services.NewSSEService()
+	svc := services.NewSSEService(nil)
 	h := NewSSEHandler(svc)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -335,7 +335,7 @@ func TestSSEHandler_HandleSSE_TanpaUserIDContext(t *testing.T) {
 }
 
 func TestSSEHandler_HandleSSE_StreamsEventFromBroadcast(t *testing.T) {
-	svc := services.NewSSEService()
+	svc := services.NewSSEService(nil)
 	h := NewSSEHandler(svc)
 
 	ctx, cancel := context.WithCancel(context.Background())

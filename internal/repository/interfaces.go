@@ -233,6 +233,17 @@ type SertifikatRepositoryInterface interface {
 	FindByUser(idUser string) ([]models.Sertifikat, error)
 }
 
+// ── Notifications ────────────────────────────────────────────────────────────
+
+type NotificationRepositoryInterface interface {
+	Create(notif *models.Notification) error
+	FindAllByUserID(userID string) ([]models.Notification, error)
+	MarkRead(userID, notifID string) error
+	MarkAllRead(userID string) error
+	Delete(userID, notifID string) error
+	DeleteAllByUserID(userID string) error
+}
+
 // DTOnya tidak dipakai langsung di interface ini, tapi diimport
 // agar tetap terkompilasi jika ada helper yang butuh dto.
 var _ = dto.KelasResponse{}

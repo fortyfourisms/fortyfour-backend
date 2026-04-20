@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
 	"strings"
 	"sync"
@@ -1001,3 +1002,92 @@ func (m *MockPerusahaanService) Delete(id string) error {
 	delete(m.perusahaans, id)
 	return nil
 }
+ 
+ // ============================================================
+ // Mock Notification Repository
+ // ============================================================
+ 
+ type MockNotificationRepository struct {
+ 	Notifications map[string][]models.Notification; FindAllByUserIDFn func(userID string) ([]models.Notification, error)
+ 	mu            sync.RWMutex
+ }
+ 
+ func NewMockNotificationRepository() *MockNotificationRepository {
+ 	return &MockNotificationRepository{
+ 		Notifications: make(map[string][]models.Notification),
+ 	}
+ }
+ 
+ func (m *MockNotificationRepository) Create(notif *models.Notification) error {
+ 	m.mu.Lock()
+ 	defer m.mu.Unlock()
+ 	m.Notifications[notif.UserID] = append([]models.Notification{*notif}, m.Notifications[notif.UserID]...)
+ 	return nil
+ }
+ 
+ func (m *MockNotificationRepository) FindAllByUserID(userID string) ([]models.Notification, error) {
+ 	if m.FindAllByUserIDFn != nil {
+ 		return m.FindAllByUserIDFn(userID)
+ 	}
+ 	m.mu.RLock()
+ 	defer m.mu.RUnlock()
+ 	notifs, ok := m.Notifications[userID]
+ 	if !ok {
+ 		return []models.Notification{}, nil
+ 	}
+ 	return notifs, nil
+ }
+ 
+ func (m *MockNotificationRepository) MarkRead(userID, notifID string) error {
+ 	m.mu.Lock()
+ 	defer m.mu.Unlock()
+ 	notifs, ok := m.Notifications[userID]
+ 	if !ok {
+ 		return errors.New("notifikasi tidak ditemukan")
+ 	}
+ 	for i := range notifs {
+ 		if notifs[i].ID == notifID {
+ 			notifs[i].Read = true
+ 			return nil
+ 		}
+ 	}
+ 	return errors.New("notifikasi tidak ditemukan")
+ }
+ 
+ func (m *MockNotificationRepository) MarkAllRead(userID string) error {
+ 	m.mu.Lock()
+ 	defer m.mu.Unlock()
+ 	notifs := m.Notifications[userID]
+ 	for i := range notifs {
+ 		notifs[i].Read = true
+ 	}
+ 	m.Notifications[userID] = notifs
+ 	return nil
+ }
+ 
+ func (m *MockNotificationRepository) Delete(userID, notifID string) error {
+ 	m.mu.Lock()
+ 	defer m.mu.Unlock()
+ 	notifs, ok := m.Notifications[userID]
+ 	if !ok {
+ 		return errors.New("notifikasi tidak ditemukan")
+ 	}
+ 	filtered := make([]models.Notification, 0, len(notifs))
+ 	for _, n := range notifs {
+ 		if n.ID == notifID {
+ 			continue
+ 		}
+ 		filtered = append(filtered, n)
+ 	}
+ 	m.Notifications[userID] = filtered
+ 	return nil
+ }
+ 
+ func (m *MockNotificationRepository) DeleteAllByUserID(userID string) error {
+ 	m.mu.Lock()
+ 	defer m.mu.Unlock()
+ 	delete(m.Notifications, userID)
+ 	return nil
+ }
+ 
+ var _ repository.NotificationRepositoryInterface = (*MockNotificationRepository)(nil)

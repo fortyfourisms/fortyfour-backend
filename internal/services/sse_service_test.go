@@ -17,7 +17,7 @@ func newTestClient(id string) *Client {
 }
 
 func TestRegisterAndUnregisterClient(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	client := newTestClient("client-1")
 	sse.RegisterClient(client)
@@ -37,7 +37,7 @@ func TestRegisterAndUnregisterClient(t *testing.T) {
 }
 
 func TestBroadcastEvent(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 	client := newTestClient("client-1")
 	sse.RegisterClient(client)
 	time.Sleep(50 * time.Millisecond)
@@ -65,7 +65,7 @@ func TestBroadcastEvent(t *testing.T) {
 }
 
 func TestNotifyCreate_WithNameFromMap(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 	client := newTestClient("client-1")
 	sse.RegisterClient(client)
 	time.Sleep(50 * time.Millisecond)
@@ -94,7 +94,7 @@ func TestNotifyUpdate_WithNameFromStruct(t *testing.T) {
 		Name string
 	}
 
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 	client := newTestClient("client-1")
 	sse.RegisterClient(client)
 	time.Sleep(50 * time.Millisecond)
@@ -116,7 +116,7 @@ func TestNotifyUpdate_WithNameFromStruct(t *testing.T) {
 }
 
 func TestNotifyDelete(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 	client := newTestClient("client-1")
 	sse.RegisterClient(client)
 	time.Sleep(50 * time.Millisecond)
@@ -137,7 +137,7 @@ func TestNotifyDelete(t *testing.T) {
 }
 
 func TestGenerateMessage_NoName(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	msg := sse.generateMessage("user", EventCreate, map[string]interface{}{})
 	if msg != "User baru berhasil ditambahkan" {
@@ -171,7 +171,7 @@ func TestFormatSSEMessage(t *testing.T) {
 // ============================================================
 
 func TestRegisterMultipleClients_CountCorrect(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	c1 := newTestClient("client-1")
 	c2 := newTestClient("client-2")
@@ -188,7 +188,7 @@ func TestRegisterMultipleClients_CountCorrect(t *testing.T) {
 }
 
 func TestUnregisterNonExistentClient_NoEffect(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	c1 := newTestClient("client-1")
 	sse.RegisterClient(c1)
@@ -206,7 +206,7 @@ func TestUnregisterNonExistentClient_NoEffect(t *testing.T) {
 }
 
 func TestUnregisterClient_ChannelClosed(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 	client := newTestClient("client-1")
 
 	sse.RegisterClient(client)
@@ -227,7 +227,7 @@ func TestUnregisterClient_ChannelClosed(t *testing.T) {
 // ============================================================
 
 func TestBroadcast_MultipleClients_AllReceive(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	c1 := newTestClient("client-1")
 	c2 := newTestClient("client-2")
@@ -255,7 +255,7 @@ func TestBroadcast_MultipleClients_AllReceive(t *testing.T) {
 }
 
 func TestBroadcast_ChannelPenuh_TidakBlokir(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	// Buat client dengan channel kecil (kapasitas 1) — pasti penuh setelah 1 event
 	client := &Client{
@@ -284,7 +284,7 @@ func TestBroadcast_ChannelPenuh_TidakBlokir(t *testing.T) {
 }
 
 func TestBroadcast_NoClients_NoError(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	// Broadcast tanpa client — tidak boleh panik atau deadlock
 	done := make(chan struct{})
@@ -301,7 +301,7 @@ func TestBroadcast_NoClients_NoError(t *testing.T) {
 }
 
 func TestBroadcast_TimestampDiSet(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 	client := newTestClient("client-1")
 	sse.RegisterClient(client)
 	time.Sleep(50 * time.Millisecond)
@@ -327,7 +327,7 @@ func TestBroadcast_TimestampDiSet(t *testing.T) {
 // ============================================================
 
 func TestGenerateMessage_Create_DenganNama(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 	data := map[string]interface{}{"nama": "PT Test"}
 
 	msg := sse.generateMessage("perusahaan", EventCreate, data)
@@ -341,7 +341,7 @@ func TestGenerateMessage_Create_DenganNama(t *testing.T) {
 }
 
 func TestGenerateMessage_Update_DenganNama(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 	data := map[string]interface{}{"nama": "Sektor Keuangan"}
 
 	msg := sse.generateMessage("sektor", EventUpdate, data)
@@ -355,7 +355,7 @@ func TestGenerateMessage_Update_DenganNama(t *testing.T) {
 }
 
 func TestGenerateMessage_Update_TanpaNama(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	msg := sse.generateMessage("sektor", EventUpdate, map[string]interface{}{})
 
@@ -365,7 +365,7 @@ func TestGenerateMessage_Update_TanpaNama(t *testing.T) {
 }
 
 func TestGenerateMessage_Delete(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	msg := sse.generateMessage("user", EventDelete, "uuid-123")
 
@@ -375,7 +375,7 @@ func TestGenerateMessage_Delete(t *testing.T) {
 }
 
 func TestGenerateMessage_UnknownEventType(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	msg := sse.generateMessage("user", "unknown_event", nil)
 
@@ -389,7 +389,7 @@ func TestGenerateMessage_UnknownEventType(t *testing.T) {
 // ============================================================
 
 func TestFormatResourceName_PendekDanUppercase(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	// Kata <= 4 huruf dan sudah uppercase → dikembalikan apa adanya
 	result := sse.formatResourceName("SE")
@@ -399,7 +399,7 @@ func TestFormatResourceName_PendekDanUppercase(t *testing.T) {
 }
 
 func TestFormatResourceName_PendekDanMixed(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	// Kata <= 4 huruf tapi bukan semua uppercase → huruf pertama kapital
 	result := sse.formatResourceName("role")
@@ -409,7 +409,7 @@ func TestFormatResourceName_PendekDanMixed(t *testing.T) {
 }
 
 func TestFormatResourceName_Panjang(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	result := sse.formatResourceName("perusahaan")
 	if result != "Perusahaan" {
@@ -422,7 +422,7 @@ func TestFormatResourceName_Panjang(t *testing.T) {
 // ============================================================
 
 func TestExtractName_NilData(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	result := sse.extractName(nil)
 	if result != "" {
@@ -431,7 +431,7 @@ func TestExtractName_NilData(t *testing.T) {
 }
 
 func TestExtractName_MapPrioritas_NamaExact(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	// Catatan: scoring di extractNameFromMap menggunakan if terpisah (bukan else-if),
 	// sehingga key "nama" mendapat score 100 → ditimpa 70 (contains "nama"),
@@ -453,7 +453,7 @@ func TestExtractName_MapPrioritas_NamaExact(t *testing.T) {
 }
 
 func TestExtractName_MapNamaPerusahaan(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	data := map[string]interface{}{
 		"nama_perusahaan": "PT Maju Jaya",
@@ -466,7 +466,7 @@ func TestExtractName_MapNamaPerusahaan(t *testing.T) {
 }
 
 func TestExtractName_MapTidakAdaNama(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	data := map[string]interface{}{
 		"id":      "uuid-123",
@@ -481,7 +481,7 @@ func TestExtractName_MapTidakAdaNama(t *testing.T) {
 }
 
 func TestExtractName_StructPointerNama(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	type DataStruct struct {
 		Nama string
@@ -495,7 +495,7 @@ func TestExtractName_StructPointerNama(t *testing.T) {
 }
 
 func TestExtractName_StructNilPointer(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	type DataStruct struct{ Nama string }
 	var data *DataStruct
@@ -507,7 +507,7 @@ func TestExtractName_StructNilPointer(t *testing.T) {
 }
 
 func TestExtractName_NonStructNonMap(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 
 	// Integer — bukan struct maupun map
 	result := sse.extractName(42)
@@ -521,7 +521,7 @@ func TestExtractName_NonStructNonMap(t *testing.T) {
 // ============================================================
 
 func TestNotifyCreate_EventFieldsLengkap(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 	client := newTestClient("client-1")
 	sse.RegisterClient(client)
 	time.Sleep(50 * time.Millisecond)
@@ -549,7 +549,7 @@ func TestNotifyCreate_EventFieldsLengkap(t *testing.T) {
 }
 
 func TestNotifyDelete_DataWrappedWithID(t *testing.T) {
-	sse := NewSSEService()
+	sse := NewSSEService(nil)
 	client := newTestClient("client-1")
 	sse.RegisterClient(client)
 	time.Sleep(50 * time.Millisecond)
