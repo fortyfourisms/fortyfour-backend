@@ -24,8 +24,8 @@ var defaultPolicies = []Policy{
 	{"user", "/api/se", "GET"},
 	{"user", "/api/se", "POST"},
 	{"user", "/api/se/:id", "GET"},
-	{"user", "/api/se/:id", "PUT"},
-	{"user", "/api/se/:id", "DELETE"},
+	{"user", "/api/se/:id/request-edit", "POST"},
+	{"user", "/api/se/edit-requests", "GET"},
 
 	// CSIRT
 	{"user", "/api/csirt", "GET"},

@@ -150,6 +150,7 @@ func main() {
 	sektorRepo := repository.NewSektorRepository(db)
 	subSektorRepo := repository.NewSubSektorRepository(db)
 	seRepo := repository.NewSERepository(db)
+	seEditReqRepo := repository.NewSEEditRequestRepository(db)
 	dashboardRepo := repository.NewDashboardRepository(db)
 	kelasRepo := repository.NewKelasRepository(db)
 	materiRepo := repository.NewMateriRepository(db)
@@ -180,6 +181,7 @@ func main() {
 	subSektorService := services.NewSubSektorService(subSektorRepo, redisClient)
 	seService := services.NewSEService(seRepo, redisClient, rmqProducer)
 	seExportService := services.NewSEExportService(seService)
+	seEditReqService := services.NewSEEditRequestService(seEditReqRepo, seRepo, seService)
 	dashboardService := services.NewDashboardService(dashboardRepo, redisClient)
 	kelasSvc := services.NewKelasService(kelasRepo, materiRepo, progressRepo, kuisRepo, kuisAttemptRepo, sertifikatRepo, fpRepo, redisClient)
 	materiSvc := services.NewMateriService(materiRepo, kelasRepo, progressRepo, redisClient)
@@ -209,6 +211,7 @@ func main() {
 	seHandler := handlers.NewSEHandler(seService, sseService)
 	seExportHandler := handlers.NewSEExportHandler(seExportService)
 	seHandler.SetExportHandler(seExportHandler)
+	seEditReqHandler := handlers.NewSEEditRequestHandler(seEditReqService)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
 	lmsHandler := handlers.NewLMSHandler(kelasSvc, materiSvc, soalSvc, kuisSvc, fpSvc, diskusiSvc, catatanSvc, sertifikatSvc, sseService)
@@ -250,6 +253,7 @@ func main() {
 		subSektorHandler,
 		seHandler,
 		seExportHandler,
+		seEditReqHandler,
 		dashboardHandler,
 		notificationHandler,
 		ikasProxyHandler,

@@ -119,6 +119,16 @@ type SERepositoryInterface interface {
 	Delete(id string) error
 }
 
+// SEEditRequestRepositoryInterface
+type SEEditRequestRepositoryInterface interface {
+	Create(req *models.SEEditRequest) error
+	FindByID(id string) (*models.SEEditRequest, error)
+	FindPendingBySE(idSE string) ([]models.SEEditRequest, error)
+	FindAllPending() ([]models.SEEditRequest, error)
+	FindByUser(idUser string) ([]models.SEEditRequest, error)
+	UpdateStatus(id string, status models.SEEditRequestStatus, catatan *string) error
+}
+
 // ── Kelas ────────────────────────────────────────────────────────────────────
 
 type KelasRepositoryInterface interface {
