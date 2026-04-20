@@ -89,8 +89,9 @@ func (c *Consumer) ConsumeIkasCreated(ctx context.Context) error {
 		log.Printf("Processing IKAS Created for ID: %s", event.IkasID)
 
 		// Validate mandatory fields (Poison Pill Prevention)
-		if strings.TrimSpace(event.IDPerusahaan) == "" || strings.TrimSpace(event.Tanggal) == "" {
-			log.Printf("❌ Skipping invalid message from ikas.created: id_perusahaan or tanggal is empty. ID: %s", event.IkasID)
+		// Hanya id_perusahaan yang wajib ada (foreign key). tanggal boleh kosong karena nullable di DB.
+		if strings.TrimSpace(event.IDPerusahaan) == "" {
+			log.Printf("❌ Skipping invalid message from ikas.created: id_perusahaan is empty. ID: %s", event.IkasID)
 			return nil // Acknowledge to remove from queue
 		}
 

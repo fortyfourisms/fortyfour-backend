@@ -36,10 +36,18 @@ func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string, nilaiKemat
 		nilai_kematangan, target_nilai)
 		VALUES (?, ?, NULL, NULL, NULL, NULL, ?, ?, ?, ?, ?, ?)`
 
+	// Konversi string kosong ke NULL agar tidak menyebabkan Error 1292 di MySQL
+	var tanggal interface{}
+	if strings.TrimSpace(req.Tanggal) == "" {
+		tanggal = nil
+	} else {
+		tanggal = req.Tanggal
+	}
+
 	_, err := r.db.Exec(query,
 		id,
 		req.IDPerusahaan,
-		req.Tanggal,
+		tanggal,
 		req.Responden,
 		req.Telepon,
 		req.Jabatan,
@@ -1099,7 +1107,9 @@ func (r *IkasRepository) CheckExistsByPerusahaanID(id string) (bool, error) {
 
 func (r *IkasRepository) CheckExistsByPerusahaanIDAndYear(id string, year int) (bool, error) {
 	var count int
-	err := r.db.QueryRow("SELECT COUNT(*) FROM ikas WHERE id_perusahaan = ? AND YEAR(tanggal) = ?", id, year).Scan(&count)
+	// Gunakan COALESCE(tanggal, created_at) untuk menangani kasus di mana tanggal asesmen kosong (NULL)
+	query := "SELECT COUNT(*) FROM ikas WHERE id_perusahaan = ? AND YEAR(COALESCE(tanggal, created_at)) = ?"
+	err := r.db.QueryRow(query, id, year).Scan(&count)
 	if err != nil {
 		return false, err
 	}
@@ -1142,4 +1152,49 @@ func (r *IkasRepository) IsLocked(id string) (bool, error) {
 		return false, err
 	}
 	return locked, nil
+}
+
+func (r *IkasRepository) GetLatestByPerusahaan(perusahaanID string) (*dto.IkasResponse, error) {
+	// Query the most recent IKAS by date for a given company
+	query := `
+		SELECT id, tanggal, responden, telepon, jabatan, nilai_kematangan, target_nilai, is_validated
+		FROM ikas WHERE id_perusahaan = ? ORDER BY tanggal DESC LIMIT 1`
+
+	var ikas dto.IkasResponse
+	err := r.db.QueryRow(query, perusahaanID).Scan(
+		&ikas.ID, &ikas.Tanggal, &ikas.Responden, &ikas.Telepon, &ikas.Jabatan,
+		&ikas.NilaiKematangan, &ikas.TargetNilai, &ikas.IsValidated,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &ikas, nil
+}
+
+func (r *IkasRepository) CreateInitial(sourceID, targetID, targetDate string) error {
+	query := `
+		INSERT INTO ikas
+			(id, id_perusahaan, tanggal, responden, telepon, jabatan, nilai_kematangan, target_nilai, is_validated)
+		SELECT 
+			?, id_perusahaan, ?, responden, telepon, jabatan, nilai_kematangan, target_nilai, false
+		FROM ikas 
+		WHERE id = ?`
+
+	_, err := r.db.Exec(query, targetID, targetDate, sourceID)
+	return err
+}
+
+func (r *IkasRepository) UpdateDomainLinks(ikasID, idIden, idProt, idDet, idGulih string) error {
+	query := `
+		UPDATE ikas 
+		SET id_identifikasi = ?, id_proteksi = ?, id_deteksi = ?, id_gulih = ?
+		WHERE id = ?`
+
+	_, err := r.db.Exec(query, idIden, idProt, idDet, idGulih, ikasID)
+	return err
 }

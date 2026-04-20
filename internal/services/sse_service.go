@@ -8,7 +8,9 @@ import (
 	"strings"
 	"sync"
 	"time"
-)
+ 
+ 	"fortyfour-backend/internal/models"
+ )
 
 // Event types
 const (
@@ -48,17 +50,19 @@ type SSEService struct {
 	broadcast    chan SSEEvent
 	register     chan *Client
 	unregister   chan *Client
-	pingInterval time.Duration
+	pingInterval       time.Duration
+	notificationService *NotificationService
 }
 
 // NewSSEService creates a new SSE service
-func NewSSEService() *SSEService {
+func NewSSEService(notificationService *NotificationService) *SSEService {
 	service := &SSEService{
-		clients:      make(map[string]*Client),
-		broadcast:    make(chan SSEEvent, 100),
-		register:     make(chan *Client),
-		unregister:   make(chan *Client),
-		pingInterval: 30 * time.Second,
+		clients:             make(map[string]*Client),
+		broadcast:           make(chan SSEEvent, 100),
+		register:            make(chan *Client),
+		unregister:          make(chan *Client),
+		pingInterval:        30 * time.Second,
+		notificationService: notificationService,
 	}
 
 	go service.run()
@@ -127,6 +131,12 @@ func (s *SSEService) Broadcast(event SSEEvent) {
 // NotifyCreate sends a create event dengan pesan otomatis
 func (s *SSEService) NotifyCreate(resource string, data interface{}, userID string) {
 	message := s.generateMessage(resource, EventCreate, data)
+
+	// Persist notification if userID is valid and not "system"
+	if s.notificationService != nil && userID != "" && userID != "system" {
+		s.notificationService.Push(userID, models.NotifResourceCreated, message)
+	}
+
 	s.Broadcast(SSEEvent{
 		Type:     EventCreate,
 		Resource: resource,
@@ -139,6 +149,12 @@ func (s *SSEService) NotifyCreate(resource string, data interface{}, userID stri
 // NotifyUpdate sends an update event dengan pesan otomatis
 func (s *SSEService) NotifyUpdate(resource string, data interface{}, userID string) {
 	message := s.generateMessage(resource, EventUpdate, data)
+
+	// Persist notification if userID is valid and not "system"
+	if s.notificationService != nil && userID != "" && userID != "system" {
+		s.notificationService.Push(userID, models.NotifResourceUpdated, message)
+	}
+
 	s.Broadcast(SSEEvent{
 		Type:     EventUpdate,
 		Resource: resource,
@@ -151,6 +167,12 @@ func (s *SSEService) NotifyUpdate(resource string, data interface{}, userID stri
 // NotifyDelete sends a delete event dengan pesan otomatis
 func (s *SSEService) NotifyDelete(resource string, id interface{}, userID string) {
 	message := s.generateMessage(resource, EventDelete, id)
+
+	// Persist notification if userID is valid and not "system"
+	if s.notificationService != nil && userID != "" && userID != "system" {
+		s.notificationService.Push(userID, models.NotifResourceDeleted, message)
+	}
+
 	s.Broadcast(SSEEvent{
 		Type:     EventDelete,
 		Resource: resource,

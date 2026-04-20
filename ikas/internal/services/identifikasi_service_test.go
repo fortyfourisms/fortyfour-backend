@@ -16,10 +16,11 @@ import (
 //
 
 type mockIdentifikasiRepository struct {
-	GetAllFn            func() ([]models.Identifikasi, error)
-	GetByIDFn           func(id string) (*models.Identifikasi, error)
-	GetByIkasIDFn       func(ikasID string) ([]models.Identifikasi, error)
-	GetByPerusahaanIDFn func(perusahaanID string) ([]models.Identifikasi, error)
+	GetAllFn      func() ([]models.Identifikasi, error)
+	GetByIDFn     func(id string) (*models.Identifikasi, error)
+	GetByIkasIDFn        func(ikasID string) ([]models.Identifikasi, error)
+	GetByPerusahaanIDFn  func(perusahaanID string) ([]models.Identifikasi, error)
+	CloneByIkasIDFn      func(sourceID, targetID string) (string, error)
 }
 
 func (m *mockIdentifikasiRepository) GetAll() ([]models.Identifikasi, error) {
@@ -42,6 +43,13 @@ func (m *mockIdentifikasiRepository) GetByPerusahaanID(perusahaanID string) ([]m
 		return m.GetByPerusahaanIDFn(perusahaanID)
 	}
 	return nil, nil
+}
+
+func (m *mockIdentifikasiRepository) CloneByIkasID(oldIkasID string, newIkasID string) (string, error) {
+	if m.CloneByIkasIDFn != nil {
+		return m.CloneByIkasIDFn(oldIkasID, newIkasID)
+	}
+	return "", nil
 }
 
 var _ repository.IdentifikasiRepositoryInterface = (*mockIdentifikasiRepository)(nil)

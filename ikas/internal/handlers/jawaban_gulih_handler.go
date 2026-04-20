@@ -126,7 +126,11 @@ func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		status := http.StatusInternalServerError
+		if err.Error() == "format ikas_id tidak valid" {
+			status = http.StatusBadRequest
+		}
+		utils.RespondError(w, status, err.Error())
 		return
 	}
 

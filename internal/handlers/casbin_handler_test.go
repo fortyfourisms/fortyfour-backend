@@ -52,7 +52,7 @@ m = r.sub == p.sub && r.obj == p.obj && r.act == p.act
 func setupCasbinHandler(t *testing.T) *CasbinHandler {
 	t.Helper()
 	svc := newTestCasbinService(t)
-	sseService := services.NewSSEService()
+	sseService := services.NewSSEService(nil)
 	return NewCasbinHandler(svc, sseService)
 }
 

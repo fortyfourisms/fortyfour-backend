@@ -118,8 +118,11 @@ func (h *JawabanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http
 	}
 
 	if err != nil {
-		rollbar.Error(err)
-		utils.RespondError(w, 500, err.Error())
+		status := http.StatusInternalServerError
+		if err.Error() == "format ikas_id tidak valid" {
+			status = http.StatusBadRequest
+		}
+		utils.RespondError(w, status, err.Error())
 		return
 	}
 	utils.RespondJSON(w, 200, map[string]interface{}{

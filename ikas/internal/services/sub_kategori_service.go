@@ -142,13 +142,13 @@ func (s *SubKategoriService) Create(req dto.CreateSubKategoriRequest) (*dto.SubK
 		return nil, err
 	}
 
-	// Publish event ke RabbitMQ untuk notifikasi SSE (fire-and-forget)
-	go func() {
-		_ = s.producer.PublishSubKategoriCreated(context.Background(), dto_event.SubKategoriCreatedEvent{
-			Request:   req,
-			CreatedAt: time.Now(),
-		})
-	}()
+	err = s.producer.PublishSubKategoriCreated(context.Background(), dto_event.SubKategoriCreatedEvent{
+		Request:   req,
+		CreatedAt: time.Now(),
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	return s.repo.GetByID(int(newID))
 }
@@ -220,14 +220,14 @@ func (s *SubKategoriService) Update(id int, req dto.UpdateSubKategoriRequest) (*
 		return nil, err
 	}
 
-	// Publish event ke RabbitMQ untuk notifikasi SSE (fire-and-forget)
-	go func() {
-		_ = s.producer.PublishSubKategoriUpdated(context.Background(), dto_event.SubKategoriUpdatedEvent{
-			ID:        id,
-			Request:   req,
-			UpdatedAt: time.Now(),
-		})
-	}()
+	err = s.producer.PublishSubKategoriUpdated(context.Background(), dto_event.SubKategoriUpdatedEvent{
+		ID:        id,
+		Request:   req,
+		UpdatedAt: time.Now(),
+	})
+	if err != nil {
+		return nil, err
+	}
 
 	return nil, nil
 }
@@ -247,13 +247,13 @@ func (s *SubKategoriService) Delete(id int) error {
 		return err
 	}
 
-	// Publish event ke RabbitMQ untuk notifikasi SSE (fire-and-forget)
-	go func() {
-		_ = s.producer.PublishSubKategoriDeleted(context.Background(), dto_event.SubKategoriDeletedEvent{
-			ID:        id,
-			DeletedAt: time.Now(),
-		})
-	}()
+	err = s.producer.PublishSubKategoriDeleted(context.Background(), dto_event.SubKategoriDeletedEvent{
+		ID:        id,
+		DeletedAt: time.Now(),
+	})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -81,6 +81,24 @@ func (m *mockIkasRepository) UpdateValidationStatus(id string, status bool) erro
 	return args.Error(0)
 }
 
+func (m *mockIkasRepository) GetLatestByPerusahaan(perusahaanID string) (*dto.IkasResponse, error) {
+	args := m.Called(perusahaanID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.IkasResponse), args.Error(1)
+}
+
+func (m *mockIkasRepository) CreateInitial(sourceID, targetID, targetDate string) error {
+	args := m.Called(sourceID, targetID, targetDate)
+	return args.Error(0)
+}
+
+func (m *mockIkasRepository) UpdateDomainLinks(ikasID, identifikasiID, proteksiID, deteksiID, gulihID string) error {
+	args := m.Called(ikasID, identifikasiID, proteksiID, deteksiID, gulihID)
+	return args.Error(0)
+}
+
 func (m *mockIkasRepository) IsLocked(id string) (bool, error) {
 	args := m.Called(id)
 	return args.Bool(0), args.Error(1)

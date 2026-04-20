@@ -177,6 +177,8 @@ func TestSubKategoriHandler_ServeHTTP_Create_Success(t *testing.T) {
 	createReq := dto.CreateSubKategoriRequest{KategoriID: 1, NamaSubKategori: "Sub Kategori Finance"}
 	repo.On("CheckKategoriExists", 1).Return(true, nil)
 	repo.On("CheckDuplicateName", 1, "Sub Kategori Finance", 0).Return(false, nil)
+	repo.On("Create", createReq).Return(int64(1), nil)
+	repo.On("GetByID", 1).Return(&dto.SubKategoriResponse{ID: 1, NamaSubKategori: "Sub Kategori Finance"}, nil)
 	producer.On("PublishSubKategoriCreated", mock.Anything, mock.MatchedBy(func(e dto_event.SubKategoriCreatedEvent) bool {
 		return e.Request.NamaSubKategori == "Sub Kategori Finance"
 	})).Return(nil)
@@ -255,6 +257,7 @@ func TestSubKategoriHandler_ServeHTTP_Create_PublishError(t *testing.T) {
 	createReq := dto.CreateSubKategoriRequest{KategoriID: 1, NamaSubKategori: "Sub Kategori Test"}
 	repo.On("CheckKategoriExists", 1).Return(true, nil)
 	repo.On("CheckDuplicateName", 1, "Sub Kategori Test", 0).Return(false, nil)
+	repo.On("Create", createReq).Return(int64(1), nil)
 	producer.On("PublishSubKategoriCreated", mock.Anything, mock.Anything).Return(errors.New("publish error"))
 
 	body, _ := json.Marshal(createReq)
@@ -274,6 +277,7 @@ func TestSubKategoriHandler_ServeHTTP_Update_Success(t *testing.T) {
 	updateReq := dto.UpdateSubKategoriRequest{NamaSubKategori: subKatStrPtr("Sub Kategori Finance")}
 	repo.On("GetByID", 1).Return(&dto.SubKategoriResponse{ID: 1, KategoriID: 1}, nil)
 	repo.On("CheckDuplicateName", 1, "Sub Kategori Finance", 1).Return(false, nil)
+	repo.On("Update", 1, updateReq).Return(nil)
 	producer.On("PublishSubKategoriUpdated", mock.Anything, mock.MatchedBy(func(e dto_event.SubKategoriUpdatedEvent) bool {
 		return e.ID == 1 && *e.Request.NamaSubKategori == "Sub Kategori Finance"
 	})).Return(nil)
@@ -370,6 +374,7 @@ func TestSubKategoriHandler_ServeHTTP_Update_PublishError(t *testing.T) {
 
 	repo.On("GetByID", 1).Return(&dto.SubKategoriResponse{ID: 1, KategoriID: 1}, nil)
 	repo.On("CheckDuplicateName", 1, "Sub Kategori Finance", 1).Return(false, nil)
+	repo.On("Update", 1, mock.Anything).Return(nil)
 	producer.On("PublishSubKategoriUpdated", mock.Anything, mock.Anything).Return(errors.New("db error"))
 
 	body, _ := json.Marshal(dto.UpdateSubKategoriRequest{NamaSubKategori: subKatStrPtr("Sub Kategori Finance")})
@@ -387,6 +392,7 @@ func TestSubKategoriHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	handler := setupSubKategoriHandler(repo, producer)
 
 	repo.On("GetByID", 1).Return(&dto.SubKategoriResponse{ID: 1}, nil)
+	repo.On("Delete", 1).Return(nil)
 	producer.On("PublishSubKategoriDeleted", mock.Anything, mock.MatchedBy(func(e dto_event.SubKategoriDeletedEvent) bool {
 		return e.ID == 1
 	})).Return(nil)

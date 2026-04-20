@@ -127,7 +127,11 @@ func (h *JawabanDeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Requ
 	}
 
 	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		status := http.StatusInternalServerError
+		if err.Error() == "format ikas_id tidak valid" {
+			status = http.StatusBadRequest
+		}
+		utils.RespondError(w, status, err.Error())
 		return
 	}
 

@@ -202,7 +202,7 @@ func (m *mockUserRepo) ExistsByPerusahaan(idPerusahaan string) (bool, error) {
 
 // newNotifSvc membuat NotificationService dengan mock redis untuk test
 func newNotifSvc() *NotificationService {
-	return NewNotificationService(newMockRedis())
+	return NewNotificationService(testhelpers.NewMockNotificationRepository())
 }
 
 // =========================

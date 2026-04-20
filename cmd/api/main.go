@@ -80,8 +80,12 @@ func main() {
 	}
 	defer redisClient.Close()
 
+	// Initialize Notification Service
+	notifRepoInit := repository.NewNotificationRepository(db)
+	notificationService := services.NewNotificationService(notifRepoInit)
+
 	// Initialize SSE Service
-	sseService := services.NewSSEService()
+	sseService := services.NewSSEService(notificationService)
 	logger.Info("SSE Service initialized successfully")
 
 	// Initialize RabbitMQ
@@ -164,7 +168,6 @@ func main() {
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret, true, cfg.Domain)
-	notificationService := services.NewNotificationService(redisClient)
 	strExpiryService := services.NewSTRExpiryService(csirtRepo, notificationService)
 	authService := services.NewAuthService(userRepo, roleRepo, tokenService, notificationService, strExpiryService)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo, redisClient, rmqProducer)
