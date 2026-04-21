@@ -948,7 +948,7 @@ func TestAuthHandler_UpdateMe_Success(t *testing.T) {
 	}
 }
 
-func TestAuthHandler_UpdateMe_WithIDJabatan(t *testing.T) {
+func TestAuthHandler_UpdateMe_WithJabatan(t *testing.T) {
 	uploadPath := t.TempDir()
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
@@ -960,8 +960,8 @@ func TestAuthHandler_UpdateMe_WithIDJabatan(t *testing.T) {
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
 	_ = userRepo.Create(user)
 
-	jabatanID := "jabatan-uuid-123"
-	body, _ := json.Marshal(dto.UpdateMeRequest{IDJabatan: &jabatanID})
+	jabatan := "Manager IT"
+	body, _ := json.Marshal(dto.UpdateMeRequest{Jabatan: &jabatan})
 	req := httptest.NewRequest(http.MethodPut, "/api/me", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 	req = withMeUserContext(req, "user-1")

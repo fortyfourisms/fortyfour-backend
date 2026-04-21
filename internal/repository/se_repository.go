@@ -21,12 +21,17 @@ func (r *seRepository) Create(
 	totalBobot int,
 	kategori string,
 ) error {
+	// Konversi empty string ke NULL untuk optional FK fields
+	var idSubSektor interface{} = req.IDSubSektor
+	if req.IDSubSektor == "" {
+		idSubSektor = nil
+	}
+
 	_, err := r.db.Exec(`
 		INSERT INTO se (
 			id,
 			id_perusahaan,
 			id_sub_sektor,
-			id_csirt,
 			nilai_investasi,
 			anggaran_operasional,
 			kepatuhan_peraturan,
@@ -44,12 +49,11 @@ func (r *seRepository) Create(
 			fitur_se,
 			total_bobot,
 			kategori_se
-		) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+		) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 	`,
 		id,
 		req.IDPerusahaan,
-		req.IDSubSektor,
-		req.IDCsirt,
+		idSubSektor,
 		req.NilaiInvestasi,
 		req.AnggaranOperasional,
 		req.KepatuhanPeraturan,
@@ -79,8 +83,7 @@ func (r *seRepository) GetAll() ([]dto.SEResponse, error) {
 		SELECT
 			se.id,
 			se.id_perusahaan,
-			se.id_sub_sektor,
-			se.id_csirt,
+			COALESCE(se.id_sub_sektor, ''),
 			se.nilai_investasi,
 			se.anggaran_operasional,
 			se.kepatuhan_peraturan,
@@ -107,15 +110,11 @@ func (r *seRepository) GetAll() ([]dto.SEResponse, error) {
 			COALESCE(ss.id, ''),
 			COALESCE(ss.nama_sub_sektor, ''),
 			COALESCE(s.id, ''),
-			COALESCE(s.nama_sektor, ''),
-
-			COALESCE(c.id, ''),
-			COALESCE(c.nama_csirt, '')
+			COALESCE(s.nama_sektor, '')
 		FROM se
 		JOIN perusahaan p ON se.id_perusahaan = p.id
 		LEFT JOIN sub_sektor ss ON se.id_sub_sektor = ss.id
 		LEFT JOIN sektor s ON ss.id_sektor = s.id
-		LEFT JOIN csirt c ON se.id_csirt = c.id
 		ORDER BY se.created_at DESC
 	`)
 	if err != nil {
@@ -129,13 +128,11 @@ func (r *seRepository) GetAll() ([]dto.SEResponse, error) {
 		var se dto.SEResponse
 		se.Perusahaan = &dto.PerusahaanMiniResponse{}
 		se.SubSektor = &dto.SubSektorMiniResponse{}
-		se.Csirt = &dto.CsirtMiniResponse{}
 
 		err := rows.Scan(
 			&se.ID,
 			&se.IDPerusahaan,
 			&se.IDSubSektor,
-			&se.IDCsirt,
 			&se.NilaiInvestasi,
 			&se.AnggaranOperasional,
 			&se.KepatuhanPeraturan,
@@ -163,9 +160,6 @@ func (r *seRepository) GetAll() ([]dto.SEResponse, error) {
 			&se.SubSektor.NamaSubSektor,
 			&se.SubSektor.IDSektor,
 			&se.SubSektor.NamaSektor,
-
-			&se.Csirt.ID,
-			&se.Csirt.NamaCsirt,
 		)
 		if err != nil {
 			return nil, err
@@ -184,8 +178,7 @@ func (r *seRepository) GetByPerusahaan(idPerusahaan string) ([]dto.SEResponse, e
 		SELECT
 			se.id,
 			se.id_perusahaan,
-			se.id_sub_sektor,
-			se.id_csirt,
+			COALESCE(se.id_sub_sektor, ''),
 			se.nilai_investasi,
 			se.anggaran_operasional,
 			se.kepatuhan_peraturan,
@@ -212,15 +205,11 @@ func (r *seRepository) GetByPerusahaan(idPerusahaan string) ([]dto.SEResponse, e
 			COALESCE(ss.id, ''),
 			COALESCE(ss.nama_sub_sektor, ''),
 			COALESCE(s.id, ''),
-			COALESCE(s.nama_sektor, ''),
-
-			COALESCE(c.id, ''),
-			COALESCE(c.nama_csirt, '')
+			COALESCE(s.nama_sektor, '')
 		FROM se
 		JOIN perusahaan p ON se.id_perusahaan = p.id
 		LEFT JOIN sub_sektor ss ON se.id_sub_sektor = ss.id
 		LEFT JOIN sektor s ON ss.id_sektor = s.id
-		LEFT JOIN csirt c ON se.id_csirt = c.id
 		WHERE se.id_perusahaan = ?
 		ORDER BY se.created_at DESC
 	`, idPerusahaan)
@@ -235,13 +224,11 @@ func (r *seRepository) GetByPerusahaan(idPerusahaan string) ([]dto.SEResponse, e
 		var se dto.SEResponse
 		se.Perusahaan = &dto.PerusahaanMiniResponse{}
 		se.SubSektor = &dto.SubSektorMiniResponse{}
-		se.Csirt = &dto.CsirtMiniResponse{}
 
 		err := rows.Scan(
 			&se.ID,
 			&se.IDPerusahaan,
 			&se.IDSubSektor,
-			&se.IDCsirt,
 			&se.NilaiInvestasi,
 			&se.AnggaranOperasional,
 			&se.KepatuhanPeraturan,
@@ -269,9 +256,6 @@ func (r *seRepository) GetByPerusahaan(idPerusahaan string) ([]dto.SEResponse, e
 			&se.SubSektor.NamaSubSektor,
 			&se.SubSektor.IDSektor,
 			&se.SubSektor.NamaSektor,
-
-			&se.Csirt.ID,
-			&se.Csirt.NamaCsirt,
 		)
 		if err != nil {
 			return nil, err
@@ -290,8 +274,7 @@ func (r *seRepository) GetByID(id string) (*dto.SEResponse, error) {
 		SELECT
 			se.id,
 			se.id_perusahaan,
-			se.id_sub_sektor,
-			se.id_csirt,
+			COALESCE(se.id_sub_sektor, ''),
 			se.nilai_investasi,
 			se.anggaran_operasional,
 			se.kepatuhan_peraturan,
@@ -318,28 +301,22 @@ func (r *seRepository) GetByID(id string) (*dto.SEResponse, error) {
 			COALESCE(ss.id, ''),
 			COALESCE(ss.nama_sub_sektor, ''),
 			COALESCE(s.id, ''),
-			COALESCE(s.nama_sektor, ''),
-
-			COALESCE(c.id, ''),
-			COALESCE(c.nama_csirt, '')
+			COALESCE(s.nama_sektor, '')
 		FROM se
 		JOIN perusahaan p ON se.id_perusahaan = p.id
 		LEFT JOIN sub_sektor ss ON se.id_sub_sektor = ss.id
 		LEFT JOIN sektor s ON ss.id_sektor = s.id
-		LEFT JOIN csirt c ON se.id_csirt = c.id
 		WHERE se.id = ?
 	`, id)
 
 	var se dto.SEResponse
 	se.Perusahaan = &dto.PerusahaanMiniResponse{}
 	se.SubSektor = &dto.SubSektorMiniResponse{}
-	se.Csirt = &dto.CsirtMiniResponse{}
 
 	err := row.Scan(
 		&se.ID,
 		&se.IDPerusahaan,
 		&se.IDSubSektor,
-		&se.IDCsirt,
 		&se.NilaiInvestasi,
 		&se.AnggaranOperasional,
 		&se.KepatuhanPeraturan,
@@ -367,9 +344,6 @@ func (r *seRepository) GetByID(id string) (*dto.SEResponse, error) {
 		&se.SubSektor.NamaSubSektor,
 		&se.SubSektor.IDSektor,
 		&se.SubSektor.NamaSektor,
-
-		&se.Csirt.ID,
-		&se.Csirt.NamaCsirt,
 	)
 	if err != nil {
 		return nil, err
@@ -439,11 +413,11 @@ func (r *seRepository) Update(
 	}
 	if req.IDSubSektor != nil {
 		updates = append(updates, "id_sub_sektor = ?")
-		params = append(params, *req.IDSubSektor)
-	}
-	if req.IDCsirt != nil {
-		updates = append(updates, "id_csirt = ?")
-		params = append(params, *req.IDCsirt)
+		if *req.IDSubSektor == "" {
+			params = append(params, nil)
+		} else {
+			params = append(params, *req.IDSubSektor)
+		}
 	}
 	if req.NamaSE != nil {
 		updates = append(updates, "nama_se = ?")

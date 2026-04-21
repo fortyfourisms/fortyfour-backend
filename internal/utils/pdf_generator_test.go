@@ -24,15 +24,10 @@ func makeSEResponse(namaSE string) dto.SEResponse {
 		NamaSubSektor: "Teknologi Informasi",
 		NamaSektor:    "Informatika",
 	}
-	csirt := &dto.CsirtMiniResponse{
-		ID:        "csirt-1",
-		NamaCsirt: "CSIRT Contoh",
-	}
 	return dto.SEResponse{
 		ID:                              "se-1",
 		IDPerusahaan:                    "perusahaan-1",
 		IDSubSektor:                     "sub-1",
-		IDCsirt:                         "csirt-1",
 		NamaSE:                          namaSE,
 		IpSE:                            "192.168.1.1",
 		AsNumberSE:                      "AS12345",
@@ -54,7 +49,6 @@ func makeSEResponse(namaSE string) dto.SEResponse {
 		UpdatedAt:                       "2024-06-01",
 		Perusahaan:                      perusahaan,
 		SubSektor:                       subSektor,
-		Csirt:                           csirt,
 	}
 }
 
@@ -229,7 +223,7 @@ func TestGenerateSEPDF_NilNestedStructs(t *testing.T) {
 	se := makeSEResponse("Server Tanpa Relasi")
 	se.Perusahaan = nil
 	se.SubSektor = nil
-	se.Csirt = nil
+	se.SubSektor = nil
 
 	result, err := GenerateSEPDF([]dto.SEResponse{se}, "")
 	require.NoError(t, err)
@@ -260,7 +254,7 @@ func TestGenerateSEByIDPDF_NilNestedStructs(t *testing.T) {
 	se := makeSEResponse("Server Single")
 	se.Perusahaan = nil
 	se.SubSektor = nil
-	se.Csirt = nil
+	se.SubSektor = nil
 
 	result, err := GenerateSEByIDPDF(&se)
 	require.NoError(t, err)
@@ -277,7 +271,7 @@ func TestGenerateSEByIDPDF_SpecialCharsInName(t *testing.T) {
 func TestGenerateSEByIDPDF_EmptyOptionalFields(t *testing.T) {
 	se := makeSEResponse("Server Minimal")
 	se.FiturSE = ""
-	se.IDCsirt = ""
+	se.IDSubSektor = ""
 	se.IDSubSektor = ""
 
 	result, err := GenerateSEByIDPDF(&se)

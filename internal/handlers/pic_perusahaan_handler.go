@@ -59,13 +59,15 @@ func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllPIC godoc
-// @Summary      List semua pic perusahaan
-// @Description  Mengambil seluruh data pic perusahaan
-// @Tags         PIC
-// @Produce      json
-// @Success      200  {array}  dto.PICResponse
-// @Failure      500  {object} dto.ErrorResponse
-// @Router       /api/pic [get]
+//
+//	@Summary		List semua pic perusahaan
+//	@Description	Mengambil seluruh data pic perusahaan
+//	@Tags			PIC
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{array}		dto.PICResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/pic [get]
 func (h *PICHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
@@ -96,14 +98,16 @@ func (h *PICHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetPICByID godoc
-// @Summary      Ambil pic perusahaan berdasarkan ID
-// @Description  Mengambil satu data pic perusahaan
-// @Tags         PIC
-// @Produce      json
-// @Param        id   path      string  true  "PIC ID"
-// @Success      200  {object} dto.PICResponse
-// @Failure      404  {object} dto.ErrorResponse
-// @Router       /api/pic/{id} [get]
+//
+//	@Summary		Ambil pic perusahaan berdasarkan ID
+//	@Description	Mengambil satu data pic perusahaan
+//	@Tags			PIC
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"PIC ID"
+//	@Success		200	{object}	dto.PICResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Router			/api/pic/{id} [get]
 func (h *PICHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -125,15 +129,17 @@ func (h *PICHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id st
 }
 
 // CreatePIC godoc
-// @Summary      Tambah pic perusahaan baru
-// @Description  Membuat record pic perusahaan
-// @Tags         PIC
-// @Accept       json
-// @Produce      json
-// @Param        pic body dto.CreatePICRequest true "Data pic perusahaan"
-// @Success      201  {object} dto.PICResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/pic [post]
+//
+//	@Summary		Tambah pic perusahaan baru
+//	@Description	Membuat record pic perusahaan
+//	@Tags			PIC
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			pic	body		dto.CreatePICRequest	true	"Data pic perusahaan"
+//	@Success		201	{object}	dto.PICResponse
+//	@Failure		400	{object}	dto.ErrorResponse
+//	@Router			/api/pic [post]
 func (h *PICHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreatePICRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -170,16 +176,18 @@ func (h *PICHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdatePIC godoc
-// @Summary      Update pic perusahaan
-// @Description  Mengubah data pic perusahaan berdasarkan ID
-// @Tags         PIC
-// @Accept       json
-// @Produce      json
-// @Param        id      path      string  true  "PIC ID"
-// @Param        pic body      dto.UpdatePICRequest true "Data update"
-// @Success      200  {object} dto.PICResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/pic/{id} [put]
+//
+//	@Summary		Update pic perusahaan
+//	@Description	Mengubah data pic perusahaan berdasarkan ID
+//	@Tags			PIC
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string					true	"PIC ID"
+//	@Param			pic	body		dto.UpdatePICRequest	true	"Data update"
+//	@Success		200	{object}	dto.PICResponse
+//	@Failure		400	{object}	dto.ErrorResponse
+//	@Router			/api/pic/{id} [put]
 func (h *PICHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	// Ownership check untuk non-admin
 	role := middleware.GetRole(r.Context())
@@ -225,14 +233,16 @@ func (h *PICHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id str
 }
 
 // DeletePIC godoc
-// @Summary      Hapus pic perusahaan
-// @Description  Menghapus data pic perusahaan berdasarkan ID
-// @Tags         PIC
-// @Produce      json
-// @Param        id  path  string  true  "PIC ID"
-// @Success      200  {object} dto.MessageResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/pic/{id} [delete]
+//
+//	@Summary		Hapus pic perusahaan
+//	@Description	Menghapus data pic perusahaan berdasarkan ID
+//	@Tags			PIC
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"PIC ID"
+//	@Success		200	{object}	dto.MessageResponse
+//	@Failure		400	{object}	dto.ErrorResponse
+//	@Router			/api/pic/{id} [delete]
 func (h *PICHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	// Ownership check untuk non-admin
 	role := middleware.GetRole(r.Context())

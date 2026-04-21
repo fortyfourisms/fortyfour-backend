@@ -91,13 +91,15 @@ func (h *PerusahaanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllPerusahaan godoc
-// @Summary      List semua perusahaan
-// @Description  Mengambil seluruh data perusahaan (AUTHENTICATED - full data)
-// @Tags         Perusahaan
-// @Produce      json
-// @Success      200  {array}  dto.PerusahaanResponse
-// @Failure      500  {object} dto.ErrorResponse
-// @Router       /api/perusahaan [get]
+//
+//	@Summary		List semua perusahaan
+//	@Description	Mengambil seluruh data perusahaan (AUTHENTICATED - full data)
+//	@Tags			Perusahaan
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{array}		dto.PerusahaanResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/perusahaan [get]
 func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
@@ -128,13 +130,14 @@ func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, r *http.Request)
 }
 
 // GetPerusahaanForDropdown godoc
-// @Summary      List perusahaan untuk dropdown
-// @Description  Data minimal (id, nama) untuk dropdown di halaman register (PUBLIC - no auth)
-// @Tags         Perusahaan
-// @Produce      json
-// @Success      200  {array}  dto.PerusahaanMinimalResponse
-// @Failure      500  {object} dto.ErrorResponse
-// @Router       /api/perusahaan/dropdown [get]
+//
+//	@Summary		List perusahaan untuk dropdown
+//	@Description	Data minimal (id, nama) untuk dropdown di halaman register (PUBLIC - no auth)
+//	@Tags			Perusahaan
+//	@Produce		json
+//	@Success		200	{array}		dto.PerusahaanMinimalResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/perusahaan/dropdown [get]
 func (h *PerusahaanHandler) handleGetDropdown(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -149,14 +152,16 @@ func (h *PerusahaanHandler) handleGetDropdown(w http.ResponseWriter, _ *http.Req
 }
 
 // GetPerusahaanByID godoc
-// @Summary      Ambil perusahaan berdasarkan ID
-// @Description  Mengambil satu data perusahaan
-// @Tags         Perusahaan
-// @Produce      json
-// @Param        id   path      string  true  "Perusahaan ID"
-// @Success      200  {object} dto.PerusahaanResponse
-// @Failure      404  {object} dto.ErrorResponse
-// @Router       /api/perusahaan/{id} [get]
+//
+//	@Summary		Ambil perusahaan berdasarkan ID
+//	@Description	Mengambil satu data perusahaan
+//	@Tags			Perusahaan
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Perusahaan ID"
+//	@Success		200	{object}	dto.PerusahaanResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Router			/api/perusahaan/{id} [get]
 func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	role := middleware.GetRole(r.Context())
 	if role == "user" {
@@ -177,15 +182,17 @@ func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, r *http.Request
 }
 
 // CreatePerusahaan godoc
-// @Summary      Tambah perusahaan baru
-// @Description  Membuat record perusahaan
-// @Tags         Perusahaan
-// @Accept       json
-// @Produce      json
-// @Param        perusahaan body dto.CreatePerusahaanRequest true "Data perusahaan"
-// @Success      201  {object} dto.PerusahaanResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/perusahaan [post]
+//
+//	@Summary		Tambah perusahaan baru
+//	@Description	Membuat record perusahaan
+//	@Tags			Perusahaan
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			perusahaan	body		dto.CreatePerusahaanRequest	true	"Data perusahaan"
+//	@Success		201			{object}	dto.PerusahaanResponse
+//	@Failure		400			{object}	dto.ErrorResponse
+//	@Router			/api/perusahaan [post]
 func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(maxUploadSize); err != nil {
 		logger.Error(err, "operation failed")
@@ -222,16 +229,18 @@ func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request)
 }
 
 // UpdatePerusahaan godoc
-// @Summary      Update perusahaan
-// @Description  Mengubah data perusahaan berdasarkan ID
-// @Tags         Perusahaan
-// @Accept       json
-// @Produce      json
-// @Param        id      path      string  true  "Perusahaan ID"
-// @Param        perusahaan body      dto.UpdatePerusahaanRequest true "Data update"
-// @Success      200  {object} dto.PerusahaanResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/perusahaan/{id} [put]
+//
+//	@Summary		Update perusahaan
+//	@Description	Mengubah data perusahaan berdasarkan ID
+//	@Tags			Perusahaan
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id			path		string						true	"Perusahaan ID"
+//	@Param			perusahaan	body		dto.UpdatePerusahaanRequest	true	"Data update"
+//	@Success		200			{object}	dto.PerusahaanResponse
+//	@Failure		400			{object}	dto.ErrorResponse
+//	@Router			/api/perusahaan/{id} [put]
 func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	// Ownership check untuk non-admin
 	role := middleware.GetRole(r.Context())
@@ -280,14 +289,16 @@ func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request,
 }
 
 // DeletePerusahaan godoc
-// @Summary      Hapus perusahaan
-// @Description  Menghapus data perusahaan berdasarkan ID
-// @Tags         Perusahaan
-// @Produce      json
-// @Param        id  path  string  true  "Perusahaan ID"
-// @Success      200  {object} dto.MessageResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/perusahaan/{id} [delete]
+//
+//	@Summary		Hapus perusahaan
+//	@Description	Menghapus data perusahaan berdasarkan ID
+//	@Tags			Perusahaan
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Perusahaan ID"
+//	@Success		200	{object}	dto.MessageResponse
+//	@Failure		400	{object}	dto.ErrorResponse
+//	@Router			/api/perusahaan/{id} [delete]
 func (h *PerusahaanHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	// Ownership check untuk non-admin
 	role := middleware.GetRole(r.Context())

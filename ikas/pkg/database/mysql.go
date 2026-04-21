@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"fortyfour-backend/pkg/logger"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 

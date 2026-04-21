@@ -8,7 +8,6 @@ type SeCreatedEvent struct {
 	ID                              string    `json:"id"`
 	IDPerusahaan                    string    `json:"id_perusahaan"`
 	IDSubSektor                     string    `json:"id_sub_sektor"`
-	IDCsirt                         string    `json:"id_csirt"`
 	NilaiInvestasi                  string    `json:"nilai_investasi"`
 	AnggaranOperasional             string    `json:"anggaran_operasional"`
 	KepatuhanPeraturan              string    `json:"kepatuhan_peraturan"`
@@ -33,7 +32,6 @@ type SeUpdatedEvent struct {
 	ID                              string    `json:"id"`
 	IDPerusahaan                    string    `json:"id_perusahaan"`
 	IDSubSektor                     string    `json:"id_sub_sektor"`
-	IDCsirt                         string    `json:"id_csirt"`
 	NilaiInvestasi                  string    `json:"nilai_investasi"`
 	AnggaranOperasional             string    `json:"anggaran_operasional"`
 	KepatuhanPeraturan              string    `json:"kepatuhan_peraturan"`

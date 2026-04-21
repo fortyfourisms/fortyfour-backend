@@ -71,13 +71,14 @@ func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllIkas godoc
-// @Summary      List semua ikas
-// @Description  Mengambil seluruh data ikas
-// @Tags         Ikas
-// @Produce      json
-// @Success      200  {array}  dto.IkasResponse
-// @Failure      500  {object} dto.ErrorResponse
-// @Router       /api/maturity/ikas [get]
+//
+//	@Summary		List semua ikas
+//	@Description	Mengambil seluruh data ikas
+//	@Tags			Ikas
+//	@Produce		json
+//	@Success		200	{array}		dto.IkasResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/ikas [get]
 func (h *IkasHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	perusahaanID := r.URL.Query().Get("perusahaan_id")
 
@@ -122,14 +123,15 @@ func (h *IkasHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetIkasByID godoc
-// @Summary      Ambil ikas berdasarkan ID
-// @Description  Mengambil satu data ikas
-// @Tags         Ikas
-// @Produce      json
-// @Param        id   path      string  true  "Ikas ID"
-// @Success      200  {object} dto.IkasResponse
-// @Failure      404  {object} dto.ErrorResponse
-// @Router       /api/maturity/ikas/{id} [get]
+//
+//	@Summary		Ambil ikas berdasarkan ID
+//	@Description	Mengambil satu data ikas
+//	@Tags			Ikas
+//	@Produce		json
+//	@Param			id	path		string	true	"Ikas ID"
+//	@Success		200	{object}	dto.IkasResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/ikas/{id} [get]
 func (h *IkasHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
@@ -151,15 +153,16 @@ func (h *IkasHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id s
 }
 
 // CreateIkas godoc
-// @Summary      Tambah ikas baru
-// @Description  Membuat record ikas
-// @Tags         Ikas
-// @Accept       json
-// @Produce      json
-// @Param        ikas body dto.CreateIkasRequest true "Data ikas"
-// @Success      201  {object} dto.IkasResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/maturity/ikas [post]
+//
+//	@Summary		Tambah ikas baru
+//	@Description	Membuat record ikas
+//	@Tags			Ikas
+//	@Accept			json
+//	@Produce		json
+//	@Param			ikas	body		dto.CreateIkasRequest	true	"Data ikas"
+//	@Success		201		{object}	dto.IkasResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Router			/api/maturity/ikas [post]
 func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateIkasRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -184,16 +187,17 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateIkas godoc
-// @Summary      Update ikas
-// @Description  Mengubah data ikas berdasarkan ID
-// @Tags         Ikas
-// @Accept       json
-// @Produce      json
-// @Param        id      path      string  true  "Ikas ID"
-// @Param        ikas body      dto.UpdateIkasRequest true "Data update"
-// @Success      200  {object} dto.IkasResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/maturity/ikas/{id} [put]
+//
+//	@Summary		Update ikas
+//	@Description	Mengubah data ikas berdasarkan ID
+//	@Tags			Ikas
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string					true	"Ikas ID"
+//	@Param			ikas	body		dto.UpdateIkasRequest	true	"Data update"
+//	@Success		200		{object}	dto.IkasResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Router			/api/maturity/ikas/{id} [put]
 func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateIkasRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -226,14 +230,15 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 }
 
 // DeleteIkas godoc
-// @Summary      Hapus ikas
-// @Description  Menghapus data ikas berdasarkan ID
-// @Tags         Ikas
-// @Produce      json
-// @Param        id  path  string  true  "Ikas ID"
-// @Success      200  {object} dto.MessageResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/maturity/ikas/{id} [delete]
+//
+//	@Summary		Hapus ikas
+//	@Description	Menghapus data ikas berdasarkan ID
+//	@Tags			Ikas
+//	@Produce		json
+//	@Param			id	path		string	true	"Ikas ID"
+//	@Success		200	{object}	dto.MessageResponse
+//	@Failure		400	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/ikas/{id} [delete]
 func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
 	userRole, _ := r.Context().Value(middleware.Role).(string)
@@ -257,20 +262,21 @@ func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 }
 
 // ImportIkas godoc
-// @Summary      Import IKAS dari Excel
-// @Description  Import data IKAS dari file Excel (sheet ke-7)
-// @Tags         Ikas
-// @Accept       multipart/form-data
-// @Produce      json
-// @Param        file formData file true "File Excel (.xlsx)"
-// @Param        id_perusahaan formData string true "ID Perusahaan"
-// @Param        tanggal formData string true "Tanggal (YYYY-MM-DD)"
-// @Param        responden formData string true "Nama Responden"
-// @Param        telepon formData string true "Nomor Telepon"
-// @Param        jabatan formData string true "Jabatan"
-// @Success      201  {object} dto.ImportIkasResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/maturity/ikas/import [post]
+//
+//	@Summary		Import IKAS dari Excel
+//	@Description	Import data IKAS dari file Excel (sheet ke-7)
+//	@Tags			Ikas
+//	@Accept			multipart/form-data
+//	@Produce		json
+//	@Param			file			formData	file	true	"File Excel (.xlsx)"
+//	@Param			id_perusahaan	formData	string	true	"ID Perusahaan"
+//	@Param			tanggal			formData	string	true	"Tanggal (YYYY-MM-DD)"
+//	@Param			responden		formData	string	true	"Nama Responden"
+//	@Param			telepon			formData	string	true	"Nomor Telepon"
+//	@Param			jabatan			formData	string	true	"Jabatan"
+//	@Success		201				{object}	dto.ImportIkasResponse
+//	@Failure		400				{object}	dto.ErrorResponse
+//	@Router			/api/maturity/ikas/import [post]
 func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		logger.Error(err, "operation failed")

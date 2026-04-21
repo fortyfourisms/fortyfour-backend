@@ -37,13 +37,14 @@ func (h *ProteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllProteksi godoc
-// @Summary      List semua proteksi
-// @Description  Mengambil seluruh data proteksi
-// @Tags         Proteksi
-// @Produce      json
-// @Success      200  {array}  dto.ProteksiResponse
-// @Failure      500  {object} dto.ErrorResponse
-// @Router       /api/proteksi [get]
+//
+//	@Summary		List semua proteksi
+//	@Description	Mengambil seluruh data proteksi
+//	@Tags			Proteksi
+//	@Produce		json
+//	@Success		200	{array}		dto.ProteksiResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/proteksi [get]
 func (h *ProteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
@@ -96,14 +97,15 @@ func (h *ProteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetProteksiByID godoc
-// @Summary      Ambil proteksi berdasarkan ID
-// @Description  Mengambil satu data proteksi
-// @Tags         Proteksi
-// @Produce      json
-// @Param        id   path      string  true  "Proteksi ID"
-// @Success      200  {object} dto.ProteksiResponse
-// @Failure      404  {object} dto.ErrorResponse
-// @Router       /api/proteksi/{id} [get]
+//
+//	@Summary		Ambil proteksi berdasarkan ID
+//	@Description	Mengambil satu data proteksi
+//	@Tags			Proteksi
+//	@Produce		json
+//	@Param			id	path		string	true	"Proteksi ID"
+//	@Success		200	{object}	dto.ProteksiResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Router			/api/proteksi/{id} [get]
 func (h *ProteksiHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)

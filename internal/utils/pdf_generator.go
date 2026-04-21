@@ -241,15 +241,10 @@ func printSEBlock(pdf *fpdf.Fpdf, se dto.SEResponse) {
 	if se.SubSektor != nil {
 		namaSubSektor = fmt.Sprintf("%s - %s", se.SubSektor.NamaSektor, se.SubSektor.NamaSubSektor)
 	}
-	namaCsirt := se.IDCsirt
-	if se.Csirt != nil {
-		namaCsirt = se.Csirt.NamaCsirt
-	}
 
 	rows := [][]string{
 		{"Perusahaan", namaPerusahaan},
 		{"Sub Sektor", namaSubSektor},
-		{"CSIRT", namaCsirt},
 		{"Nama SE", se.NamaSE},
 		{"IP SE", se.IpSE},
 		{"AS Number SE", se.AsNumberSE},

@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"fortyfour-backend/internal/dto"
@@ -49,6 +50,7 @@ func (s *KuisService) CreateKuis(idKelas string, req dto.CreateKuisRequest) (*dt
 		PassingGrade: req.PassingGrade,
 		IsFinal:      req.IsFinal,
 		Urutan:       req.Urutan,
+		MaxAttempt:   req.MaxAttempt,
 	}
 
 	// Validasi: hanya boleh ada 1 kuis final per kelas
@@ -58,6 +60,22 @@ func (s *KuisService) CreateKuis(idKelas string, req dto.CreateKuisRequest) (*dt
 			return nil, errors.New("sudah ada kuis akhir untuk kelas ini")
 		}
 		kuis.IDMateri = nil // kuis final tidak terikat ke materi
+	}
+
+	// Validasi: urutan tidak boleh duplikat dalam kelas ini
+	existingKuis, _ := s.kuisRepo.FindByKelas(idKelas)
+	for _, k := range existingKuis {
+		if k.Urutan == kuis.Urutan {
+			return nil, fmt.Errorf("urutan %d sudah digunakan oleh kuis lain dalam kelas ini", kuis.Urutan)
+		}
+	}
+
+	// Validasi: 1 materi hanya boleh punya 1 kuis
+	if kuis.IDMateri != nil {
+		existingKuisMateri, err := s.kuisRepo.FindByMateri(*kuis.IDMateri)
+		if err == nil && existingKuisMateri != nil {
+			return nil, errors.New("materi ini sudah memiliki kuis")
+		}
 	}
 
 	if err := s.kuisRepo.Create(kuis); err != nil {
@@ -86,10 +104,30 @@ func (s *KuisService) UpdateKuis(id string, req dto.UpdateKuisRequest) (*dto.Kui
 		kuis.PassingGrade = *req.PassingGrade
 	}
 	if req.IsFinal != nil {
+		// Validasi: hanya boleh ada 1 kuis final per kelas
+		if *req.IsFinal && !kuis.IsFinal {
+			existing, err := s.kuisRepo.FindFinalByKelas(kuis.IDKelas)
+			if err == nil && existing != nil {
+				return nil, errors.New("sudah ada kuis akhir untuk kelas ini")
+			}
+		}
 		kuis.IsFinal = *req.IsFinal
+		if kuis.IsFinal {
+			kuis.IDMateri = nil // kuis final tidak terikat ke materi
+		}
 	}
 	if req.Urutan != nil {
+		// Validasi: urutan tidak boleh duplikat dalam kelas ini
+		existingKuis, _ := s.kuisRepo.FindByKelas(kuis.IDKelas)
+		for _, k := range existingKuis {
+			if k.Urutan == *req.Urutan && k.ID != kuis.ID {
+				return nil, fmt.Errorf("urutan %d sudah digunakan oleh kuis lain dalam kelas ini", *req.Urutan)
+			}
+		}
 		kuis.Urutan = *req.Urutan
+	}
+	if req.MaxAttempt != nil {
+		kuis.MaxAttempt = *req.MaxAttempt
 	}
 
 	if err := s.kuisRepo.Update(kuis); err != nil {
@@ -156,7 +194,24 @@ func (s *KuisService) Start(userID, kuisID string) (*dto.StartKuisResponse, erro
 		return s.buildStartResponse(latest.ID, kuisID)
 	}
 
-	// 4. Buat attempt baru
+	// 4. Cek max attempt
+	if kuis.MaxAttempt > 0 {
+		allAttempts, err := s.attemptRepo.FindByUserAndKuis(userID, kuisID)
+		if err != nil {
+			return nil, err
+		}
+		finishedCount := 0
+		for _, a := range allAttempts {
+			if a.FinishedAt != nil {
+				finishedCount++
+			}
+		}
+		if finishedCount >= kuis.MaxAttempt {
+			return nil, fmt.Errorf("sudah mencapai batas maksimal pengerjaan kuis (%d kali)", kuis.MaxAttempt)
+		}
+	}
+
+	// 5. Buat attempt baru
 	attempt := &models.KuisAttempt{
 		ID:     uuid.New().String(),
 		IDUser: userID,
@@ -387,6 +442,7 @@ func mapKuisToResponse(k *models.Kuis) *dto.KuisResponse {
 		PassingGrade: k.PassingGrade,
 		IsFinal:      k.IsFinal,
 		Urutan:       k.Urutan,
+		MaxAttempt:   k.MaxAttempt,
 		CreatedAt:    k.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:    k.UpdatedAt.Format(time.RFC3339),
 	}

@@ -426,7 +426,7 @@ func TestAuthService_Register_WithJabatan(t *testing.T) {
 	tokenService := NewTokenService(redis, "test-secret", false, "localhost")
 	authService := NewAuthService(userRepo, newMockRoleRepo(), tokenService, newNotifSvc(), nil)
 
-	idJabatan := "jabatan-456"
+	jabatan := "Manager IT"
 	namaPerusahaan := "PT Jabatan Test"
 
 	user, tokens, err := authService.Register(
@@ -434,7 +434,7 @@ func TestAuthService_Register_WithJabatan(t *testing.T) {
 			Username:       "testuser",
 			Password:       "MySecureP@ssw0rd2024!",
 			Email:          "test@example.com",
-			IDJabatan:      &idJabatan,
+			Jabatan:        &jabatan,
 			NamaPerusahaan: &namaPerusahaan, // FIX: wajib diisi
 		},
 		testhelpers.NewMockPerusahaanService(),
@@ -449,8 +449,8 @@ func TestAuthService_Register_WithJabatan(t *testing.T) {
 	if user.RoleID == nil || *user.RoleID != "role-user-id" {
 		t.Errorf("expected default roleID 'role-user-id', got '%v'", user.RoleID)
 	}
-	if user.IDJabatan == nil || *user.IDJabatan != idJabatan {
-		t.Errorf("expected idJabatan '%s', got '%v'", idJabatan, user.IDJabatan)
+	if user.Jabatan == nil || *user.Jabatan != jabatan {
+		t.Errorf("expected jabatan '%s', got '%v'", jabatan, user.Jabatan)
 	}
 	if tokens == nil {
 		t.Fatal("expected tokens to be returned")

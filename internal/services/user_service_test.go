@@ -711,14 +711,14 @@ func TestUserService_UpdateMe_Success_Email(t *testing.T) {
 	}
 }
 
-func TestUserService_UpdateMe_Success_IDJabatan(t *testing.T) {
+func TestUserService_UpdateMe_Success_Jabatan(t *testing.T) {
 	service, mockRepo := setupUserService()
 
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
 	_ = mockRepo.Create(user)
 
-	jabatanID := "jabatan-uuid-123"
-	req := dto.UpdateMeRequest{IDJabatan: &jabatanID}
+	jabatan := "Manager IT"
+	req := dto.UpdateMeRequest{Jabatan: &jabatan}
 
 	result, err := service.UpdateMe("user-1", req)
 

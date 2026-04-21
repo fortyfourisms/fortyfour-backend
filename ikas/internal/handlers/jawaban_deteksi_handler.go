@@ -41,14 +41,14 @@ func (h *JawabanDeteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	}
 }
 
-// @Summary Create Jawaban Deteksi
-// @Description Create a new answer for detection question
-// @Tags Jawaban Deteksi
-// @Accept json
-// @Produce json
-// @Param request body dto.CreateJawabanDeteksiRequest true "Jawaban Deteksi Request"
-// @Success 201 {object} dto.JawabanDeteksiResponse
-// @Router /api/maturity/jawaban-deteksi [post]
+// @Summary		Create Jawaban Deteksi
+// @Description	Create a new answer for detection question
+// @Tags			Jawaban Deteksi
+// @Accept			json
+// @Produce		json
+// @Param			request	body		dto.CreateJawabanDeteksiRequest	true	"Jawaban Deteksi Request"
+// @Success		201		{object}	dto.JawabanDeteksiResponse
+// @Router			/api/maturity/jawaban-deteksi [post]
 func (h *JawabanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateJawabanDeteksiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -85,14 +85,14 @@ func (h *JawabanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.Requ
 	})
 }
 
-// @Summary Get All Jawaban Deteksi
-// @Description Get all answers for detection questions, optionally filtered by ikas_id or pertanyaan_deteksi_id
-// @Tags Jawaban Deteksi
-// @Produce json
-// @Param ikas_id query string false "Filter by Ikas ID"
-// @Param pertanyaan_deteksi_id query int false "Filter by Pertanyaan Deteksi ID"
-// @Success 200 {array} dto.JawabanDeteksiResponse
-// @Router /api/maturity/jawaban-deteksi [get]
+// @Summary		Get All Jawaban Deteksi
+// @Description	Get all answers for detection questions, optionally filtered by ikas_id or pertanyaan_deteksi_id
+// @Tags			Jawaban Deteksi
+// @Produce		json
+// @Param			ikas_id					query	string	false	"Filter by Ikas ID"
+// @Param			pertanyaan_deteksi_id	query	int		false	"Filter by Pertanyaan Deteksi ID"
+// @Success		200						{array}	dto.JawabanDeteksiResponse
+// @Router			/api/maturity/jawaban-deteksi [get]
 func (h *JawabanDeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	ikasID := r.URL.Query().Get("ikas_id")
 	pertanyaanIDStr := r.URL.Query().Get("pertanyaan_deteksi_id")
@@ -162,13 +162,13 @@ func (h *JawabanDeteksiHandler) handleGetByIkasID(w http.ResponseWriter, r *http
 	})
 }
 
-// @Summary Get Jawaban Deteksi by ID
-// @Description Get a specific detection answer by its ID
-// @Tags Jawaban Deteksi
-// @Produce json
-// @Param id path int true "Jawaban Deteksi ID"
-// @Success 200 {object} dto.JawabanDeteksiResponse
-// @Router /api/maturity/jawaban-deteksi/{id} [get]
+// @Summary		Get Jawaban Deteksi by ID
+// @Description	Get a specific detection answer by its ID
+// @Tags			Jawaban Deteksi
+// @Produce		json
+// @Param			id	path		int	true	"Jawaban Deteksi ID"
+// @Success		200	{object}	dto.JawabanDeteksiResponse
+// @Router			/api/maturity/jawaban-deteksi/{id} [get]
 func (h *JawabanDeteksiHandler) handleGetByID(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.ExtractIntID(r.URL.Path, "jawaban-deteksi")
 	if err != nil {
@@ -195,15 +195,15 @@ func (h *JawabanDeteksiHandler) handleGetByID(w http.ResponseWriter, r *http.Req
 	})
 }
 
-// @Summary Update Jawaban Deteksi
-// @Description Update an existing detection answer
-// @Tags Jawaban Deteksi
-// @Accept json
-// @Produce json
-// @Param id path int true "Jawaban Deteksi ID"
-// @Param request body dto.UpdateJawabanDeteksiRequest true "Update Request"
-// @Success 200 {object} dto.JawabanDeteksiResponse
-// @Router /api/maturity/jawaban-deteksi/{id} [put]
+// @Summary		Update Jawaban Deteksi
+// @Description	Update an existing detection answer
+// @Tags			Jawaban Deteksi
+// @Accept			json
+// @Produce		json
+// @Param			id		path		int								true	"Jawaban Deteksi ID"
+// @Param			request	body		dto.UpdateJawabanDeteksiRequest	true	"Update Request"
+// @Success		200		{object}	dto.JawabanDeteksiResponse
+// @Router			/api/maturity/jawaban-deteksi/{id} [put]
 func (h *JawabanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.ExtractIntID(r.URL.Path, "jawaban-deteksi")
 	if err != nil {
@@ -255,13 +255,13 @@ func (h *JawabanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Requ
 	})
 }
 
-// @Summary Delete Jawaban Deteksi
-// @Description Delete a specific detection answer
-// @Tags Jawaban Deteksi
-// @Produce json
-// @Param id path int true "Jawaban Deteksi ID"
-// @Success 200 {object} map[string]interface{}
-// @Router /api/maturity/jawaban-deteksi/{id} [delete]
+// @Summary		Delete Jawaban Deteksi
+// @Description	Delete a specific detection answer
+// @Tags			Jawaban Deteksi
+// @Produce		json
+// @Param			id	path		int	true	"Jawaban Deteksi ID"
+// @Success		200	{object}	map[string]interface{}
+// @Router			/api/maturity/jawaban-deteksi/{id} [delete]
 func (h *JawabanDeteksiHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.ExtractIntID(r.URL.Path, "jawaban-deteksi")
 	if err != nil {

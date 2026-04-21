@@ -55,13 +55,13 @@ func (h *PertanyaanDeteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Requ
 
 // GetAllPertanyaanDeteksi godoc
 //
-//	@Summary      List semua pertanyaan deteksi
-//	@Description  Mengambil seluruh data pertanyaan deteksi
-//	@Tags         PertanyaanDeteksi
-//	@Produce      json
-//	@Success      200  {array}   dto.PertanyaanDeteksiResponse
-//	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/maturity/pertanyaan-deteksi [get]
+//	@Summary		List semua pertanyaan deteksi
+//	@Description	Mengambil seluruh data pertanyaan deteksi
+//	@Tags			PertanyaanDeteksi
+//	@Produce		json
+//	@Success		200	{array}		dto.PertanyaanDeteksiResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/pertanyaan-deteksi [get]
 func (h *PertanyaanDeteksiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -78,14 +78,14 @@ func (h *PertanyaanDeteksiHandler) handleGetAll(w http.ResponseWriter, _ *http.R
 
 // GetPertanyaanDeteksiByID godoc
 //
-//	@Summary      Ambil pertanyaan deteksi berdasarkan ID
-//	@Description  Mengambil satu data pertanyaan deteksi
-//	@Tags         PertanyaanDeteksi
-//	@Produce      json
-//	@Param        id   path      int  true  "PertanyaanDeteksi ID"
-//	@Success      200  {object}  dto.PertanyaanDeteksiResponse
-//	@Failure      404  {object}  dto.ErrorResponse
-//	@Router       /api/maturity/pertanyaan-deteksi/{id} [get]
+//	@Summary		Ambil pertanyaan deteksi berdasarkan ID
+//	@Description	Mengambil satu data pertanyaan deteksi
+//	@Tags			PertanyaanDeteksi
+//	@Produce		json
+//	@Param			id	path		int	true	"PertanyaanDeteksi ID"
+//	@Success		200	{object}	dto.PertanyaanDeteksiResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/pertanyaan-deteksi/{id} [get]
 func (h *PertanyaanDeteksiHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id int) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -105,16 +105,16 @@ func (h *PertanyaanDeteksiHandler) handleGetByID(w http.ResponseWriter, _ *http.
 
 // CreatePertanyaanDeteksi godoc
 //
-//	@Summary      Tambah pertanyaan deteksi baru
-//	@Description  Membuat record pertanyaan deteksi baru
-//	@Tags         PertanyaanDeteksi
-//	@Accept       json
-//	@Produce      json
-//	@Param        body  body      dto.CreatePertanyaanDeteksiRequest  true  "Data pertanyaan deteksi"
-//	@Success      201   {object}  dto.PertanyaanDeteksiResponse
-//	@Failure      400   {object}  dto.ErrorResponse
-//	@Failure      404   {object}  dto.ErrorResponse
-//	@Router       /api/maturity/pertanyaan-deteksi [post]
+//	@Summary		Tambah pertanyaan deteksi baru
+//	@Description	Membuat record pertanyaan deteksi baru
+//	@Tags			PertanyaanDeteksi
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		dto.CreatePertanyaanDeteksiRequest	true	"Data pertanyaan deteksi"
+//	@Success		201		{object}	dto.PertanyaanDeteksiResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		404		{object}	dto.ErrorResponse
+//	@Router			/api/maturity/pertanyaan-deteksi [post]
 func (h *PertanyaanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreatePertanyaanDeteksiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -164,17 +164,17 @@ func (h *PertanyaanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.R
 
 // UpdatePertanyaanDeteksi godoc
 //
-//	@Summary      Update pertanyaan deteksi
-//	@Description  Mengubah data pertanyaan deteksi berdasarkan ID
-//	@Tags         PertanyaanDeteksi
-//	@Accept       json
-//	@Produce      json
-//	@Param        id    path      int                              true  "PertanyaanDeteksi ID"
-//	@Param        body  body      dto.UpdatePertanyaanDeteksiRequest  true  "Data update"
-//	@Success      200   {object}  dto.PertanyaanDeteksiResponse
-//	@Failure      400   {object}  dto.ErrorResponse
-//	@Failure      404   {object}  dto.ErrorResponse
-//	@Router       /api/maturity/pertanyaan-deteksi/{id} [put]
+//	@Summary		Update pertanyaan deteksi
+//	@Description	Mengubah data pertanyaan deteksi berdasarkan ID
+//	@Tags			PertanyaanDeteksi
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int									true	"PertanyaanDeteksi ID"
+//	@Param			body	body		dto.UpdatePertanyaanDeteksiRequest	true	"Data update"
+//	@Success		200		{object}	dto.PertanyaanDeteksiResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		404		{object}	dto.ErrorResponse
+//	@Router			/api/maturity/pertanyaan-deteksi/{id} [put]
 func (h *PertanyaanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id int) {
 	var req dto.UpdatePertanyaanDeteksiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -227,15 +227,15 @@ func (h *PertanyaanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.R
 
 // DeletePertanyaanDeteksi godoc
 //
-//	@Summary      Hapus pertanyaan deteksi
-//	@Description  Menghapus data pertanyaan deteksi berdasarkan ID
-//	@Tags         PertanyaanDeteksi
-//	@Produce      json
-//	@Param        id   path      int  true  "PertanyaanDeteksi ID"
-//	@Success      200  {object}  dto.PertanyaanDeteksiMessageResponse
-//	@Failure      404  {object}  dto.ErrorResponse
-//	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/maturity/pertanyaan-deteksi/{id} [delete]
+//	@Summary		Hapus pertanyaan deteksi
+//	@Description	Menghapus data pertanyaan deteksi berdasarkan ID
+//	@Tags			PertanyaanDeteksi
+//	@Produce		json
+//	@Param			id	path		int	true	"PertanyaanDeteksi ID"
+//	@Success		200	{object}	dto.PertanyaanDeteksiMessageResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/pertanyaan-deteksi/{id} [delete]
 func (h *PertanyaanDeteksiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id int) {
 	if err := h.service.Delete(id); err != nil {
 		rollbar.Error(err)

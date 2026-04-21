@@ -69,6 +69,7 @@ type Kuis struct {
 	PassingGrade float64   `json:"passing_grade"`
 	IsFinal      bool      `json:"is_final"`
 	Urutan       int       `json:"urutan"`
+	MaxAttempt   int       `json:"max_attempt"` // 0 = unlimited
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }

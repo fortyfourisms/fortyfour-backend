@@ -19,7 +19,7 @@ func setupKuisRepoTest(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *KuisRepository)
 	return db, mock, NewKuisRepository(db)
 }
 
-var kuisColumns = []string{"id", "id_kelas", "id_materi", "judul", "deskripsi", "durasi_menit", "passing_grade", "is_final", "urutan", "created_at", "updated_at"}
+var kuisColumns = []string{"id", "id_kelas", "id_materi", "judul", "deskripsi", "durasi_menit", "passing_grade", "is_final", "urutan", "max_attempt", "created_at", "updated_at"}
 
 func TestKuisRepository_Create(t *testing.T) {
 	db, mock, repo := setupKuisRepoTest(t)
@@ -54,7 +54,7 @@ func TestKuisRepository_FindByID(t *testing.T) {
 		mock.ExpectQuery("SELECT .+ FROM kuis WHERE id = \\?").
 			WithArgs("q-1").
 			WillReturnRows(sqlmock.NewRows(kuisColumns).
-				AddRow("q-1", "k-1", nil, "Kuis 1", nil, nil, 70.0, false, 1, now, now))
+				AddRow("q-1", "k-1", nil, "Kuis 1", nil, nil, 70.0, false, 1, 0, now, now))
 
 		result, err := repo.FindByID("q-1")
 		assert.NoError(t, err)
@@ -87,8 +87,8 @@ func TestKuisRepository_FindByKelas(t *testing.T) {
 		mock.ExpectQuery("SELECT .+ FROM kuis WHERE id_kelas = \\?").
 			WithArgs("k-1").
 			WillReturnRows(sqlmock.NewRows(kuisColumns).
-				AddRow("q-1", "k-1", "m-1", "Quiz 1", nil, nil, 70.0, false, 1, now, now).
-				AddRow("q-2", "k-1", nil, "Final", nil, nil, 80.0, true, 2, now, now))
+				AddRow("q-1", "k-1", "m-1", "Quiz 1", nil, nil, 70.0, false, 1, 0, now, now).
+				AddRow("q-2", "k-1", nil, "Final", nil, nil, 80.0, true, 2, 0, now, now))
 
 		result, err := repo.FindByKelas("k-1")
 		assert.NoError(t, err)
@@ -118,7 +118,7 @@ func TestKuisRepository_FindFinalByKelas(t *testing.T) {
 		mock.ExpectQuery("SELECT .+ FROM kuis WHERE id_kelas = \\? AND is_final = 1").
 			WithArgs("k-1").
 			WillReturnRows(sqlmock.NewRows(kuisColumns).
-				AddRow("q-final", "k-1", nil, "Kuis Akhir", nil, nil, 80.0, true, 1, now, now))
+				AddRow("q-final", "k-1", nil, "Kuis Akhir", nil, nil, 80.0, true, 1, 0, now, now))
 
 		result, err := repo.FindFinalByKelas("k-1")
 		assert.NoError(t, err)

@@ -37,13 +37,14 @@ func (h *IdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 }
 
 // GetAllIdentifikasi godoc
-// @Summary      List semua identifikasi
-// @Description  Mengambil seluruh data identifikasi
-// @Tags         Identifikasi
-// @Produce      json
-// @Success      200  {array}  dto.IdentifikasiResponse
-// @Failure      500  {object} dto.ErrorResponse
-// @Router       /api/identifikasi [get]
+//
+//	@Summary		List semua identifikasi
+//	@Description	Mengambil seluruh data identifikasi
+//	@Tags			Identifikasi
+//	@Produce		json
+//	@Success		200	{array}		dto.IdentifikasiResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/identifikasi [get]
 func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
@@ -97,14 +98,15 @@ func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 }
 
 // GetIdentifikasiByID godoc
-// @Summary      Ambil identifikasi berdasarkan ID
-// @Description  Mengambil satu data identifikasi
-// @Tags         Identifikasi
-// @Produce      json
-// @Param        id   path      string  true  "Identifikasi ID"
-// @Success      200  {object} dto.IdentifikasiResponse
-// @Failure      404  {object} dto.ErrorResponse
-// @Router       /api/identifikasi/{id} [get]
+//
+//	@Summary		Ambil identifikasi berdasarkan ID
+//	@Description	Mengambil satu data identifikasi
+//	@Tags			Identifikasi
+//	@Produce		json
+//	@Param			id	path		string	true	"Identifikasi ID"
+//	@Success		200	{object}	dto.IdentifikasiResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Router			/api/identifikasi/{id} [get]
 func (h *IdentifikasiHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)

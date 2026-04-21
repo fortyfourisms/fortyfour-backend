@@ -55,13 +55,13 @@ func (h *PertanyaanGulihHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 
 // GetAllPertanyaanGulih godoc
 //
-//	@Summary      List semua pertanyaan gulih
-//	@Description  Mengambil seluruh data pertanyaan gulih
-//	@Tags         PertanyaanGulih
-//	@Produce      json
-//	@Success      200  {array}   dto.PertanyaanGulihResponse
-//	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/maturity/pertanyaan-gulih [get]
+//	@Summary		List semua pertanyaan gulih
+//	@Description	Mengambil seluruh data pertanyaan gulih
+//	@Tags			PertanyaanGulih
+//	@Produce		json
+//	@Success		200	{array}		dto.PertanyaanGulihResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/pertanyaan-gulih [get]
 func (h *PertanyaanGulihHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -78,14 +78,14 @@ func (h *PertanyaanGulihHandler) handleGetAll(w http.ResponseWriter, _ *http.Req
 
 // GetPertanyaanGulihByID godoc
 //
-//	@Summary      Ambil pertanyaan gulih berdasarkan ID
-//	@Description  Mengambil satu data pertanyaan gulih
-//	@Tags         PertanyaanGulih
-//	@Produce      json
-//	@Param        id   path      int  true  "PertanyaanGulih ID"
-//	@Success      200  {object}  dto.PertanyaanGulihResponse
-//	@Failure      404  {object}  dto.ErrorResponse
-//	@Router       /api/maturity/pertanyaan-gulih/{id} [get]
+//	@Summary		Ambil pertanyaan gulih berdasarkan ID
+//	@Description	Mengambil satu data pertanyaan gulih
+//	@Tags			PertanyaanGulih
+//	@Produce		json
+//	@Param			id	path		int	true	"PertanyaanGulih ID"
+//	@Success		200	{object}	dto.PertanyaanGulihResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/pertanyaan-gulih/{id} [get]
 func (h *PertanyaanGulihHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id int) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -105,16 +105,16 @@ func (h *PertanyaanGulihHandler) handleGetByID(w http.ResponseWriter, _ *http.Re
 
 // CreatePertanyaanGulih godoc
 //
-//	@Summary      Tambah pertanyaan gulih baru
-//	@Description  Membuat record pertanyaan gulih baru
-//	@Tags         PertanyaanGulih
-//	@Accept       json
-//	@Produce      json
-//	@Param        body  body      dto.CreatePertanyaanGulihRequest  true  "Data pertanyaan gulih"
-//	@Success      201   {object}  dto.PertanyaanGulihResponse
-//	@Failure      400   {object}  dto.ErrorResponse
-//	@Failure      404   {object}  dto.ErrorResponse
-//	@Router       /api/maturity/pertanyaan-gulih [post]
+//	@Summary		Tambah pertanyaan gulih baru
+//	@Description	Membuat record pertanyaan gulih baru
+//	@Tags			PertanyaanGulih
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		dto.CreatePertanyaanGulihRequest	true	"Data pertanyaan gulih"
+//	@Success		201		{object}	dto.PertanyaanGulihResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		404		{object}	dto.ErrorResponse
+//	@Router			/api/maturity/pertanyaan-gulih [post]
 func (h *PertanyaanGulihHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreatePertanyaanGulihRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -164,17 +164,17 @@ func (h *PertanyaanGulihHandler) handleCreate(w http.ResponseWriter, r *http.Req
 
 // UpdatePertanyaanGulih godoc
 //
-//	@Summary      Update pertanyaan gulih
-//	@Description  Mengubah data pertanyaan gulih berdasarkan ID
-//	@Tags         PertanyaanGulih
-//	@Accept       json
-//	@Produce      json
-//	@Param        id    path      int                            true  "PertanyaanGulih ID"
-//	@Param        body  body      dto.UpdatePertanyaanGulihRequest  true  "Data update"
-//	@Success      200   {object}  dto.PertanyaanGulihResponse
-//	@Failure      400   {object}  dto.ErrorResponse
-//	@Failure      404   {object}  dto.ErrorResponse
-//	@Router       /api/maturity/pertanyaan-gulih/{id} [put]
+//	@Summary		Update pertanyaan gulih
+//	@Description	Mengubah data pertanyaan gulih berdasarkan ID
+//	@Tags			PertanyaanGulih
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int									true	"PertanyaanGulih ID"
+//	@Param			body	body		dto.UpdatePertanyaanGulihRequest	true	"Data update"
+//	@Success		200		{object}	dto.PertanyaanGulihResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		404		{object}	dto.ErrorResponse
+//	@Router			/api/maturity/pertanyaan-gulih/{id} [put]
 func (h *PertanyaanGulihHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id int) {
 	var req dto.UpdatePertanyaanGulihRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -227,15 +227,15 @@ func (h *PertanyaanGulihHandler) handleUpdate(w http.ResponseWriter, r *http.Req
 
 // DeletePertanyaanGulih godoc
 //
-//	@Summary      Hapus pertanyaan gulih
-//	@Description  Menghapus data pertanyaan gulih berdasarkan ID
-//	@Tags         PertanyaanGulih
-//	@Produce      json
-//	@Param        id   path      int  true  "PertanyaanGulih ID"
-//	@Success      200  {object}  dto.PertanyaanGulihMessageResponse
-//	@Failure      404  {object}  dto.ErrorResponse
-//	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/maturity/pertanyaan-gulih/{id} [delete]
+//	@Summary		Hapus pertanyaan gulih
+//	@Description	Menghapus data pertanyaan gulih berdasarkan ID
+//	@Tags			PertanyaanGulih
+//	@Produce		json
+//	@Param			id	path		int	true	"PertanyaanGulih ID"
+//	@Success		200	{object}	dto.PertanyaanGulihMessageResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/pertanyaan-gulih/{id} [delete]
 func (h *PertanyaanGulihHandler) handleDelete(w http.ResponseWriter, r *http.Request, id int) {
 	if err := h.service.Delete(id); err != nil {
 		rollbar.Error(err)

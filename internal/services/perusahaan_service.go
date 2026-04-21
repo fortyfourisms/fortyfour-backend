@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"fortyfour-backend/internal/rabbitmq"
+
 	"github.com/google/uuid"
 )
 

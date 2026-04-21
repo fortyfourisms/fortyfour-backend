@@ -278,7 +278,7 @@ func (m *MockUserRepository) UpdateWithPhoto(user *models.User) error {
 			u.Username = user.Username
 			u.Email = user.Email
 			u.RoleID = user.RoleID
-			u.IDJabatan = user.IDJabatan
+			u.Jabatan = user.Jabatan
 			u.FotoProfile = user.FotoProfile
 			u.Banner = user.Banner
 			u.UpdatedAt = user.UpdatedAt
@@ -569,82 +569,6 @@ func NewMockRoleRepositoryWithDefaults() *MockRoleRepository {
 	return repo
 }
 
-// ============================================================
-// Mock Jabatan Repository
-// ============================================================
-
-type MockJabatanRepository struct {
-	jabatans map[string]*dto.JabatanResponse
-	mu       sync.RWMutex
-}
-
-func NewMockJabatanRepository() *MockJabatanRepository {
-	return &MockJabatanRepository{
-		jabatans: make(map[string]*dto.JabatanResponse),
-	}
-}
-
-func (m *MockJabatanRepository) Create(req dto.CreateJabatanRequest, id string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	nama := ""
-	if req.NamaJabatan != nil {
-		nama = *req.NamaJabatan
-	}
-
-	m.jabatans[id] = &dto.JabatanResponse{
-		ID:          id,
-		NamaJabatan: nama,
-		CreatedAt:   time.Now().Format("2006-01-02 15:04:05"),
-		UpdatedAt:   time.Now().Format("2006-01-02 15:04:05"),
-	}
-	return nil
-}
-
-func (m *MockJabatanRepository) GetAll() ([]dto.JabatanResponse, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	jabatans := make([]dto.JabatanResponse, 0, len(m.jabatans))
-	for _, j := range m.jabatans {
-		jabatans = append(jabatans, *j)
-	}
-	return jabatans, nil
-}
-
-func (m *MockJabatanRepository) GetByID(id string) (*dto.JabatanResponse, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	jabatan, exists := m.jabatans[id]
-	if !exists {
-		return nil, errors.New("jabatan not found")
-	}
-	return jabatan, nil
-}
-
-func (m *MockJabatanRepository) Update(id string, jabatan dto.JabatanResponse) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if _, exists := m.jabatans[id]; !exists {
-		return errors.New("jabatan not found")
-	}
-	m.jabatans[id] = &jabatan
-	return nil
-}
-
-func (m *MockJabatanRepository) Delete(id string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if _, exists := m.jabatans[id]; !exists {
-		return errors.New("jabatan not found")
-	}
-	delete(m.jabatans, id)
-	return nil
-}
 
 // ============================================================
 // Mock PIC Repository
