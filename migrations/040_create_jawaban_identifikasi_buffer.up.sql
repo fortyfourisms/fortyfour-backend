@@ -1,4 +1,4 @@
--- +migrate Up
+
 CREATE TABLE IF NOT EXISTS jawaban_identifikasi_buffer (
     id INT AUTO_INCREMENT PRIMARY KEY,
     pertanyaan_identifikasi_id INT NOT NULL,
@@ -12,6 +12,3 @@ CREATE TABLE IF NOT EXISTS jawaban_identifikasi_buffer (
 
     UNIQUE (perusahaan_id, pertanyaan_identifikasi_id)
 );
-
--- +migrate Down
-DROP TABLE IF EXISTS jawaban_identifikasi_buffer;

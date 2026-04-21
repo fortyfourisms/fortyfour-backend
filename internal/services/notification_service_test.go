@@ -39,6 +39,17 @@ func (m *mockNotifRepo) Create(notif *models.Notification) error {
 	return nil
 }
 
+func (m *mockNotifRepo) FindAll() ([]models.Notification, error) {
+	if m.findAllErr != nil {
+		return nil, m.findAllErr
+	}
+	var all []models.Notification
+	for _, notifs := range m.data {
+		all = append(all, notifs...)
+	}
+	return all, nil
+}
+
 func (m *mockNotifRepo) FindAllByUserID(userID string) ([]models.Notification, error) {
 	if m.findAllErr != nil {
 		return nil, m.findAllErr
@@ -125,7 +136,7 @@ func TestNotificationService_GetAll_Empty_ReturnsEmptySlice(t *testing.T) {
 	repo := newMockNotifRepo()
 	svc := NewNotificationService(repo)
 
-	result, err := svc.GetAll("user-1")
+	result, err := svc.GetAll("user-1", "user")
 
 	require.NoError(t, err)
 	assert.Empty(t, result)
@@ -140,11 +151,23 @@ func TestNotificationService_GetAll_WithData(t *testing.T) {
 	repo.data["u1"] = notifs
 
 	svc := NewNotificationService(repo)
-	result, err := svc.GetAll("u1")
+	result, err := svc.GetAll("u1", "user")
 
 	require.NoError(t, err)
 	assert.Len(t, result, 2)
 	assert.Equal(t, int64(1), result[0].ID)
+}
+
+func TestNotificationService_GetAll_AdminReturnsAll(t *testing.T) {
+	repo := newMockNotifRepo()
+	repo.data["u1"] = []models.Notification{{ID: 1, UserID: "u1"}}
+	repo.data["u2"] = []models.Notification{{ID: 2, UserID: "u2"}}
+
+	svc := NewNotificationService(repo)
+	result, err := svc.GetAll("admin-id", "admin")
+
+	require.NoError(t, err)
+	assert.Len(t, result, 2, "admin harus melihat semua notifikasi")
 }
 
 // ============================================================

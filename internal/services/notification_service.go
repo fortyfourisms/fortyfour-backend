@@ -17,7 +17,10 @@ func NewNotificationService(repo repository.NotificationRepositoryInterface) *No
 }
 
 // GetAll mengambil semua notifikasi milik user dari database
-func (s *NotificationService) GetAll(userID string) ([]models.Notification, error) {
+func (s *NotificationService) GetAll(userID string, role string) ([]models.Notification, error) {
+	if role == "admin" {
+		return s.repo.FindAll()
+	}
 	return s.repo.FindAllByUserID(userID)
 }
 
@@ -56,7 +59,7 @@ func (s *NotificationService) DeleteAll(userID string) error {
 
 // HasPasswordExpirySoonNotif mengecek apakah sudah ada notifikasi password expiry soon
 func (s *NotificationService) HasPasswordExpirySoonNotif(userID string) (bool, error) {
-	notifs, err := s.GetAll(userID)
+	notifs, err := s.repo.FindAllByUserID(userID)
 	if err != nil {
 		return false, err
 	}
@@ -71,7 +74,7 @@ func (s *NotificationService) HasPasswordExpirySoonNotif(userID string) (bool, e
 
 // HasSTRExpirySoonNotif mengecek apakah sudah ada notifikasi STR expiry soon
 func (s *NotificationService) HasSTRExpirySoonNotif(userID string) (bool, error) {
-	notifs, err := s.GetAll(userID)
+	notifs, err := s.repo.FindAllByUserID(userID)
 	if err != nil {
 		return false, err
 	}

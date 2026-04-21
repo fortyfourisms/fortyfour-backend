@@ -110,7 +110,7 @@ func (s *STRExpiryService) checkTanggalKadaluarsa(userID string, csirt *models.C
 // hasNotifByType mengecek apakah sudah ada notifikasi unread dengan type dan keyword tertentu
 // untuk menghindari duplikasi antara notif kadaluarsa vs registrasi ulang
 func (s *STRExpiryService) hasNotifByType(userID string, notifType models.NotificationType, keyword string) (bool, error) {
-	notifs, err := s.notifSvc.GetAll(userID)
+	notifs, err := s.notifSvc.GetAll(userID, "user")
 	if err != nil {
 		return false, err
 	}

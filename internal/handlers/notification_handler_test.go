@@ -72,9 +72,9 @@ func TestNotificationHandler_GetAll_WithUnreadNotifs(t *testing.T) {
 	handler, _, repo := setupNotificationHandler()
 
 	notifs := []models.Notification{
-		{ID: 1, Type: models.NotifLoginFailed, Message: "Login gagal", Read: false, CreatedAt: time.Now()},
-		{ID: 2, Type: models.NotifPasswordExpirySoon, Message: "Password mau expired", Read: true, CreatedAt: time.Now()},
-		{ID: 3, Type: models.NotifAccountSuspended, Message: "Akun suspend", Read: false, CreatedAt: time.Now()},
+		{ID: 1, UserID: "user-1", Username: "krisna", DisplayName: "Krisna", Type: models.NotifLoginFailed, Message: "Login gagal", Read: false, CreatedAt: time.Now()},
+		{ID: 2, UserID: "user-1", Username: "krisna", DisplayName: "Krisna", Type: models.NotifPasswordExpirySoon, Message: "Password mau expired", Read: true, CreatedAt: time.Now()},
+		{ID: 3, UserID: "user-1", Username: "krisna", DisplayName: "Krisna", Type: models.NotifAccountSuspended, Message: "Akun suspend", Read: false, CreatedAt: time.Now()},
 	}
 	seedNotifInHandler(repo, "user-1", notifs)
 
@@ -87,6 +87,7 @@ func TestNotificationHandler_GetAll_WithUnreadNotifs(t *testing.T) {
 	var resp dto.NotificationListResponse
 	require.NoError(t, json.NewDecoder(rr.Body).Decode(&resp))
 	assert.Len(t, resp.Notifications, 3)
+	assert.Equal(t, "krisna", resp.Notifications[0].User.Username)
 	assert.Equal(t, 2, resp.UnreadCount, "harus ada 2 notif unread")
 }
 

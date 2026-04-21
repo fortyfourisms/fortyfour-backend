@@ -30,12 +30,40 @@ func (r *NotificationRepository) Create(notif *models.Notification) error {
 	return nil
 }
 
+func (r *NotificationRepository) FindAll() ([]models.Notification, error) {
+	query := `
+ 		SELECT n.id, n.user_id, u.username, COALESCE(u.display_name, '') as display_name, 
+ 		       n.type, n.message, n.is_read, n.created_at
+ 		FROM notifications n
+ 		LEFT JOIN users u ON n.user_id = u.id
+ 		ORDER BY n.created_at DESC
+ 	`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var notifs []models.Notification
+	for rows.Next() {
+		var n models.Notification
+		err := rows.Scan(&n.ID, &n.UserID, &n.Username, &n.DisplayName, &n.Type, &n.Message, &n.Read, &n.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		notifs = append(notifs, n)
+	}
+	return notifs, nil
+}
+
 func (r *NotificationRepository) FindAllByUserID(userID string) ([]models.Notification, error) {
 	query := `
- 		SELECT id, user_id, type, message, is_read, created_at
- 		FROM notifications
- 		WHERE user_id = ?
- 		ORDER BY created_at DESC
+ 		SELECT n.id, n.user_id, u.username, COALESCE(u.display_name, '') as display_name, 
+ 		       n.type, n.message, n.is_read, n.created_at
+ 		FROM notifications n
+ 		LEFT JOIN users u ON n.user_id = u.id
+ 		WHERE n.user_id = ?
+ 		ORDER BY n.created_at DESC
  	`
 	rows, err := r.db.Query(query, userID)
 	if err != nil {
@@ -46,7 +74,7 @@ func (r *NotificationRepository) FindAllByUserID(userID string) ([]models.Notifi
 	var notifs []models.Notification
 	for rows.Next() {
 		var n models.Notification
-		err := rows.Scan(&n.ID, &n.UserID, &n.Type, &n.Message, &n.Read, &n.CreatedAt)
+		err := rows.Scan(&n.ID, &n.UserID, &n.Username, &n.DisplayName, &n.Type, &n.Message, &n.Read, &n.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
