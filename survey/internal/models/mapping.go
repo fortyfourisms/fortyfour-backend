@@ -5,13 +5,13 @@ package models
 func MapImpactIntToString(i ImpactLevel) string {
 	switch i {
 	case ImpactNotSignificant:
-		return "tidak_signifikan"
+		return "Tidak Signifikan"
 	case ImpactFairlySignificant:
-		return "cukup_signifikan"
+		return "Cukup Signifikan"
 	case ImpactSignificant:
-		return "signifikan"
+		return "Signifikan"
 	case ImpactVerySignificant:
-		return "sangat_signifikan"
+		return "Sangat Signifikan"
 	default:
 		return ""
 	}
@@ -20,13 +20,13 @@ func MapImpactIntToString(i ImpactLevel) string {
 // string → int (dari database)
 func MapImpactStringToInt(s string) ImpactLevel {
 	switch s {
-	case "tidak_signifikan":
+	case "Tidak Signifikan":
 		return ImpactNotSignificant
-	case "cukup_signifikan":
+	case "Sukup Signifikan":
 		return ImpactFairlySignificant
-	case "signifikan":
+	case "Signifikan":
 		return ImpactSignificant
-	case "sangat_signifikan":
+	case "Sangat Signifikan":
 		return ImpactVerySignificant
 	default:
 		return 0
@@ -38,13 +38,13 @@ func MapImpactStringToInt(s string) ImpactLevel {
 func MapFrequencyIntToString(f FrequencyLevel) string {
 	switch f {
 	case FrequencySmall:
-		return "kecil"
+		return "Kecil"
 	case FrequencyMedium:
-		return "sedang"
+		return "Sedang"
 	case FrequencyLarge:
-		return "besar"
+		return "Besar"
 	case FrequencyVeryLarge:
-		return "sangat_besar"
+		return "Sangat Besar"
 	default:
 		return ""
 	}
@@ -53,13 +53,13 @@ func MapFrequencyIntToString(f FrequencyLevel) string {
 // string → int
 func MapFrequencyStringToInt(s string) FrequencyLevel {
 	switch s {
-	case "kecil":
+	case "Kecil":
 		return FrequencySmall
-	case "sedang":
+	case "Sedang":
 		return FrequencyMedium
-	case "besar":
+	case "Besar":
 		return FrequencyLarge
-	case "sangat_besar":
+	case "Sangat Besar":
 		return FrequencyVeryLarge
 	default:
 		return 0
