@@ -4,7 +4,6 @@ package dto
 type CreateSERequest struct {
 	IDPerusahaan string `json:"id_perusahaan" validate:"required,uuid4"`
 	IDSubSektor  string `json:"id_sub_sektor" validate:"omitempty,uuid4"`
-	IDCsirt      string `json:"id_csirt" validate:"omitempty,uuid4"`
 
 	// Karakteristik Instansi (A/B/C)
 	NilaiInvestasi                  string `json:"nilai_investasi" validate:"required,oneof=A B C"`
@@ -30,7 +29,6 @@ type CreateSERequest struct {
 type UpdateSERequest struct {
 	IDPerusahaan *string `json:"id_perusahaan" validate:"omitempty,uuid4"`
 	IDSubSektor  *string `json:"id_sub_sektor" validate:"omitempty,uuid4"`
-	IDCsirt      *string `json:"id_csirt" validate:"omitempty,uuid4"`
 
 	// Karakteristik Instansi (A/B/C)
 	NilaiInvestasi                  *string `json:"nilai_investasi" validate:"omitempty,oneof=A B C"`
@@ -57,7 +55,6 @@ type SEResponse struct {
 	ID           string `json:"id"`
 	IDPerusahaan string `json:"id_perusahaan"`
 	IDSubSektor  string `json:"id_sub_sektor"`
-	IDCsirt      string `json:"id_csirt"`
 
 	// Karakteristik Instansi
 	NilaiInvestasi                  string `json:"nilai_investasi"`
@@ -88,7 +85,6 @@ type SEResponse struct {
 	// Nested objects
 	Perusahaan *PerusahaanMiniResponse `json:"perusahaan,omitempty"`
 	SubSektor  *SubSektorMiniResponse  `json:"sub_sektor,omitempty"`
-	Csirt      *CsirtMiniResponse      `json:"csirt,omitempty"`
 }
 
 // SEListResponse represents the list response for SE

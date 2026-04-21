@@ -37,7 +37,6 @@ func TestSERepository_Create(t *testing.T) {
 			req: dto.CreateSERequest{
 				IDPerusahaan:                    "perusahaan-123",
 				IDSubSektor:                     "sub-sektor-1",
-				IDCsirt:                         "csirt-1",
 				NilaiInvestasi:                  "A",
 				AnggaranOperasional:             "A",
 				KepatuhanPeraturan:              "A",
@@ -59,7 +58,7 @@ func TestSERepository_Create(t *testing.T) {
 			kategori:   "Strategis",
 			mockFn: func(mock sqlmock.Sqlmock, req dto.CreateSERequest, id string, totalBobot int, kategori string) {
 				mock.ExpectExec("INSERT INTO se").
-					WithArgs(id, req.IDPerusahaan, req.IDSubSektor, req.IDCsirt,
+					WithArgs(id, req.IDPerusahaan, req.IDSubSektor,
 						req.NilaiInvestasi, req.AnggaranOperasional, req.KepatuhanPeraturan,
 						req.TeknikKriptografi, req.JumlahPengguna, req.DataPribadi,
 						req.KlasifikasiData, req.KekritisanProses, req.DampakKegagalan,
@@ -74,7 +73,6 @@ func TestSERepository_Create(t *testing.T) {
 			req: dto.CreateSERequest{
 				IDPerusahaan:                    "perusahaan-456",
 				IDSubSektor:                     "",
-				IDCsirt:                         "",
 				NilaiInvestasi:                  "B",
 				AnggaranOperasional:             "B",
 				KepatuhanPeraturan:              "B",
@@ -96,7 +94,7 @@ func TestSERepository_Create(t *testing.T) {
 			kategori:   "Tinggi",
 			mockFn: func(mock sqlmock.Sqlmock, req dto.CreateSERequest, id string, totalBobot int, kategori string) {
 				mock.ExpectExec("INSERT INTO se").
-					WithArgs(id, req.IDPerusahaan, nil, nil,
+					WithArgs(id, req.IDPerusahaan, nil,
 						req.NilaiInvestasi, req.AnggaranOperasional, req.KepatuhanPeraturan,
 						req.TeknikKriptografi, req.JumlahPengguna, req.DataPribadi,
 						req.KlasifikasiData, req.KekritisanProses, req.DampakKegagalan,
@@ -111,7 +109,6 @@ func TestSERepository_Create(t *testing.T) {
 			req: dto.CreateSERequest{
 				IDPerusahaan:                    "perusahaan-789",
 				IDSubSektor:                     "sub-3",
-				IDCsirt:                         "csirt-3",
 				NilaiInvestasi:                  "C",
 				AnggaranOperasional:             "C",
 				KepatuhanPeraturan:              "C",
@@ -133,7 +130,7 @@ func TestSERepository_Create(t *testing.T) {
 			kategori:   "Rendah",
 			mockFn: func(mock sqlmock.Sqlmock, req dto.CreateSERequest, id string, totalBobot int, kategori string) {
 				mock.ExpectExec("INSERT INTO se").
-					WithArgs(id, req.IDPerusahaan, req.IDSubSektor, req.IDCsirt,
+					WithArgs(id, req.IDPerusahaan, req.IDSubSektor,
 						req.NilaiInvestasi, req.AnggaranOperasional, req.KepatuhanPeraturan,
 						req.TeknikKriptografi, req.JumlahPengguna, req.DataPribadi,
 						req.KlasifikasiData, req.KekritisanProses, req.DampakKegagalan,
@@ -167,7 +164,7 @@ func TestSERepository_Create(t *testing.T) {
 			kategori:   "Strategis",
 			mockFn: func(mock sqlmock.Sqlmock, req dto.CreateSERequest, id string, totalBobot int, kategori string) {
 				mock.ExpectExec("INSERT INTO se").
-					WithArgs(id, req.IDPerusahaan, nil, nil,
+					WithArgs(id, req.IDPerusahaan, nil,
 						req.NilaiInvestasi, req.AnggaranOperasional, req.KepatuhanPeraturan,
 						req.TeknikKriptografi, req.JumlahPengguna, req.DataPribadi,
 						req.KlasifikasiData, req.KekritisanProses, req.DampakKegagalan,
@@ -201,7 +198,7 @@ func TestSERepository_Create(t *testing.T) {
 			kategori:   "Tinggi",
 			mockFn: func(mock sqlmock.Sqlmock, req dto.CreateSERequest, id string, totalBobot int, kategori string) {
 				mock.ExpectExec("INSERT INTO se").
-					WithArgs(id, req.IDPerusahaan, nil, nil,
+					WithArgs(id, req.IDPerusahaan, nil,
 						req.NilaiInvestasi, req.AnggaranOperasional, req.KepatuhanPeraturan,
 						req.TeknikKriptografi, req.JumlahPengguna, req.DataPribadi,
 						req.KlasifikasiData, req.KekritisanProses, req.DampakKegagalan,
@@ -250,7 +247,7 @@ func TestSERepository_GetAll(t *testing.T) {
 			mockFn: func(mock sqlmock.Sqlmock) {
 				now := time.Now()
 				rows := sqlmock.NewRows([]string{
-					"id", "id_perusahaan", "id_sub_sektor", "id_csirt",
+					"id", "id_perusahaan", "id_sub_sektor",
 					"nilai_investasi", "anggaran_operasional", "kepatuhan_peraturan", "teknik_kriptografi",
 					"jumlah_pengguna", "data_pribadi", "klasifikasi_data", "kekritisan_proses",
 					"dampak_kegagalan", "potensi_kerugian_dan_dampak_negatif",
@@ -258,15 +255,13 @@ func TestSERepository_GetAll(t *testing.T) {
 					"total_bobot", "kategori_se", "created_at", "updated_at",
 					"p_id", "nama_perusahaan",
 					"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
-					"c_id", "nama_csirt",
-				}).
-					AddRow("se-1", "perusahaan-1", "sub-1", "csirt-1",
+									}).
+					AddRow("se-1", "perusahaan-1", "sub-1",
 						"A", "A", "A", "A", "A", "A", "A", "A", "A", "A",
 						"Core Banking System", "192.168.1.100", "AS65000", "IT Dept", "Transaction Processing",
 						100, "Strategis", now, now,
 						"perusahaan-1", "PT Bank ABC",
-						"sub-1", "Perbankan", "sektor-1", "Keuangan",
-						"csirt-1", "CSIRT Bank ABC")
+						"sub-1", "Perbankan", "sektor-1", "Keuangan")
 
 				mock.ExpectQuery("SELECT (.+) FROM se JOIN perusahaan p (.+) ORDER BY se.created_at DESC").
 					WillReturnRows(rows)
@@ -279,7 +274,7 @@ func TestSERepository_GetAll(t *testing.T) {
 			mockFn: func(mock sqlmock.Sqlmock) {
 				now := time.Now()
 				rows := sqlmock.NewRows([]string{
-					"id", "id_perusahaan", "id_sub_sektor", "id_csirt",
+					"id", "id_perusahaan", "id_sub_sektor",
 					"nilai_investasi", "anggaran_operasional", "kepatuhan_peraturan", "teknik_kriptografi",
 					"jumlah_pengguna", "data_pribadi", "klasifikasi_data", "kekritisan_proses",
 					"dampak_kegagalan", "potensi_kerugian_dan_dampak_negatif",
@@ -287,15 +282,13 @@ func TestSERepository_GetAll(t *testing.T) {
 					"total_bobot", "kategori_se", "created_at", "updated_at",
 					"p_id", "nama_perusahaan",
 					"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
-					"c_id", "nama_csirt",
-				}).
-					AddRow("se-1", "perusahaan-1", "", "",
+									}).
+					AddRow("se-1", "perusahaan-1", "",
 						"C", "C", "C", "C", "C", "C", "C", "C", "C", "C",
 						"Internal Portal", "10.0.0.1", "AS64512", "Internal IT", "",
 						30, "Rendah", now, now,
 						"perusahaan-1", "PT ABC",
-						"", "", "", "",
-						"", "")
+						"", "", "", "")
 
 				mock.ExpectQuery("SELECT (.+) FROM se JOIN perusahaan p (.+) ORDER BY se.created_at DESC").
 					WillReturnRows(rows)
@@ -308,7 +301,7 @@ func TestSERepository_GetAll(t *testing.T) {
 			mockFn: func(mock sqlmock.Sqlmock) {
 				now := time.Now()
 				rows := sqlmock.NewRows([]string{
-					"id", "id_perusahaan", "id_sub_sektor", "id_csirt",
+					"id", "id_perusahaan", "id_sub_sektor",
 					"nilai_investasi", "anggaran_operasional", "kepatuhan_peraturan", "teknik_kriptografi",
 					"jumlah_pengguna", "data_pribadi", "klasifikasi_data", "kekritisan_proses",
 					"dampak_kegagalan", "potensi_kerugian_dan_dampak_negatif",
@@ -316,23 +309,22 @@ func TestSERepository_GetAll(t *testing.T) {
 					"total_bobot", "kategori_se", "created_at", "updated_at",
 					"p_id", "nama_perusahaan",
 					"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
-					"c_id", "nama_csirt",
-				}).
-					AddRow("se-1", "p1", "sub-1", "csirt-1",
+									}).
+					AddRow("se-1", "p1", "sub-1",
 						"A", "A", "A", "A", "A", "A", "A", "A", "A", "A",
 						"System 1", "192.168.1.1", "AS1", "IT", "Features 1",
 						100, "Strategis", now, now,
-						"p1", "PT 1", "sub-1", "Sub 1", "s1", "Sektor 1", "csirt-1", "CSIRT 1").
-					AddRow("se-2", "p2", "sub-2", "csirt-2",
+						"p1", "PT 1", "sub-1", "Sub 1", "s1", "Sektor 1").
+					AddRow("se-2", "p2", "sub-2",
 						"B", "B", "B", "B", "B", "B", "B", "B", "B", "B",
 						"System 2", "192.168.1.2", "AS2", "IT", "Features 2",
 						70, "Tinggi", now, now,
-						"p2", "PT 2", "sub-2", "Sub 2", "s2", "Sektor 2", "csirt-2", "CSIRT 2").
-					AddRow("se-3", "p3", "", "",
+						"p2", "PT 2", "sub-2", "Sub 2", "s2", "Sektor 2").
+					AddRow("se-3", "p3", "",
 						"C", "C", "C", "C", "C", "C", "C", "C", "C", "C",
 						"System 3", "192.168.1.3", "AS3", "IT", "Features 3",
 						30, "Rendah", now, now,
-						"p3", "PT 3", "", "", "", "", "", "")
+						"p3", "PT 3", "", "", "", "")
 
 				mock.ExpectQuery("SELECT (.+) FROM se JOIN perusahaan p (.+) ORDER BY se.created_at DESC").
 					WillReturnRows(rows)
@@ -344,7 +336,7 @@ func TestSERepository_GetAll(t *testing.T) {
 			name: "success - empty result",
 			mockFn: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{
-					"id", "id_perusahaan", "id_sub_sektor", "id_csirt",
+					"id", "id_perusahaan", "id_sub_sektor",
 					"nilai_investasi", "anggaran_operasional", "kepatuhan_peraturan", "teknik_kriptografi",
 					"jumlah_pengguna", "data_pribadi", "klasifikasi_data", "kekritisan_proses",
 					"dampak_kegagalan", "potensi_kerugian_dan_dampak_negatif",
@@ -352,8 +344,7 @@ func TestSERepository_GetAll(t *testing.T) {
 					"total_bobot", "kategori_se", "created_at", "updated_at",
 					"p_id", "nama_perusahaan",
 					"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
-					"c_id", "nama_csirt",
-				})
+									})
 
 				mock.ExpectQuery("SELECT (.+) FROM se JOIN perusahaan p (.+) ORDER BY se.created_at DESC").
 					WillReturnRows(rows)
@@ -425,7 +416,7 @@ func TestSERepository_GetByID(t *testing.T) {
 			mockFn: func(mock sqlmock.Sqlmock) {
 				now := time.Now()
 				rows := sqlmock.NewRows([]string{
-					"id", "id_perusahaan", "id_sub_sektor", "id_csirt",
+					"id", "id_perusahaan", "id_sub_sektor",
 					"nilai_investasi", "anggaran_operasional", "kepatuhan_peraturan", "teknik_kriptografi",
 					"jumlah_pengguna", "data_pribadi", "klasifikasi_data", "kekritisan_proses",
 					"dampak_kegagalan", "potensi_kerugian_dan_dampak_negatif",
@@ -433,15 +424,13 @@ func TestSERepository_GetByID(t *testing.T) {
 					"total_bobot", "kategori_se", "created_at", "updated_at",
 					"p_id", "nama_perusahaan",
 					"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
-					"c_id", "nama_csirt",
-				}).
-					AddRow("se-123", "perusahaan-1", "sub-1", "csirt-1",
+									}).
+					AddRow("se-123", "perusahaan-1", "sub-1",
 						"A", "A", "A", "A", "A", "A", "A", "A", "A", "A",
 						"Core Banking System", "192.168.1.100", "AS65000", "IT Dept", "Transaction Processing",
 						100, "Strategis", now, now,
 						"perusahaan-1", "PT Bank ABC",
-						"sub-1", "Perbankan", "sektor-1", "Keuangan",
-						"csirt-1", "CSIRT Bank ABC")
+						"sub-1", "Perbankan", "sektor-1", "Keuangan")
 
 				mock.ExpectQuery("SELECT (.+) FROM se JOIN perusahaan p (.+) WHERE se.id = \\?").
 					WithArgs("se-123").
@@ -455,7 +444,7 @@ func TestSERepository_GetByID(t *testing.T) {
 			mockFn: func(mock sqlmock.Sqlmock) {
 				now := time.Now()
 				rows := sqlmock.NewRows([]string{
-					"id", "id_perusahaan", "id_sub_sektor", "id_csirt",
+					"id", "id_perusahaan", "id_sub_sektor",
 					"nilai_investasi", "anggaran_operasional", "kepatuhan_peraturan", "teknik_kriptografi",
 					"jumlah_pengguna", "data_pribadi", "klasifikasi_data", "kekritisan_proses",
 					"dampak_kegagalan", "potensi_kerugian_dan_dampak_negatif",
@@ -463,15 +452,13 @@ func TestSERepository_GetByID(t *testing.T) {
 					"total_bobot", "kategori_se", "created_at", "updated_at",
 					"p_id", "nama_perusahaan",
 					"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
-					"c_id", "nama_csirt",
-				}).
-					AddRow("se-456", "perusahaan-1", "", "",
+									}).
+					AddRow("se-456", "perusahaan-1", "",
 						"B", "B", "B", "B", "B", "B", "B", "B", "B", "B",
 						"Internal Portal", "10.0.0.1", "AS64512", "Internal IT", "",
 						70, "Tinggi", now, now,
 						"perusahaan-1", "PT ABC",
-						"", "", "", "",
-						"", "")
+						"", "", "", "")
 
 				mock.ExpectQuery("SELECT (.+) FROM se JOIN perusahaan p (.+) WHERE se.id = \\?").
 					WithArgs("se-456").
@@ -558,7 +545,6 @@ func TestSERepository_Update(t *testing.T) {
 				PotensiKerugiandanDampakNegatif: stringPtr("A"),
 				IDPerusahaan:                    stringPtr("perusahaan-updated"),
 				IDSubSektor:                     stringPtr("sub-updated"),
-				IDCsirt:                         stringPtr("csirt-updated"),
 				NamaSE:                          stringPtr("Updated System"),
 				IpSE:                            stringPtr("192.168.1.200"),
 				AsNumberSE:                      stringPtr("AS65001"),
@@ -746,7 +732,7 @@ func TestSERepository_ValidateABCValues(t *testing.T) {
 			id := uuid.New().String()
 
 			mock.ExpectExec("INSERT INTO se").
-				WithArgs(id, req.IDPerusahaan, nil, nil,
+				WithArgs(id, req.IDPerusahaan, nil,
 					req.NilaiInvestasi, req.AnggaranOperasional, req.KepatuhanPeraturan,
 					req.TeknikKriptografi, req.JumlahPengguna, req.DataPribadi,
 					req.KlasifikasiData, req.KekritisanProses, req.DampakKegagalan,
@@ -765,7 +751,7 @@ func TestSERepository_ValidateABCValues(t *testing.T) {
 
 func TestSERepository_GetByPerusahaan(t *testing.T) {
 	cols := []string{
-		"id", "id_perusahaan", "id_sub_sektor", "id_csirt",
+		"id", "id_perusahaan", "id_sub_sektor",
 		"nilai_investasi", "anggaran_operasional", "kepatuhan_peraturan", "teknik_kriptografi",
 		"jumlah_pengguna", "data_pribadi", "klasifikasi_data", "kekritisan_proses",
 		"dampak_kegagalan", "potensi_kerugian_dan_dampak_negatif",
@@ -773,8 +759,7 @@ func TestSERepository_GetByPerusahaan(t *testing.T) {
 		"total_bobot", "kategori_se", "created_at", "updated_at",
 		"p_id", "nama_perusahaan",
 		"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
-		"c_id", "nama_csirt",
-	}
+			}
 
 	tests := []struct {
 		name         string
@@ -789,20 +774,18 @@ func TestSERepository_GetByPerusahaan(t *testing.T) {
 			mockFn: func(mock sqlmock.Sqlmock) {
 				now := time.Now()
 				rows := sqlmock.NewRows(cols).
-					AddRow("se-1", "perusahaan-1", "sub-1", "csirt-1",
+					AddRow("se-1", "perusahaan-1", "sub-1",
 						"A", "A", "A", "A", "A", "A", "A", "A", "A", "A",
 						"Core Banking", "192.168.1.1", "AS1", "IT", "Features",
 						100, "Strategis", now, now,
 						"perusahaan-1", "PT ABC",
-						"sub-1", "Perbankan", "s-1", "Keuangan",
-						"csirt-1", "CSIRT ABC").
-					AddRow("se-2", "perusahaan-1", "", "",
+						"sub-1", "Perbankan", "s-1", "Keuangan").
+					AddRow("se-2", "perusahaan-1", "",
 						"B", "B", "B", "B", "B", "B", "B", "B", "B", "B",
 						"Internal Portal", "10.0.0.1", "AS2", "IT", "",
 						70, "Tinggi", now, now,
 						"perusahaan-1", "PT ABC",
-						"", "", "", "",
-						"", "")
+						"", "", "", "")
 
 				mock.ExpectQuery("SELECT (.+) FROM se JOIN perusahaan p (.+) WHERE se.id_perusahaan = \\?").
 					WithArgs("perusahaan-1").
