@@ -32,12 +32,13 @@ func NewNotificationHandler(svc *services.NotificationService) *NotificationHand
 // @Router       /api/notifications [get]
 func (h *NotificationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
+	role := middleware.GetRole(r.Context())
 	if userID == "" {
 		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	notifs, err := h.svc.GetAll(userID)
+	notifs, err := h.svc.GetAll(userID, role)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -51,6 +52,7 @@ func (h *NotificationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		}
 		items = append(items, dto.NotificationResponse{
 			ID:        n.ID,
+			UserID:    n.UserID,
 			Type:      string(n.Type),
 			Message:   n.Message,
 			Read:      n.Read,

@@ -30,7 +30,31 @@ package repository
  	return nil
  }
  
- func (r *NotificationRepository) FindAllByUserID(userID string) ([]models.Notification, error) {
+ func (r *NotificationRepository) FindAll() ([]models.Notification, error) {
+	query := `
+		SELECT id, user_id, type, message, is_read, created_at
+		FROM notifications
+		ORDER BY created_at DESC
+	`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var notifs []models.Notification
+	for rows.Next() {
+		var n models.Notification
+		err := rows.Scan(&n.ID, &n.UserID, &n.Type, &n.Message, &n.Read, &n.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		notifs = append(notifs, n)
+	}
+	return notifs, nil
+}
+
+func (r *NotificationRepository) FindAllByUserID(userID string) ([]models.Notification, error) {
  	query := `
  		SELECT id, user_id, type, message, is_read, created_at
  		FROM notifications

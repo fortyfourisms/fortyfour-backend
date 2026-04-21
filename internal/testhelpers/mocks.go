@@ -1019,7 +1019,17 @@ func (m *MockPerusahaanService) Delete(id string) error {
  	}
  }
  
- func (m *MockNotificationRepository) Create(notif *models.Notification) error {
+ func (m *MockNotificationRepository) FindAll() ([]models.Notification, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var all []models.Notification
+	for _, notifs := range m.Notifications {
+		all = append(all, notifs...)
+	}
+	return all, nil
+}
+
+func (m *MockNotificationRepository) Create(notif *models.Notification) error {
  	m.mu.Lock()
  	defer m.mu.Unlock()
  	if notif.ID == 0 {

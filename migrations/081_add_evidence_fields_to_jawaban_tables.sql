@@ -13,7 +13,7 @@ ADD COLUMN evidence TEXT NULL AFTER jawaban_deteksi,
 ADD COLUMN validasi ENUM('yes', 'no') NULL AFTER evidence,
 ADD COLUMN keterangan TEXT NULL AFTER validasi;
 
-ALTER TABLE jawaban_pulih
-ADD COLUMN evidence TEXT NULL AFTER jawaban_pulih,
+ALTER TABLE jawaban_gulih
+ADD COLUMN evidence TEXT NULL AFTER jawaban_gulih,
 ADD COLUMN validasi ENUM('yes', 'no') NULL AFTER evidence,
 ADD COLUMN keterangan TEXT NULL AFTER validasi;

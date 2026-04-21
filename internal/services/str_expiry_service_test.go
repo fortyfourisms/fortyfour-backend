@@ -75,7 +75,7 @@ package services
  	svc.CheckAndNotify("user-1", "perusahaan-1")
  
  	// Tidak ada notifikasi yang di-push
- 	notifs, err := notifSvc.GetAll("user-1")
+ 	notifs, err := notifSvc.GetAll("user-1", "user")
  	require.NoError(t, err)
  	assert.Empty(t, notifs)
  }
@@ -96,7 +96,7 @@ package services
  
  	svc.CheckAndNotify("user-1", "perusahaan-1")
  
- 	notifs, _ := notifSvc.GetAll("user-1")
+ 	notifs, _ := notifSvc.GetAll("user-1", "user")
  	assert.Empty(t, notifs, "tanggal nil → tidak push notif")
  }
  
@@ -116,7 +116,7 @@ package services
  
  	svc.CheckAndNotify("user-1", "perusahaan-1")
  
- 	notifs, _ := notifSvc.GetAll("user-1")
+ 	notifs, _ := notifSvc.GetAll("user-1", "user")
  	assert.Empty(t, notifs, "tanggal kosong → tidak push notif")
  }
  
@@ -138,7 +138,7 @@ package services
  
  	svc.CheckAndNotify("user-1", "perusahaan-1")
  
- 	notifs, _ := notifSvc.GetAll("user-1")
+ 	notifs, _ := notifSvc.GetAll("user-1", "user")
  	require.Len(t, notifs, 1)
  	assert.Equal(t, models.NotifSTRExpired, notifs[0].Type)
  	assert.Contains(t, notifs[0].Message, "CSIRT ABC")
@@ -163,7 +163,7 @@ package services
  
  	svc.CheckAndNotify("user-1", "perusahaan-1")
  
- 	notifs, _ := notifSvc.GetAll("user-1")
+ 	notifs, _ := notifSvc.GetAll("user-1", "user")
  	require.Len(t, notifs, 1)
  	assert.Equal(t, models.NotifSTRExpirySoon, notifs[0].Type)
  	assert.Contains(t, notifs[0].Message, "CSIRT DEF")
@@ -188,7 +188,7 @@ package services
  
  	svc.CheckAndNotify("user-1", "perusahaan-1")
  
- 	notifs, _ := notifSvc.GetAll("user-1")
+ 	notifs, _ := notifSvc.GetAll("user-1", "user")
  	assert.Empty(t, notifs, "kadaluarsa masih jauh → tidak push notif")
  }
  
@@ -221,7 +221,7 @@ package services
  	svc := NewSTRExpiryService(csirtRepo, notifSvc)
  	svc.CheckAndNotify("user-1", "perusahaan-1")
  
- 	notifs, _ := notifSvc.GetAll("user-1")
+ 	notifs, _ := notifSvc.GetAll("user-1", "user")
  	assert.Len(t, notifs, 1, "notif duplikat tidak boleh di-push ulang")
  	assert.Equal(t, int64(1), notifs[0].ID, "notif lama tetap ada")
  }
@@ -255,7 +255,7 @@ package services
  	svc := NewSTRExpiryService(csirtRepo, notifSvc)
  	svc.CheckAndNotify("user-1", "perusahaan-1")
  
- 	notifs, _ := notifSvc.GetAll("user-1")
+ 	notifs, _ := notifSvc.GetAll("user-1", "user")
  	assert.Len(t, notifs, 1, "notif expiring soon duplikat tidak boleh di-push ulang")
  }
  
@@ -288,7 +288,7 @@ package services
  	svc := NewSTRExpiryService(csirtRepo, notifSvc)
  	svc.CheckAndNotify("user-1", "perusahaan-1")
  
- 	notifs, _ := notifSvc.GetAll("user-1")
+ 	notifs, _ := notifSvc.GetAll("user-1", "user")
  	// Notif lama (read) masih ada + notif baru di-push
  	assert.Len(t, notifs, 2, "jika notif lama sudah dibaca, push notif baru")
  }
@@ -432,6 +432,6 @@ package services
  	svc := NewSTRExpiryService(csirtRepo, notifSvc)
  	svc.CheckAndNotify("user-1", "perusahaan-1")
  
- 	notifs, _ := notifSvc.GetAll("user-1")
+ 	notifs, _ := notifSvc.GetAll("user-1", "user")
  	assert.Len(t, notifs, 1, "tidak boleh push duplikat expired")
  }
