@@ -1,51 +1,38 @@
 package dto
 
-// RESPONSE MASTER RISIKO
-type RisikoResponse struct {
-	ID         int    `json:"id"`
-	Kode       string `json:"kode"`
-	Nama       string `json:"nama"`
-	Deskripsi  string `json:"deskripsi"`
-}
+import "survey/internal/models"
 
-// STEP 1: ELIGIBILITY
 type EligibilityRequest struct {
 	RespondenID   int  `json:"responden_id"`
 	RisikoID      int  `json:"risiko_id"`
 	PernahTerjadi bool `json:"pernah_terjadi"`
 }
 
-// STEP 2A: ALASAN (JIKA TIDAK)
 type AlasanRequest struct {
 	RespondenID int    `json:"responden_id"`
 	RisikoID    int    `json:"risiko_id"`
 	Alasan      string `json:"alasan"`
 }
 
-// STEP 2B: DAMPAK (JIKA YA)
 type DampakRequest struct {
-	RespondenID int `json:"responden_id"`
-	RisikoID    int `json:"risiko_id"`
-
-	DampakReputasi    string `json:"dampak_reputasi"`    // ENUM
-	DampakOperasional string `json:"dampak_operasional"` // ENUM
-	DampakFinansial   string `json:"dampak_finansial"`   // ENUM
-	DampakHukum       string `json:"dampak_hukum"`       // ENUM
-
-	Frekuensi string `json:"frekuensi"` // ENUM
+	RespondenID       int                   `json:"responden_id"`
+	RisikoID          int                   `json:"risiko_id"`
+	DampakReputasi    models.ImpactLevel    `json:"dampak_reputasi"`   
+	DampakOperasional models.ImpactLevel    `json:"dampak_operasional"`
+	DampakFinansial   models.ImpactLevel    `json:"dampak_finansial"`
+	DampakHukum       models.ImpactLevel    `json:"dampak_hukum"`
+	Frekuensi         models.FrequencyLevel `json:"frekuensi"`
 }
 
-// STEP 2C: PENGENDALIAN
 type PengendalianRequest struct {
-	RespondenID int  `json:"responden_id"`
-	RisikoID    int  `json:"risiko_id"`
-
-	AdaPengendalian bool   `json:"ada_pengendalian"`
-	Deskripsi       string `json:"deskripsi_pengendalian,omitempty"`
+	RespondenID           int    `json:"responden_id"`
+	RisikoID              int    `json:"risiko_id"`
+	AdaPengendalian       bool   `json:"ada_pengendalian"`
+	DeskripsiPengendalian string `json:"deskripsi_pengendalian,omitempty"` 
 }
 
-// RESPONSE GENERIC
-type RisikoStepResponse struct {
-	NextStep string `json:"next_step"`
-	Message  string `json:"message,omitempty"`
+type NavigateRequest struct {             
+	RespondenID int    `json:"responden_id"`
+	Direction   string `json:"direction"`
+	CurrentRisk int    `json:"current_risk"`
 }

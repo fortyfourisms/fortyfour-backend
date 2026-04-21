@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"survey/internal/dto"
 	"survey/internal/repository"
@@ -95,15 +96,23 @@ func (h *RisikoHandler) SubmitPengendalian(w http.ResponseWriter, r *http.Reques
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"message":   msg,
+		"data":      result, 
 		"next_step": "finish",
 	})
 }
 
 // GET BY RESPONDEN ID
 func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("respondent_id")
 
-	id, err := strconv.Atoi(idStr)
+	// ambil dari URL: /api/survey/ip-theft/
+	path := strings.TrimPrefix(r.URL.Path, "/api/survey/ip-theft/")
+	
+	if path == "" {
+		writeError(w, http.StatusBadRequest, "respondent_id diperlukan")
+		return
+	}
+
+	id, err := strconv.Atoi(path)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "respondent_id harus angka")
 		return
@@ -124,9 +133,15 @@ func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request
 
 // GET PROGRESS
 func (h *RisikoHandler) GetProgress(w http.ResponseWriter, r *http.Request) {
-	idStr := r.PathValue("respondent_id")
 
-	id, err := strconv.Atoi(idStr)
+	path := strings.TrimPrefix(r.URL.Path, "/api/survey/progress/")
+
+	if path == "" {
+		writeError(w, http.StatusBadRequest, "respondent_id diperlukan")
+		return
+	}
+
+	id, err := strconv.Atoi(path)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "respondent_id harus angka")
 		return

@@ -2,90 +2,87 @@ package validation
 
 import (
 	"errors"
-	"strings"
-	"survey/internal/models"
+	"survey/internal/dto"
 )
 
 var (
-	ErrMissingRespondentID = errors.New("respondent_id wajib diisi")
+	ErrMissingRespondentID = errors.New("responden_id wajib diisi")
+	ErrMissingRisikoID     = errors.New("risiko_id wajib diisi")
 
-	// Reason (alur Tidak)
-	ErrMissingReason = errors.New("alasan wajib diisi ketika perusahaan tidak mengalami insiden")
+	ErrMissingReason = errors.New("alasan wajib diisi")
 
-	// Dampak & Frekuensi (alur Ya)
-	ErrInvalidImpactReputation  = errors.New("dampak reputasi tidak valid")
-	ErrInvalidImpactOperational = errors.New("dampak operasional tidak valid")
-	ErrInvalidImpactFinancial   = errors.New("dampak finansial tidak valid")
-	ErrInvalidImpactLegal       = errors.New("dampak hukum tidak valid")
-	ErrInvalidFrequency         = errors.New("frekuensi tidak valid")
+	ErrInvalidImpact  = errors.New("nilai dampak harus 1-4")
+	ErrInvalidFreq    = errors.New("frekuensi harus 1-4")
 
-	// Pengendalian
-	ErrMissingControlInfo = errors.New("deskripsi pengendalian wajib diisi jika has_control = true")
+	ErrMissingControl = errors.New("deskripsi pengendalian wajib diisi jika ada_pengendalian = true")
 )
 
 // STEP 1 — ELIGIBILITY
-func ValidateEligibilityRequest(req models.EligibilityRequest) error {
-	if strings.TrimSpace(req.RespondentID) == "" {
+func ValidateEligibilityRequest(req dto.EligibilityRequest) error {
+	if req.RespondenID <= 0 {
 		return ErrMissingRespondentID
 	}
-
-	// Tidak perlu validasi boolean karena default Go sudah aman
+	if req.RisikoID <= 0 {
+		return ErrMissingRisikoID
+	}
 	return nil
 }
 
-// STEP 2a — REASON (Tidak)
-func ValidateReasonRequest(req models.ReasonRequest) error {
-	if strings.TrimSpace(req.RespondentID) == "" {
+// STEP 2A — ALASAN
+func ValidateAlasanRequest(req dto.AlasanRequest) error {
+	if req.RespondenID <= 0 {
 		return ErrMissingRespondentID
 	}
-
-	if strings.TrimSpace(req.Reason) == "" {
+	if req.RisikoID <= 0 {
+		return ErrMissingRisikoID
+	}
+	if req.Alasan == "" {
 		return ErrMissingReason
 	}
+	return nil
+}
+
+// STEP 2B — DAMPAK
+func ValidateDampakRequest(req dto.DampakRequest) error {
+	if req.RespondenID <= 0 {
+		return ErrMissingRespondentID
+	}
+	if req.RisikoID <= 0 {
+		return ErrMissingRisikoID
+	}
+
+	// karena ImpactLevel = int (1-4)
+	if req.DampakReputasi < 1 || req.DampakReputasi > 4 {
+		return ErrInvalidImpact
+	}
+	if req.DampakOperasional < 1 || req.DampakOperasional > 4 {
+		return ErrInvalidImpact
+	}
+	if req.DampakFinansial < 1 || req.DampakFinansial > 4 {
+		return ErrInvalidImpact
+	}
+	if req.DampakHukum < 1 || req.DampakHukum > 4 {
+		return ErrInvalidImpact
+	}
+
+	if req.Frekuensi < 1 || req.Frekuensi > 4 {
+		return ErrInvalidFreq
+	}
 
 	return nil
 }
 
-// STEP 2b — DETAIL (Ya)
-func ValidateDetailRequest(req models.DetailRequest) error {
-	if strings.TrimSpace(req.RespondentID) == "" {
+// STEP 2C — PENGENDALIAN
+func ValidatePengendalianRequest(req dto.PengendalianRequest) error {
+	if req.RespondenID <= 0 {
 		return ErrMissingRespondentID
 	}
-
-	// Validasi matrix dampak (sesuai CHECK DB 1–4)
-	if !req.Impact.Reputation.Valid() {
-		return ErrInvalidImpactReputation
-	}
-	if !req.Impact.Operational.Valid() {
-		return ErrInvalidImpactOperational
-	}
-	if !req.Impact.Financial.Valid() {
-		return ErrInvalidImpactFinancial
-	}
-	if !req.Impact.Legal.Valid() {
-		return ErrInvalidImpactLegal
+	if req.RisikoID <= 0 {
+		return ErrMissingRisikoID
 	}
 
-	// Validasi frekuensi (1–4)
-	if !req.Frequency.Valid() {
-		return ErrInvalidFrequency
-	}
-
-	return nil
-}
-
-// STEP 2c — CONTROL (Ya)
-func ValidateControlRequest(req models.ControlRequest) error {
-	if strings.TrimSpace(req.RespondentID) == "" {
-		return ErrMissingRespondentID
-	}
-
-	// Constraint DB:
-	// ada_pengendalian = true → deskripsi wajib
-	if req.HasControl {
-		if strings.TrimSpace(req.ControlMeasures) == "" {
-			return ErrMissingControlInfo
-		}
+	if req.AdaPengendalian && req.DeskripsiPengendalian == "" {
+		return ErrMissingControl
 	}
 
 	return nil

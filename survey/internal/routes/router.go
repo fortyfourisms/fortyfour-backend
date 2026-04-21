@@ -36,11 +36,11 @@ func InitRouter(
 	mux.Handle("/api/responden/", middleware.Logger(utils.AdaptHandler(respondenH)))
 
 	// RISIKO (Intellectual Property Theft Survey)
-	mux.HandleFunc("/api/survey/risk/ip-theft/eligibility", risikoH.SubmitEligibility)
-	mux.HandleFunc("/api/survey/risk/ip-theft/detail", risikoH.SubmitDetail)
-	mux.HandleFunc("/api/survey/risk/ip-theft/control", risikoH.SubmitControl)
-	mux.HandleFunc("/api/survey/risk/ip-theft/reason", risikoH.SubmitReason)
-	mux.HandleFunc("/api/survey/risk/ip-theft/", risikoH.GetByRespondentID)
+	mux.HandleFunc("/api/survey/ip-theft/eligibility", risikoH.SubmitEligibility)
+	mux.HandleFunc("POST /api/survey/ip-theft/dampak", risikoH.SubmitDampak)
+	mux.HandleFunc("POST /api/survey/ip-theft/pengendalian", risikoH.SubmitPengendalian)
+	mux.HandleFunc("POST /api/survey/ip-theft/reason", risikoH.SubmitAlasan)
+	mux.HandleFunc("/api/survey/ip-theft/", risikoH.GetByRespondentID)
 
 	// Progress & navigation
 	mux.HandleFunc("/api/survey/progress/", risikoH.GetProgress)

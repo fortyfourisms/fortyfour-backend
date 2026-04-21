@@ -2,9 +2,11 @@ package services
 
 import (
 	"errors"
+	"survey/internal/dto"
 	"survey/internal/models"
 	"survey/internal/repository"
 	"survey/validator"
+	"database/sql"
 )
 
 type RisikoService struct {
@@ -16,149 +18,177 @@ func NewRisikoService(repo *repository.RisikoRepository) *RisikoService {
 }
 
 // STEP 1 — ELIGIBILITY
-func (s *RisikoService) ProcessEligibility(req models.EligibilityRequest) (*models.EligibilityResponse, error) {
-	if err := validation.ValidateEligibilityRequest(req); err != nil {
+func (s *RisikoService) ProcessEligibility(req dto.EligibilityRequest) (map[string]interface{}, error) {
+
+	if req.RespondenID == 0 {
+		return nil, validation.ErrMissingRespondentID
+	}
+
+	data := models.RisikoEligibility{
+		RespondenID:   req.RespondenID,
+		RisikoID:      req.RisikoID,
+		PernahTerjadi: req.PernahTerjadi,
+	}
+
+	if err := s.repo.UpsertEligibility(data); err != nil {
 		return nil, err
 	}
 
-	err := s.repo.UpsertEligibility(req.RespondentID, req.HasExperienced)
-	if err != nil {
-		return nil, err
+	nextStep := "reason"
+	if req.PernahTerjadi {
+		nextStep = "dampak"
 	}
 
-	nextStep := "show_reason"
-	if req.HasExperienced {
-		nextStep = "show_detail"
-	}
-
-	return &models.EligibilityResponse{
-		RespondentID:   req.RespondentID,
-		HasExperienced: req.HasExperienced,
-		NextStep:       nextStep,
+	return map[string]interface{}{
+		"message":   "eligibility tersimpan",
+		"next_step": nextStep,
 	}, nil
 }
 
-// STEP 2a — REASON (Tidak)
-func (s *RisikoService) ProcessReason(req models.ReasonRequest) error {
-	if err := validation.ValidateReasonRequest(req); err != nil {
-		return err
+// STEP 2A — ALASAN (JIKA TIDAK)
+func (s *RisikoService) ProcessAlasan(req dto.AlasanRequest) (map[string]interface{}, error) {
+
+	if req.RespondenID == 0 {
+		return nil, validation.ErrMissingRespondentID
 	}
 
-	hasExp, err := s.repo.GetEligibility(req.RespondentID)
-	if err != nil {
-		return err
+	if req.Alasan == "" {
+		return nil, validation.ErrMissingReason
 	}
 
-	if hasExp {
-		return errors.New("tidak bisa isi alasan jika memilih 'Ya'")
+	data := models.RisikoAlasan{
+		RespondenID: req.RespondenID,
+		RisikoID:    req.RisikoID,
+		Alasan:      req.Alasan,
 	}
 
-	err = s.repo.InsertReason(req.RespondentID, req.Reason)
-	if err != nil {
-		return err
-	}
-
-	s.repo.MarkCompleted(req.RespondentID, 1)
-
-	return nil
-}
-
-// STEP 2b — DETAIL (Ya)
-func (s *RisikoService) ProcessDetail(req models.DetailRequest) (*models.DetailResponse, error) {
-	if err := validation.ValidateDetailRequest(req); err != nil {
+	if err := s.repo.UpsertAlasan(data); err != nil {
 		return nil, err
 	}
 
-	hasExp, err := s.repo.GetEligibility(req.RespondentID)
-	if err != nil {
-		return nil, err
-	}
-
-	if !hasExp {
-		return nil, errors.New("tidak bisa isi detail jika memilih 'Tidak'")
-	}
-
-	err = s.repo.InsertDetail(
-		req.RespondentID,
-		int(req.Impact.Reputation),
-		int(req.Impact.Operational),
-		int(req.Impact.Financial),
-		int(req.Impact.Legal),
-		int(req.Frequency),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return &models.DetailResponse{
-		RespondentID: req.RespondentID,
-		NextStep:     "show_control",
+	return map[string]interface{}{
+		"message":   "alasan tersimpan",
+		"next_step": "finish",
 	}, nil
 }
 
-// STEP 2c — CONTROL (Ya)
-func (s *RisikoService) ProcessControl(req models.ControlRequest) (*models.ControlResponse, error) {
-	if err := validation.ValidateControlRequest(req); err != nil {
+// STEP 2B — DAMPAK (JIKA YA)
+func (s *RisikoService) ProcessDampak(req dto.DampakRequest) (map[string]interface{}, error) {
+
+	if req.RespondenID == 0 {
+		return nil, validation.ErrMissingRespondentID
+	}
+
+	// validasi impact & frekuensi
+	if !req.DampakReputasi.Valid() ||
+		!req.DampakOperasional.Valid() ||
+		!req.DampakFinansial.Valid() ||
+		!req.DampakHukum.Valid() {
+		return nil, validation.ErrInvalidImpact
+	}
+
+	if !req.Frekuensi.Valid() {
+		return nil, validation.ErrInvalidFreq
+	}
+
+	data := models.RisikoDampak{
+		RespondenID:       req.RespondenID,
+		RisikoID:          req.RisikoID,
+		DampakReputasi:    req.DampakReputasi,
+		DampakOperasional: req.DampakOperasional,
+		DampakFinansial:   req.DampakFinansial,
+		DampakHukum:       req.DampakHukum,
+		Frekuensi:         req.Frekuensi,
+	}
+
+	if err := s.repo.UpsertDampak(data); err != nil {
 		return nil, err
 	}
 
-	hasExp, err := s.repo.GetEligibility(req.RespondentID)
-	if err != nil {
-		return nil, err
-	}
-
-	if !hasExp {
-		return nil, errors.New("tidak bisa isi pengendalian jika memilih 'Tidak'")
-	}
-
-	err = s.repo.InsertControl(
-		req.RespondentID,
-		req.HasControl,
-		req.ControlMeasures,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	s.repo.MarkCompleted(req.RespondentID, 1)
-
-	return &models.ControlResponse{
-		RespondentID:    req.RespondentID,
-		HasControl:      req.HasControl,
-		ControlMeasures: req.ControlMeasures,
-		NextStep:        "finish",
+	return map[string]interface{}{
+		"message":   "dampak & frekuensi tersimpan",
+		"next_step": "pengendalian",
 	}, nil
 }
 
-// GET RESPONSE (Gabungan)
-func (s *RisikoService) GetResponse(respondentID string) (*models.IPTheftResponse, error) {
-	return s.repo.GetFullResponse(respondentID)
+// STEP 2C — PENGENDALIAN
+func (s *RisikoService) ProcessPengendalian(req dto.PengendalianRequest) (map[string]interface{}, error) {
+
+	if req.RespondenID == 0 {
+		return nil, validation.ErrMissingRespondentID
+	}
+
+	if req.AdaPengendalian && req.DeskripsiPengendalian == "" {
+		return nil, validation.ErrMissingControl
+	}
+
+	data := models.RisikoPengendalian{
+		RespondenID:           req.RespondenID,
+		RisikoID:              req.RisikoID,
+		AdaPengendalian:       req.AdaPengendalian,
+		DeskripsiPengendalian: req.DeskripsiPengendalian,
+	}
+
+	if err := s.repo.UpsertPengendalian(data); err != nil {
+		return nil, err
+	}
+
+	msg := "pengendalian tersimpan"
+	if !req.AdaPengendalian {
+		msg = "tidak ada pengendalian"
+	}
+
+	return map[string]interface{}{
+		"message":   msg,
+		"next_step": "finish",
+	}, nil
+}
+
+// GET FULL DATA
+func (s *RisikoService) GetByRespondentID(id int) (map[string]interface{}, error) {
+	return s.repo.FindByRespondentID(id)
 }
 
 // PROGRESS
-func (s *RisikoService) GetProgress(respondentID string) (*models.SurveyProgress, error) {
-	return s.repo.GetProgress(respondentID)
+func (s *RisikoService) GetProgress(id int) (*models.SurveyProgress, error) {
+	return s.repo.GetProgress(id)
 }
 
 // NAVIGATE
-func (s *RisikoService) Navigate(req models.NavigateRequest) (*models.SurveyProgress, error) {
-	progress, err := s.repo.GetProgress(req.RespondentID)
+func (s *RisikoService) Navigate(req dto.NavigateRequest) (*models.SurveyProgress, error) {
+
+	progress, err := s.repo.GetProgress(req.RespondenID)
 	if err != nil {
 		return nil, err
 	}
 
-	switch req.Direction {
-	case "next":
-		if progress.CurrentRisk < progress.TotalRisks {
-			progress.CurrentRisk++
-		}
-	case "previous":
-		if progress.CurrentRisk > 1 {
-			progress.CurrentRisk--
-		}
+	// ambil nilai sekarang (handle NULL)
+	current := int64(1)
+	if progress.RisikoID.Valid {
+		current = progress.RisikoID.Int64
 	}
 
-	err = s.repo.UpdateCurrentRisk(req.RespondentID, progress.CurrentRisk)
+	switch req.Direction {
+
+	case "next":
+		current++
+
+	case "previous":
+		if current > 1 {
+			current--
+		}
+
+	default:
+		return nil, errors.New("direction tidak valid")
+	}
+
+	// set balik ke struct
+	progress.RisikoID = sql.NullInt64{
+		Int64: current,
+		Valid: true,
+	}
+
+	err = s.repo.UpsertProgress(*progress)
 	if err != nil {
 		return nil, err
 	}

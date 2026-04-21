@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+		"time"
+		"database/sql"
+)
 
 // ENUMS
 type ImpactLevel int
@@ -88,6 +91,12 @@ type ControlResponse struct {
 	NextStep    string `json:"next_step"` // finish
 }
 
+type RisikoResponse struct {
+	ID         int    `json:"id"`
+	NamaRisiko string `json:"nama_risiko"`
+	Deskripsi  string `json:"deskripsi"`
+}
+
 // DATABASE MODELS (ENTITY)
 
 // STEP 1
@@ -106,7 +115,6 @@ type RisikoAlasan struct {
 	RespondenID int       `db:"responden_id"`
 	RisikoID    int       `db:"risiko_id"`
 	Alasan      string    `db:"alasan"`
-	Selesai     bool      `db:"selesai"`
 	CreatedAt   time.Time `db:"created_at"`
 }
 
@@ -120,7 +128,6 @@ type RisikoDampak struct {
 	DampakFinansial     ImpactLevel    `db:"dampak_finansial"`
 	DampakHukum         ImpactLevel    `db:"dampak_hukum"`
 	Frekuensi           FrequencyLevel `db:"frekuensi"`
-	LangkahSelanjutnya  string         `db:"langkah_selanjutnya"`
 	CreatedAt           time.Time      `db:"created_at"`
 }
 
@@ -131,19 +138,17 @@ type RisikoPengendalian struct {
 	RisikoID               int       `db:"risiko_id"`
 	AdaPengendalian        bool      `db:"ada_pengendalian"`
 	DeskripsiPengendalian  string    `db:"deskripsi_pengendalian"`
-	Selesai                bool      `db:"selesai"`
 	CreatedAt              time.Time `db:"created_at"`
 }
 
 // PROGRESS MODEL
 type SurveyProgress struct {
-	ID               int       `db:"id"`
-	RespondenID      int       `db:"responden_id"`
-	RisikoID         int       `db:"risiko_id"`
-	LangkahSaatIni   string    `db:"langkah_saat_ini"`
-	NomorRisiko      int       `db:"nomor_risiko"`
-	Selesai          bool      `db:"selesai"`
-	TerakhirUpdate   time.Time `db:"terakhir_update"`
+	ID               int       		`db:"id"`
+	RespondenID      int       		`db:"responden_id"`
+	RisikoID         sql.NullInt64  `db:"risiko_id"`
+	LangkahSaatIni   sql.NullString  `db:"langkah_saat_ini"`
+	Selesai          bool      		`db:"selesai"`
+	TerakhirUpdate   time.Time 		`db:"terakhir_update"`
 }
 
 // GLOBAL RESPONSE

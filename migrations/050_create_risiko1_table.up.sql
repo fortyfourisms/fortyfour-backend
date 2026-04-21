@@ -46,13 +46,13 @@ CREATE TABLE risiko_dampak (
     risiko_id INT NOT NULL,
 
     -- Dampak (ENUM sesuai pilihan UI)
-    dampak_reputasi ENUM('tidak_signifikan','cukup_signifikan','signifikan','sangat_signifikan'),
-    dampak_operasional ENUM('tidak_signifikan','cukup_signifikan','signifikan','sangat_signifikan'),
-    dampak_finansial ENUM('tidak_signifikan','cukup_signifikan','signifikan','sangat_signifikan'),
-    dampak_hukum ENUM('tidak_signifikan','cukup_signifikan','signifikan','sangat_signifikan'),
+    dampak_reputasi ENUM('Tidak Signifikan','Cukup Signifikan','Signifikan','Sangat Signifikan'),
+    dampak_operasional ENUM('Tidak Signifikan','Cukup Signifikan','Signifikan','Sangat Signifikan'),
+    dampak_finansial ENUM('Tidak Signifikan','Cukup Signifikan','Signifikan','Sangat Signifikan'),
+    dampak_hukum ENUM('Tidak Signifikan','Cukup Signifikan','Signifikan','Sangat Signifikan'),
 
     -- Frekuensi
-    frekuensi ENUM('kecil','sedang','besar','sangat_besar'),
+    frekuensi ENUM('Kecil','Sedang','Besar','Sangat Besar'),
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
