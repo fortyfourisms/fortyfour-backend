@@ -36,6 +36,9 @@ type IkasRepositoryInterface interface {
 	GetIDByPerusahaanID(idPerusahaan string) (string, error)
 	UpdateValidationStatus(id string, status bool) error
 	IsLocked(id string) (bool, error)
+	GetLatestByPerusahaan(perusahaanID string) (*dto.IkasResponse, error)
+	CreateInitial(sourceID, targetID, targetDate string) error
+	UpdateDomainLinks(ikasID, idIden, idProt, idDet, idGulih string) error
 }
 
 // RuangLingkupRepositoryInterface
@@ -95,6 +98,7 @@ type IdentifikasiRepositoryInterface interface {
 	GetByID(id string) (*models.Identifikasi, error)
 	GetByIkasID(ikasID string) ([]models.Identifikasi, error)
 	GetByPerusahaanID(perusahaanID string) ([]models.Identifikasi, error)
+	CloneByIkasID(sourceIkasID, targetIkasID string) (string, error)
 }
 
 // ProteksiRepositoryInterface
@@ -103,6 +107,7 @@ type ProteksiRepositoryInterface interface {
 	GetByID(id string) (*models.Proteksi, error)
 	GetByIkasID(ikasID string) ([]models.Proteksi, error)
 	GetByPerusahaanID(perusahaanID string) ([]models.Proteksi, error)
+	CloneByIkasID(sourceIkasID, targetIkasID string) (string, error)
 }
 
 // DeteksiRepositoryInterface
@@ -111,6 +116,7 @@ type DeteksiRepositoryInterface interface {
 	GetByID(id string) (*models.Deteksi, error)
 	GetByIkasID(ikasID string) ([]models.Deteksi, error)
 	GetByPerusahaanID(perusahaanID string) ([]models.Deteksi, error)
+	CloneByIkasID(sourceIkasID, targetIkasID string) (string, error)
 }
 
 // GulihRepositoryInterface
@@ -119,4 +125,5 @@ type GulihRepositoryInterface interface {
 	GetByID(id string) (*models.Gulih, error)
 	GetByIkasID(ikasID string) ([]models.Gulih, error)
 	GetByPerusahaanID(perusahaanID string) ([]models.Gulih, error)
+	CloneByIkasID(sourceIkasID, targetIkasID string) (string, error)
 }

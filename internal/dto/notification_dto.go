@@ -2,7 +2,7 @@ package dto
 
 // NotificationResponse adalah response notifikasi untuk user
 type NotificationResponse struct {
-	ID        string `json:"id"`
+	ID        int64  `json:"id"`
 	Type      string `json:"type"`
 	Message   string `json:"message"`
 	Read      bool   `json:"read"`

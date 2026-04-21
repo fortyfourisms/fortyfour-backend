@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -64,7 +65,10 @@ func (s *MateriService) Create(idKelas string, req dto.CreateMateriRequest) (*dt
 	}
 
 	// Validasi: urutan tidak boleh duplikat dalam kelas ini
-	existingMateri, _ := s.repo.FindByKelas(idKelas)
+	existingMateri, err := s.repo.FindByKelas(idKelas)
+	if err != nil {
+		return nil, fmt.Errorf("gagal memvalidasi urutan: %w", err)
+	}
 	for _, m := range existingMateri {
 		if m.Urutan == req.Urutan {
 			return nil, errors.New("urutan sudah digunakan oleh materi lain dalam kelas ini")
@@ -108,7 +112,10 @@ func (s *MateriService) Update(id string, req dto.UpdateMateriRequest) (*dto.Mat
 	}
 	if req.Urutan != nil {
 		// Validasi: urutan tidak boleh duplikat dalam kelas ini
-		existingMateri, _ := s.repo.FindByKelas(materi.IDKelas)
+		existingMateri, err := s.repo.FindByKelas(materi.IDKelas)
+		if err != nil {
+			return nil, fmt.Errorf("gagal memvalidasi urutan: %w", err)
+		}
 		for _, m := range existingMateri {
 			if m.Urutan == *req.Urutan && m.ID != materi.ID {
 				return nil, errors.New("urutan sudah digunakan oleh materi lain dalam kelas ini")

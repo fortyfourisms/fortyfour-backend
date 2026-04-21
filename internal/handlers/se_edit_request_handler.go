@@ -59,10 +59,7 @@ func (h *SEEditRequestHandler) handleList(w http.ResponseWriter, r *http.Request
 	}
 
 	// User: list own requests
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
+	userID := middleware.GetUserID(r.Context())
 	if userID == "" {
 		utils.RespondError(w, 401, "Unauthorized")
 		return
@@ -122,10 +119,7 @@ func (h *SEEditRequestHandler) handleReview(w http.ResponseWriter, r *http.Reque
 //	@Failure		400		{object}	dto.ErrorResponse
 //	@Router			/api/se/{id}/request-edit [post]
 func (h *SEEditRequestHandler) HandleRequestEdit(w http.ResponseWriter, r *http.Request, idSE string) {
-	userID := ""
-	if uid := r.Context().Value(middleware.UserIDKey); uid != nil {
-		userID = uid.(string)
-	}
+	userID := middleware.GetUserID(r.Context())
 	if userID == "" {
 		utils.RespondError(w, 401, "Unauthorized")
 		return

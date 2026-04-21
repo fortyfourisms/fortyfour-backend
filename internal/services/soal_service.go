@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"fortyfour-backend/internal/dto"
@@ -42,9 +43,12 @@ func (s *SoalService) Create(idKuis string, req dto.CreateSoalRequest) (*dto.Soa
 	}
 
 	// Validasi: urutan tidak boleh duplikat dalam kuis ini
-	existingSoal, _ := s.repo.FindByKuis(idKuis)
-	for _, soal := range existingSoal {
-		if soal.Urutan == req.Urutan {
+	existingSoal, err := s.repo.FindByKuis(idKuis)
+	if err != nil {
+		return nil, fmt.Errorf("gagal memvalidasi urutan: %w", err)
+	}
+	for _, existing := range existingSoal {
+		if existing.Urutan == req.Urutan {
 			return nil, errors.New("urutan sudah digunakan oleh soal lain dalam kuis ini")
 		}
 	}
@@ -81,9 +85,12 @@ func (s *SoalService) Update(id string, req dto.UpdateSoalRequest) (*dto.SoalRes
 	}
 	if req.Urutan != nil {
 		// Validasi: urutan tidak boleh duplikat dalam kuis ini
-		existingSoal, _ := s.repo.FindByKuis(soal.IDKuis)
-		for _, s := range existingSoal {
-			if s.Urutan == *req.Urutan && s.ID != soal.ID {
+		existingSoal, err := s.repo.FindByKuis(soal.IDKuis)
+		if err != nil {
+			return nil, fmt.Errorf("gagal memvalidasi urutan: %w", err)
+		}
+		for _, existing := range existingSoal {
+			if existing.Urutan == *req.Urutan && existing.ID != soal.ID {
 				return nil, errors.New("urutan sudah digunakan oleh soal lain dalam kuis ini")
 			}
 		}

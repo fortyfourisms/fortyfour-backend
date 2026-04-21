@@ -4,7 +4,13 @@ import (
 	"math"
 	"net/http"
 	"strconv"
+
+	"github.com/google/uuid"
 )
+
+func GenerateUUID() string {
+	return uuid.New().String()
+}
 
 func RoundToTwo(f float64) float64 {
 	return math.Round(f*100) / 100

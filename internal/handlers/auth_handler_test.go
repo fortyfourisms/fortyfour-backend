@@ -23,7 +23,7 @@ func setupAuthHandler() (*AuthHandler, *testhelpers.MockRedisClient) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	perusahaanService := testhelpers.NewMockPerusahaanService()
 	handler := NewAuthHandler(authService, tokenService, perusahaanService, nil, "")
 
@@ -854,7 +854,7 @@ func TestAuthHandler_GetMe_Success(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 
@@ -896,7 +896,7 @@ func TestAuthHandler_GetMe_UserNotFound(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 
@@ -922,7 +922,7 @@ func TestAuthHandler_UpdateMe_Success(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 
@@ -953,7 +953,7 @@ func TestAuthHandler_UpdateMe_WithIDJabatan(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 
@@ -1010,7 +1010,7 @@ func TestAuthHandler_UpdateMe_RoleIDNotUpdatable(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 
@@ -1049,7 +1049,7 @@ func TestAuthHandler_UpdateMePassword_Success(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 
@@ -1141,7 +1141,7 @@ func TestAuthHandler_UpdateMePassword_WrongOldPassword(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 
@@ -1209,7 +1209,7 @@ func TestAuthHandler_UpdateMeMedia_NoFileProvided(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 
@@ -1241,7 +1241,7 @@ func TestAuthHandler_UpdateMeMedia_InvalidPhotoFormat(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 
@@ -1276,7 +1276,7 @@ func TestAuthHandler_UpdateMeMedia_UploadProfilePhoto_Success(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 
@@ -1306,7 +1306,7 @@ func TestAuthHandler_UpdateMeMedia_UploadBanner_Success(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 
@@ -1494,7 +1494,7 @@ func TestAuthHandler_Login_MFAEnabled_ReturnsMFAToken(t *testing.T) {
 // 	userRepo := testhelpers.NewMockUserRepository()
 // 	redis := testhelpers.NewMockRedisClient()
 // 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-// 	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(redis), nil)
+// 	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 // 	userService := services.NewUserService(userRepo, uploadPath, nil)
 // 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 // 	return handler, redis
@@ -1624,7 +1624,7 @@ func TestAuthHandler_MeRouter_GET_RoutesToGetMe(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 
@@ -1652,7 +1652,7 @@ func TestAuthHandler_MeRouter_PUT_RoutesToUpdateMe(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 
@@ -1683,7 +1683,7 @@ func TestAuthHandler_MeRouter_PUT_password_RoutesToUpdateMePassword(t *testing.T
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 
@@ -1721,7 +1721,7 @@ func TestAuthHandler_MeRouter_POST_media_RoutesToUpdateMeMedia(t *testing.T) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
-	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(redis), nil)
+	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
 

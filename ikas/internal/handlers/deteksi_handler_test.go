@@ -45,6 +45,10 @@ func (m *mockDeteksiRepository) GetByPerusahaanID(perusahaanID string) ([]models
 	return nil, nil
 }
 
+func (m *mockDeteksiRepository) CloneByIkasID(oldIkasID string, newIkasID string) (string, error) {
+	return "", nil
+}
+
 var _ repository.DeteksiRepositoryInterface = (*mockDeteksiRepository)(nil)
 
 func setupDeteksiHandler(repo repository.DeteksiRepositoryInterface, ikasRepo repository.IkasRepositoryInterface) *DeteksiHandler {

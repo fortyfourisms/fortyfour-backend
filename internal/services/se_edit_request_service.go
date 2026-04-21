@@ -42,11 +42,9 @@ func NewSEEditRequestService(
 // CreateRequest — user submit request edit SE
 func (s *seEditRequestService) CreateRequest(userID, idSE string, req dto.CreateSEEditRequestDTO) (*dto.SEEditRequestResponse, error) {
 	// Pastikan SE ada
-	se, err := s.seRepo.GetByID(idSE)
-	if err != nil {
+	if _, err := s.seRepo.GetByID(idSE); err != nil {
 		return nil, errors.New("SE tidak ditemukan")
 	}
-	_ = se
 
 	// Serialize data perubahan ke JSON
 	dataJSON, err := json.Marshal(req.DataPerubahan)
@@ -54,6 +52,7 @@ func (s *seEditRequestService) CreateRequest(userID, idSE string, req dto.Create
 		return nil, errors.New("data perubahan tidak valid")
 	}
 
+	now := time.Now()
 	editReq := &models.SEEditRequest{
 		ID:            uuid.NewString(),
 		IDSE:          idSE,
@@ -61,6 +60,8 @@ func (s *seEditRequestService) CreateRequest(userID, idSE string, req dto.Create
 		Status:        models.SEEditRequestPending,
 		CatatanUser:   req.Catatan,
 		DataPerubahan: string(dataJSON),
+		CreatedAt:     now,
+		UpdatedAt:     now,
 	}
 
 	if err := s.repo.Create(editReq); err != nil {

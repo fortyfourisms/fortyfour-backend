@@ -140,7 +140,18 @@ func main() {
 	jawabanGulihRepo := repository.NewJawabanGulihRepository(db)
 
 	// services
-	ikasService := services.NewIkasService(ikasRepo, msgProducer)
+	ikasService := services.NewIkasService(
+		ikasRepo,
+		identifikasiRepo,
+		proteksiRepo,
+		deteksiRepo,
+		gulihRepo,
+		jawabanIdentifikasiRepo,
+		jawabanProteksiRepo,
+		jawabanDeteksiRepo,
+		jawabanGulihRepo,
+		msgProducer,
+	)
 	ruangLingkupService := services.NewRuangLingkupService(ruangLingkupRepo, msgProducer)
 	domainService := services.NewDomainService(domainRepo, msgProducer)
 	kategoriService := services.NewKategoriService(kategoriRepo, msgProducer)

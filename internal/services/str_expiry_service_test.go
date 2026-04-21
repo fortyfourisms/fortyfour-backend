@@ -1,10 +1,10 @@
 package services
 
 import (
-	"encoding/json"
 	"errors"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/testhelpers"
 	"testing"
 	"time"
 
@@ -66,8 +66,8 @@ func TestSTRExpiryService_CheckAndNotify_NoCsirt_NoNotification(t *testing.T) {
 			return nil, errors.New("not found")
 		},
 	}
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 	svc := NewSTRExpiryService(csirtRepo, notifSvc)
 
 	// Tidak boleh panic
@@ -89,8 +89,8 @@ func TestSTRExpiryService_CheckAndNotify_TanggalKadaluarsaNil_Skip(t *testing.T)
 			}, nil
 		},
 	}
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 	svc := NewSTRExpiryService(csirtRepo, notifSvc)
 
 	svc.CheckAndNotify("user-1", "perusahaan-1")
@@ -109,8 +109,8 @@ func TestSTRExpiryService_CheckAndNotify_TanggalKadaluarsaKosong_Skip(t *testing
 			}, nil
 		},
 	}
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 	svc := NewSTRExpiryService(csirtRepo, notifSvc)
 
 	svc.CheckAndNotify("user-1", "perusahaan-1")
@@ -131,8 +131,8 @@ func TestSTRExpiryService_CheckAndNotify_STRExpired_PushNotif(t *testing.T) {
 			}, nil
 		},
 	}
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 	svc := NewSTRExpiryService(csirtRepo, notifSvc)
 
 	svc.CheckAndNotify("user-1", "perusahaan-1")
@@ -156,8 +156,8 @@ func TestSTRExpiryService_CheckAndNotify_STRExpiringSoon_PushNotif(t *testing.T)
 			}, nil
 		},
 	}
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 	svc := NewSTRExpiryService(csirtRepo, notifSvc)
 
 	svc.CheckAndNotify("user-1", "perusahaan-1")
@@ -181,8 +181,8 @@ func TestSTRExpiryService_CheckAndNotify_STRMasihJauh_NoNotif(t *testing.T) {
 			}, nil
 		},
 	}
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 	svc := NewSTRExpiryService(csirtRepo, notifSvc)
 
 	svc.CheckAndNotify("user-1", "perusahaan-1")
@@ -202,27 +202,27 @@ func TestSTRExpiryService_CheckAndNotify_DuplikasiExpired_TidakPushUlang(t *test
 			}, nil
 		},
 	}
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 
 	// Seed notifikasi expired yang sudah ada (unread)
 	existing := []models.Notification{
 		{
-			ID:      "existing-1",
+			ID:      1,
 			UserID:  "user-1",
 			Type:    models.NotifSTRExpired,
 			Message: "STR CSIRT \"CSIRT Dup\" telah melewati tanggal kadaluarsa (" + yesterday + "). Segera lakukan perpanjangan.",
 			Read:    false,
 		},
 	}
-	seedNotifications(rc, "user-1", existing)
+	repo.Notifications["user-1"] = existing
 
 	svc := NewSTRExpiryService(csirtRepo, notifSvc)
 	svc.CheckAndNotify("user-1", "perusahaan-1")
 
 	notifs, _ := notifSvc.GetAll("user-1")
 	assert.Len(t, notifs, 1, "notif duplikat tidak boleh di-push ulang")
-	assert.Equal(t, "existing-1", notifs[0].ID, "notif lama tetap ada")
+	assert.Equal(t, int64(1), notifs[0].ID, "notif lama tetap ada")
 }
 
 func TestSTRExpiryService_CheckAndNotify_DuplikasiExpiringSoon_TidakPushUlang(t *testing.T) {
@@ -236,20 +236,20 @@ func TestSTRExpiryService_CheckAndNotify_DuplikasiExpiringSoon_TidakPushUlang(t 
 			}, nil
 		},
 	}
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 
 	// Seed notifikasi expirySoon yang sudah ada (unread)
 	existing := []models.Notification{
 		{
-			ID:      "existing-soon-1",
+			ID:      2,
 			UserID:  "user-1",
 			Type:    models.NotifSTRExpirySoon,
 			Message: "STR hampir kadaluarsa",
 			Read:    false,
 		},
 	}
-	seedNotifications(rc, "user-1", existing)
+	repo.Notifications["user-1"] = existing
 
 	svc := NewSTRExpiryService(csirtRepo, notifSvc)
 	svc.CheckAndNotify("user-1", "perusahaan-1")
@@ -269,20 +269,20 @@ func TestSTRExpiryService_CheckAndNotify_ExpiredNotifSudahDibaca_PushUlang(t *te
 			}, nil
 		},
 	}
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 
 	// Seed notifikasi expired yang sudah dibaca (Read: true)
 	existing := []models.Notification{
 		{
-			ID:      "read-1",
+			ID:      101,
 			UserID:  "user-1",
 			Type:    models.NotifSTRExpired,
 			Message: "pesan lama kadaluarsa",
 			Read:    true, // sudah dibaca
 		},
 	}
-	seedNotifications(rc, "user-1", existing)
+	repo.Notifications["user-1"] = existing
 
 	svc := NewSTRExpiryService(csirtRepo, notifSvc)
 	svc.CheckAndNotify("user-1", "perusahaan-1")
@@ -299,8 +299,8 @@ func TestSTRExpiryService_CheckAndNotify_PanicRecovery(t *testing.T) {
 			panic("unexpected panic in repo")
 		},
 	}
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 	svc := NewSTRExpiryService(csirtRepo, notifSvc)
 
 	// Harus tidak panic
@@ -314,14 +314,14 @@ func TestSTRExpiryService_CheckAndNotify_PanicRecovery(t *testing.T) {
 // ============================================================
 
 func TestSTRExpiryService_HasNotifByType_FoundUnread(t *testing.T) {
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 	svc := NewSTRExpiryService(nil, notifSvc)
 
 	notifs := []models.Notification{
-		{ID: "n1", Type: models.NotifSTRExpired, Message: "STR kadaluarsa sudah lewat", Read: false},
+		{ID: 201, Type: models.NotifSTRExpired, Message: "STR kadaluarsa sudah lewat", Read: false},
 	}
-	seedNotifications(rc, "user-1", notifs)
+	repo.Notifications["user-1"] = notifs
 
 	has, err := svc.hasNotifByType("user-1", models.NotifSTRExpired, "kadaluarsa")
 	require.NoError(t, err)
@@ -329,14 +329,14 @@ func TestSTRExpiryService_HasNotifByType_FoundUnread(t *testing.T) {
 }
 
 func TestSTRExpiryService_HasNotifByType_AlreadyRead_ReturnsFalse(t *testing.T) {
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 	svc := NewSTRExpiryService(nil, notifSvc)
 
 	notifs := []models.Notification{
-		{ID: "n1", Type: models.NotifSTRExpired, Message: "STR kadaluarsa sudah lewat", Read: true},
+		{ID: 201, Type: models.NotifSTRExpired, Message: "STR kadaluarsa sudah lewat", Read: true},
 	}
-	seedNotifications(rc, "user-1", notifs)
+	repo.Notifications["user-1"] = notifs
 
 	has, err := svc.hasNotifByType("user-1", models.NotifSTRExpired, "kadaluarsa")
 	require.NoError(t, err)
@@ -344,14 +344,14 @@ func TestSTRExpiryService_HasNotifByType_AlreadyRead_ReturnsFalse(t *testing.T) 
 }
 
 func TestSTRExpiryService_HasNotifByType_DifferentKeyword_ReturnsFalse(t *testing.T) {
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 	svc := NewSTRExpiryService(nil, notifSvc)
 
 	notifs := []models.Notification{
-		{ID: "n1", Type: models.NotifSTRExpired, Message: "STR registrasi ulang sudah lewat", Read: false},
+		{ID: 201, Type: models.NotifSTRExpired, Message: "STR registrasi ulang sudah lewat", Read: false},
 	}
-	seedNotifications(rc, "user-1", notifs)
+	repo.Notifications["user-1"] = notifs
 
 	// Cari keyword "kadaluarsa" tapi message-nya "registrasi ulang"
 	has, err := svc.hasNotifByType("user-1", models.NotifSTRExpired, "kadaluarsa")
@@ -360,8 +360,8 @@ func TestSTRExpiryService_HasNotifByType_DifferentKeyword_ReturnsFalse(t *testin
 }
 
 func TestSTRExpiryService_HasNotifByType_NoNotif_ReturnsFalse(t *testing.T) {
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 	svc := NewSTRExpiryService(nil, notifSvc)
 
 	has, err := svc.hasNotifByType("user-1", models.NotifSTRExpired, "kadaluarsa")
@@ -370,14 +370,14 @@ func TestSTRExpiryService_HasNotifByType_NoNotif_ReturnsFalse(t *testing.T) {
 }
 
 func TestSTRExpiryService_HasNotifByType_DifferentType_ReturnsFalse(t *testing.T) {
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 	svc := NewSTRExpiryService(nil, notifSvc)
 
 	notifs := []models.Notification{
-		{ID: "n1", Type: models.NotifLoginFailed, Message: "Login gagal kadaluarsa", Read: false},
+		{ID: 201, Type: models.NotifLoginFailed, Message: "Login gagal kadaluarsa", Read: false},
 	}
-	seedNotifications(rc, "user-1", notifs)
+	repo.Notifications["user-1"] = notifs
 
 	has, err := svc.hasNotifByType("user-1", models.NotifSTRExpired, "kadaluarsa")
 	require.NoError(t, err)
@@ -385,16 +385,16 @@ func TestSTRExpiryService_HasNotifByType_DifferentType_ReturnsFalse(t *testing.T
 }
 
 func TestSTRExpiryService_HasNotifByType_GetAllError(t *testing.T) {
-	rc := newNotifTestRedis()
-	// Simpan JSON rusak agar GetAll error
-	rc.data["notif:user-1"] = `ini bukan json[`
-
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 	svc := NewSTRExpiryService(nil, notifSvc)
 
-	// GetAll gagal → hasNotifByType juga gagal
+	// FindAllByUserID dengan JSON rusak (simulasi manual)
+	repo.FindAllByUserIDFn = func(userID string) ([]models.Notification, error) {
+		return nil, errors.New("database error")
+	}
+
 	_, err := svc.hasNotifByType("user-1", models.NotifSTRExpired, "kadaluarsa")
-	// GetAll dengan JSON rusak memang return error
 	assert.Error(t, err)
 }
 
@@ -413,21 +413,20 @@ func TestSTRExpiryService_CheckAndNotify_ExpiredNotifSudahAda_DenganKeyword_Tida
 			}, nil
 		},
 	}
-	rc := newNotifTestRedis()
-	notifSvc := NewNotificationService(rc)
+	repo := testhelpers.NewMockNotificationRepository()
+	notifSvc := NewNotificationService(repo)
 
 	// Seed notifikasi expired yang sudah ada (dengan keyword "kadaluarsa"), unread
 	existingNotifs := []models.Notification{
 		{
-			ID:      "existing-1",
+			ID:      1,
 			UserID:  "user-1",
 			Type:    models.NotifSTRExpired,
 			Message: "STR kadaluarsa sudah lewat",
 			Read:    false,
 		},
 	}
-	data, _ := json.Marshal(existingNotifs)
-	rc.data["notif:user-1"] = string(data)
+	repo.Notifications["user-1"] = existingNotifs
 
 	svc := NewSTRExpiryService(csirtRepo, notifSvc)
 	svc.CheckAndNotify("user-1", "perusahaan-1")

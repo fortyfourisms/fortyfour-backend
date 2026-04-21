@@ -20,6 +20,7 @@ type mockProteksiRepository struct {
 	GetByIDFn           func(id string) (*models.Proteksi, error)
 	GetByIkasIDFn       func(ikasID string) ([]models.Proteksi, error)
 	GetByPerusahaanIDFn func(perusahaanID string) ([]models.Proteksi, error)
+	CloneByIkasIDFn     func(sourceID, targetID string) (string, error)
 }
 
 func (m *mockProteksiRepository) GetAll() ([]models.Proteksi, error) {
@@ -42,6 +43,13 @@ func (m *mockProteksiRepository) GetByPerusahaanID(perusahaanID string) ([]model
 		return m.GetByPerusahaanIDFn(perusahaanID)
 	}
 	return nil, nil
+}
+
+func (m *mockProteksiRepository) CloneByIkasID(oldIkasID string, newIkasID string) (string, error) {
+	if m.CloneByIkasIDFn != nil {
+		return m.CloneByIkasIDFn(oldIkasID, newIkasID)
+	}
+	return "", nil
 }
 
 var _ repository.ProteksiRepositoryInterface = (*mockProteksiRepository)(nil)

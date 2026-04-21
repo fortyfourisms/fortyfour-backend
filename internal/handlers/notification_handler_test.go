@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -13,72 +12,21 @@ import (
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/services"
+	"fortyfour-backend/internal/testhelpers"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // ============================================================
-// Mock Redis untuk NotificationService di handler test
-// ============================================================
-
-type notifHandlerRedis struct {
-	data   map[string]string
-	setErr error
-	getErr error
-	delErr error
-}
-
-func newNotifHandlerRedis() *notifHandlerRedis {
-	return &notifHandlerRedis{data: make(map[string]string)}
-}
-
-func (r *notifHandlerRedis) Set(key string, value interface{}, ttl time.Duration) error {
-	if r.setErr != nil {
-		return r.setErr
-	}
-	if v, ok := value.(string); ok {
-		r.data[key] = v
-	}
-	return nil
-}
-
-func (r *notifHandlerRedis) Get(key string) (string, error) {
-	if r.getErr != nil {
-		return "", r.getErr
-	}
-	v, ok := r.data[key]
-	if !ok {
-		return "", errors.New("key not found")
-	}
-	return v, nil
-}
-
-func (r *notifHandlerRedis) Delete(key string) error {
-	if r.delErr != nil {
-		return r.delErr
-	}
-	delete(r.data, key)
-	return nil
-}
-
-func (r *notifHandlerRedis) Exists(key string) (bool, error) {
-	_, ok := r.data[key]
-	return ok, nil
-}
-
-func (r *notifHandlerRedis) Scan(pattern string) ([]string, error) { return nil, nil }
-func (r *notifHandlerRedis) Close() error                          { return nil }
-
-// ============================================================
 // Helper setup
 // ============================================================
 
-func setupNotificationHandler() (*NotificationHandler, *services.NotificationService, *notifHandlerRedis) {
-	rc := newNotifHandlerRedis()
-	svc := services.NewNotificationService(rc)
+func setupNotificationHandler() (*NotificationHandler, *services.NotificationService, *testhelpers.MockNotificationRepository) {
+	repo := testhelpers.NewMockNotificationRepository()
+	svc := services.NewNotificationService(repo)
 	handler := NewNotificationHandler(svc)
-	return handler, svc, rc
+	return handler, svc, repo
 }
 
 func reqWithUserID(method, path, userID string) *http.Request {
@@ -87,9 +35,8 @@ func reqWithUserID(method, path, userID string) *http.Request {
 	return req.WithContext(ctx)
 }
 
-func seedNotifInHandler(rc *notifHandlerRedis, userID string, notifs []models.Notification) {
-	data, _ := json.Marshal(notifs)
-	rc.data["notif:"+userID] = string(data)
+func seedNotifInHandler(repo *testhelpers.MockNotificationRepository, userID string, notifs []models.Notification) {
+	repo.Notifications[userID] = notifs
 }
 
 // ============================================================
@@ -122,14 +69,14 @@ func TestNotificationHandler_GetAll_EmptyList(t *testing.T) {
 }
 
 func TestNotificationHandler_GetAll_WithUnreadNotifs(t *testing.T) {
-	handler, _, rc := setupNotificationHandler()
+	handler, _, repo := setupNotificationHandler()
 
 	notifs := []models.Notification{
-		{ID: "n1", Type: models.NotifLoginFailed, Message: "Login gagal", Read: false, CreatedAt: time.Now()},
-		{ID: "n2", Type: models.NotifPasswordExpirySoon, Message: "Password mau expired", Read: true, CreatedAt: time.Now()},
-		{ID: "n3", Type: models.NotifAccountSuspended, Message: "Akun suspend", Read: false, CreatedAt: time.Now()},
+		{ID: 1, Type: models.NotifLoginFailed, Message: "Login gagal", Read: false, CreatedAt: time.Now()},
+		{ID: 2, Type: models.NotifPasswordExpirySoon, Message: "Password mau expired", Read: true, CreatedAt: time.Now()},
+		{ID: 3, Type: models.NotifAccountSuspended, Message: "Akun suspend", Read: false, CreatedAt: time.Now()},
 	}
-	seedNotifInHandler(rc, "user-1", notifs)
+	seedNotifInHandler(repo, "user-1", notifs)
 
 	req := reqWithUserID(http.MethodGet, "/api/notifications", "user-1")
 	rr := httptest.NewRecorder()
@@ -176,7 +123,7 @@ func TestNotificationHandler_GetAll_IsolatesPerUser(t *testing.T) {
 func TestNotificationHandler_MarkRead_Unauthorized(t *testing.T) {
 	handler, _, _ := setupNotificationHandler()
 
-	req := httptest.NewRequest(http.MethodPatch, "/api/notifications/n1/read", nil)
+	req := httptest.NewRequest(http.MethodPatch, "/api/notifications/1/read", nil)
 	rr := httptest.NewRecorder()
 	handler.MarkRead(rr, req)
 
@@ -193,15 +140,26 @@ func TestNotificationHandler_MarkRead_MissingNotifID(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, rr.Code)
 }
 
+func TestNotificationHandler_MarkRead_InvalidIDFormat(t *testing.T) {
+	handler, _, _ := setupNotificationHandler()
+
+	req := reqWithUserID(http.MethodPatch, "/api/notifications/abc/read", "user-1")
+	rr := httptest.NewRecorder()
+	handler.MarkRead(rr, req)
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	assert.Contains(t, rr.Body.String(), "format")
+}
+
 func TestNotificationHandler_MarkRead_Success(t *testing.T) {
-	handler, _, rc := setupNotificationHandler()
+	handler, _, repo := setupNotificationHandler()
 
 	notifs := []models.Notification{
-		{ID: "notif-abc", UserID: "user-1", Type: models.NotifLoginFailed, Read: false, CreatedAt: time.Now()},
+		{ID: 123, UserID: "user-1", Type: models.NotifLoginFailed, Read: false, CreatedAt: time.Now()},
 	}
-	seedNotifInHandler(rc, "user-1", notifs)
+	seedNotifInHandler(repo, "user-1", notifs)
 
-	req := reqWithUserID(http.MethodPatch, "/api/notifications/notif-abc/read", "user-1")
+	req := reqWithUserID(http.MethodPatch, "/api/notifications/123/read", "user-1")
 	rr := httptest.NewRecorder()
 	handler.MarkRead(rr, req)
 
@@ -215,7 +173,7 @@ func TestNotificationHandler_MarkRead_Success(t *testing.T) {
 func TestNotificationHandler_MarkRead_NotFound_Returns500(t *testing.T) {
 	handler, _, _ := setupNotificationHandler()
 
-	req := reqWithUserID(http.MethodPatch, "/api/notifications/tidak-ada/read", "user-1")
+	req := reqWithUserID(http.MethodPatch, "/api/notifications/999/read", "user-1")
 	rr := httptest.NewRecorder()
 	handler.MarkRead(rr, req)
 
@@ -237,13 +195,13 @@ func TestNotificationHandler_MarkAllRead_Unauthorized(t *testing.T) {
 }
 
 func TestNotificationHandler_MarkAllRead_Success(t *testing.T) {
-	handler, _, rc := setupNotificationHandler()
+	handler, _, repo := setupNotificationHandler()
 
 	notifs := []models.Notification{
-		{ID: "n1", Read: false, CreatedAt: time.Now()},
-		{ID: "n2", Read: false, CreatedAt: time.Now()},
+		{ID: 1, Read: false, CreatedAt: time.Now()},
+		{ID: 2, Read: false, CreatedAt: time.Now()},
 	}
-	seedNotifInHandler(rc, "user-1", notifs)
+	seedNotifInHandler(repo, "user-1", notifs)
 
 	req := reqWithUserID(http.MethodPatch, "/api/notifications/read-all", "user-1")
 	rr := httptest.NewRecorder()
@@ -269,7 +227,7 @@ func TestNotificationHandler_MarkAllRead_EmptyList_NoError(t *testing.T) {
 func TestNotificationHandler_Delete_Unauthorized(t *testing.T) {
 	handler, _, _ := setupNotificationHandler()
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/notifications/n1", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/api/notifications/1", nil)
 	rr := httptest.NewRecorder()
 	handler.Delete(rr, req)
 
@@ -287,14 +245,14 @@ func TestNotificationHandler_Delete_MissingID(t *testing.T) {
 }
 
 func TestNotificationHandler_Delete_Success(t *testing.T) {
-	handler, _, rc := setupNotificationHandler()
+	handler, _, repo := setupNotificationHandler()
 
 	notifs := []models.Notification{
-		{ID: "notif-del", CreatedAt: time.Now()},
+		{ID: 555, CreatedAt: time.Now()},
 	}
-	seedNotifInHandler(rc, "user-1", notifs)
+	seedNotifInHandler(repo, "user-1", notifs)
 
-	req := reqWithUserID(http.MethodDelete, "/api/notifications/notif-del", "user-1")
+	req := reqWithUserID(http.MethodDelete, "/api/notifications/555", "user-1")
 	rr := httptest.NewRecorder()
 	handler.Delete(rr, req)
 
@@ -308,7 +266,7 @@ func TestNotificationHandler_Delete_Success(t *testing.T) {
 func TestNotificationHandler_Delete_NotFound_Returns500(t *testing.T) {
 	handler, _, _ := setupNotificationHandler()
 
-	req := reqWithUserID(http.MethodDelete, "/api/notifications/tidak-ada", "user-1")
+	req := reqWithUserID(http.MethodDelete, "/api/notifications/999", "user-1")
 	rr := httptest.NewRecorder()
 	handler.Delete(rr, req)
 
@@ -330,12 +288,12 @@ func TestNotificationHandler_DeleteAll_Unauthorized(t *testing.T) {
 }
 
 func TestNotificationHandler_DeleteAll_Success(t *testing.T) {
-	handler, _, rc := setupNotificationHandler()
+	handler, _, repo := setupNotificationHandler()
 
 	notifs := []models.Notification{
-		{ID: "n1"}, {ID: "n2"},
+		{ID: 1}, {ID: 2},
 	}
-	seedNotifInHandler(rc, "user-1", notifs)
+	seedNotifInHandler(repo, "user-1", notifs)
 
 	req := reqWithUserID(http.MethodDelete, "/api/notifications", "user-1")
 	rr := httptest.NewRecorder()
@@ -373,14 +331,14 @@ func TestNotificationHandler_ServeHTTP_MarkReadAll(t *testing.T) {
 }
 
 func TestNotificationHandler_ServeHTTP_MarkRead(t *testing.T) {
-	handler, _, rc := setupNotificationHandler()
+	handler, _, repo := setupNotificationHandler()
 
 	notifs := []models.Notification{
-		{ID: "notif-xyz", Read: false, CreatedAt: time.Now()},
+		{ID: 777, Read: false, CreatedAt: time.Now()},
 	}
-	seedNotifInHandler(rc, "user-1", notifs)
+	seedNotifInHandler(repo, "user-1", notifs)
 
-	req := reqWithUserID(http.MethodPatch, "/api/notifications/notif-xyz/read", "user-1")
+	req := reqWithUserID(http.MethodPatch, "/api/notifications/777/read", "user-1")
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
@@ -398,14 +356,14 @@ func TestNotificationHandler_ServeHTTP_DeleteAll(t *testing.T) {
 }
 
 func TestNotificationHandler_ServeHTTP_Delete(t *testing.T) {
-	handler, _, rc := setupNotificationHandler()
+	handler, _, repo := setupNotificationHandler()
 
 	notifs := []models.Notification{
-		{ID: "n-route", CreatedAt: time.Now()},
+		{ID: 888, CreatedAt: time.Now()},
 	}
-	seedNotifInHandler(rc, "user-1", notifs)
+	seedNotifInHandler(repo, "user-1", notifs)
 
-	req := reqWithUserID(http.MethodDelete, "/api/notifications/n-route", "user-1")
+	req := reqWithUserID(http.MethodDelete, "/api/notifications/888", "user-1")
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
@@ -425,7 +383,7 @@ func TestNotificationHandler_ServeHTTP_MethodNotAllowed(t *testing.T) {
 func TestNotificationHandler_ServeHTTP_PutNotAllowed(t *testing.T) {
 	handler, _, _ := setupNotificationHandler()
 
-	req := reqWithUserID(http.MethodPut, "/api/notifications/n1", "user-1")
+	req := reqWithUserID(http.MethodPut, "/api/notifications/1", "user-1")
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
