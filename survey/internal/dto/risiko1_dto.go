@@ -36,3 +36,10 @@ type NavigateRequest struct {
 	Direction   string `json:"direction"`
 	CurrentRisk int    `json:"current_risk"`
 }
+
+type ProgressResponse struct {
+	RespondenID    int     `json:"responden_id"`
+	RisikoID       *int    `json:"risiko_id"`
+	LangkahSaatIni *string `json:"langkah_saat_ini"`
+	Selesai        bool    `json:"selesai"`
+}

@@ -171,11 +171,11 @@ func (s *RisikoService) GetProgress(id int) (*models.SurveyProgress, error) {
 }
 
 // NAVIGATE
-func (s *RisikoService) Navigate(req dto.NavigateRequest) (*models.SurveyProgress, error) {
+func (s *RisikoService) Navigate(req dto.NavigateRequest) (dto.ProgressResponse, error) {
 
 	progress, err := s.repo.GetProgress(req.RespondenID)
 	if err != nil {
-		return nil, err
+		return dto.ProgressResponse{}, err
 	}
 
 	// ambil nilai sekarang (handle NULL)
@@ -195,7 +195,7 @@ func (s *RisikoService) Navigate(req dto.NavigateRequest) (*models.SurveyProgres
 		}
 
 	default:
-		return nil, errors.New("direction tidak valid")
+		return dto.ProgressResponse{}, errors.New("direction tidak valid")
 	}
 
 	// set kembali ke struct
@@ -206,10 +206,10 @@ func (s *RisikoService) Navigate(req dto.NavigateRequest) (*models.SurveyProgres
 
 	err = s.repo.UpsertProgress(*progress)
 	if err != nil {
-		return nil, err
+		return dto.ProgressResponse{}, err
 	}
 
-	return progress, nil
+	return mapProgressToResponse(progress), nil
 }
 
 // VALIDATE FOREIGN KEY
@@ -232,4 +232,25 @@ func (s *RisikoService) validateForeignKey(respondenID, risikoID int) error {
 	}
 
 	return nil
+}
+
+// MAPPING PROGRESS
+func mapProgressToResponse(p *models.SurveyProgress) dto.ProgressResponse {
+	var risikoID *int
+	if p.RisikoID.Valid {
+		val := int(p.RisikoID.Int64)
+		risikoID = &val
+	}
+
+	var langkah *string
+	if p.LangkahSaatIni.Valid {
+		langkah = &p.LangkahSaatIni.String
+	}
+
+	return dto.ProgressResponse{
+		RespondenID:    p.RespondenID,
+		RisikoID:       risikoID,
+		LangkahSaatIni: langkah,
+		Selesai:        p.Selesai,
+	}
 }

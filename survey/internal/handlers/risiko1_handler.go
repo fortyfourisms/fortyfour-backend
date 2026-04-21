@@ -171,7 +171,10 @@ func (h *RisikoHandler) Navigate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, result)
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+	"success": true,
+	"data": result,
+	})
 }
 
 // HELPERS
