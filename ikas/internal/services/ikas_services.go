@@ -25,16 +25,16 @@ type IkasProducerInterface interface {
 }
 
 type IkasService struct {
-	repo              repository.IkasRepositoryInterface
-	identifikasiRepo  repository.IdentifikasiRepositoryInterface
-	proteksiRepo      repository.ProteksiRepositoryInterface
-	deteksiRepo       repository.DeteksiRepositoryInterface
-	gulihRepo         repository.GulihRepositoryInterface
-	jawabanIdenRepo   repository.JawabanIdentifikasiRepositoryInterface
-	jawabanProtRepo   repository.JawabanProteksiRepositoryInterface
-	jawabanDetRepo    repository.JawabanDeteksiRepositoryInterface
-	jawabanGulihRepo  repository.JawabanGulihRepositoryInterface
-	producer          IkasProducerInterface
+	repo             repository.IkasRepositoryInterface
+	identifikasiRepo repository.IdentifikasiRepositoryInterface
+	proteksiRepo     repository.ProteksiRepositoryInterface
+	deteksiRepo      repository.DeteksiRepositoryInterface
+	gulihRepo        repository.GulihRepositoryInterface
+	jawabanIdenRepo  repository.JawabanIdentifikasiRepositoryInterface
+	jawabanProtRepo  repository.JawabanProteksiRepositoryInterface
+	jawabanDetRepo   repository.JawabanDeteksiRepositoryInterface
+	jawabanGulihRepo repository.JawabanGulihRepositoryInterface
+	producer         IkasProducerInterface
 }
 
 func NewIkasService(
@@ -50,16 +50,16 @@ func NewIkasService(
 	producer IkasProducerInterface,
 ) *IkasService {
 	return &IkasService{
-		repo:              repo,
-		identifikasiRepo:  identifikasiRepo,
-		proteksiRepo:      proteksiRepo,
-		deteksiRepo:       deteksiRepo,
-		gulihRepo:         gulihRepo,
-		jawabanIdenRepo:   jawabanIdenRepo,
-		jawabanProtRepo:   jawabanProtRepo,
-		jawabanDetRepo:    jawabanDetRepo,
-		jawabanGulihRepo:  jawabanGulihRepo,
-		producer:          producer,
+		repo:             repo,
+		identifikasiRepo: identifikasiRepo,
+		proteksiRepo:     proteksiRepo,
+		deteksiRepo:      deteksiRepo,
+		gulihRepo:        gulihRepo,
+		jawabanIdenRepo:  jawabanIdenRepo,
+		jawabanProtRepo:  jawabanProtRepo,
+		jawabanDetRepo:   jawabanDetRepo,
+		jawabanGulihRepo: jawabanGulihRepo,
+		producer:         producer,
 	}
 }
 

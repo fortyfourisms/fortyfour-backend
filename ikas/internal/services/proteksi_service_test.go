@@ -16,11 +16,11 @@ import (
 //
 
 type mockProteksiRepository struct {
-	GetAllFn      func() ([]models.Proteksi, error)
-	GetByIDFn     func(id string) (*models.Proteksi, error)
-	GetByIkasIDFn        func(ikasID string) ([]models.Proteksi, error)
-	GetByPerusahaanIDFn  func(perusahaanID string) ([]models.Proteksi, error)
-	CloneByIkasIDFn      func(sourceID, targetID string) (string, error)
+	GetAllFn            func() ([]models.Proteksi, error)
+	GetByIDFn           func(id string) (*models.Proteksi, error)
+	GetByIkasIDFn       func(ikasID string) ([]models.Proteksi, error)
+	GetByPerusahaanIDFn func(perusahaanID string) ([]models.Proteksi, error)
+	CloneByIkasIDFn     func(sourceID, targetID string) (string, error)
 }
 
 func (m *mockProteksiRepository) GetAll() ([]models.Proteksi, error) {

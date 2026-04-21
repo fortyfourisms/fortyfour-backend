@@ -126,7 +126,7 @@ func setupJawabanGulihHandler(repo *mockJawabanGulihRepository, ikasRepo *mockIk
 	if ikasRepo != nil {
 		ikasRepo.On("IsLocked", mock.Anything).Return(false, nil).Maybe()
 		ikasRepo.On("GetByID", mock.Anything).Return(&dto.IkasResponse{
-			ID: "uuid1",
+			ID:         "uuid1",
 			Perusahaan: &dto.PerusahaanInIkas{ID: "1"},
 		}, nil).Maybe()
 		ikasRepo.On("CheckOwnership", mock.Anything, mock.Anything).Return(true, nil).Maybe()

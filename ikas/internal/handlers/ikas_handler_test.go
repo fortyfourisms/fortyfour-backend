@@ -73,7 +73,6 @@ func (m *mockIkasProducer) PublishJawabanGulihCreated(ctx context.Context, event
 var _ repository.IkasRepositoryInterface = (*mockIkasRepository)(nil)
 var _ services.IkasProducerInterface = (*mockIkasProducer)(nil)
 
-
 func setupIkasHandler(repo repository.IkasRepositoryInterface, producer services.IkasProducerInterface) *IkasHandler {
 	service := services.NewIkasService(
 		repo,
