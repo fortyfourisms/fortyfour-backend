@@ -23,7 +23,7 @@ func NewRespondenHandler(service *services.RespondenService) *RespondenHandler {
 
 func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	path := strings.TrimPrefix(r.URL.Path, "/api/responden")
+	path := strings.TrimPrefix(r.URL.Path, "/api/survey/responden")
 	id := strings.TrimPrefix(path, "/")
 
 	switch r.Method {

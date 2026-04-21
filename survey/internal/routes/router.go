@@ -32,8 +32,8 @@ func InitRouter(
 	mux.HandleFunc("/api/health", healthHandler)
 
 	// RESPONDEN ROUTES
-	mux.Handle("/api/responden", middleware.Logger(utils.AdaptHandler(respondenH)))
-	mux.Handle("/api/responden/", middleware.Logger(utils.AdaptHandler(respondenH)))
+	mux.Handle("/api/survey/responden", middleware.Logger(utils.AdaptHandler(respondenH)))
+	mux.Handle("/api/survey/responden/", middleware.Logger(utils.AdaptHandler(respondenH)))
 
 	// RISIKO (Intellectual Property Theft Survey)
 	mux.HandleFunc("/api/survey/ip-theft/eligibility", risikoH.SubmitEligibility)
