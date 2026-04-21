@@ -50,6 +50,7 @@ func (h *SdmCsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Description	Mengambil seluruh data sdm csirt
 //	@Tags			SDM
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Success		200	{array}		dto.SdmCsirtResponse
 //	@Failure		500	{object}	dto.ErrorResponse
 //	@Router			/api/sdm_csirt [get]
@@ -98,6 +99,7 @@ func (h *SdmCsirtHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 //	@Description	Mengambil satu data sdm csirt
 //	@Tags			SDM
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"SDM ID"
 //	@Success		200	{object}	dto.SdmCsirtResponse
 //	@Failure		404	{object}	dto.ErrorResponse
@@ -129,6 +131,7 @@ func (h *SdmCsirtHandler) handleGetByID(w http.ResponseWriter, r *http.Request, 
 //	@Tags			SDM
 //	@Accept			json
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			sdm	body		dto.CreateSdmCsirtRequest	true	"Data sdm csirt"
 //	@Success		201	{object}	dto.SdmCsirtResponse
 //	@Failure		400	{object}	dto.ErrorResponse
@@ -188,6 +191,7 @@ func (h *SdmCsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 //	@Tags			SDM
 //	@Accept			json
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string						true	"SDM ID"
 //	@Param			sdm	body		dto.UpdateSdmCsirtRequest	true	"Data update"
 //	@Success		200	{object}	dto.SdmCsirtResponse
@@ -239,6 +243,7 @@ func (h *SdmCsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 //	@Description	Menghapus data sdm csirt berdasarkan ID
 //	@Tags			SDM
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"SDM ID"
 //	@Success		200	{object}	dto.MessageResponse
 //	@Failure		400	{object}	dto.ErrorResponse

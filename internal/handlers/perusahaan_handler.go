@@ -96,6 +96,7 @@ func (h *PerusahaanHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Description	Mengambil seluruh data perusahaan (AUTHENTICATED - full data)
 //	@Tags			Perusahaan
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Success		200	{array}		dto.PerusahaanResponse
 //	@Failure		500	{object}	dto.ErrorResponse
 //	@Router			/api/perusahaan [get]
@@ -156,6 +157,7 @@ func (h *PerusahaanHandler) handleGetDropdown(w http.ResponseWriter, _ *http.Req
 //	@Description	Mengambil satu data perusahaan
 //	@Tags			Perusahaan
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"Perusahaan ID"
 //	@Success		200	{object}	dto.PerusahaanResponse
 //	@Failure		404	{object}	dto.ErrorResponse
@@ -186,6 +188,7 @@ func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, r *http.Request
 //	@Tags			Perusahaan
 //	@Accept			json
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			perusahaan	body		dto.CreatePerusahaanRequest	true	"Data perusahaan"
 //	@Success		201			{object}	dto.PerusahaanResponse
 //	@Failure		400			{object}	dto.ErrorResponse
@@ -232,6 +235,7 @@ func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request)
 //	@Tags			Perusahaan
 //	@Accept			json
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id			path		string						true	"Perusahaan ID"
 //	@Param			perusahaan	body		dto.UpdatePerusahaanRequest	true	"Data update"
 //	@Success		200			{object}	dto.PerusahaanResponse
@@ -290,6 +294,7 @@ func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request,
 //	@Description	Menghapus data perusahaan berdasarkan ID
 //	@Tags			Perusahaan
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"Perusahaan ID"
 //	@Success		200	{object}	dto.MessageResponse
 //	@Failure		400	{object}	dto.ErrorResponse

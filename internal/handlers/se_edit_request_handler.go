@@ -42,6 +42,7 @@ func (h *SEEditRequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 // @Description	Admin melihat semua request pending. User melihat request miliknya.
 // @Tags			SE - Edit Request
 // @Produce		json
+// @Security		BearerAuth
 // @Success		200	{array}		dto.SEEditRequestResponse
 // @Failure		500	{object}	dto.ErrorResponse
 // @Router			/api/se/edit-requests [get]
@@ -78,6 +79,7 @@ func (h *SEEditRequestHandler) handleList(w http.ResponseWriter, r *http.Request
 // @Tags			SE - Edit Request
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id		path		string						true	"ID Edit Request"
 // @Param			request	body		dto.ReviewSEEditRequestDTO	true	"Status dan catatan admin"
 // @Success		200		{object}	dto.SEEditRequestResponse
@@ -113,6 +115,7 @@ func (h *SEEditRequestHandler) handleReview(w http.ResponseWriter, r *http.Reque
 //	@Tags			SE - Edit Request
 //	@Accept			json
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id		path		string						true	"ID SE"
 //	@Param			request	body		dto.CreateSEEditRequestDTO	true	"Data perubahan dan alasan"
 //	@Success		201		{object}	dto.SEEditRequestResponse

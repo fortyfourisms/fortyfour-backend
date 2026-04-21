@@ -51,6 +51,7 @@ func (h *SubSektorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Description	Mengambil seluruh data sub sektor
 //	@Tags			SubSektor
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Success		200	{array}		dto.SubSektorResponse
 //	@Failure		500	{object}	dto.ErrorResponse
 //	@Router			/api/sub_sektor [get]
@@ -69,6 +70,7 @@ func (h *SubSektorHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) 
 //	@Description	Mengambil satu data sub sektor
 //	@Tags			SubSektor
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"SubSektor ID"
 //	@Success		200	{object}	dto.SubSektorResponse
 //	@Failure		404	{object}	dto.ErrorResponse
@@ -88,6 +90,7 @@ func (h *SubSektorHandler) handleGetByID(w http.ResponseWriter, _ *http.Request,
 //	@Description	Mengambil data sub sektor dalam satu sektor
 //	@Tags			SubSektor
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"Sektor ID"
 //	@Success		200	{array}		dto.SubSektorResponse
 //	@Failure		500	{object}	dto.ErrorResponse

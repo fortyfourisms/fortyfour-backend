@@ -40,6 +40,7 @@ func (h *SektorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Description	Mengambil seluruh data sektor beserta sub sektor
 //	@Tags			Sektor
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Success		200	{array}		dto.SektorResponse
 //	@Failure		500	{object}	dto.ErrorResponse
 //	@Router			/api/sektor [get]
@@ -58,6 +59,7 @@ func (h *SektorHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 //	@Description	Mengambil satu data sektor beserta sub sektor
 //	@Tags			Sektor
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"Sektor ID"
 //	@Success		200	{object}	dto.SektorResponse
 //	@Failure		404	{object}	dto.ErrorResponse

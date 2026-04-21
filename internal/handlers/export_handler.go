@@ -5,11 +5,15 @@ import (
 	"net/http"
 	"strings"
 
+	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/pkg/logger"
 )
+
+// Ensure dto types are available for swagger type resolution.
+var _ dto.ErrorResponse
 
 // SEExportHandler handles PDF export endpoints for SE data.
 type SEExportHandler struct {
@@ -64,6 +68,7 @@ func (h *SEExportHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Description	Admin: export semua SE, atau filter by id_perusahaan. User: hanya milik perusahaannya.
 //	@Tags			SE Export
 //	@Produce		application/pdf
+//	@Security		BearerAuth
 //	@Param			id_perusahaan	query		string	false	"Filter by ID Perusahaan (admin only)"
 //	@Success		200				{file}		binary
 //	@Failure		403				{object}	dto.ErrorResponse
@@ -117,6 +122,7 @@ func (h *SEExportHandler) handleExportAll(w http.ResponseWriter, r *http.Request
 //	@Description	Export data SE berdasarkan ID. User hanya bisa akses SE milik perusahaannya.
 //	@Tags			SE Export
 //	@Produce		application/pdf
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"SE ID"
 //	@Success		200	{file}		binary
 //	@Failure		403	{object}	dto.ErrorResponse
@@ -209,6 +215,7 @@ func (h *CsirtExportHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Description	Admin: export semua CSIRT, atau filter by id_perusahaan. User: hanya milik perusahaannya.
 //	@Tags			CSIRT Export
 //	@Produce		application/pdf
+//	@Security		BearerAuth
 //	@Param			id_perusahaan	query		string	false	"Filter by ID Perusahaan (admin only)"
 //	@Success		200				{file}		binary
 //	@Failure		403				{object}	dto.ErrorResponse
@@ -259,6 +266,7 @@ func (h *CsirtExportHandler) handleExportAll(w http.ResponseWriter, r *http.Requ
 //	@Description	Export data CSIRT berdasarkan ID. User hanya bisa akses CSIRT milik perusahaannya.
 //	@Tags			CSIRT Export
 //	@Produce		application/pdf
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"CSIRT ID"
 //	@Success		200	{file}		binary
 //	@Failure		403	{object}	dto.ErrorResponse

@@ -495,7 +495,7 @@ func (h *UserHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 //	@Produce		json
 //	@Param			id		path		string	true	"User ID"
 //	@Param			body	body		object	true	"Status baru"
-//	@Success		200		{object}	map[string]string
+//	@Success		200		{object}	dto.UserResponse
 //	@Failure		400		{object}	dto.ErrorResponse
 //	@Failure		403		{object}	dto.ErrorResponse
 //	@Failure		500		{object}	dto.ErrorResponse

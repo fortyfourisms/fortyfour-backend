@@ -64,6 +64,7 @@ func (h *RoleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Description	Mengambil seluruh data role
 //	@Tags			Role
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Success		200	{array}		dto.RoleResponse
 //	@Failure		500	{object}	dto.ErrorResponse
 //	@Router			/api/role [get]
@@ -83,6 +84,7 @@ func (h *RoleHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 //	@Description	Mengambil satu data role
 //	@Tags			Role
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"Role ID"
 //	@Success		200	{object}	dto.RoleResponse
 //	@Failure		404	{object}	dto.ErrorResponse
@@ -104,6 +106,7 @@ func (h *RoleHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id s
 //	@Tags			Role
 //	@Accept			json
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			role	body		dto.CreateRoleRequest	true	"Data role"
 //	@Success		201		{object}	dto.RoleResponse
 //	@Failure		400		{object}	dto.ErrorResponse
@@ -140,6 +143,7 @@ func (h *RoleHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 //	@Tags			Role
 //	@Accept			json
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id		path		string					true	"Role ID"
 //	@Param			role	body		dto.UpdateRoleRequest	true	"Data update"
 //	@Success		200		{object}	dto.RoleResponse
@@ -176,6 +180,7 @@ func (h *RoleHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 //	@Description	Menghapus data role berdasarkan ID
 //	@Tags			Role
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"Role ID"
 //	@Success		200	{object}	dto.MessageResponse
 //	@Failure		400	{object}	dto.ErrorResponse

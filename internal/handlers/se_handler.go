@@ -69,6 +69,7 @@ func (h *SEHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // @Tags			SE
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Success		200	{object}	dto.SEListResponse
 // @Failure		403	{object}	dto.ErrorResponse
 // @Failure		500	{object}	dto.ErrorResponse
@@ -107,6 +108,7 @@ func (h *SEHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 // @Tags			SE
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"SE ID"
 // @Success		200	{object}	dto.SEResponse
 // @Failure		403	{object}	dto.ErrorResponse
@@ -137,6 +139,7 @@ func (h *SEHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id str
 // @Tags			SE
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			request	body		dto.CreateSERequest	true	"SE Create Request"
 // @Success		201		{object}	dto.SEResponse
 // @Failure		400		{object}	dto.ErrorResponse
@@ -180,6 +183,7 @@ func (h *SEHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 // @Tags			SE
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id		path		string				true	"SE ID"
 // @Param			request	body		dto.UpdateSERequest	true	"SE Update Request"
 // @Success		200		{object}	dto.SEResponse
@@ -228,6 +232,7 @@ func (h *SEHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id stri
 // @Tags			SE
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"SE ID"
 // @Success		200	{object}	map[string]string
 // @Failure		403	{object}	dto.ErrorResponse

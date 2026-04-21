@@ -180,6 +180,7 @@ func (h *LMSHandler) ServeKelas(w http.ResponseWriter, r *http.Request) {
 // @Description	Admin melihat semua kelas. User hanya melihat kelas yang published.
 // @Tags			LMS - Kelas
 // @Produce		json
+// @Security		BearerAuth
 // @Success		200	{array}		dto.KelasResponse
 // @Failure		500	{object}	dto.ErrorResponse
 // @Router			/api/kelas [get]
@@ -200,8 +201,9 @@ func (h *LMSHandler) kelasGetAll(w http.ResponseWriter, r *http.Request) {
 // @Description	Mendapatkan detail kelas beserta materi dan progress user.
 // @Tags			LMS - Kelas
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID Kelas"
-// @Success		200	{object}	dto.KelasDetailResponse
+// @Success		200	{object}	dto.KelasResponse
 // @Failure		404	{object}	dto.ErrorResponse
 // @Router			/api/kelas/{id} [get]
 func (h *LMSHandler) kelasGetDetail(w http.ResponseWriter, r *http.Request, id string) {
@@ -220,6 +222,7 @@ func (h *LMSHandler) kelasGetDetail(w http.ResponseWriter, r *http.Request, id s
 // @Tags			LMS - Kelas
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			request	body		dto.CreateKelasRequest	true	"Data kelas"
 // @Success		201		{object}	dto.KelasResponse
 // @Failure		400		{object}	dto.ErrorResponse
@@ -246,6 +249,7 @@ func (h *LMSHandler) kelasCreate(w http.ResponseWriter, r *http.Request) {
 // @Tags			LMS - Kelas
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id		path		string					true	"ID Kelas"
 // @Param			request	body		dto.UpdateKelasRequest	true	"Data update"
 // @Success		200		{object}	dto.KelasResponse
@@ -271,6 +275,7 @@ func (h *LMSHandler) kelasUpdate(w http.ResponseWriter, r *http.Request, id stri
 // @Description	Admin menghapus kelas.
 // @Tags			LMS - Kelas
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID Kelas"
 // @Success		200	{object}	map[string]string
 // @Failure		400	{object}	dto.ErrorResponse
@@ -384,6 +389,7 @@ func (h *LMSHandler) ServeMateriByKelas(w http.ResponseWriter, r *http.Request) 
 // @Tags			LMS - Materi
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id		path		string					true	"ID Kelas"
 // @Param			request	body		dto.CreateMateriRequest	true	"Data materi"
 // @Success		201		{object}	dto.MateriResponse
@@ -410,6 +416,7 @@ func (h *LMSHandler) materiCreate(w http.ResponseWriter, r *http.Request, idKela
 // @Tags			LMS - Materi
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id		path		string					true	"ID Materi"
 // @Param			request	body		dto.UpdateMateriRequest	true	"Data update"
 // @Success		200		{object}	dto.MateriResponse
@@ -435,6 +442,7 @@ func (h *LMSHandler) materiUpdate(w http.ResponseWriter, r *http.Request, id str
 // @Description	Admin menghapus materi.
 // @Tags			LMS - Materi
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID Materi"
 // @Success		200	{object}	map[string]string
 // @Failure		400	{object}	dto.ErrorResponse
@@ -454,6 +462,7 @@ func (h *LMSHandler) materiDelete(w http.ResponseWriter, r *http.Request, id str
 // @Tags			LMS - Materi
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id		path		string						true	"ID Materi"
 // @Param			request	body		dto.UpdateProgressRequest	true	"Data progress"
 // @Success		200		{object}	dto.ProgressResponse
@@ -509,6 +518,7 @@ func (h *LMSHandler) ServeFilePendukung(w http.ResponseWriter, r *http.Request) 
 // @Description	Mendapatkan daftar file pendukung untuk suatu materi.
 // @Tags			LMS - File Pendukung
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID Materi"
 // @Success		200	{array}		dto.FilePendukungResponse
 // @Failure		500	{object}	dto.ErrorResponse
@@ -528,6 +538,7 @@ func (h *LMSHandler) filePendukungGetByMateri(w http.ResponseWriter, _ *http.Req
 // @Tags			LMS - File Pendukung
 // @Accept			multipart/form-data
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id		path		string	true	"ID Materi"
 // @Param			file	formData	file	true	"File PDF"
 // @Success		201		{object}	dto.FilePendukungResponse
@@ -567,6 +578,7 @@ func (h *LMSHandler) filePendukungUpload(w http.ResponseWriter, r *http.Request,
 // @Description	Admin menghapus file pendukung.
 // @Tags			LMS - File Pendukung
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID File Pendukung"
 // @Success		200	{object}	map[string]string
 // @Failure		400	{object}	dto.ErrorResponse
@@ -584,6 +596,7 @@ func (h *LMSHandler) filePendukungDelete(w http.ResponseWriter, _ *http.Request,
 // @Description	User mendownload file PDF pendukung materi.
 // @Tags			LMS - File Pendukung
 // @Produce		application/pdf
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID File Pendukung"
 // @Success		200	{file}		binary
 // @Failure		404	{object}	dto.ErrorResponse
@@ -654,6 +667,7 @@ func (h *LMSHandler) serveSoalByKuis(w http.ResponseWriter, r *http.Request, idK
 // @Description	Admin mendapatkan daftar soal dalam suatu kuis.
 // @Tags			LMS - Soal
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id_kuis	path		string	true	"ID Kuis"
 // @Success		200		{array}		dto.SoalResponse
 // @Failure		500		{object}	dto.ErrorResponse
@@ -673,6 +687,7 @@ func (h *LMSHandler) soalGetByKuis(w http.ResponseWriter, _ *http.Request, idKui
 // @Tags			LMS - Soal
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id_kuis	path		string					true	"ID Kuis"
 // @Param			request	body		dto.CreateSoalRequest	true	"Data soal + pilihan"
 // @Success		201		{object}	dto.SoalResponse
@@ -698,6 +713,7 @@ func (h *LMSHandler) soalCreate(w http.ResponseWriter, r *http.Request, idKuis s
 // @Tags			LMS - Soal
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id		path		string					true	"ID Soal"
 // @Param			request	body		dto.UpdateSoalRequest	true	"Data update"
 // @Success		200		{object}	dto.SoalResponse
@@ -722,6 +738,7 @@ func (h *LMSHandler) soalUpdate(w http.ResponseWriter, r *http.Request, id strin
 // @Description	Admin menghapus soal.
 // @Tags			LMS - Soal
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID Soal"
 // @Success		200	{object}	map[string]string
 // @Failure		400	{object}	dto.ErrorResponse
@@ -817,6 +834,7 @@ func (h *LMSHandler) ServeKuis(w http.ResponseWriter, r *http.Request) {
 // @Description	Mendapatkan daftar kuis dalam suatu kelas.
 // @Tags			LMS - Kuis
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID Kelas"
 // @Success		200	{array}		dto.KuisResponse
 // @Failure		500	{object}	dto.ErrorResponse
@@ -836,6 +854,7 @@ func (h *LMSHandler) kuisGetByKelas(w http.ResponseWriter, _ *http.Request, idKe
 // @Tags			LMS - Kuis
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id		path		string					true	"ID Kelas"
 // @Param			request	body		dto.CreateKuisRequest	true	"Data kuis"
 // @Success		201		{object}	dto.KuisResponse
@@ -861,6 +880,7 @@ func (h *LMSHandler) kuisCreate(w http.ResponseWriter, r *http.Request, idKelas 
 // @Tags			LMS - Kuis
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id		path		string					true	"ID Kuis"
 // @Param			request	body		dto.UpdateKuisRequest	true	"Data update"
 // @Success		200		{object}	dto.KuisResponse
@@ -885,6 +905,7 @@ func (h *LMSHandler) kuisUpdate(w http.ResponseWriter, r *http.Request, id strin
 // @Description	Admin menghapus kuis.
 // @Tags			LMS - Kuis
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID Kuis"
 // @Success		200	{object}	map[string]string
 // @Failure		400	{object}	dto.ErrorResponse
@@ -902,8 +923,9 @@ func (h *LMSHandler) kuisDeleteHandler(w http.ResponseWriter, _ *http.Request, i
 // @Description	User memulai attempt kuis. Dibatasi oleh max_attempt jika ada.
 // @Tags			LMS - Kuis
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id_kuis	path		string	true	"ID Kuis"
-// @Success		200		{object}	dto.AttemptResponse
+// @Success		200		{object}	dto.StartKuisResponse
 // @Failure		400		{object}	dto.ErrorResponse
 // @Router			/api/kuis/{id_kuis}/start [post]
 func (h *LMSHandler) kuisStart(w http.ResponseWriter, r *http.Request, idKuis string) {
@@ -926,9 +948,10 @@ func (h *LMSHandler) kuisStart(w http.ResponseWriter, r *http.Request, idKuis st
 // @Tags			LMS - Kuis
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id_attempt	path		string					true	"ID Attempt"
 // @Param			request		body		dto.SubmitKuisRequest	true	"Jawaban kuis"
-// @Success		200			{object}	dto.AttemptResultResponse
+// @Success		200			{object}	dto.KuisResultResponse
 // @Failure		400			{object}	dto.ErrorResponse
 // @Router			/api/kuis/attempt/{id_attempt}/submit [post]
 func (h *LMSHandler) kuisSubmit(w http.ResponseWriter, r *http.Request, idAttempt string) {
@@ -955,8 +978,9 @@ func (h *LMSHandler) kuisSubmit(w http.ResponseWriter, r *http.Request, idAttemp
 // @Description	User melihat hasil dari attempt kuis yang sudah selesai.
 // @Tags			LMS - Kuis
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id_attempt	path		string	true	"ID Attempt"
-// @Success		200			{object}	dto.AttemptResultResponse
+// @Success		200			{object}	dto.KuisResultResponse
 // @Failure		400			{object}	dto.ErrorResponse
 // @Router			/api/kuis/attempt/{id_attempt}/result [get]
 func (h *LMSHandler) kuisResult(w http.ResponseWriter, r *http.Request, idAttempt string) {
@@ -1002,6 +1026,7 @@ func (h *LMSHandler) ServeDiskusi(w http.ResponseWriter, r *http.Request) {
 // @Description	Mendapatkan daftar diskusi untuk suatu materi.
 // @Tags			LMS - Diskusi
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID Materi"
 // @Success		200	{array}		dto.DiskusiResponse
 // @Failure		500	{object}	dto.ErrorResponse
@@ -1021,6 +1046,7 @@ func (h *LMSHandler) diskusiGetByMateri(w http.ResponseWriter, _ *http.Request, 
 // @Tags			LMS - Diskusi
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id		path		string						true	"ID Materi"
 // @Param			request	body		dto.CreateDiskusiRequest	true	"Data diskusi"
 // @Success		201		{object}	dto.DiskusiResponse
@@ -1051,6 +1077,7 @@ func (h *LMSHandler) diskusiCreate(w http.ResponseWriter, r *http.Request, idMat
 // @Tags			LMS - Diskusi
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id		path		string						true	"ID Diskusi"
 // @Param			request	body		dto.UpdateDiskusiRequest	true	"Data update"
 // @Success		200		{object}	dto.DiskusiResponse
@@ -1080,6 +1107,7 @@ func (h *LMSHandler) diskusiUpdate(w http.ResponseWriter, r *http.Request, id st
 // @Description	User menghapus diskusi miliknya. Admin bisa hapus diskusi siapa saja.
 // @Tags			LMS - Diskusi
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID Diskusi"
 // @Success		200	{object}	map[string]string
 // @Failure		400	{object}	dto.ErrorResponse
@@ -1103,8 +1131,9 @@ func (h *LMSHandler) diskusiDelete(w http.ResponseWriter, r *http.Request, id st
 // @Description	User mendapatkan catatan pribadinya untuk suatu materi.
 // @Tags			LMS - Catatan
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID Materi"
-// @Success		200	{object}	dto.CatatanResponse
+// @Success		200	{object}	dto.CatatanPribadiResponse
 // @Failure		404	{object}	dto.ErrorResponse
 // @Router			/api/materi/{id}/catatan [get]
 func (h *LMSHandler) catatanGet(w http.ResponseWriter, r *http.Request, idMateri string) {
@@ -1126,9 +1155,10 @@ func (h *LMSHandler) catatanGet(w http.ResponseWriter, r *http.Request, idMateri
 // @Tags			LMS - Catatan
 // @Accept			json
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id		path		string						true	"ID Materi"
 // @Param			request	body		dto.UpsertCatatanRequest	true	"Data catatan"
-// @Success		200		{object}	dto.CatatanResponse
+// @Success		200		{object}	dto.CatatanPribadiResponse
 // @Failure		400		{object}	dto.ErrorResponse
 // @Router			/api/materi/{id}/catatan [put]
 func (h *LMSHandler) catatanUpsert(w http.ResponseWriter, r *http.Request, idMateri string) {
@@ -1211,6 +1241,7 @@ func (h *LMSHandler) ServeSertifikat(w http.ResponseWriter, r *http.Request) {
 // @Description	User men-generate sertifikat setelah menyelesaikan kelas.
 // @Tags			LMS - Sertifikat
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID Kelas"
 // @Success		201	{object}	dto.SertifikatResponse
 // @Failure		400	{object}	dto.ErrorResponse
@@ -1229,6 +1260,7 @@ func (h *LMSHandler) sertifikatGenerate(w http.ResponseWriter, _ *http.Request, 
 // @Description	Mengecek apakah user sudah punya sertifikat untuk kelas tertentu.
 // @Tags			LMS - Sertifikat
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID Kelas"
 // @Success		200	{object}	dto.SertifikatResponse
 // @Failure		404	{object}	dto.ErrorResponse
@@ -1246,6 +1278,7 @@ func (h *LMSHandler) sertifikatGetByKelas(w http.ResponseWriter, _ *http.Request
 // @Description	User mendapatkan semua sertifikat miliknya.
 // @Tags			LMS - Sertifikat
 // @Produce		json
+// @Security		BearerAuth
 // @Success		200	{array}		dto.SertifikatResponse
 // @Failure		500	{object}	dto.ErrorResponse
 // @Router			/api/sertifikat/me [get]
@@ -1263,6 +1296,7 @@ func (h *LMSHandler) sertifikatGetByUser(w http.ResponseWriter, _ *http.Request,
 // @Description	Mendapatkan detail sertifikat berdasarkan ID.
 // @Tags			LMS - Sertifikat
 // @Produce		json
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID Sertifikat"
 // @Success		200	{object}	dto.SertifikatResponse
 // @Failure		404	{object}	dto.ErrorResponse
@@ -1280,6 +1314,7 @@ func (h *LMSHandler) sertifikatGetByID(w http.ResponseWriter, _ *http.Request, i
 // @Description	User mendownload sertifikat dalam format PDF.
 // @Tags			LMS - Sertifikat
 // @Produce		application/pdf
+// @Security		BearerAuth
 // @Param			id	path		string	true	"ID Sertifikat"
 // @Success		200	{file}		binary
 // @Failure		404	{object}	dto.ErrorResponse

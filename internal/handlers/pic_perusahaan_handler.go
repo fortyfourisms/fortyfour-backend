@@ -64,6 +64,7 @@ func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Description	Mengambil seluruh data pic perusahaan
 //	@Tags			PIC
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Success		200	{array}		dto.PICResponse
 //	@Failure		500	{object}	dto.ErrorResponse
 //	@Router			/api/pic [get]
@@ -102,6 +103,7 @@ func (h *PICHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 //	@Description	Mengambil satu data pic perusahaan
 //	@Tags			PIC
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"PIC ID"
 //	@Success		200	{object}	dto.PICResponse
 //	@Failure		404	{object}	dto.ErrorResponse
@@ -133,6 +135,7 @@ func (h *PICHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id st
 //	@Tags			PIC
 //	@Accept			json
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			pic	body		dto.CreatePICRequest	true	"Data pic perusahaan"
 //	@Success		201	{object}	dto.PICResponse
 //	@Failure		400	{object}	dto.ErrorResponse
@@ -179,6 +182,7 @@ func (h *PICHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 //	@Tags			PIC
 //	@Accept			json
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string					true	"PIC ID"
 //	@Param			pic	body		dto.UpdatePICRequest	true	"Data update"
 //	@Success		200	{object}	dto.PICResponse
@@ -234,6 +238,7 @@ func (h *PICHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id str
 //	@Description	Menghapus data pic perusahaan berdasarkan ID
 //	@Tags			PIC
 //	@Produce		json
+//	@Security		BearerAuth
 //	@Param			id	path		string	true	"PIC ID"
 //	@Success		200	{object}	dto.MessageResponse
 //	@Failure		400	{object}	dto.ErrorResponse
