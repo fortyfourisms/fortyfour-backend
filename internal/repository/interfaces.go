@@ -44,14 +44,6 @@ type PostRepositoryInterface interface {
 	Delete(id int) error
 }
 
-// JabatanRepositoryInterface defines methods for jabatan data access
-type JabatanRepositoryInterface interface {
-	Create(req dto.CreateJabatanRequest, id string) error
-	GetAll() ([]dto.JabatanResponse, error)
-	GetByID(id string) (*dto.JabatanResponse, error)
-	Update(id string, jabatan dto.JabatanResponse) error
-	Delete(id string) error
-}
 
 // PerusahaanRepositoryInterface
 type PerusahaanRepositoryInterface interface {

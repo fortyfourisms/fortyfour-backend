@@ -103,7 +103,7 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*dto.UserResponse, erro
 		Password:  string(hashedPassword),
 		Email:     req.Email,
 		RoleID:    req.RoleID,
-		IDJabatan: req.IDJabatan,
+		Jabatan:   req.Jabatan,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -189,8 +189,8 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 	if req.RoleID != nil {
 		user.RoleID = req.RoleID
 	}
-	if req.IDJabatan != nil {
-		user.IDJabatan = req.IDJabatan
+	if req.Jabatan != nil {
+		user.Jabatan = req.Jabatan
 	}
 
 	s.repo.Update(user)
@@ -275,8 +275,8 @@ func (s *UserService) UpdateMe(id string, req dto.UpdateMeRequest) (*dto.UserRes
 		user.Email = trimmed
 	}
 
-	if req.IDJabatan != nil {
-		user.IDJabatan = req.IDJabatan
+	if req.Jabatan != nil {
+		user.Jabatan = req.Jabatan
 	}
 
 	s.repo.Update(user)
@@ -447,8 +447,7 @@ func (s *UserService) toResponse(user *models.User) dto.UserResponse {
 		Email:        user.Email,
 		RoleID:       user.RoleID,
 		RoleName:     user.RoleName,
-		IDJabatan:    user.IDJabatan,
-		JabatanName:  user.JabatanName,
+		Jabatan:      user.Jabatan,
 		IDPerusahaan: user.IDPerusahaan,
 		FotoProfile:  user.FotoProfile,
 		Banner:       user.Banner,

@@ -146,7 +146,6 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	perusahaanRepo := repository.NewPerusahaanRepository(db)
 	picRepo := repository.NewPICRepository(db)
-	jabatanRepo := repository.NewJabatanRepository(db)
 	csirtRepo := repository.NewCsirtRepository(db)
 	sdmCsirtRepo := repository.NewSdmCsirtRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
@@ -173,7 +172,6 @@ func main() {
 	authService := services.NewAuthService(userRepo, roleRepo, tokenService, notificationService, strExpiryService)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo, redisClient, rmqProducer)
 	picService := services.NewPICService(picRepo, redisClient, rmqProducer)
-	jabatanService := services.NewJabatanService(jabatanRepo, redisClient, rmqProducer)
 	csirtService := services.NewCsirtService(csirtRepo, redisClient, rmqProducer)
 	csirtExportService := services.NewCsirtExportService(csirtService)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo, redisClient, rmqProducer)
@@ -200,7 +198,6 @@ func main() {
 	userHandler := handlers.NewUserHandler(userService, uploadPath, sseService)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
 	picHandler := handlers.NewPICHandler(picService, sseService)
-	jabatanHandler := handlers.NewJabatanHandler(jabatanService, sseService)
 	csirtHandler := handlers.NewCsirtHandler(csirtService, sseService)
 	csirtExportHandler := handlers.NewCsirtExportHandler(csirtExportService)
 	csirtHandler.SetExportHandler(csirtExportHandler)
@@ -239,7 +236,6 @@ func main() {
 		userHandler,
 		perusahaanHandler,
 		picHandler,
-		jabatanHandler,
 		roleHandler,
 		casbinHandler,
 		sseHandler,
