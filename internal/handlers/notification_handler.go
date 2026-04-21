@@ -51,8 +51,12 @@ func (h *NotificationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 			unread++
 		}
 		items = append(items, dto.NotificationResponse{
-			ID:        n.ID,
-			UserID:    n.UserID,
+			ID: n.ID,
+			User: dto.NotificationUserResponse{
+				UserID:      n.UserID,
+				Username:    n.Username,
+				DisplayName: n.DisplayName,
+			},
 			Type:      string(n.Type),
 			Message:   n.Message,
 			Read:      n.Read,

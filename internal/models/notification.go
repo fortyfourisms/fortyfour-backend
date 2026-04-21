@@ -20,8 +20,10 @@ const (
 // Notification adalah struktur notifikasi yang disimpan di MySQL
 type Notification struct {
 	ID        int64            `json:"id"`
-	UserID    string           `json:"user_id"`
-	Type      NotificationType `json:"type"`
+	UserID      string           `json:"user_id"`
+	Username    string           `json:"username"`
+	DisplayName string           `json:"display_name"`
+	Type        NotificationType `json:"type"`
 	Message   string           `json:"message"`
 	Read      bool             `json:"read"`
 	CreatedAt time.Time        `json:"created_at"`
