@@ -96,7 +96,7 @@ func TestSERepository_Create(t *testing.T) {
 			kategori:   "Tinggi",
 			mockFn: func(mock sqlmock.Sqlmock, req dto.CreateSERequest, id string, totalBobot int, kategori string) {
 				mock.ExpectExec("INSERT INTO se").
-					WithArgs(id, req.IDPerusahaan, req.IDSubSektor, req.IDCsirt,
+					WithArgs(id, req.IDPerusahaan, nil, nil,
 						req.NilaiInvestasi, req.AnggaranOperasional, req.KepatuhanPeraturan,
 						req.TeknikKriptografi, req.JumlahPengguna, req.DataPribadi,
 						req.KlasifikasiData, req.KekritisanProses, req.DampakKegagalan,
@@ -167,7 +167,7 @@ func TestSERepository_Create(t *testing.T) {
 			kategori:   "Strategis",
 			mockFn: func(mock sqlmock.Sqlmock, req dto.CreateSERequest, id string, totalBobot int, kategori string) {
 				mock.ExpectExec("INSERT INTO se").
-					WithArgs(id, req.IDPerusahaan, req.IDSubSektor, req.IDCsirt,
+					WithArgs(id, req.IDPerusahaan, nil, nil,
 						req.NilaiInvestasi, req.AnggaranOperasional, req.KepatuhanPeraturan,
 						req.TeknikKriptografi, req.JumlahPengguna, req.DataPribadi,
 						req.KlasifikasiData, req.KekritisanProses, req.DampakKegagalan,
@@ -201,7 +201,7 @@ func TestSERepository_Create(t *testing.T) {
 			kategori:   "Tinggi",
 			mockFn: func(mock sqlmock.Sqlmock, req dto.CreateSERequest, id string, totalBobot int, kategori string) {
 				mock.ExpectExec("INSERT INTO se").
-					WithArgs(id, req.IDPerusahaan, req.IDSubSektor, req.IDCsirt,
+					WithArgs(id, req.IDPerusahaan, nil, nil,
 						req.NilaiInvestasi, req.AnggaranOperasional, req.KepatuhanPeraturan,
 						req.TeknikKriptografi, req.JumlahPengguna, req.DataPribadi,
 						req.KlasifikasiData, req.KekritisanProses, req.DampakKegagalan,
@@ -746,7 +746,7 @@ func TestSERepository_ValidateABCValues(t *testing.T) {
 			id := uuid.New().String()
 
 			mock.ExpectExec("INSERT INTO se").
-				WithArgs(id, req.IDPerusahaan, req.IDSubSektor, req.IDCsirt,
+				WithArgs(id, req.IDPerusahaan, nil, nil,
 					req.NilaiInvestasi, req.AnggaranOperasional, req.KepatuhanPeraturan,
 					req.TeknikKriptografi, req.JumlahPengguna, req.DataPribadi,
 					req.KlasifikasiData, req.KekritisanProses, req.DampakKegagalan,
