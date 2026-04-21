@@ -279,3 +279,9 @@ func (r *RisikoRepository) GetProgress(respondenID int) (*models.SurveyProgress,
 
 	return &p, nil
 }
+
+func (r *RisikoRepository) ExistsRisiko(id int) (bool, error) {
+	var exists bool
+	err := r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM risiko WHERE id = ?)", id).Scan(&exists)
+	return exists, err
+}

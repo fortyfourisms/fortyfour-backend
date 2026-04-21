@@ -23,7 +23,6 @@ CREATE TABLE risiko_eligibility (
     responden_id INT NOT NULL,
     risiko_id INT NOT NULL,
     pernah_terjadi BOOLEAN NOT NULL,
-    langkah_selanjutnya VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uk_eligibility (responden_id, risiko_id)
 ) ENGINE=InnoDB;

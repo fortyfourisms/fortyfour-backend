@@ -24,6 +24,10 @@ func (s *RisikoService) ProcessEligibility(req dto.EligibilityRequest) (map[stri
 		return nil, validation.ErrMissingRespondentID
 	}
 
+	if err := s.validateForeignKey(req.RespondenID, req.RisikoID); err != nil {
+	return nil, err
+	}
+
 	data := models.RisikoEligibility{
 		RespondenID:   req.RespondenID,
 		RisikoID:      req.RisikoID,
@@ -52,6 +56,10 @@ func (s *RisikoService) ProcessAlasan(req dto.AlasanRequest) (map[string]interfa
 		return nil, validation.ErrMissingRespondentID
 	}
 
+	if err := s.validateForeignKey(req.RespondenID, req.RisikoID); err != nil {
+	return nil, err
+	}
+
 	if req.Alasan == "" {
 		return nil, validation.ErrMissingReason
 	}
@@ -77,6 +85,10 @@ func (s *RisikoService) ProcessDampak(req dto.DampakRequest) (map[string]interfa
 
 	if req.RespondenID == 0 {
 		return nil, validation.ErrMissingRespondentID
+	}
+
+	if err := s.validateForeignKey(req.RespondenID, req.RisikoID); err != nil {
+	return nil, err
 	}
 
 	// validasi impact & frekuensi
@@ -116,6 +128,10 @@ func (s *RisikoService) ProcessPengendalian(req dto.PengendalianRequest) (map[st
 
 	if req.RespondenID == 0 {
 		return nil, validation.ErrMissingRespondentID
+	}
+
+	if err := s.validateForeignKey(req.RespondenID, req.RisikoID); err != nil {
+	return nil, err
 	}
 
 	if req.AdaPengendalian && req.DeskripsiPengendalian == "" {
@@ -163,9 +179,9 @@ func (s *RisikoService) Navigate(req dto.NavigateRequest) (*models.SurveyProgres
 	}
 
 	// ambil nilai sekarang (handle NULL)
-	current := int64(1)
-	if progress.RisikoID.Valid {
-		current = progress.RisikoID.Int64
+	current := progress.RisikoID.Int64
+	if !progress.RisikoID.Valid {
+		current = 1
 	}
 
 	switch req.Direction {
@@ -182,7 +198,7 @@ func (s *RisikoService) Navigate(req dto.NavigateRequest) (*models.SurveyProgres
 		return nil, errors.New("direction tidak valid")
 	}
 
-	// set balik ke struct
+	// set kembali ke struct
 	progress.RisikoID = sql.NullInt64{
 		Int64: current,
 		Valid: true,
@@ -194,4 +210,26 @@ func (s *RisikoService) Navigate(req dto.NavigateRequest) (*models.SurveyProgres
 	}
 
 	return progress, nil
+}
+
+// VALIDATE FOREIGN KEY
+func (s *RisikoService) validateForeignKey(respondenID, risikoID int) error {
+
+	existResponden, err := s.repo.ExistsResponden(respondenID)
+	if err != nil {
+		return err
+	}
+	if !existResponden {
+		return errors.New("responden tidak ditemukan")
+	}
+
+	existRisiko, err := s.repo.ExistsRisiko(risikoID)
+	if err != nil {
+		return err
+	}
+	if !existRisiko {
+		return errors.New("risiko tidak ditemukan")
+	}
+
+	return nil
 }
