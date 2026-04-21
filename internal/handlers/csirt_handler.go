@@ -71,6 +71,15 @@ func (h *CsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary		List semua CSIRT
+// @Description	Admin mendapat semua data CSIRT. User hanya mendapat CSIRT milik perusahaannya.
+// @Tags			CSIRT
+// @Produce		json
+// @Security		BearerAuth
+// @Success		200	{array}		dto.CsirtResponse
+// @Failure		403	{object}	dto.ErrorResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/csirt [get]
 func (h *CsirtHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
@@ -100,15 +109,15 @@ func (h *CsirtHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 200, data)
 }
 
-// @Summary Ambil CSIRT berdasarkan ID
-// @Description Mengambil satu data CSIRT
-// @Tags CSIRT
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "CSIRT ID"
-// @Success 200 {object} dto.CsirtResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Router /api/csirt/{id} [get]
+// @Summary		Ambil CSIRT berdasarkan ID
+// @Description	Mengambil satu data CSIRT
+// @Tags			CSIRT
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"CSIRT ID"
+// @Success		200	{object}	dto.CsirtResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/csirt/{id} [get]
 func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -129,15 +138,15 @@ func (h *CsirtHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id 
 	utils.RespondJSON(w, 200, data)
 }
 
-// @Summary Download file Public Key PGP CSIRT
-// @Description Mendownload file PGP (.asc) milik CSIRT berdasarkan ID
-// @Tags CSIRT
-// @Produce application/octet-stream
-// @Security BearerAuth
-// @Param id path string true "CSIRT ID"
-// @Success 200 {file} binary
-// @Failure 404 {object} dto.ErrorResponse
-// @Router /api/csirt/{id}/pgp-download [get]
+// @Summary		Download file Public Key PGP CSIRT
+// @Description	Mendownload file PGP (.asc) milik CSIRT berdasarkan ID
+// @Tags			CSIRT
+// @Produce		application/octet-stream
+// @Security		BearerAuth
+// @Param			id	path		string	true	"CSIRT ID"
+// @Success		200	{file}		binary
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/csirt/{id}/pgp-download [get]
 func (h *CsirtHandler) handlePGPDownload(w http.ResponseWriter, r *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -178,26 +187,26 @@ func (h *CsirtHandler) handlePGPDownload(w http.ResponseWriter, r *http.Request,
 	io.Copy(w, f)
 }
 
-// @Summary Tambah CSIRT baru
-// @Description Membuat record CSIRT baru dengan file upload
-// @Tags CSIRT
-// @Accept multipart/form-data
-// @Produce json
-// @Security BearerAuth
-// @Param id_perusahaan formData string true "ID Perusahaan"
-// @Param nama_csirt formData string true "Nama CSIRT"
-// @Param web_csirt formData string false "Website CSIRT"
-// @Param email_csirt formData string false "Email CSIRT"
-// @Param telepon_csirt formData string false "Telepon CSIRT"
-// @Param photo_csirt formData file false "Photo CSIRT"
-// @Param file_rfc2350 formData file false "File RFC2350"
-// @Param file_public_key_pgp formData file false "File Public Key PGP (.asc)"
-// @Param file_str formData file false "File STR CSIRT (nullable)"
-// @Param tanggal_registrasi formData string false "Tanggal Registrasi (YYYY-MM-DD)"
-// @Param tanggal_kadaluarsa formData string false "Tanggal Kadaluarsa (YYYY-MM-DD)"
-// @Success 201 {object} dto.CsirtResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/csirt [post]
+// @Summary		Tambah CSIRT baru
+// @Description	Membuat record CSIRT baru dengan file upload
+// @Tags			CSIRT
+// @Accept			multipart/form-data
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id_perusahaan		formData	string	true	"ID Perusahaan"
+// @Param			nama_csirt			formData	string	true	"Nama CSIRT"
+// @Param			web_csirt			formData	string	false	"Website CSIRT"
+// @Param			email_csirt			formData	string	false	"Email CSIRT"
+// @Param			telepon_csirt		formData	string	false	"Telepon CSIRT"
+// @Param			photo_csirt			formData	file	false	"Photo CSIRT"
+// @Param			file_rfc2350		formData	file	false	"File RFC2350"
+// @Param			file_public_key_pgp	formData	file	false	"File Public Key PGP (.asc)"
+// @Param			file_str			formData	file	false	"File STR CSIRT (nullable)"
+// @Param			tanggal_registrasi	formData	string	false	"Tanggal Registrasi (YYYY-MM-DD)"
+// @Param			tanggal_kadaluarsa	formData	string	false	"Tanggal Kadaluarsa (YYYY-MM-DD)"
+// @Success		201					{object}	dto.CsirtResponse
+// @Failure		400					{object}	dto.ErrorResponse
+// @Router			/api/csirt [post]
 func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		logger.Error(err, "failed to parse multipart form for CSIRT create")
@@ -276,26 +285,26 @@ func (h *CsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 201, resp)
 }
 
-// @Summary Update CSIRT
-// @Description Mengubah data CSIRT berdasarkan ID
-// @Tags CSIRT
-// @Accept multipart/form-data
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "CSIRT ID"
-// @Param nama_csirt formData string false "Nama CSIRT"
-// @Param web_csirt formData string false "Website CSIRT"
-// @Param email_csirt formData string false "Email CSIRT"
-// @Param telepon_csirt formData string false "Telepon CSIRT"
-// @Param photo_csirt formData file false "Photo CSIRT"
-// @Param file_rfc2350 formData file false "File RFC2350"
-// @Param file_public_key_pgp formData file false "File Public Key PGP (.asc)"
-// @Param file_str formData file false "File STR CSIRT (nullable)"
-// @Param tanggal_registrasi formData string false "Tanggal Registrasi (YYYY-MM-DD)"
-// @Param tanggal_kadaluarsa formData string false "Tanggal Kadaluarsa (YYYY-MM-DD)"
-// @Success 200 {object} dto.CsirtResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/csirt/{id} [put]
+// @Summary		Update CSIRT
+// @Description	Mengubah data CSIRT berdasarkan ID
+// @Tags			CSIRT
+// @Accept			multipart/form-data
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id					path		string	true	"CSIRT ID"
+// @Param			nama_csirt			formData	string	false	"Nama CSIRT"
+// @Param			web_csirt			formData	string	false	"Website CSIRT"
+// @Param			email_csirt			formData	string	false	"Email CSIRT"
+// @Param			telepon_csirt		formData	string	false	"Telepon CSIRT"
+// @Param			photo_csirt			formData	file	false	"Photo CSIRT"
+// @Param			file_rfc2350		formData	file	false	"File RFC2350"
+// @Param			file_public_key_pgp	formData	file	false	"File Public Key PGP (.asc)"
+// @Param			file_str			formData	file	false	"File STR CSIRT (nullable)"
+// @Param			tanggal_registrasi	formData	string	false	"Tanggal Registrasi (YYYY-MM-DD)"
+// @Param			tanggal_kadaluarsa	formData	string	false	"Tanggal Kadaluarsa (YYYY-MM-DD)"
+// @Success		200					{object}	dto.CsirtResponse
+// @Failure		400					{object}	dto.ErrorResponse
+// @Router			/api/csirt/{id} [put]
 func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		logger.Error(err, "failed to parse multipart form for CSIRT update")
@@ -376,15 +385,15 @@ func (h *CsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id s
 	utils.RespondJSON(w, 200, resp)
 }
 
-// @Summary Hapus CSIRT
-// @Description Menghapus data CSIRT berdasarkan ID
-// @Tags CSIRT
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "CSIRT ID"
-// @Success 200 {object} dto.MessageResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/csirt/{id} [delete]
+// @Summary		Hapus CSIRT
+// @Description	Menghapus data CSIRT berdasarkan ID
+// @Tags			CSIRT
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"CSIRT ID"
+// @Success		200	{object}	dto.MessageResponse
+// @Failure		400	{object}	dto.ErrorResponse
+// @Router			/api/csirt/{id} [delete]
 func (h *CsirtHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	// Ownership check untuk user
 	role := middleware.GetRole(r.Context())

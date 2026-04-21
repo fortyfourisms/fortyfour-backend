@@ -37,13 +37,14 @@ func (h *DeteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllDeteksi godoc
-// @Summary      List semua deteksi
-// @Description  Mengambil seluruh data deteksi
-// @Tags         Deteksi
-// @Produce      json
-// @Success      200  {array}  dto.DeteksiResponse
-// @Failure      500  {object} dto.ErrorResponse
-// @Router       /api/deteksi [get]
+//
+//	@Summary		List semua deteksi
+//	@Description	Mengambil seluruh data deteksi
+//	@Tags			Deteksi
+//	@Produce		json
+//	@Success		200	{array}		dto.DeteksiResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/deteksi [get]
 func (h *DeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
@@ -96,13 +97,14 @@ func (h *DeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetDeteksiByID godoc
-// @Summary      Ambil deteksi berdasarkan ID
-// @Tags         Deteksi
-// @Produce      json
-// @Param        id   path      string  true  "Deteksi ID"
-// @Success      200  {object} dto.DeteksiResponse
-// @Failure      404  {object} dto.ErrorResponse
-// @Router       /api/deteksi/{id} [get]
+//
+//	@Summary	Ambil deteksi berdasarkan ID
+//	@Tags		Deteksi
+//	@Produce	json
+//	@Param		id	path		string	true	"Deteksi ID"
+//	@Success	200	{object}	dto.DeteksiResponse
+//	@Failure	404	{object}	dto.ErrorResponse
+//	@Router		/api/deteksi/{id} [get]
 func (h *DeteksiHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)

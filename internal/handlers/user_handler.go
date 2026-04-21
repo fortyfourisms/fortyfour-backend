@@ -89,14 +89,14 @@ func (h *UserHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// @Summary List semua users
-// @Description Mengambil seluruh data user
-// @Tags Users
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {array} dto.UserResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /api/users [get]
+// @Summary		List semua users
+// @Description	Mengambil seluruh data user
+// @Tags			Users
+// @Produce		json
+// @Security		BearerAuth
+// @Success		200	{array}		dto.UserResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/users [get]
 func (h *UserHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -107,15 +107,15 @@ func (h *UserHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 	utils.RespondJSON(w, 200, data)
 }
 
-// @Summary Ambil user berdasarkan ID
-// @Description Mengambil satu data user
-// @Tags Users
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "User ID"
-// @Success 200 {object} dto.UserResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Router /api/users/{id} [get]
+// @Summary		Ambil user berdasarkan ID
+// @Description	Mengambil satu data user
+// @Tags			Users
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"User ID"
+// @Success		200	{object}	dto.UserResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/users/{id} [get]
 func (h *UserHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -126,16 +126,16 @@ func (h *UserHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id s
 	utils.RespondJSON(w, 200, data)
 }
 
-// @Summary Tambah user baru
-// @Description Membuat record user baru
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param user body dto.CreateUserRequest true "Data user"
-// @Success 201 {object} dto.UserResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/users [post]
+// @Summary		Tambah user baru
+// @Description	Membuat record user baru
+// @Tags			Users
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			user	body		dto.CreateUserRequest	true	"Data user"
+// @Success		201		{object}	dto.UserResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/users [post]
 func (h *UserHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateUserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -169,18 +169,18 @@ func (h *UserHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 201, resp)
 }
 
-// @Summary Update user
-// @Description Mengubah data user berdasarkan ID
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "User ID"
-// @Param user body dto.UpdateUserRequest true "Data update"
-// @Success 200 {object} dto.UserResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 403 {object} dto.ErrorResponse
-// @Router /api/users/{id} [put]
+// @Summary		Update user
+// @Description	Mengubah data user berdasarkan ID
+// @Tags			Users
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		string					true	"User ID"
+// @Param			user	body		dto.UpdateUserRequest	true	"Data update"
+// @Success		200		{object}	dto.UserResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		403		{object}	dto.ErrorResponse
+// @Router			/api/users/{id} [put]
 func (h *UserHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	currentUserID := h.getUserID(r)
 	isAdmin := h.isAdmin(r)
@@ -231,18 +231,18 @@ func (h *UserHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 	utils.RespondJSON(w, 200, resp)
 }
 
-// @Summary Update password user
-// @Description Mengubah password user
-// @Tags Users
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "User ID"
-// @Param password body dto.UpdateUserPasswordRequest true "Data password"
-// @Success 200 {object} dto.MessageResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 403 {object} dto.ErrorResponse
-// @Router /api/users/{id}/password [put]
+// @Summary		Update password user
+// @Description	Mengubah password user
+// @Tags			Users
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id			path		string							true	"User ID"
+// @Param			password	body		dto.UpdateUserPasswordRequest	true	"Data password"
+// @Success		200			{object}	dto.MessageResponse
+// @Failure		400			{object}	dto.ErrorResponse
+// @Failure		403			{object}	dto.ErrorResponse
+// @Router			/api/users/{id}/password [put]
 func (h *UserHandler) handleUpdatePassword(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -285,18 +285,18 @@ func (h *UserHandler) handleUpdatePassword(w http.ResponseWriter, r *http.Reques
 	utils.RespondJSON(w, 200, map[string]string{"message": "Password berhasil diubah"})
 }
 
-// @Summary Update profile photo user
-// @Description Mengubah foto profile user
-// @Tags Users
-// @Accept multipart/form-data
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "User ID"
-// @Param profile_photo formData file true "Profile photo file"
-// @Success 200 {object} dto.UserResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 403 {object} dto.ErrorResponse
-// @Router /api/users/{id}/profile-photo [post]
+// @Summary		Update profile photo user
+// @Description	Mengubah foto profile user
+// @Tags			Users
+// @Accept			multipart/form-data
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id				path		string	true	"User ID"
+// @Param			profile_photo	formData	file	true	"Profile photo file"
+// @Success		200				{object}	dto.UserResponse
+// @Failure		400				{object}	dto.ErrorResponse
+// @Failure		403				{object}	dto.ErrorResponse
+// @Router			/api/users/{id}/profile-photo [post]
 func (h *UserHandler) handleUpdateProfilePhoto(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -371,18 +371,18 @@ func (h *UserHandler) handleUpdateProfilePhoto(w http.ResponseWriter, r *http.Re
 	utils.RespondJSON(w, 200, resp)
 }
 
-// @Summary Update banner user
-// @Description Mengubah banner user
-// @Tags Users
-// @Accept multipart/form-data
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "User ID"
-// @Param banner formData file true "Banner file"
-// @Success 200 {object} dto.UserResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 403 {object} dto.ErrorResponse
-// @Router /api/users/{id}/banner [post]
+// @Summary		Update banner user
+// @Description	Mengubah banner user
+// @Tags			Users
+// @Accept			multipart/form-data
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		string	true	"User ID"
+// @Param			banner	formData	file	true	"Banner file"
+// @Success		200		{object}	dto.UserResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		403		{object}	dto.ErrorResponse
+// @Router			/api/users/{id}/banner [post]
 func (h *UserHandler) handleUpdateBanner(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -457,16 +457,16 @@ func (h *UserHandler) handleUpdateBanner(w http.ResponseWriter, r *http.Request)
 	utils.RespondJSON(w, 200, resp)
 }
 
-// @Summary Hapus user
-// @Description Menghapus data user berdasarkan ID (admin only)
-// @Tags Users
-// @Produce json
-// @Security BearerAuth
-// @Param id path string true "User ID"
-// @Success 200 {object} dto.MessageResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 403 {object} dto.ErrorResponse
-// @Router /api/users/{id} [delete]
+// @Summary		Hapus user
+// @Description	Menghapus data user berdasarkan ID (admin only)
+// @Tags			Users
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"User ID"
+// @Success		200	{object}	dto.MessageResponse
+// @Failure		400	{object}	dto.ErrorResponse
+// @Failure		403	{object}	dto.ErrorResponse
+// @Router			/api/users/{id} [delete]
 func (h *UserHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if !h.isAdmin(r) {
 		utils.RespondError(w, 403, "Hanya admin yang bisa menghapus user")
@@ -486,19 +486,20 @@ func (h *UserHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 }
 
 // handleUpdateStatus godoc
-// @Summary      Update status akun user
-// @Description  Admin mengubah status akun user (Aktif, Suspend, Nonaktif)
-// @Tags         Users
-// @Security     BearerAuth
-// @Accept       json
-// @Produce      json
-// @Param        id    path  string  true  "User ID"
-// @Param        body  body  object  true  "Status baru"
-// @Success      200   {object}  map[string]string
-// @Failure      400   {object}  dto.ErrorResponse
-// @Failure      403   {object}  dto.ErrorResponse
-// @Failure      500   {object}  dto.ErrorResponse
-// @Router       /api/users/{id}/status [patch]
+//
+//	@Summary		Update status akun user
+//	@Description	Admin mengubah status akun user (Aktif, Suspend, Nonaktif)
+//	@Tags			Users
+//	@Security		BearerAuth
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string	true	"User ID"
+//	@Param			body	body		object	true	"Status baru"
+//	@Success		200		{object}	dto.UserResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		403		{object}	dto.ErrorResponse
+//	@Failure		500		{object}	dto.ErrorResponse
+//	@Router			/api/users/{id}/status [patch]
 func (h *UserHandler) handleUpdateStatus(w http.ResponseWriter, r *http.Request, id string) {
 	if !h.isAdmin(r) {
 		utils.RespondError(w, http.StatusForbidden, "Hanya admin yang bisa mengubah status akun")

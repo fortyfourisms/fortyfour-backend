@@ -50,22 +50,23 @@ func ptrStr(s string) *string {
 }
 
 // Summary godoc
-// @Summary      Get dashboard summary
-// @Description  Mengambil ringkasan data dashboard. Mendukung berbagai filter opsional.
-// @Description  Prioritas filter tanggal: from+to > year+quarter > year.
-// @Tags         Dashboard
-// @Security     BearerAuth
-// @Produce      json
-// @Param        from          query  string  false  "Start date (YYYY-MM-DD)"
-// @Param        to            query  string  false  "End date (YYYY-MM-DD)"
-// @Param        year          query  string  false  "Filter per tahun, misal 2025"
-// @Param        quarter       query  string  false  "Filter per kuartal (1-4), harus digunakan bersama year"
-// @Param        sub_sektor_id query  string  false  "Filter per sub-sektor (UUID)"
-// @Param        kategori_se   query  string  false  "Filter kategori SE: Strategis | Tinggi | Rendah"
-// @Success      200  {object}  dto.DashboardSummary
-// @Failure      400  {object}  dto.ErrorResponse
-// @Failure      500  {object}  dto.ErrorResponse
-// @Router       /api/dashboard/summary [get]
+//
+//	@Summary		Get dashboard summary
+//	@Description	Mengambil ringkasan data dashboard. Mendukung berbagai filter opsional.
+//	@Description	Prioritas filter tanggal: from+to > year+quarter > year.
+//	@Tags			Dashboard
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			from			query		string	false	"Start date (YYYY-MM-DD)"
+//	@Param			to				query		string	false	"End date (YYYY-MM-DD)"
+//	@Param			year			query		string	false	"Filter per tahun, misal 2025"
+//	@Param			quarter			query		string	false	"Filter per kuartal (1-4), harus digunakan bersama year"
+//	@Param			sub_sektor_id	query		string	false	"Filter per sub-sektor (UUID)"
+//	@Param			kategori_se		query		string	false	"Filter kategori SE: Strategis | Tinggi | Rendah"
+//	@Success		200				{object}	dto.DashboardSummary
+//	@Failure		400				{object}	dto.ErrorResponse
+//	@Failure		500				{object}	dto.ErrorResponse
+//	@Router			/api/dashboard/summary [get]
 func (h *DashboardHandler) Summary(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 

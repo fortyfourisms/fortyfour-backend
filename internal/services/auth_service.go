@@ -196,7 +196,7 @@ func (s *AuthService) Register(
 		Password:     string(hashed),
 		Email:        email,
 		RoleID:       &defaultRole.ID,
-		IDJabatan:    req.IDJabatan,
+		Jabatan:      req.Jabatan,
 		IDPerusahaan: idPerusahaan,
 	}
 

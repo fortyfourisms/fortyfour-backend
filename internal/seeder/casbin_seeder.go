@@ -24,8 +24,8 @@ var defaultPolicies = []Policy{
 	{"user", "/api/se", "GET"},
 	{"user", "/api/se", "POST"},
 	{"user", "/api/se/:id", "GET"},
-	{"user", "/api/se/:id", "PUT"},
-	{"user", "/api/se/:id", "DELETE"},
+	{"user", "/api/se/:id/request-edit", "POST"},
+	{"user", "/api/se/edit-requests", "GET"},
 
 	// CSIRT
 	{"user", "/api/csirt", "GET"},
@@ -49,9 +49,6 @@ var defaultPolicies = []Policy{
 	{"user", "/api/pic/:id", "PUT"},
 	{"user", "/api/pic/:id", "DELETE"},
 
-	// Jabatan (user bisa lihat list dan tambah jabatan baru untuk dropdown profil)
-	{"user", "/api/jabatan", "GET"},
-	{"user", "/api/jabatan", "POST"},
 
 	// Perusahaan (user hanya bisa lihat dan update miliknya sendiri)
 	{"user", "/api/perusahaan", "GET"},
@@ -181,12 +178,14 @@ var defaultPolicies = []Policy{
 	{"user", "/api/sertifikat/:id/download", "GET"},
 }
 
-// SeedCasbinPolicies memastikan semua default policy ada di database.
-// Aman dijalankan berulang kali — tidak akan duplikat karena pakai HasPolicy check.
+// SeedCasbinPolicies memastikan semua default policy ada di database
+// dan menghapus policy lama yang sudah tidak ada di defaultPolicies.
+// Aman dijalankan berulang kali.
 func SeedCasbinPolicies(casbinService *services.CasbinService) {
 	added := 0
 	skipped := 0
 
+	// 1. Tambah policy yang belum ada
 	for _, p := range defaultPolicies {
 		ok, err := casbinService.AddPolicy(p.Role, p.Resource, p.Action)
 		if err != nil {
@@ -201,5 +200,45 @@ func SeedCasbinPolicies(casbinService *services.CasbinService) {
 		}
 	}
 
-	logger.Infof("Casbin seeder selesai: %d policy ditambahkan, %d sudah ada", added, skipped)
+	// 2. Hapus policy lama yang sudah tidak ada di defaultPolicies
+	removed := cleanupStalePolicies(casbinService)
+
+	logger.Infof("Casbin seeder selesai: %d ditambahkan, %d sudah ada, %d dihapus", added, skipped, removed)
+}
+
+// cleanupStalePolicies menghapus policy di database yang sudah tidak ada di defaultPolicies.
+// Ini penting agar policy lama (misal: user PUT/DELETE SE) tidak tersisa.
+func cleanupStalePolicies(casbinService *services.CasbinService) int {
+	// Bangun lookup set dari defaultPolicies
+	policySet := make(map[string]bool)
+	for _, p := range defaultPolicies {
+		key := p.Role + "|" + p.Resource + "|" + p.Action
+		policySet[key] = true
+	}
+
+	// Ambil semua policy yang ada di database
+	allPolicies := casbinService.GetAllPolicies()
+
+	removed := 0
+	for _, p := range allPolicies {
+		// Skip admin wildcard — jangan pernah hapus
+		if p.Role == "admin" {
+			continue
+		}
+		key := p.Role + "|" + p.Resource + "|" + p.Action
+		if !policySet[key] {
+			ok, err := casbinService.RemovePolicy(p.Role, p.Resource, p.Action)
+			if err != nil {
+				logger.Errorf(err, "Casbin seeder: gagal hapus stale policy (%s, %s, %s)",
+					p.Role, p.Resource, p.Action)
+				continue
+			}
+			if ok {
+				logger.Infof("Casbin seeder: hapus stale policy (%s, %s, %s)", p.Role, p.Resource, p.Action)
+				removed++
+			}
+		}
+	}
+
+	return removed
 }

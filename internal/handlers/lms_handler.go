@@ -80,10 +80,37 @@ func trimID(path, prefix string) string {
 func (h *LMSHandler) ServeKelas(w http.ResponseWriter, r *http.Request) {
 	id := trimID(r.URL.Path, "/api/kelas")
 
-	// Handle nested routes: /api/kelas/{id}/materi
+	// Handle nested routes: /api/kelas/{id}/materi or /api/kelas/{id}/materi/{id_materi}
 	if strings.Contains(id, "/materi") {
-		idKelas := strings.Split(id, "/materi")[0]
-		h.materiCreate(w, r, idKelas)
+		parts := strings.SplitN(id, "/materi", 2)
+		idKelas := parts[0]
+		materiSuffix := ""
+		if len(parts) > 1 {
+			materiSuffix = strings.TrimPrefix(parts[1], "/")
+		}
+
+		switch r.Method {
+		case http.MethodPost:
+			if materiSuffix != "" {
+				utils.RespondError(w, 400, "ID materi tidak diperlukan untuk create")
+				return
+			}
+			h.materiCreate(w, r, idKelas)
+		case http.MethodPut:
+			if materiSuffix == "" {
+				utils.RespondError(w, 400, "ID materi wajib untuk update")
+				return
+			}
+			h.materiUpdate(w, r, materiSuffix)
+		case http.MethodDelete:
+			if materiSuffix == "" {
+				utils.RespondError(w, 400, "ID materi wajib untuk delete")
+				return
+			}
+			h.materiDelete(w, r, materiSuffix)
+		default:
+			w.WriteHeader(http.StatusMethodNotAllowed)
+		}
 		return
 	}
 
@@ -149,6 +176,14 @@ func (h *LMSHandler) ServeKelas(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary		List semua kelas
+// @Description	Admin melihat semua kelas. User hanya melihat kelas yang published.
+// @Tags			LMS - Kelas
+// @Produce		json
+// @Security		BearerAuth
+// @Success		200	{array}		dto.KelasResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/kelas [get]
 func (h *LMSHandler) kelasGetAll(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 	onlyPublished := role != "admin"
@@ -162,6 +197,15 @@ func (h *LMSHandler) kelasGetAll(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 200, data)
 }
 
+// @Summary		Detail kelas
+// @Description	Mendapatkan detail kelas beserta materi dan progress user.
+// @Tags			LMS - Kelas
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Kelas"
+// @Success		200	{object}	dto.KelasResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/kelas/{id} [get]
 func (h *LMSHandler) kelasGetDetail(w http.ResponseWriter, r *http.Request, id string) {
 	userID := getUserID(r)
 	data, err := h.kelasSvc.GetDetail(id, userID)
@@ -173,6 +217,16 @@ func (h *LMSHandler) kelasGetDetail(w http.ResponseWriter, r *http.Request, id s
 	utils.RespondJSON(w, 200, data)
 }
 
+// @Summary		Buat kelas baru
+// @Description	Admin membuat kelas baru.
+// @Tags			LMS - Kelas
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			request	body		dto.CreateKelasRequest	true	"Data kelas"
+// @Success		201		{object}	dto.KelasResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/kelas [post]
 func (h *LMSHandler) kelasCreate(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r)
 	var req dto.CreateKelasRequest
@@ -190,6 +244,17 @@ func (h *LMSHandler) kelasCreate(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, 201, resp)
 }
 
+// @Summary		Update kelas
+// @Description	Admin mengupdate kelas.
+// @Tags			LMS - Kelas
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		string					true	"ID Kelas"
+// @Param			request	body		dto.UpdateKelasRequest	true	"Data update"
+// @Success		200		{object}	dto.KelasResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/kelas/{id} [put]
 func (h *LMSHandler) kelasUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateKelasRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -206,6 +271,15 @@ func (h *LMSHandler) kelasUpdate(w http.ResponseWriter, r *http.Request, id stri
 	utils.RespondJSON(w, 200, resp)
 }
 
+// @Summary		Hapus kelas
+// @Description	Admin menghapus kelas.
+// @Tags			LMS - Kelas
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Kelas"
+// @Success		200	{object}	map[string]string
+// @Failure		400	{object}	dto.ErrorResponse
+// @Router			/api/kelas/{id} [delete]
 func (h *LMSHandler) kelasDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.kelasSvc.Delete(id); err != nil {
 		logger.Error(err, "kelasDelete failed")
@@ -310,6 +384,17 @@ func (h *LMSHandler) ServeMateriByKelas(w http.ResponseWriter, r *http.Request) 
 	h.materiCreate(w, r, idKelas)
 }
 
+// @Summary		Tambah materi ke kelas
+// @Description	Admin menambahkan materi baru ke dalam kelas.
+// @Tags			LMS - Materi
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		string					true	"ID Kelas"
+// @Param			request	body		dto.CreateMateriRequest	true	"Data materi"
+// @Success		201		{object}	dto.MateriResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/kelas/{id}/materi [post]
 func (h *LMSHandler) materiCreate(w http.ResponseWriter, r *http.Request, idKelas string) {
 	var req dto.CreateMateriRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -326,6 +411,17 @@ func (h *LMSHandler) materiCreate(w http.ResponseWriter, r *http.Request, idKela
 	utils.RespondJSON(w, 201, resp)
 }
 
+// @Summary		Update materi
+// @Description	Admin mengupdate materi.
+// @Tags			LMS - Materi
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		string					true	"ID Materi"
+// @Param			request	body		dto.UpdateMateriRequest	true	"Data update"
+// @Success		200		{object}	dto.MateriResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/materi/{id} [put]
 func (h *LMSHandler) materiUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateMateriRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -342,6 +438,15 @@ func (h *LMSHandler) materiUpdate(w http.ResponseWriter, r *http.Request, id str
 	utils.RespondJSON(w, 200, resp)
 }
 
+// @Summary		Hapus materi
+// @Description	Admin menghapus materi.
+// @Tags			LMS - Materi
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Materi"
+// @Success		200	{object}	map[string]string
+// @Failure		400	{object}	dto.ErrorResponse
+// @Router			/api/materi/{id} [delete]
 func (h *LMSHandler) materiDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.materiSvc.Delete(id); err != nil {
 		logger.Error(err, "materiDelete failed")
@@ -352,6 +457,17 @@ func (h *LMSHandler) materiDelete(w http.ResponseWriter, r *http.Request, id str
 	utils.RespondJSON(w, 200, map[string]string{"message": "Materi berhasil dihapus"})
 }
 
+// @Summary		Update progress materi
+// @Description	User menandai progress materi (video/teks) telah diselesaikan.
+// @Tags			LMS - Materi
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		string						true	"ID Materi"
+// @Param			request	body		dto.UpdateProgressRequest	true	"Data progress"
+// @Success		200		{object}	dto.ProgressResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/materi/{id}/progress [post]
 func (h *LMSHandler) materiUpdateProgress(w http.ResponseWriter, r *http.Request, id string) {
 	userID := getUserID(r)
 	if userID == "" {
@@ -398,6 +514,15 @@ func (h *LMSHandler) ServeFilePendukung(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+// @Summary		List file pendukung per materi
+// @Description	Mendapatkan daftar file pendukung untuk suatu materi.
+// @Tags			LMS - File Pendukung
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Materi"
+// @Success		200	{array}		dto.FilePendukungResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/materi/{id}/file-pendukung [get]
 func (h *LMSHandler) filePendukungGetByMateri(w http.ResponseWriter, _ *http.Request, idMateri string) {
 	data, err := h.fpSvc.GetByMateri(idMateri)
 	if err != nil {
@@ -408,6 +533,17 @@ func (h *LMSHandler) filePendukungGetByMateri(w http.ResponseWriter, _ *http.Req
 	utils.RespondJSON(w, 200, data)
 }
 
+// @Summary		Upload file pendukung
+// @Description	Admin mengupload file PDF sebagai pendukung materi.
+// @Tags			LMS - File Pendukung
+// @Accept			multipart/form-data
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		string	true	"ID Materi"
+// @Param			file	formData	file	true	"File PDF"
+// @Success		201		{object}	dto.FilePendukungResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/materi/{id}/file-pendukung [post]
 func (h *LMSHandler) filePendukungUpload(w http.ResponseWriter, r *http.Request, idMateri string) {
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		utils.RespondError(w, 400, "Gagal membaca form-data")
@@ -438,6 +574,15 @@ func (h *LMSHandler) filePendukungUpload(w http.ResponseWriter, r *http.Request,
 	utils.RespondJSON(w, 201, resp)
 }
 
+// @Summary		Hapus file pendukung
+// @Description	Admin menghapus file pendukung.
+// @Tags			LMS - File Pendukung
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID File Pendukung"
+// @Success		200	{object}	map[string]string
+// @Failure		400	{object}	dto.ErrorResponse
+// @Router			/api/file-pendukung/{id} [delete]
 func (h *LMSHandler) filePendukungDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.fpSvc.Delete(id); err != nil {
 		logger.Error(err, "filePendukungDelete failed")
@@ -447,6 +592,15 @@ func (h *LMSHandler) filePendukungDelete(w http.ResponseWriter, _ *http.Request,
 	utils.RespondJSON(w, 200, map[string]string{"message": "File pendukung berhasil dihapus"})
 }
 
+// @Summary		Download file pendukung
+// @Description	User mendownload file PDF pendukung materi.
+// @Tags			LMS - File Pendukung
+// @Produce		application/pdf
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID File Pendukung"
+// @Success		200	{file}		binary
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/file-pendukung/{id}/download [get]
 func (h *LMSHandler) filePendukungDownload(w http.ResponseWriter, _ *http.Request, id string) {
 	fp, err := h.fpSvc.FindByID(id)
 	if err != nil {
@@ -509,6 +663,15 @@ func (h *LMSHandler) serveSoalByKuis(w http.ResponseWriter, r *http.Request, idK
 	}
 }
 
+// @Summary		List soal per kuis
+// @Description	Admin mendapatkan daftar soal dalam suatu kuis.
+// @Tags			LMS - Soal
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id_kuis	path		string	true	"ID Kuis"
+// @Success		200		{array}		dto.SoalResponse
+// @Failure		500		{object}	dto.ErrorResponse
+// @Router			/api/kuis/{id_kuis}/soal [get]
 func (h *LMSHandler) soalGetByKuis(w http.ResponseWriter, _ *http.Request, idKuis string) {
 	data, err := h.soalSvc.GetByKuis(idKuis)
 	if err != nil {
@@ -519,6 +682,17 @@ func (h *LMSHandler) soalGetByKuis(w http.ResponseWriter, _ *http.Request, idKui
 	utils.RespondJSON(w, 200, data)
 }
 
+// @Summary		Tambah soal ke kuis
+// @Description	Admin menambahkan soal beserta pilihan jawaban ke kuis.
+// @Tags			LMS - Soal
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id_kuis	path		string					true	"ID Kuis"
+// @Param			request	body		dto.CreateSoalRequest	true	"Data soal + pilihan"
+// @Success		201		{object}	dto.SoalResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/kuis/{id_kuis}/soal [post]
 func (h *LMSHandler) soalCreate(w http.ResponseWriter, r *http.Request, idKuis string) {
 	var req dto.CreateSoalRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -534,6 +708,17 @@ func (h *LMSHandler) soalCreate(w http.ResponseWriter, r *http.Request, idKuis s
 	utils.RespondJSON(w, 201, resp)
 }
 
+// @Summary		Update soal
+// @Description	Admin mengupdate soal dan pilihan jawaban.
+// @Tags			LMS - Soal
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		string					true	"ID Soal"
+// @Param			request	body		dto.UpdateSoalRequest	true	"Data update"
+// @Success		200		{object}	dto.SoalResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/soal/{id} [put]
 func (h *LMSHandler) soalUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateSoalRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -549,6 +734,15 @@ func (h *LMSHandler) soalUpdate(w http.ResponseWriter, r *http.Request, id strin
 	utils.RespondJSON(w, 200, resp)
 }
 
+// @Summary		Hapus soal
+// @Description	Admin menghapus soal.
+// @Tags			LMS - Soal
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Soal"
+// @Success		200	{object}	map[string]string
+// @Failure		400	{object}	dto.ErrorResponse
+// @Router			/api/soal/{id} [delete]
 func (h *LMSHandler) soalDelete(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.soalSvc.Delete(id); err != nil {
 		logger.Error(err, "soalDelete failed")
@@ -568,10 +762,21 @@ func (h *LMSHandler) serveKuisByKelas(w http.ResponseWriter, r *http.Request, id
 		h.kuisGetByKelas(w, r, idKelas)
 	case http.MethodPost:
 		h.kuisCreate(w, r, idKelas)
+	case http.MethodPut:
+		if suffix == "" {
+			utils.RespondError(w, 400, "ID kuis wajib untuk update")
+			return
+		}
+		h.kuisUpdate(w, r, suffix)
+	case http.MethodDelete:
+		if suffix == "" {
+			utils.RespondError(w, 400, "ID kuis wajib untuk delete")
+			return
+		}
+		h.kuisDeleteHandler(w, r, suffix)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
-	_ = suffix // reserved for future use
 }
 
 func (h *LMSHandler) ServeKuis(w http.ResponseWriter, r *http.Request) {
@@ -625,6 +830,15 @@ func (h *LMSHandler) ServeKuis(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary		List kuis per kelas
+// @Description	Mendapatkan daftar kuis dalam suatu kelas.
+// @Tags			LMS - Kuis
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Kelas"
+// @Success		200	{array}		dto.KuisResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/kelas/{id}/kuis [get]
 func (h *LMSHandler) kuisGetByKelas(w http.ResponseWriter, _ *http.Request, idKelas string) {
 	data, err := h.kuisSvc.GetKuisByKelas(idKelas)
 	if err != nil {
@@ -635,6 +849,17 @@ func (h *LMSHandler) kuisGetByKelas(w http.ResponseWriter, _ *http.Request, idKe
 	utils.RespondJSON(w, 200, data)
 }
 
+// @Summary		Buat kuis baru
+// @Description	Admin membuat kuis baru dalam kelas. Kuis bisa per-materi atau final.
+// @Tags			LMS - Kuis
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		string					true	"ID Kelas"
+// @Param			request	body		dto.CreateKuisRequest	true	"Data kuis"
+// @Success		201		{object}	dto.KuisResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/kelas/{id}/kuis [post]
 func (h *LMSHandler) kuisCreate(w http.ResponseWriter, r *http.Request, idKelas string) {
 	var req dto.CreateKuisRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -650,6 +875,17 @@ func (h *LMSHandler) kuisCreate(w http.ResponseWriter, r *http.Request, idKelas 
 	utils.RespondJSON(w, 201, resp)
 }
 
+// @Summary		Update kuis
+// @Description	Admin mengupdate data kuis.
+// @Tags			LMS - Kuis
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		string					true	"ID Kuis"
+// @Param			request	body		dto.UpdateKuisRequest	true	"Data update"
+// @Success		200		{object}	dto.KuisResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/kuis/{id} [put]
 func (h *LMSHandler) kuisUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateKuisRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -665,6 +901,15 @@ func (h *LMSHandler) kuisUpdate(w http.ResponseWriter, r *http.Request, id strin
 	utils.RespondJSON(w, 200, resp)
 }
 
+// @Summary		Hapus kuis
+// @Description	Admin menghapus kuis.
+// @Tags			LMS - Kuis
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Kuis"
+// @Success		200	{object}	map[string]string
+// @Failure		400	{object}	dto.ErrorResponse
+// @Router			/api/kuis/{id} [delete]
 func (h *LMSHandler) kuisDeleteHandler(w http.ResponseWriter, _ *http.Request, id string) {
 	if err := h.kuisSvc.DeleteKuis(id); err != nil {
 		logger.Error(err, "kuisDelete failed")
@@ -674,6 +919,15 @@ func (h *LMSHandler) kuisDeleteHandler(w http.ResponseWriter, _ *http.Request, i
 	utils.RespondJSON(w, 200, map[string]string{"message": "Kuis berhasil dihapus"})
 }
 
+// @Summary		Mulai mengerjakan kuis
+// @Description	User memulai attempt kuis. Dibatasi oleh max_attempt jika ada.
+// @Tags			LMS - Kuis
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id_kuis	path		string	true	"ID Kuis"
+// @Success		200		{object}	dto.StartKuisResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/kuis/{id_kuis}/start [post]
 func (h *LMSHandler) kuisStart(w http.ResponseWriter, r *http.Request, idKuis string) {
 	userID := getUserID(r)
 	if userID == "" {
@@ -689,6 +943,17 @@ func (h *LMSHandler) kuisStart(w http.ResponseWriter, r *http.Request, idKuis st
 	utils.RespondJSON(w, 200, resp)
 }
 
+// @Summary		Submit jawaban kuis
+// @Description	User mengirim jawaban untuk attempt kuis yang sedang berjalan.
+// @Tags			LMS - Kuis
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id_attempt	path		string					true	"ID Attempt"
+// @Param			request		body		dto.SubmitKuisRequest	true	"Jawaban kuis"
+// @Success		200			{object}	dto.KuisResultResponse
+// @Failure		400			{object}	dto.ErrorResponse
+// @Router			/api/kuis/attempt/{id_attempt}/submit [post]
 func (h *LMSHandler) kuisSubmit(w http.ResponseWriter, r *http.Request, idAttempt string) {
 	userID := getUserID(r)
 	if userID == "" {
@@ -709,6 +974,15 @@ func (h *LMSHandler) kuisSubmit(w http.ResponseWriter, r *http.Request, idAttemp
 	utils.RespondJSON(w, 200, resp)
 }
 
+// @Summary		Lihat hasil kuis
+// @Description	User melihat hasil dari attempt kuis yang sudah selesai.
+// @Tags			LMS - Kuis
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id_attempt	path		string	true	"ID Attempt"
+// @Success		200			{object}	dto.KuisResultResponse
+// @Failure		400			{object}	dto.ErrorResponse
+// @Router			/api/kuis/attempt/{id_attempt}/result [get]
 func (h *LMSHandler) kuisResult(w http.ResponseWriter, r *http.Request, idAttempt string) {
 	userID := getUserID(r)
 	if userID == "" {
@@ -748,6 +1022,15 @@ func (h *LMSHandler) ServeDiskusi(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary		List diskusi per materi
+// @Description	Mendapatkan daftar diskusi untuk suatu materi.
+// @Tags			LMS - Diskusi
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Materi"
+// @Success		200	{array}		dto.DiskusiResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/materi/{id}/diskusi [get]
 func (h *LMSHandler) diskusiGetByMateri(w http.ResponseWriter, _ *http.Request, idMateri string) {
 	data, err := h.diskusiSvc.GetByMateri(idMateri)
 	if err != nil {
@@ -758,6 +1041,17 @@ func (h *LMSHandler) diskusiGetByMateri(w http.ResponseWriter, _ *http.Request, 
 	utils.RespondJSON(w, 200, data)
 }
 
+// @Summary		Buat diskusi baru
+// @Description	User membuat diskusi atau reply di materi.
+// @Tags			LMS - Diskusi
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		string						true	"ID Materi"
+// @Param			request	body		dto.CreateDiskusiRequest	true	"Data diskusi"
+// @Success		201		{object}	dto.DiskusiResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/materi/{id}/diskusi [post]
 func (h *LMSHandler) diskusiCreate(w http.ResponseWriter, r *http.Request, idMateri string) {
 	userID := getUserID(r)
 	if userID == "" {
@@ -778,6 +1072,17 @@ func (h *LMSHandler) diskusiCreate(w http.ResponseWriter, r *http.Request, idMat
 	utils.RespondJSON(w, 201, resp)
 }
 
+// @Summary		Update diskusi
+// @Description	User mengupdate diskusi miliknya.
+// @Tags			LMS - Diskusi
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		string						true	"ID Diskusi"
+// @Param			request	body		dto.UpdateDiskusiRequest	true	"Data update"
+// @Success		200		{object}	dto.DiskusiResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/diskusi/{id} [put]
 func (h *LMSHandler) diskusiUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	userID := getUserID(r)
 	if userID == "" {
@@ -798,6 +1103,15 @@ func (h *LMSHandler) diskusiUpdate(w http.ResponseWriter, r *http.Request, id st
 	utils.RespondJSON(w, 200, resp)
 }
 
+// @Summary		Hapus diskusi
+// @Description	User menghapus diskusi miliknya. Admin bisa hapus diskusi siapa saja.
+// @Tags			LMS - Diskusi
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Diskusi"
+// @Success		200	{object}	map[string]string
+// @Failure		400	{object}	dto.ErrorResponse
+// @Router			/api/diskusi/{id} [delete]
 func (h *LMSHandler) diskusiDelete(w http.ResponseWriter, r *http.Request, id string) {
 	userID := getUserID(r)
 	role := middleware.GetRole(r.Context())
@@ -813,6 +1127,15 @@ func (h *LMSHandler) diskusiDelete(w http.ResponseWriter, r *http.Request, id st
 // CATATAN PRIBADI  —  /api/materi/{id}/catatan
 // ════════════════════════════════════════════════════════════════════════════
 
+// @Summary		Get catatan pribadi
+// @Description	User mendapatkan catatan pribadinya untuk suatu materi.
+// @Tags			LMS - Catatan
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Materi"
+// @Success		200	{object}	dto.CatatanPribadiResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/materi/{id}/catatan [get]
 func (h *LMSHandler) catatanGet(w http.ResponseWriter, r *http.Request, idMateri string) {
 	userID := getUserID(r)
 	if userID == "" {
@@ -827,6 +1150,17 @@ func (h *LMSHandler) catatanGet(w http.ResponseWriter, r *http.Request, idMateri
 	utils.RespondJSON(w, 200, resp)
 }
 
+// @Summary		Upsert catatan pribadi
+// @Description	User membuat atau mengupdate catatan pribadinya untuk suatu materi.
+// @Tags			LMS - Catatan
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		string						true	"ID Materi"
+// @Param			request	body		dto.UpsertCatatanRequest	true	"Data catatan"
+// @Success		200		{object}	dto.CatatanPribadiResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Router			/api/materi/{id}/catatan [put]
 func (h *LMSHandler) catatanUpsert(w http.ResponseWriter, r *http.Request, idMateri string) {
 	userID := getUserID(r)
 	if userID == "" {
@@ -903,6 +1237,15 @@ func (h *LMSHandler) ServeSertifikat(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 }
 
+// @Summary		Generate sertifikat
+// @Description	User men-generate sertifikat setelah menyelesaikan kelas.
+// @Tags			LMS - Sertifikat
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Kelas"
+// @Success		201	{object}	dto.SertifikatResponse
+// @Failure		400	{object}	dto.ErrorResponse
+// @Router			/api/kelas/{id}/sertifikat/generate [post]
 func (h *LMSHandler) sertifikatGenerate(w http.ResponseWriter, _ *http.Request, userID, idKelas string) {
 	resp, err := h.sertifikatSvc.Generate(userID, idKelas)
 	if err != nil {
@@ -913,6 +1256,15 @@ func (h *LMSHandler) sertifikatGenerate(w http.ResponseWriter, _ *http.Request, 
 	utils.RespondJSON(w, 201, resp)
 }
 
+// @Summary		Cek sertifikat user per kelas
+// @Description	Mengecek apakah user sudah punya sertifikat untuk kelas tertentu.
+// @Tags			LMS - Sertifikat
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Kelas"
+// @Success		200	{object}	dto.SertifikatResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/kelas/{id}/sertifikat [get]
 func (h *LMSHandler) sertifikatGetByKelas(w http.ResponseWriter, _ *http.Request, userID, idKelas string) {
 	resp, err := h.sertifikatSvc.GetByUserAndKelas(userID, idKelas)
 	if err != nil {
@@ -922,6 +1274,14 @@ func (h *LMSHandler) sertifikatGetByKelas(w http.ResponseWriter, _ *http.Request
 	utils.RespondJSON(w, 200, resp)
 }
 
+// @Summary		List sertifikat user
+// @Description	User mendapatkan semua sertifikat miliknya.
+// @Tags			LMS - Sertifikat
+// @Produce		json
+// @Security		BearerAuth
+// @Success		200	{array}		dto.SertifikatResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/sertifikat/me [get]
 func (h *LMSHandler) sertifikatGetByUser(w http.ResponseWriter, _ *http.Request, userID string) {
 	data, err := h.sertifikatSvc.GetByUser(userID)
 	if err != nil {
@@ -932,6 +1292,15 @@ func (h *LMSHandler) sertifikatGetByUser(w http.ResponseWriter, _ *http.Request,
 	utils.RespondJSON(w, 200, data)
 }
 
+// @Summary		Detail sertifikat
+// @Description	Mendapatkan detail sertifikat berdasarkan ID.
+// @Tags			LMS - Sertifikat
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Sertifikat"
+// @Success		200	{object}	dto.SertifikatResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/sertifikat/{id} [get]
 func (h *LMSHandler) sertifikatGetByID(w http.ResponseWriter, _ *http.Request, id string) {
 	resp, err := h.sertifikatSvc.GetByID(id)
 	if err != nil {
@@ -941,6 +1310,15 @@ func (h *LMSHandler) sertifikatGetByID(w http.ResponseWriter, _ *http.Request, i
 	utils.RespondJSON(w, 200, resp)
 }
 
+// @Summary		Download sertifikat PDF
+// @Description	User mendownload sertifikat dalam format PDF.
+// @Tags			LMS - Sertifikat
+// @Produce		application/pdf
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Sertifikat"
+// @Success		200	{file}		binary
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/sertifikat/{id}/download [get]
 func (h *LMSHandler) sertifikatDownload(w http.ResponseWriter, _ *http.Request, id string) {
 	resp, err := h.sertifikatSvc.GetByID(id)
 	if err != nil {

@@ -44,14 +44,6 @@ type PostRepositoryInterface interface {
 	Delete(id int) error
 }
 
-// JabatanRepositoryInterface defines methods for jabatan data access
-type JabatanRepositoryInterface interface {
-	Create(req dto.CreateJabatanRequest, id string) error
-	GetAll() ([]dto.JabatanResponse, error)
-	GetByID(id string) (*dto.JabatanResponse, error)
-	Update(id string, jabatan dto.JabatanResponse) error
-	Delete(id string) error
-}
 
 // PerusahaanRepositoryInterface
 type PerusahaanRepositoryInterface interface {
@@ -117,6 +109,16 @@ type SERepositoryInterface interface {
 	GetByPerusahaan(idPerusahaan string) ([]dto.SEResponse, error)
 	Update(id string, req dto.UpdateSERequest, totalBobot int, kategori string) error
 	Delete(id string) error
+}
+
+// SEEditRequestRepositoryInterface
+type SEEditRequestRepositoryInterface interface {
+	Create(req *models.SEEditRequest) error
+	FindByID(id string) (*models.SEEditRequest, error)
+	FindPendingBySE(idSE string) ([]models.SEEditRequest, error)
+	FindAllPending() ([]models.SEEditRequest, error)
+	FindByUser(idUser string) ([]models.SEEditRequest, error)
+	UpdateStatus(id string, status models.SEEditRequestStatus, catatan *string) error
 }
 
 // ── Kelas ────────────────────────────────────────────────────────────────────

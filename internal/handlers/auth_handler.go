@@ -45,17 +45,17 @@ func NewAuthHandler(
 	}
 }
 
-// @Summary Register user baru
-// @Description Mendaftarkan user baru. Token dikirim via HTTP-only cookies, BUKAN di response body.
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param request body dto.RegisterRequest true "Register data"
-// @Success 201 {object} map[string]interface{} "message dan user info (tanpa token)"
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /api/register [post]
+// @Summary		Register user baru
+// @Description	Mendaftarkan user baru. Token dikirim via HTTP-only cookies, BUKAN di response body.
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			request	body		dto.RegisterRequest		true	"Register data"
+// @Success		201		{object}	map[string]interface{}	"message dan user info (tanpa token)"
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		401		{object}	dto.ErrorResponse
+// @Failure		500		{object}	dto.ErrorResponse
+// @Router			/api/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req dto.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -107,17 +107,18 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusCreated, response)
 }
 
-// @Summary Login user
-// @Description Autentikasi user. Token dikirim via HTTP-only cookies, BUKAN di response body.
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param request body dto.LoginRequest true "Login credentials"
-// @Success 200 {object} map[string]interface{} "message dan user info (tanpa token)"
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /api/login [post]
+//	@Summary		Login user
+//	@Description	Autentikasi user. Token dikirim via HTTP-only cookies, BUKAN di response body.
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		dto.LoginRequest		true	"Login credentials"
+//	@Success		200		{object}	map[string]interface{}	"message dan user info (tanpa token)"
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		401		{object}	dto.ErrorResponse
+//	@Failure		500		{object}	dto.ErrorResponse
+//	@Router			/api/login [post]
+//
 // Login authenticates user and sets secure cookies
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req dto.LoginRequest
@@ -200,13 +201,14 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, response)
 }
 
-// @Summary Refresh token
-// @Description Refresh access token menggunakan refresh token dari cookie. Token baru dikirim via HTTP-only cookies.
-// @Tags Auth
-// @Produce json
-// @Success 200 {object} dto.MessageResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Router /api/refresh [post]
+//	@Summary		Refresh token
+//	@Description	Refresh access token menggunakan refresh token dari cookie. Token baru dikirim via HTTP-only cookies.
+//	@Tags			Auth
+//	@Produce		json
+//	@Success		200	{object}	dto.MessageResponse
+//	@Failure		401	{object}	dto.ErrorResponse
+//	@Router			/api/refresh [post]
+//
 // Refresh generates new access token using refresh token from cookie
 func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	// Get refresh token from cookie
@@ -231,12 +233,13 @@ func (h *AuthHandler) Refresh(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// @Summary Logout
-// @Description Revoke refresh token dan hapus cookies autentikasi.
-// @Tags Auth
-// @Produce json
-// @Success 200 {object} dto.MessageResponse
-// @Router /api/logout [post]
+//	@Summary		Logout
+//	@Description	Revoke refresh token dan hapus cookies autentikasi.
+//	@Tags			Auth
+//	@Produce		json
+//	@Success		200	{object}	dto.MessageResponse
+//	@Router			/api/logout [post]
+//
 // Logout revokes tokens and clears cookies
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	// Get refresh token from cookie to revoke it
@@ -254,15 +257,16 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// @Summary Logout dari semua perangkat
-// @Description Revoke semua refresh token user dan hapus cookies.
-// @Tags Auth
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} dto.MessageResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /api/logout-all [post]
+//	@Summary		Logout dari semua perangkat
+//	@Description	Revoke semua refresh token user dan hapus cookies.
+//	@Tags			Auth
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	dto.MessageResponse
+//	@Failure		401	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/logout-all [post]
+//
 // LogoutAll revokes all user's refresh tokens across all devices
 func (h *AuthHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 	// Get user ID from context (set by auth middleware)
@@ -286,15 +290,15 @@ func (h *AuthHandler) LogoutAll(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// @Summary Get current user profile
-// @Description Mengambil data lengkap user yang sedang login (profil diri sendiri).
-// @Tags Me
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} dto.UserResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Router /api/me [get]
+// @Summary		Get current user profile
+// @Description	Mengambil data lengkap user yang sedang login (profil diri sendiri).
+// @Tags			Me
+// @Produce		json
+// @Security		BearerAuth
+// @Success		200	{object}	dto.UserResponse
+// @Failure		401	{object}	dto.ErrorResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/me [get]
 func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok || userID == "" {
@@ -311,17 +315,17 @@ func (h *AuthHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, user)
 }
 
-// @Summary Update profile sendiri
-// @Description User mengupdate display_name, email, dan jabatan miliknya
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param request body dto.UpdateMeRequest true "Data yang ingin diubah"
-// @Success 200 {object} dto.UserResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Router /api/me [put]
+// @Summary		Update profile sendiri
+// @Description	User mengupdate display_name, email, dan jabatan miliknya
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			request	body		dto.UpdateMeRequest	true	"Data yang ingin diubah"
+// @Success		200		{object}	dto.UserResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		401		{object}	dto.ErrorResponse
+// @Router			/api/me [put]
 func (h *AuthHandler) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok || userID == "" {
@@ -388,17 +392,17 @@ func (h *AuthHandler) MeRouter(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// @Summary Update password diri sendiri
-// @Description Mengubah password user yang sedang login. Wajib mengisi password lama sebagai verifikasi.
-// @Tags Me
-// @Accept json
-// @Produce json
-// @Security BearerAuth
-// @Param request body dto.UpdateUserPasswordRequest true "Password lama dan baru"
-// @Success 200 {object} dto.MessageResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Router /api/me/password [put]
+// @Summary		Update password diri sendiri
+// @Description	Mengubah password user yang sedang login. Wajib mengisi password lama sebagai verifikasi.
+// @Tags			Me
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			request	body		dto.UpdateUserPasswordRequest	true	"Password lama dan baru"
+// @Success		200		{object}	dto.MessageResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		401		{object}	dto.ErrorResponse
+// @Router			/api/me/password [put]
 func (h *AuthHandler) UpdateMePassword(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok || userID == "" {
@@ -429,18 +433,18 @@ func (h *AuthHandler) UpdateMePassword(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": "Password berhasil diubah"})
 }
 
-// @Summary Update foto profile dan/atau banner diri sendiri
-// @Description Upload foto profile dan/atau banner sekaligus. Boleh kirim salah satu atau keduanya.
-// @Tags Me
-// @Accept multipart/form-data
-// @Produce json
-// @Security BearerAuth
-// @Param profile_photo formData file false "Foto profile (jpg/jpeg/png, max 10MB)"
-// @Param banner formData file false "Banner (jpg/jpeg/png, max 10MB)"
-// @Success 200 {object} dto.UserResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Router /api/me/media [post]
+// @Summary		Update foto profile dan/atau banner diri sendiri
+// @Description	Upload foto profile dan/atau banner sekaligus. Boleh kirim salah satu atau keduanya.
+// @Tags			Me
+// @Accept			multipart/form-data
+// @Produce		json
+// @Security		BearerAuth
+// @Param			profile_photo	formData	file	false	"Foto profile (jpg/jpeg/png, max 10MB)"
+// @Param			banner			formData	file	false	"Banner (jpg/jpeg/png, max 10MB)"
+// @Success		200				{object}	dto.UserResponse
+// @Failure		400				{object}	dto.ErrorResponse
+// @Failure		401				{object}	dto.ErrorResponse
+// @Router			/api/me/media [post]
 func (h *AuthHandler) UpdateMeMedia(w http.ResponseWriter, r *http.Request) {
 	userID, ok := r.Context().Value(middleware.UserIDKey).(string)
 	if !ok || userID == "" {
@@ -565,16 +569,16 @@ func isValidImageType(filename string) bool {
 
 /* ===================== MFA HANDLERS (MICROSOFT-STYLE) ===================== */
 
-// @Summary Setup MFA
-// @Description Generate MFA provisioning URI and secret (Microsoft-style: accepts setup_token)
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param setup body map[string]string false "Setup token (for unauthenticated setup)"
-// @Success 200 {object} map[string]string "provisioning_uri and secret"
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Router /api/mfa/setup [post]
+// @Summary		Setup MFA
+// @Description	Generate MFA provisioning URI and secret (Microsoft-style: accepts setup_token)
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			setup	body		map[string]string	false	"Setup token (for unauthenticated setup)"
+// @Success		200		{object}	map[string]string	"provisioning_uri and secret"
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		401		{object}	dto.ErrorResponse
+// @Router			/api/mfa/setup [post]
 func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
 	// Try to get userID from context (authenticated user) or from setup_token
 	userID := middleware.GetUserID(r.Context())
@@ -615,16 +619,16 @@ func (h *AuthHandler) SetupMFA(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// @Summary Enable MFA
-// @Description Verify MFA code and enable MFA (Microsoft-style: returns tokens immediately)
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param enable body map[string]string true "MFA code and optional setup_token"
-// @Success 200 {object} dto.AuthResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Router /api/mfa/enable [post]
+// @Summary		Enable MFA
+// @Description	Verify MFA code and enable MFA (Microsoft-style: returns tokens immediately)
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			enable	body		map[string]string	true	"MFA code and optional setup_token"
+// @Success		200		{object}	dto.AuthResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		401		{object}	dto.ErrorResponse
+// @Router			/api/mfa/enable [post]
 func (h *AuthHandler) EnableMFA(w http.ResponseWriter, r *http.Request) {
 	// Try to get userID from context (authenticated user) or from setup_token
 	userID := middleware.GetUserID(r.Context())
@@ -687,16 +691,16 @@ func (h *AuthHandler) EnableMFA(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, response)
 }
 
-// @Summary Verify MFA
-// @Description Verify MFA code and return access tokens
-// @Tags Auth
-// @Accept json
-// @Produce json
-// @Param verify body map[string]string true "MFA token and code"
-// @Success 200 {object} dto.AuthResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Router /api/mfa/verify [post]
+// @Summary		Verify MFA
+// @Description	Verify MFA code and return access tokens
+// @Tags			Auth
+// @Accept			json
+// @Produce		json
+// @Param			verify	body		map[string]string	true	"MFA token and code"
+// @Success		200		{object}	dto.AuthResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		401		{object}	dto.ErrorResponse
+// @Router			/api/mfa/verify [post]
 func (h *AuthHandler) VerifyMFA(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		MFAToken string `json:"mfa_token"`

@@ -6,7 +6,6 @@ type SE struct {
 	ID           string `json:"id"`
 	IDPerusahaan string `json:"id_perusahaan"`
 	IDSubSektor  string `json:"id_sub_sektor"`
-	IDCsirt      string `json:"id_csirt"`
 
 	// Dari form kategorisasi - Karakteristik Instansi
 	NilaiInvestasi                  string `json:"nilai_investasi"`

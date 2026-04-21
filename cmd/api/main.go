@@ -23,14 +23,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// @title Fortyfour Backend API
-// @version 1.0
-// @description API documentation for Fortyfour Backend - main auth and management service.
-// @host localhost:8080
-// @BasePath /
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
+// @title						Fortyfour Backend API
+// @version					1.0
+// @description				API documentation for Fortyfour Backend - main auth and management service.
+// @host						localhost:8080
+// @BasePath					/
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
 func main() {
 
 	// Load env
@@ -146,7 +146,6 @@ func main() {
 	userRepo := repository.NewUserRepository(db)
 	perusahaanRepo := repository.NewPerusahaanRepository(db)
 	picRepo := repository.NewPICRepository(db)
-	jabatanRepo := repository.NewJabatanRepository(db)
 	csirtRepo := repository.NewCsirtRepository(db)
 	sdmCsirtRepo := repository.NewSdmCsirtRepository(db)
 	roleRepo := repository.NewRoleRepository(db)
@@ -154,6 +153,7 @@ func main() {
 	sektorRepo := repository.NewSektorRepository(db)
 	subSektorRepo := repository.NewSubSektorRepository(db)
 	seRepo := repository.NewSERepository(db)
+	seEditReqRepo := repository.NewSEEditRequestRepository(db)
 	dashboardRepo := repository.NewDashboardRepository(db)
 	kelasRepo := repository.NewKelasRepository(db)
 	materiRepo := repository.NewMateriRepository(db)
@@ -172,7 +172,6 @@ func main() {
 	authService := services.NewAuthService(userRepo, roleRepo, tokenService, notificationService, strExpiryService)
 	perusahaanService := services.NewPerusahaanService(perusahaanRepo, subSektorRepo, redisClient, rmqProducer)
 	picService := services.NewPICService(picRepo, redisClient, rmqProducer)
-	jabatanService := services.NewJabatanService(jabatanRepo, redisClient, rmqProducer)
 	csirtService := services.NewCsirtService(csirtRepo, redisClient, rmqProducer)
 	csirtExportService := services.NewCsirtExportService(csirtService)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo, redisClient, rmqProducer)
@@ -183,6 +182,7 @@ func main() {
 	subSektorService := services.NewSubSektorService(subSektorRepo, redisClient)
 	seService := services.NewSEService(seRepo, redisClient, rmqProducer)
 	seExportService := services.NewSEExportService(seService)
+	seEditReqService := services.NewSEEditRequestService(seEditReqRepo, seRepo, seService)
 	dashboardService := services.NewDashboardService(dashboardRepo, redisClient)
 	kelasSvc := services.NewKelasService(kelasRepo, materiRepo, progressRepo, kuisRepo, kuisAttemptRepo, sertifikatRepo, fpRepo, redisClient)
 	materiSvc := services.NewMateriService(materiRepo, kelasRepo, progressRepo, redisClient)
@@ -198,7 +198,6 @@ func main() {
 	userHandler := handlers.NewUserHandler(userService, uploadPath, sseService)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
 	picHandler := handlers.NewPICHandler(picService, sseService)
-	jabatanHandler := handlers.NewJabatanHandler(jabatanService, sseService)
 	csirtHandler := handlers.NewCsirtHandler(csirtService, sseService)
 	csirtExportHandler := handlers.NewCsirtExportHandler(csirtExportService)
 	csirtHandler.SetExportHandler(csirtExportHandler)
@@ -212,6 +211,7 @@ func main() {
 	seHandler := handlers.NewSEHandler(seService, sseService)
 	seExportHandler := handlers.NewSEExportHandler(seExportService)
 	seHandler.SetExportHandler(seExportHandler)
+	seEditReqHandler := handlers.NewSEEditRequestHandler(seEditReqService)
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
 	lmsHandler := handlers.NewLMSHandler(kelasSvc, materiSvc, soalSvc, kuisSvc, fpSvc, diskusiSvc, catatanSvc, sertifikatSvc, sseService)
@@ -236,7 +236,6 @@ func main() {
 		userHandler,
 		perusahaanHandler,
 		picHandler,
-		jabatanHandler,
 		roleHandler,
 		casbinHandler,
 		sseHandler,
@@ -253,6 +252,7 @@ func main() {
 		subSektorHandler,
 		seHandler,
 		seExportHandler,
+		seEditReqHandler,
 		dashboardHandler,
 		notificationHandler,
 		ikasProxyHandler,

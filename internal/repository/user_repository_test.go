@@ -50,7 +50,7 @@ func TestUserRepository_Create(t *testing.T) {
 						user.Password,
 						user.Email,
 						user.RoleID,
-						user.IDJabatan,
+						user.Jabatan,
 						user.IDPerusahaan,
 					).
 					WillReturnResult(sqlmock.NewResult(1, 1))
@@ -77,7 +77,7 @@ func TestUserRepository_Create(t *testing.T) {
 						user.Password,
 						user.Email,
 						sqlmock.AnyArg(), // role_id akan di-set ke default
-						user.IDJabatan,
+						user.Jabatan,
 						user.IDPerusahaan,
 					).
 					WillReturnResult(sqlmock.NewResult(1, 1))
@@ -104,7 +104,7 @@ func TestUserRepository_Create(t *testing.T) {
 						user.Password,
 						user.Email,
 						user.RoleID,
-						user.IDJabatan,
+						user.Jabatan,
 						user.IDPerusahaan,
 					).
 					WillReturnError(sql.ErrConnDone)
@@ -152,15 +152,15 @@ func TestUserRepository_FindByID(t *testing.T) {
 			userID: "user-123",
 			mockFn: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{
-					"id", "username", "display_name", "password", "email", // ← display_name
-					"role_id", "role_name", "id_jabatan", "nama_jabatan",
+					"id", "username", "display_name", "password", "email",
+					"role_id", "role_name", "jabatan",
 					"id_perusahaan", "foto_profile", "banner",
 					"mfa_enabled", "mfa_secret",
 					"status", "password_changed_at", "login_attempts",
 					"created_at", "updated_at",
 				}).AddRow(
-					"user-123", "testuser", nil, "hashedpass", "test@example.com", // ← nil untuk display_name
-					"role-1", "admin", "jabatan-1", "Manager",
+					"user-123", "testuser", nil, "hashedpass", "test@example.com",
+					"role-1", "admin", "Manager",
 					"perusahaan-1", "photo.jpg", "banner.jpg",
 					true, "secret123",
 					"Aktif", time.Now(), 0,
@@ -183,15 +183,15 @@ func TestUserRepository_FindByID(t *testing.T) {
 			userID: "user-456",
 			mockFn: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{
-					"id", "username", "display_name", "password", "email", // ← display_name
-					"role_id", "role_name", "id_jabatan", "nama_jabatan",
+					"id", "username", "display_name", "password", "email",
+					"role_id", "role_name", "jabatan",
 					"id_perusahaan", "foto_profile", "banner",
 					"mfa_enabled", "mfa_secret",
 					"status", "password_changed_at", "login_attempts",
 					"created_at", "updated_at",
 				}).AddRow(
-					"user-456", "testuser2", nil, "hashedpass2", "test2@example.com", // ← nil untuk display_name
-					nil, nil, nil, nil,
+					"user-456", "testuser2", nil, "hashedpass2", "test2@example.com",
+					nil, nil, nil,
 					nil, nil, nil,
 					false, nil,
 					"Aktif", time.Now(), 0,
@@ -278,15 +278,15 @@ func TestUserRepository_FindByUsername(t *testing.T) {
 			username: "testuser",
 			mockFn: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{
-					"id", "username", "display_name", "password", "email", // ← display_name
-					"role_id", "role_name", "id_jabatan", "nama_jabatan",
+					"id", "username", "display_name", "password", "email",
+					"role_id", "role_name", "jabatan",
 					"id_perusahaan", "foto_profile", "banner",
 					"mfa_enabled", "mfa_secret",
 					"status", "password_changed_at", "login_attempts",
 					"created_at", "updated_at",
 				}).AddRow(
-					"user-123", "testuser", nil, "hashedpass", "test@example.com", // ← nil untuk display_name
-					"role-1", "admin", nil, nil,
+					"user-123", "testuser", nil, "hashedpass", "test@example.com",
+					"role-1", "admin", nil,
 					nil, nil, nil,
 					false, nil,
 					"Aktif", time.Now(), 0,
@@ -367,7 +367,7 @@ func TestUserRepository_Update(t *testing.T) {
 						user.DisplayName, // ← display_name
 						user.Email,
 						user.RoleID,
-						user.IDJabatan,
+						user.Jabatan,
 						user.ID,
 					).
 					WillReturnResult(sqlmock.NewResult(0, 1))
@@ -388,7 +388,7 @@ func TestUserRepository_Update(t *testing.T) {
 						user.DisplayName, // ← display_name
 						user.Email,
 						user.RoleID,
-						user.IDJabatan,
+						user.Jabatan,
 						user.ID,
 					).
 					WillReturnError(sql.ErrConnDone)
@@ -448,7 +448,7 @@ func TestUserRepository_UpdateWithPhoto(t *testing.T) {
 						user.DisplayName, // ← display_name
 						user.Email,
 						user.RoleID,
-						user.IDJabatan,
+						user.Jabatan,
 						user.FotoProfile,
 						user.Banner,
 						user.ID,
@@ -667,15 +667,15 @@ func TestUserRepository_FindAll(t *testing.T) {
 			mockFn: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{
 					"id", "username", "display_name", "email", // ← display_name
-					"role_id", "role_name", "id_jabatan", "nama_jabatan",
+					"role_id", "role_name", "jabatan",
 					"id_perusahaan", "foto_profile", "banner",
 					"mfa_enabled", "status", "created_at", "updated_at",
 				}).
-					AddRow("user-1", "user1", nil, "user1@example.com", // ← nil untuk display_name
-						"role-1", "admin", nil, nil, nil, nil, nil,
-												false, "aktif", time.Now(), time.Now()).
-					AddRow("user-2", "user2", nil, "user2@example.com", // ← nil untuk display_name
-						"role-2", "user", nil, nil, nil, nil, nil,
+					AddRow("user-1", "user1", nil, "user1@example.com",
+						"role-1", "admin", nil, nil, nil, nil,
+						false, "aktif", time.Now(), time.Now()).
+					AddRow("user-2", "user2", nil, "user2@example.com",
+						"role-2", "user", nil, nil, nil, nil,
 						false, "aktif", time.Now(), time.Now())
 
 				mock.ExpectQuery("SELECT (.+) FROM users").
@@ -689,7 +689,7 @@ func TestUserRepository_FindAll(t *testing.T) {
 			mockFn: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows([]string{
 					"id", "username", "display_name", "email", // ← display_name
-					"role_id", "role_name", "id_jabatan", "nama_jabatan",
+					"role_id", "role_name", "jabatan",
 					"id_perusahaan", "foto_profile", "banner",
 					"mfa_enabled", "status", "created_at", "updated_at",
 				})

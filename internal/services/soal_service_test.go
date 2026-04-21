@@ -28,7 +28,10 @@ func (m *mockSoalRepo) Create(soal *models.Soal, pilihan []models.PilihanJawaban
 }
 func (m *mockSoalRepo) FindByID(id string) (*models.Soal, error) { return m.FindByIDFn(id) }
 func (m *mockSoalRepo) FindByKuis(idKuis string) ([]models.Soal, error) {
-	return m.FindByKuisFn(idKuis)
+	if m.FindByKuisFn != nil {
+		return m.FindByKuisFn(idKuis)
+	}
+	return []models.Soal{}, nil
 }
 func (m *mockSoalRepo) Update(soal *models.Soal, pilihan []models.PilihanJawaban) error {
 	return m.UpdateFn(soal, pilihan)
