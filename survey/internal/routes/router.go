@@ -49,5 +49,9 @@ func InitRouter(
 	// Lanjutkan Nanti 
 	mux.HandleFunc("/api/survey/save-progress", risikoH.SaveProgress)
 
+	// Custom Risiko
+	mux.HandleFunc("/api/survey/custom-risk", risikoH.CreateCustomRisiko)
+	mux.HandleFunc("/api/survey/finish", risikoH.FinishSurvey)
+
 	return mux
 }

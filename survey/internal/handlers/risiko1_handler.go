@@ -20,17 +20,7 @@ func NewRisikoHandler(svc *services.RisikoService) *RisikoHandler {
 	return &RisikoHandler{svc: svc}
 }
 
-// STEP 1: ELIGIBILITY
-// SubmitEligibility godoc
-// @Summary      Step 1 - Submit Eligibility
-// @Description  Menentukan apakah responden memenuhi kriteria risiko
-// @Tags         Risiko
-// @Accept       json
-// @Produce      json
-// @Param        request body dto.EligibilityRequest true "Eligibility Request"
-// @Success      200 {object} dto.EligibilityResponse
-// @Failure      400 {object} dto.ErrorResponse
-// @Router       /api/survey/risiko/eligibility [post]
+// STEP 1 — ELIGIBILITY
 func (h *RisikoHandler) SubmitEligibility(w http.ResponseWriter, r *http.Request) {
 	var req dto.EligibilityRequest
 
@@ -45,21 +35,10 @@ func (h *RisikoHandler) SubmitEligibility(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	writeJSON(w, http.StatusOK, result)
+	writeSuccess(w, result)
 }
 
-// STEP 2A: ALASAN (JIKA TIDAK)
-// SubmitAlasan godoc
-// @Summary      Step 2A - Submit Alasan
-// @Description  Mengisi alasan jika tidak memenuhi kriteria risiko
-// @Tags         Risiko
-// @Accept       json
-// @Produce      json
-// @Param        request body dto.AlasanRequest true "Alasan Request"
-// @Success      200 {object} dto.AlasanResponse
-// @Failure      400 {object} dto.ErrorResponse
-// @Failure      404 {object} dto.ErrorResponse
-// @Router       /api/survey/risiko/alasan [post]
+// STEP 2A — ALASAN
 func (h *RisikoHandler) SubmitAlasan(w http.ResponseWriter, r *http.Request) {
 	var req dto.AlasanRequest
 
@@ -74,21 +53,10 @@ func (h *RisikoHandler) SubmitAlasan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, result)
+	writeSuccess(w, result)
 }
 
-// STEP 2B: DAMPAK (JIKA YA)
-// SubmitDampak godoc
-// @Summary      Step 2B - Submit Dampak
-// @Description  Mengisi dampak jika memenuhi kriteria risiko
-// @Tags         Risiko
-// @Accept       json
-// @Produce      json
-// @Param        request body dto.DampakRequest true "Dampak Request"
-// @Success      200 {object} dto.DampakResponse
-// @Failure      400 {object} dto.ErrorResponse
-// @Failure      404 {object} dto.ErrorResponse
-// @Router       /api/survey/risiko/dampak [post]
+// STEP 2B — DAMPAK
 func (h *RisikoHandler) SubmitDampak(w http.ResponseWriter, r *http.Request) {
 	var req dto.DampakRequest
 
@@ -103,21 +71,10 @@ func (h *RisikoHandler) SubmitDampak(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, result)
+	writeSuccess(w, result)
 }
 
-// STEP 2C: PENGENDALIAN
-// SubmitPengendalian godoc
-// @Summary      Step 2C - Submit Pengendalian
-// @Description  Mengisi tindakan pengendalian risiko
-// @Tags         Risiko
-// @Accept       json
-// @Produce      json
-// @Param        request body dto.PengendalianRequest true "Pengendalian Request"
-// @Success      200 {object} map[string]interface{}
-// @Failure      400 {object} dto.ErrorResponse
-// @Failure      404 {object} dto.ErrorResponse
-// @Router       /api/survey/risiko/pengendalian [post]
+// STEP 2C — PENGENDALIAN
 func (h *RisikoHandler) SubmitPengendalian(w http.ResponseWriter, r *http.Request) {
 	var req dto.PengendalianRequest
 
@@ -132,46 +89,20 @@ func (h *RisikoHandler) SubmitPengendalian(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	msg := "Tindakan pengendalian berhasil disimpan"
-	if !req.AdaPengendalian {
-		msg = "Tidak ada pengendalian, risiko selesai"
-	}
-
-	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"message":   msg,
-		"data":      result, 
-		"next_step": "finish",
-	})
+	writeSuccess(w, result)
 }
 
-// GET BY RESPONDEN ID
-// GetByRespondentID godoc
-// @Summary      Get Risiko by Respondent ID
-// @Description  Mengambil data risiko berdasarkan responden_id
-// @Tags         Risiko
-// @Produce      json
-// @Param        responden_id path int true "Respondent ID"
-// @Success      200 {object} dto.RisikoResponse
-// @Failure      400 {object} dto.ErrorResponse
-// @Failure      404 {object} dto.ErrorResponse
-// @Router       /api/survey/risiko/{responden_id} [get]
+// GET RISIKO BY RESPONDENT
 func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request) {
 
-	// ambil dari URL: /api/survey/risiko/
-	path := strings.TrimPrefix(r.URL.Path, "/api/survey/risiko/")
-	
-	if path == "" {
-		writeError(w, http.StatusBadRequest, "respondent_id diperlukan")
-		return
-	}
-
-	id, err := strconv.Atoi(path)
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/survey/risiko/")
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "respondent_id harus angka")
+		writeError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
-	result, err := h.svc.GetByRespondentID(id)
+	result, err := h.svc.GetByRespondentID(id) // ⬅ pastikan service ADA
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			writeError(w, http.StatusNotFound, "data tidak ditemukan")
@@ -181,119 +112,52 @@ func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	writeJSON(w, http.StatusOK, result)
+	writeSuccess(w, result)
 }
 
 // GET PROGRESS
-// GetProgress godoc
-// @Summary      Get Progress Risiko
-// @Description  Mengambil progress pengisian risiko berdasarkan responden_id
-// @Tags         Risiko
-// @Produce      json
-// @Param        responden_id path int true "Respondent ID"
-// @Success      200 {object} dto.ProgressResponse
-// @Failure      400 {object} dto.ErrorResponse
-// @Failure      500 {object} dto.ErrorResponse
-// @Router       /api/survey/progress/{responden_id} [get]
 func (h *RisikoHandler) GetProgress(w http.ResponseWriter, r *http.Request) {
 
-	path := strings.TrimPrefix(r.URL.Path, "/api/survey/progress/")
-
-	if path == "" {
-		writeError(w, http.StatusBadRequest, "respondent_id diperlukan")
-		return
-	}
-
-	id, err := strconv.Atoi(path)
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/survey/progress/")
+	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "respondent_id harus angka")
+		writeError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
-	result, err := h.svc.GetProgress(id)
+	progress, err := h.svc.GetProgress(id) // ⬅ HARUS ADA DI SERVICE
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, result)
+	writeSuccess(w, progress)
 }
 
 // NAVIGATE
-// Navigate godoc
-// @Summary      Navigate Step Risiko
-// @Description  Navigasi antar step pengisian risiko
-// @Tags         Risiko
-// @Accept       json
-// @Produce      json
-// @Param        request body dto.NavigateRequest true "Navigate Request"
-// @Success      200 {object} map[string]interface{}
-// @Failure      400 {object} dto.ErrorResponse
-// @Failure      500 {object} dto.ErrorResponse
-// @Router       /api/survey/risiko/navigate [post]
 func (h *RisikoHandler) Navigate(w http.ResponseWriter, r *http.Request) {
 	var req dto.NavigateRequest
 
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
+		writeError(w, http.StatusBadRequest, "invalid request")
 		return
 	}
 
 	result, err := h.svc.Navigate(req)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error())
+		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, map[string]interface{}{
-	"success": true,
-	"data": result,
-	})
+	writeSuccess(w, result)
 }
 
-// HELPERS
-func decodeJSON(r *http.Request, dst interface{}) error {
-	defer r.Body.Close()
-	return json.NewDecoder(r.Body).Decode(dst)
-}
-
-func writeJSON(w http.ResponseWriter, status int, body interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(body)
-}
-
-func writeError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, map[string]interface{}{
-		"success": false,
-		"message": message,
-	})
-}
-
-func resolveErrorStatus(err error) int {
-	if errors.Is(err, repository.ErrNotFound) {
-		return http.StatusNotFound
-	}
-	return http.StatusBadRequest
-}
-
-// LANJUTKAN NANTI
-// SaveProgress godoc
-// @Summary      Simpan Progress Risiko (Lanjutkan Nanti)
-// @Description  Menyimpan progress sementara untuk dilanjutkan nanti
-// @Tags         Risiko
-// @Accept       json
-// @Produce      json
-// @Param        request body dto.NavigateRequest true "Save Progress Request"
-// @Success      200 {object} dto.ProgressResponse
-// @Failure      400 {object} dto.ErrorResponse
-// @Failure      500 {object} dto.ErrorResponse
-// @Router       /api/survey/risiko/save-progress [post]
+// SAVE PROGRESS
 func (h *RisikoHandler) SaveProgress(w http.ResponseWriter, r *http.Request) {
 	var req dto.NavigateRequest
 
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
+		writeError(w, http.StatusBadRequest, "invalid request")
 		return
 	}
 
@@ -303,5 +167,78 @@ func (h *RisikoHandler) SaveProgress(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, result)
+	writeSuccess(w, result)
+}
+
+// CUSTOM RISIKO
+func (h *RisikoHandler) CreateCustomRisiko(w http.ResponseWriter, r *http.Request) {
+	var req dto.CustomRisikoRequest
+
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request")
+		return
+	}
+
+	id, err := h.svc.CreateCustomRisiko(req)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	writeSuccess(w, map[string]int{
+		"custom_risiko_id": id,
+	})
+}
+
+// FINISH
+func (h *RisikoHandler) FinishSurvey(w http.ResponseWriter, r *http.Request) {
+
+	var req struct {
+		RespondenID int `json:"responden_id"`
+	}
+
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request")
+		return
+	}
+
+	if err := h.svc.FinishSurvey(req.RespondenID); err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeSuccess(w, "survey selesai")
+}
+
+// HELPERS
+func decodeJSON(r *http.Request, dst interface{}) error {
+	defer r.Body.Close()
+	return json.NewDecoder(r.Body).Decode(dst)
+}
+
+func writeSuccess(w http.ResponseWriter, data interface{}) {
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"data":    data,
+	})
+}
+
+func writeError(w http.ResponseWriter, status int, message string) {
+	writeJSON(w, status, map[string]interface{}{
+		"success": false,
+		"message": message,
+	})
+}
+
+func writeJSON(w http.ResponseWriter, status int, body interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(body)
+}
+
+func resolveErrorStatus(err error) int {
+	if errors.Is(err, repository.ErrNotFound) {
+		return http.StatusNotFound
+	}
+	return http.StatusBadRequest
 }

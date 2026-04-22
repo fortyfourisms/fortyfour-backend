@@ -285,3 +285,27 @@ func (r *RisikoRepository) ExistsRisiko(id int) (bool, error) {
 	err := r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM risiko WHERE id = ?)", id).Scan(&exists)
 	return exists, err
 }
+
+// CUSTOM RISIKO
+func (r *RisikoRepository) InsertCustomRisiko(respondenID int, nama string) (int, error) {
+
+	result, err := r.db.Exec(`
+		INSERT INTO risiko_custom (responden_id, nama_risiko)
+		VALUES (?, ?)
+	`, respondenID, nama)
+
+	if err != nil {
+		return 0, err
+	}
+
+	id, _ := result.LastInsertId()
+	return int(id), nil
+}
+
+func (r *RisikoRepository) ExistsCustomRisiko(id int) (bool, error) {
+	var exists bool
+	err := r.db.QueryRow(`
+		SELECT EXISTS(SELECT 1 FROM risiko_custom WHERE id = ?)
+	`, id).Scan(&exists)
+	return exists, err
+}

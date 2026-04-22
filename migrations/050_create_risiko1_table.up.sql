@@ -22,7 +22,7 @@ CREATE TABLE risiko (
 CREATE TABLE risiko_eligibility (
     id INT AUTO_INCREMENT PRIMARY KEY,
     responden_id INT NOT NULL,
-    risiko_id INT NOT NULL,
+    risiko_id INT NULL,
     pernah_terjadi BOOLEAN NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -33,7 +33,7 @@ CREATE TABLE risiko_eligibility (
 CREATE TABLE risiko_alasan (
     id INT AUTO_INCREMENT PRIMARY KEY,
     responden_id INT NOT NULL,
-    risiko_id INT NOT NULL,
+    risiko_id INT NULL,
     alasan TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -44,7 +44,7 @@ CREATE TABLE risiko_alasan (
 CREATE TABLE risiko_dampak (
     id INT AUTO_INCREMENT PRIMARY KEY,
     responden_id INT NOT NULL,
-    risiko_id INT NOT NULL,
+    risiko_id INT NULL,
 
     dampak_reputasi ENUM('Tidak Signifikan','Cukup Signifikan','Signifikan','Sangat Signifikan'),
     dampak_operasional ENUM('Tidak Signifikan','Cukup Signifikan','Signifikan','Sangat Signifikan'),
@@ -63,7 +63,7 @@ CREATE TABLE risiko_dampak (
 CREATE TABLE risiko_pengendalian (
     id INT AUTO_INCREMENT PRIMARY KEY,
     responden_id INT NOT NULL,
-    risiko_id INT NOT NULL,
+    risiko_id INT NULL,
 
     ada_pengendalian BOOLEAN NOT NULL,
     deskripsi_pengendalian TEXT,
@@ -87,7 +87,7 @@ CREATE TABLE survey_progress (
     langkah_saat_ini VARCHAR(50),
     selesai BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    terakhir_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     UNIQUE KEY uk_progress (responden_id)
 ) ENGINE=InnoDB;

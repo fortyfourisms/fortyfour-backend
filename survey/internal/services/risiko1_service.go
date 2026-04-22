@@ -1,13 +1,15 @@
 package services
 
 import (
+	"database/sql"
 	"errors"
 	"survey/internal/dto"
 	"survey/internal/models"
 	"survey/internal/repository"
 	"survey/validator"
-	"database/sql"
 )
+
+const CustomRiskIndex = 14
 
 type RisikoService struct {
 	repo *repository.RisikoRepository
@@ -17,6 +19,55 @@ func NewRisikoService(repo *repository.RisikoRepository) *RisikoService {
 	return &RisikoService{repo: repo}
 }
 
+// HELPER
+func toIntPtr(v int) *int {
+	if v == 0 {
+		return nil
+	}
+	return &v
+}
+
+func (s *RisikoService) validateFK(respondenID, risikoID, customID int) error {
+
+	existResponden, err := s.repo.ExistsResponden(respondenID)
+	if err != nil {
+		return err
+	}
+	if !existResponden {
+		return errors.New("responden tidak ditemukan")
+	}
+
+	// custom risk
+	if customID != 0 {
+		exist, err := s.repo.ExistsCustomRisiko(customID)
+		if err != nil {
+			return err
+		}
+		if !exist {
+			return errors.New("custom risiko tidak ditemukan")
+		}
+		return nil
+	}
+
+	// master risk
+	exist, err := s.repo.ExistsRisiko(risikoID)
+	if err != nil {
+		return err
+	}
+	if !exist {
+		return errors.New("risiko tidak ditemukan")
+	}
+
+	return nil
+}
+
+func assignRisk(risikoID int, customID int) (int, *int) {
+	if customID != 0 {
+		return 0, toIntPtr(customID)
+	}
+	return risikoID, nil
+}
+
 // STEP 1 — ELIGIBILITY
 func (s *RisikoService) ProcessEligibility(req dto.EligibilityRequest) (map[string]interface{}, error) {
 
@@ -24,14 +75,17 @@ func (s *RisikoService) ProcessEligibility(req dto.EligibilityRequest) (map[stri
 		return nil, validation.ErrMissingRespondentID
 	}
 
-	if err := s.validateForeignKey(req.RespondenID, req.RisikoID); err != nil {
-	return nil, err
+	if err := s.validateFK(req.RespondenID, req.RisikoID, req.CustomRisikoID); err != nil {
+		return nil, err
 	}
 
+	risikoID, customPtr := assignRisk(req.RisikoID, req.CustomRisikoID)
+
 	data := models.RisikoEligibility{
-		RespondenID:   req.RespondenID,
-		RisikoID:      req.RisikoID,
-		PernahTerjadi: req.PernahTerjadi,
+		RespondenID:    req.RespondenID,
+		RisikoID:       risikoID,
+		CustomRisikoID: customPtr,
+		PernahTerjadi:  req.PernahTerjadi,
 	}
 
 	if err := s.repo.UpsertEligibility(data); err != nil {
@@ -49,25 +103,28 @@ func (s *RisikoService) ProcessEligibility(req dto.EligibilityRequest) (map[stri
 	}, nil
 }
 
-// STEP 2A — ALASAN (JIKA TIDAK)
+// STEP 2A — ALASAN
 func (s *RisikoService) ProcessAlasan(req dto.AlasanRequest) (map[string]interface{}, error) {
 
 	if req.RespondenID == 0 {
 		return nil, validation.ErrMissingRespondentID
 	}
 
-	if err := s.validateForeignKey(req.RespondenID, req.RisikoID); err != nil {
-	return nil, err
-	}
-
 	if req.Alasan == "" {
 		return nil, validation.ErrMissingReason
 	}
 
+	if err := s.validateFK(req.RespondenID, req.RisikoID, req.CustomRisikoID); err != nil {
+		return nil, err
+	}
+
+	risikoID, customPtr := assignRisk(req.RisikoID, req.CustomRisikoID)
+
 	data := models.RisikoAlasan{
-		RespondenID: req.RespondenID,
-		RisikoID:    req.RisikoID,
-		Alasan:      req.Alasan,
+		RespondenID:    req.RespondenID,
+		RisikoID:       risikoID,
+		CustomRisikoID: customPtr,
+		Alasan:         req.Alasan,
 	}
 
 	if err := s.repo.UpsertAlasan(data); err != nil {
@@ -80,18 +137,17 @@ func (s *RisikoService) ProcessAlasan(req dto.AlasanRequest) (map[string]interfa
 	}, nil
 }
 
-// STEP 2B — DAMPAK (JIKA YA)
+// STEP 2B — DAMPAK
 func (s *RisikoService) ProcessDampak(req dto.DampakRequest) (map[string]interface{}, error) {
 
 	if req.RespondenID == 0 {
 		return nil, validation.ErrMissingRespondentID
 	}
 
-	if err := s.validateForeignKey(req.RespondenID, req.RisikoID); err != nil {
-	return nil, err
+	if err := s.validateFK(req.RespondenID, req.RisikoID, req.CustomRisikoID); err != nil {
+		return nil, err
 	}
 
-	// validasi impact & frekuensi
 	if !req.DampakReputasi.Valid() ||
 		!req.DampakOperasional.Valid() ||
 		!req.DampakFinansial.Valid() ||
@@ -103,9 +159,12 @@ func (s *RisikoService) ProcessDampak(req dto.DampakRequest) (map[string]interfa
 		return nil, validation.ErrInvalidFreq
 	}
 
+	risikoID, customPtr := assignRisk(req.RisikoID, req.CustomRisikoID)
+
 	data := models.RisikoDampak{
 		RespondenID:       req.RespondenID,
-		RisikoID:          req.RisikoID,
+		RisikoID:          risikoID,
+		CustomRisikoID:    customPtr,
 		DampakReputasi:    req.DampakReputasi,
 		DampakOperasional: req.DampakOperasional,
 		DampakFinansial:   req.DampakFinansial,
@@ -130,17 +189,20 @@ func (s *RisikoService) ProcessPengendalian(req dto.PengendalianRequest) (map[st
 		return nil, validation.ErrMissingRespondentID
 	}
 
-	if err := s.validateForeignKey(req.RespondenID, req.RisikoID); err != nil {
-	return nil, err
-	}
-
 	if req.AdaPengendalian && req.DeskripsiPengendalian == "" {
 		return nil, validation.ErrMissingControl
 	}
 
+	if err := s.validateFK(req.RespondenID, req.RisikoID, req.CustomRisikoID); err != nil {
+		return nil, err
+	}
+
+	risikoID, customPtr := assignRisk(req.RisikoID, req.CustomRisikoID)
+
 	data := models.RisikoPengendalian{
 		RespondenID:           req.RespondenID,
-		RisikoID:              req.RisikoID,
+		RisikoID:              risikoID,
+		CustomRisikoID:        customPtr,
 		AdaPengendalian:       req.AdaPengendalian,
 		DeskripsiPengendalian: req.DeskripsiPengendalian,
 	}
@@ -149,25 +211,24 @@ func (s *RisikoService) ProcessPengendalian(req dto.PengendalianRequest) (map[st
 		return nil, err
 	}
 
-	msg := "pengendalian tersimpan"
-	if !req.AdaPengendalian {
-		msg = "tidak ada pengendalian"
-	}
-
 	return map[string]interface{}{
-		"message":   msg,
+		"message":   "pengendalian tersimpan",
 		"next_step": "finish",
 	}, nil
 }
 
-// GET FULL DATA
 func (s *RisikoService) GetByRespondentID(id int) (map[string]interface{}, error) {
 	return s.repo.FindByRespondentID(id)
 }
 
-// PROGRESS
-func (s *RisikoService) GetProgress(id int) (*models.SurveyProgress, error) {
-	return s.repo.GetProgress(id)
+func (s *RisikoService) GetProgress(id int) (dto.ProgressResponse, error) {
+
+	progress, err := s.repo.GetProgress(id)
+	if err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	return mapProgressToResponse(progress), nil
 }
 
 // NAVIGATE
@@ -178,64 +239,94 @@ func (s *RisikoService) Navigate(req dto.NavigateRequest) (dto.ProgressResponse,
 		return dto.ProgressResponse{}, err
 	}
 
-	// ambil nilai sekarang (handle NULL)
 	current := progress.RisikoID.Int64
 	if !progress.RisikoID.Valid {
 		current = 1
 	}
 
 	switch req.Direction {
-
 	case "next":
 		current++
-
 	case "previous":
 		if current > 1 {
 			current--
 		}
-
 	default:
 		return dto.ProgressResponse{}, errors.New("direction tidak valid")
 	}
 
-	// set kembali ke struct
-	progress.RisikoID = sql.NullInt64{
-		Int64: current,
-		Valid: true,
+	step := "normal"
+	if current == CustomRiskIndex {
+		step = "custom_risk"
 	}
 
-	err = s.repo.UpsertProgress(*progress)
-	if err != nil {
+	progress.RisikoID = sql.NullInt64{Int64: current, Valid: true}
+	progress.LangkahSaatIni = sql.NullString{String: step, Valid: true}
+
+	if err := s.repo.UpsertProgress(*progress); err != nil {
 		return dto.ProgressResponse{}, err
 	}
 
 	return mapProgressToResponse(progress), nil
 }
 
-// VALIDATE FOREIGN KEY
-func (s *RisikoService) validateForeignKey(respondenID, risikoID int) error {
+// SAVE PROGRESS
+func (s *RisikoService) SaveProgress(req dto.NavigateRequest) (dto.ProgressResponse, error) {
 
-	existResponden, err := s.repo.ExistsResponden(respondenID)
+	progress, err := s.repo.GetProgress(req.RespondenID)
 	if err != nil {
-		return err
-	}
-	if !existResponden {
-		return errors.New("responden tidak ditemukan")
+		return dto.ProgressResponse{}, err
 	}
 
-	existRisiko, err := s.repo.ExistsRisiko(risikoID)
-	if err != nil {
-		return err
-	}
-	if !existRisiko {
-		return errors.New("risiko tidak ditemukan")
+	progress.RisikoID = sql.NullInt64{
+		Int64: int64(req.CurrentRisk),
+		Valid: true,
 	}
 
-	return nil
+	progress.LangkahSaatIni = sql.NullString{
+		String: "paused",
+		Valid:  true,
+	}
+
+	progress.Selesai = false
+
+	if err := s.repo.UpsertProgress(*progress); err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	return mapProgressToResponse(progress), nil
 }
 
-// MAPPING PROGRESS
+// CUSTOM RISIKO
+func (s *RisikoService) CreateCustomRisiko(req dto.CustomRisikoRequest) (int, error) {
+
+	if req.NamaRisiko == "" {
+		return 0, errors.New("nama risiko wajib diisi")
+	}
+
+	return s.repo.InsertCustomRisiko(req.RespondenID, req.NamaRisiko)
+}
+
+// FINISH
+func (s *RisikoService) FinishSurvey(respondenID int) error {
+
+	progress, err := s.repo.GetProgress(respondenID)
+	if err != nil {
+		return err
+	}
+
+	progress.Selesai = true
+	progress.LangkahSaatIni = sql.NullString{
+		String: "finish",
+		Valid:  true,
+	}
+
+	return s.repo.UpsertProgress(*progress)
+}
+
+// MAPPING
 func mapProgressToResponse(p *models.SurveyProgress) dto.ProgressResponse {
+
 	var risikoID *int
 	if p.RisikoID.Valid {
 		val := int(p.RisikoID.Int64)
@@ -253,31 +344,4 @@ func mapProgressToResponse(p *models.SurveyProgress) dto.ProgressResponse {
 		LangkahSaatIni: langkah,
 		Selesai:        p.Selesai,
 	}
-}
-
-// LANJUTKAN NANTI
-func (s *RisikoService) SaveProgress(req dto.NavigateRequest) (dto.ProgressResponse, error) {
-	progress, err := s.repo.GetProgress(req.RespondenID)
-	if err != nil {
-		return dto.ProgressResponse{}, err
-	}
-
-	// simpan posisi terakhir dari request
-	progress.RisikoID = sql.NullInt64{
-		Int64: int64(req.CurrentRisk),
-		Valid: true,
-	}
-
-	progress.LangkahSaatIni = sql.NullString{
-		String: "paused", // status khusus
-		Valid:  true,
-	}
-
-	progress.Selesai = false
-
-	if err := s.repo.UpsertProgress(*progress); err != nil {
-		return dto.ProgressResponse{}, err
-	}
-
-	return mapProgressToResponse(progress), nil
 }
