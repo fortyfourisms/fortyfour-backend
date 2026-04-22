@@ -255,7 +255,7 @@ func TestSERepository_GetAll(t *testing.T) {
 					"total_bobot", "kategori_se", "created_at", "updated_at",
 					"p_id", "nama_perusahaan",
 					"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
-									}).
+				}).
 					AddRow("se-1", "perusahaan-1", "sub-1",
 						"A", "A", "A", "A", "A", "A", "A", "A", "A", "A",
 						"Core Banking System", "192.168.1.100", "AS65000", "IT Dept", "Transaction Processing",
@@ -282,7 +282,7 @@ func TestSERepository_GetAll(t *testing.T) {
 					"total_bobot", "kategori_se", "created_at", "updated_at",
 					"p_id", "nama_perusahaan",
 					"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
-									}).
+				}).
 					AddRow("se-1", "perusahaan-1", "",
 						"C", "C", "C", "C", "C", "C", "C", "C", "C", "C",
 						"Internal Portal", "10.0.0.1", "AS64512", "Internal IT", "",
@@ -309,7 +309,7 @@ func TestSERepository_GetAll(t *testing.T) {
 					"total_bobot", "kategori_se", "created_at", "updated_at",
 					"p_id", "nama_perusahaan",
 					"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
-									}).
+				}).
 					AddRow("se-1", "p1", "sub-1",
 						"A", "A", "A", "A", "A", "A", "A", "A", "A", "A",
 						"System 1", "192.168.1.1", "AS1", "IT", "Features 1",
@@ -344,7 +344,7 @@ func TestSERepository_GetAll(t *testing.T) {
 					"total_bobot", "kategori_se", "created_at", "updated_at",
 					"p_id", "nama_perusahaan",
 					"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
-									})
+				})
 
 				mock.ExpectQuery("SELECT (.+) FROM se JOIN perusahaan p (.+) ORDER BY se.created_at DESC").
 					WillReturnRows(rows)
@@ -424,7 +424,7 @@ func TestSERepository_GetByID(t *testing.T) {
 					"total_bobot", "kategori_se", "created_at", "updated_at",
 					"p_id", "nama_perusahaan",
 					"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
-									}).
+				}).
 					AddRow("se-123", "perusahaan-1", "sub-1",
 						"A", "A", "A", "A", "A", "A", "A", "A", "A", "A",
 						"Core Banking System", "192.168.1.100", "AS65000", "IT Dept", "Transaction Processing",
@@ -452,7 +452,7 @@ func TestSERepository_GetByID(t *testing.T) {
 					"total_bobot", "kategori_se", "created_at", "updated_at",
 					"p_id", "nama_perusahaan",
 					"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
-									}).
+				}).
 					AddRow("se-456", "perusahaan-1", "",
 						"B", "B", "B", "B", "B", "B", "B", "B", "B", "B",
 						"Internal Portal", "10.0.0.1", "AS64512", "Internal IT", "",
@@ -759,7 +759,7 @@ func TestSERepository_GetByPerusahaan(t *testing.T) {
 		"total_bobot", "kategori_se", "created_at", "updated_at",
 		"p_id", "nama_perusahaan",
 		"ss_id", "nama_sub_sektor", "s_id", "nama_sektor",
-			}
+	}
 
 	tests := []struct {
 		name         string

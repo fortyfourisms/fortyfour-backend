@@ -362,7 +362,6 @@ func (c *Consumer) ConsumePicDeleted(ctx context.Context) error {
 	})
 }
 
-
 // SDM CSIRT
 func (c *Consumer) ConsumeSdmCsirtCreated(ctx context.Context) error {
 	return c.Consume(ctx, "sdm_csirt.created", func(ctx context.Context, body []byte) error {
