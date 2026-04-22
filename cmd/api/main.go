@@ -103,9 +103,19 @@ func main() {
 
 	logger.Info("RabbitMQ infrastructure initialized successfully")
 
-	// Create Shared Producer and Consumer
-	sharedProducer := pkgRmq.NewProducer(rmq.GetChannel())
-	sharedConsumer := pkgRmq.NewConsumer(rmq.GetChannel())
+	// Create separate channels for Producer and Consumer
+	// AMQP channels are NOT safe for concurrent use — producer and consumer must have their own.
+	producerCh, err := rmq.NewChannel()
+	if err != nil {
+		logger.FatalErr(err, "Failed to create producer channel")
+	}
+	consumerCh, err := rmq.NewChannel()
+	if err != nil {
+		logger.FatalErr(err, "Failed to create consumer channel")
+	}
+
+	sharedProducer := pkgRmq.NewProducer(producerCh)
+	sharedConsumer := pkgRmq.NewConsumer(consumerCh)
 
 	// Wrap with specific Producer
 	rmqProducer := internalRmq.NewProducer(sharedProducer)

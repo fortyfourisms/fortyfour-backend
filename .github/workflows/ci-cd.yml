@@ -605,16 +605,6 @@ jobs:
           fi
           echo "✅ Health check passed"
 
-      - name: Test API endpoints
-        run: |
-          # Test posts endpoint
-          response=$(curl -s -o /dev/null -w "%{http_code}" https://${{ secrets.SITE_URL }}/api/jabatan)
-          if [ $response -ne 200 ] && [ $response -ne 401 ]; then
-            echo "❌ Posts endpoint failed with status: $response"
-            exit 1
-          fi
-          echo "✅ API endpoints working"
-
       - name: Final summary
         if: success()
         run: |

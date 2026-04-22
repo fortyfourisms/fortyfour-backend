@@ -44,7 +44,6 @@ type PostRepositoryInterface interface {
 	Delete(id int) error
 }
 
-
 // PerusahaanRepositoryInterface
 type PerusahaanRepositoryInterface interface {
 	Create(req dto.CreatePerusahaanRequest, id string) error
@@ -92,6 +91,15 @@ type SdmCsirtRepositoryInterface interface {
 type SektorRepositoryInterface interface {
 	GetAll() ([]dto.SektorResponse, error)
 	GetByID(id string) (*dto.SektorResponse, error)
+}
+
+// JabatanRepositoryInterface
+type JabatanRepositoryInterface interface {
+	Create(req dto.CreateJabatanRequest, id string) error
+	GetByID(id string) (*dto.JabatanResponse, error)
+	GetAll() ([]dto.JabatanResponse, error)
+	Update(id string, jabatan dto.JabatanResponse) error
+	Delete(id string) error
 }
 
 // SubSektorRepositoryInterface

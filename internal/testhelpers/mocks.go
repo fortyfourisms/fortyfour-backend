@@ -569,7 +569,6 @@ func NewMockRoleRepositoryWithDefaults() *MockRoleRepository {
 	return repo
 }
 
-
 // ============================================================
 // Mock PIC Repository
 // ============================================================
@@ -1029,3 +1028,83 @@ func (m *MockNotificationRepository) DeleteAllByUserID(userID string) error {
 }
 
 var _ repository.NotificationRepositoryInterface = (*MockNotificationRepository)(nil)
+
+// ============================================================
+// Mock Jabatan Repository
+// ============================================================
+
+type MockJabatanRepository struct {
+	jabatans map[string]*dto.JabatanResponse
+	mu       sync.RWMutex
+}
+
+func NewMockJabatanRepository() *MockJabatanRepository {
+	return &MockJabatanRepository{
+		jabatans: make(map[string]*dto.JabatanResponse),
+	}
+}
+
+func (m *MockJabatanRepository) Create(req dto.CreateJabatanRequest, id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	nama := ""
+	if req.NamaJabatan != nil {
+		nama = *req.NamaJabatan
+	}
+
+	m.jabatans[id] = &dto.JabatanResponse{
+		ID:          id,
+		NamaJabatan: nama,
+		CreatedAt:   time.Now().Format("2006-01-02 15:04:05"),
+		UpdatedAt:   time.Now().Format("2006-01-02 15:04:05"),
+	}
+	return nil
+}
+
+func (m *MockJabatanRepository) GetByID(id string) (*dto.JabatanResponse, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	jabatan, exists := m.jabatans[id]
+	if !exists {
+		return nil, errors.New("jabatan tidak ditemukan")
+	}
+	return jabatan, nil
+}
+
+func (m *MockJabatanRepository) GetAll() ([]dto.JabatanResponse, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	result := make([]dto.JabatanResponse, 0, len(m.jabatans))
+	for _, j := range m.jabatans {
+		result = append(result, *j)
+	}
+	return result, nil
+}
+
+func (m *MockJabatanRepository) Update(id string, jabatan dto.JabatanResponse) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if _, exists := m.jabatans[id]; !exists {
+		return errors.New("jabatan tidak ditemukan")
+	}
+	jabatan.UpdatedAt = time.Now().Format("2006-01-02 15:04:05")
+	m.jabatans[id] = &jabatan
+	return nil
+}
+
+func (m *MockJabatanRepository) Delete(id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if _, exists := m.jabatans[id]; !exists {
+		return errors.New("jabatan tidak ditemukan")
+	}
+	delete(m.jabatans, id)
+	return nil
+}
+
+var _ repository.JabatanRepositoryInterface = (*MockJabatanRepository)(nil)

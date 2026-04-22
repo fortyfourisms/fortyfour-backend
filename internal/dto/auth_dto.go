@@ -3,10 +3,10 @@ package dto
 import "fortyfour-backend/internal/models"
 
 type RegisterRequest struct {
-	Username  string  `json:"username" validate:"required,min=3,max=50"`
-	Password  string  `json:"password" validate:"required,min=8"`
-	Email     string  `json:"email" validate:"required,email"`
-	Jabatan   *string `json:"jabatan,omitempty"`
+	Username string  `json:"username" validate:"required,min=3,max=50"`
+	Password string  `json:"password" validate:"required,min=8"`
+	Email    string  `json:"email" validate:"required,email"`
+	Jabatan  *string `json:"jabatan,omitempty"`
 
 	// Added company fields for registration
 	NamaPerusahaan *string `json:"nama_perusahaan,omitempty"` // For creating new company
