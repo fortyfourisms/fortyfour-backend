@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -55,26 +56,36 @@ func (s *MateriService) Create(idKelas string, req dto.CreateMateriRequest) (*dt
 		if req.YoutubeID == nil || strings.TrimSpace(*req.YoutubeID) == "" {
 			return nil, errors.New("youtube_id wajib diisi untuk tipe video")
 		}
-	case models.MateriTipePDF:
-		if req.PDFPath == nil || strings.TrimSpace(*req.PDFPath) == "" {
-			return nil, errors.New("pdf_path wajib diisi untuk tipe pdf")
+	case models.MateriTipeTeks:
+		if req.KontenHTML == nil || strings.TrimSpace(*req.KontenHTML) == "" {
+			return nil, errors.New("konten_html wajib diisi untuk tipe teks")
 		}
-	case models.MateriTipeKuis:
-		// kuis tidak butuh field tambahan saat create materi,
-		// soal ditambahkan via endpoint terpisah
 	default:
-		return nil, errors.New("tipe tidak valid, harus: video, pdf, atau kuis")
+		return nil, errors.New("tipe tidak valid, harus: video atau teks")
+	}
+
+	// Validasi: urutan tidak boleh duplikat dalam kelas ini
+	existingMateri, err := s.repo.FindByKelas(idKelas)
+	if err != nil {
+		return nil, fmt.Errorf("gagal memvalidasi urutan: %w", err)
+	}
+	for _, m := range existingMateri {
+		if m.Urutan == req.Urutan {
+			return nil, errors.New("urutan sudah digunakan oleh materi lain dalam kelas ini")
+		}
 	}
 
 	materi := &models.Materi{
-		ID:          uuid.New().String(),
-		IDKelas:     idKelas,
-		Judul:       judul,
-		Tipe:        tipe,
-		Urutan:      req.Urutan,
-		YoutubeID:   req.YoutubeID,
-		PDFPath:     req.PDFPath,
-		DurasiDetik: req.DurasiDetik,
+		ID:               uuid.New().String(),
+		IDKelas:          idKelas,
+		Judul:            judul,
+		Tipe:             tipe,
+		Urutan:           req.Urutan,
+		YoutubeID:        req.YoutubeID,
+		DurasiDetik:      req.DurasiDetik,
+		KontenHTML:       req.KontenHTML,
+		DeskripsiSingkat: req.DeskripsiSingkat,
+		Kategori:         req.Kategori,
 	}
 
 	if err := s.repo.Create(materi); err != nil {
@@ -100,16 +111,32 @@ func (s *MateriService) Update(id string, req dto.UpdateMateriRequest) (*dto.Mat
 		materi.Judul = trimmed
 	}
 	if req.Urutan != nil {
+		// Validasi: urutan tidak boleh duplikat dalam kelas ini
+		existingMateri, err := s.repo.FindByKelas(materi.IDKelas)
+		if err != nil {
+			return nil, fmt.Errorf("gagal memvalidasi urutan: %w", err)
+		}
+		for _, m := range existingMateri {
+			if m.Urutan == *req.Urutan && m.ID != materi.ID {
+				return nil, errors.New("urutan sudah digunakan oleh materi lain dalam kelas ini")
+			}
+		}
 		materi.Urutan = *req.Urutan
 	}
 	if req.YoutubeID != nil {
 		materi.YoutubeID = req.YoutubeID
 	}
-	if req.PDFPath != nil {
-		materi.PDFPath = req.PDFPath
-	}
 	if req.DurasiDetik != nil {
 		materi.DurasiDetik = req.DurasiDetik
+	}
+	if req.KontenHTML != nil {
+		materi.KontenHTML = req.KontenHTML
+	}
+	if req.DeskripsiSingkat != nil {
+		materi.DeskripsiSingkat = req.DeskripsiSingkat
+	}
+	if req.Kategori != nil {
+		materi.Kategori = req.Kategori
 	}
 
 	if err := s.repo.Update(materi); err != nil {
@@ -143,15 +170,11 @@ func (s *MateriService) Delete(id string) error {
 
 // UpdateProgress dipakai untuk:
 //   - Video: update last_watched_seconds, tandai selesai jika >= 80% durasi
-//   - PDF  : langsung tandai selesai (is_completed=true)
+//   - Teks : langsung tandai selesai (is_completed=true)
 func (s *MateriService) UpdateProgress(userID, materiID string, req dto.UpdateProgressRequest) (*dto.ProgressResponse, error) {
 	materi, err := s.repo.FindByID(materiID)
 	if err != nil {
 		return nil, errors.New("materi tidak ditemukan")
-	}
-
-	if materi.Tipe == models.MateriTipeKuis {
-		return nil, errors.New("progress kuis dikelola melalui endpoint kuis")
 	}
 
 	// Ambil atau buat progress record
@@ -190,8 +213,8 @@ func (s *MateriService) UpdateProgress(userID, materiID string, req dto.UpdatePr
 			progress.CompletedAt = &now
 		}
 
-	case models.MateriTipePDF:
-		// PDF: selesai saat dibuka / dikonfirmasi client
+	case models.MateriTipeTeks:
+		// Teks: selesai saat dibuka / dikonfirmasi client
 		if req.IsCompleted {
 			progress.IsCompleted = true
 			now := time.Now()

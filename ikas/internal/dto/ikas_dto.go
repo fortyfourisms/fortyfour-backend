@@ -18,6 +18,10 @@ type UpdateIkasRequest struct {
 	TargetNilai  *float64 `json:"target_nilai,omitempty"`
 }
 
+type ValidasiIkasRequest struct {
+	Status bool `json:"status"`
+}
+
 // Response dengan nested objects
 type IkasResponse struct {
 	ID                              string              `json:"id"`
@@ -33,6 +37,7 @@ type IkasResponse struct {
 	Proteksi                        *ProteksiInIkas     `json:"proteksi,omitempty"`
 	Deteksi                         *DeteksiInIkas      `json:"deteksi,omitempty"`
 	Gulih                           *GulihInIkas        `json:"gulih,omitempty"`
+	IsValidated                     bool                `json:"is_validated"`
 	CreatedAt                       string              `json:"created_at"`
 	UpdatedAt                       string              `json:"updated_at"`
 }

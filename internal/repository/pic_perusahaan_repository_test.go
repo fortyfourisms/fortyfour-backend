@@ -45,7 +45,7 @@ func TestPICRepository_Create(t *testing.T) {
 		id := "pic-123"
 
 		mock.ExpectExec("INSERT INTO pic_perusahaan").
-			WithArgs(id, nama, telepon, idPerusahaan).
+			WithArgs(id, nama, telepon, nil, idPerusahaan).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		err := repo.Create(req, id)
@@ -62,7 +62,7 @@ func TestPICRepository_Create(t *testing.T) {
 		id := "pic-123"
 
 		mock.ExpectExec("INSERT INTO pic_perusahaan").
-			WithArgs(id, nil, nil, nil).
+			WithArgs(id, nil, nil, nil, nil).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		err := repo.Create(req, id)
@@ -78,7 +78,7 @@ func TestPICRepository_Create(t *testing.T) {
 		id := "pic-123"
 
 		mock.ExpectExec("INSERT INTO pic_perusahaan").
-			WithArgs(id, nama, nil, nil).
+			WithArgs(id, nama, nil, nil, nil).
 			WillReturnError(errors.New("database error"))
 
 		err := repo.Create(req, id)
@@ -95,7 +95,7 @@ func TestPICRepository_Create(t *testing.T) {
 		id := "pic-123"
 
 		mock.ExpectExec("INSERT INTO pic_perusahaan").
-			WithArgs(id, nama, nil, nil).
+			WithArgs(id, nama, nil, nil, nil).
 			WillReturnError(errors.New("duplicate entry"))
 
 		err := repo.Create(req, id)
@@ -114,11 +114,11 @@ func TestPICRepository_GetAll(t *testing.T) {
 		updatedAt := "2024-01-02 15:30:00"
 
 		rows := sqlmock.NewRows([]string{
-			"p.id", "p.nama", "p.telepon", "p.created_at", "p.updated_at",
+			"p.id", "p.nama", "p.telepon", "p.email", "p.created_at", "p.updated_at",
 			"per.id", "per.nama_perusahaan",
 		}).
-			AddRow("pic-1", "John Doe", "081234567890", createdAt, updatedAt, "perusahaan-1", "PT ABC").
-			AddRow("pic-2", "Jane Smith", "081987654321", createdAt, updatedAt, "perusahaan-2", "PT XYZ")
+			AddRow("pic-1", "John Doe", "081234567890", nil, createdAt, updatedAt, "perusahaan-1", "PT ABC").
+			AddRow("pic-2", "Jane Smith", "081987654321", nil, createdAt, updatedAt, "perusahaan-2", "PT XYZ")
 
 		mock.ExpectQuery("SELECT (.+) FROM pic_perusahaan p LEFT JOIN perusahaan per").
 			WillReturnRows(rows)
@@ -152,10 +152,10 @@ func TestPICRepository_GetAll(t *testing.T) {
 		updatedAt := "2024-01-02 15:30:00"
 
 		rows := sqlmock.NewRows([]string{
-			"p.id", "p.nama", "p.telepon", "p.created_at", "p.updated_at",
+			"p.id", "p.nama", "p.telepon", "p.email", "p.created_at", "p.updated_at",
 			"per.id", "per.nama_perusahaan",
 		}).
-			AddRow("pic-1", "John Doe", "081234567890", createdAt, updatedAt, nil, nil)
+			AddRow("pic-1", "John Doe", "081234567890", nil, createdAt, updatedAt, nil, nil)
 
 		mock.ExpectQuery("SELECT (.+) FROM pic_perusahaan p LEFT JOIN perusahaan per").
 			WillReturnRows(rows)
@@ -184,7 +184,7 @@ func TestPICRepository_GetAll(t *testing.T) {
 
 	t.Run("empty result", func(t *testing.T) {
 		rows := sqlmock.NewRows([]string{
-			"p.id", "p.nama", "p.telepon", "p.created_at", "p.updated_at",
+			"p.id", "p.nama", "p.telepon", "p.email", "p.created_at", "p.updated_at",
 			"per.id", "per.nama_perusahaan",
 		})
 
@@ -203,11 +203,11 @@ func TestPICRepository_GetAll(t *testing.T) {
 		updatedAt := "2024-01-02 15:30:00"
 
 		rows := sqlmock.NewRows([]string{
-			"p.id", "p.nama", "p.telepon", "p.created_at", "p.updated_at",
+			"p.id", "p.nama", "p.telepon", "p.email", "p.created_at", "p.updated_at",
 			"per.id", "per.nama_perusahaan",
 		}).
-			AddRow("pic-1", nil, nil, nil, nil, nil, nil). // Will cause scan error
-			AddRow("pic-2", "Jane Smith", "081987654321", createdAt, updatedAt, "perusahaan-2", "PT XYZ")
+			AddRow("pic-1", nil, nil, nil, nil, nil, nil, nil). // Will cause scan error
+			AddRow("pic-2", "Jane Smith", "081987654321", nil, createdAt, updatedAt, "perusahaan-2", "PT XYZ")
 
 		mock.ExpectQuery("SELECT (.+) FROM pic_perusahaan p LEFT JOIN perusahaan per").
 			WillReturnRows(rows)
@@ -233,10 +233,10 @@ func TestPICRepository_GetByID(t *testing.T) {
 		updatedAt := "2024-01-02 15:30:00"
 
 		row := sqlmock.NewRows([]string{
-			"p.id", "p.nama", "p.telepon", "p.created_at", "p.updated_at",
+			"p.id", "p.nama", "p.telepon", "p.email", "p.created_at", "p.updated_at",
 			"per.id", "per.nama_perusahaan",
 		}).
-			AddRow(id, "John Doe", "081234567890", createdAt, updatedAt, "perusahaan-1", "PT ABC")
+			AddRow(id, "John Doe", "081234567890", nil, createdAt, updatedAt, "perusahaan-1", "PT ABC")
 
 		mock.ExpectQuery("SELECT (.+) FROM pic_perusahaan p LEFT JOIN perusahaan per (.+) WHERE p.id = ?").
 			WithArgs(id).
@@ -262,10 +262,10 @@ func TestPICRepository_GetByID(t *testing.T) {
 		updatedAt := "2024-01-02 15:30:00"
 
 		row := sqlmock.NewRows([]string{
-			"p.id", "p.nama", "p.telepon", "p.created_at", "p.updated_at",
+			"p.id", "p.nama", "p.telepon", "p.email", "p.created_at", "p.updated_at",
 			"per.id", "per.nama_perusahaan",
 		}).
-			AddRow(id, "John Doe", "081234567890", createdAt, updatedAt, nil, nil)
+			AddRow(id, "John Doe", "081234567890", nil, createdAt, updatedAt, nil, nil)
 
 		mock.ExpectQuery("SELECT (.+) FROM pic_perusahaan p LEFT JOIN perusahaan per (.+) WHERE p.id = ?").
 			WithArgs(id).
@@ -520,7 +520,7 @@ func TestPICRepository_Delete(t *testing.T) {
 }
 func TestPICRepository_GetByPerusahaan(t *testing.T) {
 	picCols := []string{
-		"p.id", "p.nama", "p.telepon", "p.created_at", "p.updated_at",
+		"p.id", "p.nama", "p.telepon", "p.email", "p.created_at", "p.updated_at",
 		"per.id", "per.nama_perusahaan",
 	}
 
@@ -536,8 +536,8 @@ func TestPICRepository_GetByPerusahaan(t *testing.T) {
 			idPerusahaan: "perusahaan-1",
 			mockFn: func(mock sqlmock.Sqlmock) {
 				rows := sqlmock.NewRows(picCols).
-					AddRow("pic-1", "John Doe", "081234567890", "2024-01-01 00:00:00", "2024-01-01 00:00:00", "perusahaan-1", "PT ABC").
-					AddRow("pic-2", "Jane Smith", "081987654321", "2024-01-01 00:00:00", "2024-01-01 00:00:00", "perusahaan-1", "PT ABC")
+					AddRow("pic-1", "John Doe", "081234567890", nil, "2024-01-01 00:00:00", "2024-01-01 00:00:00", "perusahaan-1", "PT ABC").
+					AddRow("pic-2", "Jane Smith", "081987654321", nil, "2024-01-01 00:00:00", "2024-01-01 00:00:00", "perusahaan-1", "PT ABC")
 
 				mock.ExpectQuery("SELECT (.+) FROM pic_perusahaan p LEFT JOIN perusahaan per (.+) WHERE p.id_perusahaan = \\?").
 					WithArgs("perusahaan-1").
@@ -553,6 +553,7 @@ func TestPICRepository_GetByPerusahaan(t *testing.T) {
 				rows := sqlmock.NewRows(picCols).
 					AddRow(
 						"pic-3", "Budi", "08111",
+						nil,
 						"2024-01-01 00:00:00", "2024-01-01 00:00:00",
 						sql.NullString{Valid: false},
 						sql.NullString{Valid: false},

@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"ikas/internal/models"
+	"strconv"
 )
 
 type IdentifikasiRepository struct {
@@ -14,7 +15,7 @@ func NewIdentifikasiRepository(db *sql.DB) *IdentifikasiRepository {
 }
 
 func (r *IdentifikasiRepository) GetAll() ([]models.Identifikasi, error) {
-	rows, err := r.db.Query(`SELECT id, nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4, nilai_subdomain5 FROM identifikasi`)
+	rows, err := r.db.Query(`SELECT id, ikas_id, nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4, nilai_subdomain5 FROM identifikasi`)
 	if err != nil {
 		return nil, err
 	}
@@ -23,18 +24,77 @@ func (r *IdentifikasiRepository) GetAll() ([]models.Identifikasi, error) {
 	var result []models.Identifikasi
 	for rows.Next() {
 		var i models.Identifikasi
-		rows.Scan(&i.ID, &i.NilaiIdentifikasi, &i.NilaiSubdomain1, &i.NilaiSubdomain2, &i.NilaiSubdomain3, &i.NilaiSubdomain4, &i.NilaiSubdomain5)
+		rows.Scan(&i.ID, &i.IkasID, &i.NilaiIdentifikasi, &i.NilaiSubdomain1, &i.NilaiSubdomain2, &i.NilaiSubdomain3, &i.NilaiSubdomain4, &i.NilaiSubdomain5)
+		result = append(result, i)
+	}
+	return result, nil
+}
+
+func (r *IdentifikasiRepository) GetByIkasID(ikasID string) ([]models.Identifikasi, error) {
+	rows, err := r.db.Query(`SELECT id, ikas_id, nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4, nilai_subdomain5 FROM identifikasi WHERE ikas_id = ?`, ikasID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []models.Identifikasi
+	for rows.Next() {
+		var i models.Identifikasi
+		rows.Scan(&i.ID, &i.IkasID, &i.NilaiIdentifikasi, &i.NilaiSubdomain1, &i.NilaiSubdomain2, &i.NilaiSubdomain3, &i.NilaiSubdomain4, &i.NilaiSubdomain5)
 		result = append(result, i)
 	}
 	return result, nil
 }
 
 func (r *IdentifikasiRepository) GetByID(id string) (*models.Identifikasi, error) {
-	row := r.db.QueryRow(`SELECT id, nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4, nilai_subdomain5 FROM identifikasi WHERE id = ?`, id)
+	row := r.db.QueryRow(`SELECT id, ikas_id, nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4, nilai_subdomain5 FROM identifikasi WHERE id = ?`, id)
 	var i models.Identifikasi
-	err := row.Scan(&i.ID, &i.NilaiIdentifikasi, &i.NilaiSubdomain1, &i.NilaiSubdomain2, &i.NilaiSubdomain3, &i.NilaiSubdomain4, &i.NilaiSubdomain5)
+	err := row.Scan(&i.ID, &i.IkasID, &i.NilaiIdentifikasi, &i.NilaiSubdomain1, &i.NilaiSubdomain2, &i.NilaiSubdomain3, &i.NilaiSubdomain4, &i.NilaiSubdomain5)
 	if err != nil {
 		return nil, err
 	}
 	return &i, nil
+}
+func (r *IdentifikasiRepository) GetByPerusahaanID(perusahaanID string) ([]models.Identifikasi, error) {
+	query := `
+		SELECT t.id, t.ikas_id, t.nilai_identifikasi, t.nilai_subdomain1, t.nilai_subdomain2, t.nilai_subdomain3, t.nilai_subdomain4, t.nilai_subdomain5 
+		FROM identifikasi t
+		JOIN ikas i ON t.ikas_id = i.id
+		WHERE i.id_perusahaan = ?
+	`
+	rows, err := r.db.Query(query, perusahaanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []models.Identifikasi
+	for rows.Next() {
+		var i models.Identifikasi
+		rows.Scan(&i.ID, &i.IkasID, &i.NilaiIdentifikasi, &i.NilaiSubdomain1, &i.NilaiSubdomain2, &i.NilaiSubdomain3, &i.NilaiSubdomain4, &i.NilaiSubdomain5)
+		result = append(result, i)
+	}
+	return result, nil
+}
+
+func (r *IdentifikasiRepository) CloneByIkasID(sourceIkasID, targetIkasID string) (string, error) {
+	query := `
+		INSERT INTO identifikasi 
+			(ikas_id, nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4, nilai_subdomain5)
+		SELECT 
+			?, nilai_identifikasi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4, nilai_subdomain5
+		FROM identifikasi 
+		WHERE ikas_id = ?`
+
+	res, err := r.db.Exec(query, targetIkasID, sourceIkasID)
+	if err != nil {
+		return "", err
+	}
+
+	lastID, err := res.LastInsertId()
+	if err != nil {
+		return "", err
+	}
+
+	return strconv.FormatInt(lastID, 10), nil
 }

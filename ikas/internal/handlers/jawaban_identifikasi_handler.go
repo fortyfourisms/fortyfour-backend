@@ -7,6 +7,7 @@ import (
 	"ikas/internal/services"
 	"ikas/internal/utils"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/rollbar/rollbar-go"
@@ -29,19 +30,13 @@ func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 	case http.MethodGet:
 		if id == 0 {
 			// Cek query params untuk filter
-			perusahaanID := r.URL.Query().Get("perusahaan_id")
+			ikasID := r.URL.Query().Get("ikas_id")
 			pertanyaanID := r.URL.Query().Get("pertanyaan_identifikasi_id")
 
-			userRole, _ := r.Context().Value(middleware.Role).(string)
-			userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
-
-			// Implicit filtering for non-admins
-			if userRole != "admin" {
-				perusahaanID = userPerusahaanID
-			}
-
-			if perusahaanID != "" {
-				h.handleGetByPerusahaan(w, r, perusahaanID)
+			// Access validation should be handled by providing user details to the service.
+			// Handlers should collect userRole and userPerusahaanID and pass them.
+			if ikasID != "" {
+				h.handleGetByIkasID(w, r, ikasID)
 			} else if pertanyaanID != "" {
 				idInt, err := utils.StringToInt(pertanyaanID)
 				if err != nil {
@@ -80,20 +75,54 @@ func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 
 // GetAllJawabanIdentifikasi godoc
 //
-//	@Summary      List semua jawaban identifikasi
-//	@Description  Mengambil seluruh data jawaban identifikasi. Bisa difilter dengan query param perusahaan_id atau pertanyaan_identifikasi_id
-//	@Tags         JawabanIdentifikasi
-//	@Produce      json
-//	@Param        perusahaan_id              query     string  false  "Filter by perusahaan ID"
-//	@Param        pertanyaan_identifikasi_id query     string  false  "Filter by pertanyaan identifikasi ID"
-//	@Success      200  {array}   dto.JawabanIdentifikasiResponse
-//	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/maturity/jawaban-identifikasi [get]
-func (h *JawabanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
-	data, err := h.service.GetAll()
+//	@Summary		List semua jawaban identifikasi
+//	@Description	Mengambil seluruh data jawaban identifikasi. Bisa difilter dengan query param perusahaan_id atau pertanyaan_identifikasi_id
+//	@Tags			JawabanIdentifikasi
+//	@Produce		json
+//	@Param			perusahaan_id				query		string	false	"Filter by perusahaan ID"
+//	@Param			pertanyaan_identifikasi_id	query		string	false	"Filter by pertanyaan identifikasi ID"
+//	@Success		200							{array}		dto.JawabanIdentifikasiResponse
+//	@Failure		500							{object}	dto.ErrorResponse
+//	@Router			/api/maturity/jawaban-identifikasi [get]
+func (h *JawabanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+	ikasID := r.URL.Query().Get("ikas_id")
+	pertanyaanIDStr := r.URL.Query().Get("pertanyaan_identifikasi_id")
+
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	if userRole != "admin" && (userPerusahaanID == "" || userPerusahaanID == "null") {
+		utils.RespondJSON(w, 200, map[string]interface{}{
+			"message": "Berhasil mengambil data",
+			"data":    []dto.JawabanIdentifikasiResponse{},
+			"total":   0,
+		})
+		return
+	}
+
+	var data []dto.JawabanIdentifikasiResponse
+	var err error
+
+	if ikasID != "" {
+		h.handleGetByIkasID(w, r, ikasID)
+		return
+	} else if pertanyaanIDStr != "" {
+		pID, _ := strconv.Atoi(pertanyaanIDStr)
+		data, err = h.service.GetByPertanyaan(pID)
+	} else {
+		if userRole != "admin" {
+			data, err = h.service.GetByPerusahaanID(userPerusahaanID, userRole, userPerusahaanID)
+		} else {
+			data, err = h.service.GetAll(userRole)
+		}
+	}
+
 	if err != nil {
-		rollbar.Error(err)
-		utils.RespondError(w, 500, err.Error())
+		status := http.StatusInternalServerError
+		if err.Error() == "format ikas_id tidak valid" {
+			status = http.StatusBadRequest
+		}
+		utils.RespondError(w, status, err.Error())
 		return
 	}
 	utils.RespondJSON(w, 200, map[string]interface{}{
@@ -103,11 +132,13 @@ func (h *JawabanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, _ *http
 	})
 }
 
-func (h *JawabanIdentifikasiHandler) handleGetByPerusahaan(w http.ResponseWriter, _ *http.Request, perusahaanID string) {
-	data, err := h.service.GetByPerusahaan(perusahaanID)
+func (h *JawabanIdentifikasiHandler) handleGetByIkasID(w http.ResponseWriter, r *http.Request, ikasID string) {
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+	data, err := h.service.GetByIkasID(ikasID, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
-		if err.Error() == "format perusahaan_id tidak valid" {
+		if err.Error() == "format ikas_id tidak valid" {
 			utils.RespondError(w, 400, err.Error())
 		} else {
 			utils.RespondError(w, 500, err.Error())
@@ -141,14 +172,14 @@ func (h *JawabanIdentifikasiHandler) handleGetByPertanyaan(w http.ResponseWriter
 
 // GetJawabanIdentifikasiByID godoc
 //
-//	@Summary      Ambil jawaban identifikasi berdasarkan ID
-//	@Description  Mengambil satu data jawaban identifikasi
-//	@Tags         JawabanIdentifikasi
-//	@Produce      json
-//	@Param        id   path      int  true  "JawabanIdentifikasi ID"
-//	@Success      200  {object}  dto.JawabanIdentifikasiResponse
-//	@Failure      404  {object}  dto.ErrorResponse
-//	@Router       /api/maturity/jawaban-identifikasi/{id} [get]
+//	@Summary		Ambil jawaban identifikasi berdasarkan ID
+//	@Description	Mengambil satu data jawaban identifikasi
+//	@Tags			JawabanIdentifikasi
+//	@Produce		json
+//	@Param			id	path		int	true	"JawabanIdentifikasi ID"
+//	@Success		200	{object}	dto.JawabanIdentifikasiResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/jawaban-identifikasi/{id} [get]
 func (h *JawabanIdentifikasiHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id int) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
@@ -171,17 +202,17 @@ func (h *JawabanIdentifikasiHandler) handleGetByID(w http.ResponseWriter, r *htt
 
 // CreateJawabanIdentifikasi godoc
 //
-//	@Summary      Tambah jawaban identifikasi baru
-//	@Description  Membuat record jawaban identifikasi baru
-//	@Tags         JawabanIdentifikasi
-//	@Accept       json
-//	@Produce      json
-//	@Param        body  body      dto.CreateJawabanIdentifikasiRequest  true  "Data jawaban identifikasi"
-//	@Success      201   {object}  dto.JawabanIdentifikasiResponse
-//	@Failure      400   {object}  dto.ErrorResponse
-//	@Failure      404   {object}  dto.ErrorResponse
-//	@Failure      409   {object}  dto.ErrorResponse
-//	@Router       /api/maturity/jawaban-identifikasi [post]
+//	@Summary		Tambah jawaban identifikasi baru
+//	@Description	Membuat record jawaban identifikasi baru
+//	@Tags			JawabanIdentifikasi
+//	@Accept			json
+//	@Produce		json
+//	@Param			body	body		dto.CreateJawabanIdentifikasiRequest	true	"Data jawaban identifikasi"
+//	@Success		201		{object}	dto.JawabanIdentifikasiResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		404		{object}	dto.ErrorResponse
+//	@Failure		409		{object}	dto.ErrorResponse
+//	@Router			/api/maturity/jawaban-identifikasi [post]
 func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateJawabanIdentifikasiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -197,27 +228,25 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 		return
 	}
 
-	userRole := ""
-	if val := r.Context().Value(middleware.Role); val != nil {
-		userRole = val.(string)
-	}
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	msg, err := h.service.Create(req, userRole)
+	msg, err := h.service.Create(req, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
 		case "pertanyaan_identifikasi_id tidak boleh kosong",
 			"format pertanyaan_identifikasi_id tidak valid",
-			"perusahaan_id tidak boleh kosong",
-			"format perusahaan_id tidak valid",
+			"ikas_id tidak boleh kosong",
+			"format ikas_id tidak valid",
 			"jawaban_identifikasi tidak boleh kosong",
 			"validasi hanya boleh diisi jika evidence ada",
 			"validasi hanya boleh berisi 'yes' atau 'no'":
 			utils.RespondError(w, 400, err.Error())
 		case "pertanyaan_identifikasi_id tidak ditemukan",
-			"perusahaan_id tidak ditemukan":
+			"ikas_id tidak ditemukan":
 			utils.RespondError(w, 404, err.Error())
-		case "pertanyaan ini sudah pernah diisi oleh perusahaan Anda":
+		case "pertanyaan ini sudah pernah diisi untuk asesmen ini":
 			utils.RespondError(w, 409, err.Error())
 		default:
 			utils.RespondError(w, 500, err.Error())
@@ -232,17 +261,17 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 
 // UpdateJawabanIdentifikasi godoc
 //
-//	@Summary      Update jawaban identifikasi
-//	@Description  Mengubah data jawaban identifikasi berdasarkan ID
-//	@Tags         JawabanIdentifikasi
-//	@Accept       json
-//	@Produce      json
-//	@Param        id    path      int                                true  "JawabanIdentifikasi ID"
-//	@Param        body  body      dto.UpdateJawabanIdentifikasiRequest  true  "Data update"
-//	@Success      200   {object}  dto.JawabanIdentifikasiResponse
-//	@Failure      400   {object}  dto.ErrorResponse
-//	@Failure      404   {object}  dto.ErrorResponse
-//	@Router       /api/maturity/jawaban-identifikasi/{id} [put]
+//	@Summary		Update jawaban identifikasi
+//	@Description	Mengubah data jawaban identifikasi berdasarkan ID
+//	@Tags			JawabanIdentifikasi
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int										true	"JawabanIdentifikasi ID"
+//	@Param			body	body		dto.UpdateJawabanIdentifikasiRequest	true	"Data update"
+//	@Success		200		{object}	dto.JawabanIdentifikasiResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		404		{object}	dto.ErrorResponse
+//	@Router			/api/maturity/jawaban-identifikasi/{id} [put]
 func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id int) {
 	var req dto.UpdateJawabanIdentifikasiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -295,15 +324,15 @@ func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http
 
 // DeleteJawabanIdentifikasi godoc
 //
-//	@Summary      Hapus jawaban identifikasi
-//	@Description  Menghapus data jawaban identifikasi berdasarkan ID
-//	@Tags         JawabanIdentifikasi
-//	@Produce      json
-//	@Param        id   path      int  true  "JawabanIdentifikasi ID"
-//	@Success      200  {object}  dto.MessageResponse
-//	@Failure      404  {object}  dto.ErrorResponse
-//	@Failure      500  {object}  dto.ErrorResponse
-//	@Router       /api/maturity/jawaban-identifikasi/{id} [delete]
+//	@Summary		Hapus jawaban identifikasi
+//	@Description	Menghapus data jawaban identifikasi berdasarkan ID
+//	@Tags			JawabanIdentifikasi
+//	@Produce		json
+//	@Param			id	path		int	true	"JawabanIdentifikasi ID"
+//	@Success		200	{object}	dto.MessageResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/jawaban-identifikasi/{id} [delete]
 func (h *JawabanIdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id int) {
 	userID := ""
 	if val := r.Context().Value(middleware.UserIDKey); val != nil {

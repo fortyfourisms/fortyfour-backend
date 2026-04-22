@@ -16,8 +16,11 @@ import (
 //
 
 type mockIdentifikasiRepository struct {
-	GetAllFn  func() ([]models.Identifikasi, error)
-	GetByIDFn func(id string) (*models.Identifikasi, error)
+	GetAllFn            func() ([]models.Identifikasi, error)
+	GetByIDFn           func(id string) (*models.Identifikasi, error)
+	GetByIkasIDFn       func(ikasID string) ([]models.Identifikasi, error)
+	GetByPerusahaanIDFn func(perusahaanID string) ([]models.Identifikasi, error)
+	CloneByIkasIDFn     func(sourceID, targetID string) (string, error)
 }
 
 func (m *mockIdentifikasiRepository) GetAll() ([]models.Identifikasi, error) {
@@ -28,7 +31,27 @@ func (m *mockIdentifikasiRepository) GetByID(id string) (*models.Identifikasi, e
 	return m.GetByIDFn(id)
 }
 
-// Compile-time check
+func (m *mockIdentifikasiRepository) GetByIkasID(ikasID string) ([]models.Identifikasi, error) {
+	if m.GetByIkasIDFn != nil {
+		return m.GetByIkasIDFn(ikasID)
+	}
+	return nil, nil
+}
+
+func (m *mockIdentifikasiRepository) GetByPerusahaanID(perusahaanID string) ([]models.Identifikasi, error) {
+	if m.GetByPerusahaanIDFn != nil {
+		return m.GetByPerusahaanIDFn(perusahaanID)
+	}
+	return nil, nil
+}
+
+func (m *mockIdentifikasiRepository) CloneByIkasID(oldIkasID string, newIkasID string) (string, error) {
+	if m.CloneByIkasIDFn != nil {
+		return m.CloneByIkasIDFn(oldIkasID, newIkasID)
+	}
+	return "", nil
+}
+
 var _ repository.IdentifikasiRepositoryInterface = (*mockIdentifikasiRepository)(nil)
 
 //
@@ -46,13 +69,19 @@ func TestIdentifikasiService_GetAll_Success(t *testing.T) {
 			}, nil
 		},
 	}
+	ikasRepo := new(mockIkasRepository)
 
-	service := NewIdentifikasiService(repo)
+	service := NewIdentifikasiService(repo, ikasRepo)
 
-	data, err := service.GetAll()
+	// Admin can see all
+	data, err := service.GetAll("admin")
 
 	assert.NoError(t, err)
 	assert.Len(t, data, 2)
+
+	// Non-admin should fail
+	_, err = service.GetAll("user")
+	assert.Error(t, err)
 }
 
 //
@@ -71,9 +100,10 @@ func TestIdentifikasiService_GetByID_Success(t *testing.T) {
 		},
 	}
 
-	service := NewIdentifikasiService(repo)
+	ikasRepo := new(mockIkasRepository)
+	service := NewIdentifikasiService(repo, ikasRepo)
 
-	result, err := service.GetByID("uuid-test")
+	result, err := service.GetByID("uuid-test", "admin", "")
 
 	assert.NoError(t, err)
 	assert.Equal(t, "uuid-test", result.ID)
@@ -86,9 +116,10 @@ func TestIdentifikasiService_GetByID_NotFound(t *testing.T) {
 		},
 	}
 
-	service := NewIdentifikasiService(repo)
+	ikasRepo := &mockIkasRepository{}
+	service := NewIdentifikasiService(repo, ikasRepo)
 
-	result, err := service.GetByID("invalid-id")
+	result, err := service.GetByID("invalid-id", "admin", "")
 
 	assert.Error(t, err)
 	assert.Nil(t, result)

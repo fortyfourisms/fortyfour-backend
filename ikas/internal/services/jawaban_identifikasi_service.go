@@ -45,12 +45,12 @@ func (s *JawabanIdentifikasiService) validateCreate(req *dto.CreateJawabanIdenti
 		return errors.New("pertanyaan_identifikasi_id tidak valid")
 	}
 
-	req.PerusahaanID = utils.NormalizeInput(req.PerusahaanID)
-	if req.PerusahaanID == "" {
-		return errors.New("perusahaan_id tidak boleh kosong")
+	req.IkasID = utils.NormalizeInput(req.IkasID)
+	if req.IkasID == "" {
+		return errors.New("ikas_id tidak boleh kosong")
 	}
-	if !utils.IsValidUUID(req.PerusahaanID) {
-		return errors.New("format perusahaan_id tidak valid")
+	if !utils.IsValidUUID(req.IkasID) {
+		return errors.New("format ikas_id tidak valid")
 	}
 
 	// Jawaban must be provided and between 0.00 - 5.00
@@ -109,7 +109,7 @@ func (s *JawabanIdentifikasiService) validateUpdate(req *dto.UpdateJawabanIdenti
 	return nil
 }
 
-func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiRequest, userRole string) (string, error) {
+func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiRequest, userRole string, userPerusahaanID string) (string, error) {
 	if err := s.validateCreate(&req, userRole); err != nil {
 		return "", err
 	}
@@ -123,24 +123,46 @@ func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiReq
 		return "", errors.New("pertanyaan_identifikasi_id tidak ditemukan")
 	}
 
-	perusahaanExists, err := s.repo.CheckPerusahaanExists(req.PerusahaanID)
+	ikasExists, err := s.repo.CheckIkasExists(req.IkasID)
 	if err != nil {
 		rollbar.Error(err)
 		return "", err
 	}
-	if !perusahaanExists {
-		return "", errors.New("perusahaan_id tidak ditemukan")
+	if !ikasExists {
+		return "", errors.New("ikas_id tidak ditemukan")
+	}
+
+	// VALIDASI KEPEMILIKAN: Hanya pemegang IKAS yang bisa mengisi jawaban (atau admin)
+	if userRole != "admin" {
+		owned, err := s.ikasRepo.CheckOwnership(req.IkasID, userPerusahaanID)
+		if err != nil {
+			rollbar.Error(err)
+			return "", err
+		}
+		if !owned {
+			return "", errors.New("anda tidak memiliki akses ke data asesmen ini")
+		}
+	}
+
+	// CHECK LOCK
+	locked, err := s.ikasRepo.IsLocked(req.IkasID)
+	if err != nil {
+		rollbar.Error(err)
+		return "", err
+	}
+	if locked {
+		return "", errors.New("data asesmen ini sudah divalidasi dan tidak dapat diubah")
 	}
 
 	// Synchronous Duplicate Check (Pola 2 Refinement)
 	// Check if already exists in the MAIN table
-	isDuplicate, err := s.repo.CheckDuplicate(req.PerusahaanID, req.PertanyaanIdentifikasiID, 0)
+	isDuplicate, err := s.repo.CheckDuplicate(req.IkasID, req.PertanyaanIdentifikasiID, 0)
 	if err != nil {
 		rollbar.Error(err)
 		return "", err
 	}
 	if isDuplicate {
-		return "", errors.New("pertanyaan ini sudah pernah diisi oleh perusahaan Anda")
+		return "", errors.New("pertanyaan ini sudah pernah diisi untuk asesmen ini")
 	}
 
 	// Publish to RabbitMQ for Pola 2
@@ -152,7 +174,10 @@ func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiReq
 	return "Berhasil menyimpan data", nil
 }
 
-func (s *JawabanIdentifikasiService) GetAll() ([]dto.JawabanIdentifikasiResponse, error) {
+func (s *JawabanIdentifikasiService) GetAll(userRole string) ([]dto.JawabanIdentifikasiResponse, error) {
+	if userRole != "admin" {
+		return nil, errors.New("anda tidak memiliki akses untuk melihat semua data")
+	}
 	return s.repo.GetAll()
 }
 
@@ -169,18 +194,49 @@ func (s *JawabanIdentifikasiService) GetByID(id int, userRole string, userPerusa
 		return nil, err
 	}
 
-	if userRole != "admin" && data.PerusahaanID != userPerusahaanID {
+	// Note: checking access now by comparing ikas session rather than perusahaan_id directly
+	// but since we don't have the link here easily without fetching ikas,
+	// we might need a more robust check if needed.
+	// For now, let's assume if they have the ikas_id they might have access, or fetch ikas to check company.
+
+	// Fetch ikas to check ownership
+	ikasData, err := s.ikasRepo.GetByID(data.IkasID)
+	if err != nil {
+		return nil, errors.New("gagal memverifikasi kepemilikan asesmen")
+	}
+
+	if userRole != "admin" && ikasData.Perusahaan.ID != userPerusahaanID {
 		return nil, errors.New("anda tidak memiliki akses ke data ini")
 	}
 
 	return data, nil
 }
 
-func (s *JawabanIdentifikasiService) GetByPerusahaan(perusahaanID string) ([]dto.JawabanIdentifikasiResponse, error) {
-	if !utils.IsValidUUID(perusahaanID) {
-		return nil, errors.New("format perusahaan_id tidak valid")
+func (s *JawabanIdentifikasiService) GetByIkasID(ikasID string, userRole string, userPerusahaanID string) ([]dto.JawabanIdentifikasiResponse, error) {
+	if !utils.IsValidUUID(ikasID) {
+		return nil, errors.New("format ikas_id tidak valid")
 	}
-	return s.repo.GetByPerusahaan(perusahaanID)
+
+	if userRole != "admin" {
+		owned, err := s.ikasRepo.CheckOwnership(ikasID, userPerusahaanID)
+		if err != nil {
+			return nil, err
+		}
+		if !owned {
+			return nil, errors.New("anda tidak memiliki akses ke data asesmen ini")
+		}
+	}
+
+	return s.repo.GetByIkasID(ikasID)
+}
+
+func (s *JawabanIdentifikasiService) GetByPerusahaanID(perusahaanID string, userRole string, userPerusahaanID string) ([]dto.JawabanIdentifikasiResponse, error) {
+	if userRole != "admin" {
+		if perusahaanID != userPerusahaanID {
+			return nil, errors.New("anda tidak memiliki akses ke data perusahaan ini")
+		}
+	}
+	return s.repo.GetByPerusahaanID(perusahaanID)
 }
 
 func (s *JawabanIdentifikasiService) GetByPertanyaan(pertanyaanID int) ([]dto.JawabanIdentifikasiResponse, error) {
@@ -204,8 +260,18 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 		return err
 	}
 
-	if userRole != "admin" && existing.PerusahaanID != userPerusahaanID {
+	// Fetch ikas to check ownership
+	ikasData, err := s.ikasRepo.GetByID(existing.IkasID)
+	if err != nil {
+		return errors.New("gagal memverifikasi kepemilikan asesmen")
+	}
+
+	if userRole != "admin" && ikasData.Perusahaan.ID != userPerusahaanID {
 		return errors.New("anda tidak memiliki akses untuk mengubah data ini")
+	}
+
+	if ikasData.IsValidated {
+		return errors.New("data asesmen ini sudah divalidasi dan tidak dapat diubah")
 	}
 
 	if err := s.validateUpdate(&req, existing.Evidence, userRole); err != nil {
@@ -251,17 +317,14 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 	}
 
 	if s.producer != nil && len(changes) > 0 {
-		ikasID, err := s.ikasRepo.GetIDByPerusahaanID(existing.PerusahaanID)
-		if err == nil {
-			auditEvent := dto_event.IkasAuditLogEvent{
-				IkasID:    ikasID,
-				UserID:    userID,
-				Action:    "UPDATE_IDENTIFIKASI",
-				Changes:   changes,
-				Timestamp: time.Now(),
-			}
-			_ = s.producer.PublishIkasAuditLog(context.Background(), auditEvent)
+		auditEvent := dto_event.IkasAuditLogEvent{
+			IkasID:    existing.IkasID,
+			UserID:    userID,
+			Action:    "UPDATE_IDENTIFIKASI",
+			Changes:   changes,
+			Timestamp: time.Now(),
 		}
+		_ = s.producer.PublishIkasAuditLog(context.Background(), auditEvent)
 	}
 
 	if err := s.producer.PublishJawabanIdentifikasiUpdated(context.Background(), event); err != nil {
@@ -286,29 +349,36 @@ func (s *JawabanIdentifikasiService) Delete(id int, userID string, userRole stri
 		return err
 	}
 
-	if userRole != "admin" && existing.PerusahaanID != userPerusahaanID {
+	// Fetch ikas to check ownership
+	ikasData, err := s.ikasRepo.GetByID(existing.IkasID)
+	if err != nil {
+		return errors.New("gagal memverifikasi kepemilikan asesmen")
+	}
+
+	if userRole != "admin" && ikasData.Perusahaan.ID != userPerusahaanID {
 		return errors.New("anda tidak memiliki akses untuk menghapus data ini")
+	}
+
+	if ikasData.IsValidated {
+		return errors.New("data asesmen ini sudah divalidasi dan tidak dapat dihapus")
 	}
 
 	// Publish Delete Event (Pola 2)
 	event := dto_event.JawabanIdentifikasiDeletedEvent{
-		ID:           id,
-		PerusahaanID: existing.PerusahaanID,
-		DeletedAt:    time.Now(),
+		ID:        id,
+		IkasID:    existing.IkasID,
+		DeletedAt: time.Now(),
 	}
 
 	if s.producer != nil {
-		ikasID, err := s.ikasRepo.GetIDByPerusahaanID(existing.PerusahaanID)
-		if err == nil {
-			auditEvent := dto_event.IkasAuditLogEvent{
-				IkasID:    ikasID,
-				UserID:    userID,
-				Action:    "DELETE_IDENTIFIKASI",
-				Changes:   map[string]interface{}{"pertanyaan_id": existing.PertanyaanIdentifikasi.ID, "status": "deleted"},
-				Timestamp: time.Now(),
-			}
-			_ = s.producer.PublishIkasAuditLog(context.Background(), auditEvent)
+		auditEvent := dto_event.IkasAuditLogEvent{
+			IkasID:    existing.IkasID,
+			UserID:    userID,
+			Action:    "DELETE_IDENTIFIKASI",
+			Changes:   map[string]interface{}{"pertanyaan_id": existing.PertanyaanIdentifikasi.ID, "status": "deleted"},
+			Timestamp: time.Now(),
 		}
+		_ = s.producer.PublishIkasAuditLog(context.Background(), auditEvent)
 	}
 
 	if err := s.producer.PublishJawabanIdentifikasiDeleted(context.Background(), event); err != nil {

@@ -103,7 +103,7 @@ func (s *UserService) Create(req dto.CreateUserRequest) (*dto.UserResponse, erro
 		Password:  string(hashedPassword),
 		Email:     req.Email,
 		RoleID:    req.RoleID,
-		IDJabatan: req.IDJabatan,
+		Jabatan:   req.Jabatan,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -189,8 +189,8 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 	if req.RoleID != nil {
 		user.RoleID = req.RoleID
 	}
-	if req.IDJabatan != nil {
-		user.IDJabatan = req.IDJabatan
+	if req.Jabatan != nil {
+		user.Jabatan = req.Jabatan
 	}
 
 	s.repo.Update(user)
@@ -231,6 +231,24 @@ func (s *UserService) UpdateMe(id string, req dto.UpdateMeRequest) (*dto.UserRes
 		return nil, err
 	}
 
+	if req.Username != nil {
+		trimmed := strings.TrimSpace(*req.Username)
+		if trimmed == "" {
+			return nil, errors.New("username tidak boleh kosong")
+		}
+		if !validator.ValidateUsername(trimmed) {
+			return nil, errors.New("username harus 3-50 karakter")
+		}
+		exists, err := s.repo.UsernameExists(trimmed, &id)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, errors.New("username sudah digunakan")
+		}
+		user.Username = trimmed
+	}
+
 	if req.DisplayName != nil {
 		trimmed := strings.TrimSpace(*req.DisplayName)
 		if trimmed == "" {
@@ -257,8 +275,8 @@ func (s *UserService) UpdateMe(id string, req dto.UpdateMeRequest) (*dto.UserRes
 		user.Email = trimmed
 	}
 
-	if req.IDJabatan != nil {
-		user.IDJabatan = req.IDJabatan
+	if req.Jabatan != nil {
+		user.Jabatan = req.Jabatan
 	}
 
 	s.repo.Update(user)
@@ -429,8 +447,7 @@ func (s *UserService) toResponse(user *models.User) dto.UserResponse {
 		Email:        user.Email,
 		RoleID:       user.RoleID,
 		RoleName:     user.RoleName,
-		IDJabatan:    user.IDJabatan,
-		JabatanName:  user.JabatanName,
+		Jabatan:      user.Jabatan,
 		IDPerusahaan: user.IDPerusahaan,
 		FotoProfile:  user.FotoProfile,
 		Banner:       user.Banner,
@@ -442,18 +459,35 @@ func (s *UserService) toResponse(user *models.User) dto.UserResponse {
 }
 
 // UpdateStatus mengubah status akun user — hanya bisa dilakukan admin
-func (s *UserService) UpdateStatus(userID string, status models.UserStatus) error {
+func (s *UserService) UpdateStatus(userID string, status models.UserStatus) (*dto.UserResponse, error) {
 	// Validasi status
 	switch status {
 	case models.UserStatusAktif, models.UserStatusSuspend, models.UserStatusNonaktif:
 		// valid
 	default:
-		return errors.New("status tidak valid, pilihan: Aktif, Suspend, Nonaktif")
+		return nil, errors.New("status tidak valid, pilihan: Aktif, Suspend, Nonaktif")
 	}
 
 	if _, err := s.repo.FindByID(userID); err != nil {
-		return errors.New("user tidak ditemukan")
+		return nil, errors.New("user tidak ditemukan")
 	}
 
-	return s.repo.UpdateStatus(userID, status)
+	if err := s.repo.UpdateStatus(userID, status); err != nil {
+		return nil, err
+	}
+
+	// Jika diaktifkan kembali, reset login_attempts agar user tidak langsung
+	// ter-suspend lagi pada percobaan login berikutnya yang gagal.
+	if status == models.UserStatusAktif {
+		_ = s.repo.ResetLoginAttempts(userID)
+	}
+
+	// Ambil data terbaru untuk dikembalikan ke frontend
+	user, err := s.repo.FindByID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	response := s.toResponse(user)
+	return &response, nil
 }

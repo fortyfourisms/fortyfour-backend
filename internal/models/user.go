@@ -28,8 +28,7 @@ type User struct {
 	Email        string    `json:"email"`
 	RoleID       *string   `json:"role_id,omitempty"`
 	RoleName     string    `json:"role_name,omitempty"`
-	IDJabatan    *string   `json:"id_jabatan,omitempty"`
-	JabatanName  *string   `json:"jabatan_name"`
+	Jabatan      *string   `json:"jabatan,omitempty"`
 	IDPerusahaan *string   `json:"id_perusahaan,omitempty"`
 	FotoProfile  *string   `json:"foto_profile"`
 	Banner       *string   `json:"banner"`

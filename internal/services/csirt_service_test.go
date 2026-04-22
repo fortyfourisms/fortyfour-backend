@@ -23,6 +23,7 @@ type mockCsirtRepo struct {
 	GetByIDWithPerusahaanFn func(id string) (*dto.CsirtResponse, error)
 	UpdateFn                func(id string, csirt models.Csirt) error
 	DeleteFn                func(id string) error
+	GetByPerusahaanFn       func(idPerusahaan string) ([]dto.CsirtResponse, error)
 }
 
 func (m *mockCsirtRepo) Create(req dto.CreateCsirtRequest, id string) error {
@@ -60,7 +61,14 @@ func (m *mockCsirtRepo) Delete(id string) error {
 }
 
 func (m *mockCsirtRepo) GetByPerusahaan(idPerusahaan string) ([]dto.CsirtResponse, error) {
+	if m.GetByPerusahaanFn != nil {
+		return m.GetByPerusahaanFn(idPerusahaan)
+	}
 	return []dto.CsirtResponse{}, nil
+}
+
+func (m *mockCsirtRepo) GetByPerusahaanModel(idPerusahaan string) (*models.Csirt, error) {
+	return nil, errors.New("not found")
 }
 
 /*
@@ -98,7 +106,6 @@ func TestCsirtService_Create_SuccessWithAllFields(t *testing.T) {
 	telepon := "081234567890"
 	tglReg := "2024-01-15"
 	tglKad := "2025-01-15"
-	tglRegU := "2025-01-20"
 	fileStr := "uploads/str_csirt/str.pdf"
 
 	var capturedReq dto.CreateCsirtRequest
@@ -109,15 +116,14 @@ func TestCsirtService_Create_SuccessWithAllFields(t *testing.T) {
 		},
 		GetByIDFn: func(id string) (*models.Csirt, error) {
 			return &models.Csirt{
-				ID:                     id,
-				NamaCsirt:              "CSIRT Advanced",
-				TeleponCsirt:           &telepon,
-				WebCsirt:               "https://csirt.example.com",
-				IdPerusahaan:           "perusahaan-123",
-				FileStr:                &fileStr,
-				TanggalRegistrasi:      &tglReg,
-				TanggalKadaluarsa:      &tglKad,
-				TanggalRegistrasiUlang: &tglRegU,
+				ID:                id,
+				NamaCsirt:         "CSIRT Advanced",
+				TeleponCsirt:      &telepon,
+				WebCsirt:          "https://csirt.example.com",
+				IdPerusahaan:      "perusahaan-123",
+				FileStr:           &fileStr,
+				TanggalRegistrasi: &tglReg,
+				TanggalKadaluarsa: &tglKad,
 			}, nil
 		},
 	}
@@ -125,14 +131,13 @@ func TestCsirtService_Create_SuccessWithAllFields(t *testing.T) {
 	service := NewCsirtService(repo, nil, nil)
 
 	res, err := service.Create(dto.CreateCsirtRequest{
-		NamaCsirt:              "CSIRT Advanced",
-		TeleponCsirt:           "081234567890",
-		WebCsirt:               "https://csirt.example.com",
-		IdPerusahaan:           "perusahaan-123",
-		FileStr:                fileStr,
-		TanggalRegistrasi:      tglReg,
-		TanggalKadaluarsa:      tglKad,
-		TanggalRegistrasiUlang: tglRegU,
+		NamaCsirt:         "CSIRT Advanced",
+		TeleponCsirt:      "081234567890",
+		WebCsirt:          "https://csirt.example.com",
+		IdPerusahaan:      "perusahaan-123",
+		FileStr:           fileStr,
+		TanggalRegistrasi: tglReg,
+		TanggalKadaluarsa: tglKad,
 	})
 
 	assert.NoError(t, err)
@@ -144,7 +149,6 @@ func TestCsirtService_Create_SuccessWithAllFields(t *testing.T) {
 	assert.Equal(t, fileStr, capturedReq.FileStr)
 	assert.Equal(t, tglReg, capturedReq.TanggalRegistrasi)
 	assert.Equal(t, tglKad, capturedReq.TanggalKadaluarsa)
-	assert.Equal(t, tglRegU, capturedReq.TanggalRegistrasiUlang)
 	// Verifikasi repo mengembalikan field baru
 	assert.NotNil(t, res.FileStr)
 	assert.Equal(t, fileStr, *res.FileStr)
@@ -152,8 +156,6 @@ func TestCsirtService_Create_SuccessWithAllFields(t *testing.T) {
 	assert.Equal(t, tglReg, *res.TanggalRegistrasi)
 	assert.NotNil(t, res.TanggalKadaluarsa)
 	assert.Equal(t, tglKad, *res.TanggalKadaluarsa)
-	assert.NotNil(t, res.TanggalRegistrasiUlang)
-	assert.Equal(t, tglRegU, *res.TanggalRegistrasiUlang)
 }
 
 // ─────────────────────────────────────────────────────────
@@ -190,12 +192,10 @@ func TestCsirtService_Create_NewFieldsNullable_WhenEmpty(t *testing.T) {
 	assert.Equal(t, "", capturedReq.FileStr)
 	assert.Equal(t, "", capturedReq.TanggalRegistrasi)
 	assert.Equal(t, "", capturedReq.TanggalKadaluarsa)
-	assert.Equal(t, "", capturedReq.TanggalRegistrasiUlang)
 	// Hasil dari GetByID: field nullable nil
 	assert.Nil(t, res.FileStr)
 	assert.Nil(t, res.TanggalRegistrasi)
 	assert.Nil(t, res.TanggalKadaluarsa)
-	assert.Nil(t, res.TanggalRegistrasiUlang)
 }
 
 func TestCsirtService_Create_OnlyTanggalRegistrasi(t *testing.T) {
@@ -228,7 +228,6 @@ func TestCsirtService_Create_OnlyTanggalRegistrasi(t *testing.T) {
 	assert.NotNil(t, res)
 	assert.Equal(t, tglReg, capturedReq.TanggalRegistrasi)
 	assert.Equal(t, "", capturedReq.TanggalKadaluarsa)
-	assert.Equal(t, "", capturedReq.TanggalRegistrasiUlang)
 	assert.NotNil(t, res.TanggalRegistrasi)
 	assert.Equal(t, tglReg, *res.TanggalRegistrasi)
 }
@@ -510,20 +509,18 @@ func TestCsirtService_GetByID_Success(t *testing.T) {
 func TestCsirtService_GetByID_ReturnsNewFields(t *testing.T) {
 	tglReg := "2024-01-15"
 	tglKad := "2025-01-15"
-	tglRegU := "2025-01-20"
 	fileStr := "uploads/str_csirt/abc.pdf"
 	telepon := "081234567890"
 
 	repo := &mockCsirtRepo{
 		GetByIDWithPerusahaanFn: func(id string) (*dto.CsirtResponse, error) {
 			return &dto.CsirtResponse{
-				ID:                     id,
-				NamaCsirt:              "CSIRT Lengkap",
-				TeleponCsirt:           &telepon,
-				FileStr:                fileStr,
-				TanggalRegistrasi:      tglReg,
-				TanggalKadaluarsa:      tglKad,
-				TanggalRegistrasiUlang: tglRegU,
+				ID:                id,
+				NamaCsirt:         "CSIRT Lengkap",
+				TeleponCsirt:      &telepon,
+				FileStr:           fileStr,
+				TanggalRegistrasi: tglReg,
+				TanggalKadaluarsa: tglKad,
 			}, nil
 		},
 	}
@@ -537,7 +534,6 @@ func TestCsirtService_GetByID_ReturnsNewFields(t *testing.T) {
 	assert.Equal(t, fileStr, res.FileStr)
 	assert.Equal(t, tglReg, res.TanggalRegistrasi)
 	assert.Equal(t, tglKad, res.TanggalKadaluarsa)
-	assert.Equal(t, tglRegU, res.TanggalRegistrasiUlang)
 }
 
 func TestCsirtService_GetByID_NewFieldsNullWhenNotSet(t *testing.T) {
@@ -560,7 +556,6 @@ func TestCsirtService_GetByID_NewFieldsNullWhenNotSet(t *testing.T) {
 	assert.Equal(t, "", res.FileStr)
 	assert.Equal(t, "", res.TanggalRegistrasi)
 	assert.Equal(t, "", res.TanggalKadaluarsa)
-	assert.Equal(t, "", res.TanggalRegistrasiUlang)
 }
 
 func TestCsirtService_GetByID_NotFound(t *testing.T) {
@@ -680,7 +675,6 @@ func TestCsirtService_Update_PartialUpdate(t *testing.T) {
 func TestCsirtService_Update_AllFields(t *testing.T) {
 	tglReg := "2024-06-01"
 	tglKad := "2025-06-01"
-	tglRegU := "2025-06-10"
 	fileStr := "uploads/str_csirt/new.pdf"
 
 	var capturedCsirt models.Csirt
@@ -705,13 +699,12 @@ func TestCsirtService_Update_AllFields(t *testing.T) {
 	newPhone := "082222222222"
 
 	res, err := service.Update("csirt-1", dto.UpdateCsirtRequest{
-		NamaCsirt:              &newName,
-		WebCsirt:               &newWeb,
-		TeleponCsirt:           &newPhone,
-		TanggalRegistrasi:      &tglReg,
-		TanggalKadaluarsa:      &tglKad,
-		TanggalRegistrasiUlang: &tglRegU,
-		FileStr:                &fileStr,
+		NamaCsirt:         &newName,
+		WebCsirt:          &newWeb,
+		TeleponCsirt:      &newPhone,
+		TanggalRegistrasi: &tglReg,
+		TanggalKadaluarsa: &tglKad,
+		FileStr:           &fileStr,
 	})
 
 	assert.NoError(t, err)
@@ -725,8 +718,6 @@ func TestCsirtService_Update_AllFields(t *testing.T) {
 	assert.Equal(t, tglReg, *capturedCsirt.TanggalRegistrasi)
 	assert.NotNil(t, capturedCsirt.TanggalKadaluarsa)
 	assert.Equal(t, tglKad, *capturedCsirt.TanggalKadaluarsa)
-	assert.NotNil(t, capturedCsirt.TanggalRegistrasiUlang)
-	assert.Equal(t, tglRegU, *capturedCsirt.TanggalRegistrasiUlang)
 	assert.NotNil(t, capturedCsirt.FileStr)
 	assert.Equal(t, fileStr, *capturedCsirt.FileStr)
 	// Verifikasi result juga membawa field baru
@@ -770,8 +761,6 @@ func TestCsirtService_Update_OnlyTanggalKadaluarsa(t *testing.T) {
 	// TanggalKadaluarsa harus ter-update
 	assert.NotNil(t, capturedCsirt.TanggalKadaluarsa)
 	assert.Equal(t, tglKad, *capturedCsirt.TanggalKadaluarsa)
-	// TanggalRegistrasiUlang tidak di-update → tetap nil
-	assert.Nil(t, capturedCsirt.TanggalRegistrasiUlang)
 }
 
 func TestCsirtService_Update_FileStr_ReplacesExisting(t *testing.T) {
@@ -847,38 +836,6 @@ func TestCsirtService_Update_NewFieldsNotProvided_ExistingValuesKept(t *testing.
 	assert.Equal(t, oldTglKad, *capturedCsirt.TanggalKadaluarsa)
 	assert.NotNil(t, capturedCsirt.FileStr)
 	assert.Equal(t, oldFileStr, *capturedCsirt.FileStr)
-}
-
-func TestCsirtService_Update_TanggalRegistrasiUlang_Independent(t *testing.T) {
-	tglRegU := "2026-02-01"
-
-	var capturedCsirt models.Csirt
-	repo := &mockCsirtRepo{
-		GetByIDFn: func(id string) (*models.Csirt, error) {
-			return &models.Csirt{
-				ID:        id,
-				NamaCsirt: "CSIRT A",
-			}, nil
-		},
-		UpdateFn: func(id string, csirt models.Csirt) error {
-			capturedCsirt = csirt
-			return nil
-		},
-	}
-
-	service := NewCsirtService(repo, nil, nil)
-
-	res, err := service.Update("csirt-1", dto.UpdateCsirtRequest{
-		TanggalRegistrasiUlang: &tglRegU,
-	})
-
-	assert.NoError(t, err)
-	assert.NotNil(t, res)
-	assert.NotNil(t, capturedCsirt.TanggalRegistrasiUlang)
-	assert.Equal(t, tglRegU, *capturedCsirt.TanggalRegistrasiUlang)
-	// Tanggal lain tidak di-update → tetap nil
-	assert.Nil(t, capturedCsirt.TanggalRegistrasi)
-	assert.Nil(t, capturedCsirt.TanggalKadaluarsa)
 }
 
 /*
@@ -1186,4 +1143,85 @@ func TestCsirtService_GetAll_IncludesNewFields(t *testing.T) {
 	assert.Equal(t, fileStr, res[0].FileStr)
 	assert.Equal(t, "", res[1].TanggalRegistrasi)
 	assert.Equal(t, "", res[1].FileStr)
+}
+
+/*
+=====================================
+ TEST GET CSIRT BY PERUSAHAAN
+=====================================
+*/
+
+func TestCsirtService_GetByPerusahaan_Success(t *testing.T) {
+	telepon := "081234567890"
+	repo := &mockCsirtRepo{
+		GetByPerusahaanFn: func(idPerusahaan string) ([]dto.CsirtResponse, error) {
+			return []dto.CsirtResponse{
+				{
+					ID:           "csirt-1",
+					NamaCsirt:    "CSIRT Perusahaan A",
+					TeleponCsirt: &telepon,
+				},
+			}, nil
+		},
+	}
+
+	service := NewCsirtService(repo, nil, nil)
+
+	res, err := service.GetByPerusahaan("perusahaan-123")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+	assert.Len(t, res, 1)
+	assert.Equal(t, "CSIRT Perusahaan A", res[0].NamaCsirt)
+	assert.Equal(t, "csirt-1", res[0].ID)
+}
+
+func TestCsirtService_GetByPerusahaan_EmptyResult(t *testing.T) {
+	repo := &mockCsirtRepo{
+		GetByPerusahaanFn: func(idPerusahaan string) ([]dto.CsirtResponse, error) {
+			return []dto.CsirtResponse{}, nil
+		},
+	}
+
+	service := NewCsirtService(repo, nil, nil)
+
+	res, err := service.GetByPerusahaan("perusahaan-tanpa-csirt")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, res)
+	assert.Len(t, res, 0)
+}
+
+func TestCsirtService_GetByPerusahaan_RepositoryError(t *testing.T) {
+	repo := &mockCsirtRepo{
+		GetByPerusahaanFn: func(idPerusahaan string) ([]dto.CsirtResponse, error) {
+			return nil, errors.New("database error")
+		},
+	}
+
+	service := NewCsirtService(repo, nil, nil)
+
+	res, err := service.GetByPerusahaan("perusahaan-123")
+
+	assert.Error(t, err)
+	assert.Nil(t, res)
+	assert.Equal(t, "database error", err.Error())
+}
+
+func TestCsirtService_GetByPerusahaan_EmptyID(t *testing.T) {
+	repo := &mockCsirtRepo{
+		GetByPerusahaanFn: func(idPerusahaan string) ([]dto.CsirtResponse, error) {
+			if idPerusahaan == "" {
+				return nil, errors.New("id perusahaan tidak boleh kosong")
+			}
+			return []dto.CsirtResponse{}, nil
+		},
+	}
+
+	service := NewCsirtService(repo, nil, nil)
+
+	res, err := service.GetByPerusahaan("")
+
+	assert.Error(t, err)
+	assert.Nil(t, res)
 }

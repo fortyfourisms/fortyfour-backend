@@ -31,16 +31,23 @@ func NewIkasRepository(db *sql.DB) *IkasRepository {
 
 // Update method Create untuk menerima nilai_kematangan (inisiasi IKAS)
 func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string, nilaiKematangan float64) error {
-
 	query := `INSERT INTO ikas
 		(id, id_perusahaan, id_identifikasi, id_proteksi, id_deteksi, id_gulih, tanggal, responden, telepon, jabatan,
 		nilai_kematangan, target_nilai)
 		VALUES (?, ?, NULL, NULL, NULL, NULL, ?, ?, ?, ?, ?, ?)`
 
+	// Konversi string kosong ke NULL agar tidak menyebabkan Error 1292 di MySQL
+	var tanggal interface{}
+	if strings.TrimSpace(req.Tanggal) == "" {
+		tanggal = nil
+	} else {
+		tanggal = req.Tanggal
+	}
+
 	_, err := r.db.Exec(query,
 		id,
 		req.IDPerusahaan,
-		req.Tanggal,
+		tanggal,
 		req.Responden,
 		req.Telepon,
 		req.Jabatan,
@@ -89,6 +96,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			g.nilai_subdomain2,
 			g.nilai_subdomain3,
 			g.nilai_subdomain4,
+			i.is_validated,
 			i.created_at,
 			i.updated_at
 		FROM ikas i
@@ -120,6 +128,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 		var detNilai, detSub1, detSub2, detSub3 sql.NullFloat64
 		var gulihID sql.NullInt64
 		var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
+		var isValidated sql.NullBool
 		var createdAt, updatedAt sql.NullString
 
 		err := rows.Scan(
@@ -158,11 +167,16 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			&gulihSub2,
 			&gulihSub3,
 			&gulihSub4,
+			&isValidated,
 			&createdAt,
 			&updatedAt,
 		)
 		if err != nil {
 			continue
+		}
+
+		if isValidated.Valid {
+			i.IsValidated = isValidated.Bool
 		}
 
 		if tanggal.Valid {
@@ -263,6 +277,218 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 	return result, nil
 }
 
+func (r *IkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse, error) {
+	query := `
+		SELECT 
+			i.id,
+			i.tanggal,
+			i.responden,
+			i.telepon,
+			i.jabatan,
+			i.nilai_kematangan,
+			i.target_nilai,
+			p.id,
+			p.nama_perusahaan,
+			iden.id,
+			iden.nilai_identifikasi,
+			iden.nilai_subdomain1,
+			iden.nilai_subdomain2,
+			iden.nilai_subdomain3,
+			iden.nilai_subdomain4,
+			iden.nilai_subdomain5,
+			prot.id,
+			prot.nilai_proteksi,
+			prot.nilai_subdomain1,
+			prot.nilai_subdomain2,
+			prot.nilai_subdomain3,
+			prot.nilai_subdomain4,
+			prot.nilai_subdomain5,
+			prot.nilai_subdomain6,
+			det.id,
+			det.nilai_deteksi,
+			det.nilai_subdomain1,
+			det.nilai_subdomain2,
+			det.nilai_subdomain3,
+			g.id,
+			g.nilai_gulih,
+			g.nilai_subdomain1,
+			g.nilai_subdomain2,
+			g.nilai_subdomain3,
+			g.nilai_subdomain4,
+			i.is_validated,
+			i.created_at,
+			i.updated_at
+		FROM ikas i
+		LEFT JOIN perusahaan p ON i.id_perusahaan = p.id
+		LEFT JOIN identifikasi iden ON i.id_identifikasi = iden.id
+		LEFT JOIN proteksi prot ON i.id_proteksi = prot.id
+		LEFT JOIN deteksi det ON i.id_deteksi = det.id
+		LEFT JOIN gulih g ON i.id_gulih = g.id
+		WHERE i.id_perusahaan = ?
+	`
+
+	rows, err := r.db.Query(query, perusahaanID)
+	if err != nil {
+		return nil, fmt.Errorf("query error: %v", err)
+	}
+	defer rows.Close()
+
+	var result []dto.IkasResponse
+
+	for rows.Next() {
+		var i dto.IkasResponse
+		var tanggal sql.NullString
+		var nilaiKematangan, targetNilai sql.NullFloat64
+		var perusahaanID, perusahaanNama sql.NullString
+		var idenID sql.NullInt64
+		var idenNilai, idenSub1, idenSub2, idenSub3, idenSub4, idenSub5 sql.NullFloat64
+		var protID sql.NullInt64
+		var protNilai, protSub1, protSub2, protSub3, protSub4, protSub5, protSub6 sql.NullFloat64
+		var detID sql.NullInt64
+		var detNilai, detSub1, detSub2, detSub3 sql.NullFloat64
+		var gulihID sql.NullInt64
+		var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
+		var isValidated sql.NullBool
+		var createdAt, updatedAt sql.NullString
+
+		err := rows.Scan(
+			&i.ID,
+			&tanggal,
+			&i.Responden,
+			&i.Telepon,
+			&i.Jabatan,
+			&nilaiKematangan,
+			&targetNilai,
+			&perusahaanID,
+			&perusahaanNama,
+			&idenID,
+			&idenNilai,
+			&idenSub1,
+			&idenSub2,
+			&idenSub3,
+			&idenSub4,
+			&idenSub5,
+			&protID,
+			&protNilai,
+			&protSub1,
+			&protSub2,
+			&protSub3,
+			&protSub4,
+			&protSub5,
+			&protSub6,
+			&detID,
+			&detNilai,
+			&detSub1,
+			&detSub2,
+			&detSub3,
+			&gulihID,
+			&gulihNilai,
+			&gulihSub1,
+			&gulihSub2,
+			&gulihSub3,
+			&gulihSub4,
+			&isValidated,
+			&createdAt,
+			&updatedAt,
+		)
+		if err != nil {
+			continue
+		}
+
+		if isValidated.Valid {
+			i.IsValidated = isValidated.Bool
+		}
+
+		if tanggal.Valid {
+			i.Tanggal = tanggal.String
+		}
+
+		if createdAt.Valid {
+			i.CreatedAt = createdAt.String
+		}
+
+		if updatedAt.Valid {
+			i.UpdatedAt = updatedAt.String
+		}
+
+		if targetNilai.Valid {
+			i.TargetNilai = targetNilai.Float64
+		}
+
+		{
+			i.NilaiKematangan = utils.RoundToTwo(
+				idenNilai.Float64*0.25 +
+					protNilai.Float64*0.30 +
+					detNilai.Float64*0.25 +
+					gulihNilai.Float64*0.20,
+			)
+		}
+
+		i.KategoriKematanganKeamananSiber = utils.GetKategoriTingkatKematangan(i.NilaiKematangan)
+
+		if perusahaanID.Valid && perusahaanNama.Valid {
+			i.Perusahaan = &dto.PerusahaanInIkas{
+				ID:             perusahaanID.String,
+				NamaPerusahaan: perusahaanNama.String,
+			}
+		}
+
+		if idenID.Valid {
+			i.Identifikasi = &dto.IdentifikasiInIkas{
+				ID:                              int(idenID.Int64),
+				NilaiIdentifikasi:               idenNilai.Float64,
+				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(idenNilai.Float64),
+				NilaiSubdomain1:                 idenSub1.Float64,
+				NilaiSubdomain2:                 idenSub2.Float64,
+				NilaiSubdomain3:                 idenSub3.Float64,
+				NilaiSubdomain4:                 idenSub4.Float64,
+				NilaiSubdomain5:                 idenSub5.Float64,
+			}
+		}
+
+		if protID.Valid {
+			i.Proteksi = &dto.ProteksiInIkas{
+				ID:                              int(protID.Int64),
+				NilaiProteksi:                   protNilai.Float64,
+				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(protNilai.Float64),
+				NilaiSubdomain1:                 protSub1.Float64,
+				NilaiSubdomain2:                 protSub2.Float64,
+				NilaiSubdomain3:                 protSub3.Float64,
+				NilaiSubdomain4:                 protSub4.Float64,
+				NilaiSubdomain5:                 protSub5.Float64,
+				NilaiSubdomain6:                 protSub6.Float64,
+			}
+		}
+
+		if detID.Valid {
+			i.Deteksi = &dto.DeteksiInIkas{
+				ID:                              int(detID.Int64),
+				NilaiDeteksi:                    detNilai.Float64,
+				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(detNilai.Float64),
+				NilaiSubdomain1:                 detSub1.Float64,
+				NilaiSubdomain2:                 detSub2.Float64,
+				NilaiSubdomain3:                 detSub3.Float64,
+			}
+		}
+
+		if gulihID.Valid {
+			i.Gulih = &dto.GulihInIkas{
+				ID:                              int(gulihID.Int64),
+				NilaiGulih:                      gulihNilai.Float64,
+				KategoriTingkatKematanganDomain: utils.GetKategoriTingkatKematangan(gulihNilai.Float64),
+				NilaiSubdomain1:                 gulihSub1.Float64,
+				NilaiSubdomain2:                 gulihSub2.Float64,
+				NilaiSubdomain3:                 gulihSub3.Float64,
+				NilaiSubdomain4:                 gulihSub4.Float64,
+			}
+		}
+
+		result = append(result, i)
+	}
+
+	return result, nil
+}
+
 func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	query := `
 		SELECT 
@@ -301,6 +527,7 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 			g.nilai_subdomain2,
 			g.nilai_subdomain3,
 			g.nilai_subdomain4,
+			i.is_validated,
 			i.created_at,
 			i.updated_at
 		FROM ikas i
@@ -326,6 +553,7 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	var detNilai, detSub1, detSub2, detSub3 sql.NullFloat64
 	var gulihID sql.NullInt64
 	var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
+	var isValidated sql.NullBool
 	var createdAt, updatedAt sql.NullString
 
 	err := row.Scan(
@@ -364,11 +592,16 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 		&gulihSub2,
 		&gulihSub3,
 		&gulihSub4,
+		&isValidated,
 		&createdAt,
 		&updatedAt,
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if isValidated.Valid {
+		i.IsValidated = isValidated.Bool
 	}
 
 	if tanggal.Valid {
@@ -509,12 +742,13 @@ func (r *IkasRepository) Update(id string, req dto.UpdateIkasRequest) error {
 }
 
 func (r *IkasRepository) Delete(id string) error {
-	// Get perusahaan ID
-	var perusahaanID string
-	err := r.db.QueryRow(`SELECT id_perusahaan FROM ikas WHERE id = ?`, id).Scan(&perusahaanID)
+	// 1. Ambil data ikas untuk mendapatkan ID domain yang terkait
+	var idenID, protID, detID, gulIHID sql.NullInt64
+	queryGet := `SELECT id_identifikasi, id_proteksi, id_deteksi, id_gulih FROM ikas WHERE id = ?`
+	err := r.db.QueryRow(queryGet, id).Scan(&idenID, &protID, &detID, &gulIHID)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil // Sudah tidak ada
+			return nil
 		}
 		return err
 	}
@@ -526,7 +760,7 @@ func (r *IkasRepository) Delete(id string) error {
 	}
 	defer tx.Rollback()
 
-	// Delete buffer data
+	// 2. Delete buffer data by ikas_id
 	tablesBuffer := []string{
 		"jawaban_identifikasi_buffer",
 		"jawaban_proteksi_buffer",
@@ -534,12 +768,12 @@ func (r *IkasRepository) Delete(id string) error {
 		"jawaban_gulih_buffer",
 	}
 	for _, table := range tablesBuffer {
-		if _, err := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE perusahaan_id = ?`, table), perusahaanID); err != nil {
+		if _, err := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE ikas_id = ?`, table), id); err != nil {
 			return fmt.Errorf("error deleting from %s: %v", table, err)
 		}
 	}
 
-	// Delete main answers
+	// 3. Delete main answers by ikas_id
 	tablesJawaban := []string{
 		"jawaban_identifikasi",
 		"jawaban_proteksi",
@@ -547,26 +781,35 @@ func (r *IkasRepository) Delete(id string) error {
 		"jawaban_gulih",
 	}
 	for _, table := range tablesJawaban {
-		if _, err := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE perusahaan_id = ?`, table), perusahaanID); err != nil {
+		if _, err := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE ikas_id = ?`, table), id); err != nil {
 			return fmt.Errorf("error deleting from %s: %v", table, err)
 		}
 	}
 
-	// Delete ikas
+	// 4. Delete ikas (lebih dulu agar FK tidak bermasalah jika ada restriksi)
 	if _, err := tx.Exec(`DELETE FROM ikas WHERE id = ?`, id); err != nil {
 		return fmt.Errorf("error deleting from ikas: %v", err)
 	}
 
-	// Delete domain data
-	tablesDomain := []string{
-		"identifikasi",
-		"proteksi",
-		"deteksi",
-		"gulih",
+	// 5. Delete domain data by specific ID (bukan perusahaan_id lagi)
+	if idenID.Valid {
+		if _, err := tx.Exec(`DELETE FROM identifikasi WHERE id = ?`, idenID.Int64); err != nil {
+			return fmt.Errorf("error deleting from identifikasi: %v", err)
+		}
 	}
-	for _, table := range tablesDomain {
-		if _, err := tx.Exec(fmt.Sprintf(`DELETE FROM %s WHERE perusahaan_id = ?`, table), perusahaanID); err != nil {
-			return fmt.Errorf("error deleting from %s: %v", table, err)
+	if protID.Valid {
+		if _, err := tx.Exec(`DELETE FROM proteksi WHERE id = ?`, protID.Int64); err != nil {
+			return fmt.Errorf("error deleting from proteksi: %v", err)
+		}
+	}
+	if detID.Valid {
+		if _, err := tx.Exec(`DELETE FROM deteksi WHERE id = ?`, detID.Int64); err != nil {
+			return fmt.Errorf("error deleting from deteksi: %v", err)
+		}
+	}
+	if gulIHID.Valid {
+		if _, err := tx.Exec(`DELETE FROM gulih WHERE id = ?`, gulIHID.Int64); err != nil {
+			return fmt.Errorf("error deleting from gulih: %v", err)
 		}
 	}
 
@@ -669,13 +912,39 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.ParsedExcelD
 		return nil, fmt.Errorf("perusahaan anda belum terdaftar: '%s'", namaPerusahaan)
 	}
 
-	// VALIDASI: Cek apakah data IKAS untuk perusahaan ini sudah ada
-	exists, err := r.CheckExistsByPerusahaanID(idPerusahaan)
+	// Tanggal dari D18 (Perlu diekstrak lebih awal untuk validasi tahun)
+	tanggalStr, err := getCellString(sheet2, "D18")
+	if err != nil {
+		return nil, fmt.Errorf("error membaca tanggal (Sheet 2, D18): %v", err)
+	}
+
+	// Extract year from date for duplicate check
+	var tahun int
+	if tanggalStr != "" {
+		if excelDate, err := strconv.ParseFloat(tanggalStr, 64); err == nil {
+			parsedTime, err := excelize.ExcelDateToTime(excelDate, false)
+			if err == nil {
+				tahun = parsedTime.Year()
+			}
+		} else {
+			parsedTime, err := parseMultipleDateFormats(tanggalStr)
+			if err == nil {
+				tahun = parsedTime.Year()
+			}
+		}
+	}
+
+	if tahun == 0 {
+		tahun = time.Now().Year()
+	}
+
+	// VALIDASI: Cek apakah data IKAS untuk perusahaan ini sudah ada di tahun tersebut
+	exists, err := r.CheckExistsByPerusahaanIDAndYear(idPerusahaan, tahun)
 	if err != nil {
 		return nil, fmt.Errorf("error validasi duplikasi data: %v", err)
 	}
 	if exists {
-		return nil, fmt.Errorf("Data IKAS untuk perusahaan '%s' sudah ada. Anda tidak dapat melakukan import lagi, silakan hubungi admin untuk melakukan update data.", namaPerusahaan)
+		return nil, fmt.Errorf("Data IKAS untuk perusahaan '%s' pada tahun %d sudah ada. Anda tidak dapat melakukan import lagi.", namaPerusahaan, tahun)
 	}
 
 	// Telepon dari D10
@@ -700,12 +969,6 @@ func (r *IkasRepository) ParseExcelForImport(fileData []byte) (*dto.ParsedExcelD
 	targetNilai, err := getCellFloat(sheet2, "D15")
 	if err != nil {
 		return nil, fmt.Errorf("error membaca target_nilai (Sheet 2, D15): %v", err)
-	}
-
-	// Tanggal dari D18
-	tanggalStr, err := getCellString(sheet2, "D18")
-	if err != nil {
-		return nil, fmt.Errorf("error membaca tanggal (Sheet 2, D18): %v", err)
 	}
 
 	var tanggal string
@@ -833,15 +1096,23 @@ func (r *IkasRepository) FindPerusahaanByName(namaPerusahaan string) (string, er
 }
 
 // CheckExistsByPerusahaanID mengecek apakah data IKAS untuk perusahaan tersebut sudah ada
-func (r *IkasRepository) CheckExistsByPerusahaanID(idPerusahaan string) (bool, error) {
+func (r *IkasRepository) CheckExistsByPerusahaanID(id string) (bool, error) {
 	var count int
-	query := `SELECT COUNT(*) FROM ikas WHERE id_perusahaan = ?`
-
-	err := r.db.QueryRow(query, idPerusahaan).Scan(&count)
+	err := r.db.QueryRow("SELECT COUNT(*) FROM ikas WHERE id_perusahaan = ?", id).Scan(&count)
 	if err != nil {
 		return false, err
 	}
+	return count > 0, nil
+}
 
+func (r *IkasRepository) CheckExistsByPerusahaanIDAndYear(id string, year int) (bool, error) {
+	var count int
+	// Gunakan COALESCE(tanggal, created_at) untuk menangani kasus di mana tanggal asesmen kosong (NULL)
+	query := "SELECT COUNT(*) FROM ikas WHERE id_perusahaan = ? AND YEAR(COALESCE(tanggal, created_at)) = ?"
+	err := r.db.QueryRow(query, id, year).Scan(&count)
+	if err != nil {
+		return false, err
+	}
 	return count > 0, nil
 }
 
@@ -853,4 +1124,77 @@ func (r *IkasRepository) GetIDByPerusahaanID(idPerusahaan string) (string, error
 		return "", err
 	}
 	return id, nil
+}
+func (r *IkasRepository) CheckOwnership(ikasID string, perusahaanID string) (bool, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM ikas WHERE id = ? AND id_perusahaan = ?`
+	err := r.db.QueryRow(query, ikasID, perusahaanID).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (r *IkasRepository) UpdateValidationStatus(id string, status bool) error {
+	query := `UPDATE ikas SET is_validated = ? WHERE id = ?`
+	_, err := r.db.Exec(query, status, id)
+	return err
+}
+
+func (r *IkasRepository) IsLocked(id string) (bool, error) {
+	var locked bool
+	query := `SELECT is_validated FROM ikas WHERE id = ?`
+	err := r.db.QueryRow(query, id).Scan(&locked)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+	return locked, nil
+}
+
+func (r *IkasRepository) GetLatestByPerusahaan(perusahaanID string) (*dto.IkasResponse, error) {
+	// Query the most recent IKAS by date for a given company
+	query := `
+		SELECT id, tanggal, responden, telepon, jabatan, nilai_kematangan, target_nilai, is_validated
+		FROM ikas WHERE id_perusahaan = ? ORDER BY tanggal DESC LIMIT 1`
+
+	var ikas dto.IkasResponse
+	err := r.db.QueryRow(query, perusahaanID).Scan(
+		&ikas.ID, &ikas.Tanggal, &ikas.Responden, &ikas.Telepon, &ikas.Jabatan,
+		&ikas.NilaiKematangan, &ikas.TargetNilai, &ikas.IsValidated,
+	)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &ikas, nil
+}
+
+func (r *IkasRepository) CreateInitial(sourceID, targetID, targetDate string) error {
+	query := `
+		INSERT INTO ikas
+			(id, id_perusahaan, tanggal, responden, telepon, jabatan, nilai_kematangan, target_nilai, is_validated)
+		SELECT 
+			?, id_perusahaan, ?, responden, telepon, jabatan, nilai_kematangan, target_nilai, false
+		FROM ikas 
+		WHERE id = ?`
+
+	_, err := r.db.Exec(query, targetID, targetDate, sourceID)
+	return err
+}
+
+func (r *IkasRepository) UpdateDomainLinks(ikasID, idIden, idProt, idDet, idGulih string) error {
+	query := `
+		UPDATE ikas 
+		SET id_identifikasi = ?, id_proteksi = ?, id_deteksi = ?, id_gulih = ?
+		WHERE id = ?`
+
+	_, err := r.db.Exec(query, idIden, idProt, idDet, idGulih, ikasID)
+	return err
 }

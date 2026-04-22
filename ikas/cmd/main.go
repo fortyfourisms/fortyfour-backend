@@ -22,14 +22,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// @title IKAS API
-// @version 1.0
-// @description API documentation for IKAS (Indeks Kematangan Keamanan Siber) service.
-// @host localhost:8081
-// @BasePath /
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
+// @title						IKAS API
+// @version					1.0
+// @description				API documentation for IKAS (Indeks Kematangan Keamanan Siber) service.
+// @host						localhost:8081
+// @BasePath					/
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
 func main() {
 	// load env
 	if err := godotenv.Load(); err != nil {
@@ -140,15 +140,26 @@ func main() {
 	jawabanGulihRepo := repository.NewJawabanGulihRepository(db)
 
 	// services
-	ikasService := services.NewIkasService(ikasRepo, msgProducer)
+	ikasService := services.NewIkasService(
+		ikasRepo,
+		identifikasiRepo,
+		proteksiRepo,
+		deteksiRepo,
+		gulihRepo,
+		jawabanIdentifikasiRepo,
+		jawabanProteksiRepo,
+		jawabanDeteksiRepo,
+		jawabanGulihRepo,
+		msgProducer,
+	)
 	ruangLingkupService := services.NewRuangLingkupService(ruangLingkupRepo, msgProducer)
 	domainService := services.NewDomainService(domainRepo, msgProducer)
 	kategoriService := services.NewKategoriService(kategoriRepo, msgProducer)
 	subKategoriService := services.NewSubKategoriService(subKategoriRepo, msgProducer)
-	identifikasiService := services.NewIdentifikasiService(identifikasiRepo)
-	proteksiService := services.NewProteksiService(proteksiRepo)
-	deteksiService := services.NewDeteksiService(deteksiRepo)
-	gulihService := services.NewGulihService(gulihRepo)
+	identifikasiService := services.NewIdentifikasiService(identifikasiRepo, ikasRepo)
+	proteksiService := services.NewProteksiService(proteksiRepo, ikasRepo)
+	deteksiService := services.NewDeteksiService(deteksiRepo, ikasRepo)
+	gulihService := services.NewGulihService(gulihRepo, ikasRepo)
 	pertanyaanIdentifikasiService := services.NewPertanyaanIdentifikasiService(pertanyaanIdentifikasiRepo, msgProducer)
 	pertanyaanProteksiService := services.NewPertanyaanProteksiService(pertanyaanProteksiRepo, msgProducer)
 	pertanyaanDeteksiService := services.NewPertanyaanDeteksiService(pertanyaanDeteksiRepo, msgProducer)

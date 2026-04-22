@@ -1,11 +1,11 @@
 package dto
 
 type CreateUserRequest struct {
-	Username  string  `json:"username" validate:"required,min=3,max=50"`
-	Password  string  `json:"password" validate:"required,min=8"`
-	Email     string  `json:"email" validate:"required,email"`
-	RoleID    *string `json:"role_id"`
-	IDJabatan *string `json:"id_jabatan"`
+	Username string  `json:"username" validate:"required,min=3,max=50"`
+	Password string  `json:"password" validate:"required,min=8"`
+	Email    string  `json:"email" validate:"required,email"`
+	RoleID   *string `json:"role_id"`
+	Jabatan  *string `json:"jabatan"`
 }
 
 type UpdateUserRequest struct {
@@ -13,14 +13,15 @@ type UpdateUserRequest struct {
 	DisplayName *string `json:"display_name" validate:"omitempty,min=1,max=100"`
 	Email       *string `json:"email" validate:"omitempty,email"`
 	RoleID      *string `json:"role_id"`
-	IDJabatan   *string `json:"id_jabatan"`
+	Jabatan     *string `json:"jabatan"`
 }
 
 // UpdateMeRequest untuk user update dirinya sendiri.
 type UpdateMeRequest struct {
+	Username    *string `json:"username" validate:"omitempty,min=3,max=50"`
 	DisplayName *string `json:"display_name" validate:"omitempty,min=1,max=100"`
 	Email       *string `json:"email" validate:"omitempty,email"`
-	IDJabatan   *string `json:"id_jabatan"`
+	Jabatan     *string `json:"jabatan"`
 }
 
 type UpdateUserPasswordRequest struct {
@@ -36,8 +37,7 @@ type UserResponse struct {
 	Email        string  `json:"email"`
 	RoleID       *string `json:"role_id"`
 	RoleName     string  `json:"role_name"`
-	IDJabatan    *string `json:"id_jabatan"`
-	JabatanName  *string `json:"jabatan_name"`
+	Jabatan      *string `json:"jabatan"`
 	IDPerusahaan *string `json:"id_perusahaan"`
 	FotoProfile  *string `json:"foto_profile"`
 	Banner       *string `json:"banner"`

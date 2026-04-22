@@ -9,6 +9,7 @@ import (
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
+	"strconv"
 )
 
 type NotificationHandler struct {
@@ -20,23 +21,25 @@ func NewNotificationHandler(svc *services.NotificationService) *NotificationHand
 }
 
 // GetAll godoc
-// @Summary      Get all notifications
-// @Description  Mengambil semua notifikasi milik user yang sedang login
-// @Tags         Notifications
-// @Security     BearerAuth
-// @Produce      json
-// @Success      200  {object}  dto.NotificationListResponse
-// @Failure      401  {object}  dto.ErrorResponse
-// @Failure      500  {object}  dto.ErrorResponse
-// @Router       /api/notifications [get]
+//
+//	@Summary		Get all notifications
+//	@Description	Mengambil semua notifikasi milik user yang sedang login
+//	@Tags			Notifications
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Success		200	{object}	dto.NotificationListResponse
+//	@Failure		401	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/notifications [get]
 func (h *NotificationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
+	role := middleware.GetRole(r.Context())
 	if userID == "" {
 		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	notifs, err := h.svc.GetAll(userID)
+	notifs, err := h.svc.GetAll(userID, role)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -49,7 +52,12 @@ func (h *NotificationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 			unread++
 		}
 		items = append(items, dto.NotificationResponse{
-			ID:        n.ID,
+			ID: n.ID,
+			User: dto.NotificationUserResponse{
+				UserID:      n.UserID,
+				Username:    n.Username,
+				DisplayName: n.DisplayName,
+			},
 			Type:      string(n.Type),
 			Message:   n.Message,
 			Read:      n.Read,
@@ -64,17 +72,18 @@ func (h *NotificationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 // MarkRead godoc
-// @Summary      Mark notification as read
-// @Description  Menandai satu notifikasi sebagai sudah dibaca
-// @Tags         Notifications
-// @Security     BearerAuth
-// @Produce      json
-// @Param        id  path  string  true  "Notification ID"
-// @Success      200  {object}  map[string]string
-// @Failure      400  {object}  dto.ErrorResponse
-// @Failure      401  {object}  dto.ErrorResponse
-// @Failure      500  {object}  dto.ErrorResponse
-// @Router       /api/notifications/{id}/read [patch]
+//
+//	@Summary		Mark notification as read
+//	@Description	Menandai satu notifikasi sebagai sudah dibaca
+//	@Tags			Notifications
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			id	path		uint64	true	"Notification ID"
+//	@Success		200	{object}	map[string]string
+//	@Failure		400	{object}	dto.ErrorResponse
+//	@Failure		401	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/notifications/{id}/read [patch]
 func (h *NotificationHandler) MarkRead(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	if userID == "" {
@@ -82,10 +91,16 @@ func (h *NotificationHandler) MarkRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notifID := strings.TrimPrefix(r.URL.Path, "/api/notifications/")
-	notifID = strings.TrimSuffix(notifID, "/read")
-	if notifID == "" {
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/notifications/")
+	idStr = strings.TrimSuffix(idStr, "/read")
+	if idStr == "" {
 		utils.RespondError(w, http.StatusBadRequest, "notification id wajib diisi")
+		return
+	}
+
+	notifID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "invalid notification id format")
 		return
 	}
 
@@ -98,15 +113,16 @@ func (h *NotificationHandler) MarkRead(w http.ResponseWriter, r *http.Request) {
 }
 
 // MarkAllRead godoc
-// @Summary      Mark all notifications as read
-// @Description  Menandai semua notifikasi user sebagai sudah dibaca
-// @Tags         Notifications
-// @Security     BearerAuth
-// @Produce      json
-// @Success      200  {object}  map[string]string
-// @Failure      401  {object}  dto.ErrorResponse
-// @Failure      500  {object}  dto.ErrorResponse
-// @Router       /api/notifications/read-all [patch]
+//
+//	@Summary		Mark all notifications as read
+//	@Description	Menandai semua notifikasi user sebagai sudah dibaca
+//	@Tags			Notifications
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Success		200	{object}	map[string]string
+//	@Failure		401	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/notifications/read-all [patch]
 func (h *NotificationHandler) MarkAllRead(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	if userID == "" {
@@ -123,17 +139,18 @@ func (h *NotificationHandler) MarkAllRead(w http.ResponseWriter, r *http.Request
 }
 
 // Delete godoc
-// @Summary      Delete a notification
-// @Description  Menghapus satu notifikasi berdasarkan ID
-// @Tags         Notifications
-// @Security     BearerAuth
-// @Produce      json
-// @Param        id  path  string  true  "Notification ID"
-// @Success      200  {object}  map[string]string
-// @Failure      400  {object}  dto.ErrorResponse
-// @Failure      401  {object}  dto.ErrorResponse
-// @Failure      500  {object}  dto.ErrorResponse
-// @Router       /api/notifications/{id} [delete]
+//
+//	@Summary		Delete a notification
+//	@Description	Menghapus satu notifikasi berdasarkan ID
+//	@Tags			Notifications
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			id	path		uint64	true	"Notification ID"
+//	@Success		200	{object}	map[string]string
+//	@Failure		400	{object}	dto.ErrorResponse
+//	@Failure		401	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/notifications/{id} [delete]
 func (h *NotificationHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	if userID == "" {
@@ -141,10 +158,16 @@ func (h *NotificationHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	notifID := strings.TrimPrefix(r.URL.Path, "/api/notifications/")
-	notifID = strings.TrimSuffix(notifID, "/")
-	if notifID == "" {
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/notifications/")
+	idStr = strings.TrimSuffix(idStr, "/")
+	if idStr == "" {
 		utils.RespondError(w, http.StatusBadRequest, "notification id wajib diisi")
+		return
+	}
+
+	notifID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "invalid notification id format")
 		return
 	}
 
@@ -157,15 +180,16 @@ func (h *NotificationHandler) Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteAll godoc
-// @Summary      Delete all notifications
-// @Description  Menghapus semua notifikasi milik user
-// @Tags         Notifications
-// @Security     BearerAuth
-// @Produce      json
-// @Success      200  {object}  map[string]string
-// @Failure      401  {object}  dto.ErrorResponse
-// @Failure      500  {object}  dto.ErrorResponse
-// @Router       /api/notifications [delete]
+//
+//	@Summary		Delete all notifications
+//	@Description	Menghapus semua notifikasi milik user
+//	@Tags			Notifications
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Success		200	{object}	map[string]string
+//	@Failure		401	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/notifications [delete]
 func (h *NotificationHandler) DeleteAll(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	if userID == "" {

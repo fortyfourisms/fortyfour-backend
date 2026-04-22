@@ -1,0 +1,1 @@
+ALTER TABLE pic_perusahaan DROP COLUMN email;

@@ -171,6 +171,8 @@ func TestRuangLingkupHandler_ServeHTTP_Create_Success(t *testing.T) {
 
 	createReq := dto.CreateRuangLingkupRequest{NamaRuangLingkup: "Lingkup Finance"}
 	repo.On("CheckDuplicateName", "Lingkup Finance", 0).Return(false, nil)
+	repo.On("Create", createReq).Return(int64(1), nil)
+	repo.On("GetByID", 1).Return(&dto.RuangLingkupResponse{ID: 1, NamaRuangLingkup: "Lingkup Finance"}, nil)
 	producer.On("PublishRuangLingkupCreated", mock.Anything, mock.MatchedBy(func(e dto_event.RuangLingkupCreatedEvent) bool {
 		return e.Request.NamaRuangLingkup == "Lingkup Finance"
 	})).Return(nil)
@@ -231,6 +233,7 @@ func TestRuangLingkupHandler_ServeHTTP_Create_PublishError(t *testing.T) {
 
 	createReq := dto.CreateRuangLingkupRequest{NamaRuangLingkup: "Lingkup Test"}
 	repo.On("CheckDuplicateName", "Lingkup Test", 0).Return(false, nil)
+	repo.On("Create", createReq).Return(int64(1), nil)
 	producer.On("PublishRuangLingkupCreated", mock.Anything, mock.Anything).Return(errors.New("publish error"))
 
 	body, _ := json.Marshal(createReq)
@@ -250,6 +253,7 @@ func TestRuangLingkupHandler_ServeHTTP_Update_Success(t *testing.T) {
 	updateReq := dto.UpdateRuangLingkupRequest{NamaRuangLingkup: rlStrPtr("Lingkup Finance")}
 	repo.On("GetByID", 1).Return(&dto.RuangLingkupResponse{ID: 1}, nil)
 	repo.On("CheckDuplicateName", "Lingkup Finance", 1).Return(false, nil)
+	repo.On("Update", 1, updateReq).Return(nil)
 	producer.On("PublishRuangLingkupUpdated", mock.Anything, mock.MatchedBy(func(e dto_event.RuangLingkupUpdatedEvent) bool {
 		return e.ID == 1 && *e.Request.NamaRuangLingkup == "Lingkup Finance"
 	})).Return(nil)
@@ -296,6 +300,7 @@ func TestRuangLingkupHandler_ServeHTTP_Update_Duplicate(t *testing.T) {
 
 	repo.On("GetByID", 1).Return(&dto.RuangLingkupResponse{ID: 1}, nil)
 	repo.On("CheckDuplicateName", "Lingkup Finance", 1).Return(false, nil)
+	repo.On("Update", 1, mock.Anything).Return(nil)
 	producer.On("PublishRuangLingkupUpdated", mock.Anything, mock.Anything).Return(errors.New("db error"))
 
 	body, _ := json.Marshal(dto.UpdateRuangLingkupRequest{NamaRuangLingkup: rlStrPtr("Lingkup Finance")})
@@ -349,6 +354,7 @@ func TestRuangLingkupHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	// _, err := s.repo.GetByID(id)
 	// return s.producer.PublishRuangLingkupDeleted(...)
 	repo.On("GetByID", 1).Return(&dto.RuangLingkupResponse{ID: 1}, nil)
+	repo.On("Delete", 1).Return(nil)
 	producer.On("PublishRuangLingkupDeleted", mock.Anything, mock.MatchedBy(func(e dto_event.RuangLingkupDeletedEvent) bool {
 		return e.ID == 1
 	})).Return(nil)

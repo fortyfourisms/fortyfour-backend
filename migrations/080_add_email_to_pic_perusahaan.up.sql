@@ -1,0 +1,1 @@
+ALTER TABLE pic_perusahaan ADD COLUMN email VARCHAR(255) NULL;

@@ -24,15 +24,10 @@ func makeSEResponse(namaSE string) dto.SEResponse {
 		NamaSubSektor: "Teknologi Informasi",
 		NamaSektor:    "Informatika",
 	}
-	csirt := &dto.CsirtMiniResponse{
-		ID:        "csirt-1",
-		NamaCsirt: "CSIRT Contoh",
-	}
 	return dto.SEResponse{
 		ID:                              "se-1",
 		IDPerusahaan:                    "perusahaan-1",
 		IDSubSektor:                     "sub-1",
-		IDCsirt:                         "csirt-1",
 		NamaSE:                          namaSE,
 		IpSE:                            "192.168.1.1",
 		AsNumberSE:                      "AS12345",
@@ -54,24 +49,24 @@ func makeSEResponse(namaSE string) dto.SEResponse {
 		UpdatedAt:                       "2024-06-01",
 		Perusahaan:                      perusahaan,
 		SubSektor:                       subSektor,
-		Csirt:                           csirt,
 	}
 }
 
 func makeCsirtResponse(namaCsirt string) dto.CsirtResponse {
 	telepon := "+62812345678"
+	email := "csirt@contoh.id"
 	return dto.CsirtResponse{
-		ID:                     "csirt-1",
-		NamaCsirt:              namaCsirt,
-		WebCsirt:               "https://csirt.contoh.id",
-		TeleponCsirt:           &telepon,
-		PhotoCsirt:             "photo.jpg",
-		FileRFC2350:            "rfc2350.pdf",
-		FilePublicKeyPGP:       "key.pgp",
-		FileStr:                "str.pdf",
-		TanggalRegistrasi:      "2024-01-01",
-		TanggalKadaluarsa:      "2025-01-01",
-		TanggalRegistrasiUlang: "2025-01-15",
+		ID:                "csirt-1",
+		NamaCsirt:         namaCsirt,
+		WebCsirt:          "https://csirt.contoh.id",
+		EmailCsirt:        &email,
+		TeleponCsirt:      &telepon,
+		PhotoCsirt:        "photo.jpg",
+		FileRFC2350:       "rfc2350.pdf",
+		FilePublicKeyPGP:  "key.pgp",
+		FileStr:           "str.pdf",
+		TanggalRegistrasi: "2024-01-01",
+		TanggalKadaluarsa: "2025-01-01",
 		Perusahaan: dto.PerusahaanResponse{
 			ID:             "perusahaan-1",
 			NamaPerusahaan: "PT Contoh Teknologi",
@@ -228,7 +223,7 @@ func TestGenerateSEPDF_NilNestedStructs(t *testing.T) {
 	se := makeSEResponse("Server Tanpa Relasi")
 	se.Perusahaan = nil
 	se.SubSektor = nil
-	se.Csirt = nil
+	se.SubSektor = nil
 
 	result, err := GenerateSEPDF([]dto.SEResponse{se}, "")
 	require.NoError(t, err)
@@ -259,7 +254,7 @@ func TestGenerateSEByIDPDF_NilNestedStructs(t *testing.T) {
 	se := makeSEResponse("Server Single")
 	se.Perusahaan = nil
 	se.SubSektor = nil
-	se.Csirt = nil
+	se.SubSektor = nil
 
 	result, err := GenerateSEByIDPDF(&se)
 	require.NoError(t, err)
@@ -276,7 +271,7 @@ func TestGenerateSEByIDPDF_SpecialCharsInName(t *testing.T) {
 func TestGenerateSEByIDPDF_EmptyOptionalFields(t *testing.T) {
 	se := makeSEResponse("Server Minimal")
 	se.FiturSE = ""
-	se.IDCsirt = ""
+	se.IDSubSektor = ""
 	se.IDSubSektor = ""
 
 	result, err := GenerateSEByIDPDF(&se)
@@ -328,8 +323,9 @@ func TestGenerateCsirtPDF_EmptyData(t *testing.T) {
 }
 
 func TestGenerateCsirtPDF_NilOptionalFields(t *testing.T) {
-	// TeleponCsirt nil, FileRFC, FilePGP, FileStr kosong
+	// TeleponCsirt nil, EmailCsirt nil, FileRFC, FilePGP, FileStr kosong
 	csirt := makeCsirtResponse("CSIRT Minimal")
+	csirt.EmailCsirt = nil
 	csirt.TeleponCsirt = nil
 	csirt.FileRFC2350 = ""
 	csirt.FilePublicKeyPGP = ""
@@ -337,7 +333,27 @@ func TestGenerateCsirtPDF_NilOptionalFields(t *testing.T) {
 	csirt.PhotoCsirt = ""
 	csirt.TanggalRegistrasi = ""
 	csirt.TanggalKadaluarsa = ""
-	csirt.TanggalRegistrasiUlang = ""
+
+	result, err := GenerateCsirtPDF([]dto.CsirtResponse{csirt}, "")
+	require.NoError(t, err)
+	assert.True(t, isPDFBytes(result))
+}
+
+func TestGenerateCsirtPDF_WithEmail(t *testing.T) {
+	// EmailCsirt terisi → harus muncul di PDF tanpa error
+	csirt := makeCsirtResponse("CSIRT Dengan Email")
+	email := "csirt@test.go.id"
+	csirt.EmailCsirt = &email
+
+	result, err := GenerateCsirtPDF([]dto.CsirtResponse{csirt}, "")
+	require.NoError(t, err)
+	assert.True(t, isPDFBytes(result))
+}
+
+func TestGenerateCsirtPDF_EmailNilFallbackToDash(t *testing.T) {
+	// EmailCsirt nil → harus fallback ke "-" tanpa panic
+	csirt := makeCsirtResponse("CSIRT Tanpa Email")
+	csirt.EmailCsirt = nil
 
 	result, err := GenerateCsirtPDF([]dto.CsirtResponse{csirt}, "")
 	require.NoError(t, err)
@@ -378,11 +394,33 @@ func TestGenerateCsirtByIDPDF_ReturnsPDFBytes(t *testing.T) {
 
 func TestGenerateCsirtByIDPDF_NilOptionalFields(t *testing.T) {
 	csirt := makeCsirtResponse("CSIRT Single Minimal")
+	csirt.EmailCsirt = nil
 	csirt.TeleponCsirt = nil
 	csirt.FileRFC2350 = ""
 	csirt.FilePublicKeyPGP = ""
 	csirt.FileStr = ""
 	csirt.PhotoCsirt = ""
+
+	result, err := GenerateCsirtByIDPDF(&csirt)
+	require.NoError(t, err)
+	assert.True(t, isPDFBytes(result))
+}
+
+func TestGenerateCsirtByIDPDF_WithEmail(t *testing.T) {
+	// EmailCsirt terisi → harus muncul di PDF tanpa error
+	csirt := makeCsirtResponse("CSIRT Detail Dengan Email")
+	email := "detail@csirt.go.id"
+	csirt.EmailCsirt = &email
+
+	result, err := GenerateCsirtByIDPDF(&csirt)
+	require.NoError(t, err)
+	assert.True(t, isPDFBytes(result))
+}
+
+func TestGenerateCsirtByIDPDF_EmailNilFallbackToDash(t *testing.T) {
+	// EmailCsirt nil → harus fallback ke "-" tanpa panic
+	csirt := makeCsirtResponse("CSIRT Detail Tanpa Email")
+	csirt.EmailCsirt = nil
 
 	result, err := GenerateCsirtByIDPDF(&csirt)
 	require.NoError(t, err)
@@ -455,4 +493,87 @@ func TestGenerateCsirtPDF_DeterministicSize(t *testing.T) {
 	maxAllowed := len(result1) / 10
 	assert.LessOrEqual(t, diff, maxAllowed,
 		"ukuran dua PDF dari data yang sama tidak boleh berbeda >10%%")
+}
+
+// ================================================================
+// TEST: statusAda helper
+// ================================================================
+
+func TestStatusAda_NonEmptyString(t *testing.T) {
+	assert.Equal(t, "Ada", statusAda("uploads/photo/csirt.jpg"))
+	assert.Equal(t, "Ada", statusAda("rfc2350.pdf"))
+	assert.Equal(t, "Ada", statusAda("key.pgp"))
+	assert.Equal(t, "Ada", statusAda("str.pdf"))
+	assert.Equal(t, "Ada", statusAda("any-non-empty-string"))
+}
+
+func TestStatusAda_EmptyString(t *testing.T) {
+	assert.Equal(t, "-", statusAda(""))
+}
+
+// ================================================================
+// TEST: GenerateCsirtPDF — verifikasi logika status Ada/-
+// ================================================================
+
+func TestGenerateCsirtPDF_AllFilesPresent(t *testing.T) {
+	// Semua file ada → semua harus tampil "Ada" (tidak panic, PDF valid)
+	csirt := makeCsirtResponse("CSIRT Lengkap")
+	csirt.PhotoCsirt = "uploads/photo/csirt.jpg"
+	csirt.FileRFC2350 = "uploads/rfc/rfc2350.pdf"
+	csirt.FilePublicKeyPGP = "uploads/pgp/key.pgp"
+	csirt.FileStr = "uploads/str_csirt/str.pdf"
+
+	result, err := GenerateCsirtPDF([]dto.CsirtResponse{csirt}, "")
+	require.NoError(t, err)
+	assert.True(t, isPDFBytes(result))
+}
+
+func TestGenerateCsirtPDF_NoFilesUploaded(t *testing.T) {
+	// Semua file kosong → semua harus tampil "-" (tidak panic, PDF valid)
+	csirt := makeCsirtResponse("CSIRT Tanpa File")
+	csirt.PhotoCsirt = ""
+	csirt.FileRFC2350 = ""
+	csirt.FilePublicKeyPGP = ""
+	csirt.FileStr = ""
+
+	result, err := GenerateCsirtPDF([]dto.CsirtResponse{csirt}, "")
+	require.NoError(t, err)
+	assert.True(t, isPDFBytes(result))
+}
+
+func TestGenerateCsirtPDF_PartialFilesUploaded(t *testing.T) {
+	// Sebagian file ada, sebagian tidak
+	csirt := makeCsirtResponse("CSIRT Sebagian File")
+	csirt.PhotoCsirt = "photo.jpg"     // Ada
+	csirt.FileRFC2350 = ""             // -
+	csirt.FilePublicKeyPGP = "key.pgp" // Ada
+	csirt.FileStr = ""                 // -
+
+	result, err := GenerateCsirtPDF([]dto.CsirtResponse{csirt}, "")
+	require.NoError(t, err)
+	assert.True(t, isPDFBytes(result))
+}
+
+func TestGenerateCsirtByIDPDF_AllFilesPresent(t *testing.T) {
+	csirt := makeCsirtResponse("CSIRT Detail Lengkap")
+	csirt.PhotoCsirt = "uploads/photo/csirt.jpg"
+	csirt.FileRFC2350 = "uploads/rfc/rfc2350.pdf"
+	csirt.FilePublicKeyPGP = "uploads/pgp/key.pgp"
+	csirt.FileStr = "uploads/str_csirt/str.pdf"
+
+	result, err := GenerateCsirtByIDPDF(&csirt)
+	require.NoError(t, err)
+	assert.True(t, isPDFBytes(result))
+}
+
+func TestGenerateCsirtByIDPDF_NoFilesUploaded(t *testing.T) {
+	csirt := makeCsirtResponse("CSIRT Detail Tanpa File")
+	csirt.PhotoCsirt = ""
+	csirt.FileRFC2350 = ""
+	csirt.FilePublicKeyPGP = ""
+	csirt.FileStr = ""
+
+	result, err := GenerateCsirtByIDPDF(&csirt)
+	require.NoError(t, err)
+	assert.True(t, isPDFBytes(result))
 }

@@ -45,13 +45,15 @@ func (h *SdmCsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllSDM godoc
-// @Summary      List semua sdm csirt
-// @Description  Mengambil seluruh data sdm csirt
-// @Tags         SDM
-// @Produce      json
-// @Success      200  {array}  dto.SdmCsirtResponse
-// @Failure      500  {object} dto.ErrorResponse
-// @Router       /api/sdm_csirt [get]
+//
+//	@Summary		List semua sdm csirt
+//	@Description	Mengambil seluruh data sdm csirt
+//	@Tags			SDM
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{array}		dto.SdmCsirtResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/sdm_csirt [get]
 func (h *SdmCsirtHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
@@ -92,14 +94,16 @@ func (h *SdmCsirtHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetSDMByID godoc
-// @Summary      Ambil sdm csirt berdasarkan ID
-// @Description  Mengambil satu data sdm csirt
-// @Tags         SDM
-// @Produce      json
-// @Param        id   path      string  true  "SDM ID"
-// @Success      200  {object} dto.SdmCsirtResponse
-// @Failure      404  {object} dto.ErrorResponse
-// @Router       /api/sdm_csirt/{id} [get]
+//
+//	@Summary		Ambil sdm csirt berdasarkan ID
+//	@Description	Mengambil satu data sdm csirt
+//	@Tags			SDM
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"SDM ID"
+//	@Success		200	{object}	dto.SdmCsirtResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Router			/api/sdm_csirt/{id} [get]
 func (h *SdmCsirtHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -121,15 +125,17 @@ func (h *SdmCsirtHandler) handleGetByID(w http.ResponseWriter, r *http.Request, 
 }
 
 // CreateSDM godoc
-// @Summary      Tambah sdm csirt baru
-// @Description  Membuat record sdm csirt
-// @Tags         SDM
-// @Accept       json
-// @Produce      json
-// @Param        sdm body dto.CreateSdmCsirtRequest true "Data sdm csirt"
-// @Success      201  {object} dto.SdmCsirtResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/sdm_csirt [post]
+//
+//	@Summary		Tambah sdm csirt baru
+//	@Description	Membuat record sdm csirt
+//	@Tags			SDM
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			sdm	body		dto.CreateSdmCsirtRequest	true	"Data sdm csirt"
+//	@Success		201	{object}	dto.SdmCsirtResponse
+//	@Failure		400	{object}	dto.ErrorResponse
+//	@Router			/api/sdm_csirt [post]
 func (h *SdmCsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateSdmCsirtRequest
 	json.NewDecoder(r.Body).Decode(&req)
@@ -179,16 +185,18 @@ func (h *SdmCsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateSDM godoc
-// @Summary      Update sdm csirt
-// @Description  Mengubah data sdm csirt berdasarkan ID
-// @Tags         SDM
-// @Accept       json
-// @Produce      json
-// @Param        id      path      string  true  "SDM ID"
-// @Param        sdm body      dto.UpdateSdmCsirtRequest true "Data update"
-// @Success      200  {object} dto.SdmCsirtResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/sdm_csirt/{id} [put]
+//
+//	@Summary		Update sdm csirt
+//	@Description	Mengubah data sdm csirt berdasarkan ID
+//	@Tags			SDM
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string						true	"SDM ID"
+//	@Param			sdm	body		dto.UpdateSdmCsirtRequest	true	"Data update"
+//	@Success		200	{object}	dto.SdmCsirtResponse
+//	@Failure		400	{object}	dto.ErrorResponse
+//	@Router			/api/sdm_csirt/{id} [put]
 func (h *SdmCsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	role := middleware.GetRole(r.Context())
 	if role == "user" {
@@ -230,14 +238,16 @@ func (h *SdmCsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 }
 
 // DeleteSDM godoc
-// @Summary      Hapus sdm csirt
-// @Description  Menghapus data sdm csirt berdasarkan ID
-// @Tags         SDM
-// @Produce      json
-// @Param        id  path  string  true  "SDM ID"
-// @Success      200  {object} dto.MessageResponse
-// @Failure      400  {object} dto.ErrorResponse
-// @Router       /api/sdm_csirt/{id} [delete]
+//
+//	@Summary		Hapus sdm csirt
+//	@Description	Menghapus data sdm csirt berdasarkan ID
+//	@Tags			SDM
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"SDM ID"
+//	@Success		200	{object}	dto.MessageResponse
+//	@Failure		400	{object}	dto.ErrorResponse
+//	@Router			/api/sdm_csirt/{id} [delete]
 func (h *SdmCsirtHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	role := middleware.GetRole(r.Context())
 	if role == "user" {

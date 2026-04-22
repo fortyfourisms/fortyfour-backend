@@ -1,0 +1,11 @@
+DROP TABLE IF EXISTS sertifikat;
+DROP TABLE IF EXISTS catatan_pribadi;
+DROP TABLE IF EXISTS diskusi;
+DROP TABLE IF EXISTS kuis_jawaban;
+DROP TABLE IF EXISTS kuis_attempt;
+DROP TABLE IF EXISTS pilihan_jawaban;
+DROP TABLE IF EXISTS soal;
+DROP TABLE IF EXISTS kuis;
+DROP TABLE IF EXISTS file_pendukung;
+DROP TABLE IF EXISTS user_materi_progress;
+DROP TABLE IF EXISTS materi;

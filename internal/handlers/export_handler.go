@@ -5,11 +5,15 @@ import (
 	"net/http"
 	"strings"
 
+	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/pkg/logger"
 )
+
+// Ensure dto types are available for swagger type resolution.
+var _ dto.ErrorResponse
 
 // SEExportHandler handles PDF export endpoints for SE data.
 type SEExportHandler struct {
@@ -59,15 +63,17 @@ func (h *SEExportHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleExportAll
-// @Summary      Export semua SE ke PDF
-// @Description  Admin: export semua SE, atau filter by id_perusahaan. User: hanya milik perusahaannya.
-// @Tags         SE Export
-// @Produce      application/pdf
-// @Param        id_perusahaan query string false "Filter by ID Perusahaan (admin only)"
-// @Success      200 {file} binary
-// @Failure      403 {object} dto.ErrorResponse
-// @Failure      500 {object} dto.ErrorResponse
-// @Router       /api/se/export-pdf [get]
+//
+//	@Summary		Export semua SE ke PDF
+//	@Description	Admin: export semua SE, atau filter by id_perusahaan. User: hanya milik perusahaannya.
+//	@Tags			SE Export
+//	@Produce		application/pdf
+//	@Security		BearerAuth
+//	@Param			id_perusahaan	query		string	false	"Filter by ID Perusahaan (admin only)"
+//	@Success		200				{file}		binary
+//	@Failure		403				{object}	dto.ErrorResponse
+//	@Failure		500				{object}	dto.ErrorResponse
+//	@Router			/api/se/export-pdf [get]
 func (h *SEExportHandler) handleExportAll(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
@@ -87,13 +93,18 @@ func (h *SEExportHandler) handleExportAll(w http.ResponseWriter, r *http.Request
 			pdfBytes, err = h.exportService.ExportAllPDF()
 		}
 	} else {
-		// User biasa: paksa pakai id_perusahaan dari JWT, query param diabaikan
-		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
-		if idPerusahaan == "" {
+		idFromJWT := middleware.GetIDPerusahaan(r.Context())
+		if idFromJWT == "" {
 			utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
 			return
 		}
-		pdfBytes, err = h.exportService.ExportByPerusahaanPDF(idPerusahaan)
+		// Jika user menyertakan query param id_perusahaan, validasi bahwa itu miliknya sendiri
+		idFromQuery := strings.TrimSpace(r.URL.Query().Get("id_perusahaan"))
+		if idFromQuery != "" && idFromQuery != idFromJWT {
+			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data perusahaan tersebut")
+			return
+		}
+		pdfBytes, err = h.exportService.ExportByPerusahaanPDF(idFromJWT)
 	}
 
 	if err != nil {
@@ -106,16 +117,18 @@ func (h *SEExportHandler) handleExportAll(w http.ResponseWriter, r *http.Request
 }
 
 // handleExportByID
-// @Summary      Export satu SE ke PDF
-// @Description  Export data SE berdasarkan ID. User hanya bisa akses SE milik perusahaannya.
-// @Tags         SE Export
-// @Produce      application/pdf
-// @Param        id path string true "SE ID"
-// @Success      200 {file} binary
-// @Failure      403 {object} dto.ErrorResponse
-// @Failure      404 {object} dto.ErrorResponse
-// @Failure      500 {object} dto.ErrorResponse
-// @Router       /api/se/{id}/export-pdf [get]
+//
+//	@Summary		Export satu SE ke PDF
+//	@Description	Export data SE berdasarkan ID. User hanya bisa akses SE milik perusahaannya.
+//	@Tags			SE Export
+//	@Produce		application/pdf
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"SE ID"
+//	@Success		200	{file}		binary
+//	@Failure		403	{object}	dto.ErrorResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/se/{id}/export-pdf [get]
 func (h *SEExportHandler) handleExportByID(w http.ResponseWriter, r *http.Request, id string) {
 	se, pdfBytes, err := h.exportService.ExportByIDPDF(id)
 	if err != nil {
@@ -197,15 +210,17 @@ func (h *CsirtExportHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleExportAll
-// @Summary      Export semua CSIRT ke PDF
-// @Description  Admin: export semua CSIRT, atau filter by id_perusahaan. User: hanya milik perusahaannya.
-// @Tags         CSIRT Export
-// @Produce      application/pdf
-// @Param        id_perusahaan query string false "Filter by ID Perusahaan (admin only)"
-// @Success      200 {file} binary
-// @Failure      403 {object} dto.ErrorResponse
-// @Failure      500 {object} dto.ErrorResponse
-// @Router       /api/csirt/export-pdf [get]
+//
+//	@Summary		Export semua CSIRT ke PDF
+//	@Description	Admin: export semua CSIRT, atau filter by id_perusahaan. User: hanya milik perusahaannya.
+//	@Tags			CSIRT Export
+//	@Produce		application/pdf
+//	@Security		BearerAuth
+//	@Param			id_perusahaan	query		string	false	"Filter by ID Perusahaan (admin only)"
+//	@Success		200				{file}		binary
+//	@Failure		403				{object}	dto.ErrorResponse
+//	@Failure		500				{object}	dto.ErrorResponse
+//	@Router			/api/csirt/export-pdf [get]
 func (h *CsirtExportHandler) handleExportAll(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
@@ -222,12 +237,18 @@ func (h *CsirtExportHandler) handleExportAll(w http.ResponseWriter, r *http.Requ
 			pdfBytes, err = h.exportService.ExportAllPDF()
 		}
 	} else {
-		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
-		if idPerusahaan == "" {
+		idFromJWT := middleware.GetIDPerusahaan(r.Context())
+		if idFromJWT == "" {
 			utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
 			return
 		}
-		pdfBytes, err = h.exportService.ExportByPerusahaanPDF(idPerusahaan)
+		// Jika user menyertakan query param id_perusahaan, validasi bahwa itu miliknya sendiri
+		idFromQuery := strings.TrimSpace(r.URL.Query().Get("id_perusahaan"))
+		if idFromQuery != "" && idFromQuery != idFromJWT {
+			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data perusahaan tersebut")
+			return
+		}
+		pdfBytes, err = h.exportService.ExportByPerusahaanPDF(idFromJWT)
 	}
 
 	if err != nil {
@@ -240,16 +261,18 @@ func (h *CsirtExportHandler) handleExportAll(w http.ResponseWriter, r *http.Requ
 }
 
 // handleExportByID
-// @Summary      Export satu CSIRT ke PDF
-// @Description  Export data CSIRT berdasarkan ID. User hanya bisa akses CSIRT milik perusahaannya.
-// @Tags         CSIRT Export
-// @Produce      application/pdf
-// @Param        id path string true "CSIRT ID"
-// @Success      200 {file} binary
-// @Failure      403 {object} dto.ErrorResponse
-// @Failure      404 {object} dto.ErrorResponse
-// @Failure      500 {object} dto.ErrorResponse
-// @Router       /api/csirt/{id}/export-pdf [get]
+//
+//	@Summary		Export satu CSIRT ke PDF
+//	@Description	Export data CSIRT berdasarkan ID. User hanya bisa akses CSIRT milik perusahaannya.
+//	@Tags			CSIRT Export
+//	@Produce		application/pdf
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"CSIRT ID"
+//	@Success		200	{file}		binary
+//	@Failure		403	{object}	dto.ErrorResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/csirt/{id}/export-pdf [get]
 func (h *CsirtExportHandler) handleExportByID(w http.ResponseWriter, r *http.Request, id string) {
 	csirt, pdfBytes, err := h.exportService.ExportByIDPDF(id)
 	if err != nil {

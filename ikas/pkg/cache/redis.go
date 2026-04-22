@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"fortyfour-backend/pkg/logger"
+
 	"github.com/redis/go-redis/v9"
 )
 

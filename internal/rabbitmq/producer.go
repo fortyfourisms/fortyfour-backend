@@ -66,17 +66,6 @@ func (p *Producer) PublishPicDeleted(ctx context.Context, event dto_event.PicDel
 	return p.Publish(ctx, "pic.events", "pic.deleted", event)
 }
 
-// Jabatan
-func (p *Producer) PublishJabatanCreated(ctx context.Context, event dto_event.JabatanCreatedEvent) error {
-	return p.Publish(ctx, "jabatan.events", "jabatan.created", event)
-}
-func (p *Producer) PublishJabatanUpdated(ctx context.Context, event dto_event.JabatanUpdatedEvent) error {
-	return p.Publish(ctx, "jabatan.events", "jabatan.updated", event)
-}
-func (p *Producer) PublishJabatanDeleted(ctx context.Context, event dto_event.JabatanDeletedEvent) error {
-	return p.Publish(ctx, "jabatan.events", "jabatan.deleted", event)
-}
-
 // SDM CSIRT
 func (p *Producer) PublishSdmCsirtCreated(ctx context.Context, event dto_event.SdmCsirtCreatedEvent) error {
 	return p.Publish(ctx, "sdm_csirt.events", "sdm_csirt.created", event)

@@ -1,62 +1,32 @@
 package services
 
 import (
-	"encoding/json"
-	"fmt"
 	"time"
 
 	"fortyfour-backend/internal/models"
-	"fortyfour-backend/pkg/cache"
-
-	"github.com/google/uuid"
+	"fortyfour-backend/internal/repository"
 )
 
-const (
-	// Format key Redis untuk notifikasi per user
-	// notif:{user_id} → JSON array of Notification
-	notifKeyPrefix = "notif:"
-)
-
-// NotificationService mengelola notifikasi user di Redis
+// NotificationService mengelola notifikasi user di MySQL (history)
 type NotificationService struct {
-	rc cache.RedisInterface
+	repo repository.NotificationRepositoryInterface
 }
 
-func NewNotificationService(rc cache.RedisInterface) *NotificationService {
-	return &NotificationService{rc: rc}
+func NewNotificationService(repo repository.NotificationRepositoryInterface) *NotificationService {
+	return &NotificationService{repo: repo}
 }
 
-// redisKey mengembalikan key Redis untuk notifikasi user
-func (s *NotificationService) redisKey(userID string) string {
-	return fmt.Sprintf("%s%s", notifKeyPrefix, userID)
-}
-
-// GetAll mengambil semua notifikasi milik user
-func (s *NotificationService) GetAll(userID string) ([]models.Notification, error) {
-	key := s.redisKey(userID)
-	raw, err := s.rc.Get(key)
-	if err != nil {
-		// Jika key tidak ada, kembalikan slice kosong (bukan error)
-		return []models.Notification{}, nil
+// GetAll mengambil semua notifikasi milik user dari database
+func (s *NotificationService) GetAll(userID string, role string) ([]models.Notification, error) {
+	if role == "admin" {
+		return s.repo.FindAll()
 	}
-
-	var notifs []models.Notification
-	if err := json.Unmarshal([]byte(raw), &notifs); err != nil {
-		return nil, fmt.Errorf("gagal membaca notifikasi: %w", err)
-	}
-	return notifs, nil
+	return s.repo.FindAllByUserID(userID)
 }
 
-// Push menambahkan notifikasi baru ke daftar notifikasi user.
-// Notifikasi disimpan tanpa TTL (persistent sampai di-dismiss user).
+// Push menambahkan notifikasi baru ke database
 func (s *NotificationService) Push(userID string, notifType models.NotificationType, message string) error {
-	notifs, err := s.GetAll(userID)
-	if err != nil {
-		return err
-	}
-
-	newNotif := models.Notification{
-		ID:        uuid.New().String(),
+	newNotif := &models.Notification{
 		UserID:    userID,
 		Type:      notifType,
 		Message:   message,
@@ -64,81 +34,32 @@ func (s *NotificationService) Push(userID string, notifType models.NotificationT
 		CreatedAt: time.Now(),
 	}
 
-	notifs = append([]models.Notification{newNotif}, notifs...) // prepend agar terbaru di atas
-
-	return s.save(userID, notifs)
+	return s.repo.Create(newNotif)
 }
 
 // MarkRead menandai satu notifikasi sebagai sudah dibaca
-func (s *NotificationService) MarkRead(userID, notifID string) error {
-	notifs, err := s.GetAll(userID)
-	if err != nil {
-		return err
-	}
-
-	found := false
-	for i := range notifs {
-		if notifs[i].ID == notifID {
-			notifs[i].Read = true
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		return fmt.Errorf("notifikasi tidak ditemukan")
-	}
-
-	return s.save(userID, notifs)
+func (s *NotificationService) MarkRead(userID string, notifID int64) error {
+	return s.repo.MarkRead(userID, notifID)
 }
 
 // MarkAllRead menandai semua notifikasi user sebagai sudah dibaca
 func (s *NotificationService) MarkAllRead(userID string) error {
-	notifs, err := s.GetAll(userID)
-	if err != nil {
-		return err
-	}
-
-	for i := range notifs {
-		notifs[i].Read = true
-	}
-
-	return s.save(userID, notifs)
+	return s.repo.MarkAllRead(userID)
 }
 
 // Delete menghapus satu notifikasi berdasarkan ID
-func (s *NotificationService) Delete(userID, notifID string) error {
-	notifs, err := s.GetAll(userID)
-	if err != nil {
-		return err
-	}
-
-	filtered := make([]models.Notification, 0, len(notifs))
-	found := false
-	for _, n := range notifs {
-		if n.ID == notifID {
-			found = true
-			continue
-		}
-		filtered = append(filtered, n)
-	}
-
-	if !found {
-		return fmt.Errorf("notifikasi tidak ditemukan")
-	}
-
-	return s.save(userID, filtered)
+func (s *NotificationService) Delete(userID string, notifID int64) error {
+	return s.repo.Delete(userID, notifID)
 }
 
 // DeleteAll menghapus semua notifikasi milik user
 func (s *NotificationService) DeleteAll(userID string) error {
-	return s.rc.Delete(s.redisKey(userID))
+	return s.repo.DeleteAllByUserID(userID)
 }
 
 // HasPasswordExpirySoonNotif mengecek apakah sudah ada notifikasi password expiry soon
-// untuk menghindari duplikasi notifikasi di setiap login
 func (s *NotificationService) HasPasswordExpirySoonNotif(userID string) (bool, error) {
-	notifs, err := s.GetAll(userID)
+	notifs, err := s.repo.FindAllByUserID(userID)
 	if err != nil {
 		return false, err
 	}
@@ -151,12 +72,17 @@ func (s *NotificationService) HasPasswordExpirySoonNotif(userID string) (bool, e
 	return false, nil
 }
 
-// save menyimpan kembali slice notifikasi ke Redis tanpa TTL
-func (s *NotificationService) save(userID string, notifs []models.Notification) error {
-	data, err := json.Marshal(notifs)
+// HasSTRExpirySoonNotif mengecek apakah sudah ada notifikasi STR expiry soon
+func (s *NotificationService) HasSTRExpirySoonNotif(userID string) (bool, error) {
+	notifs, err := s.repo.FindAllByUserID(userID)
 	if err != nil {
-		return fmt.Errorf("gagal menyimpan notifikasi: %w", err)
+		return false, err
 	}
-	// TTL 0 → tidak expired (persistent)
-	return s.rc.Set(s.redisKey(userID), string(data), 0)
+
+	for _, n := range notifs {
+		if n.Type == models.NotifSTRExpirySoon && !n.Read {
+			return true, nil
+		}
+	}
+	return false, nil
 }

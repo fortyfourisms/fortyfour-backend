@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
 	"strings"
 	"sync"
@@ -277,7 +278,7 @@ func (m *MockUserRepository) UpdateWithPhoto(user *models.User) error {
 			u.Username = user.Username
 			u.Email = user.Email
 			u.RoleID = user.RoleID
-			u.IDJabatan = user.IDJabatan
+			u.Jabatan = user.Jabatan
 			u.FotoProfile = user.FotoProfile
 			u.Banner = user.Banner
 			u.UpdatedAt = user.UpdatedAt
@@ -568,82 +569,6 @@ func NewMockRoleRepositoryWithDefaults() *MockRoleRepository {
 	return repo
 }
 
-// ============================================================
-// Mock Jabatan Repository
-// ============================================================
-
-type MockJabatanRepository struct {
-	jabatans map[string]*dto.JabatanResponse
-	mu       sync.RWMutex
-}
-
-func NewMockJabatanRepository() *MockJabatanRepository {
-	return &MockJabatanRepository{
-		jabatans: make(map[string]*dto.JabatanResponse),
-	}
-}
-
-func (m *MockJabatanRepository) Create(req dto.CreateJabatanRequest, id string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	nama := ""
-	if req.NamaJabatan != nil {
-		nama = *req.NamaJabatan
-	}
-
-	m.jabatans[id] = &dto.JabatanResponse{
-		ID:          id,
-		NamaJabatan: nama,
-		CreatedAt:   time.Now().Format("2006-01-02 15:04:05"),
-		UpdatedAt:   time.Now().Format("2006-01-02 15:04:05"),
-	}
-	return nil
-}
-
-func (m *MockJabatanRepository) GetAll() ([]dto.JabatanResponse, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	jabatans := make([]dto.JabatanResponse, 0, len(m.jabatans))
-	for _, j := range m.jabatans {
-		jabatans = append(jabatans, *j)
-	}
-	return jabatans, nil
-}
-
-func (m *MockJabatanRepository) GetByID(id string) (*dto.JabatanResponse, error) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	jabatan, exists := m.jabatans[id]
-	if !exists {
-		return nil, errors.New("jabatan not found")
-	}
-	return jabatan, nil
-}
-
-func (m *MockJabatanRepository) Update(id string, jabatan dto.JabatanResponse) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if _, exists := m.jabatans[id]; !exists {
-		return errors.New("jabatan not found")
-	}
-	m.jabatans[id] = &jabatan
-	return nil
-}
-
-func (m *MockJabatanRepository) Delete(id string) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if _, exists := m.jabatans[id]; !exists {
-		return errors.New("jabatan not found")
-	}
-	delete(m.jabatans, id)
-	return nil
-}
 
 // ============================================================
 // Mock PIC Repository
@@ -1001,3 +926,106 @@ func (m *MockPerusahaanService) Delete(id string) error {
 	delete(m.perusahaans, id)
 	return nil
 }
+
+// ============================================================
+// Mock Notification Repository
+// ============================================================
+
+type MockNotificationRepository struct {
+	Notifications     map[string][]models.Notification
+	FindAllByUserIDFn func(userID string) ([]models.Notification, error)
+	mu                sync.RWMutex
+}
+
+func NewMockNotificationRepository() *MockNotificationRepository {
+	return &MockNotificationRepository{
+		Notifications: make(map[string][]models.Notification),
+	}
+}
+
+func (m *MockNotificationRepository) FindAll() ([]models.Notification, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var all []models.Notification
+	for _, notifs := range m.Notifications {
+		all = append(all, notifs...)
+	}
+	return all, nil
+}
+
+func (m *MockNotificationRepository) Create(notif *models.Notification) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if notif.ID == 0 {
+		notif.ID = int64(len(m.Notifications[notif.UserID]) + 1)
+	}
+	m.Notifications[notif.UserID] = append([]models.Notification{*notif}, m.Notifications[notif.UserID]...)
+	return nil
+}
+
+func (m *MockNotificationRepository) FindAllByUserID(userID string) ([]models.Notification, error) {
+	if m.FindAllByUserIDFn != nil {
+		return m.FindAllByUserIDFn(userID)
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	notifs, ok := m.Notifications[userID]
+	if !ok {
+		return []models.Notification{}, nil
+	}
+	return notifs, nil
+}
+
+func (m *MockNotificationRepository) MarkRead(userID string, notifID int64) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	notifs, ok := m.Notifications[userID]
+	if !ok {
+		return errors.New("notifikasi tidak ditemukan")
+	}
+	for i := range notifs {
+		if notifs[i].ID == notifID {
+			notifs[i].Read = true
+			return nil
+		}
+	}
+	return errors.New("notifikasi tidak ditemukan")
+}
+
+func (m *MockNotificationRepository) MarkAllRead(userID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	notifs := m.Notifications[userID]
+	for i := range notifs {
+		notifs[i].Read = true
+	}
+	m.Notifications[userID] = notifs
+	return nil
+}
+
+func (m *MockNotificationRepository) Delete(userID string, notifID int64) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	notifs, ok := m.Notifications[userID]
+	if !ok {
+		return errors.New("notifikasi tidak ditemukan")
+	}
+	filtered := make([]models.Notification, 0, len(notifs))
+	for _, n := range notifs {
+		if n.ID == notifID {
+			continue
+		}
+		filtered = append(filtered, n)
+	}
+	m.Notifications[userID] = filtered
+	return nil
+}
+
+func (m *MockNotificationRepository) DeleteAllByUserID(userID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.Notifications, userID)
+	return nil
+}
+
+var _ repository.NotificationRepositoryInterface = (*MockNotificationRepository)(nil)

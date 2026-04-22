@@ -100,7 +100,7 @@ func (m *mockCsirtServiceForSdm) Delete(id string) error { return nil }
 //
 
 func newSdmHandler(mockSvc *mockSdmCsirtService) *SdmCsirtHandler {
-	sseService := services.NewSSEService()
+	sseService := services.NewSSEService(nil)
 	return NewSdmCsirtHandler(mockSvc, &mockCsirtServiceForSdm{}, sseService)
 }
 
@@ -432,7 +432,7 @@ func (m *mockCsirtForOwnership) Update(id string, req dto.UpdateCsirtRequest) (*
 func (m *mockCsirtForOwnership) Delete(id string) error { return nil }
 
 func newSdmHandlerWithOwnership(sdmSvc *mockSdmCsirtService, perusahaanID, csirtID string) *SdmCsirtHandler {
-	sseService := services.NewSSEService()
+	sseService := services.NewSSEService(nil)
 	csirtSvc := &mockCsirtForOwnership{csirtID: csirtID, perusahaanID: perusahaanID}
 	return NewSdmCsirtHandler(sdmSvc, csirtSvc, sseService)
 }
@@ -480,7 +480,7 @@ func TestSdmCsirtHandler_GetAll_AsUser_NoPerusahaan_Forbidden(t *testing.T) {
 func TestSdmCsirtHandler_GetAll_AsUser_NoCsirtForPerusahaan_Empty(t *testing.T) {
 	// Perusahaan tidak punya CSIRT — return empty
 	sdmSvc := &mockSdmCsirtService{}
-	sseService := services.NewSSEService()
+	sseService := services.NewSSEService(nil)
 	// csirt service return 0 csirt untuk perusahaan ini
 	csirtSvc := &mockCsirtForOwnership{csirtID: "", perusahaanID: "perusahaan-lain"}
 	handler := NewSdmCsirtHandler(sdmSvc, csirtSvc, sseService)

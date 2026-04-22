@@ -25,6 +25,7 @@ Thumbs.db
 # Go
 vendor/
 nginx/
+uploads/
 
 .agent/
 scripts/

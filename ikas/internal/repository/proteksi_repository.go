@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"ikas/internal/models"
+	"strconv"
 )
 
 type ProteksiRepository struct {
@@ -14,7 +15,7 @@ func NewProteksiRepository(db *sql.DB) *ProteksiRepository {
 }
 
 func (r *ProteksiRepository) GetAll() ([]models.Proteksi, error) {
-	query := `SELECT id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
+	query := `SELECT id, ikas_id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
 	          nilai_subdomain3, nilai_subdomain4, nilai_subdomain5, nilai_subdomain6 
 	          FROM proteksi 
 	          ORDER BY id DESC`
@@ -30,6 +31,43 @@ func (r *ProteksiRepository) GetAll() ([]models.Proteksi, error) {
 		var proteksi models.Proteksi
 		err := rows.Scan(
 			&proteksi.ID,
+			&proteksi.IkasID,
+			&proteksi.NilaiProteksi,
+			&proteksi.NilaiSubdomain1,
+			&proteksi.NilaiSubdomain2,
+			&proteksi.NilaiSubdomain3,
+			&proteksi.NilaiSubdomain4,
+			&proteksi.NilaiSubdomain5,
+			&proteksi.NilaiSubdomain6,
+		)
+		if err != nil {
+			return nil, err
+		}
+		proteksiList = append(proteksiList, proteksi)
+	}
+
+	return proteksiList, nil
+}
+
+func (r *ProteksiRepository) GetByIkasID(ikasID string) ([]models.Proteksi, error) {
+	query := `SELECT id, ikas_id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
+	          nilai_subdomain3, nilai_subdomain4, nilai_subdomain5, nilai_subdomain6 
+	          FROM proteksi 
+	          WHERE ikas_id = ?
+	          ORDER BY id DESC`
+
+	rows, err := r.db.Query(query, ikasID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var proteksiList []models.Proteksi
+	for rows.Next() {
+		var proteksi models.Proteksi
+		err := rows.Scan(
+			&proteksi.ID,
+			&proteksi.IkasID,
 			&proteksi.NilaiProteksi,
 			&proteksi.NilaiSubdomain1,
 			&proteksi.NilaiSubdomain2,
@@ -49,13 +87,14 @@ func (r *ProteksiRepository) GetAll() ([]models.Proteksi, error) {
 
 func (r *ProteksiRepository) GetByID(id string) (*models.Proteksi, error) {
 	var proteksi models.Proteksi
-	query := `SELECT id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
+	query := `SELECT id, ikas_id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, 
 	          nilai_subdomain3, nilai_subdomain4, nilai_subdomain5, nilai_subdomain6 
 	          FROM proteksi 
 	          WHERE id = ?`
 
 	err := r.db.QueryRow(query, id).Scan(
 		&proteksi.ID,
+		&proteksi.IkasID,
 		&proteksi.NilaiProteksi,
 		&proteksi.NilaiSubdomain1,
 		&proteksi.NilaiSubdomain2,
@@ -73,4 +112,62 @@ func (r *ProteksiRepository) GetByID(id string) (*models.Proteksi, error) {
 	}
 
 	return &proteksi, nil
+}
+func (r *ProteksiRepository) GetByPerusahaanID(perusahaanID string) ([]models.Proteksi, error) {
+	query := `SELECT t.id, t.ikas_id, t.nilai_proteksi, t.nilai_subdomain1, t.nilai_subdomain2, 
+	          t.nilai_subdomain3, t.nilai_subdomain4, t.nilai_subdomain5, t.nilai_subdomain6 
+	          FROM proteksi t
+	          JOIN ikas i ON t.ikas_id = i.id
+	          WHERE i.id_perusahaan = ?
+	          ORDER BY t.id DESC`
+
+	rows, err := r.db.Query(query, perusahaanID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var proteksiList []models.Proteksi
+	for rows.Next() {
+		var proteksi models.Proteksi
+		err := rows.Scan(
+			&proteksi.ID,
+			&proteksi.IkasID,
+			&proteksi.NilaiProteksi,
+			&proteksi.NilaiSubdomain1,
+			&proteksi.NilaiSubdomain2,
+			&proteksi.NilaiSubdomain3,
+			&proteksi.NilaiSubdomain4,
+			&proteksi.NilaiSubdomain5,
+			&proteksi.NilaiSubdomain6,
+		)
+		if err != nil {
+			return nil, err
+		}
+		proteksiList = append(proteksiList, proteksi)
+	}
+
+	return proteksiList, nil
+}
+
+func (r *ProteksiRepository) CloneByIkasID(sourceIkasID, targetIkasID string) (string, error) {
+	query := `
+		INSERT INTO proteksi 
+			(ikas_id, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4, nilai_subdomain5, nilai_subdomain6)
+		SELECT 
+			?, nilai_proteksi, nilai_subdomain1, nilai_subdomain2, nilai_subdomain3, nilai_subdomain4, nilai_subdomain5, nilai_subdomain6
+		FROM proteksi 
+		WHERE ikas_id = ?`
+
+	res, err := r.db.Exec(query, targetIkasID, sourceIkasID)
+	if err != nil {
+		return "", err
+	}
+
+	lastID, err := res.LastInsertId()
+	if err != nil {
+		return "", err
+	}
+
+	return strconv.FormatInt(lastID, 10), nil
 }
