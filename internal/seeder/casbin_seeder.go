@@ -49,7 +49,6 @@ var defaultPolicies = []Policy{
 	{"user", "/api/pic/:id", "PUT"},
 	{"user", "/api/pic/:id", "DELETE"},
 
-
 	// Perusahaan (user hanya bisa lihat dan update miliknya sendiri)
 	{"user", "/api/perusahaan", "GET"},
 	{"user", "/api/perusahaan/:id", "GET"},

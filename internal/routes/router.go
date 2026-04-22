@@ -106,7 +106,6 @@ func InitRouter(
 	mux.HandleFunc("/api/pic", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(picH)))))
 	mux.HandleFunc("/api/pic/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(picH)))))
 
-
 	// Route IKAS (Proxy to Microservice)
 	mux.Handle("/api/maturity/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(ikasProxyH.ServeHTTP))))
 	mux.Handle("/api/maturity", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(ikasProxyH.ServeHTTP))))
