@@ -74,6 +74,41 @@ func trimID(path, prefix string) string {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
+// PUBLIC KELAS  —  /api/public/kelas (tanpa auth, landing page)
+// ════════════════════════════════════════════════════════════════════════════
+
+// ServePublicKelas menangani endpoint publik untuk kelas (tanpa auth).
+// GET /api/public/kelas       → list kelas published
+// GET /api/public/kelas/{id}  → detail kelas (tanpa progress user)
+func (h *LMSHandler) ServePublicKelas(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	id := trimID(r.URL.Path, "/api/public/kelas")
+	if id == "" {
+		// List semua kelas yang statusnya 'published'
+		data, err := h.kelasSvc.GetAll(true)
+		if err != nil {
+			logger.Error(err, "publicKelasGetAll failed")
+			utils.RespondError(w, 500, err.Error())
+			return
+		}
+		utils.RespondJSON(w, 200, data)
+	} else {
+		// Detail kelas tanpa userID → progress di-skip oleh service
+		data, err := h.kelasSvc.GetDetail(id, "")
+		if err != nil {
+			logger.Error(err, "publicKelasGetDetail failed")
+			utils.RespondError(w, 404, err.Error())
+			return
+		}
+		utils.RespondJSON(w, 200, data)
+	}
+}
+
+// ════════════════════════════════════════════════════════════════════════════
 // KELAS  —  /api/kelas  dan  /api/kelas/{id}
 // ════════════════════════════════════════════════════════════════════════════
 

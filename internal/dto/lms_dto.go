@@ -5,27 +5,45 @@ import "fortyfour-backend/internal/models"
 // ── Kelas ────────────────────────────────────────────────────────────────────
 
 type CreateKelasRequest struct {
-	Judul     string  `json:"judul" validate:"required,min=3,max=255"`
-	Deskripsi *string `json:"deskripsi,omitempty"`
-	Thumbnail *string `json:"thumbnail,omitempty"`
+	Judul             string  `json:"judul" validate:"required,min=3,max=255"`
+	Deskripsi         *string `json:"deskripsi,omitempty"`
+	Thumbnail         *string `json:"thumbnail,omitempty"`
+	Kategori          *string `json:"kategori,omitempty"`
+	DurasiJP          *int    `json:"durasi_jp,omitempty"`
+	Penyelenggara     *string `json:"penyelenggara,omitempty"`
+	TargetPeserta     *string `json:"target_peserta,omitempty"`
+	SyaratPendaftaran *string `json:"syarat_pendaftaran,omitempty"`
+	InformasiUmum     *string `json:"informasi_umum,omitempty"`
 }
 
 type UpdateKelasRequest struct {
-	Judul     *string `json:"judul,omitempty" validate:"omitempty,min=3,max=255"`
-	Deskripsi *string `json:"deskripsi,omitempty"`
-	Thumbnail *string `json:"thumbnail,omitempty"`
-	Status    *string `json:"status,omitempty" validate:"omitempty,oneof=draft published"`
+	Judul             *string `json:"judul,omitempty" validate:"omitempty,min=3,max=255"`
+	Deskripsi         *string `json:"deskripsi,omitempty"`
+	Thumbnail         *string `json:"thumbnail,omitempty"`
+	Kategori          *string `json:"kategori,omitempty"`
+	DurasiJP          *int    `json:"durasi_jp,omitempty"`
+	Penyelenggara     *string `json:"penyelenggara,omitempty"`
+	TargetPeserta     *string `json:"target_peserta,omitempty"`
+	SyaratPendaftaran *string `json:"syarat_pendaftaran,omitempty"`
+	InformasiUmum     *string `json:"informasi_umum,omitempty"`
+	Status            *string `json:"status,omitempty" validate:"omitempty,oneof=draft published"`
 }
 
 type KelasResponse struct {
-	ID        string             `json:"id"`
-	Judul     string             `json:"judul"`
-	Deskripsi *string            `json:"deskripsi"`
-	Thumbnail *string            `json:"thumbnail"`
-	Status    models.KelasStatus `json:"status"`
-	CreatedBy string             `json:"created_by"`
-	CreatedAt string             `json:"created_at"`
-	UpdatedAt string             `json:"updated_at"`
+	ID                string             `json:"id"`
+	Judul             string             `json:"judul"`
+	Deskripsi         *string            `json:"deskripsi"`
+	Thumbnail         *string            `json:"thumbnail"`
+	Kategori          *string            `json:"kategori"`
+	DurasiJP          *int               `json:"durasi_jp"`
+	Penyelenggara     *string            `json:"penyelenggara"`
+	TargetPeserta     *string            `json:"target_peserta"`
+	SyaratPendaftaran *string            `json:"syarat_pendaftaran"`
+	InformasiUmum     *string            `json:"informasi_umum"`
+	Status            models.KelasStatus `json:"status"`
+	CreatedBy         string             `json:"created_by"`
+	CreatedAt         string             `json:"created_at"`
+	UpdatedAt         string             `json:"updated_at"`
 
 	// Disertakan saat GET detail
 	Materi     []MateriResponse    `json:"materi,omitempty"`
