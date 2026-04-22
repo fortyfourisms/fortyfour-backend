@@ -581,7 +581,7 @@ func TestRegister_WithIDPerusahaan_Success(t *testing.T) {
 	}
 }
 
-func TestRegister_WithIDPerusahaan_AlreadyHasUser_ShouldFail(t *testing.T) {
+func TestRegister_WithIDPerusahaan_MultipleUsers_ShouldSucceed(t *testing.T) {
 	perusahaanSvc := testhelpers.NewMockPerusahaanService()
 	namaP := "PT Sudah Punya User"
 	p, _ := perusahaanSvc.Create(dto.CreatePerusahaanRequest{NamaPerusahaan: &namaP})
@@ -596,7 +596,8 @@ func TestRegister_WithIDPerusahaan_AlreadyHasUser_ShouldFail(t *testing.T) {
 
 	auth := NewAuthService(repo, newMockRoleRepo(), NewTokenService(newMockRedis(), "secret", false, "localhost"), newNotifSvc(), nil)
 
-	_, _, err := auth.Register(
+	// Register user kedua ke perusahaan yang sama — harus berhasil
+	user, token, err := auth.Register(
 		dto.RegisterRequest{
 			Username:     "newuser",
 			Password:     "XyZ#91!kLmPq",
@@ -606,11 +607,14 @@ func TestRegister_WithIDPerusahaan_AlreadyHasUser_ShouldFail(t *testing.T) {
 		perusahaanSvc,
 	)
 
-	if err == nil {
-		t.Fatal("expected error karena perusahaan sudah punya akun terdaftar")
+	if err != nil {
+		t.Fatalf("expected success (multiple users per company allowed), got: %v", err)
 	}
-	if err.Error() != "perusahaan sudah terdaftar, silakan minta akun kepada admin perusahaan tersebut" {
-		t.Errorf("unexpected error message: %s", err.Error())
+	if user == nil || token == nil {
+		t.Fatal("expected user dan token, got nil")
+	}
+	if user.IDPerusahaan == nil || *user.IDPerusahaan != p.ID {
+		t.Errorf("expected IDPerusahaan '%s', got '%v'", p.ID, user.IDPerusahaan)
 	}
 }
 
