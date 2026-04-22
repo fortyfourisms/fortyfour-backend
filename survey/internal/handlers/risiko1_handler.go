@@ -202,3 +202,21 @@ func resolveErrorStatus(err error) int {
 	}
 	return http.StatusBadRequest
 }
+
+// LANJUTKAN NANTI
+func (h *RisikoHandler) SaveProgress(w http.ResponseWriter, r *http.Request) {
+	var req dto.NavigateRequest
+
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	result, err := h.svc.SaveProgress(req)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, result)
+}

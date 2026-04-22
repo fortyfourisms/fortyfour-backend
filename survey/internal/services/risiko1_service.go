@@ -254,3 +254,30 @@ func mapProgressToResponse(p *models.SurveyProgress) dto.ProgressResponse {
 		Selesai:        p.Selesai,
 	}
 }
+
+// LANJUTKAN NANTI
+func (s *RisikoService) SaveProgress(req dto.NavigateRequest) (dto.ProgressResponse, error) {
+	progress, err := s.repo.GetProgress(req.RespondenID)
+	if err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	// simpan posisi terakhir dari request
+	progress.RisikoID = sql.NullInt64{
+		Int64: int64(req.CurrentRisk),
+		Valid: true,
+	}
+
+	progress.LangkahSaatIni = sql.NullString{
+		String: "paused", // status khusus
+		Valid:  true,
+	}
+
+	progress.Selesai = false
+
+	if err := s.repo.UpsertProgress(*progress); err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	return mapProgressToResponse(progress), nil
+}
