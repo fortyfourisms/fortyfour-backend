@@ -2,76 +2,88 @@ package validation
 
 import (
 	"errors"
-	"strings"
-	"survey/internal/models"
+	"survey/internal/dto"
 )
 
 var (
-	ErrMissingRespondentID = errors.New("respondent_id wajib diisi")
-	ErrMissingReason       = errors.New("alasan wajib diisi ketika perusahaan tidak mengalami insiden")
-	ErrInvalidImpactLevel  = errors.New("nilai dampak tidak valid (harus 1–4)")
-	ErrInvalidFrequency    = errors.New("nilai frekuensi tidak valid (harus 1–4)")
-	ErrMissingControlInfo  = errors.New("tindakan pengendalian wajib diisi jika has_control = true")
+	ErrMissingRespondentID = errors.New("responden_id wajib diisi")
+	ErrMissingRisikoID     = errors.New("risiko_id wajib diisi")
+
+	ErrMissingReason = errors.New("alasan wajib diisi")
+
+	ErrInvalidImpact  = errors.New("nilai dampak harus 1-4")
+	ErrInvalidFreq    = errors.New("frekuensi harus 1-4")
+
+	ErrMissingControl = errors.New("deskripsi pengendalian wajib diisi jika ada_pengendalian = true")
 )
 
-func ValidateEligibilityRequest(req models.EligibilityRequest) error {
-	if strings.TrimSpace(req.RespondentID) == "" {
+// STEP 1 — ELIGIBILITY
+func ValidateEligibilityRequest(req dto.EligibilityRequest) error {
+	if req.RespondenID <= 0 {
 		return ErrMissingRespondentID
+	}
+	if req.RisikoID <= 0 {
+		return ErrMissingRisikoID
 	}
 	return nil
 }
 
-func ValidateReasonRequest(req models.ReasonRequest) error {
-	if strings.TrimSpace(req.RespondentID) == "" {
+// STEP 2A — ALASAN
+func ValidateAlasanRequest(req dto.AlasanRequest) error {
+	if req.RespondenID <= 0 {
 		return ErrMissingRespondentID
 	}
-	if strings.TrimSpace(req.Reason) == "" {
+	if req.RisikoID <= 0 {
+		return ErrMissingRisikoID
+	}
+	if req.Alasan == "" {
 		return ErrMissingReason
 	}
 	return nil
 }
 
-// ValidateDetailRequest — validasi Step 2b: matrix dampak + frekuensi
-// (tidak lagi termasuk validasi pengendalian — itu ada di ValidateControlRequest)
-func ValidateDetailRequest(req models.DetailRequest) error {
-	if strings.TrimSpace(req.RespondentID) == "" {
+// STEP 2B — DAMPAK
+func ValidateDampakRequest(req dto.DampakRequest) error {
+	if req.RespondenID <= 0 {
 		return ErrMissingRespondentID
 	}
-	if err := validateImpactMatrix(req.Impact); err != nil {
-		return err
+	if req.RisikoID <= 0 {
+		return ErrMissingRisikoID
 	}
-	if !req.Frequency.Valid() {
-		return ErrInvalidFrequency
+
+	// karena ImpactLevel = int (1-4)
+	if req.DampakReputasi < 1 || req.DampakReputasi > 4 {
+		return ErrInvalidImpact
 	}
+	if req.DampakOperasional < 1 || req.DampakOperasional > 4 {
+		return ErrInvalidImpact
+	}
+	if req.DampakFinansial < 1 || req.DampakFinansial > 4 {
+		return ErrInvalidImpact
+	}
+	if req.DampakHukum < 1 || req.DampakHukum > 4 {
+		return ErrInvalidImpact
+	}
+
+	if req.Frekuensi < 1 || req.Frekuensi > 4 {
+		return ErrInvalidFreq
+	}
+
 	return nil
 }
 
-// ValidateControlRequest — validasi Step 2c: tindakan pengendalian
-//
-//	has_control = true  → ControlMeasures wajib diisi
-//	has_control = false → ControlMeasures diabaikan, langsung Berikutnya
-func ValidateControlRequest(req models.ControlRequest) error {
-	if strings.TrimSpace(req.RespondentID) == "" {
+// STEP 2C — PENGENDALIAN
+func ValidatePengendalianRequest(req dto.PengendalianRequest) error {
+	if req.RespondenID <= 0 {
 		return ErrMissingRespondentID
 	}
-	if req.HasControl && strings.TrimSpace(req.ControlMeasures) == "" {
-		return ErrMissingControlInfo
+	if req.RisikoID <= 0 {
+		return ErrMissingRisikoID
 	}
-	return nil
-}
 
-func validateImpactMatrix(m models.ImpactMatrix) error {
-	if !m.Reputation.Valid() {
-		return errors.New("dampak reputasi tidak valid (harus 1–4)")
+	if req.AdaPengendalian && req.DeskripsiPengendalian == "" {
+		return ErrMissingControl
 	}
-	if !m.Operational.Valid() {
-		return errors.New("dampak operasional tidak valid (harus 1–4)")
-	}
-	if !m.Financial.Valid() {
-		return errors.New("dampak finansial tidak valid (harus 1–4)")
-	}
-	if !m.Legal.Valid() {
-		return errors.New("dampak hukum tidak valid (harus 1–4)")
-	}
+
 	return nil
 }

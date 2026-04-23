@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"survey/internal/models"
+	"strconv"
+	"strings"
+
+	"survey/internal/dto"
 	"survey/internal/repository"
 	"survey/internal/services"
 )
@@ -17,20 +20,22 @@ func NewRisikoHandler(svc *services.RisikoService) *RisikoHandler {
 	return &RisikoHandler{svc: svc}
 }
 
-// POST /api/survey/risk/ip-theft/eligibility
-// STEP 1 — Pertanyaan awal:
-//   "Apakah perusahaan Anda berpotensi mengalami atau pernah mengalami
-//    insiden pencurian Intellectual Property?"
-// Request:
-//   { "respondent_id": "R001", "has_experienced": true|false }
-// Response:
-//   { "next_step": "show_detail" }   ← jika Ya
-//   { "next_step": "show_reason" }   ← jika Tidak
-
+// STEP 1 — ELIGIBILITY
+// SubmitEligibility godoc
+// @Summary      Step 1 - Eligibility
+// @Description  Menentukan apakah responden masuk kategori risiko
+// @Tags         Risiko
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.EligibilityRequest true "Eligibility Request"
+// @Success      200 {object} map[string]interface{} "Success response"
+// @Failure      400 {object} dto.ErrorResponse "Invalid request"
+// @Router       /api/survey/risiko/eligibility [post]
 func (h *RisikoHandler) SubmitEligibility(w http.ResponseWriter, r *http.Request) {
-	var req models.EligibilityRequest
+	var req dto.EligibilityRequest
+
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
@@ -40,205 +45,301 @@ func (h *RisikoHandler) SubmitEligibility(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	writeJSON(w, http.StatusOK, models.APIResponse{
-		Success: true,
-		Message: "Jawaban eligibilitas berhasil disimpan",
-		Data:    result,
-	})
+	writeSuccess(w, result)
 }
 
-// POST /api/survey/risk/ip-theft/reason
-// STEP 2a — Alur "Tidak"
-// Syarat: has_experienced = false
-// Pertanyaan:
-//   "Mengapa perusahaan Anda tidak berpotensi mengalami atau tidak pernah
-//    mengalami insiden pencurian Intellectual Property?"
-// Request:
-//   { "respondent_id": "R001", "reason": "..." }
-// Setelah ini → Risiko 1 selesai, tombol Berikutnya aktif
+// STEP 2A — ALASAN
+// SubmitAlasan godoc
+// @Summary      Step 2A - Alasan
+// @Description  Mengisi alasan jika tidak eligible
+// @Tags         Risiko
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.AlasanRequest true "Alasan Request"
+// @Success      200 {object} map[string]interface{}
+// @Failure      400 {object} dto.ErrorResponse
+// @Failure      404 {object} dto.ErrorResponse
+// @Router       /api/survey/risiko/reason [post]
+func (h *RisikoHandler) SubmitAlasan(w http.ResponseWriter, r *http.Request) {
+	var req dto.AlasanRequest
 
-func (h *RisikoHandler) SubmitReason(w http.ResponseWriter, r *http.Request) {
-	var req models.ReasonRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	result, err := h.svc.ProcessReason(req)
+	result, err := h.svc.ProcessAlasan(req)
 	if err != nil {
 		writeError(w, resolveErrorStatus(err), err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, models.APIResponse{
-		Success: true,
-		Message: "Alasan berhasil disimpan. Risiko 1 selesai.",
-		Data:    result,
-	})
+	writeSuccess(w, result)
 }
 
-// POST /api/survey/risk/ip-theft/detail
-// STEP 2b — Alur "Ya"
-// Syarat: has_experienced = true
-// Pertanyaan:
-//   1. "Seberapa besar dampak dari pencurian Intellectual Property perusahaan?"
-//      (matrix Reputasi / Operasional / Finansial / Hukum, nilai 1–4)
-//   2. "Seberapa sering dalam setahun risiko pencurian IP berpotensi terjadi?"
-//      (Kecil=1, Sedang=2, Besar=3, Sangat Besar=4)
-// Request:
-//   {
-//     "respondent_id": "R001",
-//     "impact": {
-//       "reputation": 3, "operational": 2, "financial": 4, "legal": 2
-//     },
-//     "frequency": 3
-//   }
-// Response → next_step: "show_control"
-//   UI harus menampilkan pertanyaan tindakan pengendalian (Step 2c)
-//   sebelum tombol Berikutnya diaktifkan
+// STEP 2B — DAMPAK
+// SubmitDampak godoc
+// @Summary      Step 2B - Dampak
+// @Description  Mengisi dampak jika eligible
+// @Tags         Risiko
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.DampakRequest true "Dampak Request"
+// @Success      200 {object} map[string]interface{}
+// @Failure      400 {object} dto.ErrorResponse
+// @Failure      404 {object} dto.ErrorResponse
+// @Router       /api/survey/risiko/dampak [post]
+func (h *RisikoHandler) SubmitDampak(w http.ResponseWriter, r *http.Request) {
+	var req dto.DampakRequest
 
-func (h *RisikoHandler) SubmitDetail(w http.ResponseWriter, r *http.Request) {
-	var req models.DetailRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	result, err := h.svc.ProcessDetail(req)
+	result, err := h.svc.ProcessDampak(req)
 	if err != nil {
 		writeError(w, resolveErrorStatus(err), err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, models.APIResponse{
-		Success: true,
-		Message: "Dampak dan frekuensi berhasil disimpan",
-		Data:    result, // { next_step: "show_control" }
-	})
+	writeSuccess(w, result)
 }
 
-// POST /api/survey/risk/ip-theft/control
-// STEP 2c — Alur "Ya", sub-branching tindakan pengendalian
-// Syarat: has_experienced = true AND step 2b sudah diisi
-// Pertanyaan wajib:
-//   "Apa perusahaan Anda telah memiliki tindakan pengendalian terhadap
-//    risiko pencurian Intellectual Property?"
-//   ● Ya  → wajib mengisi:
-//            "Apa tindakan pengendalian yang telah dilakukan oleh perusahaan Anda
-//             terhadap risiko pencurian Intellectual Property perusahaan?"
-//   ● Tidak → tidak ada pertanyaan lanjutan, tombol Berikutnya langsung aktif
-// Request (has_control = Ya):
-//   {
-//     "respondent_id": "R001",
-//     "has_control": true,
-//     "control_measures": "Enkripsi data, NDA karyawan, monitoring akses sistem"
-//   }
-// Request (has_control = Tidak):
-//   {
-//     "respondent_id": "R001",
-//     "has_control": false
-//   }
-// Response → next_step: "finish"  (tombol Berikutnya aktif, Risiko 1 selesai)
+// STEP 2C — PENGENDALIAN
+// SubmitPengendalian godoc
+// @Summary      Step 2C - Pengendalian
+// @Description  Mengisi tindakan pengendalian risiko
+// @Tags         Risiko
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.PengendalianRequest true "Pengendalian Request"
+// @Success      200 {object} map[string]interface{}
+// @Failure      400 {object} dto.ErrorResponse
+// @Failure      404 {object} dto.ErrorResponse
+// @Router       /api/survey/risiko/pengendalian [post]
+func (h *RisikoHandler) SubmitPengendalian(w http.ResponseWriter, r *http.Request) {
+	var req dto.PengendalianRequest
 
-func (h *RisikoHandler) SubmitControl(w http.ResponseWriter, r *http.Request) {
-	var req models.ControlRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, http.StatusBadRequest, err.Error())
+		writeError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
-	result, err := h.svc.ProcessControl(req)
+	result, err := h.svc.ProcessPengendalian(req)
 	if err != nil {
 		writeError(w, resolveErrorStatus(err), err.Error())
 		return
 	}
 
-	msg := "Tindakan pengendalian disimpan. Risiko 1 selesai."
-	if !req.HasControl {
-		msg = "Tidak ada tindakan pengendalian. Risiko 1 selesai."
-	}
-
-	writeJSON(w, http.StatusOK, models.APIResponse{
-		Success: true,
-		Message: msg,
-		Data:    result, // { next_step: "finish" }
-	})
+	writeSuccess(w, result)
 }
 
-// GET /api/survey/risk/ip-theft/{respondent_id}
+// GET RISIKO BY RESPONDENT
+// GetByRespondentID godoc
+// @Summary      Get Risiko by Responden
+// @Description  Mengambil data risiko berdasarkan responden_id
+// @Tags         Risiko
+// @Produce      json
+// @Param        responden_id path int true "Responden ID"
+// @Success      200 {object} map[string]interface{}
+// @Failure      400 {object} dto.ErrorResponse "Invalid ID"
+// @Failure      404 {object} dto.ErrorResponse "Data tidak ditemukan"
+// @Failure      500 {object} dto.ErrorResponse
+// @Router       /api/survey/risiko/{responden_id} [get]
 func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request) {
-	respondentID := r.PathValue("respondent_id")
-	if respondentID == "" {
-		writeError(w, http.StatusBadRequest, "respondent_id diperlukan")
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/survey/risiko/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
-	result, err := h.svc.GetResponse(respondentID)
+	result, err := h.svc.GetByRespondentID(id) // ⬅ pastikan service ADA
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			writeError(w, http.StatusNotFound, "Data tidak ditemukan")
+			writeError(w, http.StatusNotFound, "data tidak ditemukan")
 			return
 		}
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, models.APIResponse{Success: true, Data: result})
+	writeSuccess(w, result)
 }
 
-// GET /api/survey/progress/{respondent_id}
+// GET PROGRESS
+// GetProgress godoc
+// @Summary      Get Progress Risiko
+// @Description  Mengambil progress pengisian survey
+// @Tags         Risiko
+// @Produce      json
+// @Param        responden_id path int true "Responden ID"
+// @Success      200 {object} map[string]interface{}
+// @Failure      400 {object} dto.ErrorResponse
+// @Failure      500 {object} dto.ErrorResponse
+// @Router       /api/survey/progress/{responden_id} [get]
 func (h *RisikoHandler) GetProgress(w http.ResponseWriter, r *http.Request) {
-	respondentID := r.PathValue("respondent_id")
-	if respondentID == "" {
-		writeError(w, http.StatusBadRequest, "respondent_id diperlukan")
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/survey/progress/")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
-	progress, err := h.svc.GetProgress(respondentID)
+	progress, err := h.svc.GetProgress(id) // ⬅ HARUS ADA DI SERVICE
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, models.APIResponse{Success: true, Data: progress})
+	writeSuccess(w, progress)
 }
 
-// POST /api/survey/navigate
-// Body: { "respondent_id": "R001", "direction": "next"|"previous", "current_risk": 1 }
+// NAVIGATE
+// Navigate godoc
+// @Summary      Navigasi Step Risiko
+// @Description  Mengatur alur step survey (next/back)
+// @Tags         Risiko
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.NavigateRequest true "Navigate Request"
+// @Success      200 {object} map[string]interface{}
+// @Failure      400 {object} dto.ErrorResponse
+// @Router       /api/survey/risiko/navigate [post]
 func (h *RisikoHandler) Navigate(w http.ResponseWriter, r *http.Request) {
-	var req models.NavigateRequest
+	var req dto.NavigateRequest
+
 	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request")
+		return
+	}
+
+	result, err := h.svc.Navigate(req)
+	if err != nil {
 		writeError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	progress, err := h.svc.Navigate(req)
+	writeSuccess(w, result)
+}
+
+// SAVE PROGRESS
+// SaveProgress godoc
+// @Summary      Simpan Progress
+// @Description  Menyimpan progress agar bisa dilanjutkan nanti
+// @Tags         Risiko
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.NavigateRequest true "Save Progress Request"
+// @Success      200 {object} map[string]interface{}
+// @Failure      400 {object} dto.ErrorResponse
+// @Failure      500 {object} dto.ErrorResponse
+// @Router       /api/survey/risiko/save-progress [post]
+func (h *RisikoHandler) SaveProgress(w http.ResponseWriter, r *http.Request) {
+	var req dto.NavigateRequest
+
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request")
+		return
+	}
+
+	result, err := h.svc.SaveProgress(req)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	writeJSON(w, http.StatusOK, models.APIResponse{
-		Success: true,
-		Message: "Navigasi berhasil",
-		Data:    progress,
+	writeSuccess(w, result)
+}
+
+// CUSTOM RISIKO
+// CreateCustomRisiko godoc
+// @Summary      Tambah Risiko Custom
+// @Description  Menambahkan risiko baru di luar daftar sistem
+// @Tags         Risiko
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.CustomRisikoRequest true "Custom Risiko Request"
+// @Success      200 {object} map[string]int
+// @Failure      400 {object} dto.ErrorResponse
+// @Router       /api/survey/risiko/custom-risk [post]
+func (h *RisikoHandler) CreateCustomRisiko(w http.ResponseWriter, r *http.Request) {
+	var req dto.CustomRisikoRequest
+
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request")
+		return
+	}
+
+	id, err := h.svc.CreateCustomRisiko(req)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	writeSuccess(w, map[string]int{
+		"custom_risiko_id": id,
 	})
 }
 
-// Helpers
+// FINISH
+// FinishSurvey godoc
+// @Summary      Selesaikan Survey
+// @Description  Menandai survey telah selesai
+// @Tags         Risiko
+// @Accept       json
+// @Produce      json
+// @Param        request body object{responden_id=int} true "Finish Request"
+// @Success      200 {object} map[string]interface{}
+// @Failure      400 {object} dto.ErrorResponse
+// @Failure      500 {object} dto.ErrorResponse
+// @Router       /api/survey/risiko/finish [post]
+func (h *RisikoHandler) FinishSurvey(w http.ResponseWriter, r *http.Request) {
+
+	var req struct {
+		RespondenID int `json:"responden_id"`
+	}
+
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request")
+		return
+	}
+
+	if err := h.svc.FinishSurvey(req.RespondenID); err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeSuccess(w, "survey selesai")
+}
+
+// HELPERS
 func decodeJSON(r *http.Request, dst interface{}) error {
 	defer r.Body.Close()
 	return json.NewDecoder(r.Body).Decode(dst)
+}
+
+func writeSuccess(w http.ResponseWriter, data interface{}) {
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"success": true,
+		"data":    data,
+	})
+}
+
+func writeError(w http.ResponseWriter, status int, message string) {
+	writeJSON(w, status, map[string]interface{}{
+		"success": false,
+		"message": message,
+	})
 }
 
 func writeJSON(w http.ResponseWriter, status int, body interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(body)
-}
-
-func writeError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, models.APIResponse{Success: false, Message: message})
 }
 
 func resolveErrorStatus(err error) int {
