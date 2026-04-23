@@ -21,6 +21,11 @@ func setupKelasTest(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *KelasRepository) {
 }
 
 var kelasColumns = []string{"id", "judul", "deskripsi", "thumbnail", "status", "created_by", "created_at", "updated_at"}
+var kelasColumnsFull = []string{
+	"id", "judul", "deskripsi", "thumbnail", "kategori", "durasi_jp",
+	"penyelenggara", "target_peserta", "syarat_pendaftaran", "informasi_umum",
+	"status", "created_by", "created_at", "updated_at",
+}
 
 func TestKelasRepository_Create(t *testing.T) {
 	db, mock, repo := setupKelasTest(t)
@@ -28,7 +33,7 @@ func TestKelasRepository_Create(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectExec("INSERT INTO kelas").
-			WithArgs("k-1", "Go Class", nil, nil, models.KelasStatusDraft, "admin-1").
+			WithArgs("k-1", "Go Class", nil, nil, nil, nil, nil, nil, nil, nil, models.KelasStatusDraft, "admin-1").
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		err := repo.Create(&models.Kelas{ID: "k-1", Judul: "Go Class", Status: models.KelasStatusDraft, CreatedBy: "admin-1"})
@@ -38,7 +43,7 @@ func TestKelasRepository_Create(t *testing.T) {
 
 	t.Run("database error", func(t *testing.T) {
 		mock.ExpectExec("INSERT INTO kelas").
-			WithArgs("k-2", "Fail", nil, nil, models.KelasStatusDraft, "admin-1").
+			WithArgs("k-2", "Fail", nil, nil, nil, nil, nil, nil, nil, nil, models.KelasStatusDraft, "admin-1").
 			WillReturnError(errors.New("db error"))
 
 		err := repo.Create(&models.Kelas{ID: "k-2", Judul: "Fail", Status: models.KelasStatusDraft, CreatedBy: "admin-1"})
@@ -56,8 +61,8 @@ func TestKelasRepository_FindByID(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectQuery("SELECT .+ FROM kelas WHERE id = \\?").
 			WithArgs("k-1").
-			WillReturnRows(sqlmock.NewRows(kelasColumns).
-				AddRow("k-1", "Go", nil, nil, "published", "admin", now, now))
+			WillReturnRows(sqlmock.NewRows(kelasColumnsFull).
+				AddRow("k-1", "Go", nil, nil, nil, nil, nil, nil, nil, nil, "published", "admin", now, now))
 
 		result, err := repo.FindByID("k-1")
 		assert.NoError(t, err)
@@ -73,8 +78,8 @@ func TestKelasRepository_FindByID(t *testing.T) {
 		thumb := "/img/go.png"
 		mock.ExpectQuery("SELECT .+ FROM kelas WHERE id = \\?").
 			WithArgs("k-2").
-			WillReturnRows(sqlmock.NewRows(kelasColumns).
-				AddRow("k-2", "Go Advanced", desc, thumb, "draft", "admin", now, now))
+			WillReturnRows(sqlmock.NewRows(kelasColumnsFull).
+				AddRow("k-2", "Go Advanced", desc, thumb, "security", 8, "BSSN", "PIC", "punya akun", "info umum", "draft", "admin", now, now))
 
 		result, err := repo.FindByID("k-2")
 		assert.NoError(t, err)
@@ -104,9 +109,9 @@ func TestKelasRepository_FindAll(t *testing.T) {
 
 	t.Run("all", func(t *testing.T) {
 		mock.ExpectQuery("SELECT .+ FROM kelas ORDER BY").
-			WillReturnRows(sqlmock.NewRows(kelasColumns).
-				AddRow("k-1", "A", nil, nil, "published", "admin", now, now).
-				AddRow("k-2", "B", nil, nil, "draft", "admin", now, now))
+			WillReturnRows(sqlmock.NewRows(kelasColumnsFull).
+				AddRow("k-1", "A", nil, nil, nil, nil, nil, nil, nil, nil, "published", "admin", now, now).
+				AddRow("k-2", "B", nil, nil, nil, nil, nil, nil, nil, nil, "draft", "admin", now, now))
 
 		result, err := repo.FindAll(false)
 		assert.NoError(t, err)
@@ -116,8 +121,8 @@ func TestKelasRepository_FindAll(t *testing.T) {
 
 	t.Run("only published", func(t *testing.T) {
 		mock.ExpectQuery("WHERE status = 'published'").
-			WillReturnRows(sqlmock.NewRows(kelasColumns).
-				AddRow("k-1", "A", nil, nil, "published", "admin", now, now))
+			WillReturnRows(sqlmock.NewRows(kelasColumnsFull).
+				AddRow("k-1", "A", nil, nil, nil, nil, nil, nil, nil, nil, "published", "admin", now, now))
 
 		result, err := repo.FindAll(true)
 		assert.NoError(t, err)
@@ -152,7 +157,7 @@ func TestKelasRepository_Update(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectExec("UPDATE kelas SET").
-			WithArgs("Go Updated", nil, nil, "published", "k-1").
+			WithArgs("Go Updated", nil, nil, nil, nil, nil, nil, nil, nil, "published", "k-1").
 			WillReturnResult(sqlmock.NewResult(0, 1))
 
 		err := repo.Update(&models.Kelas{ID: "k-1", Judul: "Go Updated", Status: "published"})
@@ -162,7 +167,7 @@ func TestKelasRepository_Update(t *testing.T) {
 
 	t.Run("database error", func(t *testing.T) {
 		mock.ExpectExec("UPDATE kelas SET").
-			WithArgs("Fail", nil, nil, "draft", "k-1").
+			WithArgs("Fail", nil, nil, nil, nil, nil, nil, nil, nil, "draft", "k-1").
 			WillReturnError(errors.New("db error"))
 
 		err := repo.Update(&models.Kelas{ID: "k-1", Judul: "Fail", Status: "draft"})

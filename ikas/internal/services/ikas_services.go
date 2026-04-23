@@ -401,7 +401,7 @@ func (s *IkasService) TriggerCarryOverIfNeeded(ctx context.Context, id string, i
 			}
 			return newID, nil
 		} else if latest != nil && latestYear == targetYear && isAnswerUpdate {
-			// A target year record already exists, we return latest.ID! 
+			// A target year record already exists, we return latest.ID!
 			// Because for isolated answer updates, we WANT them to automatically route to the newest record.
 			return latest.ID, nil
 		}

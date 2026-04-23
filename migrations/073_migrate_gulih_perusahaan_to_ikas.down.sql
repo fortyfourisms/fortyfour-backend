@@ -1,0 +1,1 @@
+-- Irreversible migration. Data backfill rollback is intentionally omitted.

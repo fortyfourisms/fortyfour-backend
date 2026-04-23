@@ -12,14 +12,20 @@ const (
 )
 
 type Kelas struct {
-	ID        string      `json:"id"`
-	Judul     string      `json:"judul"`
-	Deskripsi *string     `json:"deskripsi"`
-	Thumbnail *string     `json:"thumbnail"`
-	Status    KelasStatus `json:"status"`
-	CreatedBy string      `json:"created_by"`
-	CreatedAt time.Time   `json:"created_at"`
-	UpdatedAt time.Time   `json:"updated_at"`
+	ID                string      `json:"id"`
+	Judul             string      `json:"judul"`
+	Deskripsi         *string     `json:"deskripsi"`
+	Thumbnail         *string     `json:"thumbnail"`
+	Kategori          *string     `json:"kategori"`           // ex: "Kelas Siber", "Strategis"
+	DurasiJP          *int        `json:"durasi_jp"`          // ex: 4 (Jam Pelajaran)
+	Penyelenggara     *string     `json:"penyelenggara"`      // ex: "Pusat Edukasi Keamanan Siber"
+	TargetPeserta     *string     `json:"target_peserta"`     // ex: "Pimpinan Unit, Manajer Risiko"
+	SyaratPendaftaran *string     `json:"syarat_pendaftaran"` // bisa HTML/Teks
+	InformasiUmum     *string     `json:"informasi_umum"`     // bisa HTML/Teks
+	Status            KelasStatus `json:"status"`
+	CreatedBy         string      `json:"created_by"`
+	CreatedAt         time.Time   `json:"created_at"`
+	UpdatedAt         time.Time   `json:"updated_at"`
 }
 
 // ── Materi ───────────────────────────────────────────────────────────────────

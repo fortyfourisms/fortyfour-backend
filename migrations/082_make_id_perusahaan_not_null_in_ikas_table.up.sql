@@ -1,0 +1,2 @@
+ALTER TABLE ikas
+MODIFY id_perusahaan CHAR(36) NOT NULL;
