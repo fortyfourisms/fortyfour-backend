@@ -72,16 +72,16 @@ func TestNotificationRepository_FindAll(t *testing.T) {
 				AddRow(1, "user-1", "alice", "Alice", fotoProfile, "resource_created", "created", false, now).
 				AddRow(2, "user-2", "bob", "", nil, "resource_deleted", "deleted", true, now))
 
-			result, err := repo.FindAll()
-			assert.NoError(t, err)
-			assert.Len(t, result, 2)
-			assert.Equal(t, "alice", result[0].Username)
-			require.NotNil(t, result[0].FotoProfile)
-			assert.Equal(t, fotoProfile, *result[0].FotoProfile)
-			assert.Equal(t, "", result[1].DisplayName)
-			assert.Nil(t, result[1].FotoProfile)
-			assert.NoError(t, mock.ExpectationsWereMet())
-		})
+		result, err := repo.FindAll()
+		assert.NoError(t, err)
+		assert.Len(t, result, 2)
+		assert.Equal(t, "alice", result[0].Username)
+		require.NotNil(t, result[0].FotoProfile)
+		assert.Equal(t, fotoProfile, *result[0].FotoProfile)
+		assert.Equal(t, "", result[1].DisplayName)
+		assert.Nil(t, result[1].FotoProfile)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
 
 	t.Run("query error", func(t *testing.T) {
 		mock.ExpectQuery("SELECT n.id, n.user_id, u.username, COALESCE\\(u.display_name, ''\\) as display_name").
@@ -107,14 +107,14 @@ func TestNotificationRepository_FindAllByUserID(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows(notificationColumns).
 				AddRow(1, "user-1", "alice", "Alice", fotoProfile, "resource_created", "created", false, now))
 
-			result, err := repo.FindAllByUserID("user-1")
-			assert.NoError(t, err)
-			assert.Len(t, result, 1)
-			assert.Equal(t, "user-1", result[0].UserID)
-			require.NotNil(t, result[0].FotoProfile)
-			assert.Equal(t, fotoProfile, *result[0].FotoProfile)
-			assert.NoError(t, mock.ExpectationsWereMet())
-		})
+		result, err := repo.FindAllByUserID("user-1")
+		assert.NoError(t, err)
+		assert.Len(t, result, 1)
+		assert.Equal(t, "user-1", result[0].UserID)
+		require.NotNil(t, result[0].FotoProfile)
+		assert.Equal(t, fotoProfile, *result[0].FotoProfile)
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
 
 	t.Run("query error", func(t *testing.T) {
 		mock.ExpectQuery("WHERE n.user_id = \\?").
