@@ -29,3 +29,5 @@ uploads/
 
 .agent/
 scripts/
+
+services.test
