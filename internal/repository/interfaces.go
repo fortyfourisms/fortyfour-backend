@@ -251,8 +251,10 @@ type NotificationRepositoryInterface interface {
 	FindAllByUserID(userID string) ([]models.Notification, error)
 	MarkRead(userID string, notifID int64) error
 	MarkAllRead(userID string) error
+	MarkAllReadGlobal() error  // admin: tandai semua notif semua user
 	Delete(userID string, notifID int64) error
 	DeleteAllByUserID(userID string) error
+	DeleteAll() error          // admin: hapus semua notif semua user
 }
 
 // DTOnya tidak dipakai langsung di interface ini, tapi diimport

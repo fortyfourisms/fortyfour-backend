@@ -128,7 +128,8 @@ func TestIkasService_Create_Success(t *testing.T) {
 		TargetNilai:  3.0,
 	}
 
-	err := service.Create(context.Background(), req, "ikas-id", "test-user")
+	// Passing "admin" role bypasses ownership enforcement, preserving the original test intent.
+	err := service.Create(context.Background(), req, "ikas-id", "test-user", "admin", "")
 	assert.NoError(t, err)
 }
 
@@ -144,9 +145,61 @@ func TestIkasService_Create_Duplicate(t *testing.T) {
 		TargetNilai:  3.0,
 	}
 
-	err := service.Create(context.Background(), req, "ikas-id", "test-user")
+	// Passing "admin" role bypasses ownership enforcement, preserving the original test intent.
+	err := service.Create(context.Background(), req, "ikas-id", "test-user", "admin", "")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "sudah ada")
+}
+
+func TestIkasService_Create_UserWithoutCompany(t *testing.T) {
+	repo := &mockIkasRepo{}
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+
+	req := dto.CreateIkasRequest{
+		IDPerusahaan: "7d7ae6c3-eae1-4e66-bc3e-c75af9c9302c",
+		Responden:    "Test Responden",
+		Telepon:      "081234567890",
+		Jabatan:      "CIO",
+	}
+
+	// User with empty perusahaan_id (not affiliated) must be rejected
+	err := service.Create(context.Background(), req, "ikas-id", "test-user", "user", "")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "belum terasosiasi")
+}
+
+func TestIkasService_Create_UserWrongCompany(t *testing.T) {
+	repo := &mockIkasRepo{}
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+
+	req := dto.CreateIkasRequest{
+		IDPerusahaan: "7d7ae6c3-eae1-4e66-bc3e-c75af9c9302c",
+		Responden:    "Test Responden",
+		Telepon:      "081234567890",
+		Jabatan:      "CIO",
+	}
+
+	// User trying to create IKAS for another company's ID must be rejected
+	err := service.Create(context.Background(), req, "ikas-id", "test-user", "user", "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "tidak memiliki akses")
+}
+
+func TestIkasService_Create_UserOwnCompany(t *testing.T) {
+	repo := &mockIkasRepo{}
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+
+	ownCompanyID := "7d7ae6c3-eae1-4e66-bc3e-c75af9c9302c"
+	req := dto.CreateIkasRequest{
+		IDPerusahaan: ownCompanyID,
+		Responden:    "Test Responden",
+		Telepon:      "081234567890",
+		Jabatan:      "CIO",
+	}
+
+	// User creating IKAS for their own affiliated company must succeed
+	err := service.Create(context.Background(), req, "ikas-id", "test-user", "user", ownCompanyID)
+	assert.NoError(t, err)
 }
 
 /*
@@ -194,7 +247,8 @@ func TestIkasService_ImportFromExcel_Async(t *testing.T) {
 	repo := &mockIkasRepo{}
 	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
-	id, err := service.ImportFromExcel(context.Background(), []byte("fake excel"), "test-user")
+	// Passing "admin" role bypasses ownership enforcement, preserving the original test intent.
+	id, err := service.ImportFromExcel(context.Background(), []byte("fake excel"), "test-user", "admin", "")
 	assert.NoError(t, err)
 	assert.NotEmpty(t, id)
 }

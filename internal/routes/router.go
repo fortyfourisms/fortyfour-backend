@@ -171,8 +171,8 @@ func InitRouter(
 	mux.HandleFunc("/api/dashboard/summary", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(dashboardH)))))
 
 	// Routes Notifications
-	mux.HandleFunc("/api/notifications", authM.Authenticate(utils.AdaptHandler(notificationH)))
-	mux.HandleFunc("/api/notifications/", authM.Authenticate(utils.AdaptHandler(notificationH)))
+	mux.HandleFunc("/api/notifications", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(notificationH))))
+	mux.HandleFunc("/api/notifications/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(notificationH))))
 
 	// Routes Chat
 	mux.HandleFunc("/api/chat", authM.Authenticate(chatHandler.Stream))

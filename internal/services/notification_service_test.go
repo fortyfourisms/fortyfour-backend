@@ -96,6 +96,19 @@ func (m *mockNotifRepo) MarkAllRead(userID string) error {
 	return nil
 }
 
+func (m *mockNotifRepo) MarkAllReadGlobal() error {
+	if m.markAllErr != nil {
+		return m.markAllErr
+	}
+	for userID, notifs := range m.data {
+		for i := range notifs {
+			notifs[i].Read = true
+		}
+		m.data[userID] = notifs
+	}
+	return nil
+}
+
 func (m *mockNotifRepo) Delete(userID string, notifID int64) error {
 	if m.deleteErr != nil {
 		return m.deleteErr
@@ -125,6 +138,14 @@ func (m *mockNotifRepo) DeleteAllByUserID(userID string) error {
 		return m.deleteAllErr
 	}
 	delete(m.data, userID)
+	return nil
+}
+
+func (m *mockNotifRepo) DeleteAll() error {
+	if m.deleteAllErr != nil {
+		return m.deleteAllErr
+	}
+	m.data = make(map[string][]models.Notification)
 	return nil
 }
 
@@ -222,16 +243,69 @@ func TestNotificationService_Delete_Success(t *testing.T) {
 }
 
 // ============================================================
-// TEST: DeleteAll
+// TEST: DeleteAll (user)
 // ============================================================
 
-func TestNotificationService_DeleteAll_Success(t *testing.T) {
+func TestNotificationService_DeleteAll_User_Success(t *testing.T) {
 	repo := newMockNotifRepo()
 	repo.data["u1"] = []models.Notification{{ID: 100}}
+	repo.data["u2"] = []models.Notification{{ID: 200}}
 
 	svc := NewNotificationService(repo)
-	err := svc.DeleteAll("u1")
+	err := svc.DeleteAll("u1", "user")
 
 	require.NoError(t, err)
-	assert.Empty(t, repo.data["u1"])
+	assert.Empty(t, repo.data["u1"], "u1 harus terhapus")
+	assert.Len(t, repo.data["u2"], 1, "u2 tidak boleh terpengaruh")
+}
+
+// ============================================================
+// TEST: DeleteAll (admin)
+// ============================================================
+
+func TestNotificationService_DeleteAll_Admin_DeletesAll(t *testing.T) {
+	repo := newMockNotifRepo()
+	repo.data["u1"] = []models.Notification{{ID: 1}}
+	repo.data["u2"] = []models.Notification{{ID: 2}}
+
+	svc := NewNotificationService(repo)
+	err := svc.DeleteAll("admin-id", "admin")
+
+	require.NoError(t, err)
+	assert.Empty(t, repo.data, "admin harus menghapus semua notifikasi semua user")
+}
+
+// ============================================================
+// TEST: MarkAllRead (user)
+// ============================================================
+
+func TestNotificationService_MarkAllRead_User_OnlyOwn(t *testing.T) {
+	repo := newMockNotifRepo()
+	repo.data["u1"] = []models.Notification{{ID: 1, Read: false}, {ID: 2, Read: false}}
+	repo.data["u2"] = []models.Notification{{ID: 3, Read: false}}
+
+	svc := NewNotificationService(repo)
+	err := svc.MarkAllRead("u1", "user")
+
+	require.NoError(t, err)
+	assert.True(t, repo.data["u1"][0].Read)
+	assert.True(t, repo.data["u1"][1].Read)
+	assert.False(t, repo.data["u2"][0].Read, "u2 tidak boleh terpengaruh")
+}
+
+// ============================================================
+// TEST: MarkAllRead (admin)
+// ============================================================
+
+func TestNotificationService_MarkAllRead_Admin_AllUsers(t *testing.T) {
+	repo := newMockNotifRepo()
+	repo.data["u1"] = []models.Notification{{ID: 1, Read: false}}
+	repo.data["u2"] = []models.Notification{{ID: 2, Read: false}}
+
+	svc := NewNotificationService(repo)
+	err := svc.MarkAllRead("admin-id", "admin")
+
+	require.NoError(t, err)
+	assert.True(t, repo.data["u1"][0].Read, "u1 harus ter-mark read oleh admin")
+	assert.True(t, repo.data["u2"][0].Read, "u2 harus ter-mark read oleh admin")
 }

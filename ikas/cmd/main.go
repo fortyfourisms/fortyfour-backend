@@ -81,9 +81,9 @@ func main() {
 	}
 	logger.Info("RabbitMQ initialized successfully")
 
-	// Create Shared Producer and Consumer
-	sharedProducer := pkgRmq.NewProducer(rmq.GetChannel())
-	sharedConsumer := pkgRmq.NewConsumer(rmq.GetChannel())
+	// Create Producer and Consumer (Managed channels and automatic reconnection)
+	sharedProducer := pkgRmq.NewProducer(rmq)
+	sharedConsumer := pkgRmq.NewConsumer(rmq)
 
 	// Wrap with IKAS specific Producer and Consumer
 	msgProducer := internalRmq.NewProducer(sharedProducer)
@@ -164,10 +164,10 @@ func main() {
 	pertanyaanProteksiService := services.NewPertanyaanProteksiService(pertanyaanProteksiRepo, msgProducer)
 	pertanyaanDeteksiService := services.NewPertanyaanDeteksiService(pertanyaanDeteksiRepo, msgProducer)
 	pertanyaanGulihService := services.NewPertanyaanGulihService(pertanyaanGulihRepo, msgProducer)
-	jawabanIdentifikasiService := services.NewJawabanIdentifikasiService(jawabanIdentifikasiRepo, ikasRepo, msgProducer)
-	jawabanProteksiService := services.NewJawabanProteksiService(jawabanProteksiRepo, ikasRepo, msgProducer)
-	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo, ikasRepo, msgProducer)
-	jawabanGulihService := services.NewJawabanGulihService(jawabanGulihRepo, ikasRepo, msgProducer)
+	jawabanIdentifikasiService := services.NewJawabanIdentifikasiService(jawabanIdentifikasiRepo, ikasRepo, msgProducer, ikasService)
+	jawabanProteksiService := services.NewJawabanProteksiService(jawabanProteksiRepo, ikasRepo, msgProducer, ikasService)
+	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo, ikasRepo, msgProducer, ikasService)
+	jawabanGulihService := services.NewJawabanGulihService(jawabanGulihRepo, ikasRepo, msgProducer, ikasService)
 
 	// handlers
 	ikasHandler := handlers.NewIkasHandler(ikasService)
