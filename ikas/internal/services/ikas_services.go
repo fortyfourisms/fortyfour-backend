@@ -151,13 +151,25 @@ func (s *IkasService) validateUpdate(req *dto.UpdateIkasRequest) error {
 	return nil
 }
 
-func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id string, userID string) error {
-	// 1. Synchronous Validation
+func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id string, userID string, userRole string, userPerusahaanID string) error {
+	// 1. Enforce perusahaan ownership for non-admin users
+	if userRole != "admin" {
+		// User must be affiliated with a company before they can create IKAS
+		if userPerusahaanID == "" || userPerusahaanID == "null" {
+			return fmt.Errorf("akun Anda belum terasosiasi dengan perusahaan. Silakan lengkapi profil perusahaan terlebih dahulu")
+		}
+		// User can only create IKAS for their own company
+		if req.IDPerusahaan != userPerusahaanID {
+			return fmt.Errorf("anda tidak memiliki akses untuk membuat data IKAS atas nama perusahaan lain")
+		}
+	}
+
+	// 2. Synchronous Validation
 	if err := s.validateCreate(&req); err != nil {
 		return err
 	}
 
-	// 2. Synchronous Existence Check (Perusahaan)
+	// 3. Synchronous Existence Check (Perusahaan)
 	perusahaanExists, err := s.repo.CheckExistsByPerusahaanID(req.IDPerusahaan)
 	if err != nil {
 		return err
@@ -489,7 +501,7 @@ func (s *IkasService) Delete(ctx context.Context, id string, userID string, user
 	return nil
 }
 
-func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, userID string) (string, error) {
+func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, userID string, userRole string, userPerusahaanID string) (string, error) {
 	excelData, err := s.repo.ParseExcelForImport(fileData)
 	if err != nil {
 		return "", err
@@ -497,8 +509,8 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 
 	newID := uuid.New().String()
 
-	// 1. Create main IKAS record
-	if err := s.Create(ctx, excelData.IkasRequest, newID, userID); err != nil {
+	// 1. Create main IKAS record (ownership enforcement delegated to Create)
+	if err := s.Create(ctx, excelData.IkasRequest, newID, userID, userRole, userPerusahaanID); err != nil {
 		return "", err
 	}
 
