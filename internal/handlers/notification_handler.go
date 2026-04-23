@@ -46,9 +46,12 @@ func (h *NotificationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	unread := 0
+	read := 0
 	items := make([]dto.NotificationResponse, 0, len(notifs))
 	for _, n := range notifs {
-		if !n.Read {
+		if n.Read {
+			read++
+		} else {
 			unread++
 		}
 		items = append(items, dto.NotificationResponse{
@@ -57,6 +60,7 @@ func (h *NotificationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 				UserID:      n.UserID,
 				Username:    n.Username,
 				DisplayName: n.DisplayName,
+				FotoProfile: n.FotoProfile,
 			},
 			Type:      string(n.Type),
 			Message:   n.Message,
@@ -66,8 +70,11 @@ func (h *NotificationHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.RespondJSON(w, http.StatusOK, dto.NotificationListResponse{
-		Notifications: items,
+		Message:       "Berhasil mengambil daftar notifikasi",
+		TotalData:     len(items),
+		ReadCount:     read,
 		UnreadCount:   unread,
+		Notifications: items,
 	})
 }
 
@@ -125,17 +132,22 @@ func (h *NotificationHandler) MarkRead(w http.ResponseWriter, r *http.Request) {
 //	@Router			/api/notifications/read-all [patch]
 func (h *NotificationHandler) MarkAllRead(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
+	role := middleware.GetRole(r.Context())
 	if userID == "" {
 		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	if err := h.svc.MarkAllRead(userID); err != nil {
+	if err := h.svc.MarkAllRead(userID, role); err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": "semua notifikasi ditandai sudah dibaca"})
+	msg := "semua notifikasi ditandai sudah dibaca"
+	if role == "admin" {
+		msg = "semua notifikasi seluruh user ditandai sudah dibaca"
+	}
+	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": msg})
 }
 
 // Delete godoc
@@ -192,17 +204,22 @@ func (h *NotificationHandler) Delete(w http.ResponseWriter, r *http.Request) {
 //	@Router			/api/notifications [delete]
 func (h *NotificationHandler) DeleteAll(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
+	role := middleware.GetRole(r.Context())
 	if userID == "" {
 		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
-	if err := h.svc.DeleteAll(userID); err != nil {
+	if err := h.svc.DeleteAll(userID, role); err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": "semua notifikasi berhasil dihapus"})
+	msg := "semua notifikasi berhasil dihapus"
+	if role == "admin" {
+		msg = "semua notifikasi seluruh user berhasil dihapus"
+	}
+	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": msg})
 }
 
 // ServeHTTP routes semua request notifikasi

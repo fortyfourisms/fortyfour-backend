@@ -151,13 +151,25 @@ func (s *IkasService) validateUpdate(req *dto.UpdateIkasRequest) error {
 	return nil
 }
 
-func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id string, userID string) error {
-	// 1. Synchronous Validation
+func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id string, userID string, userRole string, userPerusahaanID string) error {
+	// 1. Enforce perusahaan ownership for non-admin users
+	if userRole != "admin" {
+		// User must be affiliated with a company before they can create IKAS
+		if userPerusahaanID == "" || userPerusahaanID == "null" {
+			return fmt.Errorf("akun Anda belum terasosiasi dengan perusahaan. Silakan lengkapi profil perusahaan terlebih dahulu")
+		}
+		// User can only create IKAS for their own company
+		if req.IDPerusahaan != userPerusahaanID {
+			return fmt.Errorf("anda tidak memiliki akses untuk membuat data IKAS atas nama perusahaan lain")
+		}
+	}
+
+	// 2. Synchronous Validation
 	if err := s.validateCreate(&req); err != nil {
 		return err
 	}
 
-	// 2. Synchronous Existence Check (Perusahaan)
+	// 3. Synchronous Existence Check (Perusahaan)
 	perusahaanExists, err := s.repo.CheckExistsByPerusahaanID(req.IDPerusahaan)
 	if err != nil {
 		return err
@@ -272,59 +284,11 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 		return id, fmt.Errorf("data asesmen ini sudah divalidasi dan tidak dapat diubah")
 	}
 
-	// 4. YEARLY CARRY-OVER DETECTION
-	// Parse current record year — utamakan kolom tanggal, fallback ke created_at jika kosong
-	var existingYear int
-	dateStr := current.Tanggal
-	if len(dateStr) > 10 {
-		dateStr = dateStr[:10] // Take only YYYY-MM-DD
+	newID, err := s.TriggerCarryOverIfNeeded(ctx, id, false)
+	if err != nil {
+		return id, err
 	}
-	if t, err := time.Parse("2006-01-02", dateStr); err == nil {
-		existingYear = t.Year()
-	}
-
-	// Fallback: jika tanggal kosong/invalid, gunakan created_at sebagai pengecek tahun
-	if existingYear == 0 && current.CreatedAt != "" {
-		caStr := current.CreatedAt
-		if len(caStr) > 10 {
-			caStr = caStr[:10]
-		}
-		if t, err := time.Parse("2006-01-02", caStr); err == nil {
-			existingYear = t.Year()
-		}
-	}
-
-	// Determine target year (Default to current system year)
-	targetYear := time.Now().Year()
-
-	// If we are updating an old year record and it's currently a new year
-	if existingYear < targetYear {
-		// Check if a record for the target year already exists
-		latest, err := s.repo.GetLatestByPerusahaan(current.Perusahaan.ID)
-		if err != nil {
-			return id, err
-		}
-
-		var latestYear int
-		if latest != nil {
-			lDate := latest.Tanggal
-			if len(lDate) > 10 {
-				lDate = lDate[:10]
-			}
-			if t, err := time.Parse("2006-01-02", lDate); err == nil {
-				latestYear = t.Year()
-			}
-		}
-
-		// If the latest record is still an old year record, we trigger Cloning
-		if latestYear < targetYear {
-			newID, err := s.handleCarryOver(ctx, id, targetYear)
-			if err != nil {
-				return id, fmt.Errorf("Gagal melakukan carry-over data: %v", err)
-			}
-			id = newID // Re-point update to the new ID
-		}
-	}
+	id = newID
 
 	// 5. Update process on the resolved 'id'
 	changes := make(map[string]interface{})
@@ -378,6 +342,69 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 
 	if err := s.producer.PublishIkasUpdated(ctx, event); err != nil {
 		return id, err
+	}
+
+	return id, nil
+}
+
+// TriggerCarryOverIfNeeded detects cross-year edits and creates a new year clone if needed.
+// It returns the newly created ID if a clone was made, or the existing ID.
+// If isAnswerUpdate is true and a new year record already exists, it forwards to the latest ID so answers update the new year automatically.
+func (s *IkasService) TriggerCarryOverIfNeeded(ctx context.Context, id string, isAnswerUpdate bool) (string, error) {
+	current, err := s.repo.GetByID(id)
+	if err != nil {
+		return id, err
+	}
+
+	var existingYear int
+	dateStr := current.Tanggal
+	if len(dateStr) > 10 {
+		dateStr = dateStr[:10]
+	}
+	if t, err := time.Parse("2006-01-02", dateStr); err == nil {
+		existingYear = t.Year()
+	}
+
+	if existingYear == 0 && current.CreatedAt != "" {
+		caStr := current.CreatedAt
+		if len(caStr) > 10 {
+			caStr = caStr[:10]
+		}
+		if t, err := time.Parse("2006-01-02", caStr); err == nil {
+			existingYear = t.Year()
+		}
+	}
+
+	targetYear := time.Now().Year()
+
+	if existingYear < targetYear {
+		latest, err := s.repo.GetLatestByPerusahaan(current.Perusahaan.ID)
+		if err != nil {
+			return id, err
+		}
+
+		var latestYear int
+		if latest != nil {
+			lDate := latest.Tanggal
+			if len(lDate) > 10 {
+				lDate = lDate[:10]
+			}
+			if t, err := time.Parse("2006-01-02", lDate); err == nil {
+				latestYear = t.Year()
+			}
+		}
+
+		if latestYear < targetYear {
+			newID, err := s.handleCarryOver(ctx, id, targetYear)
+			if err != nil {
+				return id, fmt.Errorf("gagal melakukan carry-over data: %v", err)
+			}
+			return newID, nil
+		} else if latest != nil && latestYear == targetYear && isAnswerUpdate {
+			// A target year record already exists, we return latest.ID! 
+			// Because for isolated answer updates, we WANT them to automatically route to the newest record.
+			return latest.ID, nil
+		}
 	}
 
 	return id, nil
@@ -474,7 +501,7 @@ func (s *IkasService) Delete(ctx context.Context, id string, userID string, user
 	return nil
 }
 
-func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, userID string) (string, error) {
+func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, userID string, userRole string, userPerusahaanID string) (string, error) {
 	excelData, err := s.repo.ParseExcelForImport(fileData)
 	if err != nil {
 		return "", err
@@ -482,8 +509,8 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 
 	newID := uuid.New().String()
 
-	// 1. Create main IKAS record
-	if err := s.Create(ctx, excelData.IkasRequest, newID, userID); err != nil {
+	// 1. Create main IKAS record (ownership enforcement delegated to Create)
+	if err := s.Create(ctx, excelData.IkasRequest, newID, userID, userRole, userPerusahaanID); err != nil {
 		return "", err
 	}
 

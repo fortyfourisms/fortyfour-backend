@@ -2,9 +2,10 @@ package dto
 
 // NotificationUserResponse adalah detail user dalam notifikasi
 type NotificationUserResponse struct {
-	UserID      string `json:"user_id"`
-	Username    string `json:"username"`
-	DisplayName string `json:"display_name"`
+	UserID      string  `json:"user_id"`
+	Username    string  `json:"username"`
+	DisplayName string  `json:"display_name"`
+	FotoProfile *string `json:"foto_profile"`
 }
 
 // NotificationResponse adalah response notifikasi untuk user
@@ -19,6 +20,9 @@ type NotificationResponse struct {
 
 // NotificationListResponse adalah response list notifikasi
 type NotificationListResponse struct {
-	Notifications []NotificationResponse `json:"notifications"`
+	Message       string                 `json:"message"`
+	TotalData     int                    `json:"total_data"`
+	ReadCount     int                    `json:"read_count"`
 	UnreadCount   int                    `json:"unread_count"`
+	Notifications []NotificationResponse `json:"notifications"`
 }

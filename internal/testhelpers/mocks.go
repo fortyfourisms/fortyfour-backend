@@ -1027,4 +1027,23 @@ func (m *MockNotificationRepository) DeleteAllByUserID(userID string) error {
 	return nil
 }
 
+func (m *MockNotificationRepository) DeleteAll() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.Notifications = make(map[string][]models.Notification)
+	return nil
+}
+
+func (m *MockNotificationRepository) MarkAllReadGlobal() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for userID, notifs := range m.Notifications {
+		for i := range notifs {
+			notifs[i].Read = true
+		}
+		m.Notifications[userID] = notifs
+	}
+	return nil
+}
+
 var _ repository.NotificationRepositoryInterface = (*MockNotificationRepository)(nil)

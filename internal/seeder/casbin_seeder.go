@@ -208,6 +208,11 @@ var defaultPolicies = []Policy{
 	{"user", "/api/sertifikat/me", "GET"},
 	{"user", "/api/sertifikat/:id", "GET"},
 	{"user", "/api/sertifikat/:id/download", "GET"},
+
+	// Notifications (user)
+	{"user", "/api/notifications", "GET"},
+	{"user", "/api/notifications/read-all", "PATCH"},
+	{"user", "/api/notifications/:id/read", "PATCH"},
 }
 
 // staffInitialPolicies adalah policy awal untuk role staff.

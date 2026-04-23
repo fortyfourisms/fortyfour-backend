@@ -24,17 +24,20 @@ type JawabanIdentifikasiService struct {
 	repo     repository.JawabanIdentifikasiRepositoryInterface
 	ikasRepo repository.IkasRepositoryInterface
 	producer JawabanIdentifikasiProducerInterface
+	ikasSvc  *IkasService
 }
 
 func NewJawabanIdentifikasiService(
 	repo repository.JawabanIdentifikasiRepositoryInterface,
 	ikasRepo repository.IkasRepositoryInterface,
 	producer JawabanIdentifikasiProducerInterface,
+	ikasSvc *IkasService,
 ) *JawabanIdentifikasiService {
 	return &JawabanIdentifikasiService{
 		repo:     repo,
 		ikasRepo: ikasRepo,
 		producer: producer,
+		ikasSvc:  ikasSvc,
 	}
 }
 
@@ -246,36 +249,59 @@ func (s *JawabanIdentifikasiService) GetByPertanyaan(pertanyaanID int) ([]dto.Ja
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }
 
-func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentifikasiRequest, userID string, userRole string, userPerusahaanID string) error {
+func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentifikasiRequest, userID string, userRole string, userPerusahaanID string) (int, string, error) {
 	if id <= 0 {
-		return errors.New("format ID tidak valid")
+		return 0, "", errors.New("format ID tidak valid")
 	}
 
-	// Existence Check
 	existing, err := s.repo.GetByID(id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return errors.New("data tidak ditemukan")
+			return 0, "", errors.New("data tidak ditemukan")
 		}
-		return err
+		return 0, "", err
 	}
 
-	// Fetch ikas to check ownership
 	ikasData, err := s.ikasRepo.GetByID(existing.IkasID)
 	if err != nil {
-		return errors.New("gagal memverifikasi kepemilikan asesmen")
-	}
-
-	if userRole != "admin" && ikasData.Perusahaan.ID != userPerusahaanID {
-		return errors.New("anda tidak memiliki akses untuk mengubah data ini")
+		return 0, "", errors.New("gagal memverifikasi kepemilikan asesmen")
 	}
 
 	if ikasData.IsValidated {
-		return errors.New("data asesmen ini sudah divalidasi dan tidak dapat diubah")
+		return 0, "", errors.New("data asesmen ini sudah divalidasi dan tidak dapat diubah")
+	}
+
+	msg := "Berhasil menyimpan data"
+
+	// ---------------- AUTO CLONE/CARRY OVER ----------------
+	if s.ikasSvc != nil {
+		newIkasID, carryErr := s.ikasSvc.TriggerCarryOverIfNeeded(context.Background(), existing.IkasID, true)
+		if carryErr == nil && newIkasID != existing.IkasID {
+			newJawabanID, errId := s.repo.GetIDByIkasAndPertanyaan(newIkasID, existing.PertanyaanIdentifikasi.ID)
+			if errId == nil && newJawabanID > 0 {
+				id = newJawabanID
+				msg = "Data tahun lalu tidak dapat diubah. Update telah dialihkan otomatis ke record tahun berjalan (carry-over)."
+				
+				existing, err = s.repo.GetByID(id)
+				if err != nil {
+					return 0, "", err
+				}
+				
+				ikasData, err = s.ikasRepo.GetByID(existing.IkasID)
+				if err != nil {
+					return 0, "", errors.New("gagal memverifikasi kepemilikan asesmen setelah clone")
+				}
+			}
+		}
+	}
+	// -------------------------------------------------------
+
+	if userRole != "admin" && ikasData.Perusahaan.ID != userPerusahaanID {
+		return 0, "", errors.New("anda tidak memiliki akses untuk mengubah data ini")
 	}
 
 	if err := s.validateUpdate(&req, existing.Evidence, userRole); err != nil {
-		return err
+		return 0, "", err
 	}
 
 	// Publish Update Event (Pola 2)
@@ -329,10 +355,10 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 
 	if err := s.producer.PublishJawabanIdentifikasiUpdated(context.Background(), event); err != nil {
 		rollbar.Error(err)
-		return err
+		return 0, "", err
 	}
 
-	return nil
+	return id, msg, nil
 }
 
 func (s *JawabanIdentifikasiService) Delete(id int, userID string, userRole string, userPerusahaanID string) error {
