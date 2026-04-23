@@ -1,0 +1,1 @@
+-- Irreversible migration. Seed rollback is intentionally omitted.
