@@ -81,9 +81,9 @@ func main() {
 	}
 	logger.Info("RabbitMQ initialized successfully")
 
-	// Create Shared Producer and Consumer
-	sharedProducer := pkgRmq.NewProducer(rmq.GetChannel())
-	sharedConsumer := pkgRmq.NewConsumer(rmq.GetChannel())
+	// Create Producer and Consumer (Managed channels and automatic reconnection)
+	sharedProducer := pkgRmq.NewProducer(rmq)
+	sharedConsumer := pkgRmq.NewConsumer(rmq)
 
 	// Wrap with IKAS specific Producer and Consumer
 	msgProducer := internalRmq.NewProducer(sharedProducer)

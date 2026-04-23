@@ -10,19 +10,27 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
-// Producer
+// Producer handles message publishing.
 type Producer struct {
+	rmq     *RabbitMQ
 	channel *amqp.Channel
 }
 
-// NewProducer
-func NewProducer(channel *amqp.Channel) *Producer {
+// NewProducer creates a producer that manages its own connection state via RabbitMQ wrapper.
+func NewProducer(rmq *RabbitMQ) *Producer {
+	return &Producer{
+		rmq: rmq,
+	}
+}
+
+// NewProducerWithChannel creates a producer with a specific pre-opened channel.
+func NewProducerWithChannel(channel *amqp.Channel) *Producer {
 	return &Producer{
 		channel: channel,
 	}
 }
 
-// Publish
+// Publish sends a message to the specified exchange and routing key.
 func (p *Producer) Publish(ctx context.Context, exchange, routingKey string, message interface{}) error {
 	// Convert message to JSON
 	body, err := json.Marshal(message)
@@ -30,21 +38,32 @@ func (p *Producer) Publish(ctx context.Context, exchange, routingKey string, mes
 		return fmt.Errorf("failed to marshal message: %w", err)
 	}
 
-	// Set timeout untuk publish
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	// 1. Get the channel to use
+	ch := p.channel
+	if p.rmq != nil {
+		// Get current shared channel from RabbitMQ wrapper
+		ch = p.rmq.GetChannel()
+	}
+
+	if ch == nil || ch.IsClosed() {
+		return fmt.Errorf("RabbitMQ channel is closed")
+	}
+
+	// 2. Set timeout for publish operation
+	publishCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	// Publish message
-	err = p.channel.PublishWithContext(
-		ctx,
-		exchange,   // exchange
-		routingKey, // routing key
-		false,      // mandatory
-		false,      // immediate
+	// 3. Publish message with persistence
+	err = ch.PublishWithContext(
+		publishCtx,
+		exchange,
+		routingKey,
+		false, // mandatory
+		false, // immediate
 		amqp.Publishing{
 			ContentType:  "application/json",
 			Body:         body,
-			DeliveryMode: amqp.Persistent, // Make message persistent
+			DeliveryMode: amqp.Persistent,
 			Timestamp:    time.Now(),
 		},
 	)
@@ -53,6 +72,6 @@ func (p *Producer) Publish(ctx context.Context, exchange, routingKey string, mes
 		return fmt.Errorf("failed to publish message: %w", err)
 	}
 
-	log.Printf("Published message to exchange=%s, routingKey=%s", exchange, routingKey)
+	log.Printf("Published message to %s -> %s", exchange, routingKey)
 	return nil
 }
