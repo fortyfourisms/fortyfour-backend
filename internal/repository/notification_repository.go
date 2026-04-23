@@ -32,7 +32,8 @@ func (r *NotificationRepository) Create(notif *models.Notification) error {
 
 func (r *NotificationRepository) FindAll() ([]models.Notification, error) {
 	query := `
- 		SELECT n.id, n.user_id, u.username, COALESCE(u.display_name, '') as display_name, 
+ 		SELECT n.id, n.user_id, u.username, COALESCE(u.display_name, '') as display_name,
+ 		       u.foto_profile,
  		       n.type, n.message, n.is_read, n.created_at
  		FROM notifications n
  		LEFT JOIN users u ON n.user_id = u.id
@@ -47,7 +48,7 @@ func (r *NotificationRepository) FindAll() ([]models.Notification, error) {
 	var notifs []models.Notification
 	for rows.Next() {
 		var n models.Notification
-		err := rows.Scan(&n.ID, &n.UserID, &n.Username, &n.DisplayName, &n.Type, &n.Message, &n.Read, &n.CreatedAt)
+		err := rows.Scan(&n.ID, &n.UserID, &n.Username, &n.DisplayName, &n.FotoProfile, &n.Type, &n.Message, &n.Read, &n.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -58,7 +59,8 @@ func (r *NotificationRepository) FindAll() ([]models.Notification, error) {
 
 func (r *NotificationRepository) FindAllByUserID(userID string) ([]models.Notification, error) {
 	query := `
- 		SELECT n.id, n.user_id, u.username, COALESCE(u.display_name, '') as display_name, 
+ 		SELECT n.id, n.user_id, u.username, COALESCE(u.display_name, '') as display_name,
+ 		       u.foto_profile,
  		       n.type, n.message, n.is_read, n.created_at
  		FROM notifications n
  		LEFT JOIN users u ON n.user_id = u.id
@@ -74,7 +76,7 @@ func (r *NotificationRepository) FindAllByUserID(userID string) ([]models.Notifi
 	var notifs []models.Notification
 	for rows.Next() {
 		var n models.Notification
-		err := rows.Scan(&n.ID, &n.UserID, &n.Username, &n.DisplayName, &n.Type, &n.Message, &n.Read, &n.CreatedAt)
+		err := rows.Scan(&n.ID, &n.UserID, &n.Username, &n.DisplayName, &n.FotoProfile, &n.Type, &n.Message, &n.Read, &n.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -104,5 +106,19 @@ func (r *NotificationRepository) Delete(userID string, notifID int64) error {
 func (r *NotificationRepository) DeleteAllByUserID(userID string) error {
 	query := `DELETE FROM notifications WHERE user_id = ?`
 	_, err := r.db.Exec(query, userID)
+	return err
+}
+
+// DeleteAll menghapus semua notifikasi dari semua user (admin only)
+func (r *NotificationRepository) DeleteAll() error {
+	query := `DELETE FROM notifications`
+	_, err := r.db.Exec(query)
+	return err
+}
+
+// MarkAllReadGlobal menandai semua notifikasi semua user sebagai sudah dibaca (admin only)
+func (r *NotificationRepository) MarkAllReadGlobal() error {
+	query := `UPDATE notifications SET is_read = TRUE`
+	_, err := r.db.Exec(query)
 	return err
 }

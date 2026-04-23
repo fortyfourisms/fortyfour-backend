@@ -23,6 +23,7 @@ type Notification struct {
 	UserID      string           `json:"user_id"`
 	Username    string           `json:"username"`
 	DisplayName string           `json:"display_name"`
+	FotoProfile *string          `json:"foto_profile"`
 	Type        NotificationType `json:"type"`
 	Message     string           `json:"message"`
 	Read        bool             `json:"read"`
