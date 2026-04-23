@@ -93,15 +93,6 @@ type SektorRepositoryInterface interface {
 	GetByID(id string) (*dto.SektorResponse, error)
 }
 
-// JabatanRepositoryInterface
-type JabatanRepositoryInterface interface {
-	Create(req dto.CreateJabatanRequest, id string) error
-	GetByID(id string) (*dto.JabatanResponse, error)
-	GetAll() ([]dto.JabatanResponse, error)
-	Update(id string, jabatan dto.JabatanResponse) error
-	Delete(id string) error
-}
-
 // SubSektorRepositoryInterface
 type SubSektorRepositoryInterface interface {
 	GetAll() ([]dto.SubSektorResponse, error)
