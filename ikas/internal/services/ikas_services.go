@@ -323,13 +323,6 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 				return id, fmt.Errorf("Gagal melakukan carry-over data: %v", err)
 			}
 			id = newID // Re-point update to the new ID
-		} else if latest != nil && latestYear == targetYear {
-			// Jika record untuk tahun saat ini sudah ada, pastikan tidak terkunci sebelum di-update
-			if latest.IsValidated {
-				return id, fmt.Errorf("Data asesmen tahun berjalan untuk perusahaan %s sudah divalidasi dan tidak dapat diubah meskipun diakses menggunakan data tahun sebelumnya", current.Perusahaan.NamaPerusahaan)
-			}
-			// Redirect update ke record tahun ini
-			id = latest.ID
 		}
 	}
 
