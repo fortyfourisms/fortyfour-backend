@@ -121,3 +121,9 @@ func (r *RespondenRepository) Delete(id int) error {
 	_, err := r.db.Exec(`DELETE FROM responden WHERE id=?`, id)
 	return err
 }
+
+func (r *RisikoRepository) ExistsResponden(id int) (bool, error) {
+	var exists bool
+	err := r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM responden WHERE id = ?)", id).Scan(&exists)
+	return exists, err
+}

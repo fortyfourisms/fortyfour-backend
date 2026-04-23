@@ -32,19 +32,26 @@ func InitRouter(
 	mux.HandleFunc("/api/health", healthHandler)
 
 	// RESPONDEN ROUTES
-	mux.Handle("/api/responden", middleware.Logger(utils.AdaptHandler(respondenH)))
-	mux.Handle("/api/responden/", middleware.Logger(utils.AdaptHandler(respondenH)))
+	mux.Handle("/api/survey/responden", middleware.Logger(utils.AdaptHandler(respondenH)))
+	mux.Handle("/api/survey/responden/", middleware.Logger(utils.AdaptHandler(respondenH)))
 
 	// RISIKO (Intellectual Property Theft Survey)
-	mux.HandleFunc("/api/survey/risk/ip-theft/eligibility", risikoH.SubmitEligibility)
-	mux.HandleFunc("/api/survey/risk/ip-theft/detail", risikoH.SubmitDetail)
-	mux.HandleFunc("/api/survey/risk/ip-theft/control", risikoH.SubmitControl)
-	mux.HandleFunc("/api/survey/risk/ip-theft/reason", risikoH.SubmitReason)
-	mux.HandleFunc("/api/survey/risk/ip-theft/", risikoH.GetByRespondentID)
+	mux.HandleFunc("/api/survey/risiko/eligibility", risikoH.SubmitEligibility)
+	mux.HandleFunc("POST /api/survey/risiko/dampak", risikoH.SubmitDampak)
+	mux.HandleFunc("POST /api/survey/risiko/pengendalian", risikoH.SubmitPengendalian)
+	mux.HandleFunc("POST /api/survey/risiko/reason", risikoH.SubmitAlasan)
+	mux.HandleFunc("/api/survey/risiko/", risikoH.GetByRespondentID)
 
 	// Progress & navigation
 	mux.HandleFunc("/api/survey/progress/", risikoH.GetProgress)
 	mux.HandleFunc("/api/survey/navigate", risikoH.Navigate)
+
+	// Lanjutkan Nanti
+	mux.HandleFunc("/api/survey/save-progress", risikoH.SaveProgress)
+
+	// Custom Risiko
+	mux.HandleFunc("/api/survey/custom-risk", risikoH.CreateCustomRisiko)
+	mux.HandleFunc("/api/survey/finish", risikoH.FinishSurvey)
 
 	return mux
 }

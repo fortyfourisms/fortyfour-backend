@@ -23,7 +23,7 @@ func NewRespondenHandler(service *services.RespondenService) *RespondenHandler {
 
 func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	path := strings.TrimPrefix(r.URL.Path, "/api/responden")
+	path := strings.TrimPrefix(r.URL.Path, "/api/survey/responden")
 	id := strings.TrimPrefix(path, "/")
 
 	switch r.Method {
@@ -61,6 +61,14 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetAllResponden godoc
+// @Summary      Ambil semua responden
+// @Description  Mengambil seluruh data responden
+// @Tags         Responden Survey
+// @Produce      json
+// @Success      200  {array}   dto.RespondenResponse
+// @Failure      500  {object}  dto.ErrorResponse
+// @Router       /api/survey/responden [get]
 func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
 
 	data, err := h.service.GetAll()
@@ -72,6 +80,17 @@ func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
 	utils.RespondJSON(w, http.StatusOK, data)
 }
 
+// GetRespondenByID godoc
+// @Summary      Ambil responden berdasarkan ID
+// @Description  Mengambil data responden berdasarkan ID
+// @Tags         Responden Survey
+// @Produce      json
+// @Param        id   path      int  true  "Responden ID"
+// @Success      200  {object}  dto.RespondenResponse
+// @Failure      400  {object}  dto.ErrorResponse
+// @Failure      404  {object}  dto.ErrorResponse
+// @Failure      500  {object}  dto.ErrorResponse
+// @Router       /api/survey/responden/{id} [get]
 func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 
 	idInt, err := strconv.Atoi(id)
@@ -94,6 +113,18 @@ func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 	utils.RespondJSON(w, http.StatusOK, data)
 }
 
+// CreateResponden godoc
+// @Summary      Tambah responden
+// @Description  Membuat data responden baru
+// @Tags         Responden Survey
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.CreateRespondenRequest true "Data responden"
+// @Success      201  {object}  dto.RespondenResponse
+// @Failure      400  {object}  dto.ErrorResponse
+// @Failure      409  {object}  dto.ErrorResponse
+// @Failure      500  {object}  dto.ErrorResponse
+// @Router       /api/survey/responden [post]
 func (h *RespondenHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	var req dto.CreateRespondenRequest
@@ -131,6 +162,20 @@ func (h *RespondenHandler) handleCreate(w http.ResponseWriter, r *http.Request) 
 	utils.RespondJSON(w, http.StatusCreated, resp)
 }
 
+// UpdateResponden godoc
+// @Summary      Update responden
+// @Description  Memperbarui data responden berdasarkan ID
+// @Tags         Responden Survey
+// @Accept       json
+// @Produce      json
+// @Param        id      path  int                          true  "Responden ID"
+// @Param        request body  dto.UpdateRespondenRequest   true  "Data responden"
+// @Success      200  {object}  dto.RespondenResponse
+// @Failure      400  {object}  dto.ErrorResponse
+// @Failure      404  {object}  dto.ErrorResponse
+// @Failure      409  {object}  dto.ErrorResponse
+// @Failure      500  {object}  dto.ErrorResponse
+// @Router       /api/survey/responden/{id} [put]
 func (h *RespondenHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 
 	idInt, err := strconv.Atoi(id)
@@ -175,6 +220,17 @@ func (h *RespondenHandler) handleUpdate(w http.ResponseWriter, r *http.Request, 
 	utils.RespondJSON(w, http.StatusOK, resp)
 }
 
+// DeleteResponden godoc
+// @Summary      Hapus responden
+// @Description  Menghapus data responden berdasarkan ID
+// @Tags         Responden Survey
+// @Produce      json
+// @Param        id   path      int  true  "Responden ID"
+// @Success      200  {object}  map[string]string
+// @Failure      400  {object}  dto.ErrorResponse
+// @Failure      404  {object}  dto.ErrorResponse
+// @Failure      500  {object}  dto.ErrorResponse
+// @Router       /api/survey/responden/{id} [delete]
 func (h *RespondenHandler) handleDelete(w http.ResponseWriter, id string) {
 
 	idInt, err := strconv.Atoi(id)

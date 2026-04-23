@@ -57,7 +57,7 @@ func main() {
 	}
 	defer db.Close()
 
-	// Run database migrations
+	// // Run database migrations
 	if err := database.RunMigrations(database.Config{
 		Host:     cfg.Database.Host,
 		Port:     cfg.Database.Port,

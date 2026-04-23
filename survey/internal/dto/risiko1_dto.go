@@ -1,25 +1,54 @@
 package dto
 
-type RisikoResponse struct {
-	ID         int    `json:"id"`
-	NamaRisiko string `json:"nama_risiko"`
-	Deskripsi  string `json:"deskripsi"`
+import "survey/internal/models"
+
+type EligibilityRequest struct {
+	RespondenID    int  `json:"responden_id"`
+	RisikoID       int  `json:"risiko_id"`
+	CustomRisikoID int  `json:"custom_risiko_id"`
+	PernahTerjadi  bool `json:"pernah_terjadi"`
 }
 
-// INPUT JAWABAN RISIKO
-type CreateRisikoJawabanRequest struct {
-	RespondenID int `json:"responden_id"`
-	RisikoID    int `json:"risiko_id"`
+type AlasanRequest struct {
+	RespondenID    int    `json:"responden_id"`
+	RisikoID       int    `json:"risiko_id"`
+	CustomRisikoID int    `json:"custom_risiko_id"`
+	Alasan         string `json:"alasan"`
+}
 
-	PernahTerjadi string `json:"pernah_terjadi"`
+type DampakRequest struct {
+	RespondenID       int                   `json:"responden_id"`
+	RisikoID          int                   `json:"risiko_id"`
+	CustomRisikoID    int                   `json:"custom_risiko_id"`
+	DampakReputasi    models.ImpactLevel    `json:"dampak_reputasi"`
+	DampakOperasional models.ImpactLevel    `json:"dampak_operasional"`
+	DampakFinansial   models.ImpactLevel    `json:"dampak_finansial"`
+	DampakHukum       models.ImpactLevel    `json:"dampak_hukum"`
+	Frekuensi         models.FrequencyLevel `json:"frekuensi"`
+}
 
-	DampakReputasi    string `json:"dampak_reputasi"`
-	DampakOperasional string `json:"dampak_operasional"`
-	DampakFinansial   string `json:"dampak_finansial"`
-	DampakHukum       string `json:"dampak_hukum"`
+type PengendalianRequest struct {
+	RespondenID           int    `json:"responden_id"`
+	RisikoID              int    `json:"risiko_id"`
+	CustomRisikoID        int    `json:"custom_risiko_id"`
+	AdaPengendalian       bool   `json:"ada_pengendalian"`
+	DeskripsiPengendalian string `json:"deskripsi_pengendalian,omitempty"`
+}
 
-	Frekuensi string `json:"frekuensi"`
+type NavigateRequest struct {
+	RespondenID int    `json:"responden_id"`
+	Direction   string `json:"direction"`
+	CurrentRisk int    `json:"current_risk"`
+}
 
-	AdaPengendalian       string `json:"ada_pengendalian"`
-	DeskripsiPengendalian string `json:"deskripsi_pengendalian"`
+type ProgressResponse struct {
+	RespondenID    int     `json:"responden_id"`
+	RisikoID       *int    `json:"risiko_id"`
+	LangkahSaatIni *string `json:"langkah_saat_ini"`
+	Selesai        bool    `json:"selesai"`
+}
+
+type CustomRisikoRequest struct {
+	RespondenID int    `json:"responden_id"`
+	NamaRisiko  string `json:"nama_risiko"`
 }
