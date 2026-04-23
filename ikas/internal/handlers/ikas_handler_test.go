@@ -176,6 +176,7 @@ func TestIkasHandler_ServeHTTP_Create_Success(t *testing.T) {
 	handler := setupIkasHandler(repo, producer)
 
 	createReq := dto.CreateIkasRequest{IDPerusahaan: "11111111-1111-1111-1111-111111111111", Responden: "User", Tanggal: "2026-01-01", Telepon: "123456", Jabatan: "Manager"}
+	repo.On("CheckExistsByPerusahaanID", "11111111-1111-1111-1111-111111111111").Return(true, nil)
 	repo.On("CheckExistsByPerusahaanIDAndYear", "11111111-1111-1111-1111-111111111111", 2026).Return(false, nil)
 
 	producer.On("PublishIkasCreated", mock.Anything, mock.MatchedBy(func(e dto_event.IkasCreatedEvent) bool {
@@ -213,6 +214,7 @@ func TestIkasHandler_ServeHTTP_Create_ExistsOrError(t *testing.T) {
 	handler := setupIkasHandler(repo, nil)
 
 	createReq := dto.CreateIkasRequest{IDPerusahaan: "11111111-1111-1111-1111-111111111111", Responden: "User", Tanggal: "2026-01-01", Telepon: "123456", Jabatan: "Manager"}
+	repo.On("CheckExistsByPerusahaanID", "11111111-1111-1111-1111-111111111111").Return(true, nil)
 	repo.On("CheckExistsByPerusahaanIDAndYear", "11111111-1111-1111-1111-111111111111", 2026).Return(true, nil) // Conflict
 
 	body, _ := json.Marshal(createReq)
@@ -429,11 +431,16 @@ func TestIkasHandler_ServeHTTP_Import_Success(t *testing.T) {
 	importData := &dto.ParsedExcelData{
 		IkasRequest: dto.CreateIkasRequest{
 			IDPerusahaan: "11111111-1111-1111-1111-111111111111",
+			Responden:    "User",
+			Tanggal:      "2026-01-01",
+			Telepon:      "123456",
+			Jabatan:      "Manager",
 		},
 		JawabanIdentifikasi: []dto.ExcelSubdomainAnswer{{PertanyaanID: 1, Jawaban: 1.0}},
 	}
 
 	repo.On("ParseExcelForImport", mock.Anything).Return(importData, nil)
+	repo.On("CheckExistsByPerusahaanID", "11111111-1111-1111-1111-111111111111").Return(true, nil)
 	repo.On("CheckExistsByPerusahaanIDAndYear", "11111111-1111-1111-1111-111111111111", 2026).Return(false, nil) // Create IKAS
 
 	producer.On("PublishIkasCreated", mock.Anything, mock.Anything).Return(nil)
@@ -463,6 +470,7 @@ func TestIkasHandler_ServeHTTP_Import_SystemError(t *testing.T) {
 	}
 
 	repo.On("ParseExcelForImport", mock.Anything).Return(importData, nil)
+	repo.On("CheckExistsByPerusahaanID", "11111111-1111-1111-1111-111111111111").Return(true, nil)
 	repo.On("CheckExistsByPerusahaanIDAndYear", "11111111-1111-1111-1111-111111111111", 2026).Return(false, errors.New("db error"))
 
 	req := createMultipartRequest(t, "file", "test.xlsx", []byte("dummy data"))
