@@ -6,6 +6,7 @@ import (
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/testhelpers"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"golang.org/x/crypto/bcrypt"
@@ -474,12 +475,13 @@ func TestUserService_UpdateProfilePhoto_UserNotFound(t *testing.T) {
 }
 
 func TestUserService_UpdateProfilePhoto_ReplacesOldPhoto(t *testing.T) {
-	service, mockRepo := setupUserService()
-	defer os.RemoveAll("./test_uploads")
+	mockRepo := testhelpers.NewMockUserRepository()
+	uploadPath := t.TempDir()
+	service := NewUserService(mockRepo, uploadPath, nil)
 
 	// Buat file lama supaya os.Remove bisa dieksekusi tanpa error
 	oldFilename := "old_photo.jpg"
-	oldPath := "./test_uploads/" + oldFilename
+	oldPath := filepath.Join(uploadPath, oldFilename)
 	_ = os.WriteFile(oldPath, []byte("dummy"), 0644)
 
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
@@ -538,11 +540,12 @@ func TestUserService_UpdateBanner_UserNotFound(t *testing.T) {
 }
 
 func TestUserService_UpdateBanner_ReplacesOldBanner(t *testing.T) {
-	service, mockRepo := setupUserService()
-	defer os.RemoveAll("./test_uploads")
+	mockRepo := testhelpers.NewMockUserRepository()
+	uploadPath := t.TempDir()
+	service := NewUserService(mockRepo, uploadPath, nil)
 
 	oldFilename := "old_banner.jpg"
-	oldPath := "./test_uploads/" + oldFilename
+	oldPath := filepath.Join(uploadPath, oldFilename)
 	_ = os.WriteFile(oldPath, []byte("dummy"), 0644)
 
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
