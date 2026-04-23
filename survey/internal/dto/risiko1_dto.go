@@ -3,24 +3,24 @@ package dto
 import "survey/internal/models"
 
 type EligibilityRequest struct {
-	RespondenID   int  `json:"responden_id"`
-	RisikoID      int  `json:"risiko_id"`
+	RespondenID    int  `json:"responden_id"`
+	RisikoID       int  `json:"risiko_id"`
 	CustomRisikoID int  `json:"custom_risiko_id"`
-	PernahTerjadi bool `json:"pernah_terjadi"`
+	PernahTerjadi  bool `json:"pernah_terjadi"`
 }
 
 type AlasanRequest struct {
-	RespondenID int    `json:"responden_id"`
-	RisikoID    int    `json:"risiko_id"`
-	CustomRisikoID int  `json:"custom_risiko_id"`
-	Alasan      string `json:"alasan"`
+	RespondenID    int    `json:"responden_id"`
+	RisikoID       int    `json:"risiko_id"`
+	CustomRisikoID int    `json:"custom_risiko_id"`
+	Alasan         string `json:"alasan"`
 }
 
 type DampakRequest struct {
 	RespondenID       int                   `json:"responden_id"`
 	RisikoID          int                   `json:"risiko_id"`
-	CustomRisikoID 	  int  					`json:"custom_risiko_id"`
-	DampakReputasi    models.ImpactLevel    `json:"dampak_reputasi"`   
+	CustomRisikoID    int                   `json:"custom_risiko_id"`
+	DampakReputasi    models.ImpactLevel    `json:"dampak_reputasi"`
 	DampakOperasional models.ImpactLevel    `json:"dampak_operasional"`
 	DampakFinansial   models.ImpactLevel    `json:"dampak_finansial"`
 	DampakHukum       models.ImpactLevel    `json:"dampak_hukum"`
@@ -30,12 +30,12 @@ type DampakRequest struct {
 type PengendalianRequest struct {
 	RespondenID           int    `json:"responden_id"`
 	RisikoID              int    `json:"risiko_id"`
-	CustomRisikoID        int  `json:"custom_risiko_id"`
+	CustomRisikoID        int    `json:"custom_risiko_id"`
 	AdaPengendalian       bool   `json:"ada_pengendalian"`
-	DeskripsiPengendalian string `json:"deskripsi_pengendalian,omitempty"` 
+	DeskripsiPengendalian string `json:"deskripsi_pengendalian,omitempty"`
 }
 
-type NavigateRequest struct {             
+type NavigateRequest struct {
 	RespondenID int    `json:"responden_id"`
 	Direction   string `json:"direction"`
 	CurrentRisk int    `json:"current_risk"`

@@ -73,31 +73,31 @@ type RisikoAlasan struct {
 
 // STEP 2B — DAMPAK
 type RisikoDampak struct {
-	ID                  int            `db:"id"`
-	RespondenID         int            `db:"responden_id"`
-	RisikoID            int            `db:"risiko_id"`
-	CustomRisikoID      *int           `db:"custom_risiko_id"`
+	ID             int  `db:"id"`
+	RespondenID    int  `db:"responden_id"`
+	RisikoID       int  `db:"risiko_id"`
+	CustomRisikoID *int `db:"custom_risiko_id"`
 
-	DampakReputasi      ImpactLevel    `db:"dampak_reputasi"`
-	DampakOperasional   ImpactLevel    `db:"dampak_operasional"`
-	DampakFinansial     ImpactLevel    `db:"dampak_finansial"`
-	DampakHukum         ImpactLevel    `db:"dampak_hukum"`
+	DampakReputasi    ImpactLevel `db:"dampak_reputasi"`
+	DampakOperasional ImpactLevel `db:"dampak_operasional"`
+	DampakFinansial   ImpactLevel `db:"dampak_finansial"`
+	DampakHukum       ImpactLevel `db:"dampak_hukum"`
 
-	Frekuensi           FrequencyLevel `db:"frekuensi"`
-	CreatedAt           time.Time      `db:"created_at"`
+	Frekuensi FrequencyLevel `db:"frekuensi"`
+	CreatedAt time.Time      `db:"created_at"`
 }
 
 // STEP 2C — PENGENDALIAN
 type RisikoPengendalian struct {
-	ID                     int       `db:"id"`
-	RespondenID            int       `db:"responden_id"`
-	RisikoID               int       `db:"risiko_id"`
-	CustomRisikoID         *int      `db:"custom_risiko_id"`
+	ID             int  `db:"id"`
+	RespondenID    int  `db:"responden_id"`
+	RisikoID       int  `db:"risiko_id"`
+	CustomRisikoID *int `db:"custom_risiko_id"`
 
-	AdaPengendalian        bool      `db:"ada_pengendalian"`
-	DeskripsiPengendalian  string    `db:"deskripsi_pengendalian"`
+	AdaPengendalian       bool   `db:"ada_pengendalian"`
+	DeskripsiPengendalian string `db:"deskripsi_pengendalian"`
 
-	CreatedAt              time.Time `db:"created_at"`
+	CreatedAt time.Time `db:"created_at"`
 }
 
 // PROGRESS SURVEY
@@ -110,12 +110,12 @@ type SurveyProgress struct {
 	TerakhirUpdate time.Time      `db:"terakhir_update"`
 }
 
-// RISIKO RESPONSE 
+// RISIKO RESPONSE
 type RisikoResponse struct {
 	ID         int    `json:"id"`
 	NamaRisiko string `json:"nama_risiko"`
 	Deskripsi  string `json:"deskripsi"`
-} 
+}
 
 // GLOBAL API RESPONSE
 type APIResponse struct {

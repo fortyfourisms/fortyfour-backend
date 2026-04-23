@@ -46,7 +46,7 @@ func InitRouter(
 	mux.HandleFunc("/api/survey/progress/", risikoH.GetProgress)
 	mux.HandleFunc("/api/survey/navigate", risikoH.Navigate)
 
-	// Lanjutkan Nanti 
+	// Lanjutkan Nanti
 	mux.HandleFunc("/api/survey/save-progress", risikoH.SaveProgress)
 
 	// Custom Risiko

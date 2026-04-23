@@ -97,7 +97,7 @@ func (r *RisikoRepository) UpsertDampak(m models.RisikoDampak) error {
 		models.MapImpactIntToString(m.DampakOperasional),
 		models.MapImpactIntToString(m.DampakFinansial),
 		models.MapImpactIntToString(m.DampakHukum),
-		models.MapFrequencyIntToString(m.Frekuensi), 
+		models.MapFrequencyIntToString(m.Frekuensi),
 	)
 
 	return err
@@ -179,8 +179,8 @@ func (r *RisikoRepository) FindByRespondentID(respondenID int) (map[string]inter
 
 	// SAFE mapping (tidak jadi 0 kalau NULL)
 	result := map[string]interface{}{
-		"pernah_terjadi": pernahTerjadi,
-		"alasan":         alasan.String,
+		"pernah_terjadi":         pernahTerjadi,
+		"alasan":                 alasan.String,
 		"ada_pengendalian":       adaPengendalian.Bool,
 		"deskripsi_pengendalian": deskripsiPengendalian.String,
 	}
