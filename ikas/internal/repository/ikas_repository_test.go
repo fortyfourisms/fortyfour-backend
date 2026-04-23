@@ -299,12 +299,16 @@ func TestIkasRepository_Excel(t *testing.T) {
 		result, err := repo.ParseExcelForImport(excelData)
 		assert.NoError(t, err)
 		assert.Equal(t, "comp-alpha", result.IkasRequest.IDPerusahaan)
-		assert.Equal(t, "2023-01-01", result.IkasRequest.Tanggal) 
+		assert.Equal(t, "2023-01-01", result.IkasRequest.Tanggal)
 	})
 
 	t.Run("ParseExcel_CompanyNotFound", func(t *testing.T) {
 		f := excelize.NewFile()
-		f.NewSheet("Sheet2"); f.NewSheet("Sheet3"); f.NewSheet("Sheet4"); f.NewSheet("Sheet5"); f.NewSheet("Sheet6")
+		f.NewSheet("Sheet2")
+		f.NewSheet("Sheet3")
+		f.NewSheet("Sheet4")
+		f.NewSheet("Sheet5")
+		f.NewSheet("Sheet6")
 		f.SetCellValue("Sheet2", "D4", "Unknown")
 		buf, _ := f.WriteToBuffer()
 
@@ -513,4 +517,3 @@ func TestParseMultipleDateFormats(t *testing.T) {
 		assert.Error(t, err)
 	})
 }
-

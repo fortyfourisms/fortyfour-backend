@@ -223,7 +223,7 @@ func (h *RespondenHandler) handleUpdate(w http.ResponseWriter, r *http.Request, 
 // DeleteResponden godoc
 // @Summary      Hapus responden
 // @Description  Menghapus data responden berdasarkan ID
-// @Tags         Responden Survey 
+// @Tags         Responden Survey
 // @Produce      json
 // @Param        id   path      int  true  "Responden ID"
 // @Success      200  {object}  map[string]string
