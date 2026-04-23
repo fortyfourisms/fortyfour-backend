@@ -164,10 +164,10 @@ func main() {
 	pertanyaanProteksiService := services.NewPertanyaanProteksiService(pertanyaanProteksiRepo, msgProducer)
 	pertanyaanDeteksiService := services.NewPertanyaanDeteksiService(pertanyaanDeteksiRepo, msgProducer)
 	pertanyaanGulihService := services.NewPertanyaanGulihService(pertanyaanGulihRepo, msgProducer)
-	jawabanIdentifikasiService := services.NewJawabanIdentifikasiService(jawabanIdentifikasiRepo, ikasRepo, msgProducer)
-	jawabanProteksiService := services.NewJawabanProteksiService(jawabanProteksiRepo, ikasRepo, msgProducer)
-	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo, ikasRepo, msgProducer)
-	jawabanGulihService := services.NewJawabanGulihService(jawabanGulihRepo, ikasRepo, msgProducer)
+	jawabanIdentifikasiService := services.NewJawabanIdentifikasiService(jawabanIdentifikasiRepo, ikasRepo, msgProducer, ikasService)
+	jawabanProteksiService := services.NewJawabanProteksiService(jawabanProteksiRepo, ikasRepo, msgProducer, ikasService)
+	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo, ikasRepo, msgProducer, ikasService)
+	jawabanGulihService := services.NewJawabanGulihService(jawabanGulihRepo, ikasRepo, msgProducer, ikasService)
 
 	// handlers
 	ikasHandler := handlers.NewIkasHandler(ikasService)
