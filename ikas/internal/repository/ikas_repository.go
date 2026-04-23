@@ -1095,10 +1095,10 @@ func (r *IkasRepository) FindPerusahaanByName(namaPerusahaan string) (string, er
 	return id, nil
 }
 
-// CheckExistsByPerusahaanID mengecek apakah data IKAS untuk perusahaan tersebut sudah ada
+// CheckExistsByPerusahaanID mengecek apakah data perusahaan tersebut ada
 func (r *IkasRepository) CheckExistsByPerusahaanID(id string) (bool, error) {
 	var count int
-	err := r.db.QueryRow("SELECT COUNT(*) FROM ikas WHERE id_perusahaan = ?", id).Scan(&count)
+	err := r.db.QueryRow("SELECT COUNT(*) FROM perusahaan WHERE id = ?", id).Scan(&count)
 	if err != nil {
 		return false, err
 	}
