@@ -128,3 +128,17 @@ func (r *RabbitMQ) Reconnect() error {
 func (r *RabbitMQ) IsConnected() bool {
 	return r.conn != nil && !r.conn.IsClosed()
 }
+
+// NewChannel creates a new independent AMQP channel from the existing connection.
+// Use this to give producers and consumers their own dedicated channels,
+// since AMQP channels are NOT safe for concurrent use across goroutines.
+func (r *RabbitMQ) NewChannel() (*amqp.Channel, error) {
+	if r.conn == nil || r.conn.IsClosed() {
+		return nil, fmt.Errorf("RabbitMQ connection is closed")
+	}
+	ch, err := r.conn.Channel()
+	if err != nil {
+		return nil, fmt.Errorf("failed to open new channel: %w", err)
+	}
+	return ch, nil
+}
