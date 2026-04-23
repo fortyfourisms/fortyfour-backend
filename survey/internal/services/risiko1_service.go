@@ -1,11 +1,15 @@
 package services
 
 import (
+	"database/sql"
 	"errors"
-
+	"survey/internal/dto"
 	"survey/internal/models"
 	"survey/internal/repository"
+	"survey/validator"
 )
+
+const CustomRiskIndex = 14
 
 type RisikoService struct {
 	repo *repository.RisikoRepository
@@ -15,210 +19,329 @@ func NewRisikoService(repo *repository.RisikoRepository) *RisikoService {
 	return &RisikoService{repo: repo}
 }
 
-// STEP 1 — Eligibility
-// POST /api/survey/risk/ip-theft/eligibility
-// Pertanyaan:
-//   "Apakah perusahaan Anda berpotensi mengalami atau pernah mengalami
-//    insiden pencurian Intellectual Property?"
-// Branching:
-//   has_experienced = true  → next_step: "show_detail"   (alur Ya)
-//   has_experienced = false → next_step: "show_reason"   (alur Tidak)
+// HELPER
+func toIntPtr(v int) *int {
+	if v == 0 {
+		return nil
+	}
+	return &v
+}
 
-func (s *RisikoService) ProcessEligibility(req models.EligibilityRequest) (*models.EligibilityResponse, error) {
-	if err := validation.ValidateEligibilityRequest(req); err != nil {
+func (s *RisikoService) validateFK(respondenID, risikoID, customID int) error {
+
+	existResponden, err := s.repo.ExistsResponden(respondenID)
+	if err != nil {
+		return err
+	}
+	if !existResponden {
+		return errors.New("responden tidak ditemukan")
+	}
+
+	// custom risk
+	if customID != 0 {
+		exist, err := s.repo.ExistsCustomRisiko(customID)
+		if err != nil {
+			return err
+		}
+		if !exist {
+			return errors.New("custom risiko tidak ditemukan")
+		}
+		return nil
+	}
+
+	// master risk
+	exist, err := s.repo.ExistsRisiko(risikoID)
+	if err != nil {
+		return err
+	}
+	if !exist {
+		return errors.New("risiko tidak ditemukan")
+	}
+
+	return nil
+}
+
+func assignRisk(risikoID int, customID int) (int, *int) {
+	if customID != 0 {
+		return 0, toIntPtr(customID)
+	}
+	return risikoID, nil
+}
+
+// STEP 1 — ELIGIBILITY
+func (s *RisikoService) ProcessEligibility(req dto.EligibilityRequest) (map[string]interface{}, error) {
+
+	if req.RespondenID == 0 {
+		return nil, validation.ErrMissingRespondentID
+	}
+
+	if err := s.validateFK(req.RespondenID, req.RisikoID, req.CustomRisikoID); err != nil {
 		return nil, err
 	}
 
-	s.repo.GetOrCreate(req.RespondentID)
+	risikoID, customPtr := assignRisk(req.RisikoID, req.CustomRisikoID)
 
-	record := &models.IPTheftResponse{
-		RespondentID:   req.RespondentID,
-		HasExperienced: req.HasExperienced,
-		CurrentStep:    models.StepEligibility,
+	data := models.RisikoEligibility{
+		RespondenID:    req.RespondenID,
+		RisikoID:       risikoID,
+		CustomRisikoID: customPtr,
+		PernahTerjadi:  req.PernahTerjadi,
 	}
-	if err := s.repo.Upsert(record); err != nil {
+
+	if err := s.repo.UpsertEligibility(data); err != nil {
 		return nil, err
 	}
 
-	nextStep := "show_reason"
-	if req.HasExperienced {
-		nextStep = "show_detail"
+	nextStep := "reason"
+	if req.PernahTerjadi {
+		nextStep = "dampak"
 	}
 
-	return &models.EligibilityResponse{
-		RespondentID:   req.RespondentID,
-		HasExperienced: req.HasExperienced,
-		NextStep:       nextStep,
+	return map[string]interface{}{
+		"message":   "eligibility tersimpan",
+		"next_step": nextStep,
 	}, nil
 }
 
-// STEP 2a — Reason   (alur "Tidak")
-// POST /api/survey/risk/ip-theft/reason
-// Syarat masuk: has_experienced = false
-// Pertanyaan:
-//   "Mengapa perusahaan Anda tidak berpotensi mengalami atau tidak pernah
-//    mengalami insiden pencurian Intellectual Property?"
-// Setelah step ini → Risiko 1 SELESAI (tombol Berikutnya aktif)
+// STEP 2A — ALASAN
+func (s *RisikoService) ProcessAlasan(req dto.AlasanRequest) (map[string]interface{}, error) {
 
-func (s *RisikoService) ProcessReason(req models.ReasonRequest) (*models.IPTheftResponse, error) {
-	if err := validation.ValidateReasonRequest(req); err != nil {
+	if req.RespondenID == 0 {
+		return nil, validation.ErrMissingRespondentID
+	}
+
+	if req.Alasan == "" {
+		return nil, validation.ErrMissingReason
+	}
+
+	if err := s.validateFK(req.RespondenID, req.RisikoID, req.CustomRisikoID); err != nil {
 		return nil, err
 	}
 
-	existing, err := s.repo.FindByRespondentID(req.RespondentID)
-	if err != nil {
+	risikoID, customPtr := assignRisk(req.RisikoID, req.CustomRisikoID)
+
+	data := models.RisikoAlasan{
+		RespondenID:    req.RespondenID,
+		RisikoID:       risikoID,
+		CustomRisikoID: customPtr,
+		Alasan:         req.Alasan,
+	}
+
+	if err := s.repo.UpsertAlasan(data); err != nil {
 		return nil, err
 	}
 
-	if existing.HasExperienced {
-		return nil, errWrongBranch("reason", "Ya")
-	}
-
-	existing.Reason = req.Reason
-	existing.CurrentStep = models.StepDone
-
-	if err := s.repo.Upsert(existing); err != nil {
-		return nil, err
-	}
-
-	s.repo.MarkCompleted(req.RespondentID, 1)
-	return existing, nil
-}
-
-// STEP 2b — Detail   (alur "Ya")
-// POST /api/survey/risk/ip-theft/detail
-// Syarat masuk: has_experienced = true
-// Pertanyaan:
-//   1. "Seberapa besar dampak dari pencurian Intellectual Property perusahaan?"
-//      → Matrix 4 dimensi (Reputasi / Operasional / Finansial / Hukum), nilai 1–4
-//   2. "Seberapa sering dalam setahun risiko pencurian IP berpotensi terjadi?"
-//      → Frekuensi (Kecil=1 / Sedang=2 / Besar=3 / Sangat Besar=4)
-// Setelah step ini → next_step: "show_control"
-//   UI wajib melanjutkan ke Step 2c (ControlRequest) sebelum tombol Berikutnya aktif
-
-func (s *RisikoService) ProcessDetail(req models.DetailRequest) (*models.DetailResponse, error) {
-	if err := validation.ValidateDetailRequest(req); err != nil {
-		return nil, err
-	}
-
-	existing, err := s.repo.FindByRespondentID(req.RespondentID)
-	if err != nil {
-		return nil, err
-	}
-
-	if !existing.HasExperienced {
-		return nil, errWrongBranch("detail", "Tidak")
-	}
-
-	existing.Impact = &req.Impact
-	existing.Frequency = &req.Frequency
-	existing.CurrentStep = models.StepDetail
-
-	if err := s.repo.Upsert(existing); err != nil {
-		return nil, err
-	}
-
-	// Selalu lanjut ke step pengendalian — belum selesai
-	return &models.DetailResponse{
-		RespondentID: req.RespondentID,
-		NextStep:     "show_control",
+	return map[string]interface{}{
+		"message":   "alasan tersimpan",
+		"next_step": "finish",
 	}, nil
 }
 
-// STEP 2c — Control   (alur "Ya", sub-branching pengendalian)
-// POST /api/survey/risk/ip-theft/control
-// Syarat masuk: has_experienced = true AND step sebelumnya = "detail"
-// Pertanyaan wajib:
-//   "Apa perusahaan Anda telah memiliki tindakan pengendalian terhadap
-//    risiko pencurian Intellectual Property?"
-//   ● Ya  → muncul pertanyaan lanjutan:
-//            "Apa tindakan pengendalian yang telah dilakukan oleh perusahaan Anda
-//             terhadap risiko pencurian Intellectual Property perusahaan?"
-//            (wajib diisi, field: control_measures)
-//   ● Tidak → langsung tombol Berikutnya aktif (tidak ada pertanyaan tambahan)
-// Setelah step ini → Risiko 1 SELESAI (next_step: "finish")
+// STEP 2B — DAMPAK
+func (s *RisikoService) ProcessDampak(req dto.DampakRequest) (map[string]interface{}, error) {
 
-func (s *RisikoService) ProcessControl(req models.ControlRequest) (*models.ControlResponse, error) {
-	if err := validation.ValidateControlRequest(req); err != nil {
+	if req.RespondenID == 0 {
+		return nil, validation.ErrMissingRespondentID
+	}
+
+	if err := s.validateFK(req.RespondenID, req.RisikoID, req.CustomRisikoID); err != nil {
 		return nil, err
 	}
 
-	existing, err := s.repo.FindByRespondentID(req.RespondentID)
-	if err != nil {
+	if !req.DampakReputasi.Valid() ||
+		!req.DampakOperasional.Valid() ||
+		!req.DampakFinansial.Valid() ||
+		!req.DampakHukum.Valid() {
+		return nil, validation.ErrInvalidImpact
+	}
+
+	if !req.Frekuensi.Valid() {
+		return nil, validation.ErrInvalidFreq
+	}
+
+	risikoID, customPtr := assignRisk(req.RisikoID, req.CustomRisikoID)
+
+	data := models.RisikoDampak{
+		RespondenID:       req.RespondenID,
+		RisikoID:          risikoID,
+		CustomRisikoID:    customPtr,
+		DampakReputasi:    req.DampakReputasi,
+		DampakOperasional: req.DampakOperasional,
+		DampakFinansial:   req.DampakFinansial,
+		DampakHukum:       req.DampakHukum,
+		Frekuensi:         req.Frekuensi,
+	}
+
+	if err := s.repo.UpsertDampak(data); err != nil {
 		return nil, err
 	}
 
-	// Guard 1: hanya bisa diakses dari alur "Ya"
-	if !existing.HasExperienced {
-		return nil, errWrongBranch("control", "Tidak")
-	}
-
-	// Guard 2: step 2b (detail) harus sudah diisi terlebih dahulu
-	if existing.CurrentStep != models.StepDetail {
-		return nil, errors.New("langkah dampak & frekuensi (detail) harus diisi sebelum tindakan pengendalian")
-	}
-
-	// Simpan jawaban pengendalian
-	hasControl := req.HasControl
-	existing.HasControl = &hasControl
-	existing.CurrentStep = models.StepControl
-
-	if req.HasControl {
-		// Alur Ya → simpan tindakan pengendalian yang diisi user
-		existing.ControlMeasures = req.ControlMeasures
-	} else {
-		// Alur Tidak → kosongkan (jika sebelumnya ada nilai)
-		existing.ControlMeasures = ""
-	}
-
-	if err := s.repo.Upsert(existing); err != nil {
-		return nil, err
-	}
-
-	// Risiko 1 selesai
-	existing.CurrentStep = models.StepDone
-	_ = s.repo.Upsert(existing)
-	s.repo.MarkCompleted(req.RespondentID, 1)
-
-	return &models.ControlResponse{
-		RespondentID:    req.RespondentID,
-		HasControl:      req.HasControl,
-		ControlMeasures: req.ControlMeasures,
-		NextStep:        "finish", // tombol Berikutnya aktif
+	return map[string]interface{}{
+		"message":   "dampak & frekuensi tersimpan",
+		"next_step": "pengendalian",
 	}, nil
 }
 
-// Query
-func (s *RisikoService) GetResponse(respondentID string) (*models.IPTheftResponse, error) {
-	return s.repo.FindByRespondentID(respondentID)
+// STEP 2C — PENGENDALIAN
+func (s *RisikoService) ProcessPengendalian(req dto.PengendalianRequest) (map[string]interface{}, error) {
+
+	if req.RespondenID == 0 {
+		return nil, validation.ErrMissingRespondentID
+	}
+
+	if req.AdaPengendalian && req.DeskripsiPengendalian == "" {
+		return nil, validation.ErrMissingControl
+	}
+
+	if err := s.validateFK(req.RespondenID, req.RisikoID, req.CustomRisikoID); err != nil {
+		return nil, err
+	}
+
+	risikoID, customPtr := assignRisk(req.RisikoID, req.CustomRisikoID)
+
+	data := models.RisikoPengendalian{
+		RespondenID:           req.RespondenID,
+		RisikoID:              risikoID,
+		CustomRisikoID:        customPtr,
+		AdaPengendalian:       req.AdaPengendalian,
+		DeskripsiPengendalian: req.DeskripsiPengendalian,
+	}
+
+	if err := s.repo.UpsertPengendalian(data); err != nil {
+		return nil, err
+	}
+
+	return map[string]interface{}{
+		"message":   "pengendalian tersimpan",
+		"next_step": "finish",
+	}, nil
 }
 
-// Helpers
-type branchError struct{ endpoint, branch string }
-
-func (e *branchError) Error() string {
-	return "endpoint '" + e.endpoint + "' tidak tersedia untuk jawaban '" + e.branch + "'"
+func (s *RisikoService) GetByRespondentID(id int) (map[string]interface{}, error) {
+	return s.repo.FindByRespondentID(id)
 }
 
-func errWrongBranch(endpoint, branch string) error {
-	return &branchError{endpoint: endpoint, branch: branch}
+func (s *RisikoService) GetProgress(id int) (dto.ProgressResponse, error) {
+
+	progress, err := s.repo.GetProgress(id)
+	if err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	return mapProgressToResponse(progress), nil
 }
 
-func (s *RisikoService) Navigate(req models.NavigateRequest) (*models.SurveyProgress, error) {
-	p := s.repo.GetOrCreate(req.RespondentID)
+// NAVIGATE
+func (s *RisikoService) Navigate(req dto.NavigateRequest) (dto.ProgressResponse, error) {
+
+	progress, err := s.repo.GetProgress(req.RespondenID)
+	if err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	current := progress.RisikoID.Int64
+	if !progress.RisikoID.Valid {
+		current = 1
+	}
+
 	switch req.Direction {
 	case "next":
-		if p.CurrentRisk < p.TotalRisks {
-			s.repo.SetCurrentRisk(req.RespondentID, p.CurrentRisk+1)
-		}
+		current++
 	case "previous":
-		if p.CurrentRisk > 1 {
-			s.repo.SetCurrentRisk(req.RespondentID, p.CurrentRisk-1)
+		if current > 1 {
+			current--
 		}
+	default:
+		return dto.ProgressResponse{}, errors.New("direction tidak valid")
 	}
-	return s.repo.Get(req.RespondentID)
+
+	step := "normal"
+	if current == CustomRiskIndex {
+		step = "custom_risk"
+	}
+
+	progress.RisikoID = sql.NullInt64{Int64: current, Valid: true}
+	progress.LangkahSaatIni = sql.NullString{String: step, Valid: true}
+
+	if err := s.repo.UpsertProgress(*progress); err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	return mapProgressToResponse(progress), nil
 }
 
-func (s *RisikoService) GetProgress(respondentID string) (*models.SurveyProgress, error) {
-	return s.repo.GetOrCreate(respondentID), nil
+// SAVE PROGRESS
+func (s *RisikoService) SaveProgress(req dto.NavigateRequest) (dto.ProgressResponse, error) {
+
+	progress, err := s.repo.GetProgress(req.RespondenID)
+	if err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	progress.RisikoID = sql.NullInt64{
+		Int64: int64(req.CurrentRisk),
+		Valid: true,
+	}
+
+	progress.LangkahSaatIni = sql.NullString{
+		String: "paused",
+		Valid:  true,
+	}
+
+	progress.Selesai = false
+
+	if err := s.repo.UpsertProgress(*progress); err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	return mapProgressToResponse(progress), nil
+}
+
+// CUSTOM RISIKO
+func (s *RisikoService) CreateCustomRisiko(req dto.CustomRisikoRequest) (int, error) {
+
+	if req.NamaRisiko == "" {
+		return 0, errors.New("nama risiko wajib diisi")
+	}
+
+	return s.repo.InsertCustomRisiko(req.RespondenID, req.NamaRisiko)
+}
+
+// FINISH
+func (s *RisikoService) FinishSurvey(respondenID int) error {
+
+	progress, err := s.repo.GetProgress(respondenID)
+	if err != nil {
+		return err
+	}
+
+	progress.Selesai = true
+	progress.LangkahSaatIni = sql.NullString{
+		String: "finish",
+		Valid:  true,
+	}
+
+	return s.repo.UpsertProgress(*progress)
+}
+
+// MAPPING
+func mapProgressToResponse(p *models.SurveyProgress) dto.ProgressResponse {
+
+	var risikoID *int
+	if p.RisikoID.Valid {
+		val := int(p.RisikoID.Int64)
+		risikoID = &val
+	}
+
+	var langkah *string
+	if p.LangkahSaatIni.Valid {
+		langkah = &p.LangkahSaatIni.String
+	}
+
+	return dto.ProgressResponse{
+		RespondenID:    p.RespondenID,
+		RisikoID:       risikoID,
+		LangkahSaatIni: langkah,
+		Selesai:        p.Selesai,
+	}
 }
