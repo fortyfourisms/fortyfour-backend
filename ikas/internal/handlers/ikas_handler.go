@@ -33,6 +33,12 @@ func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if strings.HasSuffix(suffix, "/export") && r.Method == http.MethodGet {
+		id := strings.TrimSuffix(suffix, "/export")
+		h.handleExportPDF(w, r, id)
+		return
+	}
+
 	id := suffix
 
 	switch r.Method {
@@ -367,4 +373,32 @@ func (h *IkasHandler) handleValidate(w http.ResponseWriter, r *http.Request, id 
 	utils.RespondJSON(w, 200, map[string]interface{}{
 		"message": msg,
 	})
+}
+func (h *IkasHandler) handleExportPDF(w http.ResponseWriter, r *http.Request, id string) {
+	if !utils.IsValidUUID(id) {
+		utils.RespondError(w, 400, "ID tidak valid")
+		return
+	}
+
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	ikas, pdfBytes, err := h.service.ExportByIDPDF(r.Context(), id, userRole, userPerusahaanID)
+	if err != nil {
+		if strings.Contains(err.Error(), "tidak ditemukan") {
+			utils.RespondError(w, 404, "Data tidak ditemukan")
+		} else {
+			utils.RespondError(w, 500, "Gagal generate PDF: "+err.Error())
+		}
+		return
+	}
+
+	// Set headers for PDF download
+	filename := "Laporan_IKAS_" + ikas.Perusahaan.NamaPerusahaan + "_" + ikas.Tanggal + ".pdf"
+	filename = strings.ReplaceAll(filename, " ", "_")
+
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
+	w.WriteHeader(http.StatusOK)
+	w.Write(pdfBytes)
 }

@@ -594,3 +594,18 @@ func (s *IkasService) ValidateIkas(ctx context.Context, id string, status bool) 
 
 	return nil
 }
+func (s *IkasService) ExportByIDPDF(ctx context.Context, id string, userRole string, userPerusahaanID string) (*dto.IkasResponse, []byte, error) {
+	// 1. Get complete data with ownership check
+	ikas, err := s.GetByID(id, userRole, userPerusahaanID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// 2. Generate PDF using ikas/internal/utils
+	pdfBytes, err := utils.GenerateIkasPDF(ikas)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return ikas, pdfBytes, nil
+}

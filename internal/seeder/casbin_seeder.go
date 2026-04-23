@@ -78,6 +78,7 @@ var defaultPolicies = []Policy{
 	{"user", "/api/maturity/ikas/:id", "GET"},
 	{"user", "/api/maturity/ikas/:id", "PUT"},
 	{"user", "/api/maturity/ikas/:id", "DELETE"},
+	{"user", "/api/maturity/ikas/:id/export", "GET"},
 
 	// Domain Identifikasi (read only untuk user)
 	{"user", "/api/maturity/identifikasi", "GET"},
