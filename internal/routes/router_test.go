@@ -38,31 +38,31 @@ func TestHealthHandler_ReturnsHealthyStatus(t *testing.T) {
 
 func TestInitRouter_HealthRoute_IsAccessibleWithoutDependencies(t *testing.T) {
 	var (
-		authH            *handlers.AuthHandler
-		userH            *handlers.UserHandler
-		perusahaanH      *handlers.PerusahaanHandler
-		picH             *handlers.PICHandler
-		roleH            *handlers.RoleHandler
-		casbinH          *handlers.CasbinHandler
-		sseH             *handlers.SSEHandler
-		authM            *middleware.AuthMiddleware
-		casbinM          *middleware.CasbinMiddleware
-		strictLimiter    *middleware.RateLimiter
-		moderateLimiter  *middleware.RateLimiter
-		lenientLimiter   *middleware.RateLimiter
-		csirtH           *handlers.CsirtHandler
-		csirtExportH     *handlers.CsirtExportHandler
-		sdmCsirtH        *handlers.SdmCsirtHandler
-		chatH            *handlers.ChatHandler
-		sektorH          *handlers.SektorHandler
-		subSektorH       *handlers.SubSektorHandler
-		seH              *handlers.SEHandler
-		seExportH        *handlers.SEExportHandler
-		seEditReqH       *handlers.SEEditRequestHandler
-		dashboardH       *handlers.DashboardHandler
-		notificationH    *handlers.NotificationHandler
-		ikasProxyH       *handlers.ProxyHandler
-		lmsH             *handlers.LMSHandler
+		authH           *handlers.AuthHandler
+		userH           *handlers.UserHandler
+		perusahaanH     *handlers.PerusahaanHandler
+		picH            *handlers.PICHandler
+		roleH           *handlers.RoleHandler
+		casbinH         *handlers.CasbinHandler
+		sseH            *handlers.SSEHandler
+		authM           *middleware.AuthMiddleware
+		casbinM         *middleware.CasbinMiddleware
+		strictLimiter   *middleware.RateLimiter
+		moderateLimiter *middleware.RateLimiter
+		lenientLimiter  *middleware.RateLimiter
+		csirtH          *handlers.CsirtHandler
+		csirtExportH    *handlers.CsirtExportHandler
+		sdmCsirtH       *handlers.SdmCsirtHandler
+		chatH           *handlers.ChatHandler
+		sektorH         *handlers.SektorHandler
+		subSektorH      *handlers.SubSektorHandler
+		seH             *handlers.SEHandler
+		seExportH       *handlers.SEExportHandler
+		seEditReqH      *handlers.SEEditRequestHandler
+		dashboardH      *handlers.DashboardHandler
+		notificationH   *handlers.NotificationHandler
+		ikasProxyH      *handlers.ProxyHandler
+		lmsH            *handlers.LMSHandler
 	)
 
 	router := InitRouter(

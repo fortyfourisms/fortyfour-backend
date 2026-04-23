@@ -10,11 +10,11 @@ import (
 )
 
 type fakeSEEditRequestRepo struct {
-	createFn        func(req *models.SEEditRequest) error
-	findByIDFn      func(id string) (*models.SEEditRequest, error)
+	createFn         func(req *models.SEEditRequest) error
+	findByIDFn       func(id string) (*models.SEEditRequest, error)
 	findAllPendingFn func() ([]models.SEEditRequest, error)
-	findByUserFn    func(userID string) ([]models.SEEditRequest, error)
-	updateStatusFn  func(id string, status models.SEEditRequestStatus, catatan *string) error
+	findByUserFn     func(userID string) ([]models.SEEditRequest, error)
+	updateStatusFn   func(id string, status models.SEEditRequestStatus, catatan *string) error
 }
 
 func (f *fakeSEEditRequestRepo) Create(req *models.SEEditRequest) error {

@@ -273,12 +273,12 @@ func (s *JawabanDeteksiService) Update(id int, req dto.UpdateJawabanDeteksiReque
 			if errId == nil && newJawabanID > 0 {
 				id = newJawabanID
 				msg = "Data tahun lalu tidak dapat diubah. Update telah dialihkan otomatis ke record tahun berjalan (carry-over)."
-				
+
 				existing, err = s.repo.GetByID(id)
 				if err != nil {
 					return 0, "", err
 				}
-				
+
 				ikasData, err = s.ikasRepo.GetByID(existing.IkasID)
 				if err != nil {
 					return 0, "", errors.New("gagal memverifikasi kepemilikan asesmen setelah clone")
