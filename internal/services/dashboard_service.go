@@ -16,10 +16,10 @@ import (
 
 type DashboardRepositoryInterface interface {
 	CountPerSektor(ctx context.Context, f dto.DashboardFilter) ([]dto.SectorCount, error)
+	IkasGlobalAgg(ctx context.Context, f dto.DashboardFilter) (dto.IkasAgg, error)
 	SeGlobalAgg(ctx context.Context, f dto.DashboardFilter) (dto.SeAgg, error)
 	SeStatusCount(ctx context.Context, f dto.DashboardFilter) (dto.SeStatusCount, error)
-	// TODO: re-enable ikas status when ikas table is ready
-	// IkasStatusCount(ctx context.Context, f dto.DashboardFilter) (dto.IkasStatusCount, error)
+	IkasStatusCount(ctx context.Context, f dto.DashboardFilter) (dto.IkasStatusCount, error)
 }
 
 /*
@@ -69,11 +69,10 @@ func (s *DashboardService) GetSummary(ctx context.Context, f dto.DashboardFilter
 		return nil, err
 	}
 
-	// TODO: re-enable ikas summary when ikas table is ready
-	// ikasAgg, err := s.repo.IkasGlobalAgg(ctx)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	ikasAgg, err := s.repo.IkasGlobalAgg(ctx, f)
+	if err != nil {
+		return nil, err
+	}
 
 	seAgg, err := s.repo.SeGlobalAgg(ctx, f)
 	if err != nil {
@@ -85,18 +84,17 @@ func (s *DashboardService) GetSummary(ctx context.Context, f dto.DashboardFilter
 		return nil, err
 	}
 
-	// TODO: re-enable ikas status when ikas table is ready
-	// ikasStatus, err := s.repo.IkasStatusCount(ctx, f)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	ikasStatus, err := s.repo.IkasStatusCount(ctx, f)
+	if err != nil {
+		return nil, err
+	}
 
 	summary := &dto.DashboardSummary{
-		Sektor: sectors,
-		// Ikas:       ikasAgg,   // TODO: re-enable ikas summary when ikas table is ready
-		SE:       seAgg,
-		SEStatus: seStatus,
-		// IkasStatus: ikasStatus, // TODO: re-enable ikas status when ikas table is ready
+		Sektor:     sectors,
+		Ikas:       ikasAgg,
+		SE:         seAgg,
+		SEStatus:   seStatus,
+		IkasStatus: ikasStatus,
 	}
 
 	cacheSet(s.rc, key, summary, TTLList)
