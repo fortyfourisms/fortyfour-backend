@@ -901,3 +901,28 @@ func TestUserHandler_handleDelete_ServiceError(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
+
+func TestUserHandler_handleUpdateStatus_AcceptsFrontendActiveValue(t *testing.T) {
+	handler, mockRepo, _ := setupUserHandler()
+
+	user := &models.User{
+		ID:            "user-1",
+		Username:      "targetuser",
+		Email:         "target@example.com",
+		Status:        models.UserStatusSuspend,
+		LoginAttempts: 2,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+	mockRepo.Create(user)
+
+	body := strings.NewReader(`{"status":"active"}`)
+	req := httptest.NewRequest(http.MethodPatch, "/api/users/user-1/status", body)
+	req = withUserCtx(req, "admin-1", "admin")
+	w := httptest.NewRecorder()
+
+	handler.handleUpdateStatus(w, req, "user-1")
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "Aktif")
+}

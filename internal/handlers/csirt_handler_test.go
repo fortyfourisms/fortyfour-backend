@@ -65,6 +65,11 @@ func withCsirtAdminContext(req *http.Request) *http.Request {
 	return req.WithContext(ctx)
 }
 
+func withCsirtStaffContext(req *http.Request) *http.Request {
+	ctx := context.WithValue(req.Context(), middleware.RoleKey, "staff")
+	return req.WithContext(ctx)
+}
+
 //
 // HELPERS
 //
@@ -151,6 +156,36 @@ func TestCsirtHandler_GetAll_ServiceError(t *testing.T) {
 	handler.ServeHTTP(rr, req)
 
 	assert.Equal(t, http.StatusInternalServerError, rr.Code)
+}
+
+func TestCsirtHandler_GetAll_AsStaff_UsesGetAll(t *testing.T) {
+	mockSvc := &mockCsirtService{
+		GetAllFn: func() ([]dto.CsirtResponse, error) {
+			return []dto.CsirtResponse{
+				{ID: "1", NamaCsirt: "CSIRT A"},
+				{ID: "2", NamaCsirt: "CSIRT B"},
+			}, nil
+		},
+		GetByPerusahaanFn: func(string) ([]dto.CsirtResponse, error) {
+			t.Fatal("GetByPerusahaan should not be called for staff")
+			return nil, nil
+		},
+	}
+
+	handler := NewCsirtHandler(mockSvc, &mockCsirtSSEService{})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/csirt", nil)
+	req = withCsirtStaffContext(req)
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response []dto.CsirtResponse
+	err := json.NewDecoder(rr.Body).Decode(&response)
+	assert.NoError(t, err)
+	assert.Len(t, response, 2)
 }
 
 //

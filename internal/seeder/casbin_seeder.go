@@ -214,6 +214,10 @@ var defaultPolicies = []Policy{
 	{"user", "/api/notifications", "GET"},
 	{"user", "/api/notifications/read-all", "PATCH"},
 	{"user", "/api/notifications/:id/read", "PATCH"},
+
+	// Perusahaan (user hanya bisa baca perusahaan miliknya sendiri, dibatasi lagi di handler)
+	{"user", "/api/perusahaan", "GET"},
+	{"user", "/api/perusahaan/:id", "GET"},
 }
 
 // staffInitialPolicies adalah policy awal untuk role staff.
@@ -226,6 +230,8 @@ var staffInitialPolicies = []Policy{
 	{"staff", "/api/se", "POST"},
 	{"staff", "/api/se/:id", "GET"},
 	{"staff", "/api/se/:id", "PUT"},
+	{"staff", "/api/se/export-pdf", "GET"},
+	{"staff", "/api/se/:id/export-pdf", "GET"},
 	{"staff", "/api/se/:id/request-edit", "POST"},
 	{"staff", "/api/se/edit-requests", "GET"},
 
@@ -234,6 +240,8 @@ var staffInitialPolicies = []Policy{
 	{"staff", "/api/csirt", "POST"},
 	{"staff", "/api/csirt/:id", "GET"},
 	{"staff", "/api/csirt/:id", "PUT"},
+	{"staff", "/api/csirt/export-pdf", "GET"},
+	{"staff", "/api/csirt/:id/export-pdf", "GET"},
 	{"staff", "/api/csirt/:id/pgp-download", "GET"},
 
 	// SDM CSIRT

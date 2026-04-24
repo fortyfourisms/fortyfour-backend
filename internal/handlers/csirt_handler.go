@@ -72,7 +72,7 @@ func (h *CsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary		List semua CSIRT
-// @Description	Admin mendapat semua data CSIRT. User hanya mendapat CSIRT milik perusahaannya.
+// @Description	Admin dan staff mendapat semua data CSIRT. User/PIC hanya mendapat CSIRT milik perusahaannya.
 // @Tags			CSIRT
 // @Produce		json
 // @Security		BearerAuth
@@ -83,7 +83,7 @@ func (h *CsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *CsirtHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
-	if role == "admin" {
+	if role == "admin" || role == "staff" {
 		data, err := h.service.GetAll()
 		if err != nil {
 			logger.Error(err, "failed to get all CSIRT data")

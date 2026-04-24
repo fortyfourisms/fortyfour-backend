@@ -96,6 +96,11 @@ func withExportAdminCtx(r *http.Request) *http.Request {
 	return r.WithContext(ctx)
 }
 
+func withExportStaffCtx(r *http.Request) *http.Request {
+	ctx := context.WithValue(r.Context(), middleware.RoleKey, "staff")
+	return r.WithContext(ctx)
+}
+
 func withExportUserCtx(r *http.Request, idPerusahaan string) *http.Request {
 	ctx := context.WithValue(r.Context(), middleware.RoleKey, "user")
 	ctx = context.WithValue(ctx, middleware.IDPerusahaanKey, idPerusahaan)
@@ -143,6 +148,37 @@ func TestSEExportHandler_ExportAll_Admin_FilterPerusahaan(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "application/pdf", w.Header().Get("Content-Type"))
+	mockSvc.AssertExpectations(t)
+}
+
+func TestSEExportHandler_ExportAll_Staff_Success(t *testing.T) {
+	mockSvc := new(mockSEExportService)
+	mockSvc.On("ExportAllPDF").Return(fakePDF, nil)
+
+	h := NewSEExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/se/export-pdf", nil)
+	req = withExportStaffCtx(req)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "application/pdf", w.Header().Get("Content-Type"))
+	mockSvc.AssertExpectations(t)
+}
+
+func TestSEExportHandler_ExportAll_Staff_FilterPerusahaan(t *testing.T) {
+	mockSvc := new(mockSEExportService)
+	mockSvc.On("ExportByPerusahaanPDF", "p-staff").Return(fakePDF, nil)
+
+	h := NewSEExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/se/export-pdf?id_perusahaan=p-staff", nil)
+	req = withExportStaffCtx(req)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
 	mockSvc.AssertExpectations(t)
 }
 
@@ -264,6 +300,22 @@ func TestSEExportHandler_ExportByID_Admin_Success(t *testing.T) {
 	mockSvc.AssertExpectations(t)
 }
 
+func TestSEExportHandler_ExportByID_Staff_Success(t *testing.T) {
+	se := &dto.SEResponse{ID: "se-1", IDPerusahaan: "p-lain"}
+	mockSvc := new(mockSEExportService)
+	mockSvc.On("ExportByIDPDF", "se-1").Return(se, fakePDF, nil)
+
+	h := NewSEExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/se/se-1/export-pdf", nil)
+	req = withExportStaffCtx(req)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockSvc.AssertExpectations(t)
+}
+
 func TestSEExportHandler_ExportByID_User_OwnData_Success(t *testing.T) {
 	se := &dto.SEResponse{ID: "se-1", IDPerusahaan: "p-user"}
 	mockSvc := new(mockSEExportService)
@@ -356,6 +408,36 @@ func TestCsirtExportHandler_ExportAll_Admin_FilterPerusahaan(t *testing.T) {
 	h := NewCsirtExportHandler(mockSvc)
 	req := httptest.NewRequest(http.MethodGet, "/api/csirt/export-pdf?id_perusahaan=p-abc", nil)
 	req = withExportAdminCtx(req)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockSvc.AssertExpectations(t)
+}
+
+func TestCsirtExportHandler_ExportAll_Staff_Success(t *testing.T) {
+	mockSvc := new(mockCsirtExportService)
+	mockSvc.On("ExportAllPDF").Return(fakePDF, nil)
+
+	h := NewCsirtExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/csirt/export-pdf", nil)
+	req = withExportStaffCtx(req)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockSvc.AssertExpectations(t)
+}
+
+func TestCsirtExportHandler_ExportAll_Staff_FilterPerusahaan(t *testing.T) {
+	mockSvc := new(mockCsirtExportService)
+	mockSvc.On("ExportByPerusahaanPDF", "p-staff").Return(fakePDF, nil)
+
+	h := NewCsirtExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/csirt/export-pdf?id_perusahaan=p-staff", nil)
+	req = withExportStaffCtx(req)
 	w := httptest.NewRecorder()
 
 	h.ServeHTTP(w, req)
@@ -481,6 +563,25 @@ func TestCsirtExportHandler_ExportByID_Admin_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "application/pdf", w.Header().Get("Content-Type"))
 	assert.Contains(t, w.Header().Get("Content-Disposition"), "csirt-1")
+	mockSvc.AssertExpectations(t)
+}
+
+func TestCsirtExportHandler_ExportByID_Staff_Success(t *testing.T) {
+	csirt := &dto.CsirtResponse{
+		ID:         "csirt-1",
+		Perusahaan: dto.PerusahaanResponse{ID: "p-lain"},
+	}
+	mockSvc := new(mockCsirtExportService)
+	mockSvc.On("ExportByIDPDF", "csirt-1").Return(csirt, fakePDF, nil)
+
+	h := NewCsirtExportHandler(mockSvc)
+	req := httptest.NewRequest(http.MethodGet, "/api/csirt/csirt-1/export-pdf", nil)
+	req = withExportStaffCtx(req)
+	w := httptest.NewRecorder()
+
+	h.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
 	mockSvc.AssertExpectations(t)
 }
 

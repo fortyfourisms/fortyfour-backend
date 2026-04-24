@@ -8,13 +8,12 @@ type SectorCount struct {
 	ThisMonth int64  `json:"this_month"`
 }
 
-// TODO: re-enable ikas summary when ikas table is ready
-// IkasAgg summary for global ikas (keperluan summary)
-// type IkasAgg struct {
-// 	Total                int64   `json:"total_ikas"`
-// 	AvgNilaiKematangan   float64 `json:"avg_nilai_kematangan"`
-// 	AvgTargetNilai       float64 `json:"avg_target_nilai"`
-// }
+// IkasAgg summary for global ikas (keperluan summary).
+type IkasAgg struct {
+	Total              int64   `json:"total_ikas"`
+	AvgNilaiKematangan float64 `json:"avg_nilai_kematangan"`
+	AvgTargetNilai     float64 `json:"avg_target_nilai"`
+}
 
 // SeAgg summary for global se — termasuk breakdown per kategori dan this_month
 type SeAgg struct {
@@ -32,13 +31,12 @@ type SeStatusCount struct {
 	BelumMengisiKSE int64 `json:"belum_mengisi_kse"`
 }
 
-// TODO: re-enable ikas status when ikas table is ready
-// IkasStatusCount menghitung perusahaan yang sudah/belum mengisi IKAS
-// type IkasStatusCount struct {
-// 	TotalPerusahaan   int64 `json:"total_perusahaan"`
-// 	SudahMengisiIKAS  int64 `json:"sudah_mengisi_ikas"`
-// 	BelumMengisiIKAS  int64 `json:"belum_mengisi_ikas"`
-// }
+// IkasStatusCount menghitung perusahaan yang sudah/belum mengisi IKAS.
+type IkasStatusCount struct {
+	TotalPerusahaan  int64 `json:"total_perusahaan"`
+	SudahMengisiIKAS int64 `json:"sudah_mengisi_ikas"`
+	BelumMengisiIKAS int64 `json:"belum_mengisi_ikas"`
+}
 
 // DashboardFilter menyimpan semua parameter filter yang diterima dari handler
 type DashboardFilter struct {
@@ -52,9 +50,9 @@ type DashboardFilter struct {
 
 // DashboardSummary top-level
 type DashboardSummary struct {
-	Sektor []SectorCount `json:"sektor_counts"`
-	// Ikas   IkasAgg       `json:"ikas"` // TODO: re-enable ikas summary when ikas table is ready
-	SE       SeAgg         `json:"kse"`
-	SEStatus SeStatusCount `json:"kse_status"`
-	// IkasStatus IkasStatusCount `json:"ikas_status"` // TODO: re-enable ikas status when ikas table is ready
+	Sektor     []SectorCount   `json:"sektor_counts"`
+	Ikas       IkasAgg         `json:"ikas"`
+	SE         SeAgg           `json:"kse"`
+	SEStatus   SeStatusCount   `json:"kse_status"`
+	IkasStatus IkasStatusCount `json:"ikas_status"`
 }

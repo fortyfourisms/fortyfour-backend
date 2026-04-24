@@ -164,7 +164,7 @@ func main() {
 	csirtService := services.NewCsirtService(csirtRepo, redisClient, rmqProducer)
 	csirtExportService := services.NewCsirtExportService(csirtService)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo, redisClient, rmqProducer)
-	userService := services.NewUserService(userRepo, uploadPath, rmqProducer)
+	userService := services.NewUserService(userRepo, uploadPath, rmqProducer, tokenService)
 	roleService := services.NewRoleService(roleRepo, redisClient, rmqProducer)
 	chatService := services.NewChatService(chatRepo, geminiClient, db)
 	sektorService := services.NewSektorService(sektorRepo, redisClient)
@@ -220,7 +220,7 @@ func main() {
 	ikasProxyHandler := handlers.NewProxyHandler("http://ikas:8081", cfg.InternalGatewayKey)
 
 	// Initialize Middleware
-	authMiddleware := middleware.NewAuthMiddleware(tokenService)
+	authMiddleware := middleware.NewAuthMiddleware(tokenService, userRepo)
 	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
 
 	// Initialize rate limiters with different configurations
