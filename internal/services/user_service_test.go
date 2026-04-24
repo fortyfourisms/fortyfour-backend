@@ -847,6 +847,10 @@ func (f *failingUserRepo) FindAll() ([]models.User, error) {
 	return f.MockUserRepository.FindAll()
 }
 
+func (f *failingUserRepo) FindAllAdmins() ([]models.User, error) {
+	return f.MockUserRepository.FindAllAdmins()
+}
+
 func newFailingUserService(failFindAll bool) (*UserService, *failingUserRepo) {
 	base := testhelpers.NewMockUserRepository()
 	repo := &failingUserRepo{

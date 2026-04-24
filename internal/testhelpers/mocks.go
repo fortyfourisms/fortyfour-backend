@@ -255,6 +255,19 @@ func (m *MockUserRepository) FindAll() ([]models.User, error) {
 	return users, nil
 }
 
+func (m *MockUserRepository) FindAllAdmins() ([]models.User, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+
+	admins := make([]models.User, 0)
+	for _, user := range m.users {
+		if user.RoleName == "admin" {
+			admins = append(admins, *user)
+		}
+	}
+	return admins, nil
+}
+
 func (m *MockUserRepository) GetPasswordByID(id string) (string, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()

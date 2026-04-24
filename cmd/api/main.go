@@ -110,17 +110,6 @@ func main() {
 	// Wrap with specific Producer
 	rmqProducer := internalRmq.NewProducer(sharedProducer)
 
-	// Wrap with specific Consumer
-	rmqConsumer := internalRmq.NewConsumer(sharedConsumer, sseService)
-
-	// Start consumers in background
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	if err := rmqConsumer.StartAllConsumers(ctx); err != nil {
-		logger.FatalErr(err, "Failed to start RabbitMQ consumers")
-	}
-
 	// Initialize Casbin Service with GORM Adapter
 	casbinService, err := services.NewCasbinService(cfg.Database.GetDSN(), cfg.CasbinModelPath)
 	if err != nil {
@@ -192,6 +181,17 @@ func main() {
 	diskusiSvc := services.NewDiskusiService(diskusiRepo, userRepo)
 	catatanSvc := services.NewCatatanService(catatanRepo)
 	sertifikatSvc := services.NewSertifikatService(sertifikatRepo, kelasRepo, progressRepo, kuisAttemptRepo, kuisRepo, userRepo)
+
+	// Wrap with specific Consumer (after repositories are initialized)
+	rmqConsumer := internalRmq.NewConsumer(sharedConsumer, sseService, userRepo, notificationService)
+
+	// Start consumers in background
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if err := rmqConsumer.StartAllConsumers(ctx); err != nil {
+		logger.FatalErr(err, "Failed to start RabbitMQ consumers")
+	}
 
 	// Initialize Handler
 	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService, userService, uploadPath)

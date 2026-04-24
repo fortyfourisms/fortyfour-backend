@@ -129,6 +129,7 @@ func (m *mockUserRepoSert) UpdateStatus(uid string, s models.UserStatus) error {
 func (m *mockUserRepoSert) IncrementLoginAttempts(uid string) (int, error)     { return 0, nil }
 func (m *mockUserRepoSert) ResetLoginAttempts(uid string) error                { return nil }
 func (m *mockUserRepoSert) UpdatePasswordChangedAt(uid string) error           { return nil }
+func (m *mockUserRepoSert) FindAllAdmins() ([]models.User, error)              { return nil, nil }
 
 /*
 =====================================

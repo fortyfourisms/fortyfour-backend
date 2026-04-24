@@ -15,6 +15,8 @@ const (
 	NotifResourceCreated    NotificationType = "resource_created"
 	NotifResourceUpdated    NotificationType = "resource_updated"
 	NotifResourceDeleted    NotificationType = "resource_deleted"
+	NotifIkasEditRequested  NotificationType = "ikas_edit_requested"
+	NotifIkasEditActioned   NotificationType = "ikas_edit_actioned"
 )
 
 // Notification adalah struktur notifikasi yang disimpan di MySQL
