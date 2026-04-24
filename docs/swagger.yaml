@@ -370,6 +370,10 @@ definitions:
         type: string
       deteksi:
         $ref: '#/definitions/dto.DeteksiInIkas'
+      edit_request_reason:
+        type: string
+      edit_request_status:
+        type: string
       gulih:
         $ref: '#/definitions/dto.GulihInIkas'
       id:
@@ -1062,6 +1066,11 @@ definitions:
     required:
     - konten
     type: object
+  fortyfour-backend_internal_dto.CreateJabatanRequest:
+    properties:
+      nama_jabatan:
+        type: string
+    type: object
   fortyfour-backend_internal_dto.CreateKelasRequest:
     properties:
       deskripsi:
@@ -1460,6 +1469,17 @@ definitions:
       pertanyaan:
         type: string
     type: object
+  fortyfour-backend_internal_dto.JabatanResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      nama_jabatan:
+        type: string
+      updated_at:
+        type: string
+    type: object
   fortyfour-backend_internal_dto.JawabanItem:
     properties:
       id_pilihan:
@@ -1631,10 +1651,16 @@ definitions:
     type: object
   fortyfour-backend_internal_dto.NotificationListResponse:
     properties:
+      message:
+        type: string
       notifications:
         items:
           $ref: '#/definitions/fortyfour-backend_internal_dto.NotificationResponse'
         type: array
+      read_count:
+        type: integer
+      total_data:
+        type: integer
       unread_count:
         type: integer
     type: object
@@ -1656,6 +1682,8 @@ definitions:
   fortyfour-backend_internal_dto.NotificationUserResponse:
     properties:
       display_name:
+        type: string
+      foto_profile:
         type: string
       user_id:
         type: string
@@ -2087,6 +2115,11 @@ definitions:
         type: string
     required:
     - konten
+    type: object
+  fortyfour-backend_internal_dto.UpdateJabatanRequest:
+    properties:
+      nama_jabatan:
+        type: string
     type: object
   fortyfour-backend_internal_dto.UpdateKelasRequest:
     properties:
@@ -3357,6 +3390,135 @@ paths:
       summary: Ambil identifikasi berdasarkan ID
       tags:
       - Identifikasi
+  /api/jabatan:
+    get:
+      description: Mengambil seluruh data jabatan
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/fortyfour-backend_internal_dto.JabatanResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List semua jabatan
+      tags:
+      - Jabatan
+    post:
+      consumes:
+      - application/json
+      description: Membuat record jabatan
+      parameters:
+      - description: Data jabatan
+        in: body
+        name: jabatan
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.CreateJabatanRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.JabatanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Tambah jabatan baru
+      tags:
+      - Jabatan
+  /api/jabatan/{id}:
+    delete:
+      description: Menghapus data jabatan berdasarkan ID
+      parameters:
+      - description: Jabatan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Hapus jabatan
+      tags:
+      - Jabatan
+    get:
+      description: Mengambil satu data jabatan
+      parameters:
+      - description: Jabatan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.JabatanResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Ambil jabatan berdasarkan ID
+      tags:
+      - Jabatan
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data jabatan berdasarkan ID
+      parameters:
+      - description: Jabatan ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data update
+        in: body
+        name: jabatan
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.UpdateJabatanRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.JabatanResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update jabatan
+      tags:
+      - Jabatan
   /api/kelas:
     get:
       description: Admin melihat semua kelas. User hanya melihat kelas yang published.
