@@ -259,6 +259,14 @@ type BeritaRepositoryInterface interface {
 	Delete(id int64) error
 }
 
+type EventRepositoryInterface interface {
+	Create(event *models.Event) error
+	FindAll() ([]models.Event, error)
+	FindByID(id int64) (*models.Event, error)
+	Update(event *models.Event) error
+	Delete(id int64) error
+}
+
 // DTOnya tidak dipakai langsung di interface ini, tapi diimport
 // agar tetap terkompilasi jika ada helper yang butuh dto.
 var _ = dto.KelasResponse{}

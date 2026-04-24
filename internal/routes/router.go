@@ -55,6 +55,7 @@ func InitRouter(
 	ikasProxyH *handlers.ProxyHandler,
 	lmsH *handlers.LMSHandler,
 	beritaH *handlers.BeritaHandler,
+	eventH *handlers.EventHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -178,6 +179,10 @@ func InitRouter(
 	// Routes Berita
 	mux.HandleFunc("/api/berita", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(beritaH)))))
 	mux.HandleFunc("/api/berita/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(beritaH)))))
+	
+	// Routes Events (Kegiatan)
+	mux.HandleFunc("/api/kegiatan", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(eventH)))))
+	mux.HandleFunc("/api/kegiatan/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(eventH)))))
 
 	// Routes Chat
 	mux.HandleFunc("/api/chat", authM.Authenticate(chatHandler.Stream))
