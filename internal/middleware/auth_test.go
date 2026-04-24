@@ -87,6 +87,32 @@ func TestAuthMiddleware_Authenticate_ValidToken(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
+func TestAuthMiddleware_Authenticate_SuspendedUserRejected(t *testing.T) {
+	tokenService := createTestTokenService()
+	userRepo := testhelpers.NewMockUserRepository()
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	user.Status = "Suspend"
+	_ = userRepo.Create(user)
+
+	middleware := NewAuthMiddleware(tokenService, userRepo)
+
+	token, _, err := utils.GenerateAccessToken("user-1", "testuser", "admin", testJWTSecret, "")
+	assert.NoError(t, err)
+
+	handler := middleware.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req.AddCookie(createAccessTokenCookie(token))
+	w := httptest.NewRecorder()
+
+	handler(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Contains(t, w.Body.String(), "Akun Anda sudah tidak aktif")
+}
+
 func TestAuthMiddleware_Authenticate_ContextValues(t *testing.T) {
 	tokenService := createTestTokenService()
 	middleware := NewAuthMiddleware(tokenService)
