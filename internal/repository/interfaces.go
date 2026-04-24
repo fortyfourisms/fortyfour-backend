@@ -249,6 +249,16 @@ type NotificationRepositoryInterface interface {
 	DeleteAll() error // admin: hapus semua notif semua user
 }
 
+// ── Berita ───────────────────────────────────────────────────────────────────
+
+type BeritaRepositoryInterface interface {
+	Create(berita *models.Berita) error
+	FindAll() ([]models.Berita, error)
+	FindByID(id int64) (*models.Berita, error)
+	Update(berita *models.Berita) error
+	Delete(id int64) error
+}
+
 // DTOnya tidak dipakai langsung di interface ini, tapi diimport
 // agar tetap terkompilasi jika ada helper yang butuh dto.
 var _ = dto.KelasResponse{}
