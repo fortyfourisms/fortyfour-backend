@@ -99,6 +99,11 @@ func (m *mockIkasRepository) UpdateDomainLinks(ikasID, identifikasiID, proteksiI
 	return args.Error(0)
 }
 
+func (m *mockIkasRepository) UpdateRequestEditStatus(id string, status string, reason string) error {
+	args := m.Called(id, status, reason)
+	return args.Error(0)
+}
+
 func (m *mockIkasRepository) IsLocked(id string) (bool, error) {
 	args := m.Called(id)
 	return args.Bool(0), args.Error(1)
