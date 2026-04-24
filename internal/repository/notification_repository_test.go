@@ -66,9 +66,10 @@ func TestNotificationRepository_FindAll(t *testing.T) {
 	now := time.Now()
 
 	t.Run("success", func(t *testing.T) {
+		fotoProfile := "alice.jpg"
 		mock.ExpectQuery("SELECT n.id, n.user_id, u.username, COALESCE\\(u.display_name, ''\\) as display_name").
 			WillReturnRows(sqlmock.NewRows(notificationColumns).
-				AddRow(1, "user-1", "alice", "Alice", "alice.jpg", "resource_created", "created", false, now).
+				AddRow(1, "user-1", "alice", "Alice", fotoProfile, "resource_created", "created", false, now).
 				AddRow(2, "user-2", "bob", "", nil, "resource_deleted", "deleted", true, now))
 
 		result, err := repo.FindAll()
@@ -76,9 +77,9 @@ func TestNotificationRepository_FindAll(t *testing.T) {
 		assert.Len(t, result, 2)
 		assert.Equal(t, "alice", result[0].Username)
 		require.NotNil(t, result[0].FotoProfile)
-		assert.Equal(t, "alice.jpg", *result[0].FotoProfile)
-		assert.Nil(t, result[1].FotoProfile)
+		assert.Equal(t, fotoProfile, *result[0].FotoProfile)
 		assert.Equal(t, "", result[1].DisplayName)
+		assert.Nil(t, result[1].FotoProfile)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
@@ -100,17 +101,18 @@ func TestNotificationRepository_FindAllByUserID(t *testing.T) {
 	now := time.Now()
 
 	t.Run("success", func(t *testing.T) {
+		fotoProfile := "alice.jpg"
 		mock.ExpectQuery("WHERE n.user_id = \\?").
 			WithArgs("user-1").
 			WillReturnRows(sqlmock.NewRows(notificationColumns).
-				AddRow(1, "user-1", "alice", "Alice", "alice.jpg", "resource_created", "created", false, now))
+				AddRow(1, "user-1", "alice", "Alice", fotoProfile, "resource_created", "created", false, now))
 
 		result, err := repo.FindAllByUserID("user-1")
 		assert.NoError(t, err)
 		assert.Len(t, result, 1)
 		assert.Equal(t, "user-1", result[0].UserID)
 		require.NotNil(t, result[0].FotoProfile)
-		assert.Equal(t, "alice.jpg", *result[0].FotoProfile)
+		assert.Equal(t, fotoProfile, *result[0].FotoProfile)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
