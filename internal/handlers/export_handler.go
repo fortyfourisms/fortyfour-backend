@@ -65,7 +65,7 @@ func (h *SEExportHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // handleExportAll
 //
 //	@Summary		Export semua SE ke PDF
-//	@Description	Admin: export semua SE, atau filter by id_perusahaan. User: hanya milik perusahaannya.
+//	@Description	Admin dan staff: export semua SE, atau filter by id_perusahaan. User: hanya milik perusahaannya.
 //	@Tags			SE Export
 //	@Produce		application/pdf
 //	@Security		BearerAuth
@@ -82,8 +82,8 @@ func (h *SEExportHandler) handleExportAll(w http.ResponseWriter, r *http.Request
 		err      error
 	)
 
-	if role == "admin" {
-		// Admin: cek query param id_perusahaan (opsional)
+	if role == "admin" || role == "staff" {
+		// Admin dan staff: cek query param id_perusahaan (opsional)
 		idPerusahaan := strings.TrimSpace(r.URL.Query().Get("id_perusahaan"))
 		if idPerusahaan != "" {
 			// Export filtered by perusahaan tertentu
@@ -119,7 +119,7 @@ func (h *SEExportHandler) handleExportAll(w http.ResponseWriter, r *http.Request
 // handleExportByID
 //
 //	@Summary		Export satu SE ke PDF
-//	@Description	Export data SE berdasarkan ID. User hanya bisa akses SE milik perusahaannya.
+//	@Description	Export data SE berdasarkan ID. Admin dan staff bisa akses semua, user hanya bisa akses SE milik perusahaannya.
 //	@Tags			SE Export
 //	@Produce		application/pdf
 //	@Security		BearerAuth
@@ -143,7 +143,7 @@ func (h *SEExportHandler) handleExportByID(w http.ResponseWriter, r *http.Reques
 
 	// Validasi ownership untuk user
 	role := middleware.GetRole(r.Context())
-	if role != "admin" {
+	if role != "admin" && role != "staff" {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if se.IDPerusahaan != idPerusahaan {
 			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
@@ -212,7 +212,7 @@ func (h *CsirtExportHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // handleExportAll
 //
 //	@Summary		Export semua CSIRT ke PDF
-//	@Description	Admin: export semua CSIRT, atau filter by id_perusahaan. User: hanya milik perusahaannya.
+//	@Description	Admin dan staff: export semua CSIRT, atau filter by id_perusahaan. User: hanya milik perusahaannya.
 //	@Tags			CSIRT Export
 //	@Produce		application/pdf
 //	@Security		BearerAuth
@@ -229,7 +229,7 @@ func (h *CsirtExportHandler) handleExportAll(w http.ResponseWriter, r *http.Requ
 		err      error
 	)
 
-	if role == "admin" {
+	if role == "admin" || role == "staff" {
 		idPerusahaan := strings.TrimSpace(r.URL.Query().Get("id_perusahaan"))
 		if idPerusahaan != "" {
 			pdfBytes, err = h.exportService.ExportByPerusahaanPDF(idPerusahaan)
@@ -263,7 +263,7 @@ func (h *CsirtExportHandler) handleExportAll(w http.ResponseWriter, r *http.Requ
 // handleExportByID
 //
 //	@Summary		Export satu CSIRT ke PDF
-//	@Description	Export data CSIRT berdasarkan ID. User hanya bisa akses CSIRT milik perusahaannya.
+//	@Description	Export data CSIRT berdasarkan ID. Admin dan staff bisa akses semua, user hanya bisa akses CSIRT milik perusahaannya.
 //	@Tags			CSIRT Export
 //	@Produce		application/pdf
 //	@Security		BearerAuth
@@ -287,7 +287,7 @@ func (h *CsirtExportHandler) handleExportByID(w http.ResponseWriter, r *http.Req
 
 	// Validasi ownership untuk user
 	role := middleware.GetRole(r.Context())
-	if role != "admin" {
+	if role != "admin" && role != "staff" {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if csirt.Perusahaan.ID != idPerusahaan {
 			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")

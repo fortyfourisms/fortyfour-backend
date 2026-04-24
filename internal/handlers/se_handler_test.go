@@ -113,6 +113,11 @@ func withAdminContext(req *http.Request) *http.Request {
 	return req.WithContext(ctx)
 }
 
+func withStaffContext(req *http.Request) *http.Request {
+	ctx := context.WithValue(req.Context(), middleware.RoleKey, "staff")
+	return req.WithContext(ctx)
+}
+
 // withUserContext set role user + id_perusahaan di context request
 func withUserContext(req *http.Request, idPerusahaan string) *http.Request {
 	ctx := context.WithValue(req.Context(), middleware.RoleKey, "user")
@@ -199,6 +204,31 @@ func TestSEHandler_GetAll_ServiceError(t *testing.T) {
 	var response map[string]string
 	json.NewDecoder(w.Body).Decode(&response)
 	assert.Contains(t, response["error"], "database error")
+
+	mockService.AssertExpectations(t)
+}
+
+func TestSEHandler_GetAll_AsStaff_UsesGetAll(t *testing.T) {
+	handler, mockService, _ := setupSEHandler()
+
+	expectedData := []dto.SEResponse{
+		{ID: "se-1", NamaSE: "SE 1"},
+		{ID: "se-2", NamaSE: "SE 2"},
+	}
+
+	mockService.On("GetAll").Return(expectedData, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/se", nil)
+	req = withStaffContext(req)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response []dto.SEResponse
+	json.NewDecoder(w.Body).Decode(&response)
+	assert.Len(t, response, 2)
 
 	mockService.AssertExpectations(t)
 }
