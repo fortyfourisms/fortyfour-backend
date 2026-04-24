@@ -654,6 +654,59 @@ func TestUserService_UpdateStatus_InvalidStatus(t *testing.T) {
 	}
 }
 
+func TestUserService_UpdateStatus_NormalizesFrontendActiveValue(t *testing.T) {
+	service, mockRepo := setupUserService()
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	user.Status = models.UserStatusSuspend
+	user.LoginAttempts = 3
+	_ = mockRepo.Create(user)
+
+	resp, err := service.UpdateStatus("user-1", "active")
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if resp == nil {
+		t.Fatal("expected response, got nil")
+	}
+	if resp.Status != "Aktif" {
+		t.Errorf("expected normalized status 'Aktif', got '%s'", resp.Status)
+	}
+
+	updatedUser, _ := mockRepo.FindByID("user-1")
+	if updatedUser.Status != models.UserStatusAktif {
+		t.Errorf("expected repository status '%s', got '%s'", models.UserStatusAktif, updatedUser.Status)
+	}
+	if updatedUser.LoginAttempts != 0 {
+		t.Errorf("expected login_attempts 0 after reactivation, got %d", updatedUser.LoginAttempts)
+	}
+}
+
+func TestUserService_UpdateStatus_Suspend_RevokesRefreshTokens(t *testing.T) {
+	mockRepo := testhelpers.NewMockUserRepository()
+	mockRedis := testhelpers.NewMockRedisClient()
+	tokenService := NewTokenService(mockRedis, "test-secret", false, "localhost")
+	service := NewUserService(mockRepo, "./test_uploads", nil, tokenService)
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = mockRepo.Create(user)
+
+	tokens, err := tokenService.GenerateTokenPair("user-1", "testuser", "admin", "")
+	if err != nil {
+		t.Fatalf("expected token pair, got %v", err)
+	}
+
+	_, err = service.UpdateStatus("user-1", "Suspend")
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if _, err := tokenService.RefreshAccessToken(tokens.RefreshToken); err == nil {
+		t.Fatal("expected refresh token to be revoked after suspend")
+	}
+}
+
 func TestUserService_UpdateStatus_UserNotFound(t *testing.T) {
 	service, _ := setupUserService()
 

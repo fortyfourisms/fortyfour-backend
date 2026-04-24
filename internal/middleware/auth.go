@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"context"
+	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"net/http"
@@ -18,12 +20,40 @@ const (
 
 type AuthMiddleware struct {
 	tokenService *services.TokenService
+	userRepo     repository.UserRepositoryInterface
 }
 
-func NewAuthMiddleware(tokenService *services.TokenService) *AuthMiddleware {
-	return &AuthMiddleware{
+func NewAuthMiddleware(tokenService *services.TokenService, userRepo ...repository.UserRepositoryInterface) *AuthMiddleware {
+	m := &AuthMiddleware{
 		tokenService: tokenService,
 	}
+
+	if len(userRepo) > 0 {
+		m.userRepo = userRepo[0]
+	}
+
+	return m
+}
+
+func (m *AuthMiddleware) ensureUserIsActive(w http.ResponseWriter, userID string) bool {
+	if m.userRepo == nil {
+		return true
+	}
+
+	user, err := m.userRepo.FindByID(userID)
+	if err != nil {
+		m.tokenService.ClearAuthCookies(w)
+		utils.RespondError(w, http.StatusUnauthorized, "User tidak ditemukan")
+		return false
+	}
+
+	if user.Status == models.UserStatusSuspend || user.Status == models.UserStatusNonaktif {
+		m.tokenService.ClearAuthCookies(w)
+		utils.RespondError(w, http.StatusUnauthorized, "Akun Anda sudah tidak aktif, silakan login kembali setelah diaktifkan admin")
+		return false
+	}
+
+	return true
 }
 
 // Authenticate validates the access token from cookie and sets user context
@@ -40,6 +70,10 @@ func (m *AuthMiddleware) Authenticate(next http.HandlerFunc) http.HandlerFunc {
 		claims, err := utils.ValidateAccessToken(accessToken, m.tokenService.JWTSecret)
 		if err != nil {
 			utils.RespondError(w, http.StatusUnauthorized, "Invalid or expired token")
+			return
+		}
+
+		if !m.ensureUserIsActive(w, claims.UserID) {
 			return
 		}
 
@@ -62,7 +96,7 @@ func (m *AuthMiddleware) OptionalAuth(next http.HandlerFunc) http.HandlerFunc {
 		accessToken, err := m.tokenService.GetAccessTokenFromCookie(r)
 		if err == nil {
 			claims, err := utils.ValidateAccessToken(accessToken, m.tokenService.JWTSecret)
-			if err == nil {
+			if err == nil && m.ensureUserIsActive(w, claims.UserID) {
 				ctx := context.WithValue(r.Context(), UserIDKey, claims.UserID)
 				ctx = context.WithValue(ctx, UsernameKey, claims.Username)
 				ctx = context.WithValue(ctx, RoleKey, claims.Role)
@@ -81,6 +115,10 @@ func (m *AuthMiddleware) AutoRefresh(next http.HandlerFunc) http.HandlerFunc {
 		claims, err := m.tokenService.ValidateAndRefreshIfNeeded(w, r)
 		if err != nil {
 			utils.RespondError(w, http.StatusUnauthorized, "Authentication required")
+			return
+		}
+
+		if !m.ensureUserIsActive(w, claims.UserID) {
 			return
 		}
 
