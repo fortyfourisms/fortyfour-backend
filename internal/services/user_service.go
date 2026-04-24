@@ -23,14 +23,21 @@ type UserService struct {
 	repo       repository.UserRepositoryInterface
 	uploadPath string
 	producer   *rabbitmq.Producer
+	tokenSvc   *TokenService
 }
 
-func NewUserService(repo repository.UserRepositoryInterface, uploadPath string, producer *rabbitmq.Producer) *UserService {
-	return &UserService{
+func NewUserService(repo repository.UserRepositoryInterface, uploadPath string, producer *rabbitmq.Producer, tokenSvc ...*TokenService) *UserService {
+	service := &UserService{
 		repo:       repo,
 		uploadPath: uploadPath,
 		producer:   producer,
 	}
+
+	if len(tokenSvc) > 0 {
+		service.tokenSvc = tokenSvc[0]
+	}
+
+	return service
 }
 
 func (s *UserService) GetAll() ([]dto.UserResponse, error) {
@@ -459,12 +466,22 @@ func (s *UserService) toResponse(user *models.User) dto.UserResponse {
 }
 
 // UpdateStatus mengubah status akun user — hanya bisa dilakukan admin
-func (s *UserService) UpdateStatus(userID string, status models.UserStatus) (*dto.UserResponse, error) {
-	// Validasi status
-	switch status {
-	case models.UserStatusAktif, models.UserStatusSuspend, models.UserStatusNonaktif:
-		// valid
+func normalizeUserStatus(status models.UserStatus) (models.UserStatus, bool) {
+	switch strings.ToLower(strings.TrimSpace(string(status))) {
+	case strings.ToLower(string(models.UserStatusAktif)), "active":
+		return models.UserStatusAktif, true
+	case strings.ToLower(string(models.UserStatusSuspend)), "suspended":
+		return models.UserStatusSuspend, true
+	case strings.ToLower(string(models.UserStatusNonaktif)), "inactive":
+		return models.UserStatusNonaktif, true
 	default:
+		return "", false
+	}
+}
+
+func (s *UserService) UpdateStatus(userID string, status models.UserStatus) (*dto.UserResponse, error) {
+	normalizedStatus, ok := normalizeUserStatus(status)
+	if !ok {
 		return nil, errors.New("status tidak valid, pilihan: Aktif, Suspend, Nonaktif")
 	}
 
@@ -472,13 +489,17 @@ func (s *UserService) UpdateStatus(userID string, status models.UserStatus) (*dt
 		return nil, errors.New("user tidak ditemukan")
 	}
 
-	if err := s.repo.UpdateStatus(userID, status); err != nil {
+	if err := s.repo.UpdateStatus(userID, normalizedStatus); err != nil {
 		return nil, err
+	}
+
+	if s.tokenSvc != nil && (normalizedStatus == models.UserStatusSuspend || normalizedStatus == models.UserStatusNonaktif) {
+		_ = s.tokenSvc.RevokeAllUserTokens(userID)
 	}
 
 	// Jika diaktifkan kembali, reset login_attempts agar user tidak langsung
 	// ter-suspend lagi pada percobaan login berikutnya yang gagal.
-	if status == models.UserStatusAktif {
+	if normalizedStatus == models.UserStatusAktif {
 		_ = s.repo.ResetLoginAttempts(userID)
 	}
 
