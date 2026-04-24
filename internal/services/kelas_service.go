@@ -55,12 +55,18 @@ func (s *KelasService) Create(req dto.CreateKelasRequest, userID string) (*dto.K
 	}
 
 	kelas := &models.Kelas{
-		ID:        uuid.New().String(),
-		Judul:     judul,
-		Deskripsi: req.Deskripsi,
-		Thumbnail: req.Thumbnail,
-		Status:    models.KelasStatusDraft,
-		CreatedBy: userID,
+		ID:                uuid.New().String(),
+		Judul:             judul,
+		Deskripsi:         req.Deskripsi,
+		Thumbnail:         req.Thumbnail,
+		Kategori:          req.Kategori,
+		DurasiJP:          req.DurasiJP,
+		Penyelenggara:     req.Penyelenggara,
+		TargetPeserta:     req.TargetPeserta,
+		SyaratPendaftaran: req.SyaratPendaftaran,
+		InformasiUmum:     req.InformasiUmum,
+		Status:            models.KelasStatusDraft,
+		CreatedBy:         userID,
 	}
 
 	if err := s.repo.Create(kelas); err != nil {
@@ -90,6 +96,24 @@ func (s *KelasService) Update(id string, req dto.UpdateKelasRequest) (*dto.Kelas
 	}
 	if req.Thumbnail != nil {
 		kelas.Thumbnail = req.Thumbnail
+	}
+	if req.Kategori != nil {
+		kelas.Kategori = req.Kategori
+	}
+	if req.DurasiJP != nil {
+		kelas.DurasiJP = req.DurasiJP
+	}
+	if req.Penyelenggara != nil {
+		kelas.Penyelenggara = req.Penyelenggara
+	}
+	if req.TargetPeserta != nil {
+		kelas.TargetPeserta = req.TargetPeserta
+	}
+	if req.SyaratPendaftaran != nil {
+		kelas.SyaratPendaftaran = req.SyaratPendaftaran
+	}
+	if req.InformasiUmum != nil {
+		kelas.InformasiUmum = req.InformasiUmum
 	}
 	if req.Status != nil {
 		kelas.Status = models.KelasStatus(*req.Status)
@@ -317,14 +341,20 @@ func (s *KelasService) calculateProgress(userID, kelasID string, materiList []mo
 
 func mapKelasToResponse(k *models.Kelas) *dto.KelasResponse {
 	return &dto.KelasResponse{
-		ID:        k.ID,
-		Judul:     k.Judul,
-		Deskripsi: k.Deskripsi,
-		Thumbnail: k.Thumbnail,
-		Status:    k.Status,
-		CreatedBy: k.CreatedBy,
-		CreatedAt: k.CreatedAt.Format(time.RFC3339),
-		UpdatedAt: k.UpdatedAt.Format(time.RFC3339),
+		ID:                k.ID,
+		Judul:             k.Judul,
+		Deskripsi:         k.Deskripsi,
+		Thumbnail:         k.Thumbnail,
+		Kategori:          k.Kategori,
+		DurasiJP:          k.DurasiJP,
+		Penyelenggara:     k.Penyelenggara,
+		TargetPeserta:     k.TargetPeserta,
+		SyaratPendaftaran: k.SyaratPendaftaran,
+		InformasiUmum:     k.InformasiUmum,
+		Status:            k.Status,
+		CreatedBy:         k.CreatedBy,
+		CreatedAt:         k.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:         k.UpdatedAt.Format(time.RFC3339),
 	}
 }
 

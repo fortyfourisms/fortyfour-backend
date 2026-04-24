@@ -178,6 +178,12 @@ func InitRouter(
 	mux.HandleFunc("/api/chat", authM.Authenticate(chatHandler.Stream))
 	mux.HandleFunc("/api/chat/delete-session", authM.Authenticate(chatHandler.DeleteSession))
 
+	// ── Public LMS Routes (Landing Page — tanpa auth) ─────────────────────────
+	// GET /api/public/kelas      → list kelas published (untuk card landing page)
+	// GET /api/public/kelas/{id} → detail kelas (untuk halaman detail sebelum daftar)
+	mux.HandleFunc("/api/public/kelas", lenientLimiter.LimitByIP(lmsH.ServePublicKelas))
+	mux.HandleFunc("/api/public/kelas/", lenientLimiter.LimitByIP(lmsH.ServePublicKelas))
+
 	// ── LMS Routes ────────────────────────────────────────────────────────────
 	//
 	// USER & ADMIN (authenticated):

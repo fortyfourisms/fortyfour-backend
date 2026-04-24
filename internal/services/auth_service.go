@@ -169,18 +169,11 @@ func (s *AuthService) Register(
 		idPerusahaan = &perusahaan.ID
 	} else if idPerusahaanTrimmed != "" {
 		// SCENARIO 2: User selects existing company
+		// Satu perusahaan bisa memiliki banyak akun user.
+		// Admin yang menentukan siapa yang menjadi user_pic.
 		_, err := perusahaanService.GetByID(idPerusahaanTrimmed)
 		if err != nil {
 			return nil, nil, errors.New("perusahaan tidak ditemukan")
-		}
-
-		// Cek apakah perusahaan ini sudah punya akun terdaftar
-		exists, err := s.userRepo.ExistsByPerusahaan(idPerusahaanTrimmed)
-		if err != nil {
-			return nil, nil, err
-		}
-		if exists {
-			return nil, nil, errors.New("perusahaan sudah terdaftar, silakan minta akun kepada admin perusahaan tersebut")
 		}
 
 		idPerusahaan = &idPerusahaanTrimmed

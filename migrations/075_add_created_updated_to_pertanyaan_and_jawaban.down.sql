@@ -1,4 +1,4 @@
-ALTER TABLE pertanyaan_identifikasi 
+ALTER TABLE pertanyaan_identifikasi
 DROP COLUMN IF EXISTS created_at,
 DROP COLUMN IF EXISTS updated_at;
 
@@ -10,22 +10,22 @@ ALTER TABLE pertanyaan_deteksi
 DROP COLUMN IF EXISTS created_at,
 DROP COLUMN IF EXISTS updated_at;
 
-ALTER TABLE pertanyaan_gulih 
+ALTER TABLE pertanyaan_gulih
 DROP COLUMN IF EXISTS created_at,
 DROP COLUMN IF EXISTS updated_at;
 
-ALTER TABLE jawaban_identifikasi 
+ALTER TABLE jawaban_identifikasi
 DROP COLUMN IF EXISTS created_at,
 DROP COLUMN IF EXISTS updated_at;
 
-ALTER TABLE jawaban_proteksi 
+ALTER TABLE jawaban_proteksi
 DROP COLUMN IF EXISTS created_at,
 DROP COLUMN IF EXISTS updated_at;
 
-ALTER TABLE jawaban_deteksi 
+ALTER TABLE jawaban_deteksi
 DROP COLUMN IF EXISTS created_at,
 DROP COLUMN IF EXISTS updated_at;
 
-ALTER TABLE jawaban_gulih 
+ALTER TABLE jawaban_gulih
 DROP COLUMN IF EXISTS created_at,
 DROP COLUMN IF EXISTS updated_at;
