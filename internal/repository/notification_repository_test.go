@@ -14,7 +14,7 @@ import (
 )
 
 var notificationColumns = []string{
-	"id", "user_id", "username", "display_name", "type", "message", "is_read", "created_at",
+	"id", "user_id", "username", "display_name", "foto_profile", "type", "message", "is_read", "created_at",
 }
 
 func setupNotificationRepoTest(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *NotificationRepository) {
@@ -68,13 +68,16 @@ func TestNotificationRepository_FindAll(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		mock.ExpectQuery("SELECT n.id, n.user_id, u.username, COALESCE\\(u.display_name, ''\\) as display_name").
 			WillReturnRows(sqlmock.NewRows(notificationColumns).
-				AddRow(1, "user-1", "alice", "Alice", "resource_created", "created", false, now).
-				AddRow(2, "user-2", "bob", "", "resource_deleted", "deleted", true, now))
+				AddRow(1, "user-1", "alice", "Alice", "alice.jpg", "resource_created", "created", false, now).
+				AddRow(2, "user-2", "bob", "", nil, "resource_deleted", "deleted", true, now))
 
 		result, err := repo.FindAll()
 		assert.NoError(t, err)
 		assert.Len(t, result, 2)
 		assert.Equal(t, "alice", result[0].Username)
+		require.NotNil(t, result[0].FotoProfile)
+		assert.Equal(t, "alice.jpg", *result[0].FotoProfile)
+		assert.Nil(t, result[1].FotoProfile)
 		assert.Equal(t, "", result[1].DisplayName)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
@@ -100,12 +103,14 @@ func TestNotificationRepository_FindAllByUserID(t *testing.T) {
 		mock.ExpectQuery("WHERE n.user_id = \\?").
 			WithArgs("user-1").
 			WillReturnRows(sqlmock.NewRows(notificationColumns).
-				AddRow(1, "user-1", "alice", "Alice", "resource_created", "created", false, now))
+				AddRow(1, "user-1", "alice", "Alice", "alice.jpg", "resource_created", "created", false, now))
 
 		result, err := repo.FindAllByUserID("user-1")
 		assert.NoError(t, err)
 		assert.Len(t, result, 1)
 		assert.Equal(t, "user-1", result[0].UserID)
+		require.NotNil(t, result[0].FotoProfile)
+		assert.Equal(t, "alice.jpg", *result[0].FotoProfile)
 		assert.NoError(t, mock.ExpectationsWereMet())
 	})
 
