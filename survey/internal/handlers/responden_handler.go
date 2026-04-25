@@ -16,9 +16,7 @@ type RespondenHandler struct {
 }
 
 func NewRespondenHandler(service *services.RespondenService) *RespondenHandler {
-	return &RespondenHandler{
-		service: service,
-	}
+	return &RespondenHandler{service: service}
 }
 
 func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -49,25 +47,19 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		h.handleUpdate(w, r, id)
 
-	case http.MethodDelete:
-		if id == "" {
-			utils.RespondError(w, http.StatusBadRequest, "ID wajib")
-			return
-		}
-		h.handleDelete(w, id)
-
 	default:
 		utils.RespondError(w, http.StatusMethodNotAllowed, "Method tidak diizinkan")
 	}
 }
 
+// GET ALL
 // GetAllResponden godoc
 // @Summary      Ambil semua responden
-// @Description  Mengambil seluruh data responden
+// @Description  Mengambil seluruh data responden (join users, jabatan, perusahaan)
 // @Tags         Responden Survey
 // @Produce      json
-// @Success      200  {array}   dto.RespondenResponse
-// @Failure      500  {object}  dto.ErrorResponse
+// @Success      200 {array} dto.RespondenResponse
+// @Failure      500 {object} dto.ErrorResponse
 // @Router       /api/survey/responden [get]
 func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
 
@@ -80,16 +72,17 @@ func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
 	utils.RespondJSON(w, http.StatusOK, data)
 }
 
+// GET BY ID
 // GetRespondenByID godoc
 // @Summary      Ambil responden berdasarkan ID
-// @Description  Mengambil data responden berdasarkan ID
+// @Description  Mengambil detail responden beserta data user, jabatan, dan perusahaan
 // @Tags         Responden Survey
 // @Produce      json
-// @Param        id   path      int  true  "Responden ID"
-// @Success      200  {object}  dto.RespondenResponse
-// @Failure      400  {object}  dto.ErrorResponse
-// @Failure      404  {object}  dto.ErrorResponse
-// @Failure      500  {object}  dto.ErrorResponse
+// @Param        id path int true "Responden ID"
+// @Success      200 {object} dto.RespondenResponse
+// @Failure      400 {object} dto.ErrorResponse
+// @Failure      404 {object} dto.ErrorResponse
+// @Failure      500 {object} dto.ErrorResponse
 // @Router       /api/survey/responden/{id} [get]
 func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 
@@ -113,25 +106,26 @@ func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 	utils.RespondJSON(w, http.StatusOK, data)
 }
 
+// CREATE
 // CreateResponden godoc
 // @Summary      Tambah responden
-// @Description  Membuat data responden baru
+// @Description  Membuat data responden baru (data utama diambil dari users)
 // @Tags         Responden Survey
 // @Accept       json
 // @Produce      json
-// @Param        request body dto.CreateRespondenRequest true "Data responden"
-// @Success      201  {object}  dto.RespondenResponse
-// @Failure      400  {object}  dto.ErrorResponse
-// @Failure      409  {object}  dto.ErrorResponse
-// @Failure      500  {object}  dto.ErrorResponse
+// @Param        request body dto.CreateRespondenRequest true "Create Responden Request"
+// @Success      201 {object} dto.RespondenResponse
+// @Failure      400 {object} dto.ErrorResponse
+// @Failure      404 {object} dto.ErrorResponse
+// @Failure      409 {object} dto.ErrorResponse
+// @Failure      500 {object} dto.ErrorResponse
 // @Router       /api/survey/responden [post]
 func (h *RespondenHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	var req dto.CreateRespondenRequest
 
-	err := json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
@@ -140,16 +134,17 @@ func (h *RespondenHandler) handleCreate(w http.ResponseWriter, r *http.Request) 
 
 		switch err.Error() {
 
-		case "nama lengkap tidak boleh kosong",
-			"jabatan tidak boleh kosong",
-			"perusahaan tidak boleh kosong",
-			"email tidak boleh kosong",
-			"format email tidak valid",
+		case "user_id wajib diisi",
 			"nomor telepon tidak boleh kosong",
-			"sektor tidak boleh kosong":
+			"sektor tidak boleh kosong",
+			"sertifikat training tidak boleh kosong",
+			"sektor lainnya wajib diisi jika sektor = lainnya":
 			utils.RespondError(w, http.StatusBadRequest, err.Error())
 
-		case "email sudah terdaftar":
+		case "user tidak ditemukan":
+			utils.RespondError(w, http.StatusNotFound, err.Error())
+
+		case "responden sudah ada":
 			utils.RespondError(w, http.StatusConflict, err.Error())
 
 		default:
@@ -162,19 +157,19 @@ func (h *RespondenHandler) handleCreate(w http.ResponseWriter, r *http.Request) 
 	utils.RespondJSON(w, http.StatusCreated, resp)
 }
 
+// UPDATE
 // UpdateResponden godoc
 // @Summary      Update responden
-// @Description  Memperbarui data responden berdasarkan ID
+// @Description  Memperbarui data responden (hanya field tambahan, bukan data users)
 // @Tags         Responden Survey
 // @Accept       json
 // @Produce      json
-// @Param        id      path  int                          true  "Responden ID"
-// @Param        request body  dto.UpdateRespondenRequest   true  "Data responden"
-// @Success      200  {object}  dto.RespondenResponse
-// @Failure      400  {object}  dto.ErrorResponse
-// @Failure      404  {object}  dto.ErrorResponse
-// @Failure      409  {object}  dto.ErrorResponse
-// @Failure      500  {object}  dto.ErrorResponse
+// @Param        id path int true "Responden ID"
+// @Param        request body dto.UpdateRespondenRequest true "Update Responden Request"
+// @Success      200 {object} dto.RespondenResponse
+// @Failure      400 {object} dto.ErrorResponse
+// @Failure      404 {object} dto.ErrorResponse
+// @Failure      500 {object} dto.ErrorResponse
 // @Router       /api/survey/responden/{id} [put]
 func (h *RespondenHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 
@@ -186,9 +181,8 @@ func (h *RespondenHandler) handleUpdate(w http.ResponseWriter, r *http.Request, 
 
 	var req dto.UpdateRespondenRequest
 
-	err = json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
 
@@ -200,15 +194,11 @@ func (h *RespondenHandler) handleUpdate(w http.ResponseWriter, r *http.Request, 
 		case "data tidak ditemukan":
 			utils.RespondError(w, http.StatusNotFound, err.Error())
 
-		case "nama lengkap tidak boleh kosong",
-			"jabatan tidak boleh kosong",
-			"perusahaan tidak boleh kosong",
-			"format email tidak valid",
-			"sektor tidak boleh kosong":
+		case "nomor telepon tidak boleh kosong",
+			"sektor tidak boleh kosong",
+			"sertifikat training tidak boleh kosong",
+			"sektor lainnya wajib diisi jika sektor = lainnya":
 			utils.RespondError(w, http.StatusBadRequest, err.Error())
-
-		case "email sudah terdaftar":
-			utils.RespondError(w, http.StatusConflict, err.Error())
 
 		default:
 			utils.RespondError(w, http.StatusInternalServerError, err.Error())
@@ -218,40 +208,4 @@ func (h *RespondenHandler) handleUpdate(w http.ResponseWriter, r *http.Request, 
 	}
 
 	utils.RespondJSON(w, http.StatusOK, resp)
-}
-
-// DeleteResponden godoc
-// @Summary      Hapus responden
-// @Description  Menghapus data responden berdasarkan ID
-// @Tags         Responden Survey 
-// @Produce      json
-// @Param        id   path      int  true  "Responden ID"
-// @Success      200  {object}  map[string]string
-// @Failure      400  {object}  dto.ErrorResponse
-// @Failure      404  {object}  dto.ErrorResponse
-// @Failure      500  {object}  dto.ErrorResponse
-// @Router       /api/survey/responden/{id} [delete]
-func (h *RespondenHandler) handleDelete(w http.ResponseWriter, id string) {
-
-	idInt, err := strconv.Atoi(id)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "ID harus berupa angka")
-		return
-	}
-
-	err = h.service.Delete(idInt)
-	if err != nil {
-
-		if err.Error() == "data tidak ditemukan" {
-			utils.RespondError(w, http.StatusNotFound, err.Error())
-		} else {
-			utils.RespondError(w, http.StatusInternalServerError, err.Error())
-		}
-
-		return
-	}
-
-	utils.RespondJSON(w, http.StatusOK, map[string]string{
-		"message": "Delete success",
-	})
 }

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"survey/internal/models"
 )
 
@@ -13,17 +14,26 @@ func NewRespondenRepository(db *sql.DB) *RespondenRepository {
 	return &RespondenRepository{db: db}
 }
 
-func (r *RespondenRepository) Create(m models.Responden) error {
-	query := `INSERT INTO responden
-		(nama_lengkap, jabatan, perusahaan, email, no_telepon,
-		 sektor, sektor_lainnya, sertifikat_training)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+// ========================
+// HELPER (ANTI NULL PANIC)
+// ========================
+func nullToString(ns sql.NullString) *string {
+	if ns.Valid {
+		return &ns.String
+	}
+	return nil
+}
 
-	_, err := r.db.Exec(query,
-		m.NamaLengkap,
-		m.Jabatan,
-		m.Perusahaan,
-		m.Email,
+// ========================
+// CREATE
+// ========================
+func (r *RespondenRepository) Create(m models.Responden) error {
+	_, err := r.db.Exec(`
+		INSERT INTO responden
+		(user_id, no_telepon, sektor, sektor_lainnya, sertifikat_training)
+		VALUES (?, ?, ?, ?, ?)
+	`,
+		m.UserID,
 		m.NoTelepon,
 		m.Sektor,
 		m.SektorLainnya,
@@ -33,80 +43,238 @@ func (r *RespondenRepository) Create(m models.Responden) error {
 	return err
 }
 
-func (r *RespondenRepository) GetAll() ([]models.Responden, error) {
-	rows, err := r.db.Query(`
-		SELECT id, nama_lengkap, jabatan, perusahaan, email, no_telepon,
-		       sektor, sektor_lainnya, sertifikat_training, created_at, updated_at
-		FROM responden`)
+// ========================
+// BASE QUERY (REUSABLE)
+// ========================
+const baseDetailQuery = `
+SELECT 
+	r.id,
+	r.user_id,
+	u.display_name,
+	u.email,
+	j.nama_jabatan,
+	p.nama_perusahaan,
+	p.id AS perusahaan_id,
+	r.no_telepon,
+	r.sektor,
+	r.sektor_lainnya,
+	r.sertifikat_training,
+	r.created_at,
+	r.updated_at
+FROM responden r
+LEFT JOIN users u ON r.user_id = u.id
+LEFT JOIN jabatan j ON u.id_jabatan = j.id
+LEFT JOIN perusahaan p ON u.id_perusahaan = p.id
+`
+
+// ========================
+// GET ALL
+// ========================
+func (r *RespondenRepository) GetAllDetail() ([]models.RespondenDetail, error) {
+
+	rows, err := r.db.Query(baseDetailQuery)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var result []models.Responden
+	var result []models.RespondenDetail
+
 	for rows.Next() {
-		var m models.Responden
-		rows.Scan(
+
+		var (
+			m models.RespondenDetail
+
+			displayName sql.NullString
+			email       sql.NullString
+			jabatan     sql.NullString
+			perusahaan  sql.NullString
+			perusahaanID sql.NullString
+			sektorLainnya sql.NullString
+		)
+
+		err := rows.Scan(
 			&m.ID,
-			&m.NamaLengkap,
-			&m.Jabatan,
-			&m.Perusahaan,
-			&m.Email,
+			&m.UserID,
+			&displayName,
+			&email,
+			&jabatan,
+			&perusahaan,
+			&perusahaanID,
 			&m.NoTelepon,
 			&m.Sektor,
-			&m.SektorLainnya,
+			&sektorLainnya,
 			&m.SertifikatTraining,
 			&m.CreatedAt,
 			&m.UpdatedAt,
 		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		m.NamaLengkap = nullToString(displayName)
+		m.Email = nullToString(email)
+		m.Jabatan = nullToString(jabatan)
+		m.NamaPerusahaan = nullToString(perusahaan)
+		m.PerusahaanID = nullToString(perusahaanID)
+		m.SektorLainnya = nullToString(sektorLainnya)
+
 		result = append(result, m)
 	}
+
 	return result, nil
 }
 
+// ========================
+// GET BY ID
+// ========================
+func (r *RespondenRepository) GetDetailByID(id int) (*models.RespondenDetail, error) {
+
+	row := r.db.QueryRow(baseDetailQuery + " WHERE r.id = ?", id)
+
+	var (
+		m models.RespondenDetail
+
+		displayName sql.NullString
+		email       sql.NullString
+		jabatan     sql.NullString
+		perusahaan  sql.NullString
+		perusahaanID sql.NullString
+		sektorLainnya sql.NullString
+	)
+
+	err := row.Scan(
+		&m.ID,
+		&m.UserID,
+		&displayName,
+		&email,
+		&jabatan,
+		&perusahaan,
+		&perusahaanID,
+		&m.NoTelepon,
+		&m.Sektor,
+		&sektorLainnya,
+		&m.SertifikatTraining,
+		&m.CreatedAt,
+		&m.UpdatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("data tidak ditemukan")
+		}
+		return nil, err
+	}
+
+	m.NamaLengkap = nullToString(displayName)
+	m.Email = nullToString(email)
+	m.Jabatan = nullToString(jabatan)
+	m.NamaPerusahaan = nullToString(perusahaan)
+	m.PerusahaanID = nullToString(perusahaanID)
+	m.SektorLainnya = nullToString(sektorLainnya)
+
+	return &m, nil
+}
+
+// ========================
+// GET BY USER ID
+// ========================
+func (r *RespondenRepository) GetDetailByUserID(userID string) (*models.RespondenDetail, error) {
+
+	row := r.db.QueryRow(baseDetailQuery+" WHERE r.user_id = ?", userID)
+
+	var (
+		m models.RespondenDetail
+
+		displayName sql.NullString
+		email       sql.NullString
+		jabatan     sql.NullString
+		perusahaan  sql.NullString
+		perusahaanID sql.NullString
+		sektorLainnya sql.NullString
+	)
+
+	err := row.Scan(
+		&m.ID,
+		&m.UserID,
+		&displayName,
+		&email,
+		&jabatan,
+		&perusahaan,
+		&perusahaanID,
+		&m.NoTelepon,
+		&m.Sektor,
+		&sektorLainnya,
+		&m.SertifikatTraining,
+		&m.CreatedAt,
+		&m.UpdatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("data tidak ditemukan")
+		}
+		return nil, err
+	}
+
+	m.NamaLengkap = nullToString(displayName)
+	m.Email = nullToString(email)
+	m.Jabatan = nullToString(jabatan)
+	m.NamaPerusahaan = nullToString(perusahaan)
+	m.PerusahaanID = nullToString(perusahaanID)
+	m.SektorLainnya = nullToString(sektorLainnya)
+
+	return &m, nil
+}
+
+// ========================
+// GET BASIC BY ID
+// ========================
 func (r *RespondenRepository) GetByID(id int) (*models.Responden, error) {
+
 	row := r.db.QueryRow(`
-		SELECT id, nama_lengkap, jabatan, perusahaan, email, no_telepon,
-		       sektor, sektor_lainnya, sertifikat_training, created_at, updated_at
-		FROM responden WHERE id = ?`, id)
+		SELECT id, user_id, no_telepon, sektor, sektor_lainnya, sertifikat_training, created_at, updated_at
+		FROM responden WHERE id = ?
+	`, id)
 
 	var m models.Responden
-	if err := row.Scan(
+
+	err := row.Scan(
 		&m.ID,
-		&m.NamaLengkap,
-		&m.Jabatan,
-		&m.Perusahaan,
-		&m.Email,
+		&m.UserID,
 		&m.NoTelepon,
 		&m.Sektor,
 		&m.SektorLainnya,
 		&m.SertifikatTraining,
 		&m.CreatedAt,
 		&m.UpdatedAt,
-	); err != nil {
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("data tidak ditemukan")
+		}
 		return nil, err
 	}
 
 	return &m, nil
 }
 
+// ========================
+// UPDATE
+// ========================
 func (r *RespondenRepository) Update(id int, m models.Responden) error {
-	_, err := r.db.Exec(`
+
+	res, err := r.db.Exec(`
 		UPDATE responden SET
-		nama_lengkap=?,
-		jabatan=?,
-		perusahaan=?,
-		email=?,
-		no_telepon=?,
-		sektor=?,
-		sektor_lainnya=?,
-		sertifikat_training=?,
-		updated_at=NOW()
-		WHERE id=?`,
-		m.NamaLengkap,
-		m.Jabatan,
-		m.Perusahaan,
-		m.Email,
+			no_telepon = ?,
+			sektor = ?,
+			sektor_lainnya = ?,
+			sertifikat_training = ?,
+			updated_at = NOW()
+		WHERE id = ?
+	`,
 		m.NoTelepon,
 		m.Sektor,
 		m.SektorLainnya,
@@ -114,16 +282,28 @@ func (r *RespondenRepository) Update(id int, m models.Responden) error {
 		id,
 	)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	rows, _ := res.RowsAffected()
+	if rows == 0 {
+		return errors.New("data tidak ditemukan")
+	}
+
+	return nil
 }
 
-func (r *RespondenRepository) Delete(id int) error {
-	_, err := r.db.Exec(`DELETE FROM responden WHERE id=?`, id)
-	return err
-}
+// ========================
+// EXISTS
+// ========================
+func (r *RespondenRepository) Exists(id int) (bool, error) {
 
-func (r *RisikoRepository) ExistsResponden(id int) (bool, error) {
 	var exists bool
-	err := r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM responden WHERE id = ?)", id).Scan(&exists)
+
+	err := r.db.QueryRow(`
+		SELECT EXISTS(SELECT 1 FROM responden WHERE id = ?)
+	`, id).Scan(&exists)
+
 	return exists, err
 }

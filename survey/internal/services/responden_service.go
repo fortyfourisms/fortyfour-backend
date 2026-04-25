@@ -1,7 +1,6 @@
 package services
 
 import (
-	"database/sql"
 	"errors"
 	"strings"
 	"time"
@@ -9,6 +8,7 @@ import (
 	"survey/internal/dto"
 	"survey/internal/models"
 	"survey/internal/repository"
+	"survey/internal/utils"
 )
 
 type RespondenService struct {
@@ -19,64 +19,43 @@ func NewRespondenService(repo *repository.RespondenRepository) *RespondenService
 	return &RespondenService{repo: repo}
 }
 
-// Validation
-func (s *RespondenService) validate(req *dto.CreateRespondenRequest) error {
-
-	req.NamaLengkap = strings.TrimSpace(req.NamaLengkap)
-	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
-
-	if req.NamaLengkap == "" {
-		return errors.New("nama_lengkap tidak boleh kosong")
-	}
-
-	if len(req.NamaLengkap) < 3 {
-		return errors.New("nama_lengkap minimal 3 karakter")
-	}
-
-	if req.Email == "" {
-		return errors.New("email tidak boleh kosong")
-	}
-
-	if !strings.Contains(req.Email, "@") {
-		return errors.New("format email tidak valid")
-	}
-
-	return nil
-}
-
-// Create
+// =======================
+// CREATE
+// =======================
 func (s *RespondenService) Create(req dto.CreateRespondenRequest) (*dto.RespondenResponse, error) {
 
-	if err := s.validate(&req); err != nil {
+	// pakai validator terpusat
+	if err := utils.ValidateCreateResponden(req); err != nil {
 		return nil, err
 	}
 
-	model := s.toModel(req)
+	model := models.Responden{
+		UserID:             strings.TrimSpace(req.UserID),
+		NoTelepon:          strings.TrimSpace(req.NoTelepon),
+		Sektor:             strings.TrimSpace(req.Sektor),
+		SektorLainnya:      toStringPtr(strings.TrimSpace(req.SektorLainnya)),
+		SertifikatTraining: strings.TrimSpace(req.SertifikatTraining),
+	}
 
 	if err := s.repo.Create(model); err != nil {
 		return nil, err
 	}
 
-	// Ambil data terakhir
-	all, err := s.repo.GetAll()
+	data, err := s.repo.GetDetailByUserID(model.UserID)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(all) == 0 {
-		return nil, errors.New("gagal mengambil data setelah create")
-	}
-
-	created := all[len(all)-1]
-	resp := s.toResponse(&created)
-
+	resp := s.toResponse(data)
 	return &resp, nil
 }
 
-// Get
+// =======================
+// GET ALL
+// =======================
 func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
 
-	data, err := s.repo.GetAll()
+	data, err := s.repo.GetAllDetail()
 	if err != nil {
 		return nil, err
 	}
@@ -89,57 +68,56 @@ func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
 	return result, nil
 }
 
+// =======================
+// GET BY ID
+// =======================
 func (s *RespondenService) GetByID(id int) (*dto.RespondenResponse, error) {
 
 	if id <= 0 {
 		return nil, errors.New("id tidak valid")
 	}
 
-	data, err := s.repo.GetByID(id)
+	data, err := s.repo.GetDetailByID(id)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("data tidak ditemukan")
-		}
-		return nil, err
+		return nil, err // repo sudah handle "data tidak ditemukan"
 	}
 
 	resp := s.toResponse(data)
 	return &resp, nil
 }
 
-// Update
+// =======================
+// UPDATE
+// =======================
 func (s *RespondenService) Update(id int, req dto.UpdateRespondenRequest) (*dto.RespondenResponse, error) {
 
 	if id <= 0 {
 		return nil, errors.New("id tidak valid")
 	}
 
+	// cek exist
 	_, err := s.repo.GetByID(id)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("data tidak ditemukan")
-		}
 		return nil, err
 	}
 
-	//Convert update DTO ke model
+	// validasi
+	if err := utils.ValidateUpdateResponden(req); err != nil {
+		return nil, err
+	}
+
 	model := models.Responden{
-		NamaLengkap:        strings.TrimSpace(req.NamaLengkap),
-		Jabatan:            strings.TrimSpace(req.Jabatan),
-		Perusahaan:         strings.TrimSpace(req.Perusahaan),
-		Email:              strings.ToLower(strings.TrimSpace(req.Email)),
 		NoTelepon:          strings.TrimSpace(req.NoTelepon),
 		Sektor:             strings.TrimSpace(req.Sektor),
-		SektorLainnya:      strings.TrimSpace(req.SektorLainnya),
+		SektorLainnya:      toStringPtr(strings.TrimSpace(req.SektorLainnya)),
 		SertifikatTraining: strings.TrimSpace(req.SertifikatTraining),
-		UpdatedAt:          time.Now(),
 	}
 
 	if err := s.repo.Update(id, model); err != nil {
 		return nil, err
 	}
 
-	updated, err := s.repo.GetByID(id)
+	updated, err := s.repo.GetDetailByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -148,52 +126,46 @@ func (s *RespondenService) Update(id int, req dto.UpdateRespondenRequest) (*dto.
 	return &resp, nil
 }
 
-// Delete
-func (s *RespondenService) Delete(id int) error {
 
-	if id <= 0 {
-		return errors.New("id tidak valid")
+// =======================
+// HELPER
+// =======================
+
+func toStringPtr(s string) *string {
+	if s == "" {
+		return nil
 	}
-
-	_, err := s.repo.GetByID(id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return errors.New("data tidak ditemukan")
-		}
-		return err
-	}
-
-	return s.repo.Delete(id)
+	return &s
 }
 
-// Helpers
-func (s *RespondenService) toModel(req dto.CreateRespondenRequest) models.Responden {
-
-	return models.Responden{
-		NamaLengkap:        strings.TrimSpace(req.NamaLengkap),
-		Jabatan:            strings.TrimSpace(req.Jabatan),
-		Perusahaan:         strings.TrimSpace(req.Perusahaan),
-		Email:              strings.ToLower(strings.TrimSpace(req.Email)),
-		NoTelepon:          strings.TrimSpace(req.NoTelepon),
-		Sektor:             strings.TrimSpace(req.Sektor),
-		SektorLainnya:      strings.TrimSpace(req.SektorLainnya),
-		SertifikatTraining: strings.TrimSpace(req.SertifikatTraining),
+func safeString(s *string) string {
+	if s == nil {
+		return ""
 	}
+	return *s
 }
 
-func (s *RespondenService) toResponse(m *models.Responden) dto.RespondenResponse {
+// =======================
+// MAPPING RESPONSE
+// =======================
+func (s *RespondenService) toResponse(m *models.RespondenDetail) dto.RespondenResponse {
 
 	return dto.RespondenResponse{
-		ID:                 m.ID,
-		NamaLengkap:        m.NamaLengkap,
-		Jabatan:            m.Jabatan,
-		Perusahaan:         m.Perusahaan,
-		Email:              m.Email,
+		ID:           m.ID,
+		UserID:       m.UserID,
+
+		NamaLengkap:  safeString(m.NamaLengkap),
+		Email:        safeString(m.Email),
+		Jabatan:      safeString(m.Jabatan),
+		NamaPerusahaan:   safeString(m.NamaPerusahaan),
+		PerusahaanID: safeString(m.PerusahaanID),
+
 		NoTelepon:          m.NoTelepon,
 		Sektor:             m.Sektor,
-		SektorLainnya:      m.SektorLainnya,
+		SektorLainnya:      safeString(m.SektorLainnya),
 		SertifikatTraining: m.SertifikatTraining,
-		CreatedAt:          m.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:          m.UpdatedAt.Format(time.RFC3339),
+
+		CreatedAt: m.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: m.UpdatedAt.Format(time.RFC3339),
 	}
 }
