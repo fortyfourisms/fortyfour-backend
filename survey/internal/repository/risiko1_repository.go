@@ -36,6 +36,28 @@ func (r *RisikoRepository) GetAllRisiko() ([]models.RisikoResponse, error) {
 	return result, nil
 }
 
+// GET BY ID
+func (r *RisikoRepository) GetByID(id int) (*models.Risiko, error) {
+
+	row := r.db.QueryRow(`
+		SELECT id, responden_id
+		FROM risiko
+		WHERE id = ?
+	`, id)
+
+	var risiko models.Risiko
+
+	err := row.Scan(
+		&risiko.ID,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &risiko, nil
+}
+
 // STEP 1 - ELIGIBILITY
 func (r *RisikoRepository) UpsertEligibility(m models.RisikoEligibility) error {
 	query := `
@@ -202,6 +224,33 @@ func (r *RisikoRepository) FindByRespondentID(respondenID int) (map[string]inter
 	}
 
 	return result, nil
+}
+
+// UPDATE PARTIAL
+func (r *RisikoRepository) UpdatePartial(id int, data map[string]interface{}) error {
+
+	if len(data) == 0 {
+		return nil
+	}
+
+	query := "UPDATE risiko SET "
+	args := []interface{}{}
+
+	i := 0
+	for k, v := range data {
+		if i > 0 {
+			query += ", "
+		}
+		query += k + " = ?"
+		args = append(args, v)
+		i++
+	}
+
+	query += ", updated_at = NOW() WHERE id = ?"
+	args = append(args, id)
+
+	_, err := r.db.Exec(query, args...)
+	return err
 }
 
 // PROGRESS
