@@ -55,7 +55,7 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	printSectionTitle(pdf, "Ringkasan Hasil Kematangan")
 	pdf.SetFont("Arial", "B", 12)
 	pdf.SetFillColor(240, 245, 255)
-	
+
 	pdf.CellFormat(colLabelW, 12, "  Skor Total", "1", 0, "L", true, 0, "")
 	pdf.SetTextColor(41, 98, 255)
 	pdf.CellFormat(colValueW, 12, fmt.Sprintf("  %.2f", data.NilaiKematangan), "1", 1, "L", true, 0, "")
@@ -65,7 +65,7 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.CellFormat(colLabelW, 10, "  Kategori", "1", 0, "L", false, 0, "")
 	pdf.SetFont("Arial", "", 10)
 	pdf.CellFormat(colValueW, 10, "  "+toSafe(data.KategoriKematanganKeamananSiber), "1", 1, "L", false, 0, "")
-	
+
 	pdf.Ln(6)
 
 	// Assessment Info
@@ -84,7 +84,7 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 
 	// Domain Breakdown
 	printSectionTitle(pdf, "Rincian Skor Per Domain")
-	
+
 	// Table Header for domains
 	pdf.SetFont("Arial", "B", 9)
 	pdf.SetFillColor(230, 235, 245)
@@ -93,7 +93,7 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.CellFormat(70, 8, "  Level Kematangan", "1", 1, "L", true, 0, "")
 
 	pdf.SetFont("Arial", "", 9)
-	
+
 	domains := []struct {
 		Nama  string
 		Skor  float64

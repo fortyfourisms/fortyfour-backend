@@ -179,7 +179,7 @@ func InitRouter(
 	// Routes Berita
 	mux.HandleFunc("/api/berita", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(beritaH)))))
 	mux.HandleFunc("/api/berita/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(beritaH)))))
-	
+
 	// Routes Events (Kegiatan)
 	mux.HandleFunc("/api/kegiatan", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(eventH)))))
 	mux.HandleFunc("/api/kegiatan/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(eventH)))))

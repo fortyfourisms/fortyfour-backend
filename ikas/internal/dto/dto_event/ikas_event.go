@@ -63,6 +63,7 @@ type IkasAuditLogEvent struct {
 	Changes   map[string]interface{} `json:"changes"`
 	Timestamp time.Time              `json:"timestamp"`
 }
+
 // IkasEditRequestedEvent
 type IkasEditRequestedEvent struct {
 	IkasID         string    `json:"ikas_id"`
