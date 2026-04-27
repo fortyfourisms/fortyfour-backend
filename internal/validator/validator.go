@@ -3,6 +3,7 @@ package validator
 import (
 	"errors"
 	"fmt"
+	"html"
 	"strings"
 	"unicode"
 
@@ -397,4 +398,8 @@ func reverseString(s string) string {
 		runes[i], runes[j] = runes[j], runes[i]
 	}
 	return string(runes)
+}
+
+func SanitizeHTML(input string) string {
+	return html.EscapeString(strings.TrimSpace(input))
 }

@@ -12,6 +12,7 @@ type UserRepositoryInterface interface {
 	FindByEmail(email string) (*models.User, error)
 	FindByID(id string) (*models.User, error)
 	FindAll() ([]models.User, error)
+	FindAllAdmins() ([]models.User, error)
 	Update(user *models.User) error
 	UpdateWithPhoto(user *models.User) error
 	UpdatePassword(id, hashedPassword string) error
@@ -246,6 +247,24 @@ type NotificationRepositoryInterface interface {
 	Delete(userID string, notifID int64) error
 	DeleteAllByUserID(userID string) error
 	DeleteAll() error // admin: hapus semua notif semua user
+}
+
+// ── Berita ───────────────────────────────────────────────────────────────────
+
+type BeritaRepositoryInterface interface {
+	Create(berita *models.Berita) error
+	FindAll() ([]models.Berita, error)
+	FindByID(id int64) (*models.Berita, error)
+	Update(berita *models.Berita) error
+	Delete(id int64) error
+}
+
+type EventRepositoryInterface interface {
+	Create(event *models.Event) error
+	FindAll() ([]models.Event, error)
+	FindByID(id int64) (*models.Event, error)
+	Update(event *models.Event) error
+	Delete(id int64) error
 }
 
 // DTOnya tidak dipakai langsung di interface ini, tapi diimport

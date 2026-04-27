@@ -33,8 +33,8 @@ func NewIkasRepository(db *sql.DB) *IkasRepository {
 func (r *IkasRepository) Create(req dto.CreateIkasRequest, id string, nilaiKematangan float64) error {
 	query := `INSERT INTO ikas
 		(id, id_perusahaan, id_identifikasi, id_proteksi, id_deteksi, id_gulih, tanggal, responden, telepon, jabatan,
-		nilai_kematangan, target_nilai)
-		VALUES (?, ?, NULL, NULL, NULL, NULL, ?, ?, ?, ?, ?, ?)`
+		nilai_kematangan, target_nilai, edit_request_status)
+		VALUES (?, ?, NULL, NULL, NULL, NULL, ?, ?, ?, ?, ?, ?, 'none')`
 
 	// Konversi string kosong ke NULL agar tidak menyebabkan Error 1292 di MySQL
 	var tanggal interface{}
@@ -97,6 +97,8 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			g.nilai_subdomain3,
 			g.nilai_subdomain4,
 			i.is_validated,
+			i.edit_request_status,
+			i.edit_request_reason,
 			i.created_at,
 			i.updated_at
 		FROM ikas i
@@ -129,6 +131,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 		var gulihID sql.NullInt64
 		var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
 		var isValidated sql.NullBool
+		var editStatus, editReason sql.NullString
 		var createdAt, updatedAt sql.NullString
 
 		err := rows.Scan(
@@ -168,6 +171,8 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			&gulihSub3,
 			&gulihSub4,
 			&isValidated,
+			&editStatus,
+			&editReason,
 			&createdAt,
 			&updatedAt,
 		)
@@ -189,6 +194,14 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 
 		if updatedAt.Valid {
 			i.UpdatedAt = updatedAt.String
+		}
+
+		if editStatus.Valid {
+			i.EditRequestStatus = editStatus.String
+		}
+
+		if editReason.Valid {
+			i.EditRequestReason = editReason.String
 		}
 
 		if targetNilai.Valid {
@@ -528,6 +541,8 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 			g.nilai_subdomain3,
 			g.nilai_subdomain4,
 			i.is_validated,
+			i.edit_request_status,
+			i.edit_request_reason,
 			i.created_at,
 			i.updated_at
 		FROM ikas i
@@ -554,6 +569,7 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	var gulihID sql.NullInt64
 	var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
 	var isValidated sql.NullBool
+	var editStatus, editReason sql.NullString
 	var createdAt, updatedAt sql.NullString
 
 	err := row.Scan(
@@ -593,6 +609,8 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 		&gulihSub3,
 		&gulihSub4,
 		&isValidated,
+		&editStatus,
+		&editReason,
 		&createdAt,
 		&updatedAt,
 	)
@@ -614,6 +632,14 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 
 	if updatedAt.Valid {
 		i.UpdatedAt = updatedAt.String
+	}
+
+	if editStatus.Valid {
+		i.EditRequestStatus = editStatus.String
+	}
+
+	if editReason.Valid {
+		i.EditRequestReason = editReason.String
 	}
 
 	if targetNilai.Valid {
@@ -1196,5 +1222,10 @@ func (r *IkasRepository) UpdateDomainLinks(ikasID, idIden, idProt, idDet, idGuli
 		WHERE id = ?`
 
 	_, err := r.db.Exec(query, idIden, idProt, idDet, idGulih, ikasID)
+	return err
+}
+func (r *IkasRepository) UpdateRequestEditStatus(id string, status string, reason string) error {
+	query := `UPDATE ikas SET edit_request_status = ?, edit_request_reason = ? WHERE id = ?`
+	_, err := r.db.Exec(query, status, reason, id)
 	return err
 }

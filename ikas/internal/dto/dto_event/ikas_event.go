@@ -63,3 +63,20 @@ type IkasAuditLogEvent struct {
 	Changes   map[string]interface{} `json:"changes"`
 	Timestamp time.Time              `json:"timestamp"`
 }
+// IkasEditRequestedEvent
+type IkasEditRequestedEvent struct {
+	IkasID         string    `json:"ikas_id"`
+	NamaPerusahaan string    `json:"nama_perusahaan"`
+	Responden      string    `json:"responden"`
+	Reason         string    `json:"reason"`
+	RequestedAt    time.Time `json:"requested_at"`
+}
+
+// IkasEditActionedEvent
+type IkasEditActionedEvent struct {
+	IkasID         string    `json:"ikas_id"`
+	NamaPerusahaan string    `json:"nama_perusahaan"`
+	Status         string    `json:"status"` // approved/rejected
+	AdminReason    string    `json:"admin_reason,omitempty"`
+	ActionedAt     time.Time `json:"actioned_at"`
+}
