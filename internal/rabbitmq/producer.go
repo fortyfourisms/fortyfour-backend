@@ -110,3 +110,15 @@ func (p *Producer) PublishEventDeleted(ctx context.Context, event dto_event.Even
 	return p.Publish(ctx, "event.events", "event.deleted", event)
 }
 
+// Berita
+func (p *Producer) PublishBeritaCreated(ctx context.Context, event dto_event.BeritaCreatedEvent) error {
+	return p.Publish(ctx, "berita.events", "berita.created", event)
+}
+func (p *Producer) PublishBeritaUpdated(ctx context.Context, event dto_event.BeritaUpdatedEvent) error {
+	return p.Publish(ctx, "berita.events", "berita.updated", event)
+}
+func (p *Producer) PublishBeritaDeleted(ctx context.Context, event dto_event.BeritaDeletedEvent) error {
+	return p.Publish(ctx, "berita.events", "berita.deleted", event)
+}
+
+
