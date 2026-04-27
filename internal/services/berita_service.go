@@ -40,7 +40,10 @@ func (s *BeritaService) Create(authorID string, req dto.CreateBeritaRequest) err
 		CreatedAt: time.Now(),
 	}
 
-	return s.producer.PublishBeritaCreated(context.Background(), event)
+	if s.producer != nil {
+		return s.producer.PublishBeritaCreated(context.Background(), event)
+	}
+	return nil
 }
 
 func (s *BeritaService) GetAll() ([]dto.BeritaResponse, error) {
@@ -82,7 +85,10 @@ func (s *BeritaService) Update(id int64, req dto.UpdateBeritaRequest) error {
 		UpdatedAt: time.Now(),
 	}
 
-	return s.producer.PublishBeritaUpdated(context.Background(), event)
+	if s.producer != nil {
+		return s.producer.PublishBeritaUpdated(context.Background(), event)
+	}
+	return nil
 }
 
 func (s *BeritaService) Delete(id int64) error {
@@ -99,7 +105,10 @@ func (s *BeritaService) Delete(id int64) error {
 		DeletedAt: time.Now(),
 	}
 
-	return s.producer.PublishBeritaDeleted(context.Background(), event)
+	if s.producer != nil {
+		return s.producer.PublishBeritaDeleted(context.Background(), event)
+	}
+	return nil
 }
 
 

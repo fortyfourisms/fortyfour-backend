@@ -43,7 +43,10 @@ func (s *EventService) Create(req dto.CreateEventRequest) error {
 		CreatedAt: time.Now(),
 	}
 
-	return s.producer.PublishEventCreated(context.Background(), event)
+	if s.producer != nil {
+		return s.producer.PublishEventCreated(context.Background(), event)
+	}
+	return nil
 }
 
 func (s *EventService) GetAll() ([]dto.EventResponse, error) {
@@ -91,7 +94,10 @@ func (s *EventService) Update(id int64, req dto.UpdateEventRequest) error {
 		UpdatedAt: time.Now(),
 	}
 
-	return s.producer.PublishEventUpdated(context.Background(), event)
+	if s.producer != nil {
+		return s.producer.PublishEventUpdated(context.Background(), event)
+	}
+	return nil
 }
 
 func (s *EventService) Delete(id int64) error {
@@ -108,7 +114,10 @@ func (s *EventService) Delete(id int64) error {
 		DeletedAt: time.Now(),
 	}
 
-	return s.producer.PublishEventDeleted(context.Background(), event)
+	if s.producer != nil {
+		return s.producer.PublishEventDeleted(context.Background(), event)
+	}
+	return nil
 }
 
 func mapEventToResponse(e *models.Event) *dto.EventResponse {
