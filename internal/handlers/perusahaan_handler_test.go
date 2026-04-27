@@ -235,7 +235,7 @@ func TestPerusahaanHandler_GetAll_ServiceError(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "database error")
+	assert.Contains(t, response["message"], "database error")
 
 	mockSvc.AssertExpectations(t)
 }
@@ -289,7 +289,7 @@ func TestPerusahaanHandler_GetByID_NotFound(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "Data tidak ditemukan")
+	assert.Contains(t, response["message"], "Data tidak ditemukan")
 
 	mockSvc.AssertExpectations(t)
 }
@@ -467,7 +467,7 @@ func TestPerusahaanHandler_Create_WithIDInURL_ShouldFail(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "ID tidak diperlukan")
+	assert.Contains(t, response["message"], "ID tidak diperlukan")
 
 	mockSvc.AssertNotCalled(t, "Create")
 	mockSSE.AssertNotCalled(t, "NotifyCreate")
@@ -488,7 +488,7 @@ func TestPerusahaanHandler_Create_InvalidFormData(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "Gagal membaca form data")
+	assert.Contains(t, response["message"], "Gagal membaca form data")
 
 	mockSvc.AssertNotCalled(t, "Create")
 	mockSSE.AssertNotCalled(t, "NotifyCreate")
@@ -517,7 +517,7 @@ func TestPerusahaanHandler_Create_ServiceError(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "validation failed")
+	assert.Contains(t, response["message"], "validation failed")
 
 	mockSvc.AssertExpectations(t)
 	mockSSE.AssertNotCalled(t, "NotifyCreate")
@@ -725,7 +725,7 @@ func TestPerusahaanHandler_Update_WithoutID_ShouldFail(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "ID wajib")
+	assert.Contains(t, response["message"], "ID wajib")
 
 	mockSvc.AssertNotCalled(t, "Update")
 	mockSSE.AssertNotCalled(t, "NotifyUpdate")
@@ -769,7 +769,7 @@ func TestPerusahaanHandler_Update_ServiceError(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "not found")
+	assert.Contains(t, response["message"], "not found")
 
 	mockSvc.AssertExpectations(t)
 	mockSSE.AssertNotCalled(t, "NotifyUpdate")
@@ -872,7 +872,7 @@ func TestPerusahaanHandler_Delete_WithoutID_ShouldFail(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "ID wajib")
+	assert.Contains(t, response["message"], "ID wajib")
 
 	mockSvc.AssertNotCalled(t, "Delete")
 	mockSSE.AssertNotCalled(t, "NotifyDelete")
@@ -897,7 +897,7 @@ func TestPerusahaanHandler_Delete_ServiceError(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "foreign key")
+	assert.Contains(t, response["message"], "foreign key")
 
 	mockSvc.AssertExpectations(t)
 	mockSSE.AssertNotCalled(t, "NotifyDelete")

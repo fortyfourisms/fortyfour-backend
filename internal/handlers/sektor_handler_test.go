@@ -120,7 +120,7 @@ func TestSektorHandler_GetAll_ServiceError(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "database error")
+	assert.Contains(t, response["message"], "database error")
 
 	mockSvc.AssertExpectations(t)
 }
@@ -214,7 +214,7 @@ func TestSektorHandler_GetByID_NotFound(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(rr.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "Data tidak ditemukan")
+	assert.Contains(t, response["message"], "Data tidak ditemukan")
 
 	mockSvc.AssertExpectations(t)
 }
