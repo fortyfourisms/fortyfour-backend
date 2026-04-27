@@ -16,8 +16,8 @@ func NewEventRepository(db *sql.DB) *EventRepository {
 var _ EventRepositoryInterface = (*EventRepository)(nil)
 
 func (r *EventRepository) Create(event *models.Event) error {
-	query := `INSERT INTO events (judul, deskripsi, tanggal) VALUES (?, ?, ?)`
-	res, err := r.db.Exec(query, event.Judul, event.Deskripsi, event.Tanggal)
+	query := `INSERT INTO events (judul, deskripsi, tanggal, lokasi) VALUES (?, ?, ?, ?)`
+	res, err := r.db.Exec(query, event.Judul, event.Deskripsi, event.Tanggal, event.Lokasi)
 	if err != nil {
 		return err
 	}
@@ -31,7 +31,7 @@ func (r *EventRepository) Create(event *models.Event) error {
 
 func (r *EventRepository) FindAll() ([]models.Event, error) {
 	query := `
-		SELECT id, judul, deskripsi, tanggal, created_at, updated_at
+		SELECT id, judul, deskripsi, tanggal, lokasi, created_at, updated_at
 		FROM events
 		ORDER BY created_at DESC`
 
@@ -45,7 +45,7 @@ func (r *EventRepository) FindAll() ([]models.Event, error) {
 	for rows.Next() {
 		var e models.Event
 		err := rows.Scan(
-			&e.ID, &e.Judul, &e.Deskripsi, &e.Tanggal, &e.CreatedAt, &e.UpdatedAt,
+			&e.ID, &e.Judul, &e.Deskripsi, &e.Tanggal, &e.Lokasi, &e.CreatedAt, &e.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -57,13 +57,13 @@ func (r *EventRepository) FindAll() ([]models.Event, error) {
 
 func (r *EventRepository) FindByID(id int64) (*models.Event, error) {
 	query := `
-		SELECT id, judul, deskripsi, tanggal, created_at, updated_at
+		SELECT id, judul, deskripsi, tanggal, lokasi, created_at, updated_at
 		FROM events
 		WHERE id = ?`
 
 	var e models.Event
 	err := r.db.QueryRow(query, id).Scan(
-		&e.ID, &e.Judul, &e.Deskripsi, &e.Tanggal, &e.CreatedAt, &e.UpdatedAt,
+		&e.ID, &e.Judul, &e.Deskripsi, &e.Tanggal, &e.Lokasi, &e.CreatedAt, &e.UpdatedAt,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -76,8 +76,8 @@ func (r *EventRepository) FindByID(id int64) (*models.Event, error) {
 }
 
 func (r *EventRepository) Update(event *models.Event) error {
-	query := `UPDATE events SET judul = ?, deskripsi = ?, tanggal = ? WHERE id = ?`
-	_, err := r.db.Exec(query, event.Judul, event.Deskripsi, event.Tanggal, event.ID)
+	query := `UPDATE events SET judul = ?, deskripsi = ?, tanggal = ?, lokasi = ? WHERE id = ?`
+	_, err := r.db.Exec(query, event.Judul, event.Deskripsi, event.Tanggal, event.Lokasi, event.ID)
 	return err
 }
 

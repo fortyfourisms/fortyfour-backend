@@ -36,6 +36,7 @@ func (s *EventService) Create(req dto.CreateEventRequest) (*dto.EventResponse, e
 		Judul:     req.Judul,
 		Deskripsi: req.Deskripsi,
 		Tanggal:   tanggal,
+		Lokasi:    req.Lokasi,
 	}
 
 	if err := s.repo.Create(event); err != nil {
@@ -96,6 +97,9 @@ func (s *EventService) Update(id int64, req dto.UpdateEventRequest) (*dto.EventR
 		}
 		existing.Tanggal = tanggal
 	}
+	if req.Lokasi != nil {
+		existing.Lokasi = *req.Lokasi
+	}
 
 	if err := s.repo.Update(existing); err != nil {
 		return nil, err
@@ -127,6 +131,7 @@ func mapEventToResponse(e *models.Event) *dto.EventResponse {
 		Judul:     e.Judul,
 		Deskripsi: e.Deskripsi,
 		Tanggal:   e.Tanggal.Format(time.RFC3339),
+		Lokasi:    e.Lokasi,
 		Status:    status,
 		CreatedAt: e.CreatedAt.Format(time.RFC3339),
 		UpdatedAt: e.UpdatedAt.Format(time.RFC3339),

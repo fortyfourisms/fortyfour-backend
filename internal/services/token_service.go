@@ -75,7 +75,7 @@ func (s *TokenService) SetAuthCookies(w http.ResponseWriter, tokens *models.Toke
 		Value:    tokens.AccessToken,
 		Path:     "/",
 		Domain:   s.domain,
-		MaxAge:   15 * 60, // 15 minutes
+		MaxAge:   15 * 60 * 60, // 15 minutes
 		HttpOnly: true,
 		Secure:   s.isProduction, // Only send over HTTPS in production
 		SameSite: http.SameSiteLaxMode,
