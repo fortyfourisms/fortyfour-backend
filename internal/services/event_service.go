@@ -27,7 +27,7 @@ func NewEventService(repo repository.EventRepositoryInterface) *EventService {
 var _ EventServiceInterface = (*EventService)(nil)
 
 func (s *EventService) Create(req dto.CreateEventRequest) (*dto.EventResponse, error) {
-	tanggal, err := time.Parse(time.RFC3339, req.Tanggal)
+	t, err := time.Parse(time.RFC3339, req.Tanggal)
 	if err != nil {
 		return nil, errors.New("format tanggal tidak valid (gunakan RFC3339, contoh: 2024-12-31T15:00:00Z)")
 	}
@@ -35,7 +35,8 @@ func (s *EventService) Create(req dto.CreateEventRequest) (*dto.EventResponse, e
 	event := &models.Event{
 		Judul:     req.Judul,
 		Deskripsi: req.Deskripsi,
-		Tanggal:   tanggal,
+		Lokasi:    req.Lokasi,
+		Tanggal:   t,
 	}
 
 	if err := s.repo.Create(event); err != nil {
@@ -89,12 +90,15 @@ func (s *EventService) Update(id int64, req dto.UpdateEventRequest) (*dto.EventR
 	if req.Deskripsi != nil {
 		existing.Deskripsi = *req.Deskripsi
 	}
+	if req.Lokasi != nil {
+		existing.Lokasi = *req.Lokasi
+	}
 	if req.Tanggal != nil {
-		tanggal, err := time.Parse(time.RFC3339, *req.Tanggal)
+		t, err := time.Parse(time.RFC3339, *req.Tanggal)
 		if err != nil {
 			return nil, errors.New("format tanggal tidak valid")
 		}
-		existing.Tanggal = tanggal
+		existing.Tanggal = t
 	}
 
 	if err := s.repo.Update(existing); err != nil {
@@ -126,6 +130,7 @@ func mapEventToResponse(e *models.Event) *dto.EventResponse {
 		ID:        e.ID,
 		Judul:     e.Judul,
 		Deskripsi: e.Deskripsi,
+		Lokasi:    e.Lokasi,
 		Tanggal:   e.Tanggal.Format(time.RFC3339),
 		Status:    status,
 		CreatedAt: e.CreatedAt.Format(time.RFC3339),
