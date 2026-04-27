@@ -46,3 +46,21 @@ type IkasImportedEvent struct {
 	UserID          string    `json:"user_id"`
 	ImportedAt      time.Time `json:"imported_at"`
 }
+
+// IkasEditRequestedEvent
+type IkasEditRequestedEvent struct {
+	IkasID         string    `json:"ikas_id"`
+	NamaPerusahaan string    `json:"nama_perusahaan"`
+	Responden      string    `json:"responden"`
+	Reason         string    `json:"reason"`
+	RequestedAt    time.Time `json:"requested_at"`
+}
+
+// IkasEditActionedEvent
+type IkasEditActionedEvent struct {
+	IkasID         string    `json:"ikas_id"`
+	NamaPerusahaan string    `json:"nama_perusahaan"`
+	Status         string    `json:"status"` // approved/rejected
+	AdminReason    string    `json:"admin_reason,omitempty"`
+	ActionedAt     time.Time `json:"actioned_at"`
+}

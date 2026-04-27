@@ -190,6 +190,7 @@ func (m *mockUserRepo) ResetLoginAttempts(userID string) error {
 	return nil
 }
 func (m *mockUserRepo) UpdatePasswordChangedAt(userID string) error { return nil }
+func (m *mockUserRepo) FindAllAdmins() ([]models.User, error)       { return nil, nil }
 
 func (m *mockUserRepo) ExistsByPerusahaan(idPerusahaan string) (bool, error) {
 	for _, u := range m.users {

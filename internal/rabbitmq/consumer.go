@@ -6,6 +6,8 @@ import (
 	"log"
 
 	"fortyfour-backend/internal/dto/dto_event"
+	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/rabbitmq"
 )
 
@@ -16,17 +18,25 @@ type SSEBroadcaster interface {
 	NotifyDelete(resource string, id interface{}, userID string)
 }
 
+type NotificationPusher interface {
+	Push(userID string, notifType models.NotificationType, message string) error
+}
+
 // Consumer wrapper
 type Consumer struct {
 	*rabbitmq.Consumer
-	sseService SSEBroadcaster
+	sseService   SSEBroadcaster
+	userRepo     repository.UserRepositoryInterface
+	notifService NotificationPusher
 }
 
 // NewConsumer
-func NewConsumer(c *rabbitmq.Consumer, sseService SSEBroadcaster) *Consumer {
+func NewConsumer(c *rabbitmq.Consumer, sseService SSEBroadcaster, userRepo repository.UserRepositoryInterface, notifService NotificationPusher) *Consumer {
 	return &Consumer{
-		Consumer:   c,
-		sseService: sseService,
+		Consumer:     c,
+		sseService:   sseService,
+		userRepo:     userRepo,
+		notifService: notifService,
 	}
 }
 
@@ -144,6 +154,60 @@ func (c *Consumer) ConsumeIkasDeleted(ctx context.Context) error {
 	})
 }
 
+func (c *Consumer) ConsumeIkasEditRequested(ctx context.Context) error {
+	return c.Consume(ctx, "main_api.ikas.edit_requested", func(ctx context.Context, body []byte) error {
+		var event dto_event.IkasEditRequestedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		log.Printf("IKAS Edit Requested Event: %+v", event)
+
+		// 1. Persist to DB for all admins
+		if c.userRepo != nil && c.notifService != nil {
+			admins, _ := c.userRepo.FindAllAdmins()
+			msg := "User " + event.Responden + " (Perusahaan: " + event.NamaPerusahaan + ") mengajukan permintaan edit data IKAS. Alasan: " + event.Reason
+			for _, admin := range admins {
+				_ = c.notifService.Push(admin.ID, models.NotifIkasEditRequested, msg)
+			}
+		}
+
+		// 2. Real-time SSE (send to admin topic/all admins)
+		if c.sseService != nil {
+			c.sseService.NotifyCreate("ikas_request", event, "admin")
+		}
+
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeIkasEditActioned(ctx context.Context) error {
+	return c.Consume(ctx, "main_api.ikas.edit_actioned", func(ctx context.Context, body []byte) error {
+		var event dto_event.IkasEditActionedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		log.Printf("IKAS Edit Actioned Event: %+v", event)
+
+		// 1. Find user owner of this IKAS ID (this might require another event enrichment or repo call)
+		// For now, we'll notify the 'ikas' resource which might be observed by the user
+		msg := "Permintaan edit data IKAS Anda telah " + event.Status
+		if event.Status == "rejected" && event.AdminReason != "" {
+			msg += ". Alasan: " + event.AdminReason
+		}
+
+		// Ideally we find the UserID of the owner here to persist notification
+		// If we don't have it in the event, we might need to fetch it or include it in event
+
+		if c.sseService != nil {
+			c.sseService.NotifyUpdate("ikas_action", event, "") // Broadcast or targeted
+		}
+
+		return nil
+	})
+}
+
 // Csirt
 func (c *Consumer) ConsumeCsirtCreated(ctx context.Context) error {
 	return c.Consume(ctx, "csirt.created", func(ctx context.Context, body []byte) error {
@@ -228,6 +292,8 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeIkasCreated,
 		c.ConsumeIkasUpdated,
 		c.ConsumeIkasDeleted,
+		c.ConsumeIkasEditRequested,
+		c.ConsumeIkasEditActioned,
 		func(ctx context.Context) error {
 			return c.consumeGenericIkasEvent(ctx, "main_api.ruang_lingkup.created", "ruang_lingkup", "Created")
 		},

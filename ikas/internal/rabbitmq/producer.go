@@ -206,3 +206,11 @@ func (p *Producer) PublishPertanyaanGulihDeleted(ctx context.Context, event inte
 func (p *Producer) PublishIkasAuditLog(ctx context.Context, log interface{}) error {
 	return p.Publish(ctx, "ikas.events", "ikas.audit.log", log)
 }
+
+func (p *Producer) PublishIkasEditRequested(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "ikas.edit_requested", event)
+}
+
+func (p *Producer) PublishIkasEditActioned(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "ikas.edit_actioned", event)
+}

@@ -110,6 +110,10 @@ func (m *mockIkasRepo) IsLocked(id string) (bool, error) {
 	return false, nil
 }
 
+func (m *mockIkasRepo) UpdateRequestEditStatus(id string, status string, reason string) error {
+	return nil
+}
+
 /*
 ========================================
  TEST CREATE

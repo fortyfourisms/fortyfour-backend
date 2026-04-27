@@ -1231,7 +1231,7 @@ func TestAuthHandler_UpdateMeMedia_NoFileProvided(t *testing.T) {
 	}
 	var resp map[string]string
 	json.NewDecoder(w.Body).Decode(&resp)
-	if resp["error"] == "" {
+	if resp["message"] == "" {
 		t.Error("expected error message")
 	}
 }
@@ -1266,8 +1266,8 @@ func TestAuthHandler_UpdateMeMedia_InvalidPhotoFormat(t *testing.T) {
 	}
 	var resp map[string]string
 	json.NewDecoder(w.Body).Decode(&resp)
-	if resp["error"] == "" || !strings.Contains(resp["error"], "format") {
-		t.Errorf("expected format error, got: %v", resp["error"])
+	if resp["message"] == "" || !strings.Contains(resp["message"], "format") {
+		t.Errorf("expected format error, got: %v", resp["message"])
 	}
 }
 
@@ -1812,7 +1812,7 @@ func TestAuthHandler_Register_ValidationFails_EmptyFields(t *testing.T) {
 	}
 	var resp map[string]string
 	json.NewDecoder(w.Body).Decode(&resp)
-	if resp["error"] == "" {
+	if resp["message"] == "" {
 		t.Error("expected error message in response")
 	}
 }

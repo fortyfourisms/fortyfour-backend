@@ -22,6 +22,14 @@ type ValidasiIkasRequest struct {
 	Status bool `json:"status"`
 }
 
+type RequestEditRequest struct {
+	Reason string `json:"reason" validate:"required"`
+}
+
+type RejectEditRequest struct {
+	Reason string `json:"reason" validate:"required"`
+}
+
 // Response dengan nested objects
 type IkasResponse struct {
 	ID                              string              `json:"id"`
@@ -38,6 +46,8 @@ type IkasResponse struct {
 	Deteksi                         *DeteksiInIkas      `json:"deteksi,omitempty"`
 	Gulih                           *GulihInIkas        `json:"gulih,omitempty"`
 	IsValidated                     bool                `json:"is_validated"`
+	EditRequestStatus               string              `json:"edit_request_status"`
+	EditRequestReason               string              `json:"edit_request_reason"`
 	CreatedAt                       string              `json:"created_at"`
 	UpdatedAt                       string              `json:"updated_at"`
 }

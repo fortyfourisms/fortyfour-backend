@@ -22,6 +22,8 @@ type IkasProducerInterface interface {
 	PublishJawabanProteksiCreated(ctx context.Context, event interface{}) error
 	PublishJawabanDeteksiCreated(ctx context.Context, event interface{}) error
 	PublishJawabanGulihCreated(ctx context.Context, event interface{}) error
+	PublishIkasEditRequested(ctx context.Context, event interface{}) error
+	PublishIkasEditActioned(ctx context.Context, event interface{}) error
 }
 
 type IkasService struct {
@@ -590,6 +592,125 @@ func (s *IkasService) ValidateIkas(ctx context.Context, id string, status bool) 
 	}
 	if s.producer != nil {
 		_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
+	}
+
+	return nil
+}
+func (s *IkasService) ExportByIDPDF(ctx context.Context, id string, userRole string, userPerusahaanID string) (*dto.IkasResponse, []byte, error) {
+	// 1. Get complete data with ownership check
+	ikas, err := s.GetByID(id, userRole, userPerusahaanID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// 2. Generate PDF using ikas/internal/utils
+	pdfBytes, err := utils.GenerateIkasPDF(ikas)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return ikas, pdfBytes, nil
+}
+
+func (s *IkasService) RequestEdit(ctx context.Context, id string, reason string, userRole string, userPerusahaanID string) error {
+	// 1. Get current data
+	ikas, err := s.GetByID(id, userRole, userPerusahaanID)
+	if err != nil {
+		return err
+	}
+
+	// 2. Validate state
+	if !ikas.IsValidated {
+		return fmt.Errorf("data IKAS belum divalidasi, tidak perlu meminta izin edit")
+	}
+	if ikas.EditRequestStatus == "pending" {
+		return fmt.Errorf("permintaan edit sebelumnya masih menunggu persetujuan admin")
+	}
+
+	// 3. Update status in DB
+	err = s.repo.UpdateRequestEditStatus(id, "pending", reason)
+	if err != nil {
+		return fmt.Errorf("gagal mengajukan permintaan edit: %v", err)
+	}
+
+	// 4. Publish Event
+	if s.producer != nil {
+		event := dto_event.IkasEditRequestedEvent{
+			IkasID:         ikas.ID,
+			NamaPerusahaan: ikas.Perusahaan.NamaPerusahaan,
+			Responden:      ikas.Responden,
+			Reason:         reason,
+			RequestedAt:    time.Now(),
+		}
+		_ = s.producer.PublishIkasEditRequested(ctx, event)
+	}
+
+	return nil
+}
+
+func (s *IkasService) ApproveEdit(ctx context.Context, id string) error {
+	// 1. Get current data (admin check is handled by handler/middleware)
+	ikas, err := s.GetByID(id, "admin", "")
+	if err != nil {
+		return err
+	}
+
+	if ikas.EditRequestStatus != "pending" {
+		return fmt.Errorf("tidak ada permintaan edit aktif untuk data ini")
+	}
+
+	// 2. Unlock data and reset status
+	err = s.repo.UpdateValidationStatus(id, false)
+	if err != nil {
+		return err
+	}
+
+	err = s.repo.UpdateRequestEditStatus(id, "none", "")
+	if err != nil {
+		return err
+	}
+
+	// 3. Publish Event
+	if s.producer != nil {
+		event := dto_event.IkasEditActionedEvent{
+			IkasID:         ikas.ID,
+			NamaPerusahaan: ikas.Perusahaan.NamaPerusahaan,
+			Status:         "approved",
+			ActionedAt:     time.Now(),
+		}
+		_ = s.producer.PublishIkasEditActioned(ctx, event)
+	}
+
+	return nil
+}
+
+func (s *IkasService) RejectEdit(ctx context.Context, id string, adminReason string) error {
+	// 1. Get current data
+	ikas, err := s.GetByID(id, "admin", "")
+	if err != nil {
+		return err
+	}
+
+	if ikas.EditRequestStatus != "pending" {
+		return fmt.Errorf("tidak ada permintaan edit aktif untuk data ini")
+	}
+
+	// 2. Update status to rejected
+	err = s.repo.UpdateRequestEditStatus(id, "rejected", adminReason)
+	if err != nil {
+		return err
+	}
+
+	// 3. Publish Event
+	if s.producer != nil {
+		event := dto_event.IkasEditActionedEvent{
+			IkasID:         ikas.ID,
+			NamaPerusahaan: ikas.Perusahaan.NamaPerusahaan,
+			Status:         "rejected",
+			AdminReason:    adminReason,
+			ActionedAt:     time.Now(),
+		}
+		_ = s.producer.PublishIkasEditActioned(ctx, event)
 	}
 
 	return nil

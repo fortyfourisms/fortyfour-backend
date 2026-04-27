@@ -203,7 +203,7 @@ func TestSEHandler_GetAll_ServiceError(t *testing.T) {
 
 	var response map[string]string
 	json.NewDecoder(w.Body).Decode(&response)
-	assert.Contains(t, response["error"], "database error")
+	assert.Contains(t, response["message"], "database error")
 
 	mockService.AssertExpectations(t)
 }
@@ -280,7 +280,7 @@ func TestSEHandler_GetByID_NotFound(t *testing.T) {
 
 	var response map[string]string
 	json.NewDecoder(w.Body).Decode(&response)
-	assert.Contains(t, response["error"], "tidak ditemukan")
+	assert.Contains(t, response["message"], "tidak ditemukan")
 
 	mockService.AssertExpectations(t)
 }
@@ -342,7 +342,7 @@ func TestSEHandler_Create_InvalidBody(t *testing.T) {
 
 	var response map[string]string
 	json.NewDecoder(w.Body).Decode(&response)
-	assert.Contains(t, response["error"], "Invalid request body")
+	assert.Contains(t, response["message"], "Invalid request body")
 }
 
 func TestSEHandler_Create_ServiceError(t *testing.T) {
@@ -365,7 +365,7 @@ func TestSEHandler_Create_ServiceError(t *testing.T) {
 
 	var response map[string]string
 	json.NewDecoder(w.Body).Decode(&response)
-	assert.Contains(t, response["error"], "validation error")
+	assert.Contains(t, response["message"], "validation error")
 
 	mockService.AssertExpectations(t)
 }

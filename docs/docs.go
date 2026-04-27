@@ -1345,6 +1345,211 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/jabatan": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil seluruh data jabatan",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Jabatan"
+                ],
+                "summary": "List semua jabatan",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.JabatanResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Membuat record jabatan",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Jabatan"
+                ],
+                "summary": "Tambah jabatan baru",
+                "parameters": [
+                    {
+                        "description": "Data jabatan",
+                        "name": "jabatan",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateJabatanRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.JabatanResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/jabatan/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil satu data jabatan",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Jabatan"
+                ],
+                "summary": "Ambil jabatan berdasarkan ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Jabatan ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.JabatanResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengubah data jabatan berdasarkan ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Jabatan"
+                ],
+                "summary": "Update jabatan",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Jabatan ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data update",
+                        "name": "jabatan",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateJabatanRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.JabatanResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menghapus data jabatan berdasarkan ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Jabatan"
+                ],
+                "summary": "Hapus jabatan",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Jabatan ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/kelas": {
             "get": {
                 "security": [
@@ -9408,6 +9613,12 @@ const docTemplate = `{
                 "deteksi": {
                     "$ref": "#/definitions/dto.DeteksiInIkas"
                 },
+                "edit_request_reason": {
+                    "type": "string"
+                },
+                "edit_request_status": {
+                    "type": "string"
+                },
                 "gulih": {
                     "$ref": "#/definitions/dto.GulihInIkas"
                 },
@@ -10469,6 +10680,14 @@ const docTemplate = `{
                 }
             }
         },
+        "fortyfour-backend_internal_dto.CreateJabatanRequest": {
+            "type": "object",
+            "properties": {
+                "nama_jabatan": {
+                    "type": "string"
+                }
+            }
+        },
         "fortyfour-backend_internal_dto.CreateKelasRequest": {
             "type": "object",
             "required": [
@@ -11040,6 +11259,23 @@ const docTemplate = `{
                 }
             }
         },
+        "fortyfour-backend_internal_dto.JabatanResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "nama_jabatan": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "fortyfour-backend_internal_dto.JawabanItem": {
             "type": "object",
             "required": [
@@ -11301,11 +11537,20 @@ const docTemplate = `{
         "fortyfour-backend_internal_dto.NotificationListResponse": {
             "type": "object",
             "properties": {
+                "message": {
+                    "type": "string"
+                },
                 "notifications": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/fortyfour-backend_internal_dto.NotificationResponse"
                     }
+                },
+                "read_count": {
+                    "type": "integer"
+                },
+                "total_data": {
+                    "type": "integer"
                 },
                 "unread_count": {
                     "type": "integer"
@@ -11339,6 +11584,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "display_name": {
+                    "type": "string"
+                },
+                "foto_profile": {
                     "type": "string"
                 },
                 "user_id": {
@@ -11993,6 +12241,14 @@ const docTemplate = `{
             ],
             "properties": {
                 "konten": {
+                    "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.UpdateJabatanRequest": {
+            "type": "object",
+            "properties": {
+                "nama_jabatan": {
                     "type": "string"
                 }
             }
