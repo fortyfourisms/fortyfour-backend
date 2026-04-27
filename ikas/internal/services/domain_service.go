@@ -87,19 +87,15 @@ func (s *DomainService) Create(req dto.CreateDomainRequest) (*dto.DomainResponse
 		return nil, errors.New("nama_domain sudah ada")
 	}
 
-	newID, err := s.repo.Create(req)
-	if err != nil {
+	if err := s.producer.PublishDomainCreated(context.Background(), dto_event.DomainCreatedEvent{
+		Request:   req,
+		CreatedAt: time.Now(),
+	}); err != nil {
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
 
-	go func() {
-		_ = s.producer.PublishDomainCreated(context.Background(), dto_event.DomainCreatedEvent{
-			Request:   req,
-			CreatedAt: time.Now(),
-		})
-	}()
-
-	return s.repo.GetByID(int(newID))
+	return nil, nil
 }
 
 func (s *DomainService) GetAll() ([]dto.DomainResponse, error) {
@@ -140,17 +136,14 @@ func (s *DomainService) Update(id int, req dto.UpdateDomainRequest) (*dto.Domain
 		}
 	}
 
-	if err := s.repo.Update(id, req); err != nil {
+	if err := s.producer.PublishDomainUpdated(context.Background(), dto_event.DomainUpdatedEvent{
+		ID:        id,
+		Request:   req,
+		UpdatedAt: time.Now(),
+	}); err != nil {
+		logger.Error(err, "operation failed")
 		return nil, err
 	}
-
-	go func() {
-		_ = s.producer.PublishDomainUpdated(context.Background(), dto_event.DomainUpdatedEvent{
-			ID:        id,
-			Request:   req,
-			UpdatedAt: time.Now(),
-		})
-	}()
 
 	return nil, nil
 }
@@ -164,16 +157,21 @@ func (s *DomainService) Delete(id int) error {
 		return err
 	}
 
-	if err := s.repo.Delete(id); err != nil {
+	hasKategori, err := s.repo.CheckHasKategori(id)
+	if err != nil {
 		return err
 	}
+	if hasKategori {
+		return errors.New("tidak dapat menghapus domain karena masih memiliki kategori")
+	}
 
-	go func() {
-		_ = s.producer.PublishDomainDeleted(context.Background(), dto_event.DomainDeletedEvent{
-			ID:        id,
-			DeletedAt: time.Now(),
-		})
-	}()
+	if err := s.producer.PublishDomainDeleted(context.Background(), dto_event.DomainDeletedEvent{
+		ID:        id,
+		DeletedAt: time.Now(),
+	}); err != nil {
+		logger.Error(err, "operation failed")
+		return err
+	}
 
 	return nil
 }

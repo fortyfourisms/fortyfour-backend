@@ -183,11 +183,11 @@ func main() {
 	diskusiSvc := services.NewDiskusiService(diskusiRepo, userRepo)
 	catatanSvc := services.NewCatatanService(catatanRepo)
 	sertifikatSvc := services.NewSertifikatService(sertifikatRepo, kelasRepo, progressRepo, kuisAttemptRepo, kuisRepo, userRepo)
-	beritaSvc := services.NewBeritaService(beritaRepo)
-	eventSvc := services.NewEventService(eventRepo)
+	beritaSvc := services.NewBeritaService(beritaRepo, rmqProducer)
+	eventSvc := services.NewEventService(eventRepo, rmqProducer)
 
 	// Wrap with specific Consumer (after repositories are initialized)
-	rmqConsumer := internalRmq.NewConsumer(sharedConsumer, sseService, userRepo, notificationService)
+	rmqConsumer := internalRmq.NewConsumer(sharedConsumer, sseService, userRepo, notificationService, eventRepo, beritaRepo)
 
 	// Start consumers in background
 	ctx, cancel := context.WithCancel(context.Background())
