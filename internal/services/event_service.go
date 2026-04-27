@@ -1,54 +1,49 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/dto/dto_event"
 	"fortyfour-backend/internal/models"
+	internalRmq "fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
 	"time"
 )
 
 type EventServiceInterface interface {
-	Create(req dto.CreateEventRequest) (*dto.EventResponse, error)
+	Create(req dto.CreateEventRequest) error
 	GetAll() ([]dto.EventResponse, error)
 	GetByID(id int64) (*dto.EventResponse, error)
-	Update(id int64, req dto.UpdateEventRequest) (*dto.EventResponse, error)
+	Update(id int64, req dto.UpdateEventRequest) error
 	Delete(id int64) error
 }
 
 type EventService struct {
-	repo repository.EventRepositoryInterface
+	repo     repository.EventRepositoryInterface
+	producer *internalRmq.Producer
 }
 
-func NewEventService(repo repository.EventRepositoryInterface) *EventService {
-	return &EventService{repo: repo}
+func NewEventService(repo repository.EventRepositoryInterface, producer *internalRmq.Producer) *EventService {
+	return &EventService{
+		repo:     repo,
+		producer: producer,
+	}
 }
 
 var _ EventServiceInterface = (*EventService)(nil)
 
-func (s *EventService) Create(req dto.CreateEventRequest) (*dto.EventResponse, error) {
-	t, err := time.Parse(time.RFC3339, req.Tanggal)
-	if err != nil {
-		return nil, errors.New("format tanggal tidak valid (gunakan RFC3339, contoh: 2024-12-31T15:00:00Z)")
+func (s *EventService) Create(req dto.CreateEventRequest) error {
+	if _, err := time.Parse(time.RFC3339, req.Tanggal); err != nil {
+		return errors.New("format tanggal tidak valid (gunakan RFC3339, contoh: 2024-12-31T15:00:00Z)")
 	}
 
-	event := &models.Event{
-		Judul:     req.Judul,
-		Deskripsi: req.Deskripsi,
-		Lokasi:    req.Lokasi,
-		Tanggal:   t,
+	event := dto_event.EventCreatedEvent{
+		Request:   req,
+		CreatedAt: time.Now(),
 	}
 
-	if err := s.repo.Create(event); err != nil {
-		return nil, err
-	}
-
-	saved, err := s.repo.FindByID(event.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return mapEventToResponse(saved), nil
+	return s.producer.PublishEventCreated(context.Background(), event)
 }
 
 func (s *EventService) GetAll() ([]dto.EventResponse, error) {
@@ -75,37 +70,28 @@ func (s *EventService) GetByID(id int64) (*dto.EventResponse, error) {
 	return mapEventToResponse(e), nil
 }
 
-func (s *EventService) Update(id int64, req dto.UpdateEventRequest) (*dto.EventResponse, error) {
+func (s *EventService) Update(id int64, req dto.UpdateEventRequest) error {
 	existing, err := s.repo.FindByID(id)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if existing == nil {
-		return nil, errors.New("event tidak ditemukan")
+		return errors.New("event tidak ditemukan")
 	}
 
-	if req.Judul != nil {
-		existing.Judul = *req.Judul
-	}
-	if req.Deskripsi != nil {
-		existing.Deskripsi = *req.Deskripsi
-	}
-	if req.Lokasi != nil {
-		existing.Lokasi = *req.Lokasi
-	}
 	if req.Tanggal != nil {
-		t, err := time.Parse(time.RFC3339, *req.Tanggal)
-		if err != nil {
-			return nil, errors.New("format tanggal tidak valid")
+		if _, err := time.Parse(time.RFC3339, *req.Tanggal); err != nil {
+			return errors.New("format tanggal tidak valid")
 		}
-		existing.Tanggal = t
 	}
 
-	if err := s.repo.Update(existing); err != nil {
-		return nil, err
+	event := dto_event.EventUpdatedEvent{
+		ID:        id,
+		Request:   req,
+		UpdatedAt: time.Now(),
 	}
 
-	return mapEventToResponse(existing), nil
+	return s.producer.PublishEventUpdated(context.Background(), event)
 }
 
 func (s *EventService) Delete(id int64) error {
@@ -117,7 +103,12 @@ func (s *EventService) Delete(id int64) error {
 		return errors.New("event tidak ditemukan")
 	}
 
-	return s.repo.Delete(id)
+	event := dto_event.EventDeletedEvent{
+		ID:        id,
+		DeletedAt: time.Now(),
+	}
+
+	return s.producer.PublishEventDeleted(context.Background(), event)
 }
 
 func mapEventToResponse(e *models.Event) *dto.EventResponse {
@@ -139,3 +130,4 @@ func mapEventToResponse(e *models.Event) *dto.EventResponse {
 
 	return res
 }
+
