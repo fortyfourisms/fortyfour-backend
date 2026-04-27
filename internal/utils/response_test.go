@@ -43,8 +43,8 @@ func TestRespondError(t *testing.T) {
 
 	var response map[string]string
 	json.NewDecoder(w.Body).Decode(&response)
-	if response["error"] != "test error" {
-		t.Errorf("expected error 'test error', got '%s'", response["error"])
+	if response["message"] != "test error" {
+		t.Errorf("expected message 'test error', got '%s'", response["message"])
 	}
 }
 
@@ -73,8 +73,8 @@ func TestRespondError_DifferentStatusCodes(t *testing.T) {
 
 			var response map[string]string
 			json.NewDecoder(w.Body).Decode(&response)
-			if response["error"] != tc.message {
-				t.Errorf("expected error '%s', got '%s'", tc.message, response["error"])
+			if response["message"] != tc.message {
+				t.Errorf("expected message '%s', got '%s'", tc.message, response["message"])
 			}
 		})
 	}
