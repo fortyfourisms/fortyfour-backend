@@ -57,7 +57,7 @@ func (h *SdmCsirtHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *SdmCsirtHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
-	if role != "user" {
+	if role == "admin" || role == "staff" {
 		// admin atau no-context: return semua
 		data, err := h.service.GetAll()
 		if err != nil {
@@ -113,7 +113,7 @@ func (h *SdmCsirtHandler) handleGetByID(w http.ResponseWriter, r *http.Request, 
 	}
 
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if !h.sdmBelongsToPerusahaan(data, idPerusahaan) {
 			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
@@ -142,7 +142,7 @@ func (h *SdmCsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	// Ownership check: user hanya bisa tambah SDM ke CSIRT miliknya
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if idPerusahaan == "" {
 			utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
@@ -199,7 +199,7 @@ func (h *SdmCsirtHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 //	@Router			/api/sdm_csirt/{id} [put]
 func (h *SdmCsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		existing, err := h.service.GetByID(id)
 		if err != nil {
 			utils.RespondError(w, 404, "Data tidak ditemukan")
@@ -250,7 +250,7 @@ func (h *SdmCsirtHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 //	@Router			/api/sdm_csirt/{id} [delete]
 func (h *SdmCsirtHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		existing, err := h.service.GetByID(id)
 		if err != nil {
 			utils.RespondError(w, 404, "Data tidak ditemukan")

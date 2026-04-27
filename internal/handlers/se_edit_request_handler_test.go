@@ -61,27 +61,33 @@ func withRoleAndUser(req *http.Request, role, userID string) *http.Request {
 	return req.WithContext(ctx)
 }
 
-func TestSEEditRequestHandler_ListAsAdmin(t *testing.T) {
-	svc := new(mockSEEditRequestService)
-	h := NewSEEditRequestHandler(svc)
+func TestSEEditRequestHandler_ListAsAdminOrStaff(t *testing.T) {
+	roles := []string{"admin", "staff"}
+	for _, role := range roles {
+		t.Run(role, func(t *testing.T) {
+			svc := new(mockSEEditRequestService)
+			h := NewSEEditRequestHandler(svc)
 
-	expected := []dto.SEEditRequestResponse{
-		{ID: "req-1", Status: models.SEEditRequestPending},
+			expected := []dto.SEEditRequestResponse{
+				{ID: "req-1", Status: models.SEEditRequestPending},
+			}
+			svc.On("GetPending").Return(expected, nil)
+
+			req := httptest.NewRequest(http.MethodGet, "/api/se/edit-requests", nil)
+	req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
+			req = withRoleAndUser(req, role, "")
+			w := httptest.NewRecorder()
+
+			h.ServeHTTP(w, req)
+
+			assert.Equal(t, http.StatusOK, w.Code)
+			var resp []dto.SEEditRequestResponse
+			_ = json.NewDecoder(w.Body).Decode(&resp)
+			assert.Len(t, resp, 1)
+			assert.Equal(t, "req-1", resp[0].ID)
+			svc.AssertExpectations(t)
+		})
 	}
-	svc.On("GetPending").Return(expected, nil)
-
-	req := httptest.NewRequest(http.MethodGet, "/api/se/edit-requests", nil)
-	req = withRoleAndUser(req, "admin", "")
-	w := httptest.NewRecorder()
-
-	h.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusOK, w.Code)
-	var resp []dto.SEEditRequestResponse
-	_ = json.NewDecoder(w.Body).Decode(&resp)
-	assert.Len(t, resp, 1)
-	assert.Equal(t, "req-1", resp[0].ID)
-	svc.AssertExpectations(t)
 }
 
 func TestSEEditRequestHandler_ListAsUser(t *testing.T) {
@@ -94,6 +100,7 @@ func TestSEEditRequestHandler_ListAsUser(t *testing.T) {
 	svc.On("GetByUser", "user-1").Return(expected, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/se/edit-requests", nil)
+	req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
 	req = withRoleAndUser(req, "user", "user-1")
 	w := httptest.NewRecorder()
 
@@ -111,6 +118,7 @@ func TestSEEditRequestHandler_ListAsUserUnauthorized(t *testing.T) {
 	h := NewSEEditRequestHandler(new(mockSEEditRequestService))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/se/edit-requests", nil)
+	req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
 	req = withRoleAndUser(req, "user", "")
 	w := httptest.NewRecorder()
 
@@ -120,37 +128,44 @@ func TestSEEditRequestHandler_ListAsUserUnauthorized(t *testing.T) {
 }
 
 func TestSEEditRequestHandler_ReviewSuccess(t *testing.T) {
-	svc := new(mockSEEditRequestService)
-	h := NewSEEditRequestHandler(svc)
-	catatan := "ok"
+	roles := []string{"admin", "staff"}
+	for _, role := range roles {
+		t.Run(role, func(t *testing.T) {
+			svc := new(mockSEEditRequestService)
+			h := NewSEEditRequestHandler(svc)
+			catatan := "ok"
 
-	svc.On("Review", "req-1", dto.ReviewSEEditRequestDTO{
-		Status:  "approved",
-		Catatan: &catatan,
-	}).Return(&dto.SEEditRequestResponse{
-		ID:     "req-1",
-		Status: models.SEEditRequestApproved,
-	}, nil)
+			svc.On("Review", "req-1", dto.ReviewSEEditRequestDTO{
+				Status:  "approved",
+				Catatan: &catatan,
+			}).Return(&dto.SEEditRequestResponse{
+				ID:     "req-1",
+				Status: models.SEEditRequestApproved,
+			}, nil)
 
-	body := []byte(`{"status":"approved","catatan":"ok"}`)
-	req := httptest.NewRequest(http.MethodPut, "/api/se/edit-requests/req-1/review", bytes.NewReader(body))
-	req = withRoleAndUser(req, "admin", "")
-	w := httptest.NewRecorder()
+			body := []byte(`{"status":"approved","catatan":"ok"}`)
+			req := httptest.NewRequest(http.MethodPut, "/api/se/edit-requests/req-1/review", bytes.NewReader(body))
+	req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
+			req = withRoleAndUser(req, role, "")
+			w := httptest.NewRecorder()
 
-	h.ServeHTTP(w, req)
+			h.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	var resp dto.SEEditRequestResponse
-	_ = json.NewDecoder(w.Body).Decode(&resp)
-	assert.Equal(t, models.SEEditRequestApproved, resp.Status)
-	svc.AssertExpectations(t)
+			assert.Equal(t, http.StatusOK, w.Code)
+			var resp dto.SEEditRequestResponse
+			_ = json.NewDecoder(w.Body).Decode(&resp)
+			assert.Equal(t, models.SEEditRequestApproved, resp.Status)
+			svc.AssertExpectations(t)
+		})
+	}
 }
 
-func TestSEEditRequestHandler_ReviewForbiddenForNonAdmin(t *testing.T) {
+func TestSEEditRequestHandler_ReviewForbiddenForNonAdminOrStaff(t *testing.T) {
 	h := NewSEEditRequestHandler(new(mockSEEditRequestService))
 
 	body := []byte(`{"status":"approved"}`)
 	req := httptest.NewRequest(http.MethodPut, "/api/se/edit-requests/req-1/review", bytes.NewReader(body))
+	req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
 	req = withRoleAndUser(req, "user", "user-1")
 	w := httptest.NewRecorder()
 
@@ -163,6 +178,7 @@ func TestSEEditRequestHandler_ReviewInvalidBody(t *testing.T) {
 	h := NewSEEditRequestHandler(new(mockSEEditRequestService))
 
 	req := httptest.NewRequest(http.MethodPut, "/api/se/edit-requests/req-1/review", bytes.NewBufferString("{invalid"))
+	req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
 	req = withRoleAndUser(req, "admin", "")
 	w := httptest.NewRecorder()
 
@@ -193,6 +209,7 @@ func TestSEEditRequestHandler_HandleRequestEditSuccess(t *testing.T) {
 
 	body, _ := json.Marshal(reqDTO)
 	req := httptest.NewRequest(http.MethodPost, "/api/se/se-1/request-edit", bytes.NewReader(body))
+	req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
 	req = withRoleAndUser(req, "user", "user-1")
 	w := httptest.NewRecorder()
 
@@ -209,6 +226,7 @@ func TestSEEditRequestHandler_HandleRequestEditUnauthorized(t *testing.T) {
 	h := NewSEEditRequestHandler(new(mockSEEditRequestService))
 
 	req := httptest.NewRequest(http.MethodPost, "/api/se/se-1/request-edit", bytes.NewBufferString(`{}`))
+	req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
 	w := httptest.NewRecorder()
 
 	h.HandleRequestEdit(w, req, "se-1")
@@ -225,6 +243,7 @@ func TestSEEditRequestHandler_HandleRequestEditServiceError(t *testing.T) {
 
 	body, _ := json.Marshal(reqDTO)
 	req := httptest.NewRequest(http.MethodPost, "/api/se/se-1/request-edit", bytes.NewReader(body))
+	req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
 	req = withRoleAndUser(req, "user", "user-1")
 	w := httptest.NewRecorder()
 
@@ -238,6 +257,7 @@ func TestSEEditRequestHandler_ServeHTTP_NotFound(t *testing.T) {
 	h := NewSEEditRequestHandler(new(mockSEEditRequestService))
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/se/edit-requests/req-1", nil)
+	req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
 	w := httptest.NewRecorder()
 
 	h.ServeHTTP(w, req)

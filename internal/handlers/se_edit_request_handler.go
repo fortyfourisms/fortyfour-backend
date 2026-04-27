@@ -49,7 +49,7 @@ func (h *SEEditRequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 func (h *SEEditRequestHandler) handleList(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
-	if role == "admin" {
+	if role == "admin" || role == "staff" {
 		data, err := h.service.GetPending()
 		if err != nil {
 			utils.RespondError(w, 500, err.Error())
@@ -88,8 +88,8 @@ func (h *SEEditRequestHandler) handleList(w http.ResponseWriter, r *http.Request
 // @Router			/api/se/edit-requests/{id}/review [put]
 func (h *SEEditRequestHandler) handleReview(w http.ResponseWriter, r *http.Request, id string) {
 	role := middleware.GetRole(r.Context())
-	if role != "admin" {
-		utils.RespondError(w, 403, "Hanya admin yang dapat mereview request")
+	if role != "admin" && role != "staff" {
+		utils.RespondError(w, 403, "Hanya admin dan staff yang dapat mereview request")
 		return
 	}
 
