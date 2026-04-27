@@ -51,7 +51,7 @@ func (h *BeritaHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	
+
 	utils.RespondJSON(w, http.StatusOK, utils.JSONResponse{
 		Status:  "success",
 		Message: "Berhasil mengambil data berita",
@@ -72,7 +72,7 @@ func (h *BeritaHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id
 		utils.RespondError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	
+
 	utils.RespondJSON(w, http.StatusOK, utils.JSONResponse{
 		Status:  "success",
 		Message: "Berhasil mengambil detail berita",
