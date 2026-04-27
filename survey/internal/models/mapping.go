@@ -64,4 +64,4 @@ func MapFrequencyStringToInt(s string) FrequencyLevel {
 	default:
 		return 0
 	}
-} 
+}

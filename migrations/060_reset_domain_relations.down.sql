@@ -1,0 +1,1 @@
+-- Irreversible migration. Data reset and auto-increment rewrites are not restored automatically.

@@ -103,21 +103,37 @@ func (r *DashboardRepository) CountPerSektor(ctx context.Context, f dto.Dashboar
 	return out, nil
 }
 
-// TODO: re-enable ikas summary when ikas table is ready
 // IkasGlobalAgg returns simple ikas aggregate across all data (for summary).
-// If ikas table or columns missing, this returns zeros or an error.
-// func (r *DashboardRepository) IkasGlobalAgg(ctx context.Context) (dto.IkasAgg, error) {
-// 	var out dto.IkasAgg
-// 	query := `SELECT COUNT(id) as total_ikas, AVG(nilai_kematangan) as avg_nilai_kematangan, AVG(target_nilai) as avg_target_nilai FROM ikas`
-// 	row := r.db.QueryRowContext(ctx, query)
-// 	if err := row.Scan(&out.Total, &out.AvgNilaiKematangan, &out.AvgTargetNilai); err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return out, nil
-// 		}
-// 		return out, err
-// 	}
-// 	return out, nil
-// }
+// Filter opsional: sub_sektor_id.
+func (r *DashboardRepository) IkasGlobalAgg(ctx context.Context, f dto.DashboardFilter) (dto.IkasAgg, error) {
+	var out dto.IkasAgg
+
+	var args []interface{}
+	whereClause := ""
+	if f.SubSektorID != nil {
+		whereClause = "WHERE p.id_sub_sektor = ?"
+		args = append(args, *f.SubSektorID)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT
+			COUNT(i.id)                              AS total_ikas,
+			COALESCE(AVG(i.nilai_kematangan), 0)     AS avg_nilai_kematangan,
+			COALESCE(AVG(i.target_nilai), 0)         AS avg_target_nilai
+		FROM ikas i
+		JOIN perusahaan p ON p.id = i.id_perusahaan
+		%s
+	`, whereClause)
+
+	row := r.db.QueryRowContext(ctx, query, args...)
+	if err := row.Scan(&out.Total, &out.AvgNilaiKematangan, &out.AvgTargetNilai); err != nil {
+		if err == sql.ErrNoRows {
+			return out, nil
+		}
+		return out, err
+	}
+	return out, nil
+}
 
 // SeGlobalAgg returns se aggregate dengan breakdown per kategori dan this_month.
 // Filter opsional: from/to, year, quarter, sub_sektor_id, kategori_se.
@@ -211,33 +227,32 @@ func (r *DashboardRepository) SeStatusCount(ctx context.Context, f dto.Dashboard
 	return out, nil
 }
 
-// TODO: re-enable ikas status when ikas table is ready
 // IkasStatusCount menghitung perusahaan yang sudah/belum mengisi IKAS.
-// func (r *DashboardRepository) IkasStatusCount(ctx context.Context, f dto.DashboardFilter) (dto.IkasStatusCount, error) {
-// 	var out dto.IkasStatusCount
-// 	var args []interface{}
-// 	var whereClause string
-// 	if f.SubSektorID != nil {
-// 		whereClause = "WHERE p.id_sub_sektor = ?"
-// 		args = append(args, *f.SubSektorID)
-// 	}
-// 	query := fmt.Sprintf(`
-// 		SELECT
-// 			COUNT(p.id)                                         AS total_perusahaan,
-// 			COUNT(ik.id_perusahaan)                             AS sudah_mengisi_ikas,
-// 			COUNT(p.id) - COUNT(ik.id_perusahaan)              AS belum_mengisi_ikas
-// 		FROM perusahaan p
-// 		LEFT JOIN (
-// 			SELECT DISTINCT id_perusahaan FROM ikas
-// 		) ik ON p.id = ik.id_perusahaan
-// 		%s
-// 	`, whereClause)
-// 	row := r.db.QueryRowContext(ctx, query, args...)
-// 	if err := row.Scan(&out.TotalPerusahaan, &out.SudahMengisiIKAS, &out.BelumMengisiIKAS); err != nil {
-// 		if err == sql.ErrNoRows {
-// 			return out, nil
-// 		}
-// 		return out, err
-// 	}
-// 	return out, nil
-// }
+func (r *DashboardRepository) IkasStatusCount(ctx context.Context, f dto.DashboardFilter) (dto.IkasStatusCount, error) {
+	var out dto.IkasStatusCount
+	var args []interface{}
+	var whereClause string
+	if f.SubSektorID != nil {
+		whereClause = "WHERE p.id_sub_sektor = ?"
+		args = append(args, *f.SubSektorID)
+	}
+	query := fmt.Sprintf(`
+		SELECT
+			COUNT(p.id)                            AS total_perusahaan,
+			COUNT(ik.id_perusahaan)                AS sudah_mengisi_ikas,
+			COUNT(p.id) - COUNT(ik.id_perusahaan)  AS belum_mengisi_ikas
+		FROM perusahaan p
+		LEFT JOIN (
+			SELECT DISTINCT id_perusahaan FROM ikas
+		) ik ON p.id = ik.id_perusahaan
+		%s
+	`, whereClause)
+	row := r.db.QueryRowContext(ctx, query, args...)
+	if err := row.Scan(&out.TotalPerusahaan, &out.SudahMengisiIKAS, &out.BelumMengisiIKAS); err != nil {
+		if err == sql.ErrNoRows {
+			return out, nil
+		}
+		return out, err
+	}
+	return out, nil
+}

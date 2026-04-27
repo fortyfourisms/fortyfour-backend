@@ -1,0 +1,2 @@
+-- Irreversible corrective migration.
+-- Restoring a broken non-auto-increment id definition would reintroduce runtime insert failures.

@@ -210,12 +210,12 @@ func TestRoleHandler_handleGetByID_NotFound_ErrorMessageInBody(t *testing.T) {
 	w := httptest.NewRecorder()
 	handler.handleGetByID(w, req, "does-not-exist")
 
-	// RespondError menggunakan key "error", bukan "message"
+	// RespondError uses the shared JSONResponse shape.
 	var errResp map[string]string
 	json.NewDecoder(w.Body).Decode(&errResp)
 
-	if errResp["error"] == "" {
-		t.Error("expected 'error' field in response body")
+	if errResp["message"] == "" {
+		t.Error("expected 'message' field in response body")
 	}
 }
 

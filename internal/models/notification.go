@@ -15,6 +15,8 @@ const (
 	NotifResourceCreated    NotificationType = "resource_created"
 	NotifResourceUpdated    NotificationType = "resource_updated"
 	NotifResourceDeleted    NotificationType = "resource_deleted"
+	NotifIkasEditRequested  NotificationType = "ikas_edit_requested"
+	NotifIkasEditActioned   NotificationType = "ikas_edit_actioned"
 )
 
 // Notification adalah struktur notifikasi yang disimpan di MySQL
@@ -23,6 +25,7 @@ type Notification struct {
 	UserID      string           `json:"user_id"`
 	Username    string           `json:"username"`
 	DisplayName string           `json:"display_name"`
+	FotoProfile *string          `json:"foto_profile"`
 	Type        NotificationType `json:"type"`
 	Message     string           `json:"message"`
 	Read        bool             `json:"read"`

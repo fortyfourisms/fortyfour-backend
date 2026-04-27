@@ -65,7 +65,7 @@ func (h *SEHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary		Get all SE
-// @Description	Admin mendapat semua SE. User hanya mendapat SE milik perusahaannya.
+// @Description	Admin dan staff mendapat semua SE. User/PIC hanya mendapat SE milik perusahaannya.
 // @Tags			SE
 // @Accept			json
 // @Produce		json
@@ -77,8 +77,8 @@ func (h *SEHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *SEHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
-	if role == "admin" {
-		// Admin → seluruh data
+	if role == "admin" || role == "staff" {
+		// Admin dan staff → seluruh data
 		data, err := h.service.GetAll()
 		if err != nil {
 			utils.RespondError(w, 500, err.Error())

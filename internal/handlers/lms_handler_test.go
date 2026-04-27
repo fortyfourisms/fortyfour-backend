@@ -247,6 +247,7 @@ func (m *lmsUserRepo) UpdateStatus(uid string, s models.UserStatus) error { retu
 func (m *lmsUserRepo) IncrementLoginAttempts(uid string) (int, error)     { return 0, nil }
 func (m *lmsUserRepo) ResetLoginAttempts(uid string) error                { return nil }
 func (m *lmsUserRepo) UpdatePasswordChangedAt(uid string) error           { return nil }
+func (m *lmsUserRepo) FindAllAdmins() ([]models.User, error)              { return nil, nil }
 
 // ── setup helpers ────────────────────────────────────────────────────────────
 

@@ -211,16 +211,16 @@ func (h *JawabanGulihHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 		userPerusahaanID = val.(string)
 	}
 
-	err = h.service.Update(id, req, userID, userRole, userPerusahaanID)
+	updatedID, msg, err := h.service.Update(id, req, userID, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
 		case "data tidak ditemukan":
 			utils.RespondError(w, 404, err.Error())
 		case "format ID tidak valid",
-			"jawaban_gulih harus bernilai antara 0 sampai 5, atau null untuk N/A",
-			"validasi hanya boleh berisi 'yes' atau 'no'",
-			"validasi hanya boleh diisi jika evidence ada":
+			"jawaban_gulih tidak boleh kosong",
+			"validasi hanya boleh diisi jika evidence ada",
+			"validasi hanya boleh berisi 'yes' atau 'no'":
 			utils.RespondError(w, 400, err.Error())
 		default:
 			utils.RespondError(w, 500, err.Error())
@@ -229,8 +229,8 @@ func (h *JawabanGulihHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 	}
 
 	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menyimpan data",
-		"id":      id,
+		"message": msg,
+		"id":      updatedID,
 	})
 }
 

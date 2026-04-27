@@ -42,8 +42,13 @@ func (s *NotificationService) MarkRead(userID string, notifID int64) error {
 	return s.repo.MarkRead(userID, notifID)
 }
 
-// MarkAllRead menandai semua notifikasi user sebagai sudah dibaca
-func (s *NotificationService) MarkAllRead(userID string) error {
+// MarkAllRead menandai semua notifikasi sebagai sudah dibaca
+// Jika role admin: tandai semua notif dari semua user
+// Jika user biasa: tandai milik user sendiri saja
+func (s *NotificationService) MarkAllRead(userID string, role string) error {
+	if role == "admin" {
+		return s.repo.MarkAllReadGlobal()
+	}
 	return s.repo.MarkAllRead(userID)
 }
 
@@ -52,8 +57,13 @@ func (s *NotificationService) Delete(userID string, notifID int64) error {
 	return s.repo.Delete(userID, notifID)
 }
 
-// DeleteAll menghapus semua notifikasi milik user
-func (s *NotificationService) DeleteAll(userID string) error {
+// DeleteAll menghapus semua notifikasi
+// Jika role admin: hapus semua notif dari semua user
+// Jika user biasa: hapus milik user sendiri saja
+func (s *NotificationService) DeleteAll(userID string, role string) error {
+	if role == "admin" {
+		return s.repo.DeleteAll()
+	}
 	return s.repo.DeleteAllByUserID(userID)
 }
 

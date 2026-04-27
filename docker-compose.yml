@@ -146,11 +146,15 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+      test:
+        [
+          "CMD-SHELL",
+          "wget --quiet --tries=1 --spider \"http://$${RABBITMQ_DEFAULT_USER}:$${RABBITMQ_DEFAULT_PASS}@127.0.0.1:15672/api/health/checks/ready-to-serve-clients\" || exit 1",
+        ]
+      interval: 20s
+      timeout: 10s
+      retries: 6
+      start_period: 60s
     expose:
       - "5672"
     ports:

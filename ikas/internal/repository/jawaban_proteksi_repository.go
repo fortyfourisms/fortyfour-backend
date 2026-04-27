@@ -26,6 +26,7 @@ type JawabanProteksiRepositoryInterface interface {
 	GetBufferCount(ikasID string) (int, error)
 	FlushBuffer(ikasID string) error
 	CloneByIkasID(sourceID, targetID string) error
+	GetIDByIkasAndPertanyaan(ikasID string, pertanyaanID int) (int, error)
 }
 
 type JawabanProteksiRepository struct {
@@ -468,4 +469,10 @@ func (r *JawabanProteksiRepository) CloneByIkasID(sourceID, targetID string) err
 		return err
 	}
 	return nil
+}
+
+func (r *JawabanProteksiRepository) GetIDByIkasAndPertanyaan(ikasID string, pertanyaanID int) (int, error) {
+	var id int
+	err := r.db.QueryRow(`SELECT id FROM jawaban_proteksi WHERE ikas_id = ? AND pertanyaan_proteksi_id = ?`, ikasID, pertanyaanID).Scan(&id)
+	return id, err
 }

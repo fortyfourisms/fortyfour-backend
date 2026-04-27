@@ -227,21 +227,21 @@ func (h *JawabanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Requ
 		userRole = val.(string)
 	}
 
-	userIkasID := ""
+	userPerusahaanID := ""
 	if val := r.Context().Value(middleware.PerusahaanIDKey); val != nil {
-		userIkasID = val.(string)
+		userPerusahaanID = val.(string)
 	}
 
-	err = h.service.Update(id, req, userID, userRole, userIkasID)
+	updatedID, msg, err := h.service.Update(id, req, userID, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
 		case "data tidak ditemukan":
 			utils.RespondError(w, 404, err.Error())
 		case "format ID tidak valid",
-			"jawaban_deteksi harus bernilai antara 0 sampai 5, atau null untuk N/A",
-			"validasi hanya boleh berisi 'yes' atau 'no'",
-			"validasi hanya boleh diisi jika evidence ada":
+			"jawaban_deteksi tidak boleh kosong",
+			"validasi hanya boleh diisi jika evidence ada",
+			"validasi hanya boleh berisi 'yes' atau 'no'":
 			utils.RespondError(w, 400, err.Error())
 		default:
 			utils.RespondError(w, 500, err.Error())
@@ -250,8 +250,8 @@ func (h *JawabanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Requ
 	}
 
 	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menyimpan data",
-		"id":      id,
+		"message": msg,
+		"id":      updatedID,
 	})
 }
 

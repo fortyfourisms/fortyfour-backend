@@ -69,6 +69,16 @@ func (m *mockIkasProducer) PublishJawabanGulihCreated(ctx context.Context, event
 	return args.Error(0)
 }
 
+func (m *mockIkasProducer) PublishIkasEditRequested(ctx context.Context, event interface{}) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
+func (m *mockIkasProducer) PublishIkasEditActioned(ctx context.Context, event interface{}) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
 // Check interfaces compliance
 var _ repository.IkasRepositoryInterface = (*mockIkasRepository)(nil)
 var _ services.IkasProducerInterface = (*mockIkasProducer)(nil)
@@ -175,11 +185,12 @@ func TestIkasHandler_ServeHTTP_Create_Success(t *testing.T) {
 	producer := new(mockIkasProducer)
 	handler := setupIkasHandler(repo, producer)
 
-	createReq := dto.CreateIkasRequest{IDPerusahaan: "1", Responden: "User", Tanggal: "2026-01-01"}
-	repo.On("CheckExistsByPerusahaanIDAndYear", "1", 2026).Return(false, nil)
+	createReq := dto.CreateIkasRequest{IDPerusahaan: "11111111-1111-1111-1111-111111111111", Responden: "User", Tanggal: "2026-01-01", Telepon: "123456", Jabatan: "Manager"}
+	repo.On("CheckExistsByPerusahaanID", "11111111-1111-1111-1111-111111111111").Return(true, nil)
+	repo.On("CheckExistsByPerusahaanIDAndYear", "11111111-1111-1111-1111-111111111111", 2026).Return(false, nil)
 
 	producer.On("PublishIkasCreated", mock.Anything, mock.MatchedBy(func(e dto_event.IkasCreatedEvent) bool {
-		return e.IDPerusahaan == "1" && e.UserID == "user-123"
+		return e.IDPerusahaan == "11111111-1111-1111-1111-111111111111" && e.UserID == "user-123"
 	})).Return(nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.MatchedBy(func(e dto_event.IkasAuditLogEvent) bool {
 		return e.Action == "CREATE_IKAS"
@@ -212,8 +223,9 @@ func TestIkasHandler_ServeHTTP_Create_ExistsOrError(t *testing.T) {
 	repo := new(mockIkasRepository)
 	handler := setupIkasHandler(repo, nil)
 
-	createReq := dto.CreateIkasRequest{IDPerusahaan: "1", Tanggal: "2026-01-01"}
-	repo.On("CheckExistsByPerusahaanIDAndYear", "1", 2026).Return(true, nil) // Conflict
+	createReq := dto.CreateIkasRequest{IDPerusahaan: "11111111-1111-1111-1111-111111111111", Responden: "User", Tanggal: "2026-01-01", Telepon: "123456", Jabatan: "Manager"}
+	repo.On("CheckExistsByPerusahaanID", "11111111-1111-1111-1111-111111111111").Return(true, nil)
+	repo.On("CheckExistsByPerusahaanIDAndYear", "11111111-1111-1111-1111-111111111111", 2026).Return(true, nil) // Conflict
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/ikas", bytes.NewBuffer(body))
@@ -232,16 +244,18 @@ func TestIkasHandler_ServeHTTP_Update_Success(t *testing.T) {
 	producer := new(mockIkasProducer)
 	handler := setupIkasHandler(repo, producer)
 
-	perusahaanID := "2"
+	perusahaanID := "22222222-2222-2222-2222-222222222222"
 	updateReq := dto.UpdateIkasRequest{IDPerusahaan: &perusahaanID}
 
 	current := &dto.IkasResponse{
 		ID:         "123",
 		Tanggal:    "2026-01-01",
-		Perusahaan: &dto.PerusahaanInIkas{ID: "1"},
+		Perusahaan: &dto.PerusahaanInIkas{ID: "11111111-1111-1111-1111-111111111111"},
 	}
 	repo.On("GetByID", "123").Return(current, nil)
-	repo.On("GetLatestByPerusahaan", "1").Return((*dto.IkasResponse)(nil), nil)
+	repo.On("GetLatestByPerusahaan", "11111111-1111-1111-1111-111111111111").Return((*dto.IkasResponse)(nil), nil)
+	repo.On("CheckExistsByPerusahaanID", "22222222-2222-2222-2222-222222222222").Return(true, nil)
+	repo.On("CheckExistsByPerusahaanIDAndYear", "22222222-2222-2222-2222-222222222222", 2026).Return(false, nil)
 
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasUpdated", mock.Anything, mock.Anything).Return(nil)
@@ -426,13 +440,18 @@ func TestIkasHandler_ServeHTTP_Import_Success(t *testing.T) {
 
 	importData := &dto.ParsedExcelData{
 		IkasRequest: dto.CreateIkasRequest{
-			IDPerusahaan: "1",
+			IDPerusahaan: "11111111-1111-1111-1111-111111111111",
+			Responden:    "User",
+			Tanggal:      "2026-01-01",
+			Telepon:      "123456",
+			Jabatan:      "Manager",
 		},
 		JawabanIdentifikasi: []dto.ExcelSubdomainAnswer{{PertanyaanID: 1, Jawaban: 1.0}},
 	}
 
 	repo.On("ParseExcelForImport", mock.Anything).Return(importData, nil)
-	repo.On("CheckExistsByPerusahaanIDAndYear", "1", 2026).Return(false, nil) // Create IKAS
+	repo.On("CheckExistsByPerusahaanID", "11111111-1111-1111-1111-111111111111").Return(true, nil)
+	repo.On("CheckExistsByPerusahaanIDAndYear", "11111111-1111-1111-1111-111111111111", 2026).Return(false, nil) // Create IKAS
 
 	producer.On("PublishIkasCreated", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
@@ -455,13 +474,14 @@ func TestIkasHandler_ServeHTTP_Import_SystemError(t *testing.T) {
 
 	importData := &dto.ParsedExcelData{
 		IkasRequest: dto.CreateIkasRequest{
-			IDPerusahaan: "1",
+			IDPerusahaan: "11111111-1111-1111-1111-111111111111",
 		},
 		JawabanIdentifikasi: []dto.ExcelSubdomainAnswer{{PertanyaanID: 1, Jawaban: 1.0}},
 	}
 
 	repo.On("ParseExcelForImport", mock.Anything).Return(importData, nil)
-	repo.On("CheckExistsByPerusahaanIDAndYear", "1", 2026).Return(false, errors.New("db error"))
+	repo.On("CheckExistsByPerusahaanID", "11111111-1111-1111-1111-111111111111").Return(true, nil)
+	repo.On("CheckExistsByPerusahaanIDAndYear", "11111111-1111-1111-1111-111111111111", 2026).Return(false, errors.New("db error"))
 
 	req := createMultipartRequest(t, "file", "test.xlsx", []byte("dummy data"))
 	// Inject admin role

@@ -54,6 +54,8 @@ func InitRouter(
 	notificationH *handlers.NotificationHandler,
 	ikasProxyH *handlers.ProxyHandler,
 	lmsH *handlers.LMSHandler,
+	beritaH *handlers.BeritaHandler,
+	eventH *handlers.EventHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -171,12 +173,26 @@ func InitRouter(
 	mux.HandleFunc("/api/dashboard/summary", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(dashboardH)))))
 
 	// Routes Notifications
-	mux.HandleFunc("/api/notifications", authM.Authenticate(utils.AdaptHandler(notificationH)))
-	mux.HandleFunc("/api/notifications/", authM.Authenticate(utils.AdaptHandler(notificationH)))
+	mux.HandleFunc("/api/notifications", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(notificationH))))
+	mux.HandleFunc("/api/notifications/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(notificationH))))
+
+	// Routes Berita
+	mux.HandleFunc("/api/berita", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(beritaH)))))
+	mux.HandleFunc("/api/berita/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(beritaH)))))
+
+	// Routes Events (Kegiatan)
+	mux.HandleFunc("/api/kegiatan", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(eventH)))))
+	mux.HandleFunc("/api/kegiatan/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(eventH)))))
 
 	// Routes Chat
 	mux.HandleFunc("/api/chat", authM.Authenticate(chatHandler.Stream))
 	mux.HandleFunc("/api/chat/delete-session", authM.Authenticate(chatHandler.DeleteSession))
+
+	// ── Public LMS Routes (Landing Page — tanpa auth) ─────────────────────────
+	// GET /api/public/kelas      → list kelas published (untuk card landing page)
+	// GET /api/public/kelas/{id} → detail kelas (untuk halaman detail sebelum daftar)
+	mux.HandleFunc("/api/public/kelas", lenientLimiter.LimitByIP(lmsH.ServePublicKelas))
+	mux.HandleFunc("/api/public/kelas/", lenientLimiter.LimitByIP(lmsH.ServePublicKelas))
 
 	// ── LMS Routes ────────────────────────────────────────────────────────────
 	//

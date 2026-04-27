@@ -33,6 +33,30 @@ func (h *IkasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if strings.HasSuffix(suffix, "/export") && r.Method == http.MethodGet {
+		id := strings.TrimSuffix(suffix, "/export")
+		h.handleExportPDF(w, r, id)
+		return
+	}
+
+	if strings.HasSuffix(suffix, "/request-edit") && r.Method == http.MethodPost {
+		id := strings.TrimSuffix(suffix, "/request-edit")
+		h.handleRequestEdit(w, r, id)
+		return
+	}
+
+	if strings.HasSuffix(suffix, "/approve-edit") && r.Method == http.MethodPut {
+		id := strings.TrimSuffix(suffix, "/approve-edit")
+		h.handleApproveEdit(w, r, id)
+		return
+	}
+
+	if strings.HasSuffix(suffix, "/reject-edit") && r.Method == http.MethodPut {
+		id := strings.TrimSuffix(suffix, "/reject-edit")
+		h.handleRejectEdit(w, r, id)
+		return
+	}
+
 	id := suffix
 
 	switch r.Method {
@@ -173,10 +197,16 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	newID := uuid.New().String()
 	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	if err := h.service.Create(r.Context(), req, newID, userID); err != nil {
+	if err := h.service.Create(r.Context(), req, newID, userID, userRole, userPerusahaanID); err != nil {
 		logger.Error(err, "operation failed")
-		utils.RespondError(w, 400, err.Error())
+		if strings.Contains(err.Error(), "tidak memiliki akses") || strings.Contains(err.Error(), "belum terasosiasi") {
+			utils.RespondError(w, 403, err.Error())
+		} else {
+			utils.RespondError(w, 400, err.Error())
+		}
 		return
 	}
 
@@ -305,9 +335,16 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
-	newID, err := h.service.ImportFromExcel(r.Context(), fileBytes, userID)
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	newID, err := h.service.ImportFromExcel(r.Context(), fileBytes, userID, userRole, userPerusahaanID)
 	if err != nil {
 		logger.Error(err, "operation failed")
+		httpStatus := http.StatusBadRequest
+		if strings.Contains(err.Error(), "tidak memiliki akses") || strings.Contains(err.Error(), "belum terasosiasi") {
+			httpStatus = http.StatusForbidden
+		}
 		response := struct {
 			Success bool     `json:"success"`
 			Message string   `json:"message"`
@@ -317,7 +354,7 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 			Message: "Import gagal",
 			Errors:  []string{err.Error()},
 		}
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(httpStatus)
 		json.NewEncoder(w).Encode(response)
 		return
 	}
@@ -353,5 +390,111 @@ func (h *IkasHandler) handleValidate(w http.ResponseWriter, r *http.Request, id 
 
 	utils.RespondJSON(w, 200, map[string]interface{}{
 		"message": msg,
+	})
+}
+func (h *IkasHandler) handleExportPDF(w http.ResponseWriter, r *http.Request, id string) {
+	if !utils.IsValidUUID(id) {
+		utils.RespondError(w, 400, "ID tidak valid")
+		return
+	}
+
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	ikas, pdfBytes, err := h.service.ExportByIDPDF(r.Context(), id, userRole, userPerusahaanID)
+	if err != nil {
+		if strings.Contains(err.Error(), "tidak ditemukan") {
+			utils.RespondError(w, 404, "Data tidak ditemukan")
+		} else {
+			utils.RespondError(w, 500, "Gagal generate PDF: "+err.Error())
+		}
+		return
+	}
+
+	// Set headers for PDF download
+	filename := "Laporan_IKAS_" + ikas.Perusahaan.NamaPerusahaan + "_" + ikas.Tanggal + ".pdf"
+	filename = strings.ReplaceAll(filename, " ", "_")
+
+	w.Header().Set("Content-Type", "application/pdf")
+	w.Header().Set("Content-Disposition", "attachment; filename="+filename)
+	w.WriteHeader(http.StatusOK)
+	w.Write(pdfBytes)
+}
+
+func (h *IkasHandler) handleRequestEdit(w http.ResponseWriter, r *http.Request, id string) {
+	if !utils.IsValidUUID(id) {
+		utils.RespondError(w, 400, "ID tidak valid")
+		return
+	}
+
+	var req dto.RequestEditRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, 400, "Invalid request body")
+		return
+	}
+
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	err := h.service.RequestEdit(r.Context(), id, req.Reason, userRole, userPerusahaanID)
+	if err != nil {
+		utils.RespondError(w, 500, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Permintaan edit berhasil diajukan ke admin",
+	})
+}
+
+func (h *IkasHandler) handleApproveEdit(w http.ResponseWriter, r *http.Request, id string) {
+	if !utils.IsValidUUID(id) {
+		utils.RespondError(w, 400, "ID tidak valid")
+		return
+	}
+
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	if userRole != "admin" {
+		utils.RespondError(w, 403, "Hanya admin yang dapat menyetujui permintaan edit")
+		return
+	}
+
+	err := h.service.ApproveEdit(r.Context(), id)
+	if err != nil {
+		utils.RespondError(w, 500, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Permintaan edit disetujui, data IKAS telah dibuka",
+	})
+}
+
+func (h *IkasHandler) handleRejectEdit(w http.ResponseWriter, r *http.Request, id string) {
+	if !utils.IsValidUUID(id) {
+		utils.RespondError(w, 400, "ID tidak valid")
+		return
+	}
+
+	var req dto.RejectEditRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, 400, "Invalid request body")
+		return
+	}
+
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	if userRole != "admin" {
+		utils.RespondError(w, 403, "Hanya admin yang dapat menolak permintaan edit")
+		return
+	}
+
+	err := h.service.RejectEdit(r.Context(), id, req.Reason)
+	if err != nil {
+		utils.RespondError(w, 500, err.Error())
+		return
+	}
+
+	utils.RespondJSON(w, 200, map[string]interface{}{
+		"message": "Permintaan edit ditolak",
 	})
 }

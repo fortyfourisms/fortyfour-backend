@@ -103,33 +103,12 @@ func main() {
 
 	logger.Info("RabbitMQ infrastructure initialized successfully")
 
-	// Create separate channels for Producer and Consumer
-	// AMQP channels are NOT safe for concurrent use — producer and consumer must have their own.
-	producerCh, err := rmq.NewChannel()
-	if err != nil {
-		logger.FatalErr(err, "Failed to create producer channel")
-	}
-	consumerCh, err := rmq.NewChannel()
-	if err != nil {
-		logger.FatalErr(err, "Failed to create consumer channel")
-	}
-
-	sharedProducer := pkgRmq.NewProducer(producerCh)
-	sharedConsumer := pkgRmq.NewConsumer(consumerCh)
+	// Create Producer and Consumer (Managed channels and automatic reconnection)
+	sharedProducer := pkgRmq.NewProducer(rmq)
+	sharedConsumer := pkgRmq.NewConsumer(rmq)
 
 	// Wrap with specific Producer
 	rmqProducer := internalRmq.NewProducer(sharedProducer)
-
-	// Wrap with specific Consumer
-	rmqConsumer := internalRmq.NewConsumer(sharedConsumer, sseService)
-
-	// Start consumers in background
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	if err := rmqConsumer.StartAllConsumers(ctx); err != nil {
-		logger.FatalErr(err, "Failed to start RabbitMQ consumers")
-	}
 
 	// Initialize Casbin Service with GORM Adapter
 	casbinService, err := services.NewCasbinService(cfg.Database.GetDSN(), cfg.CasbinModelPath)
@@ -175,6 +154,8 @@ func main() {
 	diskusiRepo := repository.NewDiskusiRepository(db)
 	catatanRepo := repository.NewCatatanRepository(db)
 	sertifikatRepo := repository.NewSertifikatRepository(db)
+	beritaRepo := repository.NewBeritaRepository(db)
+	eventRepo := repository.NewEventRepository(db)
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret, true, cfg.Domain)
@@ -185,7 +166,7 @@ func main() {
 	csirtService := services.NewCsirtService(csirtRepo, redisClient, rmqProducer)
 	csirtExportService := services.NewCsirtExportService(csirtService)
 	sdmCsirtService := services.NewSdmCsirtService(sdmCsirtRepo, redisClient, rmqProducer)
-	userService := services.NewUserService(userRepo, uploadPath, rmqProducer)
+	userService := services.NewUserService(userRepo, uploadPath, rmqProducer, tokenService)
 	roleService := services.NewRoleService(roleRepo, redisClient, rmqProducer)
 	chatService := services.NewChatService(chatRepo, geminiClient, db)
 	sektorService := services.NewSektorService(sektorRepo, redisClient)
@@ -202,6 +183,19 @@ func main() {
 	diskusiSvc := services.NewDiskusiService(diskusiRepo, userRepo)
 	catatanSvc := services.NewCatatanService(catatanRepo)
 	sertifikatSvc := services.NewSertifikatService(sertifikatRepo, kelasRepo, progressRepo, kuisAttemptRepo, kuisRepo, userRepo)
+	beritaSvc := services.NewBeritaService(beritaRepo)
+	eventSvc := services.NewEventService(eventRepo)
+
+	// Wrap with specific Consumer (after repositories are initialized)
+	rmqConsumer := internalRmq.NewConsumer(sharedConsumer, sseService, userRepo, notificationService)
+
+	// Start consumers in background
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	if err := rmqConsumer.StartAllConsumers(ctx); err != nil {
+		logger.FatalErr(err, "Failed to start RabbitMQ consumers")
+	}
 
 	// Initialize Handler
 	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService, userService, uploadPath)
@@ -225,12 +219,14 @@ func main() {
 	dashboardHandler := handlers.NewDashboardHandler(dashboardService)
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
 	lmsHandler := handlers.NewLMSHandler(kelasSvc, materiSvc, soalSvc, kuisSvc, fpSvc, diskusiSvc, catatanSvc, sertifikatSvc, sseService)
+	beritaHandler := handlers.NewBeritaHandler(beritaSvc)
+	eventHandler := handlers.NewEventHandler(eventSvc)
 
 	// Proxy Handler for IKAS
 	ikasProxyHandler := handlers.NewProxyHandler("http://ikas:8081", cfg.InternalGatewayKey)
 
 	// Initialize Middleware
-	authMiddleware := middleware.NewAuthMiddleware(tokenService)
+	authMiddleware := middleware.NewAuthMiddleware(tokenService, userRepo)
 	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
 
 	// Initialize rate limiters with different configurations
@@ -267,6 +263,8 @@ func main() {
 		notificationHandler,
 		ikasProxyHandler,
 		lmsHandler,
+		beritaHandler,
+		eventHandler,
 	)
 
 	// Start server

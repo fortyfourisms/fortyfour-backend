@@ -39,6 +39,7 @@ type IkasRepositoryInterface interface {
 	GetLatestByPerusahaan(perusahaanID string) (*dto.IkasResponse, error)
 	CreateInitial(sourceID, targetID, targetDate string) error
 	UpdateDomainLinks(ikasID, idIden, idProt, idDet, idGulih string) error
+	UpdateRequestEditStatus(id string, status string, reason string) error
 }
 
 // RuangLingkupRepositoryInterface

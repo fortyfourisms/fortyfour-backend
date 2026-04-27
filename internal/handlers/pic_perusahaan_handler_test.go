@@ -126,7 +126,7 @@ func TestPICHandler_GetByID_NotFound(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "Data tidak ditemukan")
+	assert.Contains(t, response["message"], "Data tidak ditemukan")
 }
 
 func TestPICHandler_GetByID_VariousIDFormats(t *testing.T) {
@@ -251,7 +251,7 @@ func TestPICHandler_Create_InvalidBody(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "Invalid request body")
+	assert.Contains(t, response["message"], "Invalid request body")
 }
 
 func TestPICHandler_Create_EmptyBody(t *testing.T) {
@@ -308,7 +308,7 @@ func TestPICHandler_Create_WithIDInURL_ShouldFail(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "ID tidak diperlukan")
+	assert.Contains(t, response["message"], "ID tidak diperlukan")
 }
 
 func TestPICHandler_Create_MissingRequiredFields(t *testing.T) {
@@ -449,7 +449,7 @@ func TestPICHandler_Update_InvalidBody(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "Invalid request body")
+	assert.Contains(t, response["message"], "Invalid request body")
 }
 
 func TestPICHandler_Update_EmptyBody(t *testing.T) {
@@ -492,7 +492,7 @@ func TestPICHandler_Update_WithoutID_ShouldFail(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "ID wajib")
+	assert.Contains(t, response["message"], "ID wajib")
 }
 
 /* =========================
@@ -566,7 +566,7 @@ func TestPICHandler_Delete_WithoutID_ShouldFail(t *testing.T) {
 	var response map[string]interface{}
 	err := json.NewDecoder(w.Body).Decode(&response)
 	assert.NoError(t, err)
-	assert.Contains(t, response["error"], "ID wajib")
+	assert.Contains(t, response["message"], "ID wajib")
 }
 
 func TestPICHandler_Delete_VerifyDeleted(t *testing.T) {

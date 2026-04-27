@@ -297,7 +297,7 @@ func (h *JawabanProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Req
 		userPerusahaanID = val.(string)
 	}
 
-	err := h.service.Update(id, req, userID, userRole, userPerusahaanID)
+	updatedID, msg, err := h.service.Update(id, req, userID, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -315,8 +315,8 @@ func (h *JawabanProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Req
 	}
 
 	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menyimpan data",
-		"id":      id,
+		"message": msg,
+		"id":      updatedID,
 	})
 }
 

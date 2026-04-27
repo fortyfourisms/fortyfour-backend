@@ -11,8 +11,8 @@ var (
 
 	ErrMissingReason = errors.New("alasan wajib diisi")
 
-	ErrInvalidImpact  = errors.New("nilai dampak harus 1-4")
-	ErrInvalidFreq    = errors.New("frekuensi harus 1-4")
+	ErrInvalidImpact = errors.New("nilai dampak harus 1-4")
+	ErrInvalidFreq   = errors.New("frekuensi harus 1-4")
 
 	ErrMissingControl = errors.New("deskripsi pengendalian wajib diisi jika ada_pengendalian = true")
 )

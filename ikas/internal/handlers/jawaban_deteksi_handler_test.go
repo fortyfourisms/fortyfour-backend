@@ -81,6 +81,10 @@ func (m *mockJawabanDeteksiRepository) Delete(id int) error {
 	args := m.Called(id)
 	return args.Error(0)
 }
+func (m *mockJawabanDeteksiRepository) GetIDByIkasAndPertanyaan(ikasID string, pertanyaanID int) (int, error) {
+	args := m.Called(ikasID, pertanyaanID)
+	return args.Get(0).(int), args.Error(1)
+}
 func (m *mockJawabanDeteksiRepository) CheckPertanyaanExists(id int) (bool, error) {
 	args := m.Called(id)
 	return args.Get(0).(bool), args.Error(1)
@@ -131,7 +135,7 @@ func setupJawabanDeteksiHandler(repo *mockJawabanDeteksiRepository, ikasRepo *mo
 		}, nil).Maybe()
 		ikasRepo.On("CheckOwnership", mock.Anything, mock.Anything).Return(true, nil).Maybe()
 	}
-	service := services.NewJawabanDeteksiService(repo, ikasRepo, producer)
+	service := services.NewJawabanDeteksiService(repo, ikasRepo, producer, nil)
 	return NewJawabanDeteksiHandler(service)
 }
 
