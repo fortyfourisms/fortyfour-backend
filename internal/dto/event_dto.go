@@ -4,14 +4,12 @@ type CreateEventRequest struct {
 	Judul     string `json:"judul" validate:"required,min=5,max=255"`
 	Deskripsi string `json:"deskripsi" validate:"required"`
 	Tanggal   string `json:"tanggal" validate:"required" example:"2024-12-31T15:00:00Z"`
-	Lokasi    string `json:"lokasi" validate:"required,min=3,max=255"`
 }
 
 type UpdateEventRequest struct {
 	Judul     *string `json:"judul,omitempty" validate:"omitempty,min=5,max=255"`
 	Deskripsi *string `json:"deskripsi,omitempty" validate:"omitempty"`
 	Tanggal   *string `json:"tanggal,omitempty" validate:"omitempty"`
-	Lokasi    *string `json:"lokasi,omitempty" validate:"omitempty,min=3,max=255"`
 }
 
 type EventResponse struct {
@@ -19,7 +17,6 @@ type EventResponse struct {
 	Judul     string `json:"judul"`
 	Deskripsi string `json:"deskripsi"`
 	Tanggal   string `json:"tanggal"`
-	Lokasi    string `json:"lokasi"`
 	Status    string `json:"status"` // upcoming atau past
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
