@@ -85,11 +85,11 @@ func (r *RespondenRepository) GetAllDetail() ([]models.RespondenDetail, error) {
 		var (
 			m models.RespondenDetail
 
-			displayName sql.NullString
-			email       sql.NullString
-			jabatan     sql.NullString
-			perusahaan  sql.NullString
-			perusahaanID sql.NullString
+			displayName   sql.NullString
+			email         sql.NullString
+			jabatan       sql.NullString
+			perusahaan    sql.NullString
+			perusahaanID  sql.NullString
 			sektorLainnya sql.NullString
 		)
 
@@ -131,16 +131,16 @@ func (r *RespondenRepository) GetAllDetail() ([]models.RespondenDetail, error) {
 // ========================
 func (r *RespondenRepository) GetDetailByID(id int) (*models.RespondenDetail, error) {
 
-	row := r.db.QueryRow(baseDetailQuery + " WHERE r.id = ?", id)
+	row := r.db.QueryRow(baseDetailQuery+" WHERE r.id = ?", id)
 
 	var (
 		m models.RespondenDetail
 
-		displayName sql.NullString
-		email       sql.NullString
-		jabatan     sql.NullString
-		perusahaan  sql.NullString
-		perusahaanID sql.NullString
+		displayName   sql.NullString
+		email         sql.NullString
+		jabatan       sql.NullString
+		perusahaan    sql.NullString
+		perusahaanID  sql.NullString
 		sektorLainnya sql.NullString
 	)
 
@@ -187,11 +187,11 @@ func (r *RespondenRepository) GetDetailByUserID(userID string) (*models.Responde
 	var (
 		m models.RespondenDetail
 
-		displayName sql.NullString
-		email       sql.NullString
-		jabatan     sql.NullString
-		perusahaan  sql.NullString
-		perusahaanID sql.NullString
+		displayName   sql.NullString
+		email         sql.NullString
+		jabatan       sql.NullString
+		perusahaan    sql.NullString
+		perusahaanID  sql.NullString
 		sektorLainnya sql.NullString
 	)
 

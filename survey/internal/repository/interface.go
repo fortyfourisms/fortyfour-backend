@@ -15,4 +15,3 @@ type RisikoRepositoryInterface interface {
 	GetByID(id int) (*models.Risiko, error)
 	UpdatePartial(id int, data map[string]interface{}) error
 }
-

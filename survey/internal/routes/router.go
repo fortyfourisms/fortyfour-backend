@@ -55,8 +55,8 @@ func InitRouter(
 	mux.HandleFunc("/api/survey/finish", risikoH.FinishSurvey)
 
 	// EDIT REQUEST RISIKO
-	mux.Handle("/api/survey/risiko/edit-requests", middleware.Logger(middleware.Auth(editH),),)
-	mux.Handle("/api/survey/risiko/edit-requests/", middleware.Logger(middleware.Auth(editH),),)
+	mux.Handle("/api/survey/risiko/edit-requests", middleware.Logger(middleware.Auth(editH)))
+	mux.Handle("/api/survey/risiko/edit-requests/", middleware.Logger(middleware.Auth(editH)))
 
 	return mux
 }

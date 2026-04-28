@@ -1,7 +1,7 @@
 package dto
 
 type CreateRespondenRequest struct {
-	UserID             string `json:"user_id"` 
+	UserID             string `json:"user_id"`
 	NoTelepon          string `json:"no_telepon"`
 	Sektor             string `json:"sektor"`
 	SektorLainnya      string `json:"sektor_lainnya,omitempty"`
@@ -20,7 +20,7 @@ type RespondenResponse struct {
 	ID int `json:"id"`
 
 	// dari USERS
-	UserID 		string `json:"user_id"`
+	UserID      string `json:"user_id"`
 	NamaLengkap string `json:"nama_lengkap"`
 	Email       string `json:"email"`
 

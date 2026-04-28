@@ -126,7 +126,6 @@ func (s *RespondenService) Update(id int, req dto.UpdateRespondenRequest) (*dto.
 	return &resp, nil
 }
 
-
 // =======================
 // HELPER
 // =======================
@@ -151,14 +150,14 @@ func safeString(s *string) string {
 func (s *RespondenService) toResponse(m *models.RespondenDetail) dto.RespondenResponse {
 
 	return dto.RespondenResponse{
-		ID:           m.ID,
-		UserID:       m.UserID,
+		ID:     m.ID,
+		UserID: m.UserID,
 
-		NamaLengkap:  safeString(m.NamaLengkap),
-		Email:        safeString(m.Email),
-		Jabatan:      safeString(m.Jabatan),
-		NamaPerusahaan:   safeString(m.NamaPerusahaan),
-		PerusahaanID: safeString(m.PerusahaanID),
+		NamaLengkap:    safeString(m.NamaLengkap),
+		Email:          safeString(m.Email),
+		Jabatan:        safeString(m.Jabatan),
+		NamaPerusahaan: safeString(m.NamaPerusahaan),
+		PerusahaanID:   safeString(m.PerusahaanID),
 
 		NoTelepon:          m.NoTelepon,
 		Sektor:             m.Sektor,
