@@ -26,6 +26,7 @@ type AuthHandler struct {
 	tokenService      *services.TokenService
 	perusahaanService services.PerusahaanServiceInterface
 	userService       *services.UserService
+	turnstileValidator *utils.TurnstileValidator
 	uploadPath        string
 }
 
@@ -34,6 +35,7 @@ func NewAuthHandler(
 	tokenService *services.TokenService,
 	perusahaanService services.PerusahaanServiceInterface,
 	userService *services.UserService,
+	turnstileValidator *utils.TurnstileValidator,
 	uploadPath string,
 ) *AuthHandler {
 	return &AuthHandler{
@@ -41,6 +43,7 @@ func NewAuthHandler(
 		tokenService:      tokenService,
 		perusahaanService: perusahaanService,
 		userService:       userService,
+		turnstileValidator: turnstileValidator,
 		uploadPath:        uploadPath,
 	}
 }
@@ -137,7 +140,31 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validasi Turnstile
+	if h.turnstileValidator != nil {
+		remoteIP := r.Header.Get("X-Forwarded-For")
+		if remoteIP == "" {
+			remoteIP = r.RemoteAddr
+		}
+		// Clean up remoteIP if it contains port
+		if strings.Contains(remoteIP, ":") {
+			remoteIP = strings.Split(remoteIP, ":")[0]
+		}
+
+		turnstileResp, err := h.turnstileValidator.Validate(req.TurnstileToken, remoteIP)
+		if err != nil {
+			utils.RespondError(w, http.StatusInternalServerError, "Gagal memvalidasi Turnstile")
+			return
+		}
+
+		if !turnstileResp.Success {
+			utils.RespondError(w, http.StatusBadRequest, "Verifikasi Turnstile gagal: "+strings.Join(turnstileResp.ErrorCodes, ", "))
+			return
+		}
+	}
+
 	user, tokens, err := h.authService.Login(req.Identifier, req.Password)
+
 	if err != nil {
 		utils.RespondError(w, http.StatusUnauthorized, err.Error())
 		return

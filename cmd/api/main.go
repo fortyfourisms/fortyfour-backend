@@ -125,6 +125,10 @@ func main() {
 	geminiClient := utils.NewGeminiClient(cfg.GeminiAPIKey)
 	logger.Info("Gemini client initialized successfully")
 
+	// Initialize Turnstile Validator
+	turnstileValidator := utils.NewTurnstileValidator(cfg.TurnstileSecretKey)
+	logger.Info("Turnstile validator initialized successfully")
+
 	uploadPath := os.Getenv("UPLOAD_DIR")
 	if uploadPath == "" {
 		uploadPath = "/app/uploads" // default fallback
@@ -198,7 +202,7 @@ func main() {
 	}
 
 	// Initialize Handler
-	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService, userService, uploadPath)
+	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService, userService, turnstileValidator, uploadPath)
 	userHandler := handlers.NewUserHandler(userService, uploadPath, sseService)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
 	picHandler := handlers.NewPICHandler(picService, sseService)
