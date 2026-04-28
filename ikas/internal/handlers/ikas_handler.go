@@ -110,7 +110,7 @@ func (h *IkasHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
 	// Implicit filtering for non-admins
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		if userPerusahaanID == "" || userPerusahaanID == "null" {
 			utils.RespondJSON(w, 200, map[string]interface{}{
 				"message": "Berhasil mengambil data",
@@ -367,7 +367,7 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 }
 func (h *IkasHandler) handleValidate(w http.ResponseWriter, r *http.Request, id string) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		utils.RespondError(w, 403, "Hanya admin yang dapat melakukan validasi final")
 		return
 	}
@@ -454,7 +454,7 @@ func (h *IkasHandler) handleApproveEdit(w http.ResponseWriter, r *http.Request, 
 	}
 
 	userRole, _ := r.Context().Value(middleware.Role).(string)
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		utils.RespondError(w, 403, "Hanya admin yang dapat menyetujui permintaan edit")
 		return
 	}
@@ -483,7 +483,7 @@ func (h *IkasHandler) handleRejectEdit(w http.ResponseWriter, r *http.Request, i
 	}
 
 	userRole, _ := r.Context().Value(middleware.Role).(string)
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		utils.RespondError(w, 403, "Hanya admin yang dapat menolak permintaan edit")
 		return
 	}
