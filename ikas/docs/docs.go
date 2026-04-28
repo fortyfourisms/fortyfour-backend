@@ -31,14 +31,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.DeteksiResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.DeteksiResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -66,13 +66,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.DeteksiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.DeteksiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -94,14 +94,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.GulihResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.GulihResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -129,13 +129,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.GulihResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.GulihResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -180,14 +180,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.IdentifikasiResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.IdentifikasiResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -216,13 +216,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.IdentifikasiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.IdentifikasiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -244,14 +244,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.DomainResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.DomainResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -275,7 +275,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateDomainRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.CreateDomainRequest"
                         }
                     }
                 ],
@@ -283,19 +283,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.DomainResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.DomainResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -324,13 +324,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.DomainResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.DomainResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -361,7 +361,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateDomainRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.UpdateDomainRequest"
                         }
                     }
                 ],
@@ -369,25 +369,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.DomainResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.DomainResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -414,19 +414,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.MessageResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -448,14 +448,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.IkasResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.IkasResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -479,7 +479,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateIkasRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.CreateIkasRequest"
                         }
                     }
                 ],
@@ -487,13 +487,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.IkasResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.IkasResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -560,13 +560,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.ImportIkasResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ImportIkasResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -595,13 +595,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.IkasResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.IkasResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -632,7 +632,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateIkasRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.UpdateIkasRequest"
                         }
                     }
                 ],
@@ -640,13 +640,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.IkasResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.IkasResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -673,13 +673,258 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/ikas/{id}/approve-edit": {
+            "put": {
+                "description": "Menyetujui permintaan edit dan membuka kembali kunci data IKAS. Hanya bisa dilakukan oleh Admin atau Staff.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Ikas"
+                ],
+                "summary": "Setujui permintaan edit IKAS",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ikas ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/ikas/{id}/export": {
+            "get": {
+                "description": "Mengunduh file laporan IKAS dalam format PDF berdasarkan ID",
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "Ikas"
+                ],
+                "summary": "Export IKAS ke PDF",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ikas ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/ikas/{id}/reject-edit": {
+            "put": {
+                "description": "Menolak permintaan edit data IKAS. Hanya bisa dilakukan oleh Admin atau Staff.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Ikas"
+                ],
+                "summary": "Tolak permintaan edit IKAS",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ikas ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Alasan penolakan",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.RejectEditRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/ikas/{id}/request-edit": {
+            "post": {
+                "description": "Mengajukan permintaan pembukaan kunci (unlock) data IKAS yang sudah divalidasi kepada Admin/Staff",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Ikas"
+                ],
+                "summary": "Ajukan permintaan edit IKAS",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ikas ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Alasan pengajuan edit",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.RequestEditRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/ikas/{id}/validate": {
+            "put": {
+                "description": "Melakukan validasi final (lock/unlock) data IKAS. Hanya bisa dilakukan oleh Admin atau Staff.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Ikas"
+                ],
+                "summary": "Validasi final IKAS",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ikas ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status validasi (true=lock, false=unlock)",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ValidasiIkasRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -687,7 +932,7 @@ const docTemplate = `{
         },
         "/api/maturity/jawaban-deteksi": {
             "get": {
-                "description": "Get all answers for detection questions, optionally filtered by perusahaan_id or pertanyaan_deteksi_id",
+                "description": "Get all answers for detection questions, optionally filtered by ikas_id or pertanyaan_deteksi_id",
                 "produces": [
                     "application/json"
                 ],
@@ -698,8 +943,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by Perusahaan ID",
-                        "name": "perusahaan_id",
+                        "description": "Filter by Ikas ID",
+                        "name": "ikas_id",
                         "in": "query"
                     },
                     {
@@ -715,7 +960,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.JawabanDeteksiResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.JawabanDeteksiResponse"
                             }
                         }
                     }
@@ -740,7 +985,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateJawabanDeteksiRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.CreateJawabanDeteksiRequest"
                         }
                     }
                 ],
@@ -748,7 +993,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.JawabanDeteksiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.JawabanDeteksiResponse"
                         }
                     }
                 }
@@ -777,7 +1022,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.JawabanDeteksiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.JawabanDeteksiResponse"
                         }
                     }
                 }
@@ -808,7 +1053,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateJawabanDeteksiRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.UpdateJawabanDeteksiRequest"
                         }
                     }
                 ],
@@ -816,7 +1061,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.JawabanDeteksiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.JawabanDeteksiResponse"
                         }
                     }
                 }
@@ -903,7 +1148,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateJawabanGulihRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.CreateJawabanGulihRequest"
                         }
                     }
                 ],
@@ -973,7 +1218,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateJawabanGulihRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.UpdateJawabanGulihRequest"
                         }
                     }
                 ],
@@ -1046,14 +1291,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.JawabanIdentifikasiResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1077,7 +1322,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateJawabanIdentifikasiRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.CreateJawabanIdentifikasiRequest"
                         }
                     }
                 ],
@@ -1085,25 +1330,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.JawabanIdentifikasiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1132,13 +1377,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.JawabanIdentifikasiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1169,7 +1414,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateJawabanIdentifikasiRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.UpdateJawabanIdentifikasiRequest"
                         }
                     }
                 ],
@@ -1177,19 +1422,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.JawabanIdentifikasiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1216,19 +1461,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.MessageResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1264,14 +1509,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.JawabanProteksiResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.JawabanProteksiResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1295,7 +1540,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateJawabanProteksiRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.CreateJawabanProteksiRequest"
                         }
                     }
                 ],
@@ -1303,25 +1548,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.JawabanProteksiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.JawabanProteksiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1350,13 +1595,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.JawabanProteksiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.JawabanProteksiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1387,7 +1632,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateJawabanProteksiRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.UpdateJawabanProteksiRequest"
                         }
                     }
                 ],
@@ -1395,19 +1640,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.JawabanProteksiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.JawabanProteksiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1434,19 +1679,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.MessageResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1468,14 +1713,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.KategoriResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.KategoriResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1499,7 +1744,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateKategoriRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.CreateKategoriRequest"
                         }
                     }
                 ],
@@ -1507,19 +1752,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.KategoriResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.KategoriResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1548,13 +1793,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.KategoriResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.KategoriResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1585,7 +1830,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateKategoriRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.UpdateKategoriRequest"
                         }
                     }
                 ],
@@ -1593,25 +1838,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.KategoriResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.KategoriResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1638,19 +1883,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.KategoriMessageResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.KategoriMessageResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1672,14 +1917,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.PertanyaanDeteksiResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1703,7 +1948,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreatePertanyaanDeteksiRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.CreatePertanyaanDeteksiRequest"
                         }
                     }
                 ],
@@ -1711,19 +1956,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanDeteksiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1752,13 +1997,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanDeteksiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1789,7 +2034,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdatePertanyaanDeteksiRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.UpdatePertanyaanDeteksiRequest"
                         }
                     }
                 ],
@@ -1797,19 +2042,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanDeteksiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1836,19 +2081,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanDeteksiMessageResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanDeteksiMessageResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1870,14 +2115,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.PertanyaanGulihResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.PertanyaanGulihResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1901,7 +2146,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreatePertanyaanGulihRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.CreatePertanyaanGulihRequest"
                         }
                     }
                 ],
@@ -1909,19 +2154,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanGulihResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanGulihResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1950,13 +2195,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanGulihResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanGulihResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -1987,7 +2232,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdatePertanyaanGulihRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.UpdatePertanyaanGulihRequest"
                         }
                     }
                 ],
@@ -1995,19 +2240,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanGulihResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanGulihResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2034,19 +2279,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanGulihMessageResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanGulihMessageResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2068,14 +2313,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.PertanyaanIdentifikasiResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2099,7 +2344,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreatePertanyaanIdentifikasiRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.CreatePertanyaanIdentifikasiRequest"
                         }
                     }
                 ],
@@ -2107,19 +2352,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanIdentifikasiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2148,13 +2393,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanIdentifikasiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2185,7 +2430,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdatePertanyaanIdentifikasiRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.UpdatePertanyaanIdentifikasiRequest"
                         }
                     }
                 ],
@@ -2193,19 +2438,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanIdentifikasiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2232,19 +2477,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanIdentifikasiMessageResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanIdentifikasiMessageResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2266,14 +2511,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.PertanyaanProteksiResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.PertanyaanProteksiResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2297,7 +2542,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreatePertanyaanProteksiRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.CreatePertanyaanProteksiRequest"
                         }
                     }
                 ],
@@ -2305,19 +2550,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanProteksiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanProteksiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2346,13 +2591,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanProteksiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanProteksiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2383,7 +2628,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdatePertanyaanProteksiRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.UpdatePertanyaanProteksiRequest"
                         }
                     }
                 ],
@@ -2391,19 +2636,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanProteksiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanProteksiResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2430,19 +2675,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanProteksiMessageResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanProteksiMessageResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2464,14 +2709,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.RuangLingkupResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.RuangLingkupResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2495,7 +2740,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateRuangLingkupRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.CreateRuangLingkupRequest"
                         }
                     }
                 ],
@@ -2503,19 +2748,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.RuangLingkupResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.RuangLingkupResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2544,13 +2789,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.RuangLingkupResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.RuangLingkupResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2581,7 +2826,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateRuangLingkupRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.UpdateRuangLingkupRequest"
                         }
                     }
                 ],
@@ -2589,25 +2834,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.RuangLingkupResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.RuangLingkupResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2634,19 +2879,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.MessageResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.MessageResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2668,14 +2913,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.SubKategoriResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.SubKategoriResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2699,7 +2944,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateSubKategoriRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.CreateSubKategoriRequest"
                         }
                     }
                 ],
@@ -2707,19 +2952,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.SubKategoriResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.SubKategoriResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2748,13 +2993,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.SubKategoriResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.SubKategoriResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2785,7 +3030,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateSubKategoriRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.UpdateSubKategoriRequest"
                         }
                     }
                 ],
@@ -2793,25 +3038,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.SubKategoriResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.SubKategoriResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2838,19 +3083,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.SubKategoriMessageResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.SubKategoriMessageResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2872,14 +3117,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/dto.ProteksiResponse"
+                                "$ref": "#/definitions/ikas_internal_dto.ProteksiResponse"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2908,13 +3153,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.ProteksiResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ProteksiResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -2922,7 +3167,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.CreateDomainRequest": {
+        "ikas_internal_dto.CreateDomainRequest": {
             "type": "object",
             "properties": {
                 "nama_domain": {
@@ -2930,7 +3175,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateIkasRequest": {
+        "ikas_internal_dto.CreateIkasRequest": {
             "type": "object",
             "properties": {
                 "id_perusahaan": {
@@ -2953,10 +3198,13 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateJawabanDeteksiRequest": {
+        "ikas_internal_dto.CreateJawabanDeteksiRequest": {
             "type": "object",
             "properties": {
                 "evidence": {
+                    "type": "string"
+                },
+                "ikas_id": {
                     "type": "string"
                 },
                 "jawaban_deteksi": {
@@ -2968,18 +3216,18 @@ const docTemplate = `{
                 "pertanyaan_deteksi_id": {
                     "type": "integer"
                 },
-                "perusahaan_id": {
-                    "type": "string"
-                },
                 "validasi": {
                     "type": "string"
                 }
             }
         },
-        "dto.CreateJawabanGulihRequest": {
+        "ikas_internal_dto.CreateJawabanGulihRequest": {
             "type": "object",
             "properties": {
                 "evidence": {
+                    "type": "string"
+                },
+                "ikas_id": {
                     "type": "string"
                 },
                 "jawaban_gulih": {
@@ -2991,18 +3239,18 @@ const docTemplate = `{
                 "pertanyaan_gulih_id": {
                     "type": "integer"
                 },
-                "perusahaan_id": {
-                    "type": "string"
-                },
                 "validasi": {
                     "type": "string"
                 }
             }
         },
-        "dto.CreateJawabanIdentifikasiRequest": {
+        "ikas_internal_dto.CreateJawabanIdentifikasiRequest": {
             "type": "object",
             "properties": {
                 "evidence": {
+                    "type": "string"
+                },
+                "ikas_id": {
                     "type": "string"
                 },
                 "jawaban_identifikasi": {
@@ -3014,18 +3262,18 @@ const docTemplate = `{
                 "pertanyaan_identifikasi_id": {
                     "type": "integer"
                 },
-                "perusahaan_id": {
-                    "type": "string"
-                },
                 "validasi": {
                     "type": "string"
                 }
             }
         },
-        "dto.CreateJawabanProteksiRequest": {
+        "ikas_internal_dto.CreateJawabanProteksiRequest": {
             "type": "object",
             "properties": {
                 "evidence": {
+                    "type": "string"
+                },
+                "ikas_id": {
                     "type": "string"
                 },
                 "jawaban_proteksi": {
@@ -3037,15 +3285,12 @@ const docTemplate = `{
                 "pertanyaan_proteksi_id": {
                     "type": "integer"
                 },
-                "perusahaan_id": {
-                    "type": "string"
-                },
                 "validasi": {
                     "type": "string"
                 }
             }
         },
-        "dto.CreateKategoriRequest": {
+        "ikas_internal_dto.CreateKategoriRequest": {
             "type": "object",
             "properties": {
                 "domain_id": {
@@ -3056,7 +3301,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreatePertanyaanDeteksiRequest": {
+        "ikas_internal_dto.CreatePertanyaanDeteksiRequest": {
             "type": "object",
             "properties": {
                 "index0": {
@@ -3088,7 +3333,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreatePertanyaanGulihRequest": {
+        "ikas_internal_dto.CreatePertanyaanGulihRequest": {
             "type": "object",
             "properties": {
                 "index0": {
@@ -3120,7 +3365,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreatePertanyaanIdentifikasiRequest": {
+        "ikas_internal_dto.CreatePertanyaanIdentifikasiRequest": {
             "type": "object",
             "properties": {
                 "index0": {
@@ -3152,7 +3397,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreatePertanyaanProteksiRequest": {
+        "ikas_internal_dto.CreatePertanyaanProteksiRequest": {
             "type": "object",
             "properties": {
                 "index0": {
@@ -3184,7 +3429,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateRuangLingkupRequest": {
+        "ikas_internal_dto.CreateRuangLingkupRequest": {
             "type": "object",
             "properties": {
                 "nama_ruang_lingkup": {
@@ -3192,7 +3437,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateSubKategoriRequest": {
+        "ikas_internal_dto.CreateSubKategoriRequest": {
             "type": "object",
             "properties": {
                 "kategori_id": {
@@ -3203,7 +3448,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.DeteksiInIkas": {
+        "ikas_internal_dto.DeteksiInIkas": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3226,7 +3471,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.DeteksiResponse": {
+        "ikas_internal_dto.DeteksiResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3246,7 +3491,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.DomainInfo": {
+        "ikas_internal_dto.DomainInfo": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3257,7 +3502,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.DomainResponse": {
+        "ikas_internal_dto.DomainResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -3274,7 +3519,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ErrorResponse": {
+        "ikas_internal_dto.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -3282,7 +3527,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.GulihInIkas": {
+        "ikas_internal_dto.GulihInIkas": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3308,7 +3553,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.GulihResponse": {
+        "ikas_internal_dto.GulihResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3331,7 +3576,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.IdentifikasiInIkas": {
+        "ikas_internal_dto.IdentifikasiInIkas": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3360,7 +3605,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.IdentifikasiResponse": {
+        "ikas_internal_dto.IdentifikasiResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3386,23 +3631,32 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.IkasResponse": {
+        "ikas_internal_dto.IkasResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
                     "type": "string"
                 },
                 "deteksi": {
-                    "$ref": "#/definitions/dto.DeteksiInIkas"
+                    "$ref": "#/definitions/ikas_internal_dto.DeteksiInIkas"
+                },
+                "edit_request_reason": {
+                    "type": "string"
+                },
+                "edit_request_status": {
+                    "type": "string"
                 },
                 "gulih": {
-                    "$ref": "#/definitions/dto.GulihInIkas"
+                    "$ref": "#/definitions/ikas_internal_dto.GulihInIkas"
                 },
                 "id": {
                     "type": "string"
                 },
                 "identifikasi": {
-                    "$ref": "#/definitions/dto.IdentifikasiInIkas"
+                    "$ref": "#/definitions/ikas_internal_dto.IdentifikasiInIkas"
+                },
+                "is_validated": {
+                    "type": "boolean"
                 },
                 "jabatan": {
                     "type": "string"
@@ -3414,10 +3668,10 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "perusahaan": {
-                    "$ref": "#/definitions/dto.PerusahaanInIkas"
+                    "$ref": "#/definitions/ikas_internal_dto.PerusahaanInIkas"
                 },
                 "proteksi": {
-                    "$ref": "#/definitions/dto.ProteksiInIkas"
+                    "$ref": "#/definitions/ikas_internal_dto.ProteksiInIkas"
                 },
                 "responden": {
                     "type": "string"
@@ -3436,11 +3690,11 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ImportIkasResponse": {
+        "ikas_internal_dto.ImportIkasResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/dto.IkasResponse"
+                    "$ref": "#/definitions/ikas_internal_dto.IkasResponse"
                 },
                 "errors": {
                     "type": "array",
@@ -3456,7 +3710,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.JawabanDeteksiResponse": {
+        "ikas_internal_dto.JawabanDeteksiResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -3467,6 +3721,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "ikas_id": {
+                    "type": "string"
                 },
                 "jawaban_deteksi": {
                     "type": "number"
@@ -3475,10 +3732,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "pertanyaan_deteksi": {
-                    "$ref": "#/definitions/dto.PertanyaanDeteksiInfo"
-                },
-                "perusahaan_id": {
-                    "type": "string"
+                    "$ref": "#/definitions/ikas_internal_dto.PertanyaanDeteksiInfo"
                 },
                 "updated_at": {
                     "type": "string"
@@ -3488,7 +3742,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.JawabanIdentifikasiResponse": {
+        "ikas_internal_dto.JawabanIdentifikasiResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -3499,6 +3753,9 @@ const docTemplate = `{
                 },
                 "id": {
                     "type": "integer"
+                },
+                "ikas_id": {
+                    "type": "string"
                 },
                 "jawaban_identifikasi": {
                     "type": "number"
@@ -3507,10 +3764,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "pertanyaan_identifikasi": {
-                    "$ref": "#/definitions/dto.PertanyaanIdentifikasiInfo"
-                },
-                "perusahaan_id": {
-                    "type": "string"
+                    "$ref": "#/definitions/ikas_internal_dto.PertanyaanIdentifikasiInfo"
                 },
                 "updated_at": {
                     "type": "string"
@@ -3520,7 +3774,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.JawabanProteksiResponse": {
+        "ikas_internal_dto.JawabanProteksiResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -3532,6 +3786,9 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "ikas_id": {
+                    "type": "string"
+                },
                 "jawaban_proteksi": {
                     "type": "number"
                 },
@@ -3539,10 +3796,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "pertanyaan_proteksi": {
-                    "$ref": "#/definitions/dto.PertanyaanProteksiInfo"
-                },
-                "perusahaan_id": {
-                    "type": "string"
+                    "$ref": "#/definitions/ikas_internal_dto.PertanyaanProteksiInfo"
                 },
                 "updated_at": {
                     "type": "string"
@@ -3552,11 +3806,11 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.KategoriInfo": {
+        "ikas_internal_dto.KategoriInfo": {
             "type": "object",
             "properties": {
                 "domain": {
-                    "$ref": "#/definitions/dto.DomainInfo"
+                    "$ref": "#/definitions/ikas_internal_dto.DomainInfo"
                 },
                 "id": {
                     "type": "integer"
@@ -3566,7 +3820,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.KategoriMessageResponse": {
+        "ikas_internal_dto.KategoriMessageResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3577,7 +3831,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.KategoriResponse": {
+        "ikas_internal_dto.KategoriResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -3597,7 +3851,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.MessageResponse": {
+        "ikas_internal_dto.MessageResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3608,7 +3862,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.PertanyaanDeteksiInfo": {
+        "ikas_internal_dto.PertanyaanDeteksiInfo": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3618,11 +3872,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sub_kategori": {
-                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
                 }
             }
         },
-        "dto.PertanyaanDeteksiMessageResponse": {
+        "ikas_internal_dto.PertanyaanDeteksiMessageResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3633,7 +3887,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.PertanyaanDeteksiResponse": {
+        "ikas_internal_dto.PertanyaanDeteksiResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -3664,17 +3918,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "ruang_lingkup": {
-                    "$ref": "#/definitions/dto.RuangLingkupInfo"
+                    "$ref": "#/definitions/ikas_internal_dto.RuangLingkupInfo"
                 },
                 "sub_kategori": {
-                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
                 },
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "dto.PertanyaanGulihMessageResponse": {
+        "ikas_internal_dto.PertanyaanGulihMessageResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3685,7 +3939,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.PertanyaanGulihResponse": {
+        "ikas_internal_dto.PertanyaanGulihResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -3716,17 +3970,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "ruang_lingkup": {
-                    "$ref": "#/definitions/dto.RuangLingkupInfo"
+                    "$ref": "#/definitions/ikas_internal_dto.RuangLingkupInfo"
                 },
                 "sub_kategori": {
-                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
                 },
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "dto.PertanyaanIdentifikasiInfo": {
+        "ikas_internal_dto.PertanyaanIdentifikasiInfo": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3736,11 +3990,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sub_kategori": {
-                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
                 }
             }
         },
-        "dto.PertanyaanIdentifikasiMessageResponse": {
+        "ikas_internal_dto.PertanyaanIdentifikasiMessageResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3751,7 +4005,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.PertanyaanIdentifikasiResponse": {
+        "ikas_internal_dto.PertanyaanIdentifikasiResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -3782,17 +4036,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "ruang_lingkup": {
-                    "$ref": "#/definitions/dto.RuangLingkupInfo"
+                    "$ref": "#/definitions/ikas_internal_dto.RuangLingkupInfo"
                 },
                 "sub_kategori": {
-                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
                 },
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "dto.PertanyaanProteksiInfo": {
+        "ikas_internal_dto.PertanyaanProteksiInfo": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3802,11 +4056,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sub_kategori": {
-                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
                 }
             }
         },
-        "dto.PertanyaanProteksiMessageResponse": {
+        "ikas_internal_dto.PertanyaanProteksiMessageResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3817,7 +4071,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.PertanyaanProteksiResponse": {
+        "ikas_internal_dto.PertanyaanProteksiResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -3848,17 +4102,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "ruang_lingkup": {
-                    "$ref": "#/definitions/dto.RuangLingkupInfo"
+                    "$ref": "#/definitions/ikas_internal_dto.RuangLingkupInfo"
                 },
                 "sub_kategori": {
-                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
                 },
                 "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "dto.PerusahaanInIkas": {
+        "ikas_internal_dto.PerusahaanInIkas": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3869,7 +4123,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ProteksiInIkas": {
+        "ikas_internal_dto.ProteksiInIkas": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3901,7 +4155,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ProteksiResponse": {
+        "ikas_internal_dto.ProteksiResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3930,7 +4184,29 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.RuangLingkupInfo": {
+        "ikas_internal_dto.RejectEditRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "ikas_internal_dto.RequestEditRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "ikas_internal_dto.RuangLingkupInfo": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3941,7 +4217,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.RuangLingkupResponse": {
+        "ikas_internal_dto.RuangLingkupResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -3958,21 +4234,21 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.SubKategoriInfo": {
+        "ikas_internal_dto.SubKategoriInfo": {
             "type": "object",
             "properties": {
                 "id": {
                     "type": "integer"
                 },
                 "kategori": {
-                    "$ref": "#/definitions/dto.KategoriInfo"
+                    "$ref": "#/definitions/ikas_internal_dto.KategoriInfo"
                 },
                 "nama_sub_kategori": {
                     "type": "string"
                 }
             }
         },
-        "dto.SubKategoriMessageResponse": {
+        "ikas_internal_dto.SubKategoriMessageResponse": {
             "type": "object",
             "properties": {
                 "id": {
@@ -3983,7 +4259,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.SubKategoriResponse": {
+        "ikas_internal_dto.SubKategoriResponse": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -4003,7 +4279,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateDomainRequest": {
+        "ikas_internal_dto.UpdateDomainRequest": {
             "type": "object",
             "properties": {
                 "nama_domain": {
@@ -4011,7 +4287,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateIkasRequest": {
+        "ikas_internal_dto.UpdateIkasRequest": {
             "type": "object",
             "properties": {
                 "id_perusahaan": {
@@ -4034,7 +4310,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateJawabanDeteksiRequest": {
+        "ikas_internal_dto.UpdateJawabanDeteksiRequest": {
             "type": "object",
             "properties": {
                 "evidence": {
@@ -4051,7 +4327,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateJawabanGulihRequest": {
+        "ikas_internal_dto.UpdateJawabanGulihRequest": {
             "type": "object",
             "properties": {
                 "evidence": {
@@ -4068,7 +4344,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateJawabanIdentifikasiRequest": {
+        "ikas_internal_dto.UpdateJawabanIdentifikasiRequest": {
             "type": "object",
             "properties": {
                 "evidence": {
@@ -4085,7 +4361,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateJawabanProteksiRequest": {
+        "ikas_internal_dto.UpdateJawabanProteksiRequest": {
             "type": "object",
             "properties": {
                 "evidence": {
@@ -4102,7 +4378,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateKategoriRequest": {
+        "ikas_internal_dto.UpdateKategoriRequest": {
             "type": "object",
             "properties": {
                 "domain_id": {
@@ -4113,7 +4389,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdatePertanyaanDeteksiRequest": {
+        "ikas_internal_dto.UpdatePertanyaanDeteksiRequest": {
             "type": "object",
             "properties": {
                 "index0": {
@@ -4145,7 +4421,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdatePertanyaanGulihRequest": {
+        "ikas_internal_dto.UpdatePertanyaanGulihRequest": {
             "type": "object",
             "properties": {
                 "index0": {
@@ -4177,7 +4453,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdatePertanyaanIdentifikasiRequest": {
+        "ikas_internal_dto.UpdatePertanyaanIdentifikasiRequest": {
             "type": "object",
             "properties": {
                 "index0": {
@@ -4209,7 +4485,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdatePertanyaanProteksiRequest": {
+        "ikas_internal_dto.UpdatePertanyaanProteksiRequest": {
             "type": "object",
             "properties": {
                 "index0": {
@@ -4241,7 +4517,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateRuangLingkupRequest": {
+        "ikas_internal_dto.UpdateRuangLingkupRequest": {
             "type": "object",
             "properties": {
                 "nama_ruang_lingkup": {
@@ -4249,7 +4525,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateSubKategoriRequest": {
+        "ikas_internal_dto.UpdateSubKategoriRequest": {
             "type": "object",
             "properties": {
                 "kategori_id": {
@@ -4257,6 +4533,14 @@ const docTemplate = `{
                 },
                 "nama_sub_kategori": {
                     "type": "string"
+                }
+            }
+        },
+        "ikas_internal_dto.ValidasiIkasRequest": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "boolean"
                 }
             }
         }

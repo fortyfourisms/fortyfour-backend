@@ -365,6 +365,19 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 		"id":      newID,
 	})
 }
+// ValidateIkas godoc
+//
+//	@Summary		Validasi final IKAS
+//	@Description	Melakukan validasi final (lock/unlock) data IKAS. Hanya bisa dilakukan oleh Admin atau Staff.
+//	@Tags			Ikas
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string						true	"Ikas ID"
+//	@Param			req		body		dto.ValidasiIkasRequest	true	"Status validasi (true=lock, false=unlock)"
+//	@Success		200		{object}	map[string]interface{}
+//	@Failure		403		{object}	dto.ErrorResponse
+//	@Failure		500		{object}	dto.ErrorResponse
+//	@Router			/api/maturity/ikas/{id}/validate [put]
 func (h *IkasHandler) handleValidate(w http.ResponseWriter, r *http.Request, id string) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	if userRole != "admin" && userRole != "staff" {
@@ -392,6 +405,17 @@ func (h *IkasHandler) handleValidate(w http.ResponseWriter, r *http.Request, id 
 		"message": msg,
 	})
 }
+// ExportIkasPDF godoc
+//
+//	@Summary		Export IKAS ke PDF
+//	@Description	Mengunduh file laporan IKAS dalam format PDF berdasarkan ID
+//	@Tags			Ikas
+//	@Produce		application/pdf
+//	@Param			id	path	string	true	"Ikas ID"
+//	@Success		200	{file}	binary
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/ikas/{id}/export [get]
 func (h *IkasHandler) handleExportPDF(w http.ResponseWriter, r *http.Request, id string) {
 	if !utils.IsValidUUID(id) {
 		utils.RespondError(w, 400, "ID tidak valid")
@@ -421,6 +445,19 @@ func (h *IkasHandler) handleExportPDF(w http.ResponseWriter, r *http.Request, id
 	w.Write(pdfBytes)
 }
 
+// RequestEditIkas godoc
+//
+//	@Summary		Ajukan permintaan edit IKAS
+//	@Description	Mengajukan permintaan pembukaan kunci (unlock) data IKAS yang sudah divalidasi kepada Admin/Staff
+//	@Tags			Ikas
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string						true	"Ikas ID"
+//	@Param			req		body		dto.RequestEditRequest	true	"Alasan pengajuan edit"
+//	@Success		200		{object}	map[string]interface{}
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		500		{object}	dto.ErrorResponse
+//	@Router			/api/maturity/ikas/{id}/request-edit [post]
 func (h *IkasHandler) handleRequestEdit(w http.ResponseWriter, r *http.Request, id string) {
 	if !utils.IsValidUUID(id) {
 		utils.RespondError(w, 400, "ID tidak valid")
@@ -447,6 +484,17 @@ func (h *IkasHandler) handleRequestEdit(w http.ResponseWriter, r *http.Request, 
 	})
 }
 
+// ApproveEditIkas godoc
+//
+//	@Summary		Setujui permintaan edit IKAS
+//	@Description	Menyetujui permintaan edit dan membuka kembali kunci data IKAS. Hanya bisa dilakukan oleh Admin atau Staff.
+//	@Tags			Ikas
+//	@Produce		json
+//	@Param			id	path		string	true	"Ikas ID"
+//	@Success		200	{object}	map[string]interface{}
+//	@Failure		403	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/maturity/ikas/{id}/approve-edit [put]
 func (h *IkasHandler) handleApproveEdit(w http.ResponseWriter, r *http.Request, id string) {
 	if !utils.IsValidUUID(id) {
 		utils.RespondError(w, 400, "ID tidak valid")
@@ -470,6 +518,19 @@ func (h *IkasHandler) handleApproveEdit(w http.ResponseWriter, r *http.Request, 
 	})
 }
 
+// RejectEditIkas godoc
+//
+//	@Summary		Tolak permintaan edit IKAS
+//	@Description	Menolak permintaan edit data IKAS. Hanya bisa dilakukan oleh Admin atau Staff.
+//	@Tags			Ikas
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string						true	"Ikas ID"
+//	@Param			req		body		dto.RejectEditRequest	true	"Alasan penolakan"
+//	@Success		200		{object}	map[string]interface{}
+//	@Failure		403		{object}	dto.ErrorResponse
+//	@Failure		500		{object}	dto.ErrorResponse
+//	@Router			/api/maturity/ikas/{id}/reject-edit [put]
 func (h *IkasHandler) handleRejectEdit(w http.ResponseWriter, r *http.Request, id string) {
 	if !utils.IsValidUUID(id) {
 		utils.RespondError(w, 400, "ID tidak valid")

@@ -111,11 +111,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 //	@Summary		Login user
-//	@Description	Autentikasi user. Token dikirim via HTTP-only cookies, BUKAN di response body.
+//	@Description	Autentikasi user dengan dukungan Cloudflare Turnstile. Token dikirim via HTTP-only cookies, BUKAN di response body.
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		dto.LoginRequest		true	"Login credentials"
+//	@Param			request	body		dto.LoginRequest		true	"Login credentials (termasuk cf-turnstile-response)"
 //	@Success		200		{object}	map[string]interface{}	"message dan user info (tanpa token)"
 //	@Failure		400		{object}	dto.ErrorResponse
 //	@Failure		401		{object}	dto.ErrorResponse
