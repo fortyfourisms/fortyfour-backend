@@ -111,7 +111,6 @@ func (s *BeritaService) Delete(id int64) error {
 	return nil
 }
 
-
 func mapBeritaToResponse(b *models.Berita) *dto.BeritaResponse {
 	res := &dto.BeritaResponse{
 		ID:        b.ID,

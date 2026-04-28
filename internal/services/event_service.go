@@ -139,4 +139,3 @@ func mapEventToResponse(e *models.Event) *dto.EventResponse {
 
 	return res
 }
-

@@ -22,12 +22,12 @@ import (
 
 // AuthHandler handles authentication-related HTTP endpoints.
 type AuthHandler struct {
-	authService       *services.AuthService
-	tokenService      *services.TokenService
-	perusahaanService services.PerusahaanServiceInterface
-	userService       *services.UserService
+	authService        *services.AuthService
+	tokenService       *services.TokenService
+	perusahaanService  services.PerusahaanServiceInterface
+	userService        *services.UserService
 	turnstileValidator *utils.TurnstileValidator
-	uploadPath        string
+	uploadPath         string
 }
 
 func NewAuthHandler(
@@ -39,12 +39,12 @@ func NewAuthHandler(
 	uploadPath string,
 ) *AuthHandler {
 	return &AuthHandler{
-		authService:       authService,
-		tokenService:      tokenService,
-		perusahaanService: perusahaanService,
-		userService:       userService,
+		authService:        authService,
+		tokenService:       tokenService,
+		perusahaanService:  perusahaanService,
+		userService:        userService,
 		turnstileValidator: turnstileValidator,
-		uploadPath:        uploadPath,
+		uploadPath:         uploadPath,
 	}
 }
 
