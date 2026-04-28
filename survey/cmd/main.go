@@ -36,23 +36,19 @@ func main() {
 	// REPOSITORY
 	respondenRepo := repository.NewRespondenRepository(db)
 	risikoRepo := repository.NewRisikoRepository(db)
-	editRequestRepo := repository.NewEditRequestRepository(db)
 
 	// SERVICE
 	respondenService := services.NewRespondenService(respondenRepo)
 	risikoService := services.NewRisikoService(risikoRepo)
-	editRequestService := services.NewEditRequestService(editRequestRepo, risikoRepo)
 
 	// HANDLER
 	respondenHandler := handlers.NewRespondenHandler(respondenService)
 	risikoHandler := handlers.NewRisikoHandler(risikoService)
-	editRequestHandler := handlers.NewEditRequestHandler(editRequestService)
 
 	// ROUTER
 	mux := routes.InitRouter(
 		respondenHandler,
 		risikoHandler,
-		editRequestHandler,
 	)
 
 	// SERVER

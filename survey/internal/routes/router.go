@@ -24,7 +24,6 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 func InitRouter(
 	respondenH *handlers.RespondenHandler,
 	risikoH *handlers.RisikoHandler,
-	editH *handlers.EditRequestHandler,
 ) *http.ServeMux {
 
 	mux := http.NewServeMux()
@@ -53,10 +52,6 @@ func InitRouter(
 	// CUSTOM RISIKO
 	mux.HandleFunc("/api/survey/custom-risk", risikoH.CreateCustomRisiko)
 	mux.HandleFunc("/api/survey/finish", risikoH.FinishSurvey)
-
-	// EDIT REQUEST RISIKO
-	mux.Handle("/api/survey/risiko/edit-requests", middleware.Logger(middleware.Auth(editH)))
-	mux.Handle("/api/survey/risiko/edit-requests/", middleware.Logger(middleware.Auth(editH)))
 
 	return mux
 }
