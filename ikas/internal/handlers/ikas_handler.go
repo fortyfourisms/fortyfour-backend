@@ -365,6 +365,7 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 		"id":      newID,
 	})
 }
+
 // ValidateIkas godoc
 //
 //	@Summary		Validasi final IKAS
@@ -405,6 +406,7 @@ func (h *IkasHandler) handleValidate(w http.ResponseWriter, r *http.Request, id 
 		"message": msg,
 	})
 }
+
 // ExportIkasPDF godoc
 //
 //	@Summary		Export IKAS ke PDF
