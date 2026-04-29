@@ -56,6 +56,9 @@ type IkasResponse struct {
 type PerusahaanInIkas struct {
 	ID             string `json:"id"`
 	NamaPerusahaan string `json:"nama_perusahaan"`
+	Alamat         string `json:"alamat"`
+	Sektor         string `json:"sektor"`
+	Email          string `json:"email"`
 }
 
 type IdentifikasiInIkas struct {
