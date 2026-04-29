@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"ikas/internal/dto"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -36,7 +38,8 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.AddPage()
 
 	// 1. Logo BSSN at Top Center
-	logoPath := "/Users/khrisnandika/Desktop/Maganghub BSSN/fortyfour-backend/ikas/internal/assets/bssn.png"
+	pwd, _ := os.Getwd()
+	logoPath := filepath.Join(pwd, "internal", "assets", "bssn.png")
 	pdf.ImageOptions(logoPath, (210-35)/2, 10, 35, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
 	pdf.Ln(32)
 
@@ -85,10 +88,10 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
 	pdf.CellFormat(col1V, 5, toSafe(data.Perusahaan.Sektor), "", 0, "L", false, 0, "")
 	pdf.SetFont("Arial", "B", 10)
-	pdf.CellFormat(col2L, 5, "Responden/", "", 0, "L", false, 0, "")
+	pdf.CellFormat(col2L, 5, "Responden", "", 0, "L", false, 0, "")
 	pdf.SetFont("Arial", "", 10)
 	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
-	pdf.CellFormat(col2V, 5, toSafe(data.Responden)+"/", "", 1, "L", false, 0, "")
+	pdf.CellFormat(col2V, 5, toSafe(data.Responden), "", 1, "L", false, 0, "")
 
 	pdf.SetFont("Arial", "B", 10)
 	pdf.CellFormat(col1L, 5, "Tanggal", "", 0, "L", false, 0, "")
@@ -115,11 +118,11 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.CellFormat(0, 5, "KEMATANGAN KEAMANAN SIBER (IKAS) v.1.2.1", "", 1, "C", false, 0, "")
 	pdf.Ln(3)
 
-	// --- WATERMARK IKAS (Centered on the table area) ---
-	watermarkPath := "/Users/khrisnandika/Desktop/Maganghub BSSN/fortyfour-backend/ikas/internal/assets/ikas.png"
-	wmW := 150.0
-	// Place it before the table so it stays behind the text
-	pdf.ImageOptions(watermarkPath, (210-wmW)/2, pdf.GetY()-10, wmW, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
+	// --- WATERMARK IKAS (Centered on the page) ---
+	watermarkPath := filepath.Join(pwd, "internal", "assets", "ikas.png")
+	wmW := 180.0
+	// Centering 300mm on 210mm paper: (210 - 300) / 2 = -45
+	pdf.ImageOptions(watermarkPath, -45, pdf.GetY()-15, wmW, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
 
 	// 6. Results Table
 	tableW := 140.0
@@ -127,9 +130,9 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.SetX(startX)
 	pdf.SetFont("Arial", "B", 10)
 	pdf.SetFillColor(240, 240, 240)
-	pdf.CellFormat(20, 7, "No.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(80, 7, "Domain", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(40, 7, "Nilai", "1", 1, "C", true, 0, "")
+	pdf.CellFormat(20, 7, "No.", "1", 0, "C", false, 0, "")
+	pdf.CellFormat(80, 7, "Domain", "1", 0, "C", false, 0, "")
+	pdf.CellFormat(40, 7, "Nilai", "1", 1, "C", false, 0, "")
 
 	pdf.SetFont("Arial", "", 10)
 	domains := []struct {
@@ -164,11 +167,11 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 
 	pdf.SetX(startX)
 	pdf.SetFont("Arial", "B", 10)
-	pdf.CellFormat(100, 7, "Nilai Kematangan", "1", 0, "R", true, 0, "")
-	pdf.CellFormat(40, 7, fmt.Sprintf("%.2f", data.NilaiKematangan), "1", 1, "C", true, 0, "")
+	pdf.CellFormat(100, 7, "Nilai Kematangan", "1", 0, "R", false, 0, "")
+	pdf.CellFormat(40, 7, fmt.Sprintf("%.2f", data.NilaiKematangan), "1", 1, "C", false, 0, "")
 	pdf.SetX(startX)
-	pdf.CellFormat(100, 7, "Kategori Tingkat Kematangan", "1", 0, "R", true, 0, "")
-	pdf.CellFormat(40, 7, toSafe(data.KategoriKematanganKeamananSiber), "1", 1, "C", true, 0, "")
+	pdf.CellFormat(100, 7, "Kategori Tingkat Kematangan", "1", 0, "R", false, 0, "")
+	pdf.CellFormat(40, 7, toSafe(data.KategoriKematanganKeamananSiber), "1", 1, "C", false, 0, "")
 
 	// 7. Kriteria
 	pdf.SetX(startX)
@@ -198,7 +201,6 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.Ln(10)
 
 	// 9. Signature
-	signaturePath := "/Users/khrisnandika/Desktop/Maganghub BSSN/fortyfour-backend/ikas/internal/assets/tteikas.jpg"
 	sigW := 55.0
 	sigX := 210 - pageMargin - sigW
 
@@ -207,8 +209,6 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.CellFormat(sigW, 5, "Ketua Tim Penilaian Kematangan", "", 1, "C", false, 0, "")
 	pdf.SetX(sigX)
 	pdf.CellFormat(sigW, 5, "Keamanan Siber Sektor Industri,", "", 1, "C", false, 0, "")
-
-	pdf.ImageOptions(signaturePath, sigX, pdf.GetY()+2, sigW, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
 
 	// 10. Footer
 	pdf.SetY(275)
