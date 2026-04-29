@@ -175,17 +175,20 @@ func (h *EventHandler) handleRegister(w http.ResponseWriter, r *http.Request, ev
 		return
 	}
 
-	req.Nama = validator.SanitizeHTML(req.Nama)
-	req.Email = validator.SanitizeHTML(req.Email)
-	req.Perusahaan = validator.SanitizeHTML(req.Perusahaan)
-	req.Jabatan = validator.SanitizeHTML(req.Jabatan)
-	req.NoHP = validator.SanitizeHTML(req.NoHP)
-	req.Sektor = validator.SanitizeHTML(req.Sektor)
-
+	// Validasi dilakukan sebelum sanitasi agar error message merujuk ke input asli
 	if err := validator.Validate(req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+
+	// XSS sanitization — email hanya di-TrimSpace karena html.EscapeString
+	// akan merusak karakter email yang valid (misalnya ' menjadi &#39;)
+	req.Nama = validator.SanitizeHTML(req.Nama)
+	req.Email = strings.TrimSpace(req.Email)
+	req.Perusahaan = validator.SanitizeHTML(req.Perusahaan)
+	req.Jabatan = validator.SanitizeHTML(req.Jabatan)
+	req.NoHP = strings.TrimSpace(req.NoHP)
+	req.Sektor = validator.SanitizeHTML(req.Sektor)
 
 	resp, err := h.service.Register(eventID, req)
 	if err != nil {
