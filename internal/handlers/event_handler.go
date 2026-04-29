@@ -98,8 +98,7 @@ func (h *EventHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	// XSS Sanitization for Deskripsi
 	req.Deskripsi = validator.SanitizeHTML(req.Deskripsi)
 
-	resp, err := h.service.Create(req)
-	if err != nil {
+	if err := h.service.Create(req); err != nil {
 		logger.Error(err, "failed to create event")
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -107,8 +106,7 @@ func (h *EventHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	utils.RespondJSON(w, http.StatusCreated, utils.JSONResponse{
 		Status:  "success",
-		Message: "Berhasil membuat event baru",
-		Data:    resp,
+		Message: "Permintaan pembuatan event telah diterima dan sedang diproses",
 	})
 }
 
@@ -135,16 +133,14 @@ func (h *EventHandler) handleUpdate(w http.ResponseWriter, r *http.Request, idSt
 		req.Deskripsi = &sanitized
 	}
 
-	resp, err := h.service.Update(id, req)
-	if err != nil {
+	if err := h.service.Update(id, req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	utils.RespondJSON(w, http.StatusOK, utils.JSONResponse{
 		Status:  "success",
-		Message: "Berhasil memperbarui event",
-		Data:    resp,
+		Message: "Permintaan pembaruan event telah diterima dan sedang diproses",
 	})
 }
 

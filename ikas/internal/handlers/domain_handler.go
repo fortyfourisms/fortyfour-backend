@@ -70,10 +70,11 @@ func (h *DomainHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
+	utils.RespondJSON(w, 200, utils.JSONResponse{
+		Status:  "success",
+		Message: "Berhasil mengambil data domain",
+		Data:    data,
+		Total:   len(data),
 	})
 }
 
@@ -99,9 +100,10 @@ func (h *DomainHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
+	utils.RespondJSON(w, 200, utils.JSONResponse{
+		Status:  "success",
+		Message: "Berhasil mengambil data domain",
+		Data:    data,
 	})
 }
 
@@ -143,8 +145,9 @@ func (h *DomainHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 201, dto.MessageResponse{
-		Message: "Berhasil menyimpan data",
+	utils.RespondJSON(w, 201, utils.JSONResponse{
+		Status:  "success",
+		Message: "Permintaan pembuatan domain telah diterima dan sedang diproses",
 	})
 }
 
@@ -190,9 +193,9 @@ func (h *DomainHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id 
 		return
 	}
 
-	utils.RespondJSON(w, 200, dto.MessageResponse{
-		ID:      id,
-		Message: "Berhasil memperbarui data",
+	utils.RespondJSON(w, 200, utils.JSONResponse{
+		Status:  "success",
+		Message: "Permintaan pembaruan domain telah diterima dan sedang diproses",
 	})
 }
 
@@ -212,14 +215,16 @@ func (h *DomainHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id 
 		logger.Error(err, "operation failed")
 		if err.Error() == "data tidak ditemukan" {
 			utils.RespondError(w, 404, err.Error())
+		} else if err.Error() == "tidak dapat menghapus domain karena masih memiliki kategori" {
+			utils.RespondError(w, 409, err.Error())
 		} else {
 			utils.RespondError(w, 500, err.Error())
 		}
 		return
 	}
 
-	utils.RespondJSON(w, 200, dto.MessageResponse{
-		ID:      id,
-		Message: "Berhasil menghapus data",
+	utils.RespondJSON(w, 200, utils.JSONResponse{
+		Status:  "success",
+		Message: "Permintaan penghapusan domain telah diterima dan sedang diproses",
 	})
 }

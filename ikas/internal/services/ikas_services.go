@@ -155,7 +155,7 @@ func (s *IkasService) validateUpdate(req *dto.UpdateIkasRequest) error {
 
 func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id string, userID string, userRole string, userPerusahaanID string) error {
 	// 1. Enforce perusahaan ownership for non-admin users
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		// User must be affiliated with a company before they can create IKAS
 		if userPerusahaanID == "" || userPerusahaanID == "null" {
 			return fmt.Errorf("akun Anda belum terasosiasi dengan perusahaan. Silakan lengkapi profil perusahaan terlebih dahulu")
@@ -232,7 +232,7 @@ func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id 
 }
 
 func (s *IkasService) GetAll(userRole string) ([]dto.IkasResponse, error) {
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		return nil, fmt.Errorf("anda tidak memiliki akses untuk melihat semua data")
 	}
 	return s.repo.GetAll()
@@ -247,7 +247,7 @@ func (s *IkasService) GetByID(id string, userRole string, userPerusahaanID strin
 	if err != nil {
 		return nil, err
 	}
-	if userRole != "admin" && data.Perusahaan != nil && data.Perusahaan.ID != userPerusahaanID {
+	if userRole != "admin" && userRole != "staff" && data.Perusahaan != nil && data.Perusahaan.ID != userPerusahaanID {
 		return nil, fmt.Errorf("anda tidak memiliki akses ke data ini")
 	}
 	return data, nil
@@ -266,7 +266,7 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 	}
 
 	// 3. Cross-Perusahaan Check (Security)
-	if userRole != "admin" && current.Perusahaan != nil && current.Perusahaan.ID != userPerusahaanID {
+	if userRole != "admin" && userRole != "staff" && current.Perusahaan != nil && current.Perusahaan.ID != userPerusahaanID {
 		return id, fmt.Errorf("anda tidak memiliki akses untuk mengubah data ini")
 	}
 

@@ -11,11 +11,7 @@ import (
 )
 
 const (
-	pageMargin   = 15.0
-	lineHeight   = 7.0
-	colLabelW    = 70.0
-	colValueW    = 110.0
-	headerHeight = 10.0
+	pageMargin = 15.0
 )
 
 // toSafe converts a UTF-8 string to a safe Latin-1 representation for fpdf.
@@ -30,136 +26,199 @@ func toSafe(s string) string {
 	return r.Replace(s)
 }
 
-// GenerateIkasPDF generates a professional report for IKAS assessment.
+// GenerateIkasPDF generates a professional report for IKAS assessment based on the BSSN template.
 func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf := fpdf.New("P", "mm", "A4", "")
 	pdf.SetMargins(pageMargin, pageMargin, pageMargin)
-	pdf.SetAutoPageBreak(true, pageMargin)
+	pdf.SetAutoPageBreak(true, 25)
 
+	// Add Page
 	pdf.AddPage()
 
-	// Header
-	pdf.SetFont("Arial", "B", 16)
-	pdf.CellFormat(0, 10, "Laporan Indeks Kematangan Keamanan Siber (IKAS)", "", 1, "C", false, 0, "")
+	// 1. Logo BSSN at Top Center
+	logoPath := "/Users/khrisnandika/Desktop/Maganghub BSSN/fortyfour-backend/ikas/internal/assets/bssn.png"
+	pdf.ImageOptions(logoPath, (210-35)/2, 10, 35, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
+	pdf.Ln(32)
 
-	pdf.SetFont("Arial", "B", 13)
-	pdf.CellFormat(0, 8, toSafe(data.Perusahaan.NamaPerusahaan), "", 1, "C", false, 0, "")
-
-	pdf.SetFont("Arial", "", 9)
-	pdf.CellFormat(0, 6,
-		fmt.Sprintf("Digenerate pada: %s", time.Now().Format("02 January 2006, 15:04:05 WIB")),
-		"", 1, "C", false, 0, "")
+	// 2. Header Titles
+	pdf.SetFont("Arial", "B", 12)
+	pdf.CellFormat(0, 6, "SURAT KETERANGAN HASIL PENILAIAN MANDIRI", "", 1, "C", false, 0, "")
+	pdf.CellFormat(0, 6, "KEMATANGAN KEAMANAN SIBER ORGANISASI", "", 1, "C", false, 0, "")
+	pdf.CellFormat(0, 6, "SEKTOR INDUSTRI", "", 1, "C", false, 0, "")
 	pdf.Ln(6)
 
-	// Summary Section
-	printSectionTitle(pdf, "Ringkasan Hasil Kematangan")
-	pdf.SetFont("Arial", "B", 12)
-	pdf.SetFillColor(240, 245, 255)
+	// 3. Opening Text
+	pdf.SetFont("Arial", "", 11)
+	openingText := "Berdasarkan hasil Penilaian Mandiri Kematangan Keamanan Siber Organisasi Sektor Industri untuk Penyelenggara Sistem Elektronik (PSE) yang dilakukan oleh:"
+	pdf.MultiCell(0, 5, toSafe(openingText), "", "L", false)
+	pdf.Ln(5)
 
-	pdf.CellFormat(colLabelW, 12, "  Skor Total", "1", 0, "L", true, 0, "")
-	pdf.SetTextColor(41, 98, 255)
-	pdf.CellFormat(colValueW, 12, fmt.Sprintf("  %.2f", data.NilaiKematangan), "1", 1, "L", true, 0, "")
-	pdf.SetTextColor(0, 0, 0)
+	// 4. PSE Details
+	col1L, col1V := 35.0, 60.0
+	col2L, col2V := 30.0, 55.0
 
 	pdf.SetFont("Arial", "B", 10)
-	pdf.CellFormat(colLabelW, 10, "  Kategori", "1", 0, "L", false, 0, "")
+	pdf.CellFormat(col1L, 5, "Nama PSE", "", 0, "L", false, 0, "")
 	pdf.SetFont("Arial", "", 10)
-	pdf.CellFormat(colValueW, 10, "  "+toSafe(data.KategoriKematanganKeamananSiber), "1", 1, "L", false, 0, "")
+	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
+	pdf.CellFormat(col1V, 5, toSafe(data.Perusahaan.NamaPerusahaan), "", 0, "L", false, 0, "")
+	pdf.SetFont("Arial", "B", 10)
+	pdf.CellFormat(col2L, 5, "No. Telpon", "", 0, "L", false, 0, "")
+	pdf.SetFont("Arial", "", 10)
+	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
+	pdf.CellFormat(col2V, 5, toSafe(data.Telepon), "", 1, "L", false, 0, "")
 
-	pdf.Ln(6)
+	pdf.SetFont("Arial", "B", 10)
+	pdf.CellFormat(col1L, 5, "Alamat", "", 0, "L", false, 0, "")
+	pdf.SetFont("Arial", "", 10)
+	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
+	pdf.CellFormat(col1V, 5, toSafe(data.Perusahaan.Alamat), "", 0, "L", false, 0, "")
+	pdf.SetFont("Arial", "B", 10)
+	pdf.CellFormat(col2L, 5, "Email", "", 0, "L", false, 0, "")
+	pdf.SetFont("Arial", "", 10)
+	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
+	pdf.CellFormat(col2V, 5, toSafe(data.Perusahaan.Email), "", 1, "L", false, 0, "")
 
-	// Assessment Info
-	printSectionTitle(pdf, "Informasi Asesmen")
-	infoRows := [][]string{
-		{"Responden", data.Responden},
-		{"Jabatan", data.Jabatan},
-		{"Telepon", data.Telepon},
-		{"Tanggal Data", data.Tanggal},
-		{"Target Skor", fmt.Sprintf("%.2f", data.TargetNilai)},
-		{"Status Validasi", map[bool]string{true: "Terverifikasi", false: "Belum Diverifikasi"}[data.IsValidated]},
+	pdf.SetFont("Arial", "B", 10)
+	pdf.CellFormat(col1L, 5, "Sektor", "", 0, "L", false, 0, "")
+	pdf.SetFont("Arial", "", 10)
+	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
+	pdf.CellFormat(col1V, 5, toSafe(data.Perusahaan.Sektor), "", 0, "L", false, 0, "")
+	pdf.SetFont("Arial", "B", 10)
+	pdf.CellFormat(col2L, 5, "Responden/", "", 0, "L", false, 0, "")
+	pdf.SetFont("Arial", "", 10)
+	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
+	pdf.CellFormat(col2V, 5, toSafe(data.Responden)+"/", "", 1, "L", false, 0, "")
+
+	pdf.SetFont("Arial", "B", 10)
+	pdf.CellFormat(col1L, 5, "Tanggal", "", 0, "L", false, 0, "")
+	pdf.SetFont("Arial", "", 10)
+	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
+	tanggalStr := data.Tanggal
+	if t, err := time.Parse(time.RFC3339, tanggalStr); err == nil {
+		tanggalStr = t.Format("02-01-2006")
+	} else if t, err := time.Parse("2006-01-02", tanggalStr); err == nil {
+		tanggalStr = t.Format("02-01-2006")
 	}
-	printRows(pdf, infoRows)
+	pdf.CellFormat(col1V, 5, toSafe(tanggalStr), "", 0, "L", false, 0, "")
+	pdf.SetFont("Arial", "B", 10)
+	pdf.CellFormat(col2L, 5, "Jabatan", "", 0, "L", false, 0, "")
+	pdf.SetFont("Arial", "", 10)
+	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
+	pdf.CellFormat(col2V, 5, toSafe(data.Jabatan), "", 1, "L", false, 0, "")
 
 	pdf.Ln(8)
 
-	// Domain Breakdown
-	printSectionTitle(pdf, "Rincian Skor Per Domain")
+	// 5. Results Table Title
+	pdf.SetFont("Arial", "B", 10)
+	pdf.CellFormat(0, 5, "HASIL PENILAIAN MANDIRI KEMATANGAN KEAMANAN SIBER MENGGUNAKAN INSTRUMEN", "", 1, "C", false, 0, "")
+	pdf.CellFormat(0, 5, "KEMATANGAN KEAMANAN SIBER (IKAS) v.1.2.1", "", 1, "C", false, 0, "")
+	pdf.Ln(3)
 
-	// Table Header for domains
-	pdf.SetFont("Arial", "B", 9)
-	pdf.SetFillColor(230, 235, 245)
-	pdf.CellFormat(80, 8, "  Domain", "1", 0, "L", true, 0, "")
-	pdf.CellFormat(30, 8, "  Skor", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(70, 8, "  Level Kematangan", "1", 1, "L", true, 0, "")
+	// --- WATERMARK IKAS (Centered on the table area) ---
+	watermarkPath := "/Users/khrisnandika/Desktop/Maganghub BSSN/fortyfour-backend/ikas/internal/assets/ikas.png"
+	wmW := 150.0
+	// Place it before the table so it stays behind the text
+	pdf.ImageOptions(watermarkPath, (210-wmW)/2, pdf.GetY()-10, wmW, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
 
-	pdf.SetFont("Arial", "", 9)
+	// 6. Results Table
+	tableW := 140.0
+	startX := (210 - tableW) / 2
+	pdf.SetX(startX)
+	pdf.SetFont("Arial", "B", 10)
+	pdf.SetFillColor(240, 240, 240)
+	pdf.CellFormat(20, 7, "No.", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(80, 7, "Domain", "1", 0, "C", true, 0, "")
+	pdf.CellFormat(40, 7, "Nilai", "1", 1, "C", true, 0, "")
 
+	pdf.SetFont("Arial", "", 10)
 	domains := []struct {
-		Nama  string
-		Skor  float64
-		Level string
+		No   string
+		Name string
+		Val  float64
 	}{
-		{"Identifikasi (Identify)", 0, "-"},
-		{"Proteksi (Protect)", 0, "-"},
-		{"Deteksi (Detect)", 0, "-"},
-		{"Penanggulangan & Pemulihan (Respond & Recover)", 0, "-"},
+		{"1.", "Domain Identifikasi", 0},
+		{"2.", "Domain Proteksi", 0},
+		{"3.", "Domain Deteksi", 0},
+		{"4.", "Domain Penanggulangan dan Pemulihan", 0},
 	}
-
 	if data.Identifikasi != nil {
-		domains[0].Skor = data.Identifikasi.NilaiIdentifikasi
-		domains[0].Level = data.Identifikasi.KategoriTingkatKematanganDomain
+		domains[0].Val = data.Identifikasi.NilaiIdentifikasi
 	}
 	if data.Proteksi != nil {
-		domains[1].Skor = data.Proteksi.NilaiProteksi
-		domains[1].Level = data.Proteksi.KategoriTingkatKematanganDomain
+		domains[1].Val = data.Proteksi.NilaiProteksi
 	}
 	if data.Deteksi != nil {
-		domains[2].Skor = data.Deteksi.NilaiDeteksi
-		domains[2].Level = data.Deteksi.KategoriTingkatKematanganDomain
+		domains[2].Val = data.Deteksi.NilaiDeteksi
 	}
 	if data.Gulih != nil {
-		domains[3].Skor = data.Gulih.NilaiGulih
-		domains[3].Level = data.Gulih.KategoriTingkatKematanganDomain
+		domains[3].Val = data.Gulih.NilaiGulih
 	}
 
 	for _, d := range domains {
-		pdf.CellFormat(80, 8, "  "+toSafe(d.Nama), "1", 0, "L", false, 0, "")
-		pdf.CellFormat(30, 8, fmt.Sprintf("  %.2f", d.Skor), "1", 0, "C", false, 0, "")
-		pdf.CellFormat(70, 8, "  "+toSafe(d.Level), "1", 1, "L", false, 0, "")
+		pdf.SetX(startX)
+		pdf.CellFormat(20, 7, d.No, "1", 0, "C", false, 0, "")
+		pdf.CellFormat(80, 7, " "+toSafe(d.Name), "1", 0, "L", false, 0, "")
+		pdf.CellFormat(40, 7, fmt.Sprintf("%.2f", d.Val), "1", 1, "C", false, 0, "")
 	}
 
+	pdf.SetX(startX)
+	pdf.SetFont("Arial", "B", 10)
+	pdf.CellFormat(100, 7, "Nilai Kematangan", "1", 0, "R", true, 0, "")
+	pdf.CellFormat(40, 7, fmt.Sprintf("%.2f", data.NilaiKematangan), "1", 1, "C", true, 0, "")
+	pdf.SetX(startX)
+	pdf.CellFormat(100, 7, "Kategori Tingkat Kematangan", "1", 0, "R", true, 0, "")
+	pdf.CellFormat(40, 7, toSafe(data.KategoriKematanganKeamananSiber), "1", 1, "C", true, 0, "")
+
+	// 7. Kriteria
+	pdf.SetX(startX)
+	pdf.SetFont("Arial", "B", 8)
+	pdf.CellFormat(140, 4, "Kriteria:", "LR", 1, "L", false, 0, "")
+	pdf.SetX(startX)
+	pdf.SetFont("Arial", "", 8)
+	kriteriaText := "A. Kondisi penerapan keamanan siber dalam tahap implementasi awal\n" +
+		"B. Penerapan keamanan siber belum memiliki prosedur yang terorganisir\n" +
+		"C. Penerapan keamanan siber bersifat informal\n" +
+		"D. Keamanan siber tidak dilakukan secara konsisten dan berkelanjutan\n" +
+		"E. Dokumen manajemen risiko dan dokumen kontrol belum disusun"
+	pdf.MultiCell(140, 4, toSafe(kriteriaText), "LRB", "L", false)
+
+	pdf.Ln(8)
+
+	// 8. Closing
+	pdf.SetFont("Arial", "I", 9)
+	keterangan := fmt.Sprintf("Keterangan:\nHasil diatas merupakan hasil penilaian mandiri IKAS %s dan masih memerlukan verifikasi dari Tim BSSN.", data.Perusahaan.NamaPerusahaan)
+	pdf.MultiCell(0, 5, toSafe(keterangan), "", "L", false)
+	pdf.Ln(4)
+
+	pdf.SetFont("Arial", "", 10)
+	closingText := fmt.Sprintf("Setelah mengetahui hasil penilaian mandiri IKAS sebagaimana tercantum pada tabel di atas yang dilakukan pada tanggal %s oleh %s, maka Badan Siber dan Sandi Negara dalam hal ini Direktorat Keamanan Siber dan Sandi Industri melalui Tim Asistensi IKAS %s, menerima hasil penilaian mandiri IKAS %s.", tanggalStr, data.Perusahaan.NamaPerusahaan, data.Perusahaan.NamaPerusahaan, data.Perusahaan.NamaPerusahaan)
+	pdf.MultiCell(0, 5, toSafe(closingText), "", "L", false)
+
 	pdf.Ln(10)
-	pdf.SetFont("Arial", "I", 8)
-	pdf.SetTextColor(100, 100, 100)
-	pdf.MultiCell(0, 4, toSafe("Catatan: Laporan ini dihasilkan secara otomatis oleh sistem. Nilai kematangan dihitung berdasarkan metodologi standar Indeks Kematangan Keamanan Siber (IKAS)."), "", "L", false)
+
+	// 9. Signature
+	signaturePath := "/Users/khrisnandika/Desktop/Maganghub BSSN/fortyfour-backend/ikas/internal/assets/tteikas.jpg"
+	sigW := 55.0
+	sigX := 210 - pageMargin - sigW
+
+	pdf.SetFont("Arial", "B", 10)
+	pdf.SetX(sigX)
+	pdf.CellFormat(sigW, 5, "Ketua Tim Penilaian Kematangan", "", 1, "C", false, 0, "")
+	pdf.SetX(sigX)
+	pdf.CellFormat(sigW, 5, "Keamanan Siber Sektor Industri,", "", 1, "C", false, 0, "")
+
+	pdf.ImageOptions(signaturePath, sigX, pdf.GetY()+2, sigW, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
+
+	// 10. Footer
+	pdf.SetY(275)
+	pdf.SetFont("Arial", "", 8)
+	footerText := "Dokumen ini telah ditandatangani secara elektronik menggunakan sertifikat elektronik\nyang diterbitkan oleh Balai Besar Sertifikasi Elektronik (BSrE), Badan Siber dan Sandi Negara"
+	pdf.MultiCell(0, 4, toSafe(footerText), "", "C", false)
 
 	var buf bytes.Buffer
 	if err := pdf.Output(&buf); err != nil {
 		return nil, fmt.Errorf("gagal generate PDF IKAS: %w", err)
 	}
 	return buf.Bytes(), nil
-}
-
-func printSectionTitle(pdf *fpdf.Fpdf, title string) {
-	pdf.SetFont("Arial", "B", 10)
-	pdf.SetFillColor(220, 230, 255)
-	pdf.SetTextColor(30, 30, 30)
-	pdf.CellFormat(colLabelW+colValueW, lineHeight, "  "+title, "1", 1, "L", true, 0, "")
-	pdf.SetTextColor(0, 0, 0)
-}
-
-func printRows(pdf *fpdf.Fpdf, rows [][]string) {
-	for i, row := range rows {
-		if i%2 == 0 {
-			pdf.SetFillColor(245, 247, 255)
-		} else {
-			pdf.SetFillColor(255, 255, 255)
-		}
-
-		pdf.SetFont("Arial", "B", 9)
-		pdf.CellFormat(colLabelW, lineHeight, toSafe("  "+row[0]), "1", 0, "L", true, 0, "")
-
-		pdf.SetFont("Arial", "", 9)
-		pdf.CellFormat(colValueW, lineHeight, toSafe("  "+row[1]), "1", 1, "L", true, 0, "")
-	}
 }

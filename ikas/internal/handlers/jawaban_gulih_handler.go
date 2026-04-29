@@ -97,7 +97,7 @@ func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	if userRole != "admin" && (userPerusahaanID == "" || userPerusahaanID == "null") {
+	if userRole != "admin" && userRole != "staff" && (userPerusahaanID == "" || userPerusahaanID == "null") {
 		utils.RespondJSON(w, 200, map[string]interface{}{
 			"message": "Berhasil mengambil data",
 			"data":    []dto.JawabanGulihResponse{},
@@ -118,7 +118,7 @@ func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 		pID, _ := strconv.Atoi(pertanyaanIDStr)
 		data, err = h.service.GetByPertanyaan(pID)
 	} else {
-		if userRole != "admin" {
+		if userRole != "admin" && userRole != "staff" {
 			data, err = h.service.GetByPerusahaanID(userPerusahaanID, userRole, userPerusahaanID)
 		} else {
 			data, err = h.service.GetAll(userRole)

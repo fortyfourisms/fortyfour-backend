@@ -59,6 +59,7 @@ type RuangLingkupRepositoryInterface interface {
 
 	// HELPER
 	CheckDuplicateName(nama string, excludeID int) (bool, error)
+	CheckHasPertanyaan(ruangLingkupID int) (bool, error)
 }
 
 // DomainRepositoryInterface
@@ -69,6 +70,7 @@ type DomainRepositoryInterface interface {
 	Update(id int, req dto.UpdateDomainRequest) error
 	Delete(id int) error
 	CheckDuplicateName(nama string, excludeID int) (bool, error)
+	CheckHasKategori(domainID int) (bool, error)
 }
 
 // KategoriRepositoryInterface
@@ -80,6 +82,7 @@ type KategoriRepositoryInterface interface {
 	Delete(id int) error
 	CheckDuplicateName(domainID int, namaKategori string, excludeID int) (bool, error)
 	CheckDomainExists(domainID int) (bool, error)
+	CheckHasSubKategori(kategoriID int) (bool, error)
 }
 
 // SubKategoriRepositoryInterface
@@ -91,6 +94,7 @@ type SubKategoriRepositoryInterface interface {
 	Delete(id int) error
 	CheckDuplicateName(kategoriID int, namaSubKategori string, excludeID int) (bool, error)
 	CheckKategoriExists(kategoriID int) (bool, error)
+	CheckHasPertanyaan(subKategoriID int) (bool, error)
 }
 
 // IdentifikasiRepositoryInterface

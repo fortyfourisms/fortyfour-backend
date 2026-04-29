@@ -18,6 +18,7 @@ type Config struct {
 	InternalGatewayKey string
 	LogLevel           string
 	Environment        string
+	TurnstileSecretKey string
 }
 
 type DatabaseConfig struct {
@@ -85,6 +86,7 @@ func Load() *Config {
 		InternalGatewayKey: getEnv("INTERNAL_GATEWAY_KEY", ""),
 		LogLevel:           getEnv("LOG_LEVEL", "info"),
 		Environment:        getEnv("ENVIRONMENT", "production"),
+		TurnstileSecretKey: getEnv("TURNSTILE_SECRET_KEY", ""),
 	}
 }
 

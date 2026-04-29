@@ -1,11 +1,11 @@
 basePath: /
 definitions:
-  dto.CreateDomainRequest:
+  ikas_internal_dto.CreateDomainRequest:
     properties:
       nama_domain:
         type: string
     type: object
-  dto.CreateIkasRequest:
+  ikas_internal_dto.CreateIkasRequest:
     properties:
       id_perusahaan:
         type: string
@@ -20,9 +20,11 @@ definitions:
       telepon:
         type: string
     type: object
-  dto.CreateJawabanDeteksiRequest:
+  ikas_internal_dto.CreateJawabanDeteksiRequest:
     properties:
       evidence:
+        type: string
+      ikas_id:
         type: string
       jawaban_deteksi:
         type: number
@@ -30,14 +32,14 @@ definitions:
         type: string
       pertanyaan_deteksi_id:
         type: integer
-      perusahaan_id:
-        type: string
       validasi:
         type: string
     type: object
-  dto.CreateJawabanGulihRequest:
+  ikas_internal_dto.CreateJawabanGulihRequest:
     properties:
       evidence:
+        type: string
+      ikas_id:
         type: string
       jawaban_gulih:
         type: number
@@ -45,14 +47,14 @@ definitions:
         type: string
       pertanyaan_gulih_id:
         type: integer
-      perusahaan_id:
-        type: string
       validasi:
         type: string
     type: object
-  dto.CreateJawabanIdentifikasiRequest:
+  ikas_internal_dto.CreateJawabanIdentifikasiRequest:
     properties:
       evidence:
+        type: string
+      ikas_id:
         type: string
       jawaban_identifikasi:
         type: number
@@ -60,14 +62,14 @@ definitions:
         type: string
       pertanyaan_identifikasi_id:
         type: integer
-      perusahaan_id:
-        type: string
       validasi:
         type: string
     type: object
-  dto.CreateJawabanProteksiRequest:
+  ikas_internal_dto.CreateJawabanProteksiRequest:
     properties:
       evidence:
+        type: string
+      ikas_id:
         type: string
       jawaban_proteksi:
         type: number
@@ -75,19 +77,17 @@ definitions:
         type: string
       pertanyaan_proteksi_id:
         type: integer
-      perusahaan_id:
-        type: string
       validasi:
         type: string
     type: object
-  dto.CreateKategoriRequest:
+  ikas_internal_dto.CreateKategoriRequest:
     properties:
       domain_id:
         type: integer
       nama_kategori:
         type: string
     type: object
-  dto.CreatePertanyaanDeteksiRequest:
+  ikas_internal_dto.CreatePertanyaanDeteksiRequest:
     properties:
       index0:
         type: string
@@ -108,7 +108,7 @@ definitions:
       sub_kategori_id:
         type: integer
     type: object
-  dto.CreatePertanyaanGulihRequest:
+  ikas_internal_dto.CreatePertanyaanGulihRequest:
     properties:
       index0:
         type: string
@@ -129,7 +129,7 @@ definitions:
       sub_kategori_id:
         type: integer
     type: object
-  dto.CreatePertanyaanIdentifikasiRequest:
+  ikas_internal_dto.CreatePertanyaanIdentifikasiRequest:
     properties:
       index0:
         type: string
@@ -150,7 +150,7 @@ definitions:
       sub_kategori_id:
         type: integer
     type: object
-  dto.CreatePertanyaanProteksiRequest:
+  ikas_internal_dto.CreatePertanyaanProteksiRequest:
     properties:
       index0:
         type: string
@@ -171,19 +171,19 @@ definitions:
       sub_kategori_id:
         type: integer
     type: object
-  dto.CreateRuangLingkupRequest:
+  ikas_internal_dto.CreateRuangLingkupRequest:
     properties:
       nama_ruang_lingkup:
         type: string
     type: object
-  dto.CreateSubKategoriRequest:
+  ikas_internal_dto.CreateSubKategoriRequest:
     properties:
       kategori_id:
         type: integer
       nama_sub_kategori:
         type: string
     type: object
-  dto.DeteksiInIkas:
+  ikas_internal_dto.DeteksiInIkas:
     properties:
       id:
         type: integer
@@ -198,7 +198,7 @@ definitions:
       nilai_subdomain3:
         type: number
     type: object
-  dto.DeteksiResponse:
+  ikas_internal_dto.DeteksiResponse:
     properties:
       id:
         type: string
@@ -211,14 +211,14 @@ definitions:
       nilai_subdomain3:
         type: number
     type: object
-  dto.DomainInfo:
+  ikas_internal_dto.DomainInfo:
     properties:
       id:
         type: integer
       nama_domain:
         type: string
     type: object
-  dto.DomainResponse:
+  ikas_internal_dto.DomainResponse:
     properties:
       created_at:
         type: string
@@ -229,12 +229,12 @@ definitions:
       updated_at:
         type: string
     type: object
-  dto.ErrorResponse:
+  ikas_internal_dto.ErrorResponse:
     properties:
       error:
         type: string
     type: object
-  dto.GulihInIkas:
+  ikas_internal_dto.GulihInIkas:
     properties:
       id:
         type: integer
@@ -251,7 +251,7 @@ definitions:
       nilai_subdomain4:
         type: number
     type: object
-  dto.GulihResponse:
+  ikas_internal_dto.GulihResponse:
     properties:
       id:
         type: string
@@ -266,7 +266,7 @@ definitions:
       nilai_subdomain4:
         type: number
     type: object
-  dto.IdentifikasiInIkas:
+  ikas_internal_dto.IdentifikasiInIkas:
     properties:
       id:
         type: integer
@@ -285,7 +285,7 @@ definitions:
       nilai_subdomain5:
         type: number
     type: object
-  dto.IdentifikasiResponse:
+  ikas_internal_dto.IdentifikasiResponse:
     properties:
       id:
         type: string
@@ -302,18 +302,24 @@ definitions:
       nilai_subdomain5:
         type: number
     type: object
-  dto.IkasResponse:
+  ikas_internal_dto.IkasResponse:
     properties:
       created_at:
         type: string
       deteksi:
-        $ref: '#/definitions/dto.DeteksiInIkas'
+        $ref: '#/definitions/ikas_internal_dto.DeteksiInIkas'
+      edit_request_reason:
+        type: string
+      edit_request_status:
+        type: string
       gulih:
-        $ref: '#/definitions/dto.GulihInIkas'
+        $ref: '#/definitions/ikas_internal_dto.GulihInIkas'
       id:
         type: string
       identifikasi:
-        $ref: '#/definitions/dto.IdentifikasiInIkas'
+        $ref: '#/definitions/ikas_internal_dto.IdentifikasiInIkas'
+      is_validated:
+        type: boolean
       jabatan:
         type: string
       kategori_kematangan_keamanan_siber:
@@ -321,9 +327,9 @@ definitions:
       nilai_kematangan:
         type: number
       perusahaan:
-        $ref: '#/definitions/dto.PerusahaanInIkas'
+        $ref: '#/definitions/ikas_internal_dto.PerusahaanInIkas'
       proteksi:
-        $ref: '#/definitions/dto.ProteksiInIkas'
+        $ref: '#/definitions/ikas_internal_dto.ProteksiInIkas'
       responden:
         type: string
       tanggal:
@@ -335,10 +341,10 @@ definitions:
       updated_at:
         type: string
     type: object
-  dto.ImportIkasResponse:
+  ikas_internal_dto.ImportIkasResponse:
     properties:
       data:
-        $ref: '#/definitions/dto.IkasResponse'
+        $ref: '#/definitions/ikas_internal_dto.IkasResponse'
       errors:
         items:
           type: string
@@ -348,7 +354,7 @@ definitions:
       success:
         type: boolean
     type: object
-  dto.JawabanDeteksiResponse:
+  ikas_internal_dto.JawabanDeteksiResponse:
     properties:
       created_at:
         type: string
@@ -356,20 +362,20 @@ definitions:
         type: string
       id:
         type: integer
+      ikas_id:
+        type: string
       jawaban_deteksi:
         type: number
       keterangan:
         type: string
       pertanyaan_deteksi:
-        $ref: '#/definitions/dto.PertanyaanDeteksiInfo'
-      perusahaan_id:
-        type: string
+        $ref: '#/definitions/ikas_internal_dto.PertanyaanDeteksiInfo'
       updated_at:
         type: string
       validasi:
         type: string
     type: object
-  dto.JawabanIdentifikasiResponse:
+  ikas_internal_dto.JawabanIdentifikasiResponse:
     properties:
       created_at:
         type: string
@@ -377,20 +383,20 @@ definitions:
         type: string
       id:
         type: integer
+      ikas_id:
+        type: string
       jawaban_identifikasi:
         type: number
       keterangan:
         type: string
       pertanyaan_identifikasi:
-        $ref: '#/definitions/dto.PertanyaanIdentifikasiInfo'
-      perusahaan_id:
-        type: string
+        $ref: '#/definitions/ikas_internal_dto.PertanyaanIdentifikasiInfo'
       updated_at:
         type: string
       validasi:
         type: string
     type: object
-  dto.JawabanProteksiResponse:
+  ikas_internal_dto.JawabanProteksiResponse:
     properties:
       created_at:
         type: string
@@ -398,36 +404,36 @@ definitions:
         type: string
       id:
         type: integer
+      ikas_id:
+        type: string
       jawaban_proteksi:
         type: number
       keterangan:
         type: string
       pertanyaan_proteksi:
-        $ref: '#/definitions/dto.PertanyaanProteksiInfo'
-      perusahaan_id:
-        type: string
+        $ref: '#/definitions/ikas_internal_dto.PertanyaanProteksiInfo'
       updated_at:
         type: string
       validasi:
         type: string
     type: object
-  dto.KategoriInfo:
+  ikas_internal_dto.KategoriInfo:
     properties:
       domain:
-        $ref: '#/definitions/dto.DomainInfo'
+        $ref: '#/definitions/ikas_internal_dto.DomainInfo'
       id:
         type: integer
       nama_kategori:
         type: string
     type: object
-  dto.KategoriMessageResponse:
+  ikas_internal_dto.KategoriMessageResponse:
     properties:
       id:
         type: integer
       message:
         type: string
     type: object
-  dto.KategoriResponse:
+  ikas_internal_dto.KategoriResponse:
     properties:
       created_at:
         type: string
@@ -440,30 +446,30 @@ definitions:
       updated_at:
         type: string
     type: object
-  dto.MessageResponse:
+  ikas_internal_dto.MessageResponse:
     properties:
       id:
         type: integer
       message:
         type: string
     type: object
-  dto.PertanyaanDeteksiInfo:
+  ikas_internal_dto.PertanyaanDeteksiInfo:
     properties:
       id:
         type: integer
       pertanyaan_deteksi:
         type: string
       sub_kategori:
-        $ref: '#/definitions/dto.SubKategoriInfo'
+        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
     type: object
-  dto.PertanyaanDeteksiMessageResponse:
+  ikas_internal_dto.PertanyaanDeteksiMessageResponse:
     properties:
       id:
         type: integer
       message:
         type: string
     type: object
-  dto.PertanyaanDeteksiResponse:
+  ikas_internal_dto.PertanyaanDeteksiResponse:
     properties:
       created_at:
         type: string
@@ -484,20 +490,20 @@ definitions:
       pertanyaan_deteksi:
         type: string
       ruang_lingkup:
-        $ref: '#/definitions/dto.RuangLingkupInfo'
+        $ref: '#/definitions/ikas_internal_dto.RuangLingkupInfo'
       sub_kategori:
-        $ref: '#/definitions/dto.SubKategoriInfo'
+        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
       updated_at:
         type: string
     type: object
-  dto.PertanyaanGulihMessageResponse:
+  ikas_internal_dto.PertanyaanGulihMessageResponse:
     properties:
       id:
         type: integer
       message:
         type: string
     type: object
-  dto.PertanyaanGulihResponse:
+  ikas_internal_dto.PertanyaanGulihResponse:
     properties:
       created_at:
         type: string
@@ -518,29 +524,29 @@ definitions:
       pertanyaan_gulih:
         type: string
       ruang_lingkup:
-        $ref: '#/definitions/dto.RuangLingkupInfo'
+        $ref: '#/definitions/ikas_internal_dto.RuangLingkupInfo'
       sub_kategori:
-        $ref: '#/definitions/dto.SubKategoriInfo'
+        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
       updated_at:
         type: string
     type: object
-  dto.PertanyaanIdentifikasiInfo:
+  ikas_internal_dto.PertanyaanIdentifikasiInfo:
     properties:
       id:
         type: integer
       pertanyaan_identifikasi:
         type: string
       sub_kategori:
-        $ref: '#/definitions/dto.SubKategoriInfo'
+        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
     type: object
-  dto.PertanyaanIdentifikasiMessageResponse:
+  ikas_internal_dto.PertanyaanIdentifikasiMessageResponse:
     properties:
       id:
         type: integer
       message:
         type: string
     type: object
-  dto.PertanyaanIdentifikasiResponse:
+  ikas_internal_dto.PertanyaanIdentifikasiResponse:
     properties:
       created_at:
         type: string
@@ -561,29 +567,29 @@ definitions:
       pertanyaan_identifikasi:
         type: string
       ruang_lingkup:
-        $ref: '#/definitions/dto.RuangLingkupInfo'
+        $ref: '#/definitions/ikas_internal_dto.RuangLingkupInfo'
       sub_kategori:
-        $ref: '#/definitions/dto.SubKategoriInfo'
+        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
       updated_at:
         type: string
     type: object
-  dto.PertanyaanProteksiInfo:
+  ikas_internal_dto.PertanyaanProteksiInfo:
     properties:
       id:
         type: integer
       pertanyaan_proteksi:
         type: string
       sub_kategori:
-        $ref: '#/definitions/dto.SubKategoriInfo'
+        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
     type: object
-  dto.PertanyaanProteksiMessageResponse:
+  ikas_internal_dto.PertanyaanProteksiMessageResponse:
     properties:
       id:
         type: integer
       message:
         type: string
     type: object
-  dto.PertanyaanProteksiResponse:
+  ikas_internal_dto.PertanyaanProteksiResponse:
     properties:
       created_at:
         type: string
@@ -604,20 +610,20 @@ definitions:
       pertanyaan_proteksi:
         type: string
       ruang_lingkup:
-        $ref: '#/definitions/dto.RuangLingkupInfo'
+        $ref: '#/definitions/ikas_internal_dto.RuangLingkupInfo'
       sub_kategori:
-        $ref: '#/definitions/dto.SubKategoriInfo'
+        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
       updated_at:
         type: string
     type: object
-  dto.PerusahaanInIkas:
+  ikas_internal_dto.PerusahaanInIkas:
     properties:
       id:
         type: string
       nama_perusahaan:
         type: string
     type: object
-  dto.ProteksiInIkas:
+  ikas_internal_dto.ProteksiInIkas:
     properties:
       id:
         type: integer
@@ -638,7 +644,7 @@ definitions:
       nilai_subdomain6:
         type: number
     type: object
-  dto.ProteksiResponse:
+  ikas_internal_dto.ProteksiResponse:
     properties:
       id:
         type: string
@@ -657,14 +663,28 @@ definitions:
       nilai_subdomain6:
         type: number
     type: object
-  dto.RuangLingkupInfo:
+  ikas_internal_dto.RejectEditRequest:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
+  ikas_internal_dto.RequestEditRequest:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
+  ikas_internal_dto.RuangLingkupInfo:
     properties:
       id:
         type: integer
       nama_ruang_lingkup:
         type: string
     type: object
-  dto.RuangLingkupResponse:
+  ikas_internal_dto.RuangLingkupResponse:
     properties:
       created_at:
         type: string
@@ -675,23 +695,23 @@ definitions:
       updated_at:
         type: string
     type: object
-  dto.SubKategoriInfo:
+  ikas_internal_dto.SubKategoriInfo:
     properties:
       id:
         type: integer
       kategori:
-        $ref: '#/definitions/dto.KategoriInfo'
+        $ref: '#/definitions/ikas_internal_dto.KategoriInfo'
       nama_sub_kategori:
         type: string
     type: object
-  dto.SubKategoriMessageResponse:
+  ikas_internal_dto.SubKategoriMessageResponse:
     properties:
       id:
         type: integer
       message:
         type: string
     type: object
-  dto.SubKategoriResponse:
+  ikas_internal_dto.SubKategoriResponse:
     properties:
       created_at:
         type: string
@@ -704,12 +724,12 @@ definitions:
       updated_at:
         type: string
     type: object
-  dto.UpdateDomainRequest:
+  ikas_internal_dto.UpdateDomainRequest:
     properties:
       nama_domain:
         type: string
     type: object
-  dto.UpdateIkasRequest:
+  ikas_internal_dto.UpdateIkasRequest:
     properties:
       id_perusahaan:
         type: string
@@ -724,7 +744,7 @@ definitions:
       telepon:
         type: string
     type: object
-  dto.UpdateJawabanDeteksiRequest:
+  ikas_internal_dto.UpdateJawabanDeteksiRequest:
     properties:
       evidence:
         type: string
@@ -735,7 +755,7 @@ definitions:
       validasi:
         type: string
     type: object
-  dto.UpdateJawabanGulihRequest:
+  ikas_internal_dto.UpdateJawabanGulihRequest:
     properties:
       evidence:
         type: string
@@ -746,7 +766,7 @@ definitions:
       validasi:
         type: string
     type: object
-  dto.UpdateJawabanIdentifikasiRequest:
+  ikas_internal_dto.UpdateJawabanIdentifikasiRequest:
     properties:
       evidence:
         type: string
@@ -757,7 +777,7 @@ definitions:
       validasi:
         type: string
     type: object
-  dto.UpdateJawabanProteksiRequest:
+  ikas_internal_dto.UpdateJawabanProteksiRequest:
     properties:
       evidence:
         type: string
@@ -768,14 +788,14 @@ definitions:
       validasi:
         type: string
     type: object
-  dto.UpdateKategoriRequest:
+  ikas_internal_dto.UpdateKategoriRequest:
     properties:
       domain_id:
         type: integer
       nama_kategori:
         type: string
     type: object
-  dto.UpdatePertanyaanDeteksiRequest:
+  ikas_internal_dto.UpdatePertanyaanDeteksiRequest:
     properties:
       index0:
         type: string
@@ -796,7 +816,7 @@ definitions:
       sub_kategori_id:
         type: integer
     type: object
-  dto.UpdatePertanyaanGulihRequest:
+  ikas_internal_dto.UpdatePertanyaanGulihRequest:
     properties:
       index0:
         type: string
@@ -817,7 +837,7 @@ definitions:
       sub_kategori_id:
         type: integer
     type: object
-  dto.UpdatePertanyaanIdentifikasiRequest:
+  ikas_internal_dto.UpdatePertanyaanIdentifikasiRequest:
     properties:
       index0:
         type: string
@@ -838,7 +858,7 @@ definitions:
       sub_kategori_id:
         type: integer
     type: object
-  dto.UpdatePertanyaanProteksiRequest:
+  ikas_internal_dto.UpdatePertanyaanProteksiRequest:
     properties:
       index0:
         type: string
@@ -859,17 +879,22 @@ definitions:
       sub_kategori_id:
         type: integer
     type: object
-  dto.UpdateRuangLingkupRequest:
+  ikas_internal_dto.UpdateRuangLingkupRequest:
     properties:
       nama_ruang_lingkup:
         type: string
     type: object
-  dto.UpdateSubKategoriRequest:
+  ikas_internal_dto.UpdateSubKategoriRequest:
     properties:
       kategori_id:
         type: integer
       nama_sub_kategori:
         type: string
+    type: object
+  ikas_internal_dto.ValidasiIkasRequest:
+    properties:
+      status:
+        type: boolean
     type: object
 host: localhost:8081
 info:
@@ -888,12 +913,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.DeteksiResponse'
+              $ref: '#/definitions/ikas_internal_dto.DeteksiResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua deteksi
       tags:
       - Deteksi
@@ -911,11 +936,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.DeteksiResponse'
+            $ref: '#/definitions/ikas_internal_dto.DeteksiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil deteksi berdasarkan ID
       tags:
       - Deteksi
@@ -929,12 +954,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.GulihResponse'
+              $ref: '#/definitions/ikas_internal_dto.GulihResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua gulih
       tags:
       - Gulih
@@ -952,11 +977,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.GulihResponse'
+            $ref: '#/definitions/ikas_internal_dto.GulihResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil gulih berdasarkan ID
       tags:
       - Gulih
@@ -985,12 +1010,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.IdentifikasiResponse'
+              $ref: '#/definitions/ikas_internal_dto.IdentifikasiResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua identifikasi
       tags:
       - Identifikasi
@@ -1009,11 +1034,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.IdentifikasiResponse'
+            $ref: '#/definitions/ikas_internal_dto.IdentifikasiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil identifikasi berdasarkan ID
       tags:
       - Identifikasi
@@ -1027,12 +1052,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.DomainResponse'
+              $ref: '#/definitions/ikas_internal_dto.DomainResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua domain
       tags:
       - Domain
@@ -1046,22 +1071,22 @@ paths:
         name: domain
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateDomainRequest'
+          $ref: '#/definitions/ikas_internal_dto.CreateDomainRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.DomainResponse'
+            $ref: '#/definitions/ikas_internal_dto.DomainResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Tambah domain baru
       tags:
       - Domain
@@ -1080,15 +1105,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.MessageResponse'
+            $ref: '#/definitions/ikas_internal_dto.MessageResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Hapus domain
       tags:
       - Domain
@@ -1106,11 +1131,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.DomainResponse'
+            $ref: '#/definitions/ikas_internal_dto.DomainResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil domain berdasarkan ID
       tags:
       - Domain
@@ -1129,26 +1154,26 @@ paths:
         name: domain
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateDomainRequest'
+          $ref: '#/definitions/ikas_internal_dto.UpdateDomainRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.DomainResponse'
+            $ref: '#/definitions/ikas_internal_dto.DomainResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Update domain
       tags:
       - Domain
@@ -1162,12 +1187,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.IkasResponse'
+              $ref: '#/definitions/ikas_internal_dto.IkasResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua ikas
       tags:
       - Ikas
@@ -1181,18 +1206,18 @@ paths:
         name: ikas
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateIkasRequest'
+          $ref: '#/definitions/ikas_internal_dto.CreateIkasRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.IkasResponse'
+            $ref: '#/definitions/ikas_internal_dto.IkasResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Tambah ikas baru
       tags:
       - Ikas
@@ -1211,11 +1236,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.MessageResponse'
+            $ref: '#/definitions/ikas_internal_dto.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Hapus ikas
       tags:
       - Ikas
@@ -1233,11 +1258,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.IkasResponse'
+            $ref: '#/definitions/ikas_internal_dto.IkasResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil ikas berdasarkan ID
       tags:
       - Ikas
@@ -1256,19 +1281,186 @@ paths:
         name: ikas
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateIkasRequest'
+          $ref: '#/definitions/ikas_internal_dto.UpdateIkasRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.IkasResponse'
+            $ref: '#/definitions/ikas_internal_dto.IkasResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Update ikas
+      tags:
+      - Ikas
+  /api/maturity/ikas/{id}/approve-edit:
+    put:
+      description: Menyetujui permintaan edit dan membuka kembali kunci data IKAS.
+        Hanya bisa dilakukan oleh Admin atau Staff.
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Setujui permintaan edit IKAS
+      tags:
+      - Ikas
+  /api/maturity/ikas/{id}/export:
+    get:
+      description: Mengunduh file laporan IKAS dalam format PDF berdasarkan ID
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Export IKAS ke PDF
+      tags:
+      - Ikas
+  /api/maturity/ikas/{id}/reject-edit:
+    put:
+      consumes:
+      - application/json
+      description: Menolak permintaan edit data IKAS. Hanya bisa dilakukan oleh Admin
+        atau Staff.
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Alasan penolakan
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/ikas_internal_dto.RejectEditRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Tolak permintaan edit IKAS
+      tags:
+      - Ikas
+  /api/maturity/ikas/{id}/request-edit:
+    post:
+      consumes:
+      - application/json
+      description: Mengajukan permintaan pembukaan kunci (unlock) data IKAS yang sudah
+        divalidasi kepada Admin/Staff
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Alasan pengajuan edit
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/ikas_internal_dto.RequestEditRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ajukan permintaan edit IKAS
+      tags:
+      - Ikas
+  /api/maturity/ikas/{id}/validate:
+    put:
+      consumes:
+      - application/json
+      description: Melakukan validasi final (lock/unlock) data IKAS. Hanya bisa dilakukan
+        oleh Admin atau Staff.
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status validasi (true=lock, false=unlock)
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/ikas_internal_dto.ValidasiIkasRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Validasi final IKAS
       tags:
       - Ikas
   /api/maturity/ikas/import:
@@ -1313,22 +1505,22 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.ImportIkasResponse'
+            $ref: '#/definitions/ikas_internal_dto.ImportIkasResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Import IKAS dari Excel
       tags:
       - Ikas
   /api/maturity/jawaban-deteksi:
     get:
       description: Get all answers for detection questions, optionally filtered by
-        perusahaan_id or pertanyaan_deteksi_id
+        ikas_id or pertanyaan_deteksi_id
       parameters:
-      - description: Filter by Perusahaan ID
+      - description: Filter by Ikas ID
         in: query
-        name: perusahaan_id
+        name: ikas_id
         type: string
       - description: Filter by Pertanyaan Deteksi ID
         in: query
@@ -1341,7 +1533,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.JawabanDeteksiResponse'
+              $ref: '#/definitions/ikas_internal_dto.JawabanDeteksiResponse'
             type: array
       summary: Get All Jawaban Deteksi
       tags:
@@ -1356,14 +1548,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateJawabanDeteksiRequest'
+          $ref: '#/definitions/ikas_internal_dto.CreateJawabanDeteksiRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.JawabanDeteksiResponse'
+            $ref: '#/definitions/ikas_internal_dto.JawabanDeteksiResponse'
       summary: Create Jawaban Deteksi
       tags:
       - Jawaban Deteksi
@@ -1401,7 +1593,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.JawabanDeteksiResponse'
+            $ref: '#/definitions/ikas_internal_dto.JawabanDeteksiResponse'
       summary: Get Jawaban Deteksi by ID
       tags:
       - Jawaban Deteksi
@@ -1420,14 +1612,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateJawabanDeteksiRequest'
+          $ref: '#/definitions/ikas_internal_dto.UpdateJawabanDeteksiRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.JawabanDeteksiResponse'
+            $ref: '#/definitions/ikas_internal_dto.JawabanDeteksiResponse'
       summary: Update Jawaban Deteksi
       tags:
       - Jawaban Deteksi
@@ -1465,7 +1657,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateJawabanGulihRequest'
+          $ref: '#/definitions/ikas_internal_dto.CreateJawabanGulihRequest'
       produces:
       - application/json
       responses:
@@ -1531,7 +1723,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateJawabanGulihRequest'
+          $ref: '#/definitions/ikas_internal_dto.UpdateJawabanGulihRequest'
       produces:
       - application/json
       responses:
@@ -1563,12 +1755,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.JawabanIdentifikasiResponse'
+              $ref: '#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua jawaban identifikasi
       tags:
       - JawabanIdentifikasi
@@ -1582,26 +1774,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateJawabanIdentifikasiRequest'
+          $ref: '#/definitions/ikas_internal_dto.CreateJawabanIdentifikasiRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.JawabanIdentifikasiResponse'
+            $ref: '#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Tambah jawaban identifikasi baru
       tags:
       - JawabanIdentifikasi
@@ -1620,15 +1812,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.MessageResponse'
+            $ref: '#/definitions/ikas_internal_dto.MessageResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Hapus jawaban identifikasi
       tags:
       - JawabanIdentifikasi
@@ -1646,11 +1838,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.JawabanIdentifikasiResponse'
+            $ref: '#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil jawaban identifikasi berdasarkan ID
       tags:
       - JawabanIdentifikasi
@@ -1669,22 +1861,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateJawabanIdentifikasiRequest'
+          $ref: '#/definitions/ikas_internal_dto.UpdateJawabanIdentifikasiRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.JawabanIdentifikasiResponse'
+            $ref: '#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Update jawaban identifikasi
       tags:
       - JawabanIdentifikasi
@@ -1708,12 +1900,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.JawabanProteksiResponse'
+              $ref: '#/definitions/ikas_internal_dto.JawabanProteksiResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua jawaban proteksi
       tags:
       - JawabanProteksi
@@ -1727,26 +1919,26 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateJawabanProteksiRequest'
+          $ref: '#/definitions/ikas_internal_dto.CreateJawabanProteksiRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.JawabanProteksiResponse'
+            $ref: '#/definitions/ikas_internal_dto.JawabanProteksiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Tambah jawaban proteksi baru
       tags:
       - JawabanProteksi
@@ -1765,15 +1957,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.MessageResponse'
+            $ref: '#/definitions/ikas_internal_dto.MessageResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Hapus jawaban proteksi
       tags:
       - JawabanProteksi
@@ -1791,11 +1983,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.JawabanProteksiResponse'
+            $ref: '#/definitions/ikas_internal_dto.JawabanProteksiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil jawaban proteksi berdasarkan ID
       tags:
       - JawabanProteksi
@@ -1814,22 +2006,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateJawabanProteksiRequest'
+          $ref: '#/definitions/ikas_internal_dto.UpdateJawabanProteksiRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.JawabanProteksiResponse'
+            $ref: '#/definitions/ikas_internal_dto.JawabanProteksiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Update jawaban proteksi
       tags:
       - JawabanProteksi
@@ -1843,12 +2035,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.KategoriResponse'
+              $ref: '#/definitions/ikas_internal_dto.KategoriResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua kategori
       tags:
       - Kategori
@@ -1862,22 +2054,22 @@ paths:
         name: kategori
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateKategoriRequest'
+          $ref: '#/definitions/ikas_internal_dto.CreateKategoriRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.KategoriResponse'
+            $ref: '#/definitions/ikas_internal_dto.KategoriResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Tambah kategori baru
       tags:
       - Kategori
@@ -1896,15 +2088,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.KategoriMessageResponse'
+            $ref: '#/definitions/ikas_internal_dto.KategoriMessageResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Hapus kategori
       tags:
       - Kategori
@@ -1922,11 +2114,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.KategoriResponse'
+            $ref: '#/definitions/ikas_internal_dto.KategoriResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil kategori berdasarkan ID
       tags:
       - Kategori
@@ -1945,26 +2137,26 @@ paths:
         name: kategori
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateKategoriRequest'
+          $ref: '#/definitions/ikas_internal_dto.UpdateKategoriRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.KategoriResponse'
+            $ref: '#/definitions/ikas_internal_dto.KategoriResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Update kategori
       tags:
       - Kategori
@@ -1978,12 +2170,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.PertanyaanDeteksiResponse'
+              $ref: '#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua pertanyaan deteksi
       tags:
       - PertanyaanDeteksi
@@ -1997,22 +2189,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.CreatePertanyaanDeteksiRequest'
+          $ref: '#/definitions/ikas_internal_dto.CreatePertanyaanDeteksiRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.PertanyaanDeteksiResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Tambah pertanyaan deteksi baru
       tags:
       - PertanyaanDeteksi
@@ -2031,15 +2223,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PertanyaanDeteksiMessageResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanDeteksiMessageResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Hapus pertanyaan deteksi
       tags:
       - PertanyaanDeteksi
@@ -2057,11 +2249,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PertanyaanDeteksiResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil pertanyaan deteksi berdasarkan ID
       tags:
       - PertanyaanDeteksi
@@ -2080,22 +2272,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdatePertanyaanDeteksiRequest'
+          $ref: '#/definitions/ikas_internal_dto.UpdatePertanyaanDeteksiRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PertanyaanDeteksiResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Update pertanyaan deteksi
       tags:
       - PertanyaanDeteksi
@@ -2109,12 +2301,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.PertanyaanGulihResponse'
+              $ref: '#/definitions/ikas_internal_dto.PertanyaanGulihResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua pertanyaan gulih
       tags:
       - PertanyaanGulih
@@ -2128,22 +2320,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.CreatePertanyaanGulihRequest'
+          $ref: '#/definitions/ikas_internal_dto.CreatePertanyaanGulihRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.PertanyaanGulihResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanGulihResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Tambah pertanyaan gulih baru
       tags:
       - PertanyaanGulih
@@ -2162,15 +2354,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PertanyaanGulihMessageResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanGulihMessageResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Hapus pertanyaan gulih
       tags:
       - PertanyaanGulih
@@ -2188,11 +2380,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PertanyaanGulihResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanGulihResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil pertanyaan gulih berdasarkan ID
       tags:
       - PertanyaanGulih
@@ -2211,22 +2403,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdatePertanyaanGulihRequest'
+          $ref: '#/definitions/ikas_internal_dto.UpdatePertanyaanGulihRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PertanyaanGulihResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanGulihResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Update pertanyaan gulih
       tags:
       - PertanyaanGulih
@@ -2240,12 +2432,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.PertanyaanIdentifikasiResponse'
+              $ref: '#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua pertanyaan identifikasi
       tags:
       - PertanyaanIdentifikasi
@@ -2259,22 +2451,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.CreatePertanyaanIdentifikasiRequest'
+          $ref: '#/definitions/ikas_internal_dto.CreatePertanyaanIdentifikasiRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.PertanyaanIdentifikasiResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Tambah pertanyaan identifikasi baru
       tags:
       - PertanyaanIdentifikasi
@@ -2293,15 +2485,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PertanyaanIdentifikasiMessageResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanIdentifikasiMessageResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Hapus pertanyaan identifikasi
       tags:
       - PertanyaanIdentifikasi
@@ -2319,11 +2511,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PertanyaanIdentifikasiResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil pertanyaan identifikasi berdasarkan ID
       tags:
       - PertanyaanIdentifikasi
@@ -2342,22 +2534,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdatePertanyaanIdentifikasiRequest'
+          $ref: '#/definitions/ikas_internal_dto.UpdatePertanyaanIdentifikasiRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PertanyaanIdentifikasiResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Update pertanyaan identifikasi
       tags:
       - PertanyaanIdentifikasi
@@ -2371,12 +2563,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.PertanyaanProteksiResponse'
+              $ref: '#/definitions/ikas_internal_dto.PertanyaanProteksiResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua pertanyaan proteksi
       tags:
       - PertanyaanProteksi
@@ -2390,22 +2582,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.CreatePertanyaanProteksiRequest'
+          $ref: '#/definitions/ikas_internal_dto.CreatePertanyaanProteksiRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.PertanyaanProteksiResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanProteksiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Tambah pertanyaan proteksi baru
       tags:
       - PertanyaanProteksi
@@ -2424,15 +2616,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PertanyaanProteksiMessageResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanProteksiMessageResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Hapus pertanyaan proteksi
       tags:
       - PertanyaanProteksi
@@ -2450,11 +2642,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PertanyaanProteksiResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanProteksiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil pertanyaan proteksi berdasarkan ID
       tags:
       - PertanyaanProteksi
@@ -2473,22 +2665,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdatePertanyaanProteksiRequest'
+          $ref: '#/definitions/ikas_internal_dto.UpdatePertanyaanProteksiRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.PertanyaanProteksiResponse'
+            $ref: '#/definitions/ikas_internal_dto.PertanyaanProteksiResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Update pertanyaan proteksi
       tags:
       - PertanyaanProteksi
@@ -2502,12 +2694,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.RuangLingkupResponse'
+              $ref: '#/definitions/ikas_internal_dto.RuangLingkupResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua ruang lingkup
       tags:
       - RuangLingkup
@@ -2521,22 +2713,22 @@ paths:
         name: ruangLingkup
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateRuangLingkupRequest'
+          $ref: '#/definitions/ikas_internal_dto.CreateRuangLingkupRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.RuangLingkupResponse'
+            $ref: '#/definitions/ikas_internal_dto.RuangLingkupResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Tambah ruang lingkup baru
       tags:
       - RuangLingkup
@@ -2555,15 +2747,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.MessageResponse'
+            $ref: '#/definitions/ikas_internal_dto.MessageResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Hapus ruang lingkup
       tags:
       - RuangLingkup
@@ -2581,11 +2773,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.RuangLingkupResponse'
+            $ref: '#/definitions/ikas_internal_dto.RuangLingkupResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil ruang lingkup berdasarkan ID
       tags:
       - RuangLingkup
@@ -2604,26 +2796,26 @@ paths:
         name: ruangLingkup
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateRuangLingkupRequest'
+          $ref: '#/definitions/ikas_internal_dto.UpdateRuangLingkupRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.RuangLingkupResponse'
+            $ref: '#/definitions/ikas_internal_dto.RuangLingkupResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Update ruang lingkup
       tags:
       - RuangLingkup
@@ -2637,12 +2829,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.SubKategoriResponse'
+              $ref: '#/definitions/ikas_internal_dto.SubKategoriResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua sub kategori
       tags:
       - SubKategori
@@ -2656,22 +2848,22 @@ paths:
         name: subKategori
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateSubKategoriRequest'
+          $ref: '#/definitions/ikas_internal_dto.CreateSubKategoriRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.SubKategoriResponse'
+            $ref: '#/definitions/ikas_internal_dto.SubKategoriResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Tambah sub kategori baru
       tags:
       - SubKategori
@@ -2690,15 +2882,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.SubKategoriMessageResponse'
+            $ref: '#/definitions/ikas_internal_dto.SubKategoriMessageResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Hapus sub kategori
       tags:
       - SubKategori
@@ -2716,11 +2908,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.SubKategoriResponse'
+            $ref: '#/definitions/ikas_internal_dto.SubKategoriResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil sub kategori berdasarkan ID
       tags:
       - SubKategori
@@ -2739,26 +2931,26 @@ paths:
         name: subKategori
         required: true
         schema:
-          $ref: '#/definitions/dto.UpdateSubKategoriRequest'
+          $ref: '#/definitions/ikas_internal_dto.UpdateSubKategoriRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.SubKategoriResponse'
+            $ref: '#/definitions/ikas_internal_dto.SubKategoriResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Update sub kategori
       tags:
       - SubKategori
@@ -2772,12 +2964,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/dto.ProteksiResponse'
+              $ref: '#/definitions/ikas_internal_dto.ProteksiResponse'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: List semua proteksi
       tags:
       - Proteksi
@@ -2796,11 +2988,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.ProteksiResponse'
+            $ref: '#/definitions/ikas_internal_dto.ProteksiResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/dto.ErrorResponse'
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Ambil proteksi berdasarkan ID
       tags:
       - Proteksi

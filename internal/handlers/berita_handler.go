@@ -102,8 +102,7 @@ func (h *BeritaHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	// XSS Sanitization for Deskripsi (Best practice for longtext/HTML)
 	req.Deskripsi = validator.SanitizeHTML(req.Deskripsi)
 
-	resp, err := h.service.Create(authorID, req)
-	if err != nil {
+	if err := h.service.Create(authorID, req); err != nil {
 		logger.Error(err, "failed to create berita")
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -111,8 +110,7 @@ func (h *BeritaHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	utils.RespondJSON(w, http.StatusCreated, utils.JSONResponse{
 		Status:  "success",
-		Message: "Berhasil membuat berita baru",
-		Data:    resp,
+		Message: "Permintaan pembuatan berita telah diterima dan sedang diproses",
 	})
 }
 
@@ -140,16 +138,14 @@ func (h *BeritaHandler) handleUpdate(w http.ResponseWriter, r *http.Request, idS
 		req.Deskripsi = &sanitized
 	}
 
-	resp, err := h.service.Update(id, req)
-	if err != nil {
+	if err := h.service.Update(id, req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	utils.RespondJSON(w, http.StatusOK, utils.JSONResponse{
 		Status:  "success",
-		Message: "Berhasil memperbarui berita",
-		Data:    resp,
+		Message: "Permintaan pembaruan berita telah diterima dan sedang diproses",
 	})
 }
 

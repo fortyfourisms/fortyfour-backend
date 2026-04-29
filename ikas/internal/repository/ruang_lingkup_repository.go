@@ -128,3 +128,18 @@ func (r *RuangLingkupRepository) CheckDuplicateName(nama string, excludeID int) 
 
 	return count > 0, nil
 }
+
+func (r *RuangLingkupRepository) CheckHasPertanyaan(ruangLingkupID int) (bool, error) {
+	var count int
+	query := `
+		SELECT 
+			(SELECT COUNT(*) FROM pertanyaan_proteksi WHERE ruang_lingkup_id = ?) +
+			(SELECT COUNT(*) FROM pertanyaan_deteksi WHERE ruang_lingkup_id = ?)
+	`
+	err := r.db.QueryRow(query, ruangLingkupID, ruangLingkupID).Scan(&count)
+	if err != nil {
+		logger.Error(err, "operation failed")
+		return false, err
+	}
+	return count > 0, nil
+}

@@ -117,11 +117,6 @@ func (s *RuangLingkupService) Create(req dto.CreateRuangLingkupRequest) (*dto.Ru
 		return nil, errors.New("nama_ruang_lingkup sudah ada")
 	}
 
-	newID, err := s.repo.Create(req)
-	if err != nil {
-		return nil, err
-	}
-
 	err = s.producer.PublishRuangLingkupCreated(context.Background(), dto_event.RuangLingkupCreatedEvent{
 		Request:   req,
 		CreatedAt: time.Now(),
@@ -130,7 +125,7 @@ func (s *RuangLingkupService) Create(req dto.CreateRuangLingkupRequest) (*dto.Ru
 		return nil, err
 	}
 
-	return s.repo.GetByID(int(newID))
+	return nil, nil
 }
 
 func (s *RuangLingkupService) GetAll() ([]dto.RuangLingkupResponse, error) {
@@ -176,10 +171,6 @@ func (s *RuangLingkupService) Update(id int, req dto.UpdateRuangLingkupRequest) 
 		}
 	}
 
-	if err := s.repo.Update(id, req); err != nil {
-		return nil, err
-	}
-
 	err = s.producer.PublishRuangLingkupUpdated(context.Background(), dto_event.RuangLingkupUpdatedEvent{
 		ID:        id,
 		Request:   req,
@@ -202,8 +193,12 @@ func (s *RuangLingkupService) Delete(id int) error {
 		return err
 	}
 
-	if err := s.repo.Delete(id); err != nil {
+	hasPertanyaan, err := s.repo.CheckHasPertanyaan(id)
+	if err != nil {
 		return err
+	}
+	if hasPertanyaan {
+		return errors.New("tidak dapat menghapus ruang lingkup karena masih digunakan oleh pertanyaan")
 	}
 
 	err = s.producer.PublishRuangLingkupDeleted(context.Background(), dto_event.RuangLingkupDeletedEvent{

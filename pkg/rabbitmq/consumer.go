@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -119,9 +120,15 @@ func (c *Consumer) runConsume(ctx context.Context, queueName string, handler Mes
 
 			// Process message
 			if err := handler(ctx, msg.Body); err != nil {
-				log.Printf("❌ Error processing message from %s: %v", queueName, err)
-				// Nack message and requeue so it's not lost
-				msg.Nack(false, true)
+				errStr := err.Error()
+				if strings.Contains(errStr, "Error 1451") || strings.Contains(errStr, "foreign key constraint fails") {
+					log.Printf("❌ Dropping poison pill message from %s due to constraint error: %v", queueName, err)
+					msg.Ack(false)
+				} else {
+					log.Printf("❌ Error processing message from %s: %v", queueName, err)
+					// Nack message and requeue so it's not lost
+					msg.Nack(false, true)
+				}
 			} else {
 				// Ack message on success
 				msg.Ack(false)
