@@ -173,7 +173,7 @@ func main() {
 	subSektorService := services.NewSubSektorService(subSektorRepo, redisClient)
 	seService := services.NewSEService(seRepo, redisClient, rmqProducer)
 	seExportService := services.NewSEExportService(seService)
-	seEditReqService := services.NewSEEditRequestService(seEditReqRepo, seRepo, seService)
+	seEditReqService := services.NewSEEditRequestService(seEditReqRepo, seRepo, seService, userRepo, sseService)
 	dashboardService := services.NewDashboardService(dashboardRepo, redisClient)
 	kelasSvc := services.NewKelasService(kelasRepo, materiRepo, progressRepo, kuisRepo, kuisAttemptRepo, sertifikatRepo, fpRepo, redisClient)
 	materiSvc := services.NewMateriService(materiRepo, kelasRepo, progressRepo, redisClient)

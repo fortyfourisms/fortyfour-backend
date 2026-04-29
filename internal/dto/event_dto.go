@@ -21,3 +21,28 @@ type EventResponse struct {
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
 }
+
+type CreateEventRegistrationRequest struct {
+	Nama       string `json:"nama" validate:"required,min=3,max=255"`
+	Email      string `json:"email" validate:"required,email,max=255"`
+	Perusahaan string `json:"perusahaan" validate:"required,min=2,max=255"`
+	Jabatan    string `json:"jabatan" validate:"required,min=2,max=255"`
+	NoHP       string `json:"no_hp" validate:"required,min=8,max=50"`
+	Sektor     string `json:"sektor" validate:"required,min=2,max=255"`
+}
+
+type EventRegistrationResponse struct {
+	ID           int64  `json:"id"`
+	EventID      int64  `json:"event_id"`
+	Nama         string `json:"nama"`
+	Email        string `json:"email"`
+	Perusahaan   string `json:"perusahaan"`
+	Jabatan      string `json:"jabatan"`
+	NoHP         string `json:"no_hp"`
+	Sektor       string `json:"sektor"`
+	QRToken      string `json:"qr_token"`
+	QRPayload    string `json:"qr_payload"`
+	QRCodeBase64 string `json:"qr_code_base64"`
+	DownloadURL  string `json:"download_url"`
+	CreatedAt    string `json:"created_at"`
+}
