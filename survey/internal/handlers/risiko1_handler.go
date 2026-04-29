@@ -12,14 +12,14 @@ import (
 )
 
 type RisikoServiceInterface interface {
-	ProcessEligibility(req dto.EligibilityRequest) (interface{}, error)
-	ProcessAlasan(req dto.AlasanRequest) (interface{}, error)
-	ProcessDampak(req dto.DampakRequest) (interface{}, error)
-	ProcessPengendalian(req dto.PengendalianRequest) (interface{}, error)
-	GetByRespondentID(id int) (interface{}, error)
-	GetProgress(id int) (interface{}, error)
-	Navigate(req dto.NavigateRequest) (interface{}, error)
-	SaveProgress(req dto.NavigateRequest) (interface{}, error)
+	ProcessEligibility(req dto.EligibilityRequest) (map[string]interface{}, error)
+	ProcessAlasan(req dto.AlasanRequest) (map[string]interface{}, error)
+	ProcessDampak(req dto.DampakRequest) (map[string]interface{}, error)
+	ProcessPengendalian(req dto.PengendalianRequest) (map[string]interface{}, error)
+	GetByRespondentID(id int) (map[string]interface{}, error)
+	GetProgress(id int) (dto.ProgressResponse, error)
+	Navigate(req dto.NavigateRequest) (dto.ProgressResponse, error)
+	SaveProgress(req dto.NavigateRequest) (dto.ProgressResponse, error)
 	CreateCustomRisiko(req dto.CustomRisikoRequest) (int, error)
 	FinishSurvey(respondenID int) error
 }

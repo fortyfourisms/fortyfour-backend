@@ -38,7 +38,7 @@ func main() {
 	risikoRepo := repository.NewRisikoRepository(db)
 
 	// SERVICE
-	respondenService := services.NewRespondenService(respondenRepo)
+	respondenService := services.NewRespondenService(respondenRepo, services.DefaultValidator{},)
 	risikoService := services.NewRisikoService(risikoRepo)
 
 	// HANDLER
