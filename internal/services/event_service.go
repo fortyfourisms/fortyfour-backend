@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	mysqlDriver "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 )
 
@@ -175,6 +176,11 @@ func (s *EventService) Register(eventID int64, req dto.CreateEventRegistrationRe
 	reg.QRPayload = rawPayload
 
 	if err := s.repo.CreateRegistration(reg); err != nil {
+		// Handle concurrent duplicate registration (MySQL UNIQUE constraint violation)
+		var mysqlErr *mysqlDriver.MySQLError
+		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			return nil, errors.New("email sudah terdaftar pada event ini")
+		}
 		return nil, err
 	}
 
