@@ -5,6 +5,9 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/testhelpers"
 )
 
 // helper client
@@ -570,6 +573,42 @@ func TestNotifyDelete_DataWrappedWithID(t *testing.T) {
 		}
 	case <-time.After(300 * time.Millisecond):
 		t.Fatal("event tidak diterima")
+	}
+}
+
+func TestNotifyCreateToUsers_TargetedOnly(t *testing.T) {
+	notifRepo := testhelpers.NewMockNotificationRepository()
+	sse := NewSSEService(NewNotificationService(notifRepo))
+
+	adminClient := &Client{ID: "admin-client", UserID: "admin-1", Channel: make(chan SSEEvent, 1)}
+	userClient := &Client{ID: "user-client", UserID: "user-1", Channel: make(chan SSEEvent, 1)}
+	sse.RegisterClient(adminClient)
+	sse.RegisterClient(userClient)
+	time.Sleep(50 * time.Millisecond)
+
+	sse.NotifyCreateToUsers("se_request", map[string]interface{}{"nama_se": "SE A"}, []string{"admin-1"}, models.NotifSEEditRequested, "request baru")
+
+	select {
+	case evt := <-adminClient.Channel:
+		if evt.Resource != "se_request" {
+			t.Fatalf("expected se_request resource, got %s", evt.Resource)
+		}
+	case <-time.After(300 * time.Millisecond):
+		t.Fatal("expected admin client to receive event")
+	}
+
+	select {
+	case evt := <-userClient.Channel:
+		t.Fatalf("non-targeted user should not receive event, got %+v", evt)
+	default:
+	}
+
+	notifs, err := notifRepo.FindAllByUserID("admin-1")
+	if err != nil {
+		t.Fatalf("failed reading notifications: %v", err)
+	}
+	if len(notifs) != 1 {
+		t.Fatalf("expected 1 persisted notification, got %d", len(notifs))
 	}
 }
 

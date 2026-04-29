@@ -222,6 +222,41 @@ func TestSEEditRequestHandler_HandleRequestEditSuccess(t *testing.T) {
 	svc.AssertExpectations(t)
 }
 
+func TestSEEditRequestHandler_HandleRequestEditSuccess_WithCatatanUserAlias(t *testing.T) {
+	svc := new(mockSEEditRequestService)
+	h := NewSEEditRequestHandler(svc)
+
+	namaSE := "SE Baru"
+	catatan := "tolong update"
+	reqDTO := dto.CreateSEEditRequestDTO{
+		CatatanUser: &catatan,
+		DataPerubahan: dto.UpdateSERequest{
+			NamaSE: &namaSE,
+		},
+	}
+
+	svc.On("CreateRequest", "user-1", "se-1", reqDTO).Return(&dto.SEEditRequestResponse{
+		ID:     "req-1",
+		IDSE:   "se-1",
+		IDUser: "user-1",
+		Status: models.SEEditRequestPending,
+	}, nil)
+
+	body := []byte(`{"catatan_user":"tolong update","data_perubahan":{"nama_se":"SE Baru"}}`)
+	req := httptest.NewRequest(http.MethodPost, "/api/se/se-1/request-edit", bytes.NewReader(body))
+	req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
+	req = withRoleAndUser(req, "user", "user-1")
+	w := httptest.NewRecorder()
+
+	h.HandleRequestEdit(w, req, "se-1")
+
+	assert.Equal(t, http.StatusCreated, w.Code)
+	var resp dto.SEEditRequestResponse
+	_ = json.NewDecoder(w.Body).Decode(&resp)
+	assert.Equal(t, "req-1", resp.ID)
+	svc.AssertExpectations(t)
+}
+
 func TestSEEditRequestHandler_HandleRequestEditUnauthorized(t *testing.T) {
 	h := NewSEEditRequestHandler(new(mockSEEditRequestService))
 

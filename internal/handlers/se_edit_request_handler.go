@@ -44,6 +44,7 @@ func (h *SEEditRequestHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 // @Produce		json
 // @Security		BearerAuth
 // @Success		200	{array}		dto.SEEditRequestResponse
+// @Failure		401	{object}	dto.ErrorResponse
 // @Failure		500	{object}	dto.ErrorResponse
 // @Router			/api/se/edit-requests [get]
 func (h *SEEditRequestHandler) handleList(w http.ResponseWriter, r *http.Request) {
@@ -83,8 +84,10 @@ func (h *SEEditRequestHandler) handleList(w http.ResponseWriter, r *http.Request
 // @Param			id		path		string						true	"ID Edit Request"
 // @Param			request	body		dto.ReviewSEEditRequestDTO	true	"Status dan catatan admin"
 // @Success		200		{object}	dto.SEEditRequestResponse
+// @Failure		401		{object}	dto.ErrorResponse
 // @Failure		400		{object}	dto.ErrorResponse
 // @Failure		403		{object}	dto.ErrorResponse
+// @Failure		500		{object}	dto.ErrorResponse
 // @Router			/api/se/edit-requests/{id}/review [put]
 func (h *SEEditRequestHandler) handleReview(w http.ResponseWriter, r *http.Request, id string) {
 	role := middleware.GetRole(r.Context())
@@ -119,7 +122,9 @@ func (h *SEEditRequestHandler) handleReview(w http.ResponseWriter, r *http.Reque
 //	@Param			id		path		string						true	"ID SE"
 //	@Param			request	body		dto.CreateSEEditRequestDTO	true	"Data perubahan dan alasan"
 //	@Success		201		{object}	dto.SEEditRequestResponse
+//	@Failure		401		{object}	dto.ErrorResponse
 //	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		500		{object}	dto.ErrorResponse
 //	@Router			/api/se/{id}/request-edit [post]
 func (h *SEEditRequestHandler) HandleRequestEdit(w http.ResponseWriter, r *http.Request, idSE string) {
 	userID := middleware.GetUserID(r.Context())
