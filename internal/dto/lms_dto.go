@@ -157,6 +157,13 @@ type KuisResponse struct {
 	CreatedAt    string  `json:"created_at"`
 	UpdatedAt    string  `json:"updated_at"`
 
+	// Progress user per kuis (diisi saat GET /api/kelas/{id}/kuis jika user login)
+	IsPassed      bool     `json:"is_passed"`
+	LatestScore   *float64 `json:"latest_score"`
+	AttemptCount  int      `json:"attempt_count"`
+	PassedAt      *string  `json:"passed_at"`
+	LastAttemptID *string  `json:"last_attempt_id"`
+
 	// Nested — hanya admin GET detail
 	Soal []SoalResponse `json:"soal,omitempty"`
 }
