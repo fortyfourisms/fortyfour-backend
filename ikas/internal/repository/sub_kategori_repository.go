@@ -145,3 +145,20 @@ func (r *SubKategoriRepository) CheckKategoriExists(kategoriID int) (bool, error
 
 	return count > 0, nil
 }
+
+func (r *SubKategoriRepository) CheckHasPertanyaan(subKategoriID int) (bool, error) {
+	var count int
+	query := `
+		SELECT 
+			(SELECT COUNT(*) FROM pertanyaan_identifikasi WHERE sub_kategori_id = ?) +
+			(SELECT COUNT(*) FROM pertanyaan_proteksi WHERE sub_kategori_id = ?) +
+			(SELECT COUNT(*) FROM pertanyaan_deteksi WHERE sub_kategori_id = ?) +
+			(SELECT COUNT(*) FROM pertanyaan_gulih WHERE sub_kategori_id = ?)
+	`
+	err := r.db.QueryRow(query, subKategoriID, subKategoriID, subKategoriID, subKategoriID).Scan(&count)
+	if err != nil {
+		logger.Error(err, "operation failed")
+		return false, err
+	}
+	return count > 0, nil
+}

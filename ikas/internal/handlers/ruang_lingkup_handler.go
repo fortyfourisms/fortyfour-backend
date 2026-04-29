@@ -69,10 +69,11 @@ func (h *RuangLingkupHandler) handleGetAll(w http.ResponseWriter, _ *http.Reques
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
+	utils.RespondJSON(w, 200, utils.JSONResponse{
+		Status:  "success",
+		Message: "Berhasil mengambil data ruang lingkup",
+		Data:    data,
+		Total:   len(data),
 	})
 }
 
@@ -97,9 +98,10 @@ func (h *RuangLingkupHandler) handleGetByID(w http.ResponseWriter, _ *http.Reque
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
+	utils.RespondJSON(w, 200, utils.JSONResponse{
+		Status:  "success",
+		Message: "Berhasil mengambil data ruang lingkup",
+		Data:    data,
 	})
 }
 
@@ -140,8 +142,9 @@ func (h *RuangLingkupHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	utils.RespondJSON(w, 201, dto.RuangLingkupMessageResponse{
-		Message: "Berhasil menyimpan data",
+	utils.RespondJSON(w, 201, utils.JSONResponse{
+		Status:  "success",
+		Message: "Permintaan pembuatan ruang lingkup telah diterima dan sedang diproses",
 	})
 }
 
@@ -186,9 +189,9 @@ func (h *RuangLingkupHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	utils.RespondJSON(w, 200, dto.RuangLingkupMessageResponse{
-		ID:      id,
-		Message: "Berhasil memperbarui data",
+	utils.RespondJSON(w, 200, utils.JSONResponse{
+		Status:  "success",
+		Message: "Permintaan pembaruan ruang lingkup telah diterima dan sedang diproses",
 	})
 }
 
@@ -208,13 +211,15 @@ func (h *RuangLingkupHandler) handleDelete(w http.ResponseWriter, r *http.Reques
 		logger.Error(err, "operation failed")
 		if err.Error() == "data tidak ditemukan" {
 			utils.RespondError(w, 404, err.Error())
+		} else if err.Error() == "tidak dapat menghapus ruang lingkup karena masih digunakan oleh pertanyaan" {
+			utils.RespondError(w, 409, err.Error())
 		} else {
 			utils.RespondError(w, 500, err.Error())
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, dto.RuangLingkupMessageResponse{
-		ID:      id,
-		Message: "Berhasil menghapus data",
+	utils.RespondJSON(w, 200, utils.JSONResponse{
+		Status:  "success",
+		Message: "Permintaan penghapusan ruang lingkup telah diterima dan sedang diproses",
 	})
 }

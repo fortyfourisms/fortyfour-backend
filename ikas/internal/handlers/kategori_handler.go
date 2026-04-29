@@ -70,10 +70,11 @@ func (h *KategoriHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
+	utils.RespondJSON(w, 200, utils.JSONResponse{
+		Status:  "success",
+		Message: "Berhasil mengambil data kategori",
+		Data:    data,
+		Total:   len(data),
 	})
 }
 
@@ -98,9 +99,10 @@ func (h *KategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, 
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
+	utils.RespondJSON(w, 200, utils.JSONResponse{
+		Status:  "success",
+		Message: "Berhasil mengambil data kategori",
+		Data:    data,
 	})
 }
 
@@ -147,8 +149,9 @@ func (h *KategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 201, dto.KategoriMessageResponse{
-		Message: "Berhasil menyimpan data",
+	utils.RespondJSON(w, 201, utils.JSONResponse{
+		Status:  "success",
+		Message: "Permintaan pembuatan kategori telah diterima dan sedang diproses",
 	})
 }
 
@@ -199,9 +202,9 @@ func (h *KategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 
-	utils.RespondJSON(w, 200, dto.KategoriMessageResponse{
-		ID:      id,
-		Message: "Berhasil memperbarui data",
+	utils.RespondJSON(w, 200, utils.JSONResponse{
+		Status:  "success",
+		Message: "Permintaan pembaruan kategori telah diterima dan sedang diproses",
 	})
 }
 
@@ -221,14 +224,16 @@ func (h *KategoriHandler) handleDelete(w http.ResponseWriter, r *http.Request, i
 		logger.Error(err, "operation failed")
 		if err.Error() == "data tidak ditemukan" {
 			utils.RespondError(w, 404, err.Error())
+		} else if err.Error() == "tidak dapat menghapus kategori karena masih memiliki sub kategori" {
+			utils.RespondError(w, 409, err.Error())
 		} else {
 			utils.RespondError(w, 500, err.Error())
 		}
 		return
 	}
 
-	utils.RespondJSON(w, 200, dto.KategoriMessageResponse{
-		ID:      id,
-		Message: "Berhasil menghapus data",
+	utils.RespondJSON(w, 200, utils.JSONResponse{
+		Status:  "success",
+		Message: "Permintaan penghapusan kategori telah diterima dan sedang diproses",
 	})
 }

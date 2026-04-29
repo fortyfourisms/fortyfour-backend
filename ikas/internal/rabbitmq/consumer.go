@@ -933,6 +933,18 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumePertanyaanGulihUpdated,
 		c.ConsumePertanyaanGulihDeleted,
 		c.ConsumeIkasAuditLog,
+		c.ConsumeDomainCreated,
+		c.ConsumeDomainUpdated,
+		c.ConsumeDomainDeleted,
+		c.ConsumeKategoriCreated,
+		c.ConsumeKategoriUpdated,
+		c.ConsumeKategoriDeleted,
+		c.ConsumeSubKategoriCreated,
+		c.ConsumeSubKategoriUpdated,
+		c.ConsumeSubKategoriDeleted,
+		c.ConsumeRuangLingkupCreated,
+		c.ConsumeRuangLingkupUpdated,
+		c.ConsumeRuangLingkupDeleted,
 	}
 
 	for _, consumer := range consumers {

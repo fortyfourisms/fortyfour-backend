@@ -51,7 +51,7 @@ func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 
 	ikasID := r.URL.Query().Get("ikas_id")
 
-	if userRole != "admin" && (userPerusahaanID == "" || userPerusahaanID == "null") {
+	if userRole != "admin" && userRole != "staff" && (userPerusahaanID == "" || userPerusahaanID == "null") {
 		utils.RespondJSON(w, 200, map[string]interface{}{
 			"message": "Berhasil mengambil data",
 			"data":    []interface{}{},
@@ -66,7 +66,7 @@ func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 	if ikasID != "" {
 		data, err = h.service.GetByIkasID(ikasID, userRole, userPerusahaanID)
 	} else {
-		if userRole != "admin" {
+		if userRole != "admin" && userRole != "staff" {
 			data, err = h.service.GetByPerusahaanID(userPerusahaanID, userRole, userPerusahaanID)
 		} else {
 			data, err = h.service.GetAll(userRole)

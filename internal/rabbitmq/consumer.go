@@ -9,6 +9,7 @@ import (
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/rabbitmq"
+	"time"
 )
 
 // SSEBroadcaster defines the interface for SSE notifications to avoid import cycles
@@ -28,15 +29,19 @@ type Consumer struct {
 	sseService   SSEBroadcaster
 	userRepo     repository.UserRepositoryInterface
 	notifService NotificationPusher
+	eventRepo    repository.EventRepositoryInterface
+	beritaRepo   repository.BeritaRepositoryInterface
 }
 
 // NewConsumer
-func NewConsumer(c *rabbitmq.Consumer, sseService SSEBroadcaster, userRepo repository.UserRepositoryInterface, notifService NotificationPusher) *Consumer {
+func NewConsumer(c *rabbitmq.Consumer, sseService SSEBroadcaster, userRepo repository.UserRepositoryInterface, notifService NotificationPusher, eventRepo repository.EventRepositoryInterface, beritaRepo repository.BeritaRepositoryInterface) *Consumer {
 	return &Consumer{
 		Consumer:     c,
 		sseService:   sseService,
 		userRepo:     userRepo,
 		notifService: notifService,
+		eventRepo:    eventRepo,
+		beritaRepo:   beritaRepo,
 	}
 }
 
@@ -348,6 +353,12 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeSeCreated,
 		c.ConsumeSeUpdated,
 		c.ConsumeSeDeleted,
+		c.ConsumeEventCreated,
+		c.ConsumeEventUpdated,
+		c.ConsumeEventDeleted,
+		c.ConsumeBeritaCreated,
+		c.ConsumeBeritaUpdated,
+		c.ConsumeBeritaDeleted,
 	}
 
 	for _, consumer := range consumers {
@@ -526,6 +537,169 @@ func (c *Consumer) ConsumeSeDeleted(ctx context.Context) error {
 			return err
 		}
 		c.sseService.NotifyDelete("se", event.ID, "system")
+		return nil
+	})
+}
+
+// Event
+func (c *Consumer) ConsumeEventCreated(ctx context.Context) error {
+	return c.Consume(ctx, "event.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.EventCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		t, _ := time.Parse(time.RFC3339, event.Request.Tanggal)
+		model := &models.Event{
+			Judul:     event.Request.Judul,
+			Deskripsi: event.Request.Deskripsi,
+			Lokasi:    event.Request.Lokasi,
+			Tanggal:   t,
+		}
+
+		if err := c.eventRepo.Create(model); err != nil {
+			log.Printf("Error creating event from RabbitMQ: %v", err)
+			return err
+		}
+
+		if c.sseService != nil {
+			c.sseService.NotifyCreate("event", model, "system")
+		}
+
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeEventUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "event.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.EventUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		existing, err := c.eventRepo.FindByID(event.ID)
+		if err != nil || existing == nil {
+			return err
+		}
+
+		if event.Request.Judul != nil {
+			existing.Judul = *event.Request.Judul
+		}
+		if event.Request.Deskripsi != nil {
+			existing.Deskripsi = *event.Request.Deskripsi
+		}
+		if event.Request.Lokasi != nil {
+			existing.Lokasi = *event.Request.Lokasi
+		}
+		if event.Request.Tanggal != nil {
+			t, _ := time.Parse(time.RFC3339, *event.Request.Tanggal)
+			existing.Tanggal = t
+		}
+
+		if err := c.eventRepo.Update(existing); err != nil {
+			return err
+		}
+
+		if c.sseService != nil {
+			c.sseService.NotifyUpdate("event", existing, "system")
+		}
+
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeEventDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "event.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.EventDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		if err := c.eventRepo.Delete(event.ID); err != nil {
+			return err
+		}
+
+		if c.sseService != nil {
+			c.sseService.NotifyDelete("event", event.ID, "system")
+		}
+
+		return nil
+	})
+}
+
+// Berita
+func (c *Consumer) ConsumeBeritaCreated(ctx context.Context) error {
+	return c.Consume(ctx, "berita.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.BeritaCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		model := &models.Berita{
+			Judul:     event.Request.Judul,
+			Deskripsi: event.Request.Deskripsi,
+			AuthorID:  event.AuthorID,
+		}
+
+		if err := c.beritaRepo.Create(model); err != nil {
+			log.Printf("Error creating berita from RabbitMQ: %v", err)
+			return err
+		}
+
+		if c.sseService != nil {
+			c.sseService.NotifyCreate("berita", model, "system")
+		}
+
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeBeritaUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "berita.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.BeritaUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		existing, err := c.beritaRepo.FindByID(event.ID)
+		if err != nil || existing == nil {
+			return err
+		}
+
+		if event.Request.Judul != nil {
+			existing.Judul = *event.Request.Judul
+		}
+		if event.Request.Deskripsi != nil {
+			existing.Deskripsi = *event.Request.Deskripsi
+		}
+
+		if err := c.beritaRepo.Update(existing); err != nil {
+			return err
+		}
+
+		if c.sseService != nil {
+			c.sseService.NotifyUpdate("berita", existing, "system")
+		}
+
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeBeritaDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "berita.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.BeritaDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		if err := c.beritaRepo.Delete(event.ID); err != nil {
+			return err
+		}
+
+		if c.sseService != nil {
+			c.sseService.NotifyDelete("berita", event.ID, "system")
+		}
+
 		return nil
 	})
 }

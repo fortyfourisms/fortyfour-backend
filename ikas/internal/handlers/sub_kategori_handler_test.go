@@ -60,6 +60,11 @@ func (m *mockSubKategoriRepository) CheckKategoriExists(kategoriID int) (bool, e
 	return args.Get(0).(bool), args.Error(1)
 }
 
+func (m *mockSubKategoriRepository) CheckHasPertanyaan(subKategoriID int) (bool, error) {
+	args := m.Called(subKategoriID)
+	return args.Get(0).(bool), args.Error(1)
+}
+
 // mockSubKategoriProducer implements services.SubKategoriProducerInterface
 type mockSubKategoriProducer struct {
 	mock.Mock
@@ -105,7 +110,7 @@ func TestSubKategoriHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var response map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &response)
-	assert.Equal(t, "Berhasil mengambil data", response["message"])
+	assert.Equal(t, "Berhasil mengambil data sub kategori", response["message"])
 }
 
 func TestSubKategoriHandler_ServeHTTP_GetAll_Error(t *testing.T) {
@@ -392,6 +397,7 @@ func TestSubKategoriHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	handler := setupSubKategoriHandler(repo, producer)
 
 	repo.On("GetByID", 1).Return(&dto.SubKategoriResponse{ID: 1}, nil)
+	repo.On("CheckHasPertanyaan", 1).Return(false, nil)
 	repo.On("Delete", 1).Return(nil)
 	producer.On("PublishSubKategoriDeleted", mock.Anything, mock.MatchedBy(func(e dto_event.SubKategoriDeletedEvent) bool {
 		return e.ID == 1

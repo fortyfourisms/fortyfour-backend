@@ -22,11 +22,12 @@ import (
 
 // AuthHandler handles authentication-related HTTP endpoints.
 type AuthHandler struct {
-	authService       *services.AuthService
-	tokenService      *services.TokenService
-	perusahaanService services.PerusahaanServiceInterface
-	userService       *services.UserService
-	uploadPath        string
+	authService        *services.AuthService
+	tokenService       *services.TokenService
+	perusahaanService  services.PerusahaanServiceInterface
+	userService        *services.UserService
+	turnstileValidator *utils.TurnstileValidator
+	uploadPath         string
 }
 
 func NewAuthHandler(
@@ -34,14 +35,16 @@ func NewAuthHandler(
 	tokenService *services.TokenService,
 	perusahaanService services.PerusahaanServiceInterface,
 	userService *services.UserService,
+	turnstileValidator *utils.TurnstileValidator,
 	uploadPath string,
 ) *AuthHandler {
 	return &AuthHandler{
-		authService:       authService,
-		tokenService:      tokenService,
-		perusahaanService: perusahaanService,
-		userService:       userService,
-		uploadPath:        uploadPath,
+		authService:        authService,
+		tokenService:       tokenService,
+		perusahaanService:  perusahaanService,
+		userService:        userService,
+		turnstileValidator: turnstileValidator,
+		uploadPath:         uploadPath,
 	}
 }
 
@@ -108,11 +111,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 //	@Summary		Login user
-//	@Description	Autentikasi user. Token dikirim via HTTP-only cookies, BUKAN di response body.
+//	@Description	Autentikasi user dengan dukungan Cloudflare Turnstile. Token dikirim via HTTP-only cookies, BUKAN di response body.
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
-//	@Param			request	body		dto.LoginRequest		true	"Login credentials"
+//	@Param			request	body		dto.LoginRequest		true	"Login credentials (termasuk cf-turnstile-response)"
 //	@Success		200		{object}	map[string]interface{}	"message dan user info (tanpa token)"
 //	@Failure		400		{object}	dto.ErrorResponse
 //	@Failure		401		{object}	dto.ErrorResponse
@@ -137,7 +140,31 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validasi Turnstile
+	if h.turnstileValidator != nil {
+		remoteIP := r.Header.Get("X-Forwarded-For")
+		if remoteIP == "" {
+			remoteIP = r.RemoteAddr
+		}
+		// Clean up remoteIP if it contains port
+		if strings.Contains(remoteIP, ":") {
+			remoteIP = strings.Split(remoteIP, ":")[0]
+		}
+
+		turnstileResp, err := h.turnstileValidator.Validate(req.TurnstileToken, remoteIP)
+		if err != nil {
+			utils.RespondError(w, http.StatusInternalServerError, "Gagal memvalidasi Turnstile")
+			return
+		}
+
+		if !turnstileResp.Success {
+			utils.RespondError(w, http.StatusBadRequest, "Verifikasi Turnstile gagal: "+strings.Join(turnstileResp.ErrorCodes, ", "))
+			return
+		}
+	}
+
 	user, tokens, err := h.authService.Login(req.Identifier, req.Password)
+
 	if err != nil {
 		utils.RespondError(w, http.StatusUnauthorized, err.Error())
 		return
