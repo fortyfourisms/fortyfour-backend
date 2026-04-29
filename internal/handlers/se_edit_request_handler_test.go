@@ -74,7 +74,7 @@ func TestSEEditRequestHandler_ListAsAdminOrStaff(t *testing.T) {
 			svc.On("GetPending").Return(expected, nil)
 
 			req := httptest.NewRequest(http.MethodGet, "/api/se/edit-requests", nil)
-	req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
+			req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
 			req = withRoleAndUser(req, role, "")
 			w := httptest.NewRecorder()
 
@@ -145,7 +145,7 @@ func TestSEEditRequestHandler_ReviewSuccess(t *testing.T) {
 
 			body := []byte(`{"status":"approved","catatan":"ok"}`)
 			req := httptest.NewRequest(http.MethodPut, "/api/se/edit-requests/req-1/review", bytes.NewReader(body))
-	req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
+			req = req.WithContext(context.WithValue(req.Context(), middleware.RoleKey, "admin"))
 			req = withRoleAndUser(req, role, "")
 			w := httptest.NewRecorder()
 

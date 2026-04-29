@@ -17,15 +17,15 @@ import (
 
 // MockEventRepository implements repository.EventRepositoryInterface for tests
 type MockEventRepository struct {
-	CreateFunc                      func(event *models.Event) error
-	FindAllFunc                     func() ([]models.Event, error)
-	FindByIDFunc                    func(id int64) (*models.Event, error)
-	UpdateFunc                      func(event *models.Event) error
-	DeleteFunc                      func(id int64) error
-	CreateRegistrationFunc          func(reg *models.EventRegistration) error
-	FindRegistrationByIDFunc        func(id int64) (*models.EventRegistration, error)
-	ExistsRegistrationFunc          func(eventID int64, email string) (bool, error)
-	UpdateRegistrationPayloadFunc   func(id int64, payload string) error
+	CreateFunc                    func(event *models.Event) error
+	FindAllFunc                   func() ([]models.Event, error)
+	FindByIDFunc                  func(id int64) (*models.Event, error)
+	UpdateFunc                    func(event *models.Event) error
+	DeleteFunc                    func(id int64) error
+	CreateRegistrationFunc        func(reg *models.EventRegistration) error
+	FindRegistrationByIDFunc      func(id int64) (*models.EventRegistration, error)
+	ExistsRegistrationFunc        func(eventID int64, email string) (bool, error)
+	UpdateRegistrationPayloadFunc func(id int64, payload string) error
 
 	// Helper fields for assertions
 	updatedPayload string

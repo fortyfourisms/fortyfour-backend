@@ -13,11 +13,11 @@ import (
 
 // MockEventService implements services.EventServiceInterface for tests
 type MockEventService struct {
-	CreateFunc  func(req dto.CreateEventRequest) error
-	GetAllFunc  func() ([]dto.EventResponse, error)
-	GetByIDFunc func(id int64) (*dto.EventResponse, error)
-	UpdateFunc  func(id int64, req dto.UpdateEventRequest) error
-	DeleteFunc  func(id int64) error
+	CreateFunc   func(req dto.CreateEventRequest) error
+	GetAllFunc   func() ([]dto.EventResponse, error)
+	GetByIDFunc  func(id int64) (*dto.EventResponse, error)
+	UpdateFunc   func(id int64, req dto.UpdateEventRequest) error
+	DeleteFunc   func(id int64) error
 	RegisterFunc func(eventID int64, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error)
 	PDFFunc      func(registrationID int64) ([]byte, string, error)
 }
