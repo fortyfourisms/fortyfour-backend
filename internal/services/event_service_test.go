@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	mysqlDriver "github.com/go-sql-driver/mysql"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -443,6 +444,41 @@ func TestEventService_Register_DuplicateEmail(t *testing.T) {
 		},
 		ExistsRegistrationFunc: func(eventID int64, email string) (bool, error) {
 			return true, nil
+		},
+	}
+	svc := services.NewEventService(repo, nil)
+
+	resp, err := svc.Register(9, dto.CreateEventRegistrationRequest{
+		Nama:       "Budi Santoso",
+		Email:      "budi@example.com",
+		Perusahaan: "PT ABC",
+		Jabatan:    "IT Manager",
+		NoHP:       "08123456789",
+		Sektor:     "Energi",
+	})
+
+	require.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Equal(t, "email sudah terdaftar pada event ini", err.Error())
+}
+
+func TestEventService_Register_ConcurrentDuplicate(t *testing.T) {
+	// Simulates two concurrent requests: both pass ExistsRegistration check (returns false),
+	// but the second insert fails with MySQL duplicate key error (1062).
+	repo := &MockEventRepository{
+		FindByIDFunc: func(id int64) (*models.Event, error) {
+			return &models.Event{
+				ID:      9,
+				Judul:   "Cyber Drill 2026",
+				Tanggal: time.Now().Add(24 * time.Hour),
+			}, nil
+		},
+		ExistsRegistrationFunc: func(eventID int64, email string) (bool, error) {
+			return false, nil // both concurrent requests pass this check
+		},
+		CreateRegistrationFunc: func(reg *models.EventRegistration) error {
+			// Simulate MySQL duplicate entry error (UNIQUE constraint violation)
+			return &mysqlDriver.MySQLError{Number: 1062, Message: "Duplicate entry '9-budi@example.com' for key 'uq_event_registration_email'"}
 		},
 	}
 	svc := services.NewEventService(repo, nil)
