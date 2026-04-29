@@ -10,6 +10,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+var sqlOpen = sql.Open
 type Config struct {
 	Port            string
 	JWTSecret       string
@@ -84,7 +85,7 @@ func InitDB(cfg *Config) (*sql.DB, error) {
 
 	dsn := cfg.Database.GetDSN()
 
-	db, err := sql.Open("mysql", dsn)
+	db, err := sqlOpen("mysql", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("sql.Open error: %w", err)
 	}

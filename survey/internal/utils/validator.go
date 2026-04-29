@@ -6,9 +6,7 @@ import (
 	"survey/internal/dto"
 )
 
-// =======================
 // CREATE VALIDATION
-// =======================
 func ValidateCreateResponden(req dto.CreateRespondenRequest) error {
 
 	// normalize input
@@ -62,9 +60,7 @@ func ValidateCreateResponden(req dto.CreateRespondenRequest) error {
 	return nil
 }
 
-// =======================
 // UPDATE VALIDATION
-// =======================
 func ValidateUpdateResponden(req dto.UpdateRespondenRequest) error {
 	return ValidateCreateResponden(dto.CreateRespondenRequest{
 		UserID:             req.UserID,
@@ -75,9 +71,7 @@ func ValidateUpdateResponden(req dto.UpdateRespondenRequest) error {
 	})
 }
 
-// =======================
 // HELPER FUNCTIONS
-// =======================
 
 // Validasi nomor telepon (hanya angka + optional '+' di depan)
 func isPhone(phone string) bool {

@@ -7,15 +7,21 @@ import (
 	"strings"
 
 	"survey/internal/dto"
-	"survey/internal/services"
 	"survey/internal/utils"
 )
 
-type RespondenHandler struct {
-	service *services.RespondenService
+type RespondenServiceInterface interface {
+	GetAll() ([]dto.RespondenResponse, error)
+	GetByID(id int) (*dto.RespondenResponse, error)
+	Create(req dto.CreateRespondenRequest) (*dto.RespondenResponse, error)
+	Update(id int, req dto.UpdateRespondenRequest) (*dto.RespondenResponse, error)
 }
 
-func NewRespondenHandler(service *services.RespondenService) *RespondenHandler {
+type RespondenHandler struct {
+	service RespondenServiceInterface
+}
+
+func NewRespondenHandler(service RespondenServiceInterface) *RespondenHandler {
 	return &RespondenHandler{service: service}
 }
 

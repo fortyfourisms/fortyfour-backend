@@ -7,25 +7,39 @@ import (
 
 	"survey/internal/dto"
 	"survey/internal/models"
-	"survey/internal/repository"
-	"survey/internal/utils"
 )
 
+type RespondenRepositoryInterface interface {
+	Create(m models.Responden) error
+	GetDetailByUserID(userID string) (*models.RespondenDetail, error)
+	GetAllDetail() ([]models.RespondenDetail, error)
+	GetDetailByID(id int) (*models.RespondenDetail, error)
+	GetByID(id int) (*models.Responden, error)
+	Update(id int, m models.Responden) error
+}
+
+type Validator interface {
+	ValidateCreate(dto.CreateRespondenRequest) error
+	ValidateUpdate(dto.UpdateRespondenRequest) error
+}
+
 type RespondenService struct {
-	repo *repository.RespondenRepository
+	repo      RespondenRepositoryInterface
+	validator Validator
 }
 
-func NewRespondenService(repo *repository.RespondenRepository) *RespondenService {
-	return &RespondenService{repo: repo}
+// constructor
+func NewRespondenService(repo RespondenRepositoryInterface, v Validator) *RespondenService {
+	return &RespondenService{
+		repo:      repo,
+		validator: v,
+	}
 }
 
-// =======================
 // CREATE
-// =======================
 func (s *RespondenService) Create(req dto.CreateRespondenRequest) (*dto.RespondenResponse, error) {
 
-	// pakai validator terpusat
-	if err := utils.ValidateCreateResponden(req); err != nil {
+	if err := s.validator.ValidateCreate(req); err != nil {
 		return nil, err
 	}
 
@@ -50,9 +64,7 @@ func (s *RespondenService) Create(req dto.CreateRespondenRequest) (*dto.Responde
 	return &resp, nil
 }
 
-// =======================
 // GET ALL
-// =======================
 func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
 
 	data, err := s.repo.GetAllDetail()
@@ -68,9 +80,7 @@ func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
 	return result, nil
 }
 
-// =======================
 // GET BY ID
-// =======================
 func (s *RespondenService) GetByID(id int) (*dto.RespondenResponse, error) {
 
 	if id <= 0 {
@@ -79,30 +89,26 @@ func (s *RespondenService) GetByID(id int) (*dto.RespondenResponse, error) {
 
 	data, err := s.repo.GetDetailByID(id)
 	if err != nil {
-		return nil, err // repo sudah handle "data tidak ditemukan"
+		return nil, err
 	}
 
 	resp := s.toResponse(data)
 	return &resp, nil
 }
 
-// =======================
 // UPDATE
-// =======================
 func (s *RespondenService) Update(id int, req dto.UpdateRespondenRequest) (*dto.RespondenResponse, error) {
 
 	if id <= 0 {
 		return nil, errors.New("id tidak valid")
 	}
 
-	// cek exist
 	_, err := s.repo.GetByID(id)
 	if err != nil {
 		return nil, err
 	}
 
-	// validasi
-	if err := utils.ValidateUpdateResponden(req); err != nil {
+	if err := s.validator.ValidateUpdate(req); err != nil {
 		return nil, err
 	}
 
@@ -126,10 +132,7 @@ func (s *RespondenService) Update(id int, req dto.UpdateRespondenRequest) (*dto.
 	return &resp, nil
 }
 
-// =======================
 // HELPER
-// =======================
-
 func toStringPtr(s string) *string {
 	if s == "" {
 		return nil
@@ -144,9 +147,7 @@ func safeString(s *string) string {
 	return *s
 }
 
-// =======================
-// MAPPING RESPONSE
-// =======================
+// RESPONSE MAPPING
 func (s *RespondenService) toResponse(m *models.RespondenDetail) dto.RespondenResponse {
 
 	return dto.RespondenResponse{

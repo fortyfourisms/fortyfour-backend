@@ -5,17 +5,30 @@ import (
 	"errors"
 	"survey/internal/dto"
 	"survey/internal/models"
-	"survey/internal/repository"
 	"survey/validator"
 )
+
+type RisikoRepositoryInterface interface {
+	ExistsResponden(int) (bool, error)
+	ExistsRisiko(int) (bool, error)
+	ExistsCustomRisiko(int) (bool, error)
+	UpsertEligibility(models.RisikoEligibility) error
+	UpsertAlasan(models.RisikoAlasan) error
+	UpsertDampak(models.RisikoDampak) error
+	UpsertPengendalian(models.RisikoPengendalian) error
+	FindByRespondentID(int) (map[string]interface{}, error)
+	GetProgress(int) (*models.SurveyProgress, error)
+	UpsertProgress(models.SurveyProgress) error
+	InsertCustomRisiko(int, string) (int, error)
+}
 
 const CustomRiskIndex = 14
 
 type RisikoService struct {
-	repo *repository.RisikoRepository
+	repo RisikoRepositoryInterface
 }
 
-func NewRisikoService(repo *repository.RisikoRepository) *RisikoService {
+func NewRisikoService(repo RisikoRepositoryInterface) *RisikoService {
 	return &RisikoService{repo: repo}
 }
 

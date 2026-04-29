@@ -9,14 +9,26 @@ import (
 
 	"survey/internal/dto"
 	"survey/internal/repository"
-	"survey/internal/services"
 )
 
-type RisikoHandler struct {
-	svc *services.RisikoService
+type RisikoServiceInterface interface {
+	ProcessEligibility(req dto.EligibilityRequest) (interface{}, error)
+	ProcessAlasan(req dto.AlasanRequest) (interface{}, error)
+	ProcessDampak(req dto.DampakRequest) (interface{}, error)
+	ProcessPengendalian(req dto.PengendalianRequest) (interface{}, error)
+	GetByRespondentID(id int) (interface{}, error)
+	GetProgress(id int) (interface{}, error)
+	Navigate(req dto.NavigateRequest) (interface{}, error)
+	SaveProgress(req dto.NavigateRequest) (interface{}, error)
+	CreateCustomRisiko(req dto.CustomRisikoRequest) (int, error)
+	FinishSurvey(respondenID int) error
 }
 
-func NewRisikoHandler(svc *services.RisikoService) *RisikoHandler {
+type RisikoHandler struct {
+	svc RisikoServiceInterface
+}
+
+func NewRisikoHandler(svc RisikoServiceInterface) *RisikoHandler {
 	return &RisikoHandler{svc: svc}
 }
 
