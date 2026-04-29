@@ -104,7 +104,7 @@ func (h *PerusahaanHandler) handleGetAll(w http.ResponseWriter, r *http.Request)
 	role := middleware.GetRole(r.Context())
 
 	// Non-admin: hanya bisa lihat data perusahaannya sendiri
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if idPerusahaan == "" {
 			utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
@@ -164,7 +164,7 @@ func (h *PerusahaanHandler) handleGetDropdown(w http.ResponseWriter, _ *http.Req
 //	@Router			/api/perusahaan/{id} [get]
 func (h *PerusahaanHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if id != idPerusahaan {
 			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
@@ -244,7 +244,7 @@ func (h *PerusahaanHandler) handleCreate(w http.ResponseWriter, r *http.Request)
 func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	// Ownership check untuk non-admin
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if id != idPerusahaan {
 			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
@@ -302,7 +302,7 @@ func (h *PerusahaanHandler) handleUpdate(w http.ResponseWriter, r *http.Request,
 func (h *PerusahaanHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	// Ownership check untuk non-admin
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if id != idPerusahaan {
 			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")

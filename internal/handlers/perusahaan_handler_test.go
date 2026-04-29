@@ -1039,6 +1039,13 @@ func withPerusahaanUserCtx(req *http.Request, idPerusahaan string) *http.Request
 	return req.WithContext(ctx)
 }
 
+func withPerusahaanUserPicCtx(req *http.Request, idPerusahaan string) *http.Request {
+	ctx := req.Context()
+	ctx = context.WithValue(ctx, middleware.RoleKey, "user_pic")
+	ctx = context.WithValue(ctx, middleware.IDPerusahaanKey, idPerusahaan)
+	return req.WithContext(ctx)
+}
+
 func TestPerusahaanHandler_GetByID_AsUser_OwnData_Success(t *testing.T) {
 	handler, mockSvc, _, _ := setupHandler(t)
 
@@ -1185,6 +1192,38 @@ func TestPerusahaanHandler_GetAll_AsUser_OwnPerusahaan_Success(t *testing.T) {
 	json.NewDecoder(rr.Body).Decode(&resp)
 	assert.Len(t, resp, 1)
 	mockSvc.AssertExpectations(t)
+}
+
+func TestPerusahaanHandler_GetAll_AsUserPic_OwnPerusahaan_Success(t *testing.T) {
+	handler, mockSvc, _, _ := setupHandler(t)
+
+	expected := &dto.PerusahaanResponse{ID: "perusahaan-1", NamaPerusahaan: "PT Mine"}
+	mockSvc.On("GetByID", "perusahaan-1").Return(expected, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/perusahaan", nil)
+	req = withPerusahaanUserPicCtx(req, "perusahaan-1")
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	var resp []interface{}
+	json.NewDecoder(rr.Body).Decode(&resp)
+	assert.Len(t, resp, 1)
+	mockSvc.AssertExpectations(t)
+}
+
+func TestPerusahaanHandler_GetByID_AsUserPic_OtherPerusahaan_Forbidden(t *testing.T) {
+	handler, mockSvc, _, _ := setupHandler(t)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/perusahaan/perusahaan-other", nil)
+	req = withPerusahaanUserPicCtx(req, "perusahaan-mine")
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusForbidden, rr.Code)
+	mockSvc.AssertNotCalled(t, "GetByID")
 }
 
 /* =========================

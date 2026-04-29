@@ -265,6 +265,10 @@ type EventRepositoryInterface interface {
 	FindByID(id int64) (*models.Event, error)
 	Update(event *models.Event) error
 	Delete(id int64) error
+	CreateRegistration(reg *models.EventRegistration) error
+	FindRegistrationByID(id int64) (*models.EventRegistration, error)
+	ExistsRegistrationByEventAndEmail(eventID int64, email string) (bool, error)
+	UpdateRegistrationPayload(id int64, payload string) error
 }
 
 // DTOnya tidak dipakai langsung di interface ini, tapi diimport

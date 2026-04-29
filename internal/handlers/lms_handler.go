@@ -866,7 +866,7 @@ func (h *LMSHandler) ServeKuis(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary		List kuis per kelas
-// @Description	Mendapatkan daftar kuis dalam suatu kelas.
+// @Description	Mendapatkan daftar kuis dalam suatu kelas beserta progress user yang login.
 // @Tags			LMS - Kuis
 // @Produce		json
 // @Security		BearerAuth
@@ -874,8 +874,9 @@ func (h *LMSHandler) ServeKuis(w http.ResponseWriter, r *http.Request) {
 // @Success		200	{array}		dto.KuisResponse
 // @Failure		500	{object}	dto.ErrorResponse
 // @Router			/api/kelas/{id}/kuis [get]
-func (h *LMSHandler) kuisGetByKelas(w http.ResponseWriter, _ *http.Request, idKelas string) {
-	data, err := h.kuisSvc.GetKuisByKelas(idKelas)
+func (h *LMSHandler) kuisGetByKelas(w http.ResponseWriter, r *http.Request, idKelas string) {
+	userID := getUserID(r)
+	data, err := h.kuisSvc.GetKuisByKelas(idKelas, userID)
 	if err != nil {
 		logger.Error(err, "kuisGetByKelas failed")
 		utils.RespondError(w, 500, err.Error())

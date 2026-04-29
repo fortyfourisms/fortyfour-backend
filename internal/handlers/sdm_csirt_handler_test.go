@@ -120,6 +120,7 @@ func TestSdmCsirtHandler_GetAll_Success(t *testing.T) {
 	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/sdm_csirt", nil)
+	req = withSdmAdminContext(req)
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)
@@ -323,6 +324,7 @@ func TestSdmCsirtHandler_GetAll_Error(t *testing.T) {
 	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/sdm_csirt", nil)
+	req = withSdmAdminContext(req)
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
@@ -343,6 +345,7 @@ func TestSdmCsirtHandler_GetAll_ResponseBody(t *testing.T) {
 	handler := newSdmHandler(mockSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/sdm_csirt", nil)
+	req = withSdmAdminContext(req)
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
 
@@ -402,6 +405,11 @@ func TestSdmCsirtHandler_Delete_WithoutID(t *testing.T) {
 func withSdmUserContext(req *http.Request, idPerusahaan string) *http.Request {
 	ctx := context.WithValue(req.Context(), middleware.RoleKey, "user")
 	ctx = context.WithValue(ctx, middleware.IDPerusahaanKey, idPerusahaan)
+	return req.WithContext(ctx)
+}
+
+func withSdmAdminContext(req *http.Request) *http.Request {
+	ctx := context.WithValue(req.Context(), middleware.RoleKey, "admin")
 	return req.WithContext(ctx)
 }
 

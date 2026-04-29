@@ -29,6 +29,13 @@ func setupPICHandler() (*PICHandler, repository.PICRepositoryInterface, *service
 	return handler, mockRepo, sseService
 }
 
+func withPICUserPicCtx(req *http.Request, idPerusahaan string) *http.Request {
+	ctx := req.Context()
+	ctx = context.WithValue(ctx, middleware.RoleKey, "user_pic")
+	ctx = context.WithValue(ctx, middleware.IDPerusahaanKey, idPerusahaan)
+	return req.WithContext(ctx)
+}
+
 /* =========================
    TEST GET ALL
 ========================= */
@@ -829,4 +836,55 @@ func TestPICHandler_VerifyJSONHeaders(t *testing.T) {
 			assert.Equal(t, "application/json", w.Header().Get("Content-Type"))
 		})
 	}
+}
+
+func TestPICHandler_GetAll_AsUserPic_OnlyOwnPerusahaan(t *testing.T) {
+	handler, mockRepo, _ := setupPICHandler()
+
+	mockRepo.Create(dto.CreatePICRequest{
+		Nama:         stringPtr("PIC 1"),
+		Telepon:      stringPtr("08123"),
+		IDPerusahaan: stringPtr("perusahaan-1"),
+	}, "id-1")
+	mockRepo.Create(dto.CreatePICRequest{
+		Nama:         stringPtr("PIC 2"),
+		Telepon:      stringPtr("08124"),
+		IDPerusahaan: stringPtr("perusahaan-2"),
+	}, "id-2")
+	pic1, _ := mockRepo.GetByID("id-1")
+	pic1.Perusahaan = &dto.PerusahaanInPIC{ID: "perusahaan-1", NamaPerusahaan: "PT 1"}
+	pic2, _ := mockRepo.GetByID("id-2")
+	pic2.Perusahaan = &dto.PerusahaanInPIC{ID: "perusahaan-2", NamaPerusahaan: "PT 2"}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/pic", nil)
+	req = withPICUserPicCtx(req, "perusahaan-1")
+	w := httptest.NewRecorder()
+
+	handler.handleGetAll(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response []dto.PICResponse
+	err := json.NewDecoder(w.Body).Decode(&response)
+	assert.NoError(t, err)
+	assert.Len(t, response, 1)
+	assert.Equal(t, "id-1", response[0].ID)
+}
+
+func TestPICHandler_GetByID_AsUserPic_OtherPerusahaan_Forbidden(t *testing.T) {
+	handler, mockRepo, _ := setupPICHandler()
+
+	mockRepo.Create(dto.CreatePICRequest{
+		Nama:         stringPtr("PIC 2"),
+		Telepon:      stringPtr("08124"),
+		IDPerusahaan: stringPtr("perusahaan-2"),
+	}, "id-2")
+
+	req := httptest.NewRequest(http.MethodGet, "/api/pic/id-2", nil)
+	req = withPICUserPicCtx(req, "perusahaan-1")
+	w := httptest.NewRecorder()
+
+	handler.handleGetByID(w, req, "id-2")
+
+	assert.Equal(t, http.StatusForbidden, w.Code)
 }

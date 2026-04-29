@@ -128,6 +128,51 @@ func (s *SSEService) Broadcast(event SSEEvent) {
 	s.broadcast <- event
 }
 
+func (s *SSEService) NotifyCreateToUsers(resource string, data interface{}, userIDs []string, notifType models.NotificationType, message string) {
+	if len(userIDs) == 0 {
+		return
+	}
+	if message == "" {
+		message = s.generateMessage(resource, EventCreate, data)
+	}
+
+	targets := make(map[string]struct{}, len(userIDs))
+	for _, userID := range userIDs {
+		if userID == "" {
+			continue
+		}
+		targets[userID] = struct{}{}
+		if s.notificationService != nil {
+			_ = s.notificationService.Push(userID, notifType, message)
+		}
+	}
+
+	if len(targets) == 0 {
+		return
+	}
+
+	event := SSEEvent{
+		Type:      EventCreate,
+		Resource:  resource,
+		Message:   message,
+		Data:      data,
+		Timestamp: time.Now(),
+	}
+
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for _, client := range s.clients {
+		if _, ok := targets[client.UserID]; !ok {
+			continue
+		}
+		select {
+		case client.Channel <- event:
+		default:
+			log.Printf("SSE: Client %s channel full", client.ID)
+		}
+	}
+}
+
 // NotifyCreate sends a create event dengan pesan otomatis
 func (s *SSEService) NotifyCreate(resource string, data interface{}, userID string) {
 	message := s.generateMessage(resource, EventCreate, data)
