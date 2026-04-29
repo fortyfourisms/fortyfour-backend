@@ -1,68 +1,73 @@
 package utils
 
 import (
+	"errors"
 	"strings"
 	"survey/internal/dto"
 )
 
-// ValidateCreateResponden validates a CreateRespondenRequest.
-// Mengembalikan map field -> pesan error. Jika kosong berarti valid.
-func ValidateCreateResponden(req dto.CreateRespondenRequest) map[string]string {
-	errors := map[string]string{}
+// =======================
+// CREATE VALIDATION
+// =======================
+func ValidateCreateResponden(req dto.CreateRespondenRequest) error {
 
-	// Nama lengkap
-	if strings.TrimSpace(req.NamaLengkap) == "" {
-		errors["nama_lengkap"] = "Nama lengkap wajib diisi"
+	// normalize input
+	req.UserID = strings.TrimSpace(req.UserID)
+	req.NoTelepon = strings.TrimSpace(req.NoTelepon)
+	req.Sektor = strings.TrimSpace(req.Sektor)
+	req.SektorLainnya = strings.TrimSpace(req.SektorLainnya)
+	req.SertifikatTraining = strings.TrimSpace(req.SertifikatTraining)
+
+	// USER ID
+	if req.UserID == "" {
+		return errors.New("user_id wajib diisi")
+	}
+	if len(req.UserID) < 3 {
+		return errors.New("user_id minimal 3 karakter")
 	}
 
-	// Jabatan
-	if strings.TrimSpace(req.Jabatan) == "" {
-		errors["jabatan"] = "Jabatan wajib diisi"
+	// NO TELEPON
+	if req.NoTelepon == "" {
+		return errors.New("no_telepon wajib diisi")
+	}
+	if !isPhone(req.NoTelepon) {
+		return errors.New("format no_telepon tidak valid")
+	}
+	if len(req.NoTelepon) < 8 {
+		return errors.New("no_telepon terlalu pendek")
 	}
 
-	// Perusahaan
-	if strings.TrimSpace(req.Perusahaan) == "" {
-		errors["perusahaan"] = "Perusahaan wajib diisi"
+	// SEKTOR
+	if req.Sektor == "" {
+		return errors.New("sektor wajib diisi")
 	}
-
-	// Email
-	email := strings.TrimSpace(req.Email)
-	switch {
-	case email == "":
-		errors["email"] = "Email wajib diisi"
-	case !isEmail(email):
-		errors["email"] = "Format email tidak valid"
-	}
-
-	// Nomor telepon
-	phone := strings.TrimSpace(req.NoTelepon)
-	switch {
-	case phone == "":
-		errors["no_telepon"] = "Nomor telepon wajib diisi"
-	case !isPhone(phone):
-		errors["no_telepon"] = "Nomor telepon hanya boleh berisi angka"
-	}
-
-	// Validasi sektor
 	if !isValidSektor(req.Sektor) {
-		errors["sektor"] = "Sektor tidak valid"
+		return errors.New("sektor tidak valid")
 	}
 
-	// Jika sektor lainnya
-	if req.Sektor == "Lainnya" && strings.TrimSpace(req.SektorLainnya) == "" {
-		errors["sektor_lainnya"] = "Keterangan sektor lainnya wajib diisi"
+	// SEKTOR LAINNYA
+	if req.Sektor == "Lainnya" {
+		if req.SektorLainnya == "" {
+			return errors.New("sektor_lainnya wajib diisi jika sektor = Lainnya")
+		}
+	} else {
+		req.SektorLainnya = ""
 	}
 
-	return errors
+	// SERTIFIKAT
+	if req.SertifikatTraining == "" {
+		return errors.New("sertifikat_training wajib diisi")
+	}
+
+	return nil
 }
 
-// ValidateUpdateResponden menggunakan validasi yang sama dengan create
-func ValidateUpdateResponden(req dto.UpdateRespondenRequest) map[string]string {
+// =======================
+// UPDATE VALIDATION
+// =======================
+func ValidateUpdateResponden(req dto.UpdateRespondenRequest) error {
 	return ValidateCreateResponden(dto.CreateRespondenRequest{
-		NamaLengkap:        req.NamaLengkap,
-		Jabatan:            req.Jabatan,
-		Perusahaan:         req.Perusahaan,
-		Email:              req.Email,
+		UserID:             req.UserID,
 		NoTelepon:          req.NoTelepon,
 		Sektor:             req.Sektor,
 		SektorLainnya:      req.SektorLainnya,
@@ -70,32 +75,20 @@ func ValidateUpdateResponden(req dto.UpdateRespondenRequest) map[string]string {
 	})
 }
 
-// =============================
-// Helper Validation Functions
-// =============================
+// =======================
+// HELPER FUNCTIONS
+// =======================
 
-// isEmail melakukan validasi sederhana format email
-func isEmail(email string) bool {
-	email = strings.TrimSpace(email)
-
-	if !strings.Contains(email, "@") {
-		return false
-	}
-
-	if !strings.Contains(email, ".") {
-		return false
-	}
-
-	return true
-}
-
-// isPhone memastikan nomor telepon hanya berisi angka
+// Validasi nomor telepon (hanya angka + optional '+' di depan)
 func isPhone(phone string) bool {
 	if phone == "" {
 		return false
 	}
 
-	for _, r := range phone {
+	for i, r := range phone {
+		if i == 0 && r == '+' {
+			continue
+		}
 		if r < '0' || r > '9' {
 			return false
 		}
@@ -104,27 +97,36 @@ func isPhone(phone string) bool {
 	return true
 }
 
-// isValidSektor memastikan sektor yang dipilih valid
+// Validasi sektor (pakai mapping cepat)
 func isValidSektor(sektor string) bool {
-	validSektor := []string{
-		"Industri Makanan dan Minuman",
-		"Industri Tekstil dan Pakaian",
-		"Industri Kimia",
-		"Industri Otomotif",
-		"Industri Elektronik",
-		"Industri Farmasi",
-		"Industri Alat Kesehatan",
-		"Jasa Konstruksi",
-		"Industri Keamanan Siber",
-		"Industri Pertahanan",
-		"Lainnya",
+	validSektor := map[string]bool{
+		"Keamanan Siber": true,
+		"Jasa Konsultan dan Sertifikasi Keamanan Informasi":        true,
+		"Industri Pulp dan Kertas":                                 true,
+		"Jasa Konstruksi":                                          true,
+		"Jasa Sertifikasi, Inspeksi, Pengujian, dan Survey":        true,
+		"Jasa Industri":                                            true,
+		"Komponen Kendaraan Listrik":                               true,
+		"Alat Kesehatan":                                           true,
+		"Peralatan Listrik":                                        true,
+		"Industri Kecil dan Menengah Furnitur, dan Bahan Bangunan": true,
+		"Logam":                               true,
+		"Permesinan dan Alat Mesin Pertanian": true,
+		"Maritim, Alat Transportasi, dan Alat Pertahanan":      true,
+		"Elektronika dan Telematika":                           true,
+		"Hasil Hutan dan Perkebunan":                           true,
+		"Makanan, Hasil Laut, dan Perikanan":                   true,
+		"Minuman, Tembakau, dan Bahan Penyegar":                true,
+		"Kemurgi, Oleokimia, dan Pakan":                        true,
+		"Kimia hulu":                                           true,
+		"Kawasan Industri":                                     true,
+		"Semen, Keramik, dan Pengolahan Bahan Galian Nonlogam": true,
+		"Tekstil, Kulit, dan Alas Kaki":                        true,
+		"Industri Aneka":                                       true,
+		"Industri Bahan dan Produk Farmasi":                    true,
+		"Kimia Hilir":                                          true,
+		"Lainnya":                                              true,
 	}
 
-	for _, s := range validSektor {
-		if sektor == s {
-			return true
-		}
-	}
-
-	return false
+	return validSektor[sektor]
 }
