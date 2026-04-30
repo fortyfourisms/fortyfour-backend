@@ -9,7 +9,6 @@ import (
 	"survey/internal/models"
 )
 
-//
 // =====================
 // MOCK CACHE
 // =====================
@@ -27,7 +26,6 @@ func (m *mockCache) Del(ctx context.Context, key string) error {
 	return nil
 }
 
-//
 // =====================
 // MOCK REPOSITORY
 // =====================
@@ -79,7 +77,6 @@ func (m *mockRisikoRepo) InsertCustomRisiko(id int, nama string) (int, error) {
 	return m.insertCustomFn(id, nama)
 }
 
-//
 // =====================
 // HELPER
 // =====================
@@ -87,7 +84,6 @@ func newService(mock *mockRisikoRepo) *RisikoService {
 	return NewRisikoService(mock, &mockCache{})
 }
 
-//
 // =====================
 // TEST ELIGIBILITY SUCCESS
 // =====================
@@ -117,7 +113,6 @@ func TestProcessEligibility_Success(t *testing.T) {
 	}
 }
 
-//
 // =====================
 // TEST ELIGIBILITY INVALID RESPONDEN
 // =====================
@@ -138,7 +133,6 @@ func TestProcessEligibility_InvalidResponden(t *testing.T) {
 	}
 }
 
-//
 // =====================
 // TEST ALASAN SUCCESS
 // =====================
@@ -168,7 +162,6 @@ func TestProcessAlasan_Success(t *testing.T) {
 	}
 }
 
-//
 // =====================
 // TEST DAMPAK INVALID
 // =====================
@@ -190,7 +183,6 @@ func TestProcessDampak_InvalidImpact(t *testing.T) {
 	}
 }
 
-//
 // =====================
 // TEST PENGENDALIAN SUCCESS
 // =====================
@@ -221,7 +213,6 @@ func TestProcessPengendalian_Success(t *testing.T) {
 	}
 }
 
-//
 // =====================
 // TEST NAVIGATE NEXT
 // =====================
@@ -254,7 +245,6 @@ func TestNavigate_Next(t *testing.T) {
 	}
 }
 
-//
 // =====================
 // TEST SAVE PROGRESS
 // =====================
@@ -286,7 +276,6 @@ func TestSaveProgress_Success(t *testing.T) {
 	}
 }
 
-//
 // =====================
 // TEST CREATE CUSTOM RISIKO
 // =====================
@@ -313,7 +302,6 @@ func TestCreateCustomRisiko_Success(t *testing.T) {
 	}
 }
 
-//
 // =====================
 // TEST FINISH SURVEY
 // =====================

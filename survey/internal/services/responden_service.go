@@ -65,11 +65,9 @@ func NewRespondenService(
 	}
 }
 
-//
 // =======================
 // CREATE
 // =======================
-//
 func (s *RespondenService) Create(req dto.CreateRespondenRequest) (*dto.RespondenResponse, error) {
 
 	if err := s.validator.ValidateCreate(req); err != nil {
@@ -109,11 +107,9 @@ func (s *RespondenService) Create(req dto.CreateRespondenRequest) (*dto.Responde
 	return &resp, nil
 }
 
-//
 // =======================
 // GET ALL (CACHE)
 // =======================
-//
 func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
 
 	cacheKey := "responden:all"
@@ -146,11 +142,9 @@ func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
 	return result, nil
 }
 
-//
 // =======================
 // GET BY ID (CACHE)
 // =======================
-//
 func (s *RespondenService) GetByID(id int) (*dto.RespondenResponse, error) {
 
 	if id <= 0 {
@@ -186,11 +180,9 @@ func (s *RespondenService) GetByID(id int) (*dto.RespondenResponse, error) {
 	return &resp, nil
 }
 
-//
 // =======================
 // UPDATE
 // =======================
-//
 func (s *RespondenService) Update(id int, req dto.UpdateRespondenRequest) (*dto.RespondenResponse, error) {
 
 	if id <= 0 {
@@ -238,11 +230,9 @@ func (s *RespondenService) Update(id int, req dto.UpdateRespondenRequest) (*dto.
 	return &resp, nil
 }
 
-//
 // =======================
 // MAPPER
 // =======================
-//
 func (s *RespondenService) toResponse(m *models.RespondenDetail) dto.RespondenResponse {
 
 	return dto.RespondenResponse{
