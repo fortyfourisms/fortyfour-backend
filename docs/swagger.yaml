@@ -1745,6 +1745,31 @@ definitions:
       updated_at:
         type: string
     type: object
+  fortyfour-backend_internal_dto.KonversiResponse:
+    properties:
+      nama_perusahaan:
+        type: string
+      persentase:
+        description: (TotalPoin / 4) * 100
+        type: number
+      perusahaan_id:
+        type: string
+      poin_csirt:
+        description: 1 jika ada, 0 jika tidak
+        type: integer
+      poin_ikas:
+        description: 1 jika ada, 0 jika tidak
+        type: integer
+      poin_kse:
+        description: 1 jika ada, 0 jika tidak
+        type: integer
+      poin_survey:
+        description: 1 jika ada, 0 jika tidak
+        type: integer
+      total_poin:
+        description: Sum dari semua poin (max 4)
+        type: integer
+    type: object
   fortyfour-backend_internal_dto.KuisResponse:
     properties:
       attempt_count:
@@ -4363,6 +4388,62 @@ paths:
       summary: Generate sertifikat
       tags:
       - LMS - Sertifikat
+  /api/konversi:
+    get:
+      description: Mengambil data poin partisipasi (IKAS, KSE, Survey, CSIRT) untuk
+        perusahaan.
+      parameters:
+      - description: ID Perusahaan (UUID) jika melalui query /api/konversi?perusahaan_id=
+        in: query
+        name: perusahaan_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/fortyfour-backend_internal_dto.KonversiResponse'
+                  type: array
+              type: object
+      summary: Get Konversi Data
+      tags:
+      - Konversi
+  /api/konversi/{id}:
+    get:
+      description: Mengambil data poin partisipasi (IKAS, KSE, Survey, CSIRT) untuk
+        perusahaan.
+      parameters:
+      - description: ID Perusahaan (UUID) jika melalui path /api/konversi/{id}
+        in: path
+        name: id
+        type: string
+      - description: ID Perusahaan (UUID) jika melalui query /api/konversi?perusahaan_id=
+        in: query
+        name: perusahaan_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/fortyfour-backend_internal_dto.KonversiResponse'
+                  type: array
+              type: object
+      summary: Get Konversi Data
+      tags:
+      - Konversi
   /api/kuis/{id_kuis}/soal:
     get:
       description: Admin mendapatkan daftar soal dalam suatu kuis.

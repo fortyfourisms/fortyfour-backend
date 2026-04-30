@@ -97,6 +97,7 @@ func TestInitRouter_HealthRoute_IsAccessibleWithoutDependencies(t *testing.T) {
 		beritaH,
 		eventH,
 		aktivitasH,
+		nil,
 	)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/health", nil)
@@ -119,9 +120,7 @@ func TestInitRouter_HealthRoute_IsAccessibleWithoutDependencies(t *testing.T) {
 
 func TestInitRouter_UnknownRoute_ReturnsNotFound(t *testing.T) {
 	router := InitRouter(
-		nil, nil, nil, nil, nil, nil, nil,
-		nil, nil, nil, nil, nil,
-		nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+		nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil,
 	)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/does-not-exist", nil)

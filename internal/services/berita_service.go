@@ -3,13 +3,13 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/dto/dto_event"
 	"fortyfour-backend/internal/models"
 	internalRmq "fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/pkg/cache"
-	"fmt"
 	"time"
 )
 

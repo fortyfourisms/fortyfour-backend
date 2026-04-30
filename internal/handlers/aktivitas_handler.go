@@ -22,7 +22,7 @@ func NewAktivitasHandler(service *services.AktivitasService) *AktivitasHandler {
 
 func (h *AktivitasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/api/aktivitas/jenis" {
-		h.handleGetJenis(w, r)
+		h.HandleGetJenis(w, r)
 		return
 	}
 
@@ -250,7 +250,7 @@ func (h *AktivitasHandler) handleDelete(w http.ResponseWriter, r *http.Request, 
 //	@Produce		json
 //	@Success		200	{object}	utils.JSONResponse{data=[]string}
 //	@Router			/api/aktivitas/jenis [get]
-func (h *AktivitasHandler) handleGetJenis(w http.ResponseWriter, _ *http.Request) {
+func (h *AktivitasHandler) HandleGetJenis(w http.ResponseWriter, _ *http.Request) {
 	data := h.service.GetAllowedJenis()
 	utils.RespondJSON(w, 200, utils.JSONResponse{
 		Status:  "success",

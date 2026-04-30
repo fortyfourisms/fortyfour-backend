@@ -2487,6 +2487,98 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/konversi": {
+            "get": {
+                "description": "Mengambil data poin partisipasi (IKAS, KSE, Survey, CSIRT) untuk perusahaan.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Konversi"
+                ],
+                "summary": "Get Konversi Data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID Perusahaan (UUID) jika melalui query /api/konversi?perusahaan_id=",
+                        "name": "perusahaan_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/fortyfour-backend_internal_dto.KonversiResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/konversi/{id}": {
+            "get": {
+                "description": "Mengambil data poin partisipasi (IKAS, KSE, Survey, CSIRT) untuk perusahaan.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Konversi"
+                ],
+                "summary": "Get Konversi Data",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID Perusahaan (UUID) jika melalui path /api/konversi/{id}",
+                        "name": "id",
+                        "in": "path"
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID Perusahaan (UUID) jika melalui query /api/konversi?perusahaan_id=",
+                        "name": "perusahaan_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/fortyfour-backend_internal_dto.KonversiResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/kuis/attempt/{id_attempt}/result": {
             "get": {
                 "security": [
@@ -12405,6 +12497,41 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.KonversiResponse": {
+            "type": "object",
+            "properties": {
+                "nama_perusahaan": {
+                    "type": "string"
+                },
+                "persentase": {
+                    "description": "(TotalPoin / 4) * 100",
+                    "type": "number"
+                },
+                "perusahaan_id": {
+                    "type": "string"
+                },
+                "poin_csirt": {
+                    "description": "1 jika ada, 0 jika tidak",
+                    "type": "integer"
+                },
+                "poin_ikas": {
+                    "description": "1 jika ada, 0 jika tidak",
+                    "type": "integer"
+                },
+                "poin_kse": {
+                    "description": "1 jika ada, 0 jika tidak",
+                    "type": "integer"
+                },
+                "poin_survey": {
+                    "description": "1 jika ada, 0 jika tidak",
+                    "type": "integer"
+                },
+                "total_poin": {
+                    "description": "Sum dari semua poin (max 4)",
+                    "type": "integer"
                 }
             }
         },
