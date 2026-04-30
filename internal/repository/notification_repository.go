@@ -32,7 +32,7 @@ func (r *NotificationRepository) Create(notif *models.Notification) error {
 
 func (r *NotificationRepository) FindAll() ([]models.Notification, error) {
 	query := `
- 		SELECT n.id, n.user_id, u.username, COALESCE(u.display_name, '') as display_name,
+ 		SELECT n.id, n.user_id, COALESCE(u.username, '') as username, COALESCE(u.display_name, '') as display_name,
  		       u.foto_profile,
  		       n.type, n.message, n.is_read, n.created_at
  		FROM notifications n
@@ -59,7 +59,7 @@ func (r *NotificationRepository) FindAll() ([]models.Notification, error) {
 
 func (r *NotificationRepository) FindAllByUserID(userID string) ([]models.Notification, error) {
 	query := `
- 		SELECT n.id, n.user_id, u.username, COALESCE(u.display_name, '') as display_name,
+ 		SELECT n.id, n.user_id, COALESCE(u.username, '') as username, COALESCE(u.display_name, '') as display_name,
  		       u.foto_profile,
  		       n.type, n.message, n.is_read, n.created_at
  		FROM notifications n
