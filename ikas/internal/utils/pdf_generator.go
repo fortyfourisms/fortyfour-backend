@@ -179,11 +179,45 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.CellFormat(140, 4, "Kriteria:", "LR", 1, "L", false, 0, "")
 	pdf.SetX(startX)
 	pdf.SetFont("Arial", "", 8)
-	kriteriaText := "A. Kondisi penerapan keamanan siber dalam tahap implementasi awal\n" +
-		"B. Penerapan keamanan siber belum memiliki prosedur yang terorganisir\n" +
-		"C. Penerapan keamanan siber bersifat informal\n" +
-		"D. Keamanan siber tidak dilakukan secara konsisten dan berkelanjutan\n" +
-		"E. Dokumen manajemen risiko dan dokumen kontrol belum disusun"
+
+	var kriteriaText string
+	category := strings.ToLower(data.KategoriKematanganKeamananSiber)
+
+	if strings.Contains(category, "level 1") {
+		kriteriaText = "A. Kondisi penerapan keamanan siber dalam tahap implementasi awal\n" +
+			"B. Penerapan keamanan siber belum memiliki prosedur yang terorganisir\n" +
+			"C. Penerapan keamanan siber bersifat informal\n" +
+			"D. Keamanan siber tidak dilakukan secara konsisten dan berkelanjutan\n" +
+			"E. Dokumen manajemen risiko dan dokumen kontrol belum disusun"
+	} else if strings.Contains(category, "level 2") {
+		kriteriaText = "A. Kondisi penerapan keamanan siber dalam tahap implementasi yang berulang\n" +
+			"B. Penerapan keamanan siber sudah memiliki prosedur yang terorganisir\n" +
+			"C. Penerapan keamanan siber bersifat informal\n" +
+			"D. Keamanan siber dilakukan secara berulang namun belum konsisten dan berkelanjutan\n" +
+			"E. Dokumen manajemen risiko dan dokumen kontrol sudah disusun namun belum ditetapkan"
+	} else if strings.Contains(category, "level 3") {
+		kriteriaText = "A. Kondisi penerapan keamanan siber dalam tahap implementasi yang telah terdefinisi dengan baik\n" +
+			"B. Penerapan keamanan siber terorganisir dengan jelas\n" +
+			"C. Penerapan keamanan siber bersifat formal\n" +
+			"D. Keamanan siber dilakukan secara berulang dan konsisten serta direviu secara berkala\n" +
+			"E. Dokumen manajemen risiko dan dokumen kontrol sudah disusun dan sudah ditetapkan"
+	} else if strings.Contains(category, "level 4") {
+		kriteriaText = "A. Kondisi penerapan keamanan siber dalam tahap implementasi yang telah terkelola dengan baik\n" +
+			"B. Penerapan keamanan siber terorganisir dengan baik namun belum dilakukan proses otomatisasi\n" +
+			"C. Penerapan keamanan siber bersifat formal\n" +
+			"D. Keamanan siber dilakukan secara berulang dan implementasi perbaikan dilakukan berkelanjutan\n" +
+			"E. Dokumen manajemen risiko dan dokumen kontrol sudah disusun dan sudah ditetapkan"
+	} else if strings.Contains(category, "level 5") {
+		kriteriaText = "A. Kondisi penerapan keamanan siber telah diimplementasikan secara optimal\n" +
+			"B. Penerapan keamanan siber telah terorganisir dengan baik dan telah dilakukan proses otomatisasi\n" +
+			"C. Penerapan keamanan siber bersifat formal\n" +
+			"D. Keamanan siber dilakukan secara berulang dan konsisten serta telah terintegrasi dan menjadi bagian budaya organisasi secara menyeluruh\n" +
+			"E. Dokumen manajemen risiko dan dokumen kontrol sudah ditetapkan"
+	} else {
+		// Empty if unknown
+		kriteriaText = ""
+	}
+
 	pdf.MultiCell(140, 4, toSafe(kriteriaText), "LRB", "L", false)
 
 	pdf.Ln(8)
