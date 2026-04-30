@@ -39,7 +39,7 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 
 	// 1. Logo BSSN at Top Center
 	pwd, _ := os.Getwd()
-	logoPath := filepath.Join(pwd, "internal", "assets", "bssn.png")
+	logoPath := filepath.Join(pwd, "ikas", "internal", "assets", "bssn.png")
 	pdf.ImageOptions(logoPath, (210-35)/2, 10, 35, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
 	pdf.Ln(32)
 
@@ -119,7 +119,7 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.Ln(3)
 
 	// --- WATERMARK IKAS (Centered on the page) ---
-	watermarkPath := filepath.Join(pwd, "internal", "assets", "ikas.png")
+	watermarkPath := filepath.Join(pwd, "ikas", "internal", "assets", "ikas.png")
 	wmW := 180.0
 	// Centering 300mm on 210mm paper: (210 - 300) / 2 = -45
 	pdf.ImageOptions(watermarkPath, -45, pdf.GetY()-15, wmW, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
