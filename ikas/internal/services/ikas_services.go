@@ -15,11 +15,6 @@ import (
 	"github.com/rollbar/rollbar-go"
 )
 
-const (
-	IkasCacheKey         = "ikas:records"
-	IkasCacheExpiration  = 24 * time.Hour
-)
-
 type IkasProducerInterface interface {
 	PublishIkasCreated(ctx context.Context, event interface{}) error
 	PublishIkasUpdated(ctx context.Context, event interface{}) error
@@ -241,8 +236,8 @@ func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id 
 
 	// Invalidate Cache
 	if s.cache != nil {
-		s.cache.Delete(IkasCacheKey)
-		s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", IkasCacheKey, req.IDPerusahaan))
+		s.cache.Delete(cache.CacheKeyIkasRecords)
+		s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, req.IDPerusahaan))
 	}
 
 	return nil
@@ -254,7 +249,7 @@ func (s *IkasService) GetAll(userRole string) ([]dto.IkasResponse, error) {
 	}
 
 	if s.cache != nil {
-		cachedData, err := s.cache.Get(IkasCacheKey)
+		cachedData, err := s.cache.Get(cache.CacheKeyIkasRecords)
 		if err == nil && cachedData != "" {
 			var result []dto.IkasResponse
 			if err := json.Unmarshal([]byte(cachedData), &result); err == nil {
@@ -272,7 +267,7 @@ func (s *IkasService) GetAll(userRole string) ([]dto.IkasResponse, error) {
 		go func(dataToCache []dto.IkasResponse) {
 			jsonData, err := json.Marshal(dataToCache)
 			if err == nil {
-				err = s.cache.Set(IkasCacheKey, string(jsonData), IkasCacheExpiration)
+				err = s.cache.Set(cache.CacheKeyIkasRecords, string(jsonData), cache.DefaultCacheExpiration)
 				if err != nil {
 					rollbar.Error(fmt.Errorf("redis caching error: %v", err))
 				}
@@ -284,7 +279,7 @@ func (s *IkasService) GetAll(userRole string) ([]dto.IkasResponse, error) {
 }
 
 func (s *IkasService) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse, error) {
-	cacheKey := fmt.Sprintf("%s:perusahaan:%s", IkasCacheKey, perusahaanID)
+	cacheKey := fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, perusahaanID)
 	if s.cache != nil {
 		cachedData, err := s.cache.Get(cacheKey)
 		if err == nil && cachedData != "" {
@@ -304,7 +299,7 @@ func (s *IkasService) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse, 
 		go func(dataToCache []dto.IkasResponse, key string) {
 			jsonData, err := json.Marshal(dataToCache)
 			if err == nil {
-				err = s.cache.Set(key, string(jsonData), IkasCacheExpiration)
+				err = s.cache.Set(key, string(jsonData), cache.DefaultCacheExpiration)
 				if err != nil {
 					rollbar.Error(fmt.Errorf("redis caching error: %v", err))
 				}
@@ -421,12 +416,12 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 
 	// Invalidate Cache
 	if s.cache != nil {
-		s.cache.Delete(IkasCacheKey)
+		s.cache.Delete(cache.CacheKeyIkasRecords)
 		if current.Perusahaan != nil {
-			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", IkasCacheKey, current.Perusahaan.ID))
+			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, current.Perusahaan.ID))
 		}
 		if req.IDPerusahaan != nil {
-			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", IkasCacheKey, *req.IDPerusahaan))
+			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, *req.IDPerusahaan))
 		}
 	}
 
@@ -586,9 +581,9 @@ func (s *IkasService) Delete(ctx context.Context, id string, userID string, user
 
 	// Invalidate Cache
 	if s.cache != nil {
-		s.cache.Delete(IkasCacheKey)
+		s.cache.Delete(cache.CacheKeyIkasRecords)
 		if existing.Perusahaan != nil {
-			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", IkasCacheKey, existing.Perusahaan.ID))
+			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, existing.Perusahaan.ID))
 		}
 	}
 
@@ -688,9 +683,9 @@ func (s *IkasService) ValidateIkas(ctx context.Context, id string, status bool) 
 
 	// Invalidate Cache
 	if s.cache != nil {
-		s.cache.Delete(IkasCacheKey)
+		s.cache.Delete(cache.CacheKeyIkasRecords)
 		if existing.Perusahaan != nil {
-			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", IkasCacheKey, existing.Perusahaan.ID))
+			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, existing.Perusahaan.ID))
 		}
 	}
 
@@ -783,9 +778,9 @@ func (s *IkasService) ApproveEdit(ctx context.Context, id string) error {
 
 	// Invalidate Cache
 	if s.cache != nil {
-		s.cache.Delete(IkasCacheKey)
+		s.cache.Delete(cache.CacheKeyIkasRecords)
 		if ikas.Perusahaan != nil {
-			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", IkasCacheKey, ikas.Perusahaan.ID))
+			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, ikas.Perusahaan.ID))
 		}
 	}
 

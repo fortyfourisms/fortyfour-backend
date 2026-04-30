@@ -9,6 +9,7 @@ import (
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
 	"ikas/internal/services"
+	"ikas/pkg/cache"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -107,9 +108,9 @@ func TestPertanyaanGulihHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	handler := setupPertanyaanGulihHandler(repo, producer, redis)
 
 	expectedData := []dto.PertanyaanGulihResponse{{ID: 1}}
-	redis.On("Get", services.PertanyaanGulihCacheKey).Return("", errors.New("miss"))
+	redis.On("Get", cache.CacheKeyPertanyaanGulih).Return("", errors.New("miss"))
 	repo.On("GetAll").Return(expectedData, nil)
-	redis.On("Set", services.PertanyaanGulihCacheKey, mock.Anything, services.QuestionCacheExpiration).Return(nil)
+	redis.On("Set", cache.CacheKeyPertanyaanGulih, mock.Anything, cache.DefaultCacheExpiration).Return(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/pertanyaan-gulih", nil)
 	w := httptest.NewRecorder()
@@ -125,7 +126,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 	redis := new(mockRedis)
 	handler := setupPertanyaanGulihHandler(repo, producer, redis)
 
-	redis.On("Get", services.PertanyaanGulihCacheKey).Return("", errors.New("miss"))
+	redis.On("Get", cache.CacheKeyPertanyaanGulih).Return("", errors.New("miss"))
 	repo.On("GetAll").Return([]dto.PertanyaanGulihResponse{}, errors.New("db error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/pertanyaan-gulih", nil)
@@ -195,7 +196,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Create_Success(t *testing.T) {
 		return e.Request.PertanyaanGulih == "Pertanyaan Test"
 	})).Return(nil)
 
-	redis.On("Delete", services.PertanyaanGulihCacheKey).Return(nil)
+	redis.On("Delete", cache.CacheKeyPertanyaanGulih).Return(nil)
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-gulih", bytes.NewBuffer(body))
@@ -279,7 +280,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Update_Success(t *testing.T) {
 	repo.On("Update", 1, mock.Anything).Return(nil)
 
 	producer.On("PublishPertanyaanGulihUpdated", mock.Anything, mock.Anything).Return(nil)
-	redis.On("Delete", services.PertanyaanGulihCacheKey).Return(nil)
+	redis.On("Delete", cache.CacheKeyPertanyaanGulih).Return(nil)
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/pertanyaan-gulih/1", bytes.NewBuffer(body))
@@ -356,7 +357,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	repo.On("GetByID", 1).Return(&dto.PertanyaanGulihResponse{ID: 1}, nil)
 	repo.On("Delete", 1).Return(nil)
 	producer.On("PublishPertanyaanGulihDeleted", mock.Anything, mock.Anything).Return(nil)
-	redis.On("Delete", services.PertanyaanGulihCacheKey).Return(nil)
+	redis.On("Delete", cache.CacheKeyPertanyaanGulih).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/pertanyaan-gulih/1", nil)
 	w := httptest.NewRecorder()

@@ -15,10 +15,6 @@ import (
 	"github.com/rollbar/rollbar-go"
 )
 
-const (
-	PertanyaanGulihCacheKey = "ikas:questions:gulih"
-)
-
 type PertanyaanGulihProducerInterface interface {
 	PublishPertanyaanGulihCreated(ctx context.Context, event interface{}) error
 	PublishPertanyaanGulihUpdated(ctx context.Context, event interface{}) error
@@ -187,14 +183,14 @@ func (s *PertanyaanGulihService) Create(req dto.CreatePertanyaanGulihRequest) (*
 	}
 
 	// Invalidate cache
-	_ = s.cache.Delete(PertanyaanGulihCacheKey)
+	_ = s.cache.Delete(cache.CacheKeyPertanyaanGulih)
 
 	return nil, nil
 }
 
 func (s *PertanyaanGulihService) GetAll() ([]dto.PertanyaanGulihResponse, error) {
 	// Try to get from cache
-	cachedData, err := s.cache.Get(PertanyaanGulihCacheKey)
+	cachedData, err := s.cache.Get(cache.CacheKeyPertanyaanGulih)
 	if err == nil && cachedData != "" {
 		var questions []dto.PertanyaanGulihResponse
 		if err := json.Unmarshal([]byte(cachedData), &questions); err == nil {
@@ -212,7 +208,7 @@ func (s *PertanyaanGulihService) GetAll() ([]dto.PertanyaanGulihResponse, error)
 	go func() {
 		jsonData, err := json.Marshal(questions)
 		if err == nil {
-			_ = s.cache.Set(PertanyaanGulihCacheKey, string(jsonData), QuestionCacheExpiration)
+			_ = s.cache.Set(cache.CacheKeyPertanyaanGulih, string(jsonData), cache.DefaultCacheExpiration)
 		}
 	}()
 
@@ -277,7 +273,7 @@ func (s *PertanyaanGulihService) Update(id int, req dto.UpdatePertanyaanGulihReq
 	}
 
 	// Invalidate cache
-	_ = s.cache.Delete(PertanyaanGulihCacheKey)
+	_ = s.cache.Delete(cache.CacheKeyPertanyaanGulih)
 
 	return nil, nil
 }
@@ -300,7 +296,7 @@ func (s *PertanyaanGulihService) Delete(id int) error {
 	}
 
 	// Invalidate cache
-	_ = s.cache.Delete(PertanyaanGulihCacheKey)
+	_ = s.cache.Delete(cache.CacheKeyPertanyaanGulih)
 
 	return nil
 }

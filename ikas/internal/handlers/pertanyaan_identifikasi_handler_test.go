@@ -9,6 +9,7 @@ import (
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
 	"ikas/internal/services"
+	"ikas/pkg/cache"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -107,9 +108,9 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	handler := setupPertanyaanIdentifikasiHandler(repo, producer, redis)
 
 	expectedData := []dto.PertanyaanIdentifikasiResponse{{ID: 1}}
-	redis.On("Get", services.PertanyaanIdentifikasiCacheKey).Return("", errors.New("miss"))
+	redis.On("Get", cache.CacheKeyPertanyaanIdentifikasi).Return("", errors.New("miss"))
 	repo.On("GetAll").Return(expectedData, nil)
-	redis.On("Set", services.PertanyaanIdentifikasiCacheKey, mock.Anything, services.QuestionCacheExpiration).Return(nil)
+	redis.On("Set", cache.CacheKeyPertanyaanIdentifikasi, mock.Anything, cache.DefaultCacheExpiration).Return(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/pertanyaan-identifikasi", nil)
 	w := httptest.NewRecorder()
@@ -125,7 +126,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 	redis := new(mockRedis)
 	handler := setupPertanyaanIdentifikasiHandler(repo, producer, redis)
 
-	redis.On("Get", services.PertanyaanIdentifikasiCacheKey).Return("", errors.New("miss"))
+	redis.On("Get", cache.CacheKeyPertanyaanIdentifikasi).Return("", errors.New("miss"))
 	repo.On("GetAll").Return([]dto.PertanyaanIdentifikasiResponse{}, errors.New("db error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/pertanyaan-identifikasi", nil)
@@ -194,7 +195,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Create_Success(t *testing.T) {
 		return e.Request.PertanyaanIdentifikasi == "Pertanyaan Test"
 	})).Return(nil)
 
-	redis.On("Delete", services.PertanyaanIdentifikasiCacheKey).Return(nil)
+	redis.On("Delete", cache.CacheKeyPertanyaanIdentifikasi).Return(nil)
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-identifikasi", bytes.NewBuffer(body))
@@ -276,7 +277,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Update_Success(t *testing.T) {
 	repo.On("GetByID", 1).Return(&dto.PertanyaanIdentifikasiResponse{ID: 1}, nil)
 
 	producer.On("PublishPertanyaanIdentifikasiUpdated", mock.Anything, mock.Anything).Return(nil)
-	redis.On("Delete", services.PertanyaanIdentifikasiCacheKey).Return(nil)
+	redis.On("Delete", cache.CacheKeyPertanyaanIdentifikasi).Return(nil)
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/pertanyaan-identifikasi/1", bytes.NewBuffer(body))
@@ -351,7 +352,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Delete_Success(t *testing.T) {
 
 	repo.On("GetByID", 1).Return(&dto.PertanyaanIdentifikasiResponse{ID: 1}, nil)
 	producer.On("PublishPertanyaanIdentifikasiDeleted", mock.Anything, mock.Anything).Return(nil)
-	redis.On("Delete", services.PertanyaanIdentifikasiCacheKey).Return(nil)
+	redis.On("Delete", cache.CacheKeyPertanyaanIdentifikasi).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/pertanyaan-identifikasi/1", nil)
 	w := httptest.NewRecorder()

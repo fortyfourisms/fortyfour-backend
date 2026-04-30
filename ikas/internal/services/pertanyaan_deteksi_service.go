@@ -15,10 +15,6 @@ import (
 	"github.com/rollbar/rollbar-go"
 )
 
-const (
-	PertanyaanDeteksiCacheKey = "ikas:questions:deteksi"
-)
-
 type PertanyaanDeteksiProducerInterface interface {
 	PublishPertanyaanDeteksiCreated(ctx context.Context, event interface{}) error
 	PublishPertanyaanDeteksiUpdated(ctx context.Context, event interface{}) error
@@ -187,14 +183,14 @@ func (s *PertanyaanDeteksiService) Create(req dto.CreatePertanyaanDeteksiRequest
 	}
 
 	// Invalidate cache
-	_ = s.cache.Delete(PertanyaanDeteksiCacheKey)
+	_ = s.cache.Delete(cache.CacheKeyPertanyaanDeteksi)
 
 	return nil, nil
 }
 
 func (s *PertanyaanDeteksiService) GetAll() ([]dto.PertanyaanDeteksiResponse, error) {
 	// Try to get from cache
-	cachedData, err := s.cache.Get(PertanyaanDeteksiCacheKey)
+	cachedData, err := s.cache.Get(cache.CacheKeyPertanyaanDeteksi)
 	if err == nil && cachedData != "" {
 		var questions []dto.PertanyaanDeteksiResponse
 		if err := json.Unmarshal([]byte(cachedData), &questions); err == nil {
@@ -212,7 +208,7 @@ func (s *PertanyaanDeteksiService) GetAll() ([]dto.PertanyaanDeteksiResponse, er
 	go func() {
 		jsonData, err := json.Marshal(questions)
 		if err == nil {
-			_ = s.cache.Set(PertanyaanDeteksiCacheKey, string(jsonData), QuestionCacheExpiration)
+			_ = s.cache.Set(cache.CacheKeyPertanyaanDeteksi, string(jsonData), cache.DefaultCacheExpiration)
 		}
 	}()
 
@@ -279,7 +275,7 @@ func (s *PertanyaanDeteksiService) Update(id int, req dto.UpdatePertanyaanDeteks
 	}
 
 	// Invalidate cache
-	_ = s.cache.Delete(PertanyaanDeteksiCacheKey)
+	_ = s.cache.Delete(cache.CacheKeyPertanyaanDeteksi)
 
 	return nil, nil
 }
@@ -302,7 +298,7 @@ func (s *PertanyaanDeteksiService) Delete(id int) error {
 	}
 
 	// Invalidate cache
-	_ = s.cache.Delete(PertanyaanDeteksiCacheKey)
+	_ = s.cache.Delete(cache.CacheKeyPertanyaanDeteksi)
 
 	return nil
 }

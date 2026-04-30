@@ -9,6 +9,7 @@ import (
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
 	"ikas/internal/services"
+	"ikas/pkg/cache"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -107,9 +108,9 @@ func TestPertanyaanProteksiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	handler := setupPertanyaanProteksiHandler(repo, producer, redis)
 
 	expectedData := []dto.PertanyaanProteksiResponse{{ID: 1}}
-	redis.On("Get", services.PertanyaanProteksiCacheKey).Return("", errors.New("miss"))
+	redis.On("Get", cache.CacheKeyPertanyaanProteksi).Return("", errors.New("miss"))
 	repo.On("GetAll").Return(expectedData, nil)
-	redis.On("Set", services.PertanyaanProteksiCacheKey, mock.Anything, services.QuestionCacheExpiration).Return(nil)
+	redis.On("Set", cache.CacheKeyPertanyaanProteksi, mock.Anything, cache.DefaultCacheExpiration).Return(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/pertanyaan-proteksi", nil)
 	w := httptest.NewRecorder()
@@ -125,7 +126,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 	redis := new(mockRedis)
 	handler := setupPertanyaanProteksiHandler(repo, producer, redis)
 
-	redis.On("Get", services.PertanyaanProteksiCacheKey).Return("", errors.New("miss"))
+	redis.On("Get", cache.CacheKeyPertanyaanProteksi).Return("", errors.New("miss"))
 	repo.On("GetAll").Return([]dto.PertanyaanProteksiResponse{}, errors.New("db error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/pertanyaan-proteksi", nil)
@@ -195,7 +196,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Create_Success(t *testing.T) {
 		return e.Request.PertanyaanProteksi == "Pertanyaan Test"
 	})).Return(nil)
 
-	redis.On("Delete", services.PertanyaanProteksiCacheKey).Return(nil)
+	redis.On("Delete", cache.CacheKeyPertanyaanProteksi).Return(nil)
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-proteksi", bytes.NewBuffer(body))
@@ -279,7 +280,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Update_Success(t *testing.T) {
 	repo.On("Update", 1, mock.Anything).Return(nil)
 
 	producer.On("PublishPertanyaanProteksiUpdated", mock.Anything, mock.Anything).Return(nil)
-	redis.On("Delete", services.PertanyaanProteksiCacheKey).Return(nil)
+	redis.On("Delete", cache.CacheKeyPertanyaanProteksi).Return(nil)
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/pertanyaan-proteksi/1", bytes.NewBuffer(body))
@@ -357,7 +358,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	repo.On("GetByID", 1).Return(&dto.PertanyaanProteksiResponse{ID: 1}, nil)
 	repo.On("Delete", 1).Return(nil)
 	producer.On("PublishPertanyaanProteksiDeleted", mock.Anything, mock.Anything).Return(nil)
-	redis.On("Delete", services.PertanyaanProteksiCacheKey).Return(nil)
+	redis.On("Delete", cache.CacheKeyPertanyaanProteksi).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/pertanyaan-proteksi/1", nil)
 	w := httptest.NewRecorder()
