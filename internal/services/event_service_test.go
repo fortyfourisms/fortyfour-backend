@@ -110,7 +110,7 @@ func TestEventService_Create(t *testing.T) {
 			return &models.Event{ID: id, Judul: "Test"}, nil
 		},
 	}
-	svc := services.NewEventService(mockRepo, nil)
+	svc := services.NewEventService(mockRepo, nil, nil)
 
 	req := dto.CreateEventRequest{
 		Judul:     "Test",
@@ -137,7 +137,7 @@ func TestEventService_Create_WithProducer(t *testing.T) {
 	}
 	pkgProducer := pkgRmq.NewProducer(nil)
 	mockProducer := internalRmq.NewProducer(pkgProducer)
-	svc := services.NewEventService(mockRepo, mockProducer)
+	svc := services.NewEventService(mockRepo, mockProducer, nil)
 
 	req := dto.CreateEventRequest{
 		Judul:     "Test",
@@ -154,7 +154,7 @@ func TestEventService_Create_WithProducer(t *testing.T) {
 
 func TestEventService_Create_InvalidDate(t *testing.T) {
 	mockRepo := &MockEventRepository{}
-	svc := services.NewEventService(mockRepo, nil)
+	svc := services.NewEventService(mockRepo, nil, nil)
 
 	req := dto.CreateEventRequest{
 		Judul:     "Test",
@@ -179,7 +179,7 @@ func TestEventService_GetAll(t *testing.T) {
 			}, nil
 		},
 	}
-	svc := services.NewEventService(mockRepo, nil)
+	svc := services.NewEventService(mockRepo, nil, nil)
 
 	res, err := svc.GetAll()
 
@@ -197,7 +197,7 @@ func TestEventService_GetAll_Error(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	svc := services.NewEventService(mockRepo, nil)
+	svc := services.NewEventService(mockRepo, nil, nil)
 
 	_, err := svc.GetAll()
 
@@ -213,7 +213,7 @@ func TestEventService_GetByID(t *testing.T) {
 			return &models.Event{ID: id, Judul: "Test", Tanggal: now, CreatedAt: now, UpdatedAt: now}, nil
 		},
 	}
-	svc := services.NewEventService(mockRepo, nil)
+	svc := services.NewEventService(mockRepo, nil, nil)
 
 	res, err := svc.GetByID(1)
 
@@ -231,7 +231,7 @@ func TestEventService_GetByID_NotFound(t *testing.T) {
 			return nil, nil
 		},
 	}
-	svc := services.NewEventService(mockRepo, nil)
+	svc := services.NewEventService(mockRepo, nil, nil)
 
 	_, err := svc.GetByID(1)
 
@@ -246,7 +246,7 @@ func TestEventService_GetByID_Error(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	svc := services.NewEventService(mockRepo, nil)
+	svc := services.NewEventService(mockRepo, nil, nil)
 
 	_, err := svc.GetByID(1)
 
@@ -261,7 +261,7 @@ func TestEventService_Update(t *testing.T) {
 			return &models.Event{ID: id, Judul: "Old"}, nil
 		},
 	}
-	svc := services.NewEventService(mockRepo, nil)
+	svc := services.NewEventService(mockRepo, nil, nil)
 
 	judul := "New"
 	desc := "New Desc"
@@ -283,7 +283,7 @@ func TestEventService_Update_WithProducer(t *testing.T) {
 	}
 	pkgProducer := pkgRmq.NewProducer(nil)
 	mockProducer := internalRmq.NewProducer(pkgProducer)
-	svc := services.NewEventService(mockRepo, mockProducer)
+	svc := services.NewEventService(mockRepo, mockProducer, nil)
 
 	judul := "New"
 	req := dto.UpdateEventRequest{Judul: &judul}
@@ -300,7 +300,7 @@ func TestEventService_Update_InvalidDate(t *testing.T) {
 			return &models.Event{ID: id, Judul: "Old"}, nil
 		},
 	}
-	svc := services.NewEventService(mockRepo, nil)
+	svc := services.NewEventService(mockRepo, nil, nil)
 
 	tgl := "invalid-date"
 	req := dto.UpdateEventRequest{Tanggal: &tgl}
@@ -317,7 +317,7 @@ func TestEventService_Update_NotFound(t *testing.T) {
 			return nil, nil
 		},
 	}
-	svc := services.NewEventService(mockRepo, nil)
+	svc := services.NewEventService(mockRepo, nil, nil)
 
 	req := dto.UpdateEventRequest{}
 	err := svc.Update(1, req)
@@ -333,7 +333,7 @@ func TestEventService_Update_ErrorFind(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	svc := services.NewEventService(mockRepo, nil)
+	svc := services.NewEventService(mockRepo, nil, nil)
 
 	req := dto.UpdateEventRequest{}
 	err := svc.Update(1, req)
@@ -349,7 +349,7 @@ func TestEventService_Delete(t *testing.T) {
 			return &models.Event{ID: id}, nil
 		},
 	}
-	svc := services.NewEventService(mockRepo, nil)
+	svc := services.NewEventService(mockRepo, nil, nil)
 
 	err := svc.Delete(1)
 
@@ -366,7 +366,7 @@ func TestEventService_Delete_WithProducer(t *testing.T) {
 	}
 	pkgProducer := pkgRmq.NewProducer(nil)
 	mockProducer := internalRmq.NewProducer(pkgProducer)
-	svc := services.NewEventService(mockRepo, mockProducer)
+	svc := services.NewEventService(mockRepo, mockProducer, nil)
 
 	err := svc.Delete(1)
 
@@ -381,7 +381,7 @@ func TestEventService_Delete_NotFound(t *testing.T) {
 			return nil, nil
 		},
 	}
-	svc := services.NewEventService(mockRepo, nil)
+	svc := services.NewEventService(mockRepo, nil, nil)
 
 	err := svc.Delete(1)
 
@@ -396,7 +396,7 @@ func TestEventService_Delete_ErrorFind(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	svc := services.NewEventService(mockRepo, nil)
+	svc := services.NewEventService(mockRepo, nil, nil)
 
 	err := svc.Delete(1)
 
@@ -417,7 +417,7 @@ func TestEventService_Register_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	svc := services.NewEventService(repo, nil)
+	svc := services.NewEventService(repo, nil, nil)
 
 	resp, err := svc.Register(9, dto.CreateEventRegistrationRequest{
 		Nama:       "Budi Santoso",
@@ -446,7 +446,7 @@ func TestEventService_Register_DuplicateEmail(t *testing.T) {
 			return true, nil
 		},
 	}
-	svc := services.NewEventService(repo, nil)
+	svc := services.NewEventService(repo, nil, nil)
 
 	resp, err := svc.Register(9, dto.CreateEventRegistrationRequest{
 		Nama:       "Budi Santoso",
@@ -481,7 +481,7 @@ func TestEventService_Register_ConcurrentDuplicate(t *testing.T) {
 			return &mysqlDriver.MySQLError{Number: 1062, Message: "Duplicate entry '9-budi@example.com' for key 'uq_event_registration_email'"}
 		},
 	}
-	svc := services.NewEventService(repo, nil)
+	svc := services.NewEventService(repo, nil, nil)
 
 	resp, err := svc.Register(9, dto.CreateEventRegistrationRequest{
 		Nama:       "Budi Santoso",
@@ -517,7 +517,7 @@ func TestEventService_DownloadRegistrationPDF_Success(t *testing.T) {
 			}, nil
 		},
 	}
-	svc := services.NewEventService(repo, nil)
+	svc := services.NewEventService(repo, nil, nil)
 
 	pdf, filename, err := svc.DownloadRegistrationPDF(101)
 
@@ -533,7 +533,7 @@ func TestEventService_DownloadRegistrationPDF_NotFound(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	svc := services.NewEventService(repo, nil)
+	svc := services.NewEventService(repo, nil, nil)
 
 	pdf, filename, err := svc.DownloadRegistrationPDF(101)
 

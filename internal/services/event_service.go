@@ -11,6 +11,7 @@ import (
 	internalRmq "fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
 	"fortyfour-backend/internal/utils"
+	"fortyfour-backend/pkg/cache"
 	"strings"
 	"time"
 
@@ -31,12 +32,18 @@ type EventServiceInterface interface {
 type EventService struct {
 	repo     repository.EventRepositoryInterface
 	producer *internalRmq.Producer
+	rc       cache.RedisInterface
 }
 
-func NewEventService(repo repository.EventRepositoryInterface, producer *internalRmq.Producer) *EventService {
+func NewEventService(
+	repo repository.EventRepositoryInterface,
+	producer *internalRmq.Producer,
+	rc cache.RedisInterface,
+) *EventService {
 	return &EventService{
 		repo:     repo,
 		producer: producer,
+		rc:       rc,
 	}
 }
 
@@ -53,25 +60,46 @@ func (s *EventService) Create(req dto.CreateEventRequest) error {
 	}
 
 	if s.producer != nil {
-		return s.producer.PublishEventCreated(context.Background(), event)
+		err := s.producer.PublishEventCreated(context.Background(), event)
+		if err != nil {
+			return err
+		}
 	}
+
+	// Invalidate list cache
+	cacheDelete(s.rc, keyList("event"))
 	return nil
 }
 
 func (s *EventService) GetAll() ([]dto.EventResponse, error) {
+	key := keyList("event")
+	var res []dto.EventResponse
+
+	if cacheGet(s.rc, key, &res) {
+		return res, nil
+	}
+
 	list, err := s.repo.FindAll()
 	if err != nil {
 		return nil, err
 	}
 
-	var res []dto.EventResponse
 	for _, e := range list {
 		res = append(res, *mapEventToResponse(&e))
 	}
+
+	cacheSet(s.rc, key, res, TTLList)
 	return res, nil
 }
 
 func (s *EventService) GetByID(id int64) (*dto.EventResponse, error) {
+	key := keyDetail("event", fmt.Sprintf("%d", id))
+	var res dto.EventResponse
+
+	if cacheGet(s.rc, key, &res) {
+		return &res, nil
+	}
+
 	e, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -79,7 +107,10 @@ func (s *EventService) GetByID(id int64) (*dto.EventResponse, error) {
 	if e == nil {
 		return nil, errors.New("event tidak ditemukan")
 	}
-	return mapEventToResponse(e), nil
+
+	resp := mapEventToResponse(e)
+	cacheSet(s.rc, key, resp, TTLDetail)
+	return resp, nil
 }
 
 func (s *EventService) Update(id int64, req dto.UpdateEventRequest) error {
@@ -104,8 +135,15 @@ func (s *EventService) Update(id int64, req dto.UpdateEventRequest) error {
 	}
 
 	if s.producer != nil {
-		return s.producer.PublishEventUpdated(context.Background(), event)
+		err = s.producer.PublishEventUpdated(context.Background(), event)
+		if err != nil {
+			return err
+		}
 	}
+
+	// Invalidate caches
+	cacheDelete(s.rc, keyList("event"))
+	cacheDelete(s.rc, keyDetail("event", fmt.Sprintf("%d", id)))
 	return nil
 }
 
@@ -124,8 +162,15 @@ func (s *EventService) Delete(id int64) error {
 	}
 
 	if s.producer != nil {
-		return s.producer.PublishEventDeleted(context.Background(), event)
+		err = s.producer.PublishEventDeleted(context.Background(), event)
+		if err != nil {
+			return err
+		}
 	}
+
+	// Invalidate caches
+	cacheDelete(s.rc, keyList("event"))
+	cacheDelete(s.rc, keyDetail("event", fmt.Sprintf("%d", id)))
 	return nil
 }
 
@@ -194,6 +239,10 @@ func (s *EventService) Register(eventID int64, req dto.CreateEventRegistrationRe
 	if err := s.repo.UpdateRegistrationPayload(reg.ID, rawPayload); err != nil {
 		return nil, err
 	}
+
+	// Invalidate caches
+	cacheDelete(s.rc, keyList("event"))
+	cacheDelete(s.rc, keyDetail("event", fmt.Sprintf("%d", eventID)))
 
 	qrPNG, err := utils.GenerateQRCodePNG(rawPayload, 256)
 	if err != nil {
