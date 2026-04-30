@@ -7984,7 +7984,7 @@ const docTemplate = `{
         },
         "/api/survey/responden": {
             "get": {
-                "description": "Mengambil seluruh data responden",
+                "description": "Mengambil seluruh data responden beserta perusahaan dan sektor",
                 "produces": [
                     "application/json"
                 ],
@@ -8011,7 +8011,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Membuat data responden baru",
+                "description": "Membuat data responden baru berdasarkan perusahaan",
                 "consumes": [
                     "application/json"
                 ],
@@ -8024,7 +8024,7 @@ const docTemplate = `{
                 "summary": "Tambah responden",
                 "parameters": [
                     {
-                        "description": "Data responden",
+                        "description": "Create Responden Request",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -8046,8 +8046,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
                         }
                     },
-                    "409": {
-                        "description": "Conflict",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
                         }
@@ -8063,7 +8063,7 @@ const docTemplate = `{
         },
         "/api/survey/responden/{id}": {
             "get": {
-                "description": "Mengambil data responden berdasarkan ID",
+                "description": "Mengambil detail responden beserta perusahaan dan sektor",
                 "produces": [
                     "application/json"
                 ],
@@ -8108,7 +8108,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Memperbarui data responden berdasarkan ID",
+                "description": "Memperbarui data responden",
                 "consumes": [
                     "application/json"
                 ],
@@ -8128,7 +8128,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Data responden",
+                        "description": "Update Responden Request",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -8142,60 +8142,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.RespondenResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Menghapus data responden berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Responden Survey"
-                ],
-                "summary": "Hapus responden",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Responden ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
                         }
                     },
                     "400": {
@@ -9370,6 +9316,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "id_perusahaan": {
+                    "type": "string"
+                },
                 "jabatan": {
                     "type": "string"
                 },
@@ -9377,15 +9326,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "no_telepon": {
-                    "type": "string"
-                },
-                "perusahaan": {
-                    "type": "string"
-                },
-                "sektor": {
-                    "type": "string"
-                },
-                "sektor_lainnya": {
                     "type": "string"
                 },
                 "sertifikat_training": {
@@ -10254,22 +10194,28 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "id_perusahaan": {
+                    "description": "dari PERUSAHAAN",
+                    "type": "string"
+                },
                 "jabatan": {
                     "type": "string"
                 },
                 "nama_lengkap": {
+                    "description": "dari RESPONDEN",
+                    "type": "string"
+                },
+                "nama_perusahaan": {
+                    "type": "string"
+                },
+                "nama_sektor": {
+                    "type": "string"
+                },
+                "nama_sub_sektor": {
+                    "description": "dari SUB SEKTOR \u0026 SEKTOR (hasil JOIN)",
                     "type": "string"
                 },
                 "no_telepon": {
-                    "type": "string"
-                },
-                "perusahaan": {
-                    "type": "string"
-                },
-                "sektor": {
-                    "type": "string"
-                },
-                "sektor_lainnya": {
                     "type": "string"
                 },
                 "sertifikat_training": {
@@ -10597,6 +10543,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "id_perusahaan": {
+                    "type": "string"
+                },
                 "jabatan": {
                     "type": "string"
                 },
@@ -10604,15 +10553,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "no_telepon": {
-                    "type": "string"
-                },
-                "perusahaan": {
-                    "type": "string"
-                },
-                "sektor": {
-                    "type": "string"
-                },
-                "sektor_lainnya": {
                     "type": "string"
                 },
                 "sertifikat_training": {

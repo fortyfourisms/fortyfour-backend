@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// EXISTING MIDDLEWARE (TIDAK DIUBAH)
+// BASIC MIDDLEWARE
 func AdaptHandler(h http.Handler) http.Handler {
 	return h
 }
@@ -47,7 +47,7 @@ func CORS(next http.Handler) http.Handler {
 	})
 }
 
-// TAMBAHAN: CONTEXT HANDLER
+// CONTEXT HANDLER
 type contextKey string
 
 const (
@@ -55,17 +55,30 @@ const (
 	roleKey   contextKey = "role"
 )
 
-// SET ke context
+// SAFE: tidak akan panic walau ctx nil
+func ensureContext(ctx context.Context) context.Context {
+	if ctx == nil {
+		return context.Background()
+	}
+	return ctx
+}
+
+// SET
 func SetUserID(ctx context.Context, userID string) context.Context {
+	ctx = ensureContext(ctx)
 	return context.WithValue(ctx, userIDKey, userID)
 }
 
 func SetRole(ctx context.Context, role string) context.Context {
+	ctx = ensureContext(ctx)
 	return context.WithValue(ctx, roleKey, role)
 }
 
-// GET dari context (dipakai handler)
+// GET
 func GetUserID(ctx context.Context) string {
+	if ctx == nil {
+		return ""
+	}
 	if val, ok := ctx.Value(userIDKey).(string); ok {
 		return val
 	}
@@ -73,22 +86,23 @@ func GetUserID(ctx context.Context) string {
 }
 
 func GetRole(ctx context.Context) string {
+	if ctx == nil {
+		return ""
+	}
 	if val, ok := ctx.Value(roleKey).(string); ok {
 		return val
 	}
 	return ""
 }
 
-// TAMBAHAN: AUTH MIDDLEWARE (SIMPLE)
+// AUTH MIDDLEWARE
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		// Ambil dari header (sementara, bisa diganti JWT nanti)
 		userID := r.Header.Get("X-User-ID")
 		role := r.Header.Get("X-Role")
 
-		// inject ke context
-		ctx := r.Context()
+		ctx := ensureContext(r.Context())
 		ctx = SetUserID(ctx, userID)
 		ctx = SetRole(ctx, role)
 
