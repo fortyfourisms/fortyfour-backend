@@ -1756,6 +1756,304 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/kegiatan": {
+            "get": {
+                "description": "Mengambil daftar semua event/kegiatan yang tersedia",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Event"
+                ],
+                "summary": "List semua event",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/fortyfour-backend_internal_dto.EventResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Membuat record event baru (proses via RabbitMQ)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Tambah event baru",
+                "parameters": [
+                    {
+                        "description": "Data event",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateEventRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/kegiatan/registrasi/{id}/download": {
+            "get": {
+                "description": "Mengunduh bukti registrasi event dalam format PDF",
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Download PDF Registrasi",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Registration ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/kegiatan/{id}": {
+            "get": {
+                "description": "Mengambil detail satu event berdasarkan ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Detail event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/fortyfour-backend_internal_dto.EventResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Mengubah data event berdasarkan ID (proses via RabbitMQ)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Update event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data event yang diubah",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateEventRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Menghapus data event berdasarkan ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Hapus event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/kegiatan/{id}/registrasi": {
+            "post": {
+                "description": "Mendaftarkan peserta ke sebuah event",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Event"
+                ],
+                "summary": "Registrasi event",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data registrasi",
+                        "name": "registration",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateEventRegistrationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/fortyfour-backend_internal_dto.EventRegistrationResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/kelas": {
             "get": {
                 "security": [
@@ -11180,6 +11478,74 @@ const docTemplate = `{
                 }
             }
         },
+        "fortyfour-backend_internal_dto.CreateEventRegistrationRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "jabatan",
+                "nama",
+                "no_hp",
+                "perusahaan",
+                "sektor"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 255
+                },
+                "jabatan": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2
+                },
+                "nama": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                },
+                "no_hp": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 8
+                },
+                "perusahaan": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2
+                },
+                "sektor": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 2
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.CreateEventRequest": {
+            "type": "object",
+            "required": [
+                "deskripsi",
+                "judul",
+                "lokasi",
+                "tanggal"
+            ],
+            "properties": {
+                "deskripsi": {
+                    "type": "string"
+                },
+                "judul": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 5
+                },
+                "lokasi": {
+                    "type": "string"
+                },
+                "tanggal": {
+                    "type": "string",
+                    "example": "2024-12-31T15:00:00Z"
+                }
+            }
+        },
         "fortyfour-backend_internal_dto.CreateKelasRequest": {
             "type": "object",
             "required": [
@@ -11734,6 +12100,80 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "invalid credentials"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.EventRegistrationResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "download_url": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "event_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "jabatan": {
+                    "type": "string"
+                },
+                "nama": {
+                    "type": "string"
+                },
+                "no_hp": {
+                    "type": "string"
+                },
+                "perusahaan": {
+                    "type": "string"
+                },
+                "qr_code_base64": {
+                    "type": "string"
+                },
+                "qr_payload": {
+                    "type": "string"
+                },
+                "qr_token": {
+                    "type": "string"
+                },
+                "sektor": {
+                    "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.EventResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deskripsi": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "judul": {
+                    "type": "string"
+                },
+                "lokasi": {
+                    "type": "string"
+                },
+                "status": {
+                    "description": "upcoming atau past",
+                    "type": "string"
+                },
+                "tanggal": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -12874,6 +13314,25 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "tanggal_selesai": {
+                    "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.UpdateEventRequest": {
+            "type": "object",
+            "properties": {
+                "deskripsi": {
+                    "type": "string"
+                },
+                "judul": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 5
+                },
+                "lokasi": {
+                    "type": "string"
+                },
+                "tanggal": {
                     "type": "string"
                 }
             }

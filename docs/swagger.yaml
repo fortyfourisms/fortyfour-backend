@@ -1105,6 +1105,58 @@ definitions:
       tanggal_selesai:
         type: string
     type: object
+  fortyfour-backend_internal_dto.CreateEventRegistrationRequest:
+    properties:
+      email:
+        maxLength: 255
+        type: string
+      jabatan:
+        maxLength: 255
+        minLength: 2
+        type: string
+      nama:
+        maxLength: 255
+        minLength: 3
+        type: string
+      no_hp:
+        maxLength: 50
+        minLength: 8
+        type: string
+      perusahaan:
+        maxLength: 255
+        minLength: 2
+        type: string
+      sektor:
+        maxLength: 255
+        minLength: 2
+        type: string
+    required:
+    - email
+    - jabatan
+    - nama
+    - no_hp
+    - perusahaan
+    - sektor
+    type: object
+  fortyfour-backend_internal_dto.CreateEventRequest:
+    properties:
+      deskripsi:
+        type: string
+      judul:
+        maxLength: 255
+        minLength: 5
+        type: string
+      lokasi:
+        type: string
+      tanggal:
+        example: "2024-12-31T15:00:00Z"
+        type: string
+    required:
+    - deskripsi
+    - judul
+    - lokasi
+    - tanggal
+    type: object
   fortyfour-backend_internal_dto.CreateKelasRequest:
     properties:
       deskripsi:
@@ -1491,6 +1543,55 @@ definitions:
     properties:
       message:
         example: invalid credentials
+        type: string
+    type: object
+  fortyfour-backend_internal_dto.EventRegistrationResponse:
+    properties:
+      created_at:
+        type: string
+      download_url:
+        type: string
+      email:
+        type: string
+      event_id:
+        type: integer
+      id:
+        type: integer
+      jabatan:
+        type: string
+      nama:
+        type: string
+      no_hp:
+        type: string
+      perusahaan:
+        type: string
+      qr_code_base64:
+        type: string
+      qr_payload:
+        type: string
+      qr_token:
+        type: string
+      sektor:
+        type: string
+    type: object
+  fortyfour-backend_internal_dto.EventResponse:
+    properties:
+      created_at:
+        type: string
+      deskripsi:
+        type: string
+      id:
+        type: integer
+      judul:
+        type: string
+      lokasi:
+        type: string
+      status:
+        description: upcoming atau past
+        type: string
+      tanggal:
+        type: string
+      updated_at:
         type: string
     type: object
   fortyfour-backend_internal_dto.FeedbackListItem:
@@ -2242,6 +2343,19 @@ definitions:
       tanggal_mulai:
         type: string
       tanggal_selesai:
+        type: string
+    type: object
+  fortyfour-backend_internal_dto.UpdateEventRequest:
+    properties:
+      deskripsi:
+        type: string
+      judul:
+        maxLength: 255
+        minLength: 5
+        type: string
+      lokasi:
+        type: string
+      tanggal:
         type: string
     type: object
   fortyfour-backend_internal_dto.UpdateKelasRequest:
@@ -3786,6 +3900,194 @@ paths:
       summary: Ambil identifikasi berdasarkan ID
       tags:
       - Identifikasi
+  /api/kegiatan:
+    get:
+      description: Mengambil daftar semua event/kegiatan yang tersedia
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/fortyfour-backend_internal_dto.EventResponse'
+                  type: array
+              type: object
+      summary: List semua event
+      tags:
+      - Event
+    post:
+      consumes:
+      - application/json
+      description: Membuat record event baru (proses via RabbitMQ)
+      parameters:
+      - description: Data event
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.CreateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Tambah event baru
+      tags:
+      - Event
+  /api/kegiatan/{id}:
+    delete:
+      description: Menghapus data event berdasarkan ID
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Hapus event
+      tags:
+      - Event
+    get:
+      description: Mengambil detail satu event berdasarkan ID
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/fortyfour-backend_internal_dto.EventResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Detail event
+      tags:
+      - Event
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data event berdasarkan ID (proses via RabbitMQ)
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data event yang diubah
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.UpdateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Update event
+      tags:
+      - Event
+  /api/kegiatan/{id}/registrasi:
+    post:
+      consumes:
+      - application/json
+      description: Mendaftarkan peserta ke sebuah event
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data registrasi
+        in: body
+        name: registration
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.CreateEventRegistrationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/fortyfour-backend_internal_dto.EventRegistrationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Registrasi event
+      tags:
+      - Event
+  /api/kegiatan/registrasi/{id}/download:
+    get:
+      description: Mengunduh bukti registrasi event dalam format PDF
+      parameters:
+      - description: Registration ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Download PDF Registrasi
+      tags:
+      - Event
   /api/kelas:
     get:
       description: Admin melihat semua kelas. User hanya melihat kelas yang published.

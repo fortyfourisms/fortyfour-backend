@@ -47,6 +47,14 @@ func (h *EventHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ListEvents godoc
+//
+//	@Summary		List semua event
+//	@Description	Mengambil daftar semua event/kegiatan yang tersedia
+//	@Tags			Event
+//	@Produce		json
+//	@Success		200	{object}	utils.JSONResponse{data=[]dto.EventResponse}
+//	@Router			/api/kegiatan [get]
 func (h *EventHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -63,6 +71,16 @@ func (h *EventHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// GetEventByID godoc
+//
+//	@Summary		Detail event
+//	@Description	Mengambil detail satu event berdasarkan ID
+//	@Tags			Event
+//	@Produce		json
+//	@Param			id	path		string	true	"Event ID"
+//	@Success		200	{object}	utils.JSONResponse{data=dto.EventResponse}
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Router			/api/kegiatan/{id} [get]
 func (h *EventHandler) handleGetByID(w http.ResponseWriter, r *http.Request, idStr string) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -83,6 +101,17 @@ func (h *EventHandler) handleGetByID(w http.ResponseWriter, r *http.Request, idS
 	})
 }
 
+// CreateEvent godoc
+//
+//	@Summary		Tambah event baru
+//	@Description	Membuat record event baru (proses via RabbitMQ)
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			event	body		dto.CreateEventRequest	true	"Data event"
+//	@Success		201		{object}	utils.JSONResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Router			/api/kegiatan [post]
 func (h *EventHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateEventRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -110,6 +139,18 @@ func (h *EventHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// UpdateEvent godoc
+//
+//	@Summary		Update event
+//	@Description	Mengubah data event berdasarkan ID (proses via RabbitMQ)
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		string					true	"Event ID"
+//	@Param			event	body		dto.UpdateEventRequest	true	"Data event yang diubah"
+//	@Success		200		{object}	utils.JSONResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Router			/api/kegiatan/{id} [put]
 func (h *EventHandler) handleUpdate(w http.ResponseWriter, r *http.Request, idStr string) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -144,6 +185,16 @@ func (h *EventHandler) handleUpdate(w http.ResponseWriter, r *http.Request, idSt
 	})
 }
 
+// DeleteEvent godoc
+//
+//	@Summary		Hapus event
+//	@Description	Menghapus data event berdasarkan ID
+//	@Tags			Event
+//	@Produce		json
+//	@Param			id	path		string	true	"Event ID"
+//	@Success		200	{object}	utils.JSONResponse
+//	@Failure		400	{object}	dto.ErrorResponse
+//	@Router			/api/kegiatan/{id} [delete]
 func (h *EventHandler) handleDelete(w http.ResponseWriter, r *http.Request, idStr string) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -162,6 +213,18 @@ func (h *EventHandler) handleDelete(w http.ResponseWriter, r *http.Request, idSt
 	})
 }
 
+// RegisterEvent godoc
+//
+//	@Summary		Registrasi event
+//	@Description	Mendaftarkan peserta ke sebuah event
+//	@Tags			Event
+//	@Accept			json
+//	@Produce		json
+//	@Param			id				path		string								true	"Event ID"
+//	@Param			registration	body		dto.CreateEventRegistrationRequest	true	"Data registrasi"
+//	@Success		201				{object}	utils.JSONResponse{data=dto.EventRegistrationResponse}
+//	@Failure		400,409			{object}	dto.ErrorResponse
+//	@Router			/api/kegiatan/{id}/registrasi [post]
 func (h *EventHandler) handleRegister(w http.ResponseWriter, r *http.Request, eventIDStr string) {
 	eventID, err := strconv.ParseInt(eventIDStr, 10, 64)
 	if err != nil {
@@ -214,6 +277,16 @@ func (h *EventHandler) handleRegister(w http.ResponseWriter, r *http.Request, ev
 	})
 }
 
+// DownloadRegistrationPDF godoc
+//
+//	@Summary		Download PDF Registrasi
+//	@Description	Mengunduh bukti registrasi event dalam format PDF
+//	@Tags			Event
+//	@Produce		application/pdf
+//	@Param			id	path	string	true	"Registration ID"
+//	@Success		200	{file}	binary
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Router			/api/kegiatan/registrasi/{id}/download [get]
 func (h *EventHandler) handleDownloadRegistrationPDF(w http.ResponseWriter, r *http.Request, registrationIDStr string) {
 	registrationID, err := strconv.ParseInt(registrationIDStr, 10, 64)
 	if err != nil {
