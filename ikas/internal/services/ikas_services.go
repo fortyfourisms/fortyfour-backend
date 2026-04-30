@@ -2,14 +2,17 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
+	"ikas/pkg/cache"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/rollbar/rollbar-go"
 )
 
 type IkasProducerInterface interface {
@@ -37,6 +40,7 @@ type IkasService struct {
 	jawabanDetRepo   repository.JawabanDeteksiRepositoryInterface
 	jawabanGulihRepo repository.JawabanGulihRepositoryInterface
 	producer         IkasProducerInterface
+	cache            cache.RedisInterface
 }
 
 func NewIkasService(
@@ -50,6 +54,7 @@ func NewIkasService(
 	jawabanDetRepo repository.JawabanDeteksiRepositoryInterface,
 	jawabanGulihRepo repository.JawabanGulihRepositoryInterface,
 	producer IkasProducerInterface,
+	cache cache.RedisInterface,
 ) *IkasService {
 	return &IkasService{
 		repo:             repo,
@@ -62,6 +67,7 @@ func NewIkasService(
 		jawabanDetRepo:   jawabanDetRepo,
 		jawabanGulihRepo: jawabanGulihRepo,
 		producer:         producer,
+		cache:            cache,
 	}
 }
 
@@ -228,6 +234,12 @@ func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id 
 	}
 	_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
 
+	// Invalidate Cache
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyIkasRecords)
+		s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, req.IDPerusahaan))
+	}
+
 	return nil
 }
 
@@ -235,11 +247,67 @@ func (s *IkasService) GetAll(userRole string) ([]dto.IkasResponse, error) {
 	if userRole != "admin" && userRole != "staff" {
 		return nil, fmt.Errorf("anda tidak memiliki akses untuk melihat semua data")
 	}
-	return s.repo.GetAll()
+
+	if s.cache != nil {
+		cachedData, err := s.cache.Get(cache.CacheKeyIkasRecords)
+		if err == nil && cachedData != "" {
+			var result []dto.IkasResponse
+			if err := json.Unmarshal([]byte(cachedData), &result); err == nil {
+				return result, nil
+			}
+		}
+	}
+
+	data, err := s.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	if s.cache != nil && len(data) > 0 {
+		go func(dataToCache []dto.IkasResponse) {
+			jsonData, err := json.Marshal(dataToCache)
+			if err == nil {
+				err = s.cache.Set(cache.CacheKeyIkasRecords, string(jsonData), cache.DefaultCacheExpiration)
+				if err != nil {
+					rollbar.Error(fmt.Errorf("redis caching error: %v", err))
+				}
+			}
+		}(data)
+	}
+
+	return data, nil
 }
 
 func (s *IkasService) GetByPerusahaan(perusahaanID string) ([]dto.IkasResponse, error) {
-	return s.repo.GetByPerusahaan(perusahaanID)
+	cacheKey := fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, perusahaanID)
+	if s.cache != nil {
+		cachedData, err := s.cache.Get(cacheKey)
+		if err == nil && cachedData != "" {
+			var result []dto.IkasResponse
+			if err := json.Unmarshal([]byte(cachedData), &result); err == nil {
+				return result, nil
+			}
+		}
+	}
+
+	data, err := s.repo.GetByPerusahaan(perusahaanID)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.cache != nil && len(data) > 0 {
+		go func(dataToCache []dto.IkasResponse, key string) {
+			jsonData, err := json.Marshal(dataToCache)
+			if err == nil {
+				err = s.cache.Set(key, string(jsonData), cache.DefaultCacheExpiration)
+				if err != nil {
+					rollbar.Error(fmt.Errorf("redis caching error: %v", err))
+				}
+			}
+		}(data, cacheKey)
+	}
+
+	return data, nil
 }
 
 func (s *IkasService) GetByID(id string, userRole string, userPerusahaanID string) (*dto.IkasResponse, error) {
@@ -344,6 +412,17 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 
 	if err := s.producer.PublishIkasUpdated(ctx, event); err != nil {
 		return id, err
+	}
+
+	// Invalidate Cache
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyIkasRecords)
+		if current.Perusahaan != nil {
+			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, current.Perusahaan.ID))
+		}
+		if req.IDPerusahaan != nil {
+			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, *req.IDPerusahaan))
+		}
 	}
 
 	return id, nil
@@ -500,6 +579,14 @@ func (s *IkasService) Delete(ctx context.Context, id string, userID string, user
 	}
 	_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
 
+	// Invalidate Cache
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyIkasRecords)
+		if existing.Perusahaan != nil {
+			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, existing.Perusahaan.ID))
+		}
+	}
+
 	return nil
 }
 
@@ -594,6 +681,14 @@ func (s *IkasService) ValidateIkas(ctx context.Context, id string, status bool) 
 		_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
 	}
 
+	// Invalidate Cache
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyIkasRecords)
+		if existing.Perusahaan != nil {
+			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, existing.Perusahaan.ID))
+		}
+	}
+
 	return nil
 }
 func (s *IkasService) ExportByIDPDF(ctx context.Context, id string, userRole string, userPerusahaanID string) (*dto.IkasResponse, []byte, error) {
@@ -679,6 +774,14 @@ func (s *IkasService) ApproveEdit(ctx context.Context, id string) error {
 			ActionedAt:     time.Now(),
 		}
 		_ = s.producer.PublishIkasEditActioned(ctx, event)
+	}
+
+	// Invalidate Cache
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyIkasRecords)
+		if ikas.Perusahaan != nil {
+			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, ikas.Perusahaan.ID))
+		}
 	}
 
 	return nil

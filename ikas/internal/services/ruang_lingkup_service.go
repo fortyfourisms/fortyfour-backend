@@ -3,11 +3,13 @@ package services
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
+	"ikas/pkg/cache"
 	"time"
 
 	"fortyfour-backend/pkg/logger"
@@ -22,12 +24,18 @@ type RuangLingkupProducerInterface interface {
 type RuangLingkupService struct {
 	repo     repository.RuangLingkupRepositoryInterface
 	producer RuangLingkupProducerInterface
+	cache    cache.RedisInterface
 }
 
-func NewRuangLingkupService(repo repository.RuangLingkupRepositoryInterface, producer RuangLingkupProducerInterface) *RuangLingkupService {
+func NewRuangLingkupService(
+	repo repository.RuangLingkupRepositoryInterface,
+	producer RuangLingkupProducerInterface,
+	cache cache.RedisInterface,
+) *RuangLingkupService {
 	return &RuangLingkupService{
 		repo:     repo,
 		producer: producer,
+		cache:    cache,
 	}
 }
 
@@ -125,11 +133,39 @@ func (s *RuangLingkupService) Create(req dto.CreateRuangLingkupRequest) (*dto.Ru
 		return nil, err
 	}
 
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyRuangLingkup)
+	}
+
 	return nil, nil
 }
 
 func (s *RuangLingkupService) GetAll() ([]dto.RuangLingkupResponse, error) {
-	return s.repo.GetAll()
+	if s.cache != nil {
+		cachedData, err := s.cache.Get(cache.CacheKeyRuangLingkup)
+		if err == nil && cachedData != "" {
+			var data []dto.RuangLingkupResponse
+			if err := json.Unmarshal([]byte(cachedData), &data); err == nil {
+				return data, nil
+			}
+		}
+	}
+
+	data, err := s.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	if s.cache != nil {
+		go func(dataToCache []dto.RuangLingkupResponse) {
+			jsonData, err := json.Marshal(dataToCache)
+			if err == nil {
+				_ = s.cache.Set(cache.CacheKeyRuangLingkup, string(jsonData), cache.DefaultCacheExpiration)
+			}
+		}(data)
+	}
+
+	return data, nil
 }
 
 func (s *RuangLingkupService) GetByID(id int) (*dto.RuangLingkupResponse, error) {
@@ -180,6 +216,10 @@ func (s *RuangLingkupService) Update(id int, req dto.UpdateRuangLingkupRequest) 
 		return nil, err
 	}
 
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyRuangLingkup)
+	}
+
 	return nil, nil
 }
 
@@ -207,6 +247,10 @@ func (s *RuangLingkupService) Delete(id int) error {
 	})
 	if err != nil {
 		return err
+	}
+
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyRuangLingkup)
 	}
 
 	return nil

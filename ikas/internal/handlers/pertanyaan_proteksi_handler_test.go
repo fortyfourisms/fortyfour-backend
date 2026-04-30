@@ -9,6 +9,7 @@ import (
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
 	"ikas/internal/services"
+	"ikas/pkg/cache"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -89,18 +90,27 @@ func (m *mockPertanyaanProteksiProducer) PublishPertanyaanProteksiDeleted(ctx co
 var _ repository.PertanyaanProteksiRepositoryInterface = (*mockPertanyaanProteksiRepository)(nil)
 var _ services.PertanyaanProteksiProducerInterface = (*mockPertanyaanProteksiProducer)(nil)
 
-func setupPertanyaanProteksiHandler(repo *mockPertanyaanProteksiRepository, producer *mockPertanyaanProteksiProducer) *PertanyaanProteksiHandler {
-	service := services.NewPertanyaanProteksiService(repo, producer)
+func setupPertanyaanProteksiHandler(repo *mockPertanyaanProteksiRepository, producer *mockPertanyaanProteksiProducer, redis *mockRedis) *PertanyaanProteksiHandler {
+	if redis == nil {
+		redis = new(mockRedis)
+		redis.On("Get", mock.Anything).Return("", errors.New("cache miss")).Maybe()
+		redis.On("Delete", mock.Anything).Return(nil).Maybe()
+		redis.On("Set", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
+	}
+	service := services.NewPertanyaanProteksiService(repo, producer, redis)
 	return NewPertanyaanProteksiHandler(service)
 }
 
 func TestPertanyaanProteksiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
 	producer := new(mockPertanyaanProteksiProducer)
-	handler := setupPertanyaanProteksiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanProteksiHandler(repo, producer, redis)
 
 	expectedData := []dto.PertanyaanProteksiResponse{{ID: 1}}
+	redis.On("Get", cache.CacheKeyPertanyaanProteksi).Return("", errors.New("miss"))
 	repo.On("GetAll").Return(expectedData, nil)
+	redis.On("Set", cache.CacheKeyPertanyaanProteksi, mock.Anything, cache.DefaultCacheExpiration).Return(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/pertanyaan-proteksi", nil)
 	w := httptest.NewRecorder()
@@ -113,8 +123,10 @@ func TestPertanyaanProteksiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 func TestPertanyaanProteksiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
 	producer := new(mockPertanyaanProteksiProducer)
-	handler := setupPertanyaanProteksiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanProteksiHandler(repo, producer, redis)
 
+	redis.On("Get", cache.CacheKeyPertanyaanProteksi).Return("", errors.New("miss"))
 	repo.On("GetAll").Return([]dto.PertanyaanProteksiResponse{}, errors.New("db error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/pertanyaan-proteksi", nil)
@@ -128,7 +140,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 func TestPertanyaanProteksiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
 	producer := new(mockPertanyaanProteksiProducer)
-	handler := setupPertanyaanProteksiHandler(repo, producer)
+	handler := setupPertanyaanProteksiHandler(repo, producer, nil)
 
 	expectedData := &dto.PertanyaanProteksiResponse{ID: 1}
 	repo.On("GetByID", 1).Return(expectedData, nil)
@@ -143,7 +155,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 
 func TestPertanyaanProteksiHandler_ServeHTTP_GetByID_NotFound(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
-	handler := setupPertanyaanProteksiHandler(repo, nil)
+	handler := setupPertanyaanProteksiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanProteksiResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -157,7 +169,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_GetByID_NotFound(t *testing.T) {
 
 func TestPertanyaanProteksiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
-	handler := setupPertanyaanProteksiHandler(repo, nil)
+	handler := setupPertanyaanProteksiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanProteksiResponse)(nil), errors.New("system error"))
 
@@ -172,7 +184,8 @@ func TestPertanyaanProteksiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 func TestPertanyaanProteksiHandler_ServeHTTP_Create_Success(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
 	producer := new(mockPertanyaanProteksiProducer)
-	handler := setupPertanyaanProteksiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanProteksiHandler(repo, producer, redis)
 
 	createReq := dto.CreatePertanyaanProteksiRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanProteksi: "Pertanyaan Test"}
 	repo.On("CheckSubKategoriExists", 1).Return(true, nil)
@@ -182,6 +195,8 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Create_Success(t *testing.T) {
 	producer.On("PublishPertanyaanProteksiCreated", mock.Anything, mock.MatchedBy(func(e dto_event.PertanyaanProteksiCreatedEvent) bool {
 		return e.Request.PertanyaanProteksi == "Pertanyaan Test"
 	})).Return(nil)
+
+	redis.On("Delete", cache.CacheKeyPertanyaanProteksi).Return(nil)
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-proteksi", bytes.NewBuffer(body))
@@ -193,7 +208,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Create_Success(t *testing.T) {
 }
 
 func TestPertanyaanProteksiHandler_ServeHTTP_Create_InvalidJSON(t *testing.T) {
-	handler := setupPertanyaanProteksiHandler(nil, nil)
+	handler := setupPertanyaanProteksiHandler(nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-proteksi", bytes.NewBufferString("invalid json"))
 	w := httptest.NewRecorder()
@@ -205,7 +220,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Create_InvalidJSON(t *testing.T) {
 
 func TestPertanyaanProteksiHandler_ServeHTTP_Create_SubKategoriNotFound(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
-	handler := setupPertanyaanProteksiHandler(repo, nil)
+	handler := setupPertanyaanProteksiHandler(repo, nil, nil)
 
 	createReq := dto.CreatePertanyaanProteksiRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanProteksi: "Pertanyaan Test"}
 	repo.On("CheckSubKategoriExists", 1).Return(false, nil)
@@ -221,7 +236,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Create_SubKategoriNotFound(t *testi
 
 func TestPertanyaanProteksiHandler_ServeHTTP_Create_ValidationError(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
-	handler := setupPertanyaanProteksiHandler(repo, nil)
+	handler := setupPertanyaanProteksiHandler(repo, nil, nil)
 
 	createReq := dto.CreatePertanyaanProteksiRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanProteksi: ""}
 	repo.On("CheckSubKategoriExists", 1).Return(true, nil)
@@ -239,7 +254,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Create_ValidationError(t *testing.T
 
 func TestPertanyaanProteksiHandler_ServeHTTP_Create_SystemError(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
-	handler := setupPertanyaanProteksiHandler(repo, nil)
+	handler := setupPertanyaanProteksiHandler(repo, nil, nil)
 
 	createReq := dto.CreatePertanyaanProteksiRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanProteksi: "Test"}
 	repo.On("CheckSubKategoriExists", 1).Return(false, errors.New("db error"))
@@ -256,7 +271,8 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Create_SystemError(t *testing.T) {
 func TestPertanyaanProteksiHandler_ServeHTTP_Update_Success(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
 	producer := new(mockPertanyaanProteksiProducer)
-	handler := setupPertanyaanProteksiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanProteksiHandler(repo, producer, redis)
 
 	updateReq := dto.UpdatePertanyaanProteksiRequest{PertanyaanProteksi: proteksiStrPtr("Pertanyaan Ubah")}
 
@@ -264,6 +280,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Update_Success(t *testing.T) {
 	repo.On("Update", 1, mock.Anything).Return(nil)
 
 	producer.On("PublishPertanyaanProteksiUpdated", mock.Anything, mock.Anything).Return(nil)
+	redis.On("Delete", cache.CacheKeyPertanyaanProteksi).Return(nil)
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/pertanyaan-proteksi/1", bytes.NewBuffer(body))
@@ -276,7 +293,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Update_Success(t *testing.T) {
 }
 
 func TestPertanyaanProteksiHandler_ServeHTTP_Update_InvalidJSON(t *testing.T) {
-	handler := setupPertanyaanProteksiHandler(nil, nil)
+	handler := setupPertanyaanProteksiHandler(nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/pertanyaan-proteksi/1", bytes.NewBufferString("invalid json"))
 	w := httptest.NewRecorder()
@@ -288,7 +305,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Update_InvalidJSON(t *testing.T) {
 
 func TestPertanyaanProteksiHandler_ServeHTTP_Update_NotFound(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
-	handler := setupPertanyaanProteksiHandler(repo, nil)
+	handler := setupPertanyaanProteksiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanProteksiResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -303,7 +320,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Update_NotFound(t *testing.T) {
 
 func TestPertanyaanProteksiHandler_ServeHTTP_Update_ValidationError(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
-	handler := setupPertanyaanProteksiHandler(repo, nil)
+	handler := setupPertanyaanProteksiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return(&dto.PertanyaanProteksiResponse{ID: 1}, nil)
 	repo.On("Update", 1, mock.Anything).Return(errors.New("pertanyaan_proteksi tidak boleh kosong"))
@@ -319,7 +336,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Update_ValidationError(t *testing.T
 
 func TestPertanyaanProteksiHandler_ServeHTTP_Update_SystemError(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
-	handler := setupPertanyaanProteksiHandler(repo, nil)
+	handler := setupPertanyaanProteksiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanProteksiResponse)(nil), errors.New("db error"))
 
@@ -335,11 +352,13 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Update_SystemError(t *testing.T) {
 func TestPertanyaanProteksiHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
 	producer := new(mockPertanyaanProteksiProducer)
-	handler := setupPertanyaanProteksiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanProteksiHandler(repo, producer, redis)
 
 	repo.On("GetByID", 1).Return(&dto.PertanyaanProteksiResponse{ID: 1}, nil)
 	repo.On("Delete", 1).Return(nil)
 	producer.On("PublishPertanyaanProteksiDeleted", mock.Anything, mock.Anything).Return(nil)
+	redis.On("Delete", cache.CacheKeyPertanyaanProteksi).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/pertanyaan-proteksi/1", nil)
 	w := httptest.NewRecorder()
@@ -351,7 +370,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Delete_Success(t *testing.T) {
 
 func TestPertanyaanProteksiHandler_ServeHTTP_Delete_NotFound(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
-	handler := setupPertanyaanProteksiHandler(repo, nil)
+	handler := setupPertanyaanProteksiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanProteksiResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -365,7 +384,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Delete_NotFound(t *testing.T) {
 
 func TestPertanyaanProteksiHandler_ServeHTTP_Delete_SystemError(t *testing.T) {
 	repo := new(mockPertanyaanProteksiRepository)
-	handler := setupPertanyaanProteksiHandler(repo, nil)
+	handler := setupPertanyaanProteksiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanProteksiResponse)(nil), errors.New("system error"))
 
@@ -378,7 +397,7 @@ func TestPertanyaanProteksiHandler_ServeHTTP_Delete_SystemError(t *testing.T) {
 }
 
 func TestPertanyaanProteksiHandler_ServeHTTP_MethodValidation(t *testing.T) {
-	handler := setupPertanyaanProteksiHandler(nil, nil)
+	handler := setupPertanyaanProteksiHandler(nil, nil, nil)
 
 	t.Run("POST with ID", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-proteksi/1", nil)

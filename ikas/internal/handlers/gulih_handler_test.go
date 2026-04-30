@@ -52,7 +52,7 @@ func (m *mockGulihRepository) CloneByIkasID(oldIkasID string, newIkasID string) 
 var _ repository.GulihRepositoryInterface = (*mockGulihRepository)(nil)
 
 func setupGulihHandler(repo repository.GulihRepositoryInterface, ikasRepo repository.IkasRepositoryInterface) *GulihHandler {
-	service := services.NewGulihService(repo, ikasRepo)
+	service := services.NewGulihService(repo, ikasRepo, nil)
 	return NewGulihHandler(service)
 }
 

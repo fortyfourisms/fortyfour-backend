@@ -3,11 +3,14 @@ package services
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
+	"ikas/pkg/cache"
 	"time"
 
 	"github.com/rollbar/rollbar-go"
@@ -25,6 +28,7 @@ type JawabanDeteksiService struct {
 	ikasRepo repository.IkasRepositoryInterface
 	producer JawabanDeteksiProducerInterface
 	ikasSvc  *IkasService
+	cache    cache.RedisInterface
 }
 
 func NewJawabanDeteksiService(
@@ -32,12 +36,14 @@ func NewJawabanDeteksiService(
 	ikasRepo repository.IkasRepositoryInterface,
 	producer JawabanDeteksiProducerInterface,
 	ikasSvc *IkasService,
+	cache cache.RedisInterface,
 ) *JawabanDeteksiService {
 	return &JawabanDeteksiService{
 		repo:     repo,
 		ikasRepo: ikasRepo,
 		producer: producer,
 		ikasSvc:  ikasSvc,
+		cache:    cache,
 	}
 }
 
@@ -171,6 +177,11 @@ func (s *JawabanDeteksiService) Create(req dto.CreateJawabanDeteksiRequest, user
 		return "", err
 	}
 
+	if s.cache != nil {
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixJawabanDeteksi, req.IkasID))
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixDeteksi, req.IkasID))
+	}
+
 	return "Berhasil menyimpan data", nil
 }
 
@@ -222,7 +233,32 @@ func (s *JawabanDeteksiService) GetByIkasID(ikasID string, userRole string, user
 		}
 	}
 
-	return s.repo.GetByIkasID(ikasID)
+	cacheKey := fmt.Sprintf("%s%s", cache.CacheKeyPrefixJawabanDeteksi, ikasID)
+	if s.cache != nil {
+		cachedData, err := s.cache.Get(cacheKey)
+		if err == nil && cachedData != "" {
+			var data []dto.JawabanDeteksiResponse
+			if err := json.Unmarshal([]byte(cachedData), &data); err == nil {
+				return data, nil
+			}
+		}
+	}
+
+	data, err := s.repo.GetByIkasID(ikasID)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.cache != nil {
+		go func(key string, dataToCache []dto.JawabanDeteksiResponse) {
+			jsonData, err := json.Marshal(dataToCache)
+			if err == nil {
+				_ = s.cache.Set(key, string(jsonData), cache.DefaultCacheExpiration)
+			}
+		}(cacheKey, data)
+	}
+
+	return data, nil
 }
 
 func (s *JawabanDeteksiService) GetByPerusahaanID(perusahaanID string, userRole string, userPerusahaanID string) ([]dto.JawabanDeteksiResponse, error) {
@@ -350,6 +386,11 @@ func (s *JawabanDeteksiService) Update(id int, req dto.UpdateJawabanDeteksiReque
 		return 0, "", err
 	}
 
+	if s.cache != nil {
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixJawabanDeteksi, existing.IkasID))
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixDeteksi, existing.IkasID))
+	}
+
 	return id, msg, nil
 }
 
@@ -402,6 +443,11 @@ func (s *JawabanDeteksiService) Delete(id int, userID string, userRole string, u
 	if err := s.producer.PublishJawabanDeteksiDeleted(context.Background(), event); err != nil {
 		rollbar.Error(err)
 		return err
+	}
+
+	if s.cache != nil {
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixJawabanDeteksi, existing.IkasID))
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixDeteksi, existing.IkasID))
 	}
 
 	return nil

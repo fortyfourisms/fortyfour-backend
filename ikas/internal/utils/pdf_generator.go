@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"ikas/internal/dto"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -36,7 +38,8 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.AddPage()
 
 	// 1. Logo BSSN at Top Center
-	logoPath := "/Users/khrisnandika/Desktop/Maganghub BSSN/fortyfour-backend/ikas/internal/assets/bssn.png"
+	pwd, _ := os.Getwd()
+	logoPath := filepath.Join(pwd, "ikas", "internal", "assets", "bssn.png")
 	pdf.ImageOptions(logoPath, (210-35)/2, 10, 35, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
 	pdf.Ln(32)
 
@@ -85,10 +88,10 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
 	pdf.CellFormat(col1V, 5, toSafe(data.Perusahaan.Sektor), "", 0, "L", false, 0, "")
 	pdf.SetFont("Arial", "B", 10)
-	pdf.CellFormat(col2L, 5, "Responden/", "", 0, "L", false, 0, "")
+	pdf.CellFormat(col2L, 5, "Responden", "", 0, "L", false, 0, "")
 	pdf.SetFont("Arial", "", 10)
 	pdf.CellFormat(5, 5, ":", "", 0, "L", false, 0, "")
-	pdf.CellFormat(col2V, 5, toSafe(data.Responden)+"/", "", 1, "L", false, 0, "")
+	pdf.CellFormat(col2V, 5, toSafe(data.Responden), "", 1, "L", false, 0, "")
 
 	pdf.SetFont("Arial", "B", 10)
 	pdf.CellFormat(col1L, 5, "Tanggal", "", 0, "L", false, 0, "")
@@ -115,11 +118,11 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.CellFormat(0, 5, "KEMATANGAN KEAMANAN SIBER (IKAS) v.1.2.1", "", 1, "C", false, 0, "")
 	pdf.Ln(3)
 
-	// --- WATERMARK IKAS (Centered on the table area) ---
-	watermarkPath := "/Users/khrisnandika/Desktop/Maganghub BSSN/fortyfour-backend/ikas/internal/assets/ikas.png"
-	wmW := 150.0
-	// Place it before the table so it stays behind the text
-	pdf.ImageOptions(watermarkPath, (210-wmW)/2, pdf.GetY()-10, wmW, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
+	// --- WATERMARK IKAS (Centered on the page) ---
+	watermarkPath := filepath.Join(pwd, "ikas", "internal", "assets", "ikas.png")
+	wmW := 180.0
+	// Centering 300mm on 210mm paper: (210 - 300) / 2 = -45
+	pdf.ImageOptions(watermarkPath, -45, pdf.GetY()-15, wmW, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
 
 	// 6. Results Table
 	tableW := 140.0
@@ -127,9 +130,9 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.SetX(startX)
 	pdf.SetFont("Arial", "B", 10)
 	pdf.SetFillColor(240, 240, 240)
-	pdf.CellFormat(20, 7, "No.", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(80, 7, "Domain", "1", 0, "C", true, 0, "")
-	pdf.CellFormat(40, 7, "Nilai", "1", 1, "C", true, 0, "")
+	pdf.CellFormat(20, 7, "No.", "1", 0, "C", false, 0, "")
+	pdf.CellFormat(80, 7, "Domain", "1", 0, "C", false, 0, "")
+	pdf.CellFormat(40, 7, "Nilai", "1", 1, "C", false, 0, "")
 
 	pdf.SetFont("Arial", "", 10)
 	domains := []struct {
@@ -164,11 +167,11 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 
 	pdf.SetX(startX)
 	pdf.SetFont("Arial", "B", 10)
-	pdf.CellFormat(100, 7, "Nilai Kematangan", "1", 0, "R", true, 0, "")
-	pdf.CellFormat(40, 7, fmt.Sprintf("%.2f", data.NilaiKematangan), "1", 1, "C", true, 0, "")
+	pdf.CellFormat(100, 7, "Nilai Kematangan", "1", 0, "R", false, 0, "")
+	pdf.CellFormat(40, 7, fmt.Sprintf("%.2f", data.NilaiKematangan), "1", 1, "C", false, 0, "")
 	pdf.SetX(startX)
-	pdf.CellFormat(100, 7, "Kategori Tingkat Kematangan", "1", 0, "R", true, 0, "")
-	pdf.CellFormat(40, 7, toSafe(data.KategoriKematanganKeamananSiber), "1", 1, "C", true, 0, "")
+	pdf.CellFormat(100, 7, "Kategori Tingkat Kematangan", "1", 0, "R", false, 0, "")
+	pdf.CellFormat(40, 7, toSafe(data.KategoriKematanganKeamananSiber), "1", 1, "C", false, 0, "")
 
 	// 7. Kriteria
 	pdf.SetX(startX)
@@ -176,11 +179,45 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.CellFormat(140, 4, "Kriteria:", "LR", 1, "L", false, 0, "")
 	pdf.SetX(startX)
 	pdf.SetFont("Arial", "", 8)
-	kriteriaText := "A. Kondisi penerapan keamanan siber dalam tahap implementasi awal\n" +
-		"B. Penerapan keamanan siber belum memiliki prosedur yang terorganisir\n" +
-		"C. Penerapan keamanan siber bersifat informal\n" +
-		"D. Keamanan siber tidak dilakukan secara konsisten dan berkelanjutan\n" +
-		"E. Dokumen manajemen risiko dan dokumen kontrol belum disusun"
+
+	var kriteriaText string
+	category := strings.ToLower(data.KategoriKematanganKeamananSiber)
+
+	if strings.Contains(category, "level 1") {
+		kriteriaText = "A. Kondisi penerapan keamanan siber dalam tahap implementasi awal\n" +
+			"B. Penerapan keamanan siber belum memiliki prosedur yang terorganisir\n" +
+			"C. Penerapan keamanan siber bersifat informal\n" +
+			"D. Keamanan siber tidak dilakukan secara konsisten dan berkelanjutan\n" +
+			"E. Dokumen manajemen risiko dan dokumen kontrol belum disusun"
+	} else if strings.Contains(category, "level 2") {
+		kriteriaText = "A. Kondisi penerapan keamanan siber dalam tahap implementasi yang berulang\n" +
+			"B. Penerapan keamanan siber sudah memiliki prosedur yang terorganisir\n" +
+			"C. Penerapan keamanan siber bersifat informal\n" +
+			"D. Keamanan siber dilakukan secara berulang namun belum konsisten dan berkelanjutan\n" +
+			"E. Dokumen manajemen risiko dan dokumen kontrol sudah disusun namun belum ditetapkan"
+	} else if strings.Contains(category, "level 3") {
+		kriteriaText = "A. Kondisi penerapan keamanan siber dalam tahap implementasi yang telah terdefinisi dengan baik\n" +
+			"B. Penerapan keamanan siber terorganisir dengan jelas\n" +
+			"C. Penerapan keamanan siber bersifat formal\n" +
+			"D. Keamanan siber dilakukan secara berulang dan konsisten serta direviu secara berkala\n" +
+			"E. Dokumen manajemen risiko dan dokumen kontrol sudah disusun dan sudah ditetapkan"
+	} else if strings.Contains(category, "level 4") {
+		kriteriaText = "A. Kondisi penerapan keamanan siber dalam tahap implementasi yang telah terkelola dengan baik\n" +
+			"B. Penerapan keamanan siber terorganisir dengan baik namun belum dilakukan proses otomatisasi\n" +
+			"C. Penerapan keamanan siber bersifat formal\n" +
+			"D. Keamanan siber dilakukan secara berulang dan implementasi perbaikan dilakukan berkelanjutan\n" +
+			"E. Dokumen manajemen risiko dan dokumen kontrol sudah disusun dan sudah ditetapkan"
+	} else if strings.Contains(category, "level 5") {
+		kriteriaText = "A. Kondisi penerapan keamanan siber telah diimplementasikan secara optimal\n" +
+			"B. Penerapan keamanan siber telah terorganisir dengan baik dan telah dilakukan proses otomatisasi\n" +
+			"C. Penerapan keamanan siber bersifat formal\n" +
+			"D. Keamanan siber dilakukan secara berulang dan konsisten serta telah terintegrasi dan menjadi bagian budaya organisasi secara menyeluruh\n" +
+			"E. Dokumen manajemen risiko dan dokumen kontrol sudah ditetapkan"
+	} else {
+		// Empty if unknown
+		kriteriaText = ""
+	}
+
 	pdf.MultiCell(140, 4, toSafe(kriteriaText), "LRB", "L", false)
 
 	pdf.Ln(8)
@@ -198,7 +235,6 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.Ln(10)
 
 	// 9. Signature
-	signaturePath := "/Users/khrisnandika/Desktop/Maganghub BSSN/fortyfour-backend/ikas/internal/assets/tteikas.jpg"
 	sigW := 55.0
 	sigX := 210 - pageMargin - sigW
 
@@ -207,8 +243,6 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.CellFormat(sigW, 5, "Ketua Tim Penilaian Kematangan", "", 1, "C", false, 0, "")
 	pdf.SetX(sigX)
 	pdf.CellFormat(sigW, 5, "Keamanan Siber Sektor Industri,", "", 1, "C", false, 0, "")
-
-	pdf.ImageOptions(signaturePath, sigX, pdf.GetY()+2, sigW, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
 
 	// 10. Footer
 	pdf.SetY(275)

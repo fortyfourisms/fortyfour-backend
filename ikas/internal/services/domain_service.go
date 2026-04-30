@@ -3,11 +3,13 @@ package services
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
+	"ikas/pkg/cache"
 	"time"
 
 	"fortyfour-backend/pkg/logger"
@@ -22,10 +24,11 @@ type DomainProducerInterface interface {
 type DomainService struct {
 	repo     repository.DomainRepositoryInterface
 	producer DomainProducerInterface
+	cache    cache.RedisInterface
 }
 
-func NewDomainService(repo repository.DomainRepositoryInterface, producer DomainProducerInterface) *DomainService {
-	return &DomainService{repo: repo, producer: producer}
+func NewDomainService(repo repository.DomainRepositoryInterface, producer DomainProducerInterface, cache cache.RedisInterface) *DomainService {
+	return &DomainService{repo: repo, producer: producer, cache: cache}
 }
 
 func (s *DomainService) validateCreate(req *dto.CreateDomainRequest) error {
@@ -95,11 +98,39 @@ func (s *DomainService) Create(req dto.CreateDomainRequest) (*dto.DomainResponse
 		return nil, err
 	}
 
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyDomain)
+	}
+
 	return nil, nil
 }
 
 func (s *DomainService) GetAll() ([]dto.DomainResponse, error) {
-	return s.repo.GetAll()
+	if s.cache != nil {
+		cachedData, err := s.cache.Get(cache.CacheKeyDomain)
+		if err == nil && cachedData != "" {
+			var data []dto.DomainResponse
+			if err := json.Unmarshal([]byte(cachedData), &data); err == nil {
+				return data, nil
+			}
+		}
+	}
+
+	data, err := s.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	if s.cache != nil {
+		go func(dataToCache []dto.DomainResponse) {
+			jsonData, err := json.Marshal(dataToCache)
+			if err == nil {
+				_ = s.cache.Set(cache.CacheKeyDomain, string(jsonData), cache.DefaultCacheExpiration)
+			}
+		}(data)
+	}
+
+	return data, nil
 }
 
 func (s *DomainService) GetByID(id int) (*dto.DomainResponse, error) {
@@ -145,6 +176,10 @@ func (s *DomainService) Update(id int, req dto.UpdateDomainRequest) (*dto.Domain
 		return nil, err
 	}
 
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyDomain)
+	}
+
 	return nil, nil
 }
 
@@ -171,6 +206,10 @@ func (s *DomainService) Delete(id int) error {
 	}); err != nil {
 		logger.Error(err, "operation failed")
 		return err
+	}
+
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyDomain)
 	}
 
 	return nil

@@ -52,7 +52,7 @@ func (m *mockIdentifikasiRepository) CloneByIkasID(oldIkasID string, newIkasID s
 var _ repository.IdentifikasiRepositoryInterface = (*mockIdentifikasiRepository)(nil)
 
 func setupIdentifikasiHandler(repo repository.IdentifikasiRepositoryInterface, ikasRepo repository.IkasRepositoryInterface) *IdentifikasiHandler {
-	service := services.NewIdentifikasiService(repo, ikasRepo)
+	service := services.NewIdentifikasiService(repo, ikasRepo, nil)
 	return NewIdentifikasiHandler(service)
 }
 

@@ -3,11 +3,13 @@ package services
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
+	"ikas/pkg/cache"
 	"time"
 
 	"fortyfour-backend/pkg/logger"
@@ -22,12 +24,18 @@ type KategoriProducerInterface interface {
 type KategoriService struct {
 	repo     repository.KategoriRepositoryInterface
 	producer KategoriProducerInterface
+	cache    cache.RedisInterface
 }
 
-func NewKategoriService(repo repository.KategoriRepositoryInterface, producer KategoriProducerInterface) *KategoriService {
+func NewKategoriService(
+	repo repository.KategoriRepositoryInterface,
+	producer KategoriProducerInterface,
+	cache cache.RedisInterface,
+) *KategoriService {
 	return &KategoriService{
 		repo:     repo,
 		producer: producer,
+		cache:    cache,
 	}
 }
 
@@ -135,11 +143,39 @@ func (s *KategoriService) Create(req dto.CreateKategoriRequest) (*dto.KategoriRe
 		return nil, err
 	}
 
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyKategori)
+	}
+
 	return nil, nil
 }
 
 func (s *KategoriService) GetAll() ([]dto.KategoriResponse, error) {
-	return s.repo.GetAll()
+	if s.cache != nil {
+		cachedData, err := s.cache.Get(cache.CacheKeyKategori)
+		if err == nil && cachedData != "" {
+			var data []dto.KategoriResponse
+			if err := json.Unmarshal([]byte(cachedData), &data); err == nil {
+				return data, nil
+			}
+		}
+	}
+
+	data, err := s.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	if s.cache != nil {
+		go func(dataToCache []dto.KategoriResponse) {
+			jsonData, err := json.Marshal(dataToCache)
+			if err == nil {
+				_ = s.cache.Set(cache.CacheKeyKategori, string(jsonData), cache.DefaultCacheExpiration)
+			}
+		}(data)
+	}
+
+	return data, nil
 }
 
 func (s *KategoriService) GetByID(id int) (*dto.KategoriResponse, error) {
@@ -207,6 +243,10 @@ func (s *KategoriService) Update(id int, req dto.UpdateKategoriRequest) (*dto.Ka
 		return nil, err
 	}
 
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyKategori)
+	}
+
 	return nil, nil
 }
 
@@ -234,6 +274,10 @@ func (s *KategoriService) Delete(id int) error {
 	})
 	if err != nil {
 		return err
+	}
+
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyKategori)
 	}
 
 	return nil

@@ -9,6 +9,7 @@ import (
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
 	"ikas/internal/services"
+	"ikas/pkg/cache"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -89,18 +90,27 @@ func (m *mockPertanyaanIdentifikasiProducer) PublishPertanyaanIdentifikasiDelete
 var _ repository.PertanyaanIdentifikasiRepositoryInterface = (*mockPertanyaanIdentifikasiRepository)(nil)
 var _ services.PertanyaanIdentifikasiProducerInterface = (*mockPertanyaanIdentifikasiProducer)(nil)
 
-func setupPertanyaanIdentifikasiHandler(repo *mockPertanyaanIdentifikasiRepository, producer *mockPertanyaanIdentifikasiProducer) *PertanyaanIdentifikasiHandler {
-	service := services.NewPertanyaanIdentifikasiService(repo, producer)
+func setupPertanyaanIdentifikasiHandler(repo *mockPertanyaanIdentifikasiRepository, producer *mockPertanyaanIdentifikasiProducer, redis *mockRedis) *PertanyaanIdentifikasiHandler {
+	if redis == nil {
+		redis = new(mockRedis)
+		redis.On("Get", mock.Anything).Return("", errors.New("cache miss")).Maybe()
+		redis.On("Delete", mock.Anything).Return(nil).Maybe()
+		redis.On("Set", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
+	}
+	service := services.NewPertanyaanIdentifikasiService(repo, producer, redis)
 	return NewPertanyaanIdentifikasiHandler(service)
 }
 
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
 	producer := new(mockPertanyaanIdentifikasiProducer)
-	handler := setupPertanyaanIdentifikasiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanIdentifikasiHandler(repo, producer, redis)
 
 	expectedData := []dto.PertanyaanIdentifikasiResponse{{ID: 1}}
+	redis.On("Get", cache.CacheKeyPertanyaanIdentifikasi).Return("", errors.New("miss"))
 	repo.On("GetAll").Return(expectedData, nil)
+	redis.On("Set", cache.CacheKeyPertanyaanIdentifikasi, mock.Anything, cache.DefaultCacheExpiration).Return(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/pertanyaan-identifikasi", nil)
 	w := httptest.NewRecorder()
@@ -113,8 +123,10 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
 	producer := new(mockPertanyaanIdentifikasiProducer)
-	handler := setupPertanyaanIdentifikasiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanIdentifikasiHandler(repo, producer, redis)
 
+	redis.On("Get", cache.CacheKeyPertanyaanIdentifikasi).Return("", errors.New("miss"))
 	repo.On("GetAll").Return([]dto.PertanyaanIdentifikasiResponse{}, errors.New("db error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/pertanyaan-identifikasi", nil)
@@ -128,7 +140,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
 	producer := new(mockPertanyaanIdentifikasiProducer)
-	handler := setupPertanyaanIdentifikasiHandler(repo, producer)
+	handler := setupPertanyaanIdentifikasiHandler(repo, producer, nil)
 
 	expectedData := &dto.PertanyaanIdentifikasiResponse{ID: 1}
 	repo.On("GetByID", 1).Return(expectedData, nil)
@@ -143,7 +155,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_GetByID_NotFound(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
-	handler := setupPertanyaanIdentifikasiHandler(repo, nil)
+	handler := setupPertanyaanIdentifikasiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanIdentifikasiResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -157,7 +169,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_GetByID_NotFound(t *testing.T) 
 
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
-	handler := setupPertanyaanIdentifikasiHandler(repo, nil)
+	handler := setupPertanyaanIdentifikasiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanIdentifikasiResponse)(nil), errors.New("system error"))
 
@@ -172,7 +184,8 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_Create_Success(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
 	producer := new(mockPertanyaanIdentifikasiProducer)
-	handler := setupPertanyaanIdentifikasiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanIdentifikasiHandler(repo, producer, redis)
 
 	createReq := dto.CreatePertanyaanIdentifikasiRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanIdentifikasi: "Pertanyaan Test"}
 	repo.On("CheckSubKategoriExists", 1).Return(true, nil)
@@ -181,6 +194,8 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Create_Success(t *testing.T) {
 	producer.On("PublishPertanyaanIdentifikasiCreated", mock.Anything, mock.MatchedBy(func(e dto_event.PertanyaanIdentifikasiCreatedEvent) bool {
 		return e.Request.PertanyaanIdentifikasi == "Pertanyaan Test"
 	})).Return(nil)
+
+	redis.On("Delete", cache.CacheKeyPertanyaanIdentifikasi).Return(nil)
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-identifikasi", bytes.NewBuffer(body))
@@ -192,7 +207,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Create_Success(t *testing.T) {
 }
 
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_Create_InvalidJSON(t *testing.T) {
-	handler := setupPertanyaanIdentifikasiHandler(nil, nil)
+	handler := setupPertanyaanIdentifikasiHandler(nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-identifikasi", bytes.NewBufferString("invalid json"))
 	w := httptest.NewRecorder()
@@ -204,7 +219,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Create_InvalidJSON(t *testing.T
 
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_Create_SubKategoriNotFound(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
-	handler := setupPertanyaanIdentifikasiHandler(repo, nil)
+	handler := setupPertanyaanIdentifikasiHandler(repo, nil, nil)
 
 	createReq := dto.CreatePertanyaanIdentifikasiRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanIdentifikasi: "Pertanyaan Test"}
 	repo.On("CheckSubKategoriExists", 1).Return(false, nil)
@@ -220,7 +235,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Create_SubKategoriNotFound(t *t
 
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_Create_ValidationError(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
-	handler := setupPertanyaanIdentifikasiHandler(repo, nil)
+	handler := setupPertanyaanIdentifikasiHandler(repo, nil, nil)
 
 	createReq := dto.CreatePertanyaanIdentifikasiRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanIdentifikasi: ""}
 	repo.On("CheckSubKategoriExists", 1).Return(true, nil)
@@ -237,7 +252,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Create_ValidationError(t *testi
 
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_Create_SystemError(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
-	handler := setupPertanyaanIdentifikasiHandler(repo, nil)
+	handler := setupPertanyaanIdentifikasiHandler(repo, nil, nil)
 
 	createReq := dto.CreatePertanyaanIdentifikasiRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanIdentifikasi: "Test"}
 	repo.On("CheckSubKategoriExists", 1).Return(false, errors.New("db error"))
@@ -254,13 +269,15 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Create_SystemError(t *testing.T
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_Update_Success(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
 	producer := new(mockPertanyaanIdentifikasiProducer)
-	handler := setupPertanyaanIdentifikasiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanIdentifikasiHandler(repo, producer, redis)
 
 	updateReq := dto.UpdatePertanyaanIdentifikasiRequest{PertanyaanIdentifikasi: identStrPtr("Pertanyaan Update")}
 
 	repo.On("GetByID", 1).Return(&dto.PertanyaanIdentifikasiResponse{ID: 1}, nil)
 
 	producer.On("PublishPertanyaanIdentifikasiUpdated", mock.Anything, mock.Anything).Return(nil)
+	redis.On("Delete", cache.CacheKeyPertanyaanIdentifikasi).Return(nil)
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/pertanyaan-identifikasi/1", bytes.NewBuffer(body))
@@ -272,7 +289,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Update_Success(t *testing.T) {
 }
 
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_Update_InvalidJSON(t *testing.T) {
-	handler := setupPertanyaanIdentifikasiHandler(nil, nil)
+	handler := setupPertanyaanIdentifikasiHandler(nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/pertanyaan-identifikasi/1", bytes.NewBufferString("invalid json"))
 	w := httptest.NewRecorder()
@@ -284,7 +301,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Update_InvalidJSON(t *testing.T
 
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_Update_NotFound(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
-	handler := setupPertanyaanIdentifikasiHandler(repo, nil)
+	handler := setupPertanyaanIdentifikasiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanIdentifikasiResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -299,7 +316,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Update_NotFound(t *testing.T) {
 
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_Update_ValidationError(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
-	handler := setupPertanyaanIdentifikasiHandler(repo, nil)
+	handler := setupPertanyaanIdentifikasiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return(&dto.PertanyaanIdentifikasiResponse{ID: 1}, nil)
 
@@ -314,7 +331,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Update_ValidationError(t *testi
 
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_Update_SystemError(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
-	handler := setupPertanyaanIdentifikasiHandler(repo, nil)
+	handler := setupPertanyaanIdentifikasiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanIdentifikasiResponse)(nil), errors.New("db error"))
 
@@ -330,10 +347,12 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Update_SystemError(t *testing.T
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
 	producer := new(mockPertanyaanIdentifikasiProducer)
-	handler := setupPertanyaanIdentifikasiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanIdentifikasiHandler(repo, producer, redis)
 
 	repo.On("GetByID", 1).Return(&dto.PertanyaanIdentifikasiResponse{ID: 1}, nil)
 	producer.On("PublishPertanyaanIdentifikasiDeleted", mock.Anything, mock.Anything).Return(nil)
+	redis.On("Delete", cache.CacheKeyPertanyaanIdentifikasi).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/pertanyaan-identifikasi/1", nil)
 	w := httptest.NewRecorder()
@@ -345,7 +364,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Delete_Success(t *testing.T) {
 
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_Delete_NotFound(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
-	handler := setupPertanyaanIdentifikasiHandler(repo, nil)
+	handler := setupPertanyaanIdentifikasiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanIdentifikasiResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -359,7 +378,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Delete_NotFound(t *testing.T) {
 
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_Delete_SystemError(t *testing.T) {
 	repo := new(mockPertanyaanIdentifikasiRepository)
-	handler := setupPertanyaanIdentifikasiHandler(repo, nil)
+	handler := setupPertanyaanIdentifikasiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanIdentifikasiResponse)(nil), errors.New("system error"))
 
@@ -372,7 +391,7 @@ func TestPertanyaanIdentifikasiHandler_ServeHTTP_Delete_SystemError(t *testing.T
 }
 
 func TestPertanyaanIdentifikasiHandler_ServeHTTP_MethodValidation(t *testing.T) {
-	handler := setupPertanyaanIdentifikasiHandler(nil, nil)
+	handler := setupPertanyaanIdentifikasiHandler(nil, nil, nil)
 
 	t.Run("POST with ID", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-identifikasi/1", nil)

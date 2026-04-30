@@ -4,7 +4,37 @@ import (
 	"github.com/stretchr/testify/mock"
 	"ikas/internal/dto"
 	"ikas/internal/repository"
+	"time"
 )
+
+type mockRedis struct {
+	mock.Mock
+}
+
+func (m *mockRedis) Set(key string, value interface{}, expiration time.Duration) error {
+	args := m.Called(key, value, expiration)
+	return args.Error(0)
+}
+
+func (m *mockRedis) Get(key string) (string, error) {
+	args := m.Called(key)
+	return args.String(0), args.Error(1)
+}
+
+func (m *mockRedis) Delete(key string) error {
+	args := m.Called(key)
+	return args.Error(0)
+}
+
+func (m *mockRedis) Exists(key string) (bool, error) {
+	args := m.Called(key)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *mockRedis) Close() error {
+	args := m.Called()
+	return args.Error(0)
+}
 
 type mockIkasRepository struct {
 	mock.Mock

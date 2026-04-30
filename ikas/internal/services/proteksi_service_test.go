@@ -71,7 +71,7 @@ func TestProteksiService_GetAll_Success(t *testing.T) {
 	}
 	ikasRepo := new(mockIkasRepository)
 
-	service := NewProteksiService(repo, ikasRepo)
+	service := NewProteksiService(repo, ikasRepo, nil)
 
 	// Admin can see all
 	data, err := service.GetAll("admin")
@@ -101,7 +101,7 @@ func TestProteksiService_GetByID_Success(t *testing.T) {
 	}
 
 	ikasRepo := new(mockIkasRepository)
-	service := NewProteksiService(repo, ikasRepo)
+	service := NewProteksiService(repo, ikasRepo, nil)
 
 	result, err := service.GetByID("uuid-test", "admin", "")
 
@@ -117,7 +117,7 @@ func TestProteksiService_GetByID_NotFound(t *testing.T) {
 	}
 
 	ikasRepo := &mockIkasRepository{}
-	service := NewProteksiService(repo, ikasRepo)
+	service := NewProteksiService(repo, ikasRepo, nil)
 
 	result, err := service.GetByID("invalid-id", "admin", "")
 

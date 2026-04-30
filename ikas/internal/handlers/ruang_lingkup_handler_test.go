@@ -85,7 +85,7 @@ var _ repository.RuangLingkupRepositoryInterface = (*mockRuangLingkupRepository)
 var _ services.RuangLingkupProducerInterface = (*mockRuangLingkupProducer)(nil)
 
 func setupRuangLingkupHandler(repo *mockRuangLingkupRepository, producer *mockRuangLingkupProducer) *RuangLingkupHandler {
-	service := services.NewRuangLingkupService(repo, producer)
+	service := services.NewRuangLingkupService(repo, producer, nil)
 	return NewRuangLingkupHandler(service)
 }
 
