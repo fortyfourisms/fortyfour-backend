@@ -83,7 +83,14 @@ func (m *mockIkasProducer) PublishIkasEditActioned(ctx context.Context, event in
 var _ repository.IkasRepositoryInterface = (*mockIkasRepository)(nil)
 var _ services.IkasProducerInterface = (*mockIkasProducer)(nil)
 
-func setupIkasHandler(repo repository.IkasRepositoryInterface, producer services.IkasProducerInterface) *IkasHandler {
+func setupIkasHandler(repo repository.IkasRepositoryInterface, producer services.IkasProducerInterface, redis *mockRedis) *IkasHandler {
+	if redis == nil {
+		redis = new(mockRedis)
+		redis.On("Get", mock.Anything).Return("", errors.New("cache miss")).Maybe()
+		redis.On("Delete", mock.Anything).Return(nil).Maybe()
+		redis.On("Set", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
+	}
+
 	service := services.NewIkasService(
 		repo,
 		nil, // identifikasiRepo
@@ -95,6 +102,7 @@ func setupIkasHandler(repo repository.IkasRepositoryInterface, producer services
 		nil, // jawabanDeteksiRepo
 		nil, // jawabanGulihRepo
 		producer,
+		redis,
 	)
 	return NewIkasHandler(service)
 }
@@ -102,7 +110,7 @@ func setupIkasHandler(repo repository.IkasRepositoryInterface, producer services
 func TestIkasHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	repo := new(mockIkasRepository)
 	producer := new(mockIkasProducer)
-	handler := setupIkasHandler(repo, producer)
+	handler := setupIkasHandler(repo, producer, nil)
 
 	expectedData := []dto.IkasResponse{{ID: "123", Responden: "Test"}}
 	repo.On("GetAll").Return(expectedData, nil)
@@ -125,7 +133,7 @@ func TestIkasHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 func TestIkasHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 	repo := new(mockIkasRepository)
 	producer := new(mockIkasProducer)
-	handler := setupIkasHandler(repo, producer)
+	handler := setupIkasHandler(repo, producer, nil)
 
 	repo.On("GetAll").Return([]dto.IkasResponse{}, errors.New("db error"))
 
@@ -144,7 +152,7 @@ func TestIkasHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 func TestIkasHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 	repo := new(mockIkasRepository)
 	producer := new(mockIkasProducer)
-	handler := setupIkasHandler(repo, producer)
+	handler := setupIkasHandler(repo, producer, nil)
 
 	expectedData := &dto.IkasResponse{ID: "123", Responden: "Test"}
 	repo.On("GetByID", "123").Return(expectedData, nil)
@@ -164,7 +172,7 @@ func TestIkasHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 func TestIkasHandler_ServeHTTP_GetByID_NotFound(t *testing.T) {
 	repo := new(mockIkasRepository)
 	producer := new(mockIkasProducer)
-	handler := setupIkasHandler(repo, producer)
+	handler := setupIkasHandler(repo, producer, nil)
 
 	repo.On("GetByID", "123").Return((*dto.IkasResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -183,7 +191,7 @@ func TestIkasHandler_ServeHTTP_GetByID_NotFound(t *testing.T) {
 func TestIkasHandler_ServeHTTP_Create_Success(t *testing.T) {
 	repo := new(mockIkasRepository)
 	producer := new(mockIkasProducer)
-	handler := setupIkasHandler(repo, producer)
+	handler := setupIkasHandler(repo, producer, nil)
 
 	createReq := dto.CreateIkasRequest{IDPerusahaan: "11111111-1111-1111-1111-111111111111", Responden: "User", Tanggal: "2026-01-01", Telepon: "123456", Jabatan: "Manager"}
 	repo.On("CheckExistsByPerusahaanID", "11111111-1111-1111-1111-111111111111").Return(true, nil)
@@ -209,7 +217,7 @@ func TestIkasHandler_ServeHTTP_Create_Success(t *testing.T) {
 }
 
 func TestIkasHandler_ServeHTTP_Create_InvalidJSON(t *testing.T) {
-	handler := setupIkasHandler(nil, nil)
+	handler := setupIkasHandler(nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/ikas", bytes.NewBufferString("invalid json"))
 	w := httptest.NewRecorder()
@@ -221,7 +229,7 @@ func TestIkasHandler_ServeHTTP_Create_InvalidJSON(t *testing.T) {
 
 func TestIkasHandler_ServeHTTP_Create_ExistsOrError(t *testing.T) {
 	repo := new(mockIkasRepository)
-	handler := setupIkasHandler(repo, nil)
+	handler := setupIkasHandler(repo, nil, nil)
 
 	createReq := dto.CreateIkasRequest{IDPerusahaan: "11111111-1111-1111-1111-111111111111", Responden: "User", Tanggal: "2026-01-01", Telepon: "123456", Jabatan: "Manager"}
 	repo.On("CheckExistsByPerusahaanID", "11111111-1111-1111-1111-111111111111").Return(true, nil)
@@ -242,7 +250,7 @@ func TestIkasHandler_ServeHTTP_Create_ExistsOrError(t *testing.T) {
 func TestIkasHandler_ServeHTTP_Update_Success(t *testing.T) {
 	repo := new(mockIkasRepository)
 	producer := new(mockIkasProducer)
-	handler := setupIkasHandler(repo, producer)
+	handler := setupIkasHandler(repo, producer, nil)
 
 	perusahaanID := "22222222-2222-2222-2222-222222222222"
 	updateReq := dto.UpdateIkasRequest{IDPerusahaan: &perusahaanID}
@@ -273,7 +281,7 @@ func TestIkasHandler_ServeHTTP_Update_Success(t *testing.T) {
 }
 
 func TestIkasHandler_ServeHTTP_Update_InvalidJSON(t *testing.T) {
-	handler := setupIkasHandler(nil, nil)
+	handler := setupIkasHandler(nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/ikas/123", bytes.NewBufferString("invalid json"))
 	w := httptest.NewRecorder()
@@ -285,7 +293,7 @@ func TestIkasHandler_ServeHTTP_Update_InvalidJSON(t *testing.T) {
 
 func TestIkasHandler_ServeHTTP_Update_NotFound(t *testing.T) {
 	repo := new(mockIkasRepository)
-	handler := setupIkasHandler(repo, nil)
+	handler := setupIkasHandler(repo, nil, nil)
 
 	repo.On("GetByID", "123").Return((*dto.IkasResponse)(nil), errors.New("sql: no rows in result set"))
 
@@ -303,7 +311,7 @@ func TestIkasHandler_ServeHTTP_Update_NotFound(t *testing.T) {
 
 func TestIkasHandler_ServeHTTP_Update_SystemError(t *testing.T) {
 	repo := new(mockIkasRepository)
-	handler := setupIkasHandler(repo, nil)
+	handler := setupIkasHandler(repo, nil, nil)
 
 	repo.On("GetByID", "123").Return((*dto.IkasResponse)(nil), errors.New("db connection failed"))
 
@@ -322,7 +330,7 @@ func TestIkasHandler_ServeHTTP_Update_SystemError(t *testing.T) {
 func TestIkasHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	repo := new(mockIkasRepository)
 	producer := new(mockIkasProducer)
-	handler := setupIkasHandler(repo, producer)
+	handler := setupIkasHandler(repo, producer, nil)
 
 	repo.On("GetByID", "123").Return(&dto.IkasResponse{ID: "123"}, nil)
 
@@ -342,7 +350,7 @@ func TestIkasHandler_ServeHTTP_Delete_Success(t *testing.T) {
 
 func TestIkasHandler_ServeHTTP_Delete_NotFound(t *testing.T) {
 	repo := new(mockIkasRepository)
-	handler := setupIkasHandler(repo, nil)
+	handler := setupIkasHandler(repo, nil, nil)
 
 	repo.On("GetByID", "123").Return((*dto.IkasResponse)(nil), errors.New("sql: no rows in result set"))
 
@@ -356,7 +364,7 @@ func TestIkasHandler_ServeHTTP_Delete_NotFound(t *testing.T) {
 
 func TestIkasHandler_ServeHTTP_Delete_SystemError(t *testing.T) {
 	repo := new(mockIkasRepository)
-	handler := setupIkasHandler(repo, nil)
+	handler := setupIkasHandler(repo, nil, nil)
 
 	repo.On("GetByID", "123").Return((*dto.IkasResponse)(nil), errors.New("db error"))
 
@@ -369,7 +377,7 @@ func TestIkasHandler_ServeHTTP_Delete_SystemError(t *testing.T) {
 }
 
 func TestIkasHandler_ServeHTTP_Import_InvalidForm(t *testing.T) {
-	handler := setupIkasHandler(nil, nil)
+	handler := setupIkasHandler(nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/ikas/import", nil)
 	req.Header.Set("Content-Type", "multipart/form-data; boundary=invalid")
@@ -398,7 +406,7 @@ func createMultipartRequest(t *testing.T, field string, filename string, content
 }
 
 func TestIkasHandler_ServeHTTP_Import_NoFile(t *testing.T) {
-	handler := setupIkasHandler(nil, nil)
+	handler := setupIkasHandler(nil, nil, nil)
 
 	req := createMultipartRequest(t, "wrong_field", "test.xlsx", []byte("dummy"))
 	w := httptest.NewRecorder()
@@ -409,7 +417,7 @@ func TestIkasHandler_ServeHTTP_Import_NoFile(t *testing.T) {
 }
 
 func TestIkasHandler_ServeHTTP_Import_WrongExtension(t *testing.T) {
-	handler := setupIkasHandler(nil, nil)
+	handler := setupIkasHandler(nil, nil, nil)
 
 	req := createMultipartRequest(t, "file", "test.txt", []byte("dummy"))
 	w := httptest.NewRecorder()
@@ -421,7 +429,7 @@ func TestIkasHandler_ServeHTTP_Import_WrongExtension(t *testing.T) {
 
 func TestIkasHandler_ServeHTTP_Import_ParseError(t *testing.T) {
 	repo := new(mockIkasRepository)
-	handler := setupIkasHandler(repo, nil)
+	handler := setupIkasHandler(repo, nil, nil)
 
 	repo.On("ParseExcelForImport", mock.Anything).Return((*dto.ParsedExcelData)(nil), errors.New("parse error"))
 
@@ -436,7 +444,7 @@ func TestIkasHandler_ServeHTTP_Import_ParseError(t *testing.T) {
 func TestIkasHandler_ServeHTTP_Import_Success(t *testing.T) {
 	repo := new(mockIkasRepository)
 	producer := new(mockIkasProducer)
-	handler := setupIkasHandler(repo, producer)
+	handler := setupIkasHandler(repo, producer, nil)
 
 	importData := &dto.ParsedExcelData{
 		IkasRequest: dto.CreateIkasRequest{
@@ -470,7 +478,7 @@ func TestIkasHandler_ServeHTTP_Import_Success(t *testing.T) {
 
 func TestIkasHandler_ServeHTTP_Import_SystemError(t *testing.T) {
 	repo := new(mockIkasRepository)
-	handler := setupIkasHandler(repo, nil)
+	handler := setupIkasHandler(repo, nil, nil)
 
 	importData := &dto.ParsedExcelData{
 		IkasRequest: dto.CreateIkasRequest{
@@ -495,7 +503,7 @@ func TestIkasHandler_ServeHTTP_Import_SystemError(t *testing.T) {
 }
 
 func TestIkasHandler_ServeHTTP_MethodValidation(t *testing.T) {
-	handler := setupIkasHandler(nil, nil)
+	handler := setupIkasHandler(nil, nil, nil)
 
 	t.Run("POST with ID", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/maturity/ikas/1", nil)

@@ -122,7 +122,7 @@ func (m *mockIkasRepo) UpdateRequestEditStatus(id string, status string, reason 
 
 func TestIkasService_Create_Success(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	req := dto.CreateIkasRequest{
 		IDPerusahaan: "7d7ae6c3-eae1-4e66-bc3e-c75af9c9302c",
@@ -139,7 +139,7 @@ func TestIkasService_Create_Success(t *testing.T) {
 
 func TestIkasService_Create_Duplicate(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	req := dto.CreateIkasRequest{
 		IDPerusahaan: "e39d8349-6aad-4315-998c-4d3799e49a92", // ID that returns true for duplicate check in mock
@@ -157,7 +157,7 @@ func TestIkasService_Create_Duplicate(t *testing.T) {
 
 func TestIkasService_Create_UserWithoutCompany(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	req := dto.CreateIkasRequest{
 		IDPerusahaan: "7d7ae6c3-eae1-4e66-bc3e-c75af9c9302c",
@@ -174,7 +174,7 @@ func TestIkasService_Create_UserWithoutCompany(t *testing.T) {
 
 func TestIkasService_Create_UserWrongCompany(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	req := dto.CreateIkasRequest{
 		IDPerusahaan: "7d7ae6c3-eae1-4e66-bc3e-c75af9c9302c",
@@ -191,7 +191,7 @@ func TestIkasService_Create_UserWrongCompany(t *testing.T) {
 
 func TestIkasService_Create_UserOwnCompany(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	ownCompanyID := "7d7ae6c3-eae1-4e66-bc3e-c75af9c9302c"
 	req := dto.CreateIkasRequest{
@@ -214,7 +214,7 @@ func TestIkasService_Create_UserOwnCompany(t *testing.T) {
 
 func TestIkasService_Update_Async(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	val := 3.0
 	req := dto.UpdateIkasRequest{
@@ -227,7 +227,7 @@ func TestIkasService_Update_Async(t *testing.T) {
 
 func TestIkasService_GetAll_Admin(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	_, err := service.GetAll("admin")
 	assert.NoError(t, err)
@@ -235,7 +235,7 @@ func TestIkasService_GetAll_Admin(t *testing.T) {
 
 func TestIkasService_GetAll_NonAdmin(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	_, err := service.GetAll("user")
 	assert.Error(t, err)
@@ -249,7 +249,7 @@ func TestIkasService_GetAll_NonAdmin(t *testing.T) {
 
 func TestIkasService_ImportFromExcel_Async(t *testing.T) {
 	repo := &mockIkasRepo{}
-	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+	service := NewIkasService(repo, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
 	// Passing "admin" role bypasses ownership enforcement, preserving the original test intent.
 	id, err := service.ImportFromExcel(context.Background(), []byte("fake excel"), "test-user", "admin", "")

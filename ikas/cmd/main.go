@@ -151,6 +151,7 @@ func main() {
 		jawabanDeteksiRepo,
 		jawabanGulihRepo,
 		msgProducer,
+		redisClient,
 	)
 	ruangLingkupService := services.NewRuangLingkupService(ruangLingkupRepo, msgProducer)
 	domainService := services.NewDomainService(domainRepo, msgProducer)
