@@ -24,11 +24,11 @@ type SeAgg struct {
 	Rendah    int64 `json:"rendah"`
 }
 
-// SeStatusCount menghitung perusahaan yang sudah/belum mengisi KSE
+// SeStatusCount menghitung perusahaan yang sudah/belum mengisi SE
 type SeStatusCount struct {
 	TotalPerusahaan int64 `json:"total_perusahaan"`
-	SudahMengisiKSE int64 `json:"sudah_mengisi_kse"`
-	BelumMengisiKSE int64 `json:"belum_mengisi_kse"`
+	SudahMengisiSE  int64 `json:"sudah_mengisi_se"`
+	BelumMengisiSE  int64 `json:"belum_mengisi_se"`
 }
 
 // IkasStatusCount menghitung perusahaan yang sudah/belum mengisi IKAS.
@@ -36,6 +36,19 @@ type IkasStatusCount struct {
 	TotalPerusahaan  int64 `json:"total_perusahaan"`
 	SudahMengisiIKAS int64 `json:"sudah_mengisi_ikas"`
 	BelumMengisiIKAS int64 `json:"belum_mengisi_ikas"`
+}
+
+// CsirtAgg summary statistik CSIRT
+type CsirtAgg struct {
+	TotalCSIRT int64 `json:"total_csirt"`
+	ThisMonth  int64 `json:"this_month"`
+}
+
+// CsirtStatusCount menghitung perusahaan yang sudah/belum membentuk CSIRT
+type CsirtStatusCount struct {
+	TotalPerusahaan     int64 `json:"total_perusahaan"`
+	SudahMembentukCSIRT int64 `json:"sudah_membentuk_csirt"`
+	BelumMembentukCSIRT int64 `json:"belum_membentuk_csirt"`
 }
 
 // DashboardFilter menyimpan semua parameter filter yang diterima dari handler
@@ -48,11 +61,27 @@ type DashboardFilter struct {
 	KategoriSE  *string // Strategis | Tinggi | Rendah
 }
 
-// DashboardSummary top-level
-type DashboardSummary struct {
-	Sektor     []SectorCount   `json:"sektor_counts"`
+// ── Response per section ─────────────────────────────────────────────────────
+
+// DashboardSektorResponse — response untuk GET /api/dashboard/sektor
+type DashboardSektorResponse struct {
+	Sektor []SectorCount `json:"sektor_counts"`
+}
+
+// DashboardIkasResponse — response untuk GET /api/dashboard/ikas
+type DashboardIkasResponse struct {
 	Ikas       IkasAgg         `json:"ikas"`
-	SE         SeAgg           `json:"kse"`
-	SEStatus   SeStatusCount   `json:"kse_status"`
 	IkasStatus IkasStatusCount `json:"ikas_status"`
+}
+
+// DashboardSEResponse — response untuk GET /api/dashboard/se
+type DashboardSEResponse struct {
+	SE       SeAgg         `json:"se"`
+	SEStatus SeStatusCount `json:"se_status"`
+}
+
+// DashboardCSIRTResponse — response untuk GET /api/dashboard/csirt
+type DashboardCSIRTResponse struct {
+	CSIRT       CsirtAgg         `json:"csirt"`
+	CSIRTStatus CsirtStatusCount `json:"csirt_status"`
 }

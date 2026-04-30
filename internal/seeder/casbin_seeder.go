@@ -148,12 +148,8 @@ var defaultPolicies = []Policy{
 	// Materi
 	{"user_pic", "/api/materi/:id/progress", "POST"},
 	{"user_pic", "/api/materi/:id/file-pendukung", "GET"},
-	{"user_pic", "/api/materi/:id/diskusi", "GET"},
-	{"user_pic", "/api/materi/:id/diskusi", "POST"},
-	{"user_pic", "/api/diskusi/:id", "PUT"},
-	{"user_pic", "/api/diskusi/:id", "DELETE"},
-	{"user_pic", "/api/materi/:id/catatan", "GET"},
-	{"user_pic", "/api/materi/:id/catatan", "PUT"},
+	{"user_pic", "/api/materi/:id/feedback", "GET"},
+	{"user_pic", "/api/materi/:id/feedback", "PUT"},
 
 	// File pendukung
 	{"user_pic", "/api/file-pendukung/:id/download", "GET"},
@@ -188,15 +184,9 @@ var defaultPolicies = []Policy{
 	// Materi — file pendukung (user bisa lihat)
 	{"user", "/api/materi/:id/file-pendukung", "GET"},
 
-	// Materi — diskusi (user bisa CRUD diskusi sendiri)
-	{"user", "/api/materi/:id/diskusi", "GET"},
-	{"user", "/api/materi/:id/diskusi", "POST"},
-	{"user", "/api/diskusi/:id", "PUT"},
-	{"user", "/api/diskusi/:id", "DELETE"},
-
-	// Materi — catatan pribadi (user)
-	{"user", "/api/materi/:id/catatan", "GET"},
-	{"user", "/api/materi/:id/catatan", "PUT"},
+	// Materi — feedback (user)
+	{"user", "/api/materi/:id/feedback", "GET"},
+	{"user", "/api/materi/:id/feedback", "PUT"},
 
 	// File pendukung — download (user)
 	{"user", "/api/file-pendukung/:id/download", "GET"},
@@ -357,10 +347,8 @@ var defaultPolicies = []Policy{
 	{"staff", "/api/materi/:id/progress", "POST"},
 	{"staff", "/api/materi/:id/file-pendukung", "GET"},
 	{"staff", "/api/materi/:id/file-pendukung", "POST"},
-	{"staff", "/api/materi/:id/diskusi", "GET"},
-	{"staff", "/api/materi/:id/diskusi", "POST"},
-	{"staff", "/api/materi/:id/catatan", "GET"},
-	{"staff", "/api/materi/:id/catatan", "PUT"},
+	{"staff", "/api/materi/:id/feedback", "GET"},
+	{"staff", "/api/materi/:id/feedback", "PUT"},
 	{"staff", "/api/file-pendukung/:id/download", "GET"},
 	{"staff", "/api/kuis/:id_kuis/start", "POST"},
 	{"staff", "/api/kuis/attempt/:id_attempt/submit", "POST"},
@@ -370,7 +358,10 @@ var defaultPolicies = []Policy{
 	{"staff", "/api/sertifikat/:id/download", "GET"},
 
 	// Dashboard
-	{"staff", "/api/dashboard/summary", "GET"},
+	{"staff", "/api/dashboard/sektor", "GET"},
+	{"staff", "/api/dashboard/ikas", "GET"},
+	{"staff", "/api/dashboard/se", "GET"},
+	{"staff", "/api/dashboard/csirt", "GET"},
 
 	// Notifications
 	{"staff", "/api/notifications", "GET"},

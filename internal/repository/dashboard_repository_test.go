@@ -178,12 +178,12 @@ func TestDashboardRepository_SeStatusCount(t *testing.T) {
 	repo := NewDashboardRepository(db)
 	mock.ExpectQuery("SELECT").
 		WithArgs("sub-uuid-abc").
-		WillReturnRows(sqlmock.NewRows([]string{"total_perusahaan", "sudah_mengisi_kse", "belum_mengisi_kse"}).
+		WillReturnRows(sqlmock.NewRows([]string{"total_perusahaan", "sudah_mengisi_se", "belum_mengisi_se"}).
 			AddRow(int64(50), int64(40), int64(10)))
 
 	result, err := repo.SeStatusCount(context.Background(), dto.DashboardFilter{SubSektorID: dashboardStringPtr("sub-uuid-abc")})
 	assert.NoError(t, err)
-	assert.Equal(t, dto.SeStatusCount{TotalPerusahaan: 50, SudahMengisiKSE: 40, BelumMengisiKSE: 10}, result)
+	assert.Equal(t, dto.SeStatusCount{TotalPerusahaan: 50, SudahMengisiSE: 40, BelumMengisiSE: 10}, result)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -262,7 +262,7 @@ func TestDashboardRepository_Integration_AllMethods(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"total_se", "this_month", "strategis", "tinggi", "rendah"}).
 			AddRow(int64(77), int64(8), int64(30), int64(28), int64(19)))
 	mock.ExpectQuery("SELECT").
-		WillReturnRows(sqlmock.NewRows([]string{"total_perusahaan", "sudah_mengisi_kse", "belum_mengisi_kse"}).
+		WillReturnRows(sqlmock.NewRows([]string{"total_perusahaan", "sudah_mengisi_se", "belum_mengisi_se"}).
 			AddRow(int64(251), int64(77), int64(174)))
 	mock.ExpectQuery("SELECT").
 		WillReturnRows(sqlmock.NewRows([]string{"total_perusahaan", "sudah_mengisi_ikas", "belum_mengisi_ikas"}).
@@ -282,7 +282,7 @@ func TestDashboardRepository_Integration_AllMethods(t *testing.T) {
 	assert.Len(t, sectors, 1)
 	assert.Equal(t, int64(80), ikasAgg.Total)
 	assert.Equal(t, seAgg.TotalSE, seAgg.Strategis+seAgg.Tinggi+seAgg.Rendah)
-	assert.Equal(t, seStatus.TotalPerusahaan, seStatus.SudahMengisiKSE+seStatus.BelumMengisiKSE)
+	assert.Equal(t, seStatus.TotalPerusahaan, seStatus.SudahMengisiSE+seStatus.BelumMengisiSE)
 	assert.Equal(t, ikasStatus.TotalPerusahaan, ikasStatus.SudahMengisiIKAS+ikasStatus.BelumMengisiIKAS)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
