@@ -58,4 +58,3 @@ func TestNewDashboardHandler_ReturnsNonNil(t *testing.T) {
 	h := NewDashboardHandler(nil)
 	assert.NotNil(t, h)
 }
-

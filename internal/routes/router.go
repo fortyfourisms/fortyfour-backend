@@ -397,7 +397,6 @@ func InitRouter(
 		},
 	)))
 
-
 	// /api/soal/{id} → PUT/DELETE admin
 	mux.HandleFunc("/api/soal/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(lmsH.ServeSoal))))
 

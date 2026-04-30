@@ -1008,8 +1008,6 @@ func TestLMSHandler_KuisMethodNotAllowed(t *testing.T) {
 	assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 }
 
-
-
 // ════════════════════════════════════════════════════════════════════════════
 // TEST FILE PENDUKUNG — success paths
 // ════════════════════════════════════════════════════════════════════════════
