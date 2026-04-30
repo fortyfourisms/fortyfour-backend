@@ -11,6 +11,7 @@ import (
 )
 
 var sqlOpen = sql.Open
+
 type Config struct {
 	Port            string
 	JWTSecret       string
@@ -44,6 +45,7 @@ type RabbitMQConfig struct {
 	Password string
 	Vhost    string
 }
+
 func (r RedisConfig) Address() string {
 	return r.Host + ":" + r.Port
 }

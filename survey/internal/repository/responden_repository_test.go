@@ -12,7 +12,6 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
-//
 // =====================
 // CREATE
 // =====================
@@ -23,23 +22,27 @@ func TestCreate_Success(t *testing.T) {
 	repo := NewRespondenRepository(db)
 
 	mock.ExpectExec("INSERT INTO responden").
-		WithArgs("user1", "08123", "IT", nil, "yes").
+		WithArgs("perusahaan1", "Nama Lengkap", "Manager", "email@mail.com", "08123", "yes").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	err := repo.Create(models.Responden{
-		UserID:              "user1",
-		NoTelepon:           "08123",
-		Sektor:              "IT",
-		SektorLainnya:       nil,
-		SertifikatTraining:  "yes",
+	id, err := repo.Create(models.Responden{
+		IdPerusahaan:       "perusahaan1",
+		NamaLengkap:        "Nama Lengkap",
+		Jabatan:            "Manager",
+		Email:              "email@mail.com",
+		NoTelepon:          "08123",
+		SertifikatTraining: "yes",
 	})
 
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
+
+	if id != 1 {
+		t.Errorf("expected insert ID 1, got %d", id)
+	}
 }
 
-//
 // =====================
 // GET ALL
 // =====================
@@ -50,15 +53,15 @@ func TestGetAllDetail_Success(t *testing.T) {
 	repo := NewRespondenRepository(db)
 
 	rows := sqlmock.NewRows([]string{
-		"id", "user_id", "display_name", "email",
-		"jabatan", "perusahaan", "perusahaan_id",
-		"no_telepon", "sektor", "sektor_lainnya",
-		"sertifikat_training", "created_at", "updated_at",
+		"id", "id_perusahaan", "nama_lengkap", "jabatan", "email",
+		"no_telepon", "sertifikat_training",
+		"nama_perusahaan", "nama_sub_sektor", "nama_sektor",
+		"created_at", "updated_at",
 	}).AddRow(
-		1, "user1", "Nama", "email@mail.com",
-		"Manager", "PT A", "10",
-		"08123", "IT", "lainnya",
-		"yes", time.Now(), time.Now(),
+		1, "perusahaan1", "Nama", "Manager", "email@mail.com",
+		"08123", "yes",
+		"PT A", "Sub Sektor 1", "Sektor 1",
+		time.Now(), time.Now(),
 	)
 
 	mock.ExpectQuery(regexp.QuoteMeta(baseDetailQuery)).
@@ -75,7 +78,6 @@ func TestGetAllDetail_Success(t *testing.T) {
 	}
 }
 
-//
 // =====================
 // GET BY ID
 // =====================
@@ -96,7 +98,6 @@ func TestGetDetailByID_NotFound(t *testing.T) {
 	}
 }
 
-//
 // =====================
 // UPDATE SUCCESS
 // =====================
@@ -107,13 +108,15 @@ func TestUpdate_Success(t *testing.T) {
 	repo := NewRespondenRepository(db)
 
 	mock.ExpectExec("UPDATE responden").
-		WithArgs("08123", "IT", nil, "yes", 1).
+		WithArgs("perusahaan1", "Nama", "Manager", "email@mail.com", "08123", "yes", 1).
 		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	err := repo.Update(1, models.Responden{
+		IdPerusahaan:       "perusahaan1",
+		NamaLengkap:        "Nama",
+		Jabatan:            "Manager",
+		Email:              "email@mail.com",
 		NoTelepon:          "08123",
-		Sektor:             "IT",
-		SektorLainnya:      nil,
 		SertifikatTraining: "yes",
 	})
 
@@ -122,7 +125,6 @@ func TestUpdate_Success(t *testing.T) {
 	}
 }
 
-//
 // =====================
 // UPDATE NOT FOUND
 // =====================
@@ -142,7 +144,6 @@ func TestUpdate_NotFound(t *testing.T) {
 	}
 }
 
-//
 // =====================
 // EXISTS
 // =====================
@@ -167,7 +168,6 @@ func TestExists_True(t *testing.T) {
 	}
 }
 
-//
 // =====================
 // EXISTS ERROR
 // =====================

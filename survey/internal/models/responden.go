@@ -18,12 +18,12 @@ type RespondenDetail struct {
 	ID int `json:"id"`
 
 	// dari responden
-	IdPerusahaan       string    `json:"id_perusahaan"`
-	NamaLengkap        string    `json:"nama_lengkap"`
-	Jabatan            string    `json:"jabatan"`
-	Email              string    `json:"email"`
-	NoTelepon          string    `json:"no_telepon"`
-	SertifikatTraining string    `json:"sertifikat_training"`
+	IdPerusahaan       string `json:"id_perusahaan"`
+	NamaLengkap        string `json:"nama_lengkap"`
+	Jabatan            string `json:"jabatan"`
+	Email              string `json:"email"`
+	NoTelepon          string `json:"no_telepon"`
+	SertifikatTraining string `json:"sertifikat_training"`
 
 	// dari perusahaan
 	NamaPerusahaan *string `json:"nama_perusahaan,omitempty"`

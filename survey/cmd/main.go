@@ -8,14 +8,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/redis/go-redis/v9"
+	"survey/internal/cache"
 	"survey/internal/config"
 	"survey/internal/handlers"
 	"survey/internal/repository"
 	"survey/internal/routes"
 	"survey/internal/services"
 	"survey/pkg/database"
-	"survey/internal/cache"
-	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -37,9 +37,9 @@ func main() {
 
 	// INIT REDIS
 	rdb := redis.NewClient(&redis.Options{
-	Addr:     cfg.Redis.Address(),
-	Password: cfg.Redis.Password,
-	DB:       cfg.Redis.DB,
+		Addr:     cfg.Redis.Address(),
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
 	})
 
 	// test connection (optional tapi bagus)
@@ -56,8 +56,8 @@ func main() {
 
 	// SERVICE
 	cache := cache.NewRedisCache(rdb)
-	respondenService := services.NewRespondenService(respondenRepo, services.DefaultValidator{}, cache,)
-	risikoService := services.NewRisikoService(risikoRepo, cache, )
+	respondenService := services.NewRespondenService(respondenRepo, services.DefaultValidator{}, cache)
+	risikoService := services.NewRisikoService(risikoRepo, cache)
 
 	// HANDLER
 	respondenHandler := handlers.NewRespondenHandler(respondenService)

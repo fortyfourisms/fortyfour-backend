@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -10,19 +11,15 @@ import (
 )
 
 type mockRepo struct {
-	createFn          func(m models.Responden) error
-	getDetailByUserFn func(userID string) (*models.RespondenDetail, error)
-	getAllFn          func() ([]models.RespondenDetail, error)
-	getDetailByIDFn   func(id int) (*models.RespondenDetail, error)
-	getByIDFn         func(id int) (*models.Responden, error)
-	updateFn          func(id int, m models.Responden) error
+	createFn        func(m models.Responden) (int64, error)
+	getAllFn        func() ([]models.RespondenDetail, error)
+	getDetailByIDFn func(id int) (*models.RespondenDetail, error)
+	getByIDFn       func(id int) (*models.Responden, error)
+	updateFn        func(id int, m models.Responden) error
 }
 
-func (m *mockRepo) Create(r models.Responden) error {
+func (m *mockRepo) Create(r models.Responden) (int64, error) {
 	return m.createFn(r)
-}
-func (m *mockRepo) GetDetailByUserID(userID string) (*models.RespondenDetail, error) {
-	return m.getDetailByUserFn(userID)
 }
 func (m *mockRepo) GetAllDetail() ([]models.RespondenDetail, error) {
 	return m.getAllFn()
@@ -40,8 +37,8 @@ func (m *mockRepo) Update(id int, r models.Responden) error {
 type mockValidator struct{}
 
 func (m mockValidator) ValidateCreate(req dto.CreateRespondenRequest) error {
-	if req.UserID == "" {
-		return errors.New("user_id wajib diisi")
+	if req.IdPerusahaan == "" {
+		return errors.New("id_perusahaan wajib diisi")
 	}
 	return nil
 }
@@ -53,25 +50,43 @@ func (m mockValidator) ValidateUpdate(req dto.UpdateRespondenRequest) error {
 	return nil
 }
 
+// mockCacheForService is a no-op cache for testing
+type mockCacheForService struct{}
+
+func (m *mockCacheForService) Get(ctx context.Context, key string) (string, bool, error) {
+	return "", false, nil
+}
+func (m *mockCacheForService) Set(ctx context.Context, key string, value string, ttlSeconds int) error {
+	return nil
+}
+func (m *mockCacheForService) Del(ctx context.Context, key string) error {
+	return nil
+}
+
 func TestCreate_Success(t *testing.T) {
 	mock := &mockRepo{
-		createFn: func(m models.Responden) error { return nil },
-		getDetailByUserFn: func(userID string) (*models.RespondenDetail, error) {
+		createFn: func(m models.Responden) (int64, error) { return 1, nil },
+		getDetailByIDFn: func(id int) (*models.RespondenDetail, error) {
 			return &models.RespondenDetail{
-				ID:        1,
-				UserID:    userID,
-				CreatedAt: time.Now(),
-				UpdatedAt: time.Now(),
+				ID:           id,
+				IdPerusahaan: "perusahaan1",
+				NamaLengkap:  "Nama Lengkap",
+				Jabatan:      "Manager",
+				Email:        "email@mail.com",
+				CreatedAt:    time.Now(),
+				UpdatedAt:    time.Now(),
 			}, nil
 		},
 	}
 
-	svc := NewRespondenService(mock, mockValidator{})
+	svc := NewRespondenService(mock, mockValidator{}, &mockCacheForService{})
 
 	req := dto.CreateRespondenRequest{
-		UserID:             "user1",
+		IdPerusahaan:       "perusahaan1",
+		NamaLengkap:        "Nama Lengkap",
+		Jabatan:            "Manager",
+		Email:              "email@mail.com",
 		NoTelepon:          "08123456789",
-		Sektor:             "IT",
 		SertifikatTraining: "yes",
 	}
 
@@ -81,7 +96,7 @@ func TestCreate_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if res.UserID != "user1" {
+	if res.IdPerusahaan != "perusahaan1" {
 		t.Error("invalid response")
 	}
 }
@@ -95,7 +110,7 @@ func TestGetAll_Success(t *testing.T) {
 		},
 	}
 
-	svc := NewRespondenService(mock, mockValidator{})
+	svc := NewRespondenService(mock, mockValidator{}, &mockCacheForService{})
 
 	res, err := svc.GetAll()
 

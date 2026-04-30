@@ -14,40 +14,40 @@ import (
 
 // MOCK SERVICE
 type mockRisikoService struct {
-	ProcessEligibilityFunc func(dto.EligibilityRequest) (interface{}, error)
-	ProcessAlasanFunc func(dto.AlasanRequest) (interface{}, error)
-	ProcessDampakFunc func(dto.DampakRequest) (interface{}, error)
-	ProcessPengendalianFunc func(dto.PengendalianRequest) (interface{}, error)
-	GetByRespondentIDFunc func(int) (interface{}, error)
-	GetProgressFunc func(int) (interface{}, error)
-	NavigateFunc func(dto.NavigateRequest) (interface{}, error)
-	SaveProgressFunc func(dto.NavigateRequest) (interface{}, error)
-	CreateCustomRisikoFunc func(dto.CustomRisikoRequest) (int, error)
-	FinishSurveyFunc func(int) error
+	ProcessEligibilityFunc  func(dto.EligibilityRequest) (map[string]interface{}, error)
+	ProcessAlasanFunc       func(dto.AlasanRequest) (map[string]interface{}, error)
+	ProcessDampakFunc       func(dto.DampakRequest) (map[string]interface{}, error)
+	ProcessPengendalianFunc func(dto.PengendalianRequest) (map[string]interface{}, error)
+	GetByRespondentIDFunc   func(int) (map[string]interface{}, error)
+	GetProgressFunc         func(int) (dto.ProgressResponse, error)
+	NavigateFunc            func(dto.NavigateRequest) (dto.ProgressResponse, error)
+	SaveProgressFunc        func(dto.NavigateRequest) (dto.ProgressResponse, error)
+	CreateCustomRisikoFunc  func(dto.CustomRisikoRequest) (int, error)
+	FinishSurveyFunc        func(int) error
 }
 
-func (m *mockRisikoService) ProcessEligibility(r dto.EligibilityRequest) (interface{}, error) {
+func (m *mockRisikoService) ProcessEligibility(r dto.EligibilityRequest) (map[string]interface{}, error) {
 	return m.ProcessEligibilityFunc(r)
 }
-func (m *mockRisikoService) ProcessAlasan(r dto.AlasanRequest) (interface{}, error) {
+func (m *mockRisikoService) ProcessAlasan(r dto.AlasanRequest) (map[string]interface{}, error) {
 	return m.ProcessAlasanFunc(r)
 }
-func (m *mockRisikoService) ProcessDampak(r dto.DampakRequest) (interface{}, error) {
+func (m *mockRisikoService) ProcessDampak(r dto.DampakRequest) (map[string]interface{}, error) {
 	return m.ProcessDampakFunc(r)
 }
-func (m *mockRisikoService) ProcessPengendalian(r dto.PengendalianRequest) (interface{}, error) {
+func (m *mockRisikoService) ProcessPengendalian(r dto.PengendalianRequest) (map[string]interface{}, error) {
 	return m.ProcessPengendalianFunc(r)
 }
-func (m *mockRisikoService) GetByRespondentID(id int) (interface{}, error) {
+func (m *mockRisikoService) GetByRespondentID(id int) (map[string]interface{}, error) {
 	return m.GetByRespondentIDFunc(id)
 }
-func (m *mockRisikoService) GetProgress(id int) (interface{}, error) {
+func (m *mockRisikoService) GetProgress(id int) (dto.ProgressResponse, error) {
 	return m.GetProgressFunc(id)
 }
-func (m *mockRisikoService) Navigate(r dto.NavigateRequest) (interface{}, error) {
+func (m *mockRisikoService) Navigate(r dto.NavigateRequest) (dto.ProgressResponse, error) {
 	return m.NavigateFunc(r)
 }
-func (m *mockRisikoService) SaveProgress(r dto.NavigateRequest) (interface{}, error) {
+func (m *mockRisikoService) SaveProgress(r dto.NavigateRequest) (dto.ProgressResponse, error) {
 	return m.SaveProgressFunc(r)
 }
 func (m *mockRisikoService) CreateCustomRisiko(r dto.CustomRisikoRequest) (int, error) {
@@ -60,8 +60,8 @@ func (m *mockRisikoService) FinishSurvey(id int) error {
 // ELIGIBILITY
 func TestSubmitEligibility_Success(t *testing.T) {
 	mock := &mockRisikoService{
-		ProcessEligibilityFunc: func(dto.EligibilityRequest) (interface{}, error) {
-			return "ok", nil
+		ProcessEligibilityFunc: func(dto.EligibilityRequest) (map[string]interface{}, error) {
+			return map[string]interface{}{"message": "ok"}, nil
 		},
 	}
 
@@ -94,8 +94,8 @@ func TestSubmitEligibility_InvalidBody(t *testing.T) {
 // GET BY RESPONDENT
 func TestGetByRespondentID_Success(t *testing.T) {
 	mock := &mockRisikoService{
-		GetByRespondentIDFunc: func(int) (interface{}, error) {
-			return "data", nil
+		GetByRespondentIDFunc: func(int) (map[string]interface{}, error) {
+			return map[string]interface{}{"data": "ok"}, nil
 		},
 	}
 
@@ -113,7 +113,7 @@ func TestGetByRespondentID_Success(t *testing.T) {
 
 func TestGetByRespondentID_NotFound(t *testing.T) {
 	mock := &mockRisikoService{
-		GetByRespondentIDFunc: func(int) (interface{}, error) {
+		GetByRespondentIDFunc: func(int) (map[string]interface{}, error) {
 			return nil, repository.ErrNotFound
 		},
 	}
