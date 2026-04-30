@@ -11,6 +11,7 @@ import (
 )
 
 var sqlOpen = sql.Open
+
 type Config struct {
 	Host            string
 	Port            string
@@ -47,7 +48,7 @@ func NewMySQLConnection(cfg Config) (*sql.DB, error) {
 		cfg.Port,
 		cfg.DBName,
 	)
-	
+
 	db, err := sqlOpen("mysql", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("error opening database: %w", err)

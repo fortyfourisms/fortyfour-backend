@@ -45,118 +45,18 @@ func (m *MockDashboardRepository) IkasStatusCount(ctx context.Context, f dto.Das
 	return args.Get(0).(dto.IkasStatusCount), args.Error(1)
 }
 
+func (m *MockDashboardRepository) CsirtGlobalAgg(ctx context.Context, f dto.DashboardFilter) (dto.CsirtAgg, error) {
+	args := m.Called(ctx, f)
+	return args.Get(0).(dto.CsirtAgg), args.Error(1)
+}
+
+func (m *MockDashboardRepository) CsirtStatusCount(ctx context.Context, f dto.DashboardFilter) (dto.CsirtStatusCount, error) {
+	args := m.Called(ctx, f)
+	return args.Get(0).(dto.CsirtStatusCount), args.Error(1)
+}
+
 func createServiceWithMockRepo(mockRepo *MockDashboardRepository) *DashboardService {
 	return NewDashboardService(mockRepo, nil)
-}
-
-func TestDashboardService_GetSummary_Success_NoFilter(t *testing.T) {
-	mockRepo := new(MockDashboardRepository)
-	service := createServiceWithMockRepo(mockRepo)
-	ctx := context.Background()
-	f := dto.DashboardFilter{}
-
-	expectedSectors := []dto.SectorCount{
-		{ID: "sektor-1", Nama: "ILMATE", Total: 100, ThisMonth: 10},
-		{ID: "sektor-2", Nama: "IKFT", Total: 50, ThisMonth: 5},
-	}
-	expectedIKAS := dto.IkasAgg{Total: 45, AvgNilaiKematangan: 2.7, AvgTargetNilai: 4}
-	expectedSE := dto.SeAgg{TotalSE: 75, ThisMonth: 8, Strategis: 30, Tinggi: 25, Rendah: 20}
-	expectedSEStatus := dto.SeStatusCount{TotalPerusahaan: 150, SudahMengisiKSE: 75, BelumMengisiKSE: 75}
-	expectedIkasStatus := dto.IkasStatusCount{TotalPerusahaan: 150, SudahMengisiIKAS: 45, BelumMengisiIKAS: 105}
-
-	mockRepo.On("CountPerSektor", ctx, f).Return(expectedSectors, nil)
-	mockRepo.On("IkasGlobalAgg", ctx, f).Return(expectedIKAS, nil)
-	mockRepo.On("SeGlobalAgg", ctx, f).Return(expectedSE, nil)
-	mockRepo.On("SeStatusCount", ctx, f).Return(expectedSEStatus, nil)
-	mockRepo.On("IkasStatusCount", ctx, f).Return(expectedIkasStatus, nil)
-
-	result, err := service.GetSummary(ctx, f)
-
-	assert.NoError(t, err)
-	assert.NotNil(t, result)
-	assert.Len(t, result.Sektor, 2)
-	assert.Equal(t, int64(45), result.Ikas.Total)
-	assert.Equal(t, 2.7, result.Ikas.AvgNilaiKematangan)
-	assert.Equal(t, int64(75), result.SE.TotalSE)
-	assert.Equal(t, int64(75), result.SEStatus.SudahMengisiKSE)
-	assert.Equal(t, int64(45), result.IkasStatus.SudahMengisiIKAS)
-	assert.Equal(t, int64(105), result.IkasStatus.BelumMengisiIKAS)
-	mockRepo.AssertExpectations(t)
-}
-
-func TestDashboardService_GetSummary_Success_WithFilter(t *testing.T) {
-	mockRepo := new(MockDashboardRepository)
-	service := createServiceWithMockRepo(mockRepo)
-	ctx := context.Background()
-	year := "2024"
-	quarter := "2"
-	f := dto.DashboardFilter{Year: &year, Quarter: &quarter}
-
-	mockRepo.On("CountPerSektor", ctx, f).Return([]dto.SectorCount{{ID: "s1", Total: 20, ThisMonth: 5}}, nil)
-	mockRepo.On("IkasGlobalAgg", ctx, f).Return(dto.IkasAgg{Total: 8, AvgNilaiKematangan: 2.5, AvgTargetNilai: 4}, nil)
-	mockRepo.On("SeGlobalAgg", ctx, f).Return(dto.SeAgg{TotalSE: 11, ThisMonth: 3}, nil)
-	mockRepo.On("SeStatusCount", ctx, f).Return(dto.SeStatusCount{TotalPerusahaan: 20, SudahMengisiKSE: 11, BelumMengisiKSE: 9}, nil)
-	mockRepo.On("IkasStatusCount", ctx, f).Return(dto.IkasStatusCount{TotalPerusahaan: 20, SudahMengisiIKAS: 8, BelumMengisiIKAS: 12}, nil)
-
-	result, err := service.GetSummary(ctx, f)
-
-	assert.NoError(t, err)
-	assert.Equal(t, int64(8), result.Ikas.Total)
-	assert.Equal(t, int64(12), result.IkasStatus.BelumMengisiIKAS)
-	mockRepo.AssertExpectations(t)
-}
-
-func TestDashboardService_GetSummary_CountPerSektorError(t *testing.T) {
-	mockRepo := new(MockDashboardRepository)
-	service := createServiceWithMockRepo(mockRepo)
-	ctx := context.Background()
-	f := dto.DashboardFilter{}
-
-	mockRepo.On("CountPerSektor", ctx, f).Return(nil, errors.New("database connection failed"))
-
-	result, err := service.GetSummary(ctx, f)
-
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.Equal(t, "database connection failed", err.Error())
-	mockRepo.AssertExpectations(t)
-}
-
-func TestDashboardService_GetSummary_IkasGlobalAggError(t *testing.T) {
-	mockRepo := new(MockDashboardRepository)
-	service := createServiceWithMockRepo(mockRepo)
-	ctx := context.Background()
-	f := dto.DashboardFilter{}
-
-	mockRepo.On("CountPerSektor", ctx, f).Return([]dto.SectorCount{}, nil)
-	mockRepo.On("IkasGlobalAgg", ctx, f).Return(dto.IkasAgg{}, errors.New("ikas query failed"))
-
-	result, err := service.GetSummary(ctx, f)
-
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.Equal(t, "ikas query failed", err.Error())
-	mockRepo.AssertExpectations(t)
-}
-
-func TestDashboardService_GetSummary_IkasStatusCountError(t *testing.T) {
-	mockRepo := new(MockDashboardRepository)
-	service := createServiceWithMockRepo(mockRepo)
-	ctx := context.Background()
-	f := dto.DashboardFilter{}
-
-	mockRepo.On("CountPerSektor", ctx, f).Return([]dto.SectorCount{}, nil)
-	mockRepo.On("IkasGlobalAgg", ctx, f).Return(dto.IkasAgg{}, nil)
-	mockRepo.On("SeGlobalAgg", ctx, f).Return(dto.SeAgg{}, nil)
-	mockRepo.On("SeStatusCount", ctx, f).Return(dto.SeStatusCount{}, nil)
-	mockRepo.On("IkasStatusCount", ctx, f).Return(dto.IkasStatusCount{}, errors.New("ikas status query failed"))
-
-	result, err := service.GetSummary(ctx, f)
-
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.Equal(t, "ikas status query failed", err.Error())
-	mockRepo.AssertExpectations(t)
 }
 
 func TestNewDashboardService(t *testing.T) {
@@ -166,109 +66,154 @@ func TestNewDashboardService(t *testing.T) {
 	assert.NotNil(t, service.repo)
 }
 
-func TestDashboardService_GetSummary_ContextCancellation(t *testing.T) {
+// ── Sektor ──────────────────────────────────────────────────────────────────
+
+func TestDashboardService_GetSummarySektor_Success(t *testing.T) {
 	mockRepo := new(MockDashboardRepository)
 	service := createServiceWithMockRepo(mockRepo)
-	ctx, cancel := context.WithCancel(context.Background())
-	cancel()
-	f := dto.DashboardFilter{}
-
-	mockRepo.On("CountPerSektor", mock.Anything, f).Return(nil, context.Canceled).Maybe()
-
-	result, err := service.GetSummary(ctx, f)
-
-	assert.Error(t, err)
-	assert.Nil(t, result)
-}
-
-func TestDashboardService_GetSummary_CacheHit_SkipRepo(t *testing.T) {
-	mockRepo := new(MockDashboardRepository)
-	rc := newDashboardTestRedis()
-	service := NewDashboardService(mockRepo, rc)
 	ctx := context.Background()
 	f := dto.DashboardFilter{}
 
-	cached := dto.DashboardSummary{
-		Sektor:     []dto.SectorCount{{ID: "cache-1", Nama: "Dari Cache", Total: 99}},
-		Ikas:       dto.IkasAgg{Total: 11},
-		SE:         dto.SeAgg{TotalSE: 42},
-		SEStatus:   dto.SeStatusCount{TotalPerusahaan: 99},
-		IkasStatus: dto.IkasStatusCount{TotalPerusahaan: 99, SudahMengisiIKAS: 11, BelumMengisiIKAS: 88},
-	}
-	key := buildCacheKey(f)
-	setDashboardCache(rc, key, cached)
+	mockRepo.On("CountPerSektor", ctx, f).Return([]dto.SectorCount{
+		{ID: "s1", Nama: "ILMATE", Total: 100, ThisMonth: 10},
+	}, nil)
 
-	result, err := service.GetSummary(ctx, f)
-
+	result, err := service.GetSummarySektor(ctx, f)
 	assert.NoError(t, err)
 	assert.NotNil(t, result)
-	assert.Equal(t, "Dari Cache", result.Sektor[0].Nama)
-	assert.Equal(t, int64(11), result.Ikas.Total)
-	assert.Equal(t, int64(42), result.SE.TotalSE)
-	mockRepo.AssertNotCalled(t, "CountPerSektor")
-	mockRepo.AssertNotCalled(t, "IkasGlobalAgg")
-	mockRepo.AssertNotCalled(t, "SeGlobalAgg")
-	mockRepo.AssertNotCalled(t, "SeStatusCount")
-	mockRepo.AssertNotCalled(t, "IkasStatusCount")
-}
-
-func TestDashboardService_GetSummary_CacheMiss_SetsCache(t *testing.T) {
-	mockRepo := new(MockDashboardRepository)
-	rc := newDashboardTestRedis()
-	service := NewDashboardService(mockRepo, rc)
-	ctx := context.Background()
-	f := dto.DashboardFilter{}
-
-	mockRepo.On("CountPerSektor", ctx, f).Return([]dto.SectorCount{{ID: "s1", Nama: "ILMATE", Total: 10}}, nil)
-	mockRepo.On("IkasGlobalAgg", ctx, f).Return(dto.IkasAgg{Total: 4}, nil)
-	mockRepo.On("SeGlobalAgg", ctx, f).Return(dto.SeAgg{TotalSE: 10}, nil)
-	mockRepo.On("SeStatusCount", ctx, f).Return(dto.SeStatusCount{}, nil)
-	mockRepo.On("IkasStatusCount", ctx, f).Return(dto.IkasStatusCount{}, nil)
-
-	_, err := service.GetSummary(ctx, f)
-	assert.NoError(t, err)
-
-	exists, _ := rc.Exists(buildCacheKey(f))
-	assert.True(t, exists, "hasil harus di-cache setelah GetSummary")
+	assert.Len(t, result.Sektor, 1)
 	mockRepo.AssertExpectations(t)
 }
 
-func TestBuildCacheKey_UniquePerFilter(t *testing.T) {
-	year := "2024"
-	quarter := "2"
-	from := "2024-01-01"
-	to := "2024-01-31"
-	sub := "sub-uuid"
-	kat := "Strategis"
+func TestDashboardService_GetSummarySektor_Error(t *testing.T) {
+	mockRepo := new(MockDashboardRepository)
+	service := createServiceWithMockRepo(mockRepo)
+	ctx := context.Background()
+	f := dto.DashboardFilter{}
 
-	filters := []dto.DashboardFilter{
-		{},
-		{Year: &year},
-		{Year: &year, Quarter: &quarter},
-		{From: &from, To: &to},
-		{SubSektorID: &sub},
-		{KategoriSE: &kat},
-		{Year: &year, KategoriSE: &kat},
-		{Year: &year, Quarter: &quarter, SubSektorID: &sub, KategoriSE: &kat},
-	}
+	mockRepo.On("CountPerSektor", ctx, f).Return(nil, errors.New("db error"))
 
-	keys := make(map[string]bool)
-	for _, f := range filters {
-		key := buildCacheKey(f)
-		assert.False(t, keys[key], "cache key tidak unik untuk filter: %+v, key: %s", f, key)
-		keys[key] = true
+	result, err := service.GetSummarySektor(ctx, f)
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	mockRepo.AssertExpectations(t)
+}
+
+// ── IKAS ────────────────────────────────────────────────────────────────────
+
+func TestDashboardService_GetSummaryIkas_Success(t *testing.T) {
+	mockRepo := new(MockDashboardRepository)
+	service := createServiceWithMockRepo(mockRepo)
+	ctx := context.Background()
+	f := dto.DashboardFilter{}
+
+	mockRepo.On("IkasGlobalAgg", ctx, f).Return(dto.IkasAgg{Total: 45}, nil)
+	mockRepo.On("IkasStatusCount", ctx, f).Return(dto.IkasStatusCount{TotalPerusahaan: 100, SudahMengisiIKAS: 45, BelumMengisiIKAS: 55}, nil)
+
+	result, err := service.GetSummaryIkas(ctx, f)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, int64(45), result.Ikas.Total)
+	assert.Equal(t, int64(55), result.IkasStatus.BelumMengisiIKAS)
+	mockRepo.AssertExpectations(t)
+}
+
+func TestDashboardService_GetSummaryIkas_IkasAggError(t *testing.T) {
+	mockRepo := new(MockDashboardRepository)
+	service := createServiceWithMockRepo(mockRepo)
+	ctx := context.Background()
+	f := dto.DashboardFilter{}
+
+	mockRepo.On("IkasGlobalAgg", ctx, f).Return(dto.IkasAgg{}, errors.New("ikas error"))
+
+	result, err := service.GetSummaryIkas(ctx, f)
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	mockRepo.AssertExpectations(t)
+}
+
+// ── SE ──────────────────────────────────────────────────────────────────────
+
+func TestDashboardService_GetSummarySE_Success(t *testing.T) {
+	mockRepo := new(MockDashboardRepository)
+	service := createServiceWithMockRepo(mockRepo)
+	ctx := context.Background()
+	f := dto.DashboardFilter{}
+
+	mockRepo.On("SeGlobalAgg", ctx, f).Return(dto.SeAgg{TotalSE: 75}, nil)
+	mockRepo.On("SeStatusCount", ctx, f).Return(dto.SeStatusCount{TotalPerusahaan: 150, SudahMengisiSE: 75, BelumMengisiSE: 75}, nil)
+
+	result, err := service.GetSummarySE(ctx, f)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, int64(75), result.SE.TotalSE)
+	assert.Equal(t, int64(75), result.SEStatus.BelumMengisiSE)
+	mockRepo.AssertExpectations(t)
+}
+
+// ── CSIRT ────────────────────────────────────────────────────────────────────
+
+func TestDashboardService_GetSummaryCSIRT_Success(t *testing.T) {
+	mockRepo := new(MockDashboardRepository)
+	service := createServiceWithMockRepo(mockRepo)
+	ctx := context.Background()
+	f := dto.DashboardFilter{}
+
+	mockRepo.On("CsirtGlobalAgg", ctx, f).Return(dto.CsirtAgg{TotalCSIRT: 30, ThisMonth: 5}, nil)
+	mockRepo.On("CsirtStatusCount", ctx, f).Return(dto.CsirtStatusCount{TotalPerusahaan: 150, SudahMembentukCSIRT: 30, BelumMembentukCSIRT: 120}, nil)
+
+	result, err := service.GetSummaryCSIRT(ctx, f)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, int64(30), result.CSIRT.TotalCSIRT)
+	assert.Equal(t, int64(120), result.CSIRTStatus.BelumMembentukCSIRT)
+	mockRepo.AssertExpectations(t)
+}
+
+// ── Cache ────────────────────────────────────────────────────────────────────
+
+func TestDashboardService_GetSummarySektor_CacheHit(t *testing.T) {
+	mockRepo := new(MockDashboardRepository)
+	rc := newDashboardTestRedis()
+	service := NewDashboardService(mockRepo, rc)
+	ctx := context.Background()
+	f := dto.DashboardFilter{}
+
+	cached := dto.DashboardSektorResponse{
+		Sektor: []dto.SectorCount{{ID: "cache-1", Nama: "Dari Cache", Total: 99}},
 	}
+	key := buildCacheKey("sektor", f)
+	setDashboardCache(rc, key, cached)
+
+	result, err := service.GetSummarySektor(ctx, f)
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	assert.Equal(t, "Dari Cache", result.Sektor[0].Nama)
+	mockRepo.AssertNotCalled(t, "CountPerSektor")
+}
+
+func TestBuildCacheKey_UniquePerSection(t *testing.T) {
+	f := dto.DashboardFilter{}
+	k1 := buildCacheKey("sektor", f)
+	k2 := buildCacheKey("ikas", f)
+	k3 := buildCacheKey("kse", f)
+	k4 := buildCacheKey("csirt", f)
+
+	assert.NotEqual(t, k1, k2)
+	assert.NotEqual(t, k2, k3)
+	assert.NotEqual(t, k3, k4)
 }
 
 func TestBuildCacheKey_SameFilterSameKey(t *testing.T) {
 	year := "2024"
 	f1 := dto.DashboardFilter{Year: &year}
-
 	year2 := "2024"
 	f2 := dto.DashboardFilter{Year: &year2}
 
-	assert.Equal(t, buildCacheKey(f1), buildCacheKey(f2))
+	assert.Equal(t, buildCacheKey("sektor", f1), buildCacheKey("sektor", f2))
 }
+
+// ── helpers ─────────────────────────────────────────────────────────────────
 
 func newDashboardTestRedis() *dashboardTestRedis {
 	return &dashboardTestRedis{data: make(map[string]string)}

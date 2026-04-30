@@ -165,40 +165,24 @@ func (m *lmsFPRepo) FindByMateri(idMateri string) ([]models.FilePendukung, error
 func (m *lmsFPRepo) FindByID(id string) (*models.FilePendukung, error) { return m.FindByIDFn(id) }
 func (m *lmsFPRepo) Delete(id string) error                            { return m.DeleteFn(id) }
 
-type lmsDiskusiRepo struct {
-	CreateFn       func(d *models.Diskusi) error
-	FindByMateriFn func(idMateri string) ([]models.Diskusi, error)
-	FindByIDFn     func(id string) (*models.Diskusi, error)
-	UpdateFn       func(d *models.Diskusi) error
-	DeleteFn       func(id string) error
-	FindRepliesFn  func(idParent string) ([]models.Diskusi, error)
-}
-
-func (m *lmsDiskusiRepo) Create(d *models.Diskusi) error { return m.CreateFn(d) }
-func (m *lmsDiskusiRepo) FindByMateri(idMateri string) ([]models.Diskusi, error) {
-	return m.FindByMateriFn(idMateri)
-}
-func (m *lmsDiskusiRepo) FindByID(id string) (*models.Diskusi, error) { return m.FindByIDFn(id) }
-func (m *lmsDiskusiRepo) Update(d *models.Diskusi) error              { return m.UpdateFn(d) }
-func (m *lmsDiskusiRepo) Delete(id string) error                      { return m.DeleteFn(id) }
-func (m *lmsDiskusiRepo) FindReplies(idParent string) ([]models.Diskusi, error) {
-	if m.FindRepliesFn != nil {
-		return m.FindRepliesFn(idParent)
-	}
-	return nil, nil
-}
-
-type lmsCatatanRepo struct {
-	UpsertFn              func(c *models.CatatanPribadi) error
-	FindByUserAndMateriFn func(idUser, idMateri string) (*models.CatatanPribadi, error)
+type lmsFeedbackRepo struct {
+	UpsertFn              func(f *models.Feedback) error
+	FindByUserAndMateriFn func(idUser, idMateri string) (*models.Feedback, error)
+	FindByMateriFn        func(idMateri string) ([]dto.FeedbackListItem, error)
 	DeleteFn              func(id string) error
 }
 
-func (m *lmsCatatanRepo) Upsert(c *models.CatatanPribadi) error { return m.UpsertFn(c) }
-func (m *lmsCatatanRepo) FindByUserAndMateri(idUser, idMateri string) (*models.CatatanPribadi, error) {
+func (m *lmsFeedbackRepo) Upsert(f *models.Feedback) error { return m.UpsertFn(f) }
+func (m *lmsFeedbackRepo) FindByUserAndMateri(idUser, idMateri string) (*models.Feedback, error) {
 	return m.FindByUserAndMateriFn(idUser, idMateri)
 }
-func (m *lmsCatatanRepo) Delete(id string) error {
+func (m *lmsFeedbackRepo) FindByMateri(idMateri string) ([]dto.FeedbackListItem, error) {
+	if m.FindByMateriFn != nil {
+		return m.FindByMateriFn(idMateri)
+	}
+	return []dto.FeedbackListItem{}, nil
+}
+func (m *lmsFeedbackRepo) Delete(id string) error {
 	if m.DeleteFn != nil {
 		return m.DeleteFn(id)
 	}
@@ -304,16 +288,9 @@ func setupLMSHandler() *LMSHandler {
 		FindByIDFn:     func(id string) (*models.FilePendukung, error) { return nil, errors.New("not found") },
 		DeleteFn:       func(id string) error { return nil },
 	}
-	diskusiRepo := &lmsDiskusiRepo{
-		CreateFn:       func(d *models.Diskusi) error { return nil },
-		FindByMateriFn: func(idMateri string) ([]models.Diskusi, error) { return []models.Diskusi{}, nil },
-		FindByIDFn:     func(id string) (*models.Diskusi, error) { return nil, errors.New("not found") },
-		UpdateFn:       func(d *models.Diskusi) error { return nil },
-		DeleteFn:       func(id string) error { return nil },
-	}
-	catatanRepo := &lmsCatatanRepo{
-		UpsertFn: func(c *models.CatatanPribadi) error { return nil },
-		FindByUserAndMateriFn: func(idUser, idMateri string) (*models.CatatanPribadi, error) {
+	feedbackRepo := &lmsFeedbackRepo{
+		UpsertFn: func(f *models.Feedback) error { return nil },
+		FindByUserAndMateriFn: func(idUser, idMateri string) (*models.Feedback, error) {
 			return nil, errors.New("not found")
 		},
 	}
@@ -323,23 +300,17 @@ func setupLMSHandler() *LMSHandler {
 		FindByIDFn:           func(id string) (*models.Sertifikat, error) { return nil, errors.New("not found") },
 		FindByUserFn:         func(idUser string) ([]models.Sertifikat, error) { return nil, nil },
 	}
-	userRepo := &lmsUserRepo{
-		FindByIDFn: func(id string) (*models.User, error) {
-			return &models.User{ID: id, Username: "testuser"}, nil
-		},
-	}
 
 	kelasSvc := services.NewKelasService(kelasRepo, materiRepo, &lmsProgressRepo{}, kuisRepo, &lmsAttemptRepo{}, sertifikatRepo, fpRepo, nil)
 	materiSvc := services.NewMateriService(materiRepo, kelasRepo, &lmsProgressRepo{}, nil)
 	soalSvc := services.NewSoalService(soalRepo, kuisRepo, nil)
 	kuisSvc := services.NewKuisService(&lmsAttemptRepo{}, soalRepo, kuisRepo, &lmsProgressRepo{}, nil)
 	fpSvc := services.NewFilePendukungService(fpRepo, materiRepo, nil)
-	diskusiSvc := services.NewDiskusiService(diskusiRepo, userRepo)
-	catatanSvc := services.NewCatatanService(catatanRepo)
-	sertifikatSvc := services.NewSertifikatService(sertifikatRepo, kelasRepo, &lmsProgressRepo{}, &lmsAttemptRepo{}, kuisRepo, userRepo)
+	feedbackSvc := services.NewFeedbackService(feedbackRepo)
+	sertifikatSvc := services.NewSertifikatService(sertifikatRepo, kelasRepo, &lmsProgressRepo{}, &lmsAttemptRepo{}, kuisRepo, nil)
 	sseSvc := services.NewSSEService(nil)
 
-	return NewLMSHandler(kelasSvc, materiSvc, soalSvc, kuisSvc, fpSvc, diskusiSvc, catatanSvc, sertifikatSvc, sseSvc)
+	return NewLMSHandler(kelasSvc, materiSvc, soalSvc, kuisSvc, fpSvc, feedbackSvc, sertifikatSvc, sseSvc)
 }
 
 // withUserCtx is defined in user_handler_test.go
@@ -399,7 +370,7 @@ func TestLMSHandler_KelasGetDetail_NotFound(t *testing.T) {
 		DeleteFn:       func(id string) error { return nil },
 	}, nil)
 	sseSvc := services.NewSSEService(nil)
-	h := NewLMSHandler(kelasSvc, nil, nil, nil, nil, nil, nil, nil, sseSvc)
+	h := NewLMSHandler(kelasSvc, nil, nil, nil, nil, nil, nil, sseSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/kelas/invalid", nil)
 	w := httptest.NewRecorder()
@@ -566,33 +537,96 @@ func TestLMSHandler_SoalMethodNotAllowed(t *testing.T) {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// TEST DISKUSI HANDLER
+// TEST FEEDBACK — /api/materi/{id}/feedback
 // ════════════════════════════════════════════════════════════════════════════
 
-func TestLMSHandler_DiskusiUpdate_Unauthorized(t *testing.T) {
+func TestLMSHandler_FeedbackGet_Unauthorized(t *testing.T) {
 	handler := setupLMSHandler()
-	body, _ := json.Marshal(dto.UpdateDiskusiRequest{Konten: "New"})
-	req := httptest.NewRequest(http.MethodPut, "/api/diskusi/d-1", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
+	req := httptest.NewRequest(http.MethodGet, "/api/materi/m-1/feedback", nil)
 	// no user
 	w := httptest.NewRecorder()
-	handler.ServeDiskusi(w, req)
+	handler.ServeMateri(w, req)
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
-func TestLMSHandler_DiskusiDelete_NoID(t *testing.T) {
+func TestLMSHandler_FeedbackGet_NotFound(t *testing.T) {
 	handler := setupLMSHandler()
-	req := httptest.NewRequest(http.MethodDelete, "/api/diskusi", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/materi/m-1/feedback", nil)
+	req = withUserCtx(req, "user-1", "user")
 	w := httptest.NewRecorder()
-	handler.ServeDiskusi(w, req)
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusNotFound, w.Code)
+}
+
+func TestLMSHandler_FeedbackGet_Success(t *testing.T) {
+	now := time.Now()
+	feedbackRepo := &lmsFeedbackRepo{
+		UpsertFn: func(f *models.Feedback) error { return nil },
+		FindByUserAndMateriFn: func(idUser, idMateri string) (*models.Feedback, error) {
+			return &models.Feedback{ID: "f-1", IDUser: idUser, IDMateri: idMateri, Konten: "Feedback saya", CreatedAt: now, UpdatedAt: now}, nil
+		},
+	}
+	feedbackSvc := services.NewFeedbackService(feedbackRepo)
+	materiSvc := services.NewMateriService(newDefaultMateriRepo(), newDefaultKelasRepo(), &lmsProgressRepo{}, nil)
+	sseSvc := services.NewSSEService(nil)
+	h := NewLMSHandler(nil, materiSvc, nil, nil, nil, feedbackSvc, nil, sseSvc)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/materi/m-1/feedback", nil)
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	h.ServeMateri(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "Feedback saya")
+}
+
+func TestLMSHandler_FeedbackUpsert_Unauthorized(t *testing.T) {
+	handler := setupLMSHandler()
+	body, _ := json.Marshal(dto.UpsertFeedbackRequest{Konten: "feedback"})
+	req := httptest.NewRequest(http.MethodPut, "/api/materi/m-1/feedback", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	// no user
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestLMSHandler_FeedbackUpsert_Success(t *testing.T) {
+	now := time.Now()
+	feedbackRepo := &lmsFeedbackRepo{
+		UpsertFn: func(f *models.Feedback) error { return nil },
+		FindByUserAndMateriFn: func(idUser, idMateri string) (*models.Feedback, error) {
+			return &models.Feedback{ID: "f-1", IDUser: idUser, IDMateri: idMateri, Konten: "old", CreatedAt: now, UpdatedAt: now}, nil
+		},
+	}
+	feedbackSvc := services.NewFeedbackService(feedbackRepo)
+	materiSvc := services.NewMateriService(newDefaultMateriRepo(), newDefaultKelasRepo(), &lmsProgressRepo{}, nil)
+	sseSvc := services.NewSSEService(nil)
+	h := NewLMSHandler(nil, materiSvc, nil, nil, nil, feedbackSvc, nil, sseSvc)
+
+	body, _ := json.Marshal(dto.UpsertFeedbackRequest{Konten: "Feedback baru"})
+	req := httptest.NewRequest(http.MethodPut, "/api/materi/m-1/feedback", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	h.ServeMateri(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestLMSHandler_FeedbackUpsert_InvalidBody(t *testing.T) {
+	handler := setupLMSHandler()
+	req := httptest.NewRequest(http.MethodPut, "/api/materi/m-1/feedback", bytes.NewBuffer([]byte("bad")))
+	req.Header.Set("Content-Type", "application/json")
+	req = withUserCtx(req, "user-1", "user")
+	w := httptest.NewRecorder()
+	handler.ServeMateri(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-func TestLMSHandler_DiskusiMethodNotAllowed(t *testing.T) {
+func TestLMSHandler_FeedbackMethodNotAllowed(t *testing.T) {
 	handler := setupLMSHandler()
-	req := httptest.NewRequest(http.MethodGet, "/api/diskusi", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/api/materi/m-1/feedback", nil)
 	w := httptest.NewRecorder()
-	handler.ServeDiskusi(w, req)
+	handler.ServeMateri(w, req)
 	assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 }
 
@@ -837,7 +871,7 @@ func TestLMSHandler_SoalCreate_Success(t *testing.T) {
 	soalSvc := services.NewSoalService(soalRepo, kuisRepo, nil)
 	kuisSvc := services.NewKuisService(&lmsAttemptRepo{}, soalRepo, kuisRepo, &lmsProgressRepo{}, nil)
 	sseSvc := services.NewSSEService(nil)
-	h := NewLMSHandler(nil, nil, soalSvc, kuisSvc, nil, nil, nil, nil, sseSvc)
+	h := NewLMSHandler(nil, nil, soalSvc, kuisSvc, nil, nil, nil, sseSvc)
 
 	body, _ := json.Marshal(dto.CreateSoalRequest{
 		Pertanyaan: "Apa itu Go?",
@@ -957,7 +991,7 @@ func TestLMSHandler_KuisDelete_Success(t *testing.T) {
 		DeleteFn:       func(id string) error { return nil },
 	}, nil)
 	sseSvc := services.NewSSEService(nil)
-	h := NewLMSHandler(kelasSvc, nil, nil, kuisSvc, nil, nil, nil, nil, sseSvc)
+	h := NewLMSHandler(kelasSvc, nil, nil, kuisSvc, nil, nil, nil, sseSvc)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/kuis/kuis-1", nil)
 	w := httptest.NewRecorder()
@@ -971,213 +1005,6 @@ func TestLMSHandler_KuisMethodNotAllowed(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPatch, "/api/kuis/kuis-1", nil)
 	w := httptest.NewRecorder()
 	handler.ServeKuis(w, req)
-	assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// TEST DISKUSI — success paths
-// ════════════════════════════════════════════════════════════════════════════
-
-func TestLMSHandler_DiskusiCreate_Success(t *testing.T) {
-	handler := setupLMSHandler()
-	body, _ := json.Marshal(dto.CreateDiskusiRequest{Konten: "Halo ini diskusi"})
-	req := httptest.NewRequest(http.MethodPost, "/api/materi/m-1/diskusi", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	req = withUserCtx(req, "user-1", "user")
-	w := httptest.NewRecorder()
-	handler.ServeMateri(w, req)
-	assert.Equal(t, http.StatusCreated, w.Code)
-}
-
-func TestLMSHandler_DiskusiCreate_Unauthorized(t *testing.T) {
-	handler := setupLMSHandler()
-	body, _ := json.Marshal(dto.CreateDiskusiRequest{Konten: "test"})
-	req := httptest.NewRequest(http.MethodPost, "/api/materi/m-1/diskusi", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	// no user context
-	w := httptest.NewRecorder()
-	handler.ServeMateri(w, req)
-	assert.Equal(t, http.StatusUnauthorized, w.Code)
-}
-
-func TestLMSHandler_DiskusiCreate_InvalidBody(t *testing.T) {
-	handler := setupLMSHandler()
-	req := httptest.NewRequest(http.MethodPost, "/api/materi/m-1/diskusi", bytes.NewBuffer([]byte("bad")))
-	req.Header.Set("Content-Type", "application/json")
-	req = withUserCtx(req, "user-1", "user")
-	w := httptest.NewRecorder()
-	handler.ServeMateri(w, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestLMSHandler_DiskusiGetByMateri_Success(t *testing.T) {
-	handler := setupLMSHandler()
-	req := httptest.NewRequest(http.MethodGet, "/api/materi/m-1/diskusi", nil)
-	w := httptest.NewRecorder()
-	handler.ServeMateri(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-}
-
-func TestLMSHandler_DiskusiUpdate_Success(t *testing.T) {
-	now := time.Now()
-	diskusiRepo := &lmsDiskusiRepo{
-		CreateFn:       func(d *models.Diskusi) error { return nil },
-		FindByMateriFn: func(idMateri string) ([]models.Diskusi, error) { return nil, nil },
-		FindByIDFn: func(id string) (*models.Diskusi, error) {
-			return &models.Diskusi{ID: id, IDUser: "user-1", Konten: "Old", CreatedAt: now, UpdatedAt: now}, nil
-		},
-		UpdateFn: func(d *models.Diskusi) error { return nil },
-		DeleteFn: func(id string) error { return nil },
-	}
-	userRepo := &lmsUserRepo{
-		FindByIDFn: func(id string) (*models.User, error) {
-			return &models.User{ID: id, Username: "testuser"}, nil
-		},
-	}
-	diskusiSvc := services.NewDiskusiService(diskusiRepo, userRepo)
-	sseSvc := services.NewSSEService(nil)
-	h := NewLMSHandler(nil, nil, nil, nil, nil, diskusiSvc, nil, nil, sseSvc)
-
-	body, _ := json.Marshal(dto.UpdateDiskusiRequest{Konten: "Updated"})
-	req := httptest.NewRequest(http.MethodPut, "/api/diskusi/d-1", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	req = withUserCtx(req, "user-1", "user")
-	w := httptest.NewRecorder()
-	h.ServeDiskusi(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-}
-
-func TestLMSHandler_DiskusiDelete_Success(t *testing.T) {
-	now := time.Now()
-	diskusiRepo := &lmsDiskusiRepo{
-		CreateFn:       func(d *models.Diskusi) error { return nil },
-		FindByMateriFn: func(idMateri string) ([]models.Diskusi, error) { return nil, nil },
-		FindByIDFn: func(id string) (*models.Diskusi, error) {
-			return &models.Diskusi{ID: id, IDUser: "user-1", Konten: "Test", CreatedAt: now, UpdatedAt: now}, nil
-		},
-		UpdateFn: func(d *models.Diskusi) error { return nil },
-		DeleteFn: func(id string) error { return nil },
-	}
-	userRepo := &lmsUserRepo{
-		FindByIDFn: func(id string) (*models.User, error) {
-			return &models.User{ID: id, Username: "testuser"}, nil
-		},
-	}
-	diskusiSvc := services.NewDiskusiService(diskusiRepo, userRepo)
-	sseSvc := services.NewSSEService(nil)
-	h := NewLMSHandler(nil, nil, nil, nil, nil, diskusiSvc, nil, nil, sseSvc)
-
-	req := httptest.NewRequest(http.MethodDelete, "/api/diskusi/d-1", nil)
-	req = withUserCtx(req, "user-1", "user")
-	w := httptest.NewRecorder()
-	h.ServeDiskusi(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "berhasil dihapus")
-}
-
-func TestLMSHandler_DiskusiUpdate_InvalidBody(t *testing.T) {
-	handler := setupLMSHandler()
-	req := httptest.NewRequest(http.MethodPut, "/api/diskusi/d-1", bytes.NewBuffer([]byte("bad")))
-	req.Header.Set("Content-Type", "application/json")
-	req = withUserCtx(req, "user-1", "user")
-	w := httptest.NewRecorder()
-	handler.ServeDiskusi(w, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// TEST CATATAN — success paths
-// ════════════════════════════════════════════════════════════════════════════
-
-func TestLMSHandler_CatatanGet_Unauthorized(t *testing.T) {
-	handler := setupLMSHandler()
-	req := httptest.NewRequest(http.MethodGet, "/api/materi/m-1/catatan", nil)
-	// no user
-	w := httptest.NewRecorder()
-	handler.ServeMateri(w, req)
-	assert.Equal(t, http.StatusUnauthorized, w.Code)
-}
-
-func TestLMSHandler_CatatanGet_NotFound(t *testing.T) {
-	handler := setupLMSHandler()
-	req := httptest.NewRequest(http.MethodGet, "/api/materi/m-1/catatan", nil)
-	req = withUserCtx(req, "user-1", "user")
-	w := httptest.NewRecorder()
-	handler.ServeMateri(w, req)
-	// Default mock returns not found
-	assert.Equal(t, http.StatusNotFound, w.Code)
-}
-
-func TestLMSHandler_CatatanGet_Success(t *testing.T) {
-	now := time.Now()
-	catatanRepo := &lmsCatatanRepo{
-		UpsertFn: func(c *models.CatatanPribadi) error { return nil },
-		FindByUserAndMateriFn: func(idUser, idMateri string) (*models.CatatanPribadi, error) {
-			return &models.CatatanPribadi{ID: "c-1", IDUser: idUser, IDMateri: idMateri, Konten: "Catatan saya", CreatedAt: now, UpdatedAt: now}, nil
-		},
-	}
-	catatanSvc := services.NewCatatanService(catatanRepo)
-	materiRepo := newDefaultMateriRepo()
-	materiSvc := services.NewMateriService(materiRepo, newDefaultKelasRepo(), &lmsProgressRepo{}, nil)
-	sseSvc := services.NewSSEService(nil)
-	h := NewLMSHandler(nil, materiSvc, nil, nil, nil, nil, catatanSvc, nil, sseSvc)
-
-	req := httptest.NewRequest(http.MethodGet, "/api/materi/m-1/catatan", nil)
-	req = withUserCtx(req, "user-1", "user")
-	w := httptest.NewRecorder()
-	h.ServeMateri(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Contains(t, w.Body.String(), "Catatan saya")
-}
-
-func TestLMSHandler_CatatanUpsert_Unauthorized(t *testing.T) {
-	handler := setupLMSHandler()
-	body, _ := json.Marshal(dto.UpsertCatatanRequest{Konten: "catatan"})
-	req := httptest.NewRequest(http.MethodPut, "/api/materi/m-1/catatan", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	// no user
-	w := httptest.NewRecorder()
-	handler.ServeMateri(w, req)
-	assert.Equal(t, http.StatusUnauthorized, w.Code)
-}
-
-func TestLMSHandler_CatatanUpsert_Success(t *testing.T) {
-	now := time.Now()
-	catatanRepo := &lmsCatatanRepo{
-		UpsertFn: func(c *models.CatatanPribadi) error { return nil },
-		FindByUserAndMateriFn: func(idUser, idMateri string) (*models.CatatanPribadi, error) {
-			return &models.CatatanPribadi{ID: "c-1", IDUser: idUser, IDMateri: idMateri, Konten: "old", CreatedAt: now, UpdatedAt: now}, nil
-		},
-	}
-	catatanSvc := services.NewCatatanService(catatanRepo)
-	materiSvc := services.NewMateriService(newDefaultMateriRepo(), newDefaultKelasRepo(), &lmsProgressRepo{}, nil)
-	sseSvc := services.NewSSEService(nil)
-	h := NewLMSHandler(nil, materiSvc, nil, nil, nil, nil, catatanSvc, nil, sseSvc)
-
-	body, _ := json.Marshal(dto.UpsertCatatanRequest{Konten: "Catatan baru"})
-	req := httptest.NewRequest(http.MethodPut, "/api/materi/m-1/catatan", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	req = withUserCtx(req, "user-1", "user")
-	w := httptest.NewRecorder()
-	h.ServeMateri(w, req)
-	assert.Equal(t, http.StatusOK, w.Code)
-}
-
-func TestLMSHandler_CatatanUpsert_InvalidBody(t *testing.T) {
-	handler := setupLMSHandler()
-	req := httptest.NewRequest(http.MethodPut, "/api/materi/m-1/catatan", bytes.NewBuffer([]byte("bad")))
-	req.Header.Set("Content-Type", "application/json")
-	req = withUserCtx(req, "user-1", "user")
-	w := httptest.NewRecorder()
-	handler.ServeMateri(w, req)
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestLMSHandler_CatatanMethodNotAllowed(t *testing.T) {
-	handler := setupLMSHandler()
-	req := httptest.NewRequest(http.MethodDelete, "/api/materi/m-1/catatan", nil)
-	w := httptest.NewRecorder()
-	handler.ServeMateri(w, req)
 	assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
 }
 
@@ -1274,7 +1101,7 @@ func TestLMSHandler_SertifikatGetByID_Success(t *testing.T) {
 	}
 	sertSvc := services.NewSertifikatService(sertRepo, nil, nil, nil, nil, nil)
 	sseSvc := services.NewSSEService(nil)
-	h := NewLMSHandler(nil, nil, nil, nil, nil, nil, nil, sertSvc, sseSvc)
+	h := NewLMSHandler(nil, nil, nil, nil, nil, nil, sertSvc, sseSvc)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/sertifikat/cert-1", nil)
 	req = withUserCtx(req, "user-1", "user")

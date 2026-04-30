@@ -8,10 +8,11 @@ import (
 
 func TestValidateCreateResponden_Success(t *testing.T) {
 	req := dto.CreateRespondenRequest{
-		UserID:             "user123",
+		IdPerusahaan:       "perusahaan1",
+		NamaLengkap:        "Nama Lengkap",
+		Jabatan:            "Manager",
+		Email:              "email@mail.com",
 		NoTelepon:          "+62812345678",
-		Sektor:             "Logam",
-		SektorLainnya:      "",
 		SertifikatTraining: "yes",
 	}
 
@@ -21,39 +22,109 @@ func TestValidateCreateResponden_Success(t *testing.T) {
 	}
 }
 
-func TestValidateCreateResponden_UserIDEmpty(t *testing.T) {
+func TestValidateCreateResponden_IdPerusahaanEmpty(t *testing.T) {
 	req := dto.CreateRespondenRequest{
-		UserID:             "",
+		IdPerusahaan:       "",
+		NamaLengkap:        "Nama Lengkap",
+		Jabatan:            "Manager",
+		Email:              "email@mail.com",
 		NoTelepon:          "+62812345678",
-		Sektor:             "Logam",
 		SertifikatTraining: "yes",
 	}
 
 	err := ValidateCreateResponden(req)
-	if err == nil || err.Error() != "user_id wajib diisi" {
-		t.Fatalf("expected user_id error, got %v", err)
+	if err == nil || err.Error() != "id_perusahaan wajib diisi" {
+		t.Fatalf("expected id_perusahaan error, got %v", err)
 	}
 }
 
-func TestValidateCreateResponden_UserIDTooShort(t *testing.T) {
+func TestValidateCreateResponden_NamaLengkapEmpty(t *testing.T) {
 	req := dto.CreateRespondenRequest{
-		UserID:             "ab",
+		IdPerusahaan:       "perusahaan1",
+		NamaLengkap:        "",
+		Jabatan:            "Manager",
+		Email:              "email@mail.com",
 		NoTelepon:          "+62812345678",
-		Sektor:             "Logam",
 		SertifikatTraining: "yes",
 	}
 
 	err := ValidateCreateResponden(req)
-	if err == nil || err.Error() != "user_id minimal 3 karakter" {
+	if err == nil || err.Error() != "nama_lengkap wajib diisi" {
+		t.Fatalf("expected nama_lengkap error, got %v", err)
+	}
+}
+
+func TestValidateCreateResponden_NamaLengkapTooShort(t *testing.T) {
+	req := dto.CreateRespondenRequest{
+		IdPerusahaan:       "perusahaan1",
+		NamaLengkap:        "ab",
+		Jabatan:            "Manager",
+		Email:              "email@mail.com",
+		NoTelepon:          "+62812345678",
+		SertifikatTraining: "yes",
+	}
+
+	err := ValidateCreateResponden(req)
+	if err == nil || err.Error() != "nama_lengkap minimal 3 karakter" {
 		t.Fatalf("expected min length error, got %v", err)
+	}
+}
+
+func TestValidateCreateResponden_JabatanEmpty(t *testing.T) {
+	req := dto.CreateRespondenRequest{
+		IdPerusahaan:       "perusahaan1",
+		NamaLengkap:        "Nama Lengkap",
+		Jabatan:            "",
+		Email:              "email@mail.com",
+		NoTelepon:          "+62812345678",
+		SertifikatTraining: "yes",
+	}
+
+	err := ValidateCreateResponden(req)
+	if err == nil || err.Error() != "jabatan wajib diisi" {
+		t.Fatalf("expected jabatan error, got %v", err)
+	}
+}
+
+func TestValidateCreateResponden_EmailEmpty(t *testing.T) {
+	req := dto.CreateRespondenRequest{
+		IdPerusahaan:       "perusahaan1",
+		NamaLengkap:        "Nama Lengkap",
+		Jabatan:            "Manager",
+		Email:              "",
+		NoTelepon:          "+62812345678",
+		SertifikatTraining: "yes",
+	}
+
+	err := ValidateCreateResponden(req)
+	if err == nil || err.Error() != "email wajib diisi" {
+		t.Fatalf("expected email error, got %v", err)
+	}
+}
+
+func TestValidateCreateResponden_EmailInvalid(t *testing.T) {
+	req := dto.CreateRespondenRequest{
+		IdPerusahaan:       "perusahaan1",
+		NamaLengkap:        "Nama Lengkap",
+		Jabatan:            "Manager",
+		Email:              "invalid-email",
+		NoTelepon:          "+62812345678",
+		SertifikatTraining: "yes",
+	}
+
+	err := ValidateCreateResponden(req)
+	if err == nil || err.Error() != "format email tidak valid" {
+		t.Fatalf("expected invalid email error, got %v", err)
 	}
 }
 
 func TestValidateCreateResponden_PhoneEmpty(t *testing.T) {
 	req := dto.CreateRespondenRequest{
-		UserID:             "user123",
+		IdPerusahaan:       "perusahaan1",
+		NamaLengkap:        "Nama Lengkap",
+		Jabatan:            "Manager",
+		Email:              "email@mail.com",
 		NoTelepon:          "",
-		Sektor:             "Logam",
 		SertifikatTraining: "yes",
 	}
 
@@ -65,9 +136,11 @@ func TestValidateCreateResponden_PhoneEmpty(t *testing.T) {
 
 func TestValidateCreateResponden_PhoneInvalidFormat(t *testing.T) {
 	req := dto.CreateRespondenRequest{
-		UserID:             "user123",
+		IdPerusahaan:       "perusahaan1",
+		NamaLengkap:        "Nama Lengkap",
+		Jabatan:            "Manager",
+		Email:              "email@mail.com",
 		NoTelepon:          "abc12345",
-		Sektor:             "Logam",
 		SertifikatTraining: "yes",
 	}
 
@@ -79,9 +152,11 @@ func TestValidateCreateResponden_PhoneInvalidFormat(t *testing.T) {
 
 func TestValidateCreateResponden_PhoneTooShort(t *testing.T) {
 	req := dto.CreateRespondenRequest{
-		UserID:             "user123",
+		IdPerusahaan:       "perusahaan1",
+		NamaLengkap:        "Nama Lengkap",
+		Jabatan:            "Manager",
+		Email:              "email@mail.com",
 		NoTelepon:          "123",
-		Sektor:             "Logam",
 		SertifikatTraining: "yes",
 	}
 
@@ -91,55 +166,13 @@ func TestValidateCreateResponden_PhoneTooShort(t *testing.T) {
 	}
 }
 
-func TestValidateCreateResponden_InvalidSektor(t *testing.T) {
-	req := dto.CreateRespondenRequest{
-		UserID:             "user123",
-		NoTelepon:          "+62812345678",
-		Sektor:             "TidakAda",
-		SertifikatTraining: "yes",
-	}
-
-	err := ValidateCreateResponden(req)
-	if err == nil || err.Error() != "sektor tidak valid" {
-		t.Fatalf("expected invalid sector, got %v", err)
-	}
-}
-
-func TestValidateCreateResponden_LainnyaWithoutDetail(t *testing.T) {
-	req := dto.CreateRespondenRequest{
-		UserID:             "user123",
-		NoTelepon:          "+62812345678",
-		Sektor:             "Lainnya",
-		SektorLainnya:      "",
-		SertifikatTraining: "yes",
-	}
-
-	err := ValidateCreateResponden(req)
-	if err == nil || err.Error() != "sektor_lainnya wajib diisi jika sektor = Lainnya" {
-		t.Fatalf("expected sektor_lainnya error, got %v", err)
-	}
-}
-
-func TestValidateCreateResponden_SertifikatEmpty(t *testing.T) {
-	req := dto.CreateRespondenRequest{
-		UserID:             "user123",
-		NoTelepon:          "+62812345678",
-		Sektor:             "Logam",
-		SertifikatTraining: "",
-	}
-
-	err := ValidateCreateResponden(req)
-	if err == nil || err.Error() != "sertifikat_training wajib diisi" {
-		t.Fatalf("expected sertifikat error, got %v", err)
-	}
-}
-
 func TestValidateUpdateResponden_Success(t *testing.T) {
 	req := dto.UpdateRespondenRequest{
-		UserID:             "user123",
+		IdPerusahaan:       "perusahaan1",
+		NamaLengkap:        "Nama Lengkap",
+		Jabatan:            "Manager",
+		Email:              "email@mail.com",
 		NoTelepon:          "+62812345678",
-		Sektor:             "Logam",
-		SektorLainnya:      "",
 		SertifikatTraining: "yes",
 	}
 
@@ -156,15 +189,5 @@ func TestIsPhone(t *testing.T) {
 
 	if isPhone("abc123") {
 		t.Error("expected invalid phone")
-	}
-}
-
-func TestIsValidSektor(t *testing.T) {
-	if !isValidSektor("Logam") {
-		t.Error("expected valid sector")
-	}
-
-	if isValidSektor("TidakAda") {
-		t.Error("expected invalid sector")
 	}
 }

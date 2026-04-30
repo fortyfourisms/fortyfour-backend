@@ -49,27 +49,9 @@ func ptrStr(s string) *string {
 	return &s
 }
 
-// Summary godoc
-//
-//	@Summary		Get dashboard summary
-//	@Description	Mengambil ringkasan data dashboard. Mendukung berbagai filter opsional.
-//	@Description	Prioritas filter tanggal: from+to > year+quarter > year.
-//	@Tags			Dashboard
-//	@Security		BearerAuth
-//	@Produce		json
-//	@Param			from			query		string	false	"Start date (YYYY-MM-DD)"
-//	@Param			to				query		string	false	"End date (YYYY-MM-DD)"
-//	@Param			year			query		string	false	"Filter per tahun, misal 2025"
-//	@Param			quarter			query		string	false	"Filter per kuartal (1-4), harus digunakan bersama year"
-//	@Param			sub_sektor_id	query		string	false	"Filter per sub-sektor (UUID)"
-//	@Param			kategori_se		query		string	false	"Filter kategori SE: Strategis | Tinggi | Rendah"
-//	@Success		200				{object}	dto.DashboardSummary
-//	@Failure		400				{object}	dto.ErrorResponse
-//	@Failure		500				{object}	dto.ErrorResponse
-//	@Router			/api/dashboard/summary [get]
-func (h *DashboardHandler) Summary(w http.ResponseWriter, r *http.Request) {
+// parseFilter mengekstrak filter dari query parameter
+func (h *DashboardHandler) parseFilter(r *http.Request) (dto.DashboardFilter, bool, string) {
 	q := r.URL.Query()
-
 	f := dto.DashboardFilter{}
 
 	// --- from & to ---
@@ -108,13 +90,128 @@ func (h *DashboardHandler) Summary(w http.ResponseWriter, r *http.Request) {
 	kategoriSE := q.Get("kategori_se")
 	if kategoriSE != "" {
 		if !validKategoriSE[kategoriSE] {
-			writeError(w, http.StatusBadRequest, "kategori_se tidak valid, nilai yang diizinkan: Strategis, Tinggi, Rendah")
-			return
+			return f, false, "kategori_se tidak valid, nilai yang diizinkan: Strategis, Tinggi, Rendah"
 		}
 		f.KategoriSE = &kategoriSE
 	}
 
-	res, err := h.svc.GetSummary(r.Context(), f)
+	return f, true, ""
+}
+
+// SummarySektor godoc
+//
+//	@Summary		Get dashboard sektor
+//	@Description	Mengambil data jumlah perusahaan per sektor.
+//	@Tags			Dashboard
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			from			query		string	false	"Start date (YYYY-MM-DD)"
+//	@Param			to				query		string	false	"End date (YYYY-MM-DD)"
+//	@Param			year			query		string	false	"Filter per tahun, misal 2025"
+//	@Param			quarter			query		string	false	"Filter per kuartal (1-4), harus digunakan bersama year"
+//	@Param			sub_sektor_id	query		string	false	"Filter per sub-sektor (UUID)"
+//	@Success		200				{object}	dto.DashboardSektorResponse
+//	@Failure		400				{object}	dto.ErrorResponse
+//	@Failure		500				{object}	dto.ErrorResponse
+//	@Router			/api/dashboard/sektor [get]
+func (h *DashboardHandler) SummarySektor(w http.ResponseWriter, r *http.Request) {
+	f, ok, errMsg := h.parseFilter(r)
+	if !ok {
+		writeError(w, http.StatusBadRequest, errMsg)
+		return
+	}
+	res, err := h.svc.GetSummarySektor(r.Context(), f)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, res)
+}
+
+// SummaryIkas godoc
+//
+//	@Summary		Get dashboard IKAS
+//	@Description	Mengambil data agregasi IKAS dan status pengisian IKAS.
+//	@Tags			Dashboard
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			from			query		string	false	"Start date (YYYY-MM-DD)"
+//	@Param			to				query		string	false	"End date (YYYY-MM-DD)"
+//	@Param			year			query		string	false	"Filter per tahun, misal 2025"
+//	@Param			quarter			query		string	false	"Filter per kuartal (1-4), harus digunakan bersama year"
+//	@Param			sub_sektor_id	query		string	false	"Filter per sub-sektor (UUID)"
+//	@Success		200				{object}	dto.DashboardIkasResponse
+//	@Failure		400				{object}	dto.ErrorResponse
+//	@Failure		500				{object}	dto.ErrorResponse
+//	@Router			/api/dashboard/ikas [get]
+func (h *DashboardHandler) SummaryIkas(w http.ResponseWriter, r *http.Request) {
+	f, ok, errMsg := h.parseFilter(r)
+	if !ok {
+		writeError(w, http.StatusBadRequest, errMsg)
+		return
+	}
+	res, err := h.svc.GetSummaryIkas(r.Context(), f)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, res)
+}
+
+// SummarySE godoc
+//
+//	@Summary		Get dashboard SE
+//	@Description	Mengambil data agregasi SE dan status pengisian SE.
+//	@Tags			Dashboard
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			from			query		string	false	"Start date (YYYY-MM-DD)"
+//	@Param			to				query		string	false	"End date (YYYY-MM-DD)"
+//	@Param			year			query		string	false	"Filter per tahun, misal 2025"
+//	@Param			quarter			query		string	false	"Filter per kuartal (1-4), harus digunakan bersama year"
+//	@Param			sub_sektor_id	query		string	false	"Filter per sub-sektor (UUID)"
+//	@Param			kategori_se		query		string	false	"Filter kategori SE: Strategis | Tinggi | Rendah"
+//	@Success		200				{object}	dto.DashboardSEResponse
+//	@Failure		400				{object}	dto.ErrorResponse
+//	@Failure		500				{object}	dto.ErrorResponse
+//	@Router			/api/dashboard/se [get]
+func (h *DashboardHandler) SummarySE(w http.ResponseWriter, r *http.Request) {
+	f, ok, errMsg := h.parseFilter(r)
+	if !ok {
+		writeError(w, http.StatusBadRequest, errMsg)
+		return
+	}
+	res, err := h.svc.GetSummarySE(r.Context(), f)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	writeJSON(w, http.StatusOK, res)
+}
+
+// SummaryCSIRT godoc
+//
+//	@Summary		Get dashboard CSIRT
+//	@Description	Mengambil data agregasi CSIRT dan status pembentukan CSIRT.
+//	@Tags			Dashboard
+//	@Security		BearerAuth
+//	@Produce		json
+//	@Param			from			query		string	false	"Start date (YYYY-MM-DD)"
+//	@Param			to				query		string	false	"End date (YYYY-MM-DD)"
+//	@Param			year			query		string	false	"Filter per tahun, misal 2025"
+//	@Param			quarter			query		string	false	"Filter per kuartal (1-4), harus digunakan bersama year"
+//	@Param			sub_sektor_id	query		string	false	"Filter per sub-sektor (UUID)"
+//	@Success		200				{object}	dto.DashboardCSIRTResponse
+//	@Failure		400				{object}	dto.ErrorResponse
+//	@Failure		500				{object}	dto.ErrorResponse
+//	@Router			/api/dashboard/csirt [get]
+func (h *DashboardHandler) SummaryCSIRT(w http.ResponseWriter, r *http.Request) {
+	f, ok, errMsg := h.parseFilter(r)
+	if !ok {
+		writeError(w, http.StatusBadRequest, errMsg)
+		return
+	}
+	res, err := h.svc.GetSummaryCSIRT(r.Context(), f)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -130,10 +227,16 @@ func (h *DashboardHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	path := r.URL.Path
-	if path == "/api/dashboard/summary" || path == "/api/dashboard/summary/" {
-		h.Summary(w, r)
-		return
+	switch path {
+	case "/api/dashboard/sektor", "/api/dashboard/sektor/":
+		h.SummarySektor(w, r)
+	case "/api/dashboard/ikas", "/api/dashboard/ikas/":
+		h.SummaryIkas(w, r)
+	case "/api/dashboard/se", "/api/dashboard/se/":
+		h.SummarySE(w, r)
+	case "/api/dashboard/csirt", "/api/dashboard/csirt/":
+		h.SummaryCSIRT(w, r)
+	default:
+		http.NotFound(w, r)
 	}
-
-	http.NotFound(w, r)
 }

@@ -12,10 +12,10 @@ import (
 
 // MOCK SERVICE
 type mockService struct {
-	GetAllFunc func() ([]dto.RespondenResponse, error)
+	GetAllFunc  func() ([]dto.RespondenResponse, error)
 	GetByIDFunc func(int) (*dto.RespondenResponse, error)
-	CreateFunc func(dto.CreateRespondenRequest) (*dto.RespondenResponse, error)
-	UpdateFunc func(int, dto.UpdateRespondenRequest) (*dto.RespondenResponse, error)
+	CreateFunc  func(dto.CreateRespondenRequest) (*dto.RespondenResponse, error)
+	UpdateFunc  func(int, dto.UpdateRespondenRequest) (*dto.RespondenResponse, error)
 }
 
 func (m *mockService) GetAll() ([]dto.RespondenResponse, error) {

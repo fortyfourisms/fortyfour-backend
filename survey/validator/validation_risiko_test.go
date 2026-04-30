@@ -1,8 +1,8 @@
 package validation
 
 import (
-	"testing"
 	"survey/internal/dto"
+	"testing"
 )
 
 // STEP 1 — ELIGIBILITY
@@ -88,13 +88,13 @@ func TestValidateAlasanRequest(t *testing.T) {
 // STEP 2B — DAMPAK
 func TestValidateDampakRequest(t *testing.T) {
 	validReq := dto.DampakRequest{
-		RespondenID:      1,
-		RisikoID:         1,
-		DampakReputasi:   2,
+		RespondenID:       1,
+		RisikoID:          1,
+		DampakReputasi:    2,
 		DampakOperasional: 2,
-		DampakFinansial:  2,
-		DampakHukum:      2,
-		Frekuensi:        2,
+		DampakFinansial:   2,
+		DampakHukum:       2,
+		Frekuensi:         2,
 	}
 
 	tests := []struct {
@@ -147,8 +147,8 @@ func TestValidatePengendalianRequest(t *testing.T) {
 		{
 			name: "valid tanpa pengendalian",
 			req: dto.PengendalianRequest{
-				RespondenID:    1,
-				RisikoID:       1,
+				RespondenID:     1,
+				RisikoID:        1,
 				AdaPengendalian: false,
 			},
 			wantErr: nil,

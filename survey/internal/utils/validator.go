@@ -18,12 +18,12 @@ func ValidateCreateResponden(req dto.CreateRespondenRequest) error {
 	req.NoTelepon = strings.TrimSpace(req.NoTelepon)
 	req.SertifikatTraining = strings.TrimSpace(req.SertifikatTraining)
 
-	// ID PERUSAHAAN 
+	// ID PERUSAHAAN
 	if req.IdPerusahaan == "" {
 		return errors.New("id_perusahaan wajib diisi")
 	}
 
-	// NAMA LENGKAP 
+	// NAMA LENGKAP
 	if req.NamaLengkap == "" {
 		return errors.New("nama_lengkap wajib diisi")
 	}
@@ -36,7 +36,7 @@ func ValidateCreateResponden(req dto.CreateRespondenRequest) error {
 		return errors.New("jabatan wajib diisi")
 	}
 
-	// EMAIL 
+	// EMAIL
 	if req.Email == "" {
 		return errors.New("email wajib diisi")
 	}
@@ -44,7 +44,7 @@ func ValidateCreateResponden(req dto.CreateRespondenRequest) error {
 		return errors.New("format email tidak valid")
 	}
 
-	// NO TELEPON 
+	// NO TELEPON
 	if req.NoTelepon == "" {
 		return errors.New("no_telepon wajib diisi")
 	}
