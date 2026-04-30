@@ -84,24 +84,45 @@ func (h *LMSHandler) ServePublicKelas(w http.ResponseWriter, r *http.Request) {
 
 	id := trimID(r.URL.Path, "/api/public/kelas")
 	if id == "" {
-		// List semua kelas yang statusnya 'published'
-		data, err := h.kelasSvc.GetAll(true)
-		if err != nil {
-			logger.Error(err, "publicKelasGetAll failed")
-			utils.RespondError(w, 500, err.Error())
-			return
-		}
-		utils.RespondJSON(w, 200, data)
+		h.publicKelasGetAll(w, r)
 	} else {
-		// Detail kelas tanpa userID → progress di-skip oleh service
-		data, err := h.kelasSvc.GetDetail(id, "")
-		if err != nil {
-			logger.Error(err, "publicKelasGetDetail failed")
-			utils.RespondError(w, 404, err.Error())
-			return
-		}
-		utils.RespondJSON(w, 200, data)
+		h.publicKelasGetDetail(w, r, id)
 	}
+}
+
+// @Summary		List kelas (public)
+// @Description	Menampilkan daftar kelas yang sudah dipublikasikan. Tidak memerlukan autentikasi.
+// @Tags			LMS - Public
+// @Produce		json
+// @Success		200	{array}		dto.KelasResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/public/kelas [get]
+func (h *LMSHandler) publicKelasGetAll(w http.ResponseWriter, _ *http.Request) {
+	data, err := h.kelasSvc.GetAll(true)
+	if err != nil {
+		logger.Error(err, "publicKelasGetAll failed")
+		utils.RespondError(w, 500, err.Error())
+		return
+	}
+	utils.RespondJSON(w, 200, data)
+}
+
+// @Summary		Detail kelas (public)
+// @Description	Menampilkan detail kelas beserta daftar materi. Tidak memerlukan autentikasi, progress tidak disertakan.
+// @Tags			LMS - Public
+// @Produce		json
+// @Param			id	path		string	true	"ID Kelas"
+// @Success		200	{object}	dto.KelasDetailResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/public/kelas/{id} [get]
+func (h *LMSHandler) publicKelasGetDetail(w http.ResponseWriter, _ *http.Request, id string) {
+	data, err := h.kelasSvc.GetDetail(id, "")
+	if err != nil {
+		logger.Error(err, "publicKelasGetDetail failed")
+		utils.RespondError(w, 404, err.Error())
+		return
+	}
+	utils.RespondJSON(w, 200, data)
 }
 
 // ════════════════════════════════════════════════════════════════════════════
