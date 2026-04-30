@@ -691,9 +691,15 @@ definitions:
     type: object
   dto.PerusahaanInIkas:
     properties:
+      alamat:
+        type: string
+      email:
+        type: string
       id:
         type: string
       nama_perusahaan:
+        type: string
+      sektor:
         type: string
     type: object
   dto.ProteksiInIkas:
@@ -1027,6 +1033,29 @@ definitions:
     - resource
     - role
     type: object
+  fortyfour-backend_internal_dto.AktivitasResponse:
+    properties:
+      created_at:
+        type: string
+      deskripsi:
+        type: string
+      id:
+        type: integer
+      jenis_aktivitas:
+        items:
+          type: string
+        type: array
+      judul:
+        type: string
+      perusahaan_id:
+        type: string
+      tanggal_mulai:
+        type: string
+      tanggal_selesai:
+        type: string
+      updated_at:
+        type: string
+    type: object
   fortyfour-backend_internal_dto.AuthResponse:
     properties:
       access_token:
@@ -1052,19 +1081,6 @@ definitions:
     - policies
     - role
     type: object
-  fortyfour-backend_internal_dto.CatatanPribadiResponse:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: string
-      id_materi:
-        type: string
-      konten:
-        type: string
-      updated_at:
-        type: string
-    type: object
   fortyfour-backend_internal_dto.ChatRequest:
     properties:
       message:
@@ -1072,15 +1088,22 @@ definitions:
       session_id:
         type: string
     type: object
-  fortyfour-backend_internal_dto.CreateDiskusiRequest:
+  fortyfour-backend_internal_dto.CreateAktivitasRequest:
     properties:
-      id_parent:
-        description: NULL = top-level, NOT NULL = reply
+      deskripsi:
         type: string
-      konten:
+      jenis_aktivitas:
+        items:
+          type: string
+        type: array
+      judul:
         type: string
-    required:
-    - konten
+      perusahaan_id:
+        type: string
+      tanggal_mulai:
+        type: string
+      tanggal_selesai:
+        type: string
     type: object
   fortyfour-backend_internal_dto.CreateKelasRequest:
     properties:
@@ -1223,6 +1246,9 @@ definitions:
     properties:
       catatan:
         description: alasan user
+        type: string
+      catatan_user:
+        description: alias dari frontend
         type: string
       data_perubahan:
         $ref: '#/definitions/fortyfour-backend_internal_dto.UpdateSERequest'
@@ -1377,6 +1403,13 @@ definitions:
     - password
     - username
     type: object
+  fortyfour-backend_internal_dto.CsirtAgg:
+    properties:
+      this_month:
+        type: integer
+      total_csirt:
+        type: integer
+    type: object
   fortyfour-backend_internal_dto.CsirtMiniResponse:
     properties:
       email_csirt:
@@ -1417,50 +1450,77 @@ definitions:
       web_csirt:
         type: string
     type: object
-  fortyfour-backend_internal_dto.DashboardSummary:
+  fortyfour-backend_internal_dto.CsirtStatusCount:
+    properties:
+      belum_membentuk_csirt:
+        type: integer
+      sudah_membentuk_csirt:
+        type: integer
+      total_perusahaan:
+        type: integer
+    type: object
+  fortyfour-backend_internal_dto.DashboardCSIRTResponse:
+    properties:
+      csirt:
+        $ref: '#/definitions/fortyfour-backend_internal_dto.CsirtAgg'
+      csirt_status:
+        $ref: '#/definitions/fortyfour-backend_internal_dto.CsirtStatusCount'
+    type: object
+  fortyfour-backend_internal_dto.DashboardIkasResponse:
     properties:
       ikas:
         $ref: '#/definitions/fortyfour-backend_internal_dto.IkasAgg'
       ikas_status:
         $ref: '#/definitions/fortyfour-backend_internal_dto.IkasStatusCount'
-      kse:
+    type: object
+  fortyfour-backend_internal_dto.DashboardSEResponse:
+    properties:
+      se:
         $ref: '#/definitions/fortyfour-backend_internal_dto.SeAgg'
-      kse_status:
+      se_status:
         $ref: '#/definitions/fortyfour-backend_internal_dto.SeStatusCount'
+    type: object
+  fortyfour-backend_internal_dto.DashboardSektorResponse:
+    properties:
       sektor_counts:
         items:
           $ref: '#/definitions/fortyfour-backend_internal_dto.SectorCount'
         type: array
     type: object
-  fortyfour-backend_internal_dto.DiskusiResponse:
+  fortyfour-backend_internal_dto.ErrorResponse:
+    properties:
+      message:
+        example: invalid credentials
+        type: string
+    type: object
+  fortyfour-backend_internal_dto.FeedbackListItem:
     properties:
       created_at:
-        type: string
-      foto_profile:
         type: string
       id:
         type: string
       id_materi:
         type: string
-      id_parent:
-        type: string
       id_user:
         type: string
       konten:
         type: string
-      nama_user:
-        type: string
-      replies:
-        items:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.DiskusiResponse'
-        type: array
       updated_at:
         type: string
+      username:
+        type: string
     type: object
-  fortyfour-backend_internal_dto.ErrorResponse:
+  fortyfour-backend_internal_dto.FeedbackResponse:
     properties:
-      message:
-        example: invalid credentials
+      created_at:
+        type: string
+      id:
+        type: string
+      id_materi:
+        type: string
+      konten:
+        type: string
+      updated_at:
         type: string
     type: object
   fortyfour-backend_internal_dto.FilePendukungResponse:
@@ -1586,6 +1646,8 @@ definitions:
     type: object
   fortyfour-backend_internal_dto.KuisResponse:
     properties:
+      attempt_count:
+        type: integer
       created_at:
         type: string
       deskripsi:
@@ -1600,10 +1662,20 @@ definitions:
         type: string
       is_final:
         type: boolean
+      is_passed:
+        description: Progress user per kuis (diisi saat GET /api/kelas/{id}/kuis jika
+          user login)
+        type: boolean
       judul:
         type: string
+      last_attempt_id:
+        type: string
+      latest_score:
+        type: number
       max_attempt:
         type: integer
+      passed_at:
+        type: string
       passing_grade:
         type: number
       soal:
@@ -2027,9 +2099,9 @@ definitions:
     type: object
   fortyfour-backend_internal_dto.SeStatusCount:
     properties:
-      belum_mengisi_kse:
+      belum_mengisi_se:
         type: integer
-      sudah_mengisi_kse:
+      sudah_mengisi_se:
         type: integer
       total_perusahaan:
         type: integer
@@ -2155,12 +2227,22 @@ definitions:
     required:
     - jawaban
     type: object
-  fortyfour-backend_internal_dto.UpdateDiskusiRequest:
+  fortyfour-backend_internal_dto.UpdateAktivitasRequest:
     properties:
-      konten:
+      deskripsi:
         type: string
-    required:
-    - konten
+      jenis_aktivitas:
+        items:
+          type: string
+        type: array
+      judul:
+        type: string
+      perusahaan_id:
+        type: string
+      tanggal_mulai:
+        type: string
+      tanggal_selesai:
+        type: string
     type: object
   fortyfour-backend_internal_dto.UpdateKelasRequest:
     properties:
@@ -2428,7 +2510,7 @@ definitions:
         minLength: 3
         type: string
     type: object
-  fortyfour-backend_internal_dto.UpsertCatatanRequest:
+  fortyfour-backend_internal_dto.UpsertFeedbackRequest:
     properties:
       konten:
         type: string
@@ -2537,6 +2619,15 @@ definitions:
     - UserStatusAktif
     - UserStatusSuspend
     - UserStatusNonaktif
+  fortyfour-backend_internal_utils.JSONResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: string
+      total: {}
+    type: object
   ikas_internal_dto.ErrorResponse:
     properties:
       error:
@@ -2588,6 +2679,175 @@ info:
   title: Fortyfour Backend API
   version: "1.0"
 paths:
+  /api/aktivitas:
+    get:
+      description: Mengambil data aktivitas per perusahaan
+      parameters:
+      - description: Perusahaan ID
+        in: query
+        name: perusahaan_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/fortyfour-backend_internal_dto.AktivitasResponse'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: List aktivitas berdasarkan Perusahaan ID
+      tags:
+      - Aktivitas
+    post:
+      consumes:
+      - application/json
+      description: Membuat record aktivitas baru
+      parameters:
+      - description: Data aktivitas
+        in: body
+        name: aktivitas
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.CreateAktivitasRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Tambah aktivitas baru
+      tags:
+      - Aktivitas
+  /api/aktivitas/{id}:
+    delete:
+      description: Menghapus data aktivitas berdasarkan ID
+      parameters:
+      - description: Aktivitas ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Hapus aktivitas
+      tags:
+      - Aktivitas
+    get:
+      description: Mengambil satu data aktivitas
+      parameters:
+      - description: Aktivitas ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/fortyfour-backend_internal_dto.AktivitasResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Ambil aktivitas berdasarkan ID
+      tags:
+      - Aktivitas
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data aktivitas berdasarkan ID
+      parameters:
+      - description: Aktivitas ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data update
+        in: body
+        name: aktivitas
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.UpdateAktivitasRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update aktivitas
+      tags:
+      - Aktivitas
+  /api/aktivitas/jenis:
+    get:
+      description: Mengambil daftar jenis aktivitas yang diperbolehkan (untuk dropdown)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+            - properties:
+                data:
+                  items:
+                    type: string
+                  type: array
+              type: object
+      summary: List jenis aktivitas
+      tags:
+      - Aktivitas
   /api/casbin/permissions:
     get:
       description: Mengambil permissions untuk role tertentu
@@ -3111,11 +3371,97 @@ paths:
       summary: Export semua CSIRT ke PDF
       tags:
       - CSIRT Export
-  /api/dashboard/summary:
+  /api/dashboard/csirt:
     get:
-      description: |-
-        Mengambil ringkasan data dashboard. Mendukung berbagai filter opsional.
-        Prioritas filter tanggal: from+to > year+quarter > year.
+      description: Mengambil data agregasi CSIRT dan status pembentukan CSIRT.
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: from
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: to
+        type: string
+      - description: Filter per tahun, misal 2025
+        in: query
+        name: year
+        type: string
+      - description: Filter per kuartal (1-4), harus digunakan bersama year
+        in: query
+        name: quarter
+        type: string
+      - description: Filter per sub-sektor (UUID)
+        in: query
+        name: sub_sektor_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.DashboardCSIRTResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get dashboard CSIRT
+      tags:
+      - Dashboard
+  /api/dashboard/ikas:
+    get:
+      description: Mengambil data agregasi IKAS dan status pengisian IKAS.
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: from
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: to
+        type: string
+      - description: Filter per tahun, misal 2025
+        in: query
+        name: year
+        type: string
+      - description: Filter per kuartal (1-4), harus digunakan bersama year
+        in: query
+        name: quarter
+        type: string
+      - description: Filter per sub-sektor (UUID)
+        in: query
+        name: sub_sektor_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.DashboardIkasResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get dashboard IKAS
+      tags:
+      - Dashboard
+  /api/dashboard/se:
+    get:
+      description: Mengambil data agregasi SE dan status pengisian SE.
       parameters:
       - description: Start date (YYYY-MM-DD)
         in: query
@@ -3147,7 +3493,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.DashboardSummary'
+            $ref: '#/definitions/fortyfour-backend_internal_dto.DashboardSEResponse'
         "400":
           description: Bad Request
           schema:
@@ -3158,7 +3504,51 @@ paths:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Get dashboard summary
+      summary: Get dashboard SE
+      tags:
+      - Dashboard
+  /api/dashboard/sektor:
+    get:
+      description: Mengambil data jumlah perusahaan per sektor.
+      parameters:
+      - description: Start date (YYYY-MM-DD)
+        in: query
+        name: from
+        type: string
+      - description: End date (YYYY-MM-DD)
+        in: query
+        name: to
+        type: string
+      - description: Filter per tahun, misal 2025
+        in: query
+        name: year
+        type: string
+      - description: Filter per kuartal (1-4), harus digunakan bersama year
+        in: query
+        name: quarter
+        type: string
+      - description: Filter per sub-sektor (UUID)
+        in: query
+        name: sub_sektor_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.DashboardSektorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get dashboard sektor
       tags:
       - Dashboard
   /api/deteksi:
@@ -3202,84 +3592,31 @@ paths:
       summary: Ambil deteksi berdasarkan ID
       tags:
       - Deteksi
-  /api/diskusi/{id}:
-    delete:
-      description: User menghapus diskusi miliknya. Admin bisa hapus diskusi siapa
-        saja.
-      parameters:
-      - description: ID Diskusi
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Hapus diskusi
-      tags:
-      - LMS - Diskusi
-    put:
-      consumes:
-      - application/json
-      description: User mengupdate diskusi miliknya.
-      parameters:
-      - description: ID Diskusi
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Data update
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.UpdateDiskusiRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.DiskusiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Update diskusi
-      tags:
-      - LMS - Diskusi
   /api/events:
     get:
-      description: Establishes an SSE connection for real-time updates
+      description: Membuka koneksi Server-Sent Events untuk menerima update real-time
+        setelah user terautentikasi.
       produces:
       - text/event-stream
       responses:
         "200":
-          description: SSE stream
+          description: SSE stream connected
           schema:
             type: string
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
       security:
       - BearerAuth: []
-      summary: Server-Sent Events connection
+      summary: Open SSE connection
       tags:
       - SSE
   /api/events/stats:
     get:
-      description: Returns SSE connection statistics
+      description: Mengambil statistik koneksi SSE yang sedang aktif.
       produces:
       - application/json
       responses:
@@ -3287,6 +3624,12 @@ paths:
           description: OK
           schema:
             additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
             type: object
       security:
       - BearerAuth: []
@@ -3576,7 +3919,8 @@ paths:
       - LMS - Kelas
   /api/kelas/{id}/kuis:
     get:
-      description: Mendapatkan daftar kuis dalam suatu kelas.
+      description: Mendapatkan daftar kuis dalam suatu kelas beserta progress user
+        yang login.
       parameters:
       - description: ID Kelas
         in: path
@@ -4049,9 +4393,9 @@ paths:
       summary: Update materi
       tags:
       - LMS - Materi
-  /api/materi/{id}/catatan:
+  /api/materi/{id}/feedback:
     get:
-      description: User mendapatkan catatan pribadinya untuk suatu materi.
+      description: User mendapatkan feedback untuk suatu materi.
       parameters:
       - description: ID Materi
         in: path
@@ -4064,51 +4408,52 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.CatatanPribadiResponse'
+            $ref: '#/definitions/fortyfour-backend_internal_dto.FeedbackResponse'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Get catatan pribadi
+      summary: Get feedback
       tags:
-      - LMS - Catatan
+      - LMS - Feedback
     put:
       consumes:
       - application/json
-      description: User membuat atau mengupdate catatan pribadinya untuk suatu materi.
+      description: User membuat atau mengupdate feedback untuk suatu materi.
       parameters:
       - description: ID Materi
         in: path
         name: id
         required: true
         type: string
-      - description: Data catatan
+      - description: Data feedback
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.UpsertCatatanRequest'
+          $ref: '#/definitions/fortyfour-backend_internal_dto.UpsertFeedbackRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.CatatanPribadiResponse'
+            $ref: '#/definitions/fortyfour-backend_internal_dto.FeedbackResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Upsert catatan pribadi
+      summary: Upsert feedback
       tags:
-      - LMS - Catatan
-  /api/materi/{id}/diskusi:
+      - LMS - Feedback
+  /api/materi/{id}/feedback/all:
     get:
-      description: Mendapatkan daftar diskusi untuk suatu materi.
+      description: Admin/staff melihat semua feedback dari semua user untuk suatu
+        materi.
       parameters:
       - description: ID Materi
         in: path
@@ -4122,7 +4467,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/fortyfour-backend_internal_dto.DiskusiResponse'
+              $ref: '#/definitions/fortyfour-backend_internal_dto.FeedbackListItem'
             type: array
         "500":
           description: Internal Server Error
@@ -4130,41 +4475,9 @@ paths:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: List diskusi per materi
+      summary: Get all feedback (admin)
       tags:
-      - LMS - Diskusi
-    post:
-      consumes:
-      - application/json
-      description: User membuat diskusi atau reply di materi.
-      parameters:
-      - description: ID Materi
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Data diskusi
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.CreateDiskusiRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.DiskusiResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Buat diskusi baru
-      tags:
-      - LMS - Diskusi
+      - LMS - Feedback
   /api/materi/{id}/file-pendukung:
     get:
       description: Mendapatkan daftar file pendukung untuk suatu materi.
@@ -6853,6 +7166,50 @@ paths:
       summary: Ambil proteksi berdasarkan ID
       tags:
       - Proteksi
+  /api/public/kelas:
+    get:
+      description: Menampilkan daftar kelas yang sudah dipublikasikan. Tidak memerlukan
+        autentikasi.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/fortyfour-backend_internal_dto.KelasResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: List kelas (public)
+      tags:
+      - LMS - Public
+  /api/public/kelas/{id}:
+    get:
+      description: Menampilkan detail kelas beserta daftar materi. Tidak memerlukan
+        autentikasi, progress tidak disertakan.
+      parameters:
+      - description: ID Kelas
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.KelasResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Detail kelas (public)
+      tags:
+      - LMS - Public
   /api/refresh:
     post:
       description: Refresh access token menggunakan refresh token dari cookie. Token
@@ -7386,6 +7743,14 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Submit request edit SE
@@ -7403,6 +7768,10 @@ paths:
             items:
               $ref: '#/definitions/fortyfour-backend_internal_dto.SEEditRequestResponse'
             type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -7441,8 +7810,16 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
         "403":
           description: Forbidden
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
       security:

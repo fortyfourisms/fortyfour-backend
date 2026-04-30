@@ -159,6 +159,7 @@ func main() {
 	sertifikatRepo := repository.NewSertifikatRepository(db)
 	beritaRepo := repository.NewBeritaRepository(db)
 	eventRepo := repository.NewEventRepository(db)
+	aktivitasRepo := repository.NewAktivitasRepository(db)
 
 	// Initialize services
 	tokenService := services.NewTokenService(redisClient, cfg.JWTSecret, true, cfg.Domain)
@@ -187,9 +188,10 @@ func main() {
 	sertifikatSvc := services.NewSertifikatService(sertifikatRepo, kelasRepo, progressRepo, kuisAttemptRepo, kuisRepo, userRepo)
 	beritaSvc := services.NewBeritaService(beritaRepo, rmqProducer)
 	eventSvc := services.NewEventService(eventRepo, rmqProducer)
+	aktivitasSvc := services.NewAktivitasService(aktivitasRepo, perusahaanRepo, rmqProducer, redisClient)
 
 	// Wrap with specific Consumer (after repositories are initialized)
-	rmqConsumer := internalRmq.NewConsumer(sharedConsumer, sseService, userRepo, notificationService, eventRepo, beritaRepo)
+	rmqConsumer := internalRmq.NewConsumer(sharedConsumer, sseService, userRepo, notificationService, eventRepo, beritaRepo, aktivitasRepo)
 
 	// Start consumers in background
 	ctx, cancel := context.WithCancel(context.Background())
@@ -223,6 +225,7 @@ func main() {
 	lmsHandler := handlers.NewLMSHandler(kelasSvc, materiSvc, soalSvc, kuisSvc, fpSvc, feedbackSvc, sertifikatSvc, sseService)
 	beritaHandler := handlers.NewBeritaHandler(beritaSvc)
 	eventHandler := handlers.NewEventHandler(eventSvc)
+	aktivitasHandler := handlers.NewAktivitasHandler(aktivitasSvc)
 
 	// Proxy Handler for IKAS
 	ikasProxyHandler := handlers.NewProxyHandler("http://ikas:8081", cfg.InternalGatewayKey)
@@ -267,6 +270,7 @@ func main() {
 		lmsHandler,
 		beritaHandler,
 		eventHandler,
+		aktivitasHandler,
 	)
 
 	// Start server

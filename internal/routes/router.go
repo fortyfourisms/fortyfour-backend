@@ -56,6 +56,7 @@ func InitRouter(
 	lmsH *handlers.LMSHandler,
 	beritaH *handlers.BeritaHandler,
 	eventH *handlers.EventHandler,
+	aktivitasH *handlers.AktivitasHandler,
 ) http.Handler {
 	mux := http.NewServeMux()
 
@@ -430,6 +431,10 @@ func InitRouter(
 	// /api/sertifikat → user routes
 	mux.HandleFunc("/api/sertifikat/", authM.Authenticate(moderateLimiter.LimitByUser(lmsH.ServeSertifikat)))
 	mux.HandleFunc("/api/sertifikat", authM.Authenticate(moderateLimiter.LimitByUser(lmsH.ServeSertifikat)))
+
+	// Routes Aktivitas
+	mux.HandleFunc("/api/aktivitas", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(aktivitasH))))
+	mux.HandleFunc("/api/aktivitas/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(aktivitasH))))
 
 	// Swagger UI
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)

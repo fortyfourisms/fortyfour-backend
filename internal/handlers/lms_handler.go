@@ -112,7 +112,7 @@ func (h *LMSHandler) publicKelasGetAll(w http.ResponseWriter, _ *http.Request) {
 // @Tags			LMS - Public
 // @Produce		json
 // @Param			id	path		string	true	"ID Kelas"
-// @Success		200	{object}	dto.KelasDetailResponse
+// @Success		200	{object}	dto.KelasResponse
 // @Failure		404	{object}	dto.ErrorResponse
 // @Router			/api/public/kelas/{id} [get]
 func (h *LMSHandler) publicKelasGetDetail(w http.ResponseWriter, _ *http.Request, id string) {

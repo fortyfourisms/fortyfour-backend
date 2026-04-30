@@ -15,6 +15,285 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/aktivitas": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil data aktivitas per perusahaan",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aktivitas"
+                ],
+                "summary": "List aktivitas berdasarkan Perusahaan ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Perusahaan ID",
+                        "name": "perusahaan_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/fortyfour-backend_internal_dto.AktivitasResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Membuat record aktivitas baru",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aktivitas"
+                ],
+                "summary": "Tambah aktivitas baru",
+                "parameters": [
+                    {
+                        "description": "Data aktivitas",
+                        "name": "aktivitas",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateAktivitasRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/aktivitas/jenis": {
+            "get": {
+                "description": "Mengambil daftar jenis aktivitas yang diperbolehkan (untuk dropdown)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aktivitas"
+                ],
+                "summary": "List jenis aktivitas",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/aktivitas/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil satu data aktivitas",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aktivitas"
+                ],
+                "summary": "Ambil aktivitas berdasarkan ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Aktivitas ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/fortyfour-backend_internal_dto.AktivitasResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengubah data aktivitas berdasarkan ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aktivitas"
+                ],
+                "summary": "Update aktivitas",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Aktivitas ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data update",
+                        "name": "aktivitas",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateAktivitasRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menghapus data aktivitas berdasarkan ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Aktivitas"
+                ],
+                "summary": "Hapus aktivitas",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Aktivitas ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/casbin/permissions": {
             "get": {
                 "security": [
@@ -830,21 +1109,159 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/dashboard/summary": {
+        "/api/dashboard/csirt": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Mengambil ringkasan data dashboard. Mendukung berbagai filter opsional.\nPrioritas filter tanggal: from+to \u003e year+quarter \u003e year.",
+                "description": "Mengambil data agregasi CSIRT dan status pembentukan CSIRT.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Dashboard"
                 ],
-                "summary": "Get dashboard summary",
+                "summary": "Get dashboard CSIRT",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter per tahun, misal 2025",
+                        "name": "year",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter per kuartal (1-4), harus digunakan bersama year",
+                        "name": "quarter",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter per sub-sektor (UUID)",
+                        "name": "sub_sektor_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.DashboardCSIRTResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/dashboard/ikas": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil data agregasi IKAS dan status pengisian IKAS.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get dashboard IKAS",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter per tahun, misal 2025",
+                        "name": "year",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter per kuartal (1-4), harus digunakan bersama year",
+                        "name": "quarter",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter per sub-sektor (UUID)",
+                        "name": "sub_sektor_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.DashboardIkasResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/dashboard/se": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil data agregasi SE dan status pengisian SE.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get dashboard SE",
                 "parameters": [
                     {
                         "type": "string",
@@ -887,7 +1304,76 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.DashboardSummary"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.DashboardSEResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/dashboard/sektor": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengambil data jumlah perusahaan per sektor.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Dashboard"
+                ],
+                "summary": "Get dashboard sektor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter per tahun, misal 2025",
+                        "name": "year",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter per kuartal (1-4), harus digunakan bersama year",
+                        "name": "quarter",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter per sub-sektor (UUID)",
+                        "name": "sub_sektor_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.DashboardSektorResponse"
                         }
                     },
                     "400": {
@@ -968,99 +1454,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/diskusi/{id}": {
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "User mengupdate diskusi miliknya.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "LMS - Diskusi"
-                ],
-                "summary": "Update diskusi",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "ID Diskusi",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data update",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateDiskusiRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.DiskusiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "User menghapus diskusi miliknya. Admin bisa hapus diskusi siapa saja.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "LMS - Diskusi"
-                ],
-                "summary": "Hapus diskusi",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "ID Diskusi",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/events": {
             "get": {
                 "security": [
@@ -1068,19 +1461,28 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Establishes an SSE connection for real-time updates",
+                "description": "Membuka koneksi Server-Sent Events untuk menerima update real-time setelah user terautentikasi.",
                 "produces": [
                     "text/event-stream"
                 ],
                 "tags": [
                     "SSE"
                 ],
-                "summary": "Server-Sent Events connection",
+                "summary": "Open SSE connection",
                 "responses": {
                     "200": {
-                        "description": "SSE stream",
+                        "description": "SSE stream connected",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -1093,7 +1495,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Returns SSE connection statistics",
+                "description": "Mengambil statistik koneksi SSE yang sedang aktif.",
                 "produces": [
                     "application/json"
                 ],
@@ -1107,6 +1509,15 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -1560,7 +1971,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Mendapatkan daftar kuis dalam suatu kelas.",
+                "description": "Mendapatkan daftar kuis dalam suatu kelas beserta progress user yang login.",
                 "produces": [
                     "application/json"
                 ],
@@ -2299,21 +2710,21 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/materi/{id}/catatan": {
+        "/api/materi/{id}/feedback": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "User mendapatkan catatan pribadinya untuk suatu materi.",
+                "description": "User mendapatkan feedback untuk suatu materi.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "LMS - Catatan"
+                    "LMS - Feedback"
                 ],
-                "summary": "Get catatan pribadi",
+                "summary": "Get feedback",
                 "parameters": [
                     {
                         "type": "string",
@@ -2327,7 +2738,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CatatanPribadiResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.FeedbackResponse"
                         }
                     },
                     "404": {
@@ -2344,7 +2755,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "User membuat atau mengupdate catatan pribadinya untuk suatu materi.",
+                "description": "User membuat atau mengupdate feedback untuk suatu materi.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2352,9 +2763,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "LMS - Catatan"
+                    "LMS - Feedback"
                 ],
-                "summary": "Upsert catatan pribadi",
+                "summary": "Upsert feedback",
                 "parameters": [
                     {
                         "type": "string",
@@ -2364,12 +2775,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Data catatan",
+                        "description": "Data feedback",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpsertCatatanRequest"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpsertFeedbackRequest"
                         }
                     }
                 ],
@@ -2377,7 +2788,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CatatanPribadiResponse"
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.FeedbackResponse"
                         }
                     },
                     "400": {
@@ -2389,21 +2800,21 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/materi/{id}/diskusi": {
+        "/api/materi/{id}/feedback/all": {
             "get": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Mendapatkan daftar diskusi untuk suatu materi.",
+                "description": "Admin/staff melihat semua feedback dari semua user untuk suatu materi.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "LMS - Diskusi"
+                    "LMS - Feedback"
                 ],
-                "summary": "List diskusi per materi",
+                "summary": "Get all feedback (admin)",
                 "parameters": [
                     {
                         "type": "string",
@@ -2419,62 +2830,12 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/fortyfour-backend_internal_dto.DiskusiResponse"
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.FeedbackListItem"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "User membuat diskusi atau reply di materi.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "LMS - Diskusi"
-                ],
-                "summary": "Buat diskusi baru",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "ID Materi",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data diskusi",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateDiskusiRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.DiskusiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
@@ -6568,6 +6929,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/public/kelas": {
+            "get": {
+                "description": "Menampilkan daftar kelas yang sudah dipublikasikan. Tidak memerlukan autentikasi.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LMS - Public"
+                ],
+                "summary": "List kelas (public)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/fortyfour-backend_internal_dto.KelasResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/public/kelas/{id}": {
+            "get": {
+                "description": "Menampilkan detail kelas beserta daftar materi. Tidak memerlukan autentikasi, progress tidak disertakan.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "LMS - Public"
+                ],
+                "summary": "Detail kelas (public)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID Kelas",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.KelasResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/refresh": {
             "post": {
                 "description": "Refresh access token menggunakan refresh token dari cookie. Token baru dikirim via HTTP-only cookies.",
@@ -7171,6 +7596,12 @@ const docTemplate = `{
                             }
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -7229,8 +7660,20 @@ const docTemplate = `{
                             "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
                     "403": {
                         "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
@@ -7535,6 +7978,18 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
@@ -10091,10 +10546,19 @@ const docTemplate = `{
         "dto.PerusahaanInIkas": {
             "type": "object",
             "properties": {
+                "alamat": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
                 "nama_perusahaan": {
+                    "type": "string"
+                },
+                "sektor": {
                     "type": "string"
                 }
             }
@@ -10606,6 +11070,41 @@ const docTemplate = `{
                 }
             }
         },
+        "fortyfour-backend_internal_dto.AktivitasResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deskripsi": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "jenis_aktivitas": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "judul": {
+                    "type": "string"
+                },
+                "perusahaan_id": {
+                    "type": "string"
+                },
+                "tanggal_mulai": {
+                    "type": "string"
+                },
+                "tanggal_selesai": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "fortyfour-backend_internal_dto.AuthResponse": {
             "type": "object",
             "properties": {
@@ -10644,26 +11143,6 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.CatatanPribadiResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "id_materi": {
-                    "type": "string"
-                },
-                "konten": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "fortyfour-backend_internal_dto.ChatRequest": {
             "type": "object",
             "properties": {
@@ -10675,17 +11154,28 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.CreateDiskusiRequest": {
+        "fortyfour-backend_internal_dto.CreateAktivitasRequest": {
             "type": "object",
-            "required": [
-                "konten"
-            ],
             "properties": {
-                "id_parent": {
-                    "description": "NULL = top-level, NOT NULL = reply",
+                "deskripsi": {
                     "type": "string"
                 },
-                "konten": {
+                "jenis_aktivitas": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "judul": {
+                    "type": "string"
+                },
+                "perusahaan_id": {
+                    "type": "string"
+                },
+                "tanggal_mulai": {
+                    "type": "string"
+                },
+                "tanggal_selesai": {
                     "type": "string"
                 }
             }
@@ -10898,6 +11388,10 @@ const docTemplate = `{
                     "description": "alasan user",
                     "type": "string"
                 },
+                "catatan_user": {
+                    "description": "alias dari frontend",
+                    "type": "string"
+                },
                 "data_perubahan": {
                     "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateSERequest"
                 }
@@ -11104,6 +11598,17 @@ const docTemplate = `{
                 }
             }
         },
+        "fortyfour-backend_internal_dto.CsirtAgg": {
+            "type": "object",
+            "properties": {
+                "this_month": {
+                    "type": "integer"
+                },
+                "total_csirt": {
+                    "type": "integer"
+                }
+            }
+        },
         "fortyfour-backend_internal_dto.CsirtMiniResponse": {
             "type": "object",
             "properties": {
@@ -11165,7 +11670,32 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.DashboardSummary": {
+        "fortyfour-backend_internal_dto.CsirtStatusCount": {
+            "type": "object",
+            "properties": {
+                "belum_membentuk_csirt": {
+                    "type": "integer"
+                },
+                "sudah_membentuk_csirt": {
+                    "type": "integer"
+                },
+                "total_perusahaan": {
+                    "type": "integer"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.DashboardCSIRTResponse": {
+            "type": "object",
+            "properties": {
+                "csirt": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.CsirtAgg"
+                },
+                "csirt_status": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.CsirtStatusCount"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.DashboardIkasResponse": {
             "type": "object",
             "properties": {
                 "ikas": {
@@ -11173,56 +11703,28 @@ const docTemplate = `{
                 },
                 "ikas_status": {
                     "$ref": "#/definitions/fortyfour-backend_internal_dto.IkasStatusCount"
-                },
-                "kse": {
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.DashboardSEResponse": {
+            "type": "object",
+            "properties": {
+                "se": {
                     "$ref": "#/definitions/fortyfour-backend_internal_dto.SeAgg"
                 },
-                "kse_status": {
+                "se_status": {
                     "$ref": "#/definitions/fortyfour-backend_internal_dto.SeStatusCount"
-                },
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.DashboardSektorResponse": {
+            "type": "object",
+            "properties": {
                 "sektor_counts": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/fortyfour-backend_internal_dto.SectorCount"
                     }
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.DiskusiResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "foto_profile": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "id_materi": {
-                    "type": "string"
-                },
-                "id_parent": {
-                    "type": "string"
-                },
-                "id_user": {
-                    "type": "string"
-                },
-                "konten": {
-                    "type": "string"
-                },
-                "nama_user": {
-                    "type": "string"
-                },
-                "replies": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/fortyfour-backend_internal_dto.DiskusiResponse"
-                    }
-                },
-                "updated_at": {
-                    "type": "string"
                 }
             }
         },
@@ -11232,6 +11734,52 @@ const docTemplate = `{
                 "message": {
                     "type": "string",
                     "example": "invalid credentials"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.FeedbackListItem": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "id_materi": {
+                    "type": "string"
+                },
+                "id_user": {
+                    "type": "string"
+                },
+                "konten": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.FeedbackResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "id_materi": {
+                    "type": "string"
+                },
+                "konten": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -11423,6 +11971,9 @@ const docTemplate = `{
         "fortyfour-backend_internal_dto.KuisResponse": {
             "type": "object",
             "properties": {
+                "attempt_count": {
+                    "type": "integer"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -11444,11 +11995,24 @@ const docTemplate = `{
                 "is_final": {
                     "type": "boolean"
                 },
+                "is_passed": {
+                    "description": "Progress user per kuis (diisi saat GET /api/kelas/{id}/kuis jika user login)",
+                    "type": "boolean"
+                },
                 "judul": {
                     "type": "string"
                 },
+                "last_attempt_id": {
+                    "type": "string"
+                },
+                "latest_score": {
+                    "type": "number"
+                },
                 "max_attempt": {
                     "type": "integer"
+                },
+                "passed_at": {
+                    "type": "string"
                 },
                 "passing_grade": {
                     "type": "number"
@@ -12091,10 +12655,10 @@ const docTemplate = `{
         "fortyfour-backend_internal_dto.SeStatusCount": {
             "type": "object",
             "properties": {
-                "belum_mengisi_kse": {
+                "belum_mengisi_se": {
                     "type": "integer"
                 },
-                "sudah_mengisi_kse": {
+                "sudah_mengisi_se": {
                     "type": "integer"
                 },
                 "total_perusahaan": {
@@ -12288,13 +12852,28 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.UpdateDiskusiRequest": {
+        "fortyfour-backend_internal_dto.UpdateAktivitasRequest": {
             "type": "object",
-            "required": [
-                "konten"
-            ],
             "properties": {
-                "konten": {
+                "deskripsi": {
+                    "type": "string"
+                },
+                "jenis_aktivitas": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "judul": {
+                    "type": "string"
+                },
+                "perusahaan_id": {
+                    "type": "string"
+                },
+                "tanggal_mulai": {
+                    "type": "string"
+                },
+                "tanggal_selesai": {
                     "type": "string"
                 }
             }
@@ -12680,7 +13259,7 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.UpsertCatatanRequest": {
+        "fortyfour-backend_internal_dto.UpsertFeedbackRequest": {
             "type": "object",
             "required": [
                 "konten"
@@ -12840,6 +13419,19 @@ const docTemplate = `{
                 "UserStatusSuspend",
                 "UserStatusNonaktif"
             ]
+        },
+        "fortyfour-backend_internal_utils.JSONResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total": {}
+            }
         },
         "ikas_internal_dto.ErrorResponse": {
             "type": "object",
