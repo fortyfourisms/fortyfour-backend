@@ -134,21 +134,9 @@ type KuisJawaban struct {
 	IsCorrect bool   `json:"is_correct"`
 }
 
-// ── Diskusi ──────────────────────────────────────────────────────────────────
+// ── Feedback (formerly Catatan Pribadi) ──────────────────────────────────────
 
-type Diskusi struct {
-	ID        string    `json:"id"`
-	IDMateri  string    `json:"id_materi"`
-	IDUser    string    `json:"id_user"`
-	IDParent  *string   `json:"id_parent,omitempty"` // NULL = top-level, NOT NULL = reply
-	Konten    string    `json:"konten"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-}
-
-// ── Catatan Pribadi ──────────────────────────────────────────────────────────
-
-type CatatanPribadi struct {
+type Feedback struct {
 	ID        string    `json:"id"`
 	IDMateri  string    `json:"id_materi"`
 	IDUser    string    `json:"id_user"`

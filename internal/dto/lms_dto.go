@@ -271,37 +271,13 @@ type HasilSoalResponse struct {
 	IsCorrect      bool   `json:"is_correct"`
 }
 
-// ── Diskusi ──────────────────────────────────────────────────────────────────
+// ── Feedback ─────────────────────────────────────────────────────────────────
 
-type CreateDiskusiRequest struct {
-	IDParent *string `json:"id_parent,omitempty"` // NULL = top-level, NOT NULL = reply
-	Konten   string  `json:"konten" validate:"required"`
-}
-
-type UpdateDiskusiRequest struct {
+type UpsertFeedbackRequest struct {
 	Konten string `json:"konten" validate:"required"`
 }
 
-type DiskusiResponse struct {
-	ID          string            `json:"id"`
-	IDMateri    string            `json:"id_materi"`
-	IDUser      string            `json:"id_user"`
-	NamaUser    string            `json:"nama_user"`
-	FotoProfile *string           `json:"foto_profile,omitempty"`
-	IDParent    *string           `json:"id_parent,omitempty"`
-	Konten      string            `json:"konten"`
-	CreatedAt   string            `json:"created_at"`
-	UpdatedAt   string            `json:"updated_at"`
-	Replies     []DiskusiResponse `json:"replies,omitempty"`
-}
-
-// ── Catatan Pribadi ──────────────────────────────────────────────────────────
-
-type UpsertCatatanRequest struct {
-	Konten string `json:"konten" validate:"required"`
-}
-
-type CatatanPribadiResponse struct {
+type FeedbackResponse struct {
 	ID        string `json:"id"`
 	IDMateri  string `json:"id_materi"`
 	Konten    string `json:"konten"`
