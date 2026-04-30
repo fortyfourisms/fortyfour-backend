@@ -55,11 +55,6 @@ func ValidateCreateResponden(req dto.CreateRespondenRequest) error {
 		return errors.New("no_telepon terlalu pendek")
 	}
 
-	// SERTIFIKAT 
-	if req.SertifikatTraining == "" {
-		return errors.New("sertifikat_training wajib diisi")
-	}
-
 	return nil
 }
 
