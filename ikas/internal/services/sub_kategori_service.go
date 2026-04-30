@@ -3,11 +3,13 @@ package services
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
+	"ikas/pkg/cache"
 	"time"
 
 	"fortyfour-backend/pkg/logger"
@@ -22,12 +24,18 @@ type SubKategoriProducerInterface interface {
 type SubKategoriService struct {
 	repo     repository.SubKategoriRepositoryInterface
 	producer SubKategoriProducerInterface
+	cache    cache.RedisInterface
 }
 
-func NewSubKategoriService(repo repository.SubKategoriRepositoryInterface, producer SubKategoriProducerInterface) *SubKategoriService {
+func NewSubKategoriService(
+	repo repository.SubKategoriRepositoryInterface,
+	producer SubKategoriProducerInterface,
+	cache cache.RedisInterface,
+) *SubKategoriService {
 	return &SubKategoriService{
 		repo:     repo,
 		producer: producer,
+		cache:    cache,
 	}
 }
 
@@ -144,11 +152,39 @@ func (s *SubKategoriService) Create(req dto.CreateSubKategoriRequest) (*dto.SubK
 		return nil, err
 	}
 
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeySubKategori)
+	}
+
 	return nil, nil
 }
 
 func (s *SubKategoriService) GetAll() ([]dto.SubKategoriResponse, error) {
-	return s.repo.GetAll()
+	if s.cache != nil {
+		cachedData, err := s.cache.Get(cache.CacheKeySubKategori)
+		if err == nil && cachedData != "" {
+			var data []dto.SubKategoriResponse
+			if err := json.Unmarshal([]byte(cachedData), &data); err == nil {
+				return data, nil
+			}
+		}
+	}
+
+	data, err := s.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	if s.cache != nil {
+		go func(dataToCache []dto.SubKategoriResponse) {
+			jsonData, err := json.Marshal(dataToCache)
+			if err == nil {
+				_ = s.cache.Set(cache.CacheKeySubKategori, string(jsonData), cache.DefaultCacheExpiration)
+			}
+		}(data)
+	}
+
+	return data, nil
 }
 
 func (s *SubKategoriService) GetByID(id int) (*dto.SubKategoriResponse, error) {
@@ -218,6 +254,10 @@ func (s *SubKategoriService) Update(id int, req dto.UpdateSubKategoriRequest) (*
 		return nil, err
 	}
 
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeySubKategori)
+	}
+
 	return nil, nil
 }
 
@@ -245,6 +285,10 @@ func (s *SubKategoriService) Delete(id int) error {
 	})
 	if err != nil {
 		return err
+	}
+
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeySubKategori)
 	}
 
 	return nil

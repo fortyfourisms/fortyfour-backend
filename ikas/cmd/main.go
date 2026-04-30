@@ -153,10 +153,10 @@ func main() {
 		msgProducer,
 		redisClient,
 	)
-	ruangLingkupService := services.NewRuangLingkupService(ruangLingkupRepo, msgProducer)
-	domainService := services.NewDomainService(domainRepo, msgProducer)
-	kategoriService := services.NewKategoriService(kategoriRepo, msgProducer)
-	subKategoriService := services.NewSubKategoriService(subKategoriRepo, msgProducer)
+	ruangLingkupService := services.NewRuangLingkupService(ruangLingkupRepo, msgProducer, redisClient)
+	domainService := services.NewDomainService(domainRepo, msgProducer, redisClient)
+	kategoriService := services.NewKategoriService(kategoriRepo, msgProducer, redisClient)
+	subKategoriService := services.NewSubKategoriService(subKategoriRepo, msgProducer, redisClient)
 	identifikasiService := services.NewIdentifikasiService(identifikasiRepo, ikasRepo)
 	proteksiService := services.NewProteksiService(proteksiRepo, ikasRepo)
 	deteksiService := services.NewDeteksiService(deteksiRepo, ikasRepo)

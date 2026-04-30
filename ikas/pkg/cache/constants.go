@@ -12,4 +12,10 @@ const (
 	CacheKeyPertanyaanProteksi     = "ikas:questions:proteksi"
 	CacheKeyPertanyaanDeteksi      = "ikas:questions:deteksi"
 	CacheKeyPertanyaanGulih        = "ikas:questions:gulih"
+
+	// Cache Keys for Master Data
+	CacheKeyRuangLingkup = "ikas:master:ruanglingkup"
+	CacheKeyDomain       = "ikas:master:domain"
+	CacheKeyKategori     = "ikas:master:kategori"
+	CacheKeySubKategori  = "ikas:master:subkategori"
 )

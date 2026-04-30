@@ -84,7 +84,7 @@ var _ repository.DomainRepositoryInterface = (*mockDomainRepository)(nil)
 var _ services.DomainProducerInterface = (*mockDomainProducer)(nil)
 
 func setupDomainHandler(repo *mockDomainRepository, producer *mockDomainProducer) *DomainHandler {
-	service := services.NewDomainService(repo, producer)
+	service := services.NewDomainService(repo, producer, nil)
 	return NewDomainHandler(service)
 }
 

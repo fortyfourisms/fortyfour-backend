@@ -90,7 +90,7 @@ var _ repository.KategoriRepositoryInterface = (*mockKategoriRepository)(nil)
 var _ services.KategoriProducerInterface = (*mockKategoriProducer)(nil)
 
 func setupKategoriHandler(repo *mockKategoriRepository, producer *mockKategoriProducer) *KategoriHandler {
-	service := services.NewKategoriService(repo, producer)
+	service := services.NewKategoriService(repo, producer, nil)
 	return NewKategoriHandler(service)
 }
 
