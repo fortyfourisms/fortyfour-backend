@@ -33,3 +33,43 @@ const (
 	CacheKeyPrefixDeteksi      = "ikas:domain:deteksi:"
 	CacheKeyPrefixGulih        = "ikas:domain:gulih:"
 )
+
+// GetJawabanIdentifikasiKey returns the cache key for Jawaban Identifikasi
+func GetJawabanIdentifikasiKey(ikasID string) string {
+	return CacheKeyPrefixJawabanIdentifikasi + ikasID
+}
+
+// GetJawabanProteksiKey returns the cache key for Jawaban Proteksi
+func GetJawabanProteksiKey(ikasID string) string {
+	return CacheKeyPrefixJawabanProteksi + ikasID
+}
+
+// GetJawabanDeteksiKey returns the cache key for Jawaban Deteksi
+func GetJawabanDeteksiKey(ikasID string) string {
+	return CacheKeyPrefixJawabanDeteksi + ikasID
+}
+
+// GetJawabanGulihKey returns the cache key for Jawaban Gulih
+func GetJawabanGulihKey(ikasID string) string {
+	return CacheKeyPrefixJawabanGulih + ikasID
+}
+
+// GetIdentifikasiKey returns the cache key for Domain Identifikasi
+func GetIdentifikasiKey(ikasID string) string {
+	return CacheKeyPrefixIdentifikasi + ikasID
+}
+
+// GetProteksiKey returns the cache key for Domain Proteksi
+func GetProteksiKey(ikasID string) string {
+	return CacheKeyPrefixProteksi + ikasID
+}
+
+// GetDeteksiKey returns the cache key for Domain Deteksi
+func GetDeteksiKey(ikasID string) string {
+	return CacheKeyPrefixDeteksi + ikasID
+}
+
+// GetGulihKey returns the cache key for Domain Gulih
+func GetGulihKey(ikasID string) string {
+	return CacheKeyPrefixGulih + ikasID
+}
