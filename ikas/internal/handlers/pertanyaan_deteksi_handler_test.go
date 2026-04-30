@@ -89,18 +89,27 @@ func (m *mockPertanyaanDeteksiProducer) PublishPertanyaanDeteksiDeleted(ctx cont
 var _ repository.PertanyaanDeteksiRepositoryInterface = (*mockPertanyaanDeteksiRepository)(nil)
 var _ services.PertanyaanDeteksiProducerInterface = (*mockPertanyaanDeteksiProducer)(nil)
 
-func setupPertanyaanDeteksiHandler(repo *mockPertanyaanDeteksiRepository, producer *mockPertanyaanDeteksiProducer) *PertanyaanDeteksiHandler {
-	service := services.NewPertanyaanDeteksiService(repo, producer)
+func setupPertanyaanDeteksiHandler(repo *mockPertanyaanDeteksiRepository, producer *mockPertanyaanDeteksiProducer, redis *mockRedis) *PertanyaanDeteksiHandler {
+	if redis == nil {
+		redis = new(mockRedis)
+		redis.On("Get", mock.Anything).Return("", errors.New("cache miss")).Maybe()
+		redis.On("Delete", mock.Anything).Return(nil).Maybe()
+		redis.On("Set", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
+	}
+	service := services.NewPertanyaanDeteksiService(repo, producer, redis)
 	return NewPertanyaanDeteksiHandler(service)
 }
 
 func TestPertanyaanDeteksiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
 	producer := new(mockPertanyaanDeteksiProducer)
-	handler := setupPertanyaanDeteksiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanDeteksiHandler(repo, producer, redis)
 
 	expectedData := []dto.PertanyaanDeteksiResponse{{ID: 1}}
+	redis.On("Get", services.PertanyaanDeteksiCacheKey).Return("", errors.New("miss"))
 	repo.On("GetAll").Return(expectedData, nil)
+	redis.On("Set", services.PertanyaanDeteksiCacheKey, mock.Anything, services.QuestionCacheExpiration).Return(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/pertanyaan-deteksi", nil)
 	w := httptest.NewRecorder()
@@ -113,8 +122,10 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 func TestPertanyaanDeteksiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
 	producer := new(mockPertanyaanDeteksiProducer)
-	handler := setupPertanyaanDeteksiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanDeteksiHandler(repo, producer, redis)
 
+	redis.On("Get", services.PertanyaanDeteksiCacheKey).Return("", errors.New("miss"))
 	repo.On("GetAll").Return([]dto.PertanyaanDeteksiResponse{}, errors.New("db error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/pertanyaan-deteksi", nil)
@@ -128,7 +139,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 func TestPertanyaanDeteksiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
 	producer := new(mockPertanyaanDeteksiProducer)
-	handler := setupPertanyaanDeteksiHandler(repo, producer)
+	handler := setupPertanyaanDeteksiHandler(repo, producer, nil)
 
 	expectedData := &dto.PertanyaanDeteksiResponse{ID: 1}
 	repo.On("GetByID", 1).Return(expectedData, nil)
@@ -143,7 +154,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 
 func TestPertanyaanDeteksiHandler_ServeHTTP_GetByID_NotFound(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
-	handler := setupPertanyaanDeteksiHandler(repo, nil)
+	handler := setupPertanyaanDeteksiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanDeteksiResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -157,7 +168,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_GetByID_NotFound(t *testing.T) {
 
 func TestPertanyaanDeteksiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
-	handler := setupPertanyaanDeteksiHandler(repo, nil)
+	handler := setupPertanyaanDeteksiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanDeteksiResponse)(nil), errors.New("system error"))
 
@@ -172,7 +183,8 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 func TestPertanyaanDeteksiHandler_ServeHTTP_Create_Success(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
 	producer := new(mockPertanyaanDeteksiProducer)
-	handler := setupPertanyaanDeteksiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanDeteksiHandler(repo, producer, redis)
 
 	createReq := dto.CreatePertanyaanDeteksiRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanDeteksi: "Pertanyaan Test"}
 	repo.On("CheckSubKategoriExists", 1).Return(true, nil)
@@ -182,6 +194,8 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Create_Success(t *testing.T) {
 	producer.On("PublishPertanyaanDeteksiCreated", mock.Anything, mock.MatchedBy(func(e dto_event.PertanyaanDeteksiCreatedEvent) bool {
 		return e.Request.PertanyaanDeteksi == "Pertanyaan Test"
 	})).Return(nil)
+
+	redis.On("Delete", services.PertanyaanDeteksiCacheKey).Return(nil)
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-deteksi", bytes.NewBuffer(body))
@@ -193,7 +207,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Create_Success(t *testing.T) {
 }
 
 func TestPertanyaanDeteksiHandler_ServeHTTP_Create_InvalidJSON(t *testing.T) {
-	handler := setupPertanyaanDeteksiHandler(nil, nil)
+	handler := setupPertanyaanDeteksiHandler(nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-deteksi", bytes.NewBufferString("invalid json"))
 	w := httptest.NewRecorder()
@@ -205,7 +219,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Create_InvalidJSON(t *testing.T) {
 
 func TestPertanyaanDeteksiHandler_ServeHTTP_Create_SubKategoriNotFound(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
-	handler := setupPertanyaanDeteksiHandler(repo, nil)
+	handler := setupPertanyaanDeteksiHandler(repo, nil, nil)
 
 	createReq := dto.CreatePertanyaanDeteksiRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanDeteksi: "Pertanyaan Test"}
 	repo.On("CheckSubKategoriExists", 1).Return(false, nil)
@@ -221,7 +235,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Create_SubKategoriNotFound(t *testin
 
 func TestPertanyaanDeteksiHandler_ServeHTTP_Create_ValidationError(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
-	handler := setupPertanyaanDeteksiHandler(repo, nil)
+	handler := setupPertanyaanDeteksiHandler(repo, nil, nil)
 
 	createReq := dto.CreatePertanyaanDeteksiRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanDeteksi: ""}
 	repo.On("CheckSubKategoriExists", 1).Return(true, nil)
@@ -239,7 +253,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Create_ValidationError(t *testing.T)
 
 func TestPertanyaanDeteksiHandler_ServeHTTP_Create_SystemError(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
-	handler := setupPertanyaanDeteksiHandler(repo, nil)
+	handler := setupPertanyaanDeteksiHandler(repo, nil, nil)
 
 	createReq := dto.CreatePertanyaanDeteksiRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanDeteksi: "Test"}
 	repo.On("CheckSubKategoriExists", 1).Return(false, errors.New("db error"))
@@ -256,7 +270,8 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Create_SystemError(t *testing.T) {
 func TestPertanyaanDeteksiHandler_ServeHTTP_Update_Success(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
 	producer := new(mockPertanyaanDeteksiProducer)
-	handler := setupPertanyaanDeteksiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanDeteksiHandler(repo, producer, redis)
 
 	updateReq := dto.UpdatePertanyaanDeteksiRequest{PertanyaanDeteksi: deteksiStrPtr("Pertanyaan Ubah")}
 
@@ -264,6 +279,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Update_Success(t *testing.T) {
 	repo.On("Update", 1, mock.Anything).Return(nil)
 
 	producer.On("PublishPertanyaanDeteksiUpdated", mock.Anything, mock.Anything).Return(nil)
+	redis.On("Delete", services.PertanyaanDeteksiCacheKey).Return(nil)
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/pertanyaan-deteksi/1", bytes.NewBuffer(body))
@@ -275,7 +291,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Update_Success(t *testing.T) {
 }
 
 func TestPertanyaanDeteksiHandler_ServeHTTP_Update_InvalidJSON(t *testing.T) {
-	handler := setupPertanyaanDeteksiHandler(nil, nil)
+	handler := setupPertanyaanDeteksiHandler(nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/pertanyaan-deteksi/1", bytes.NewBufferString("invalid json"))
 	w := httptest.NewRecorder()
@@ -287,7 +303,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Update_InvalidJSON(t *testing.T) {
 
 func TestPertanyaanDeteksiHandler_ServeHTTP_Update_NotFound(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
-	handler := setupPertanyaanDeteksiHandler(repo, nil)
+	handler := setupPertanyaanDeteksiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanDeteksiResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -302,7 +318,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Update_NotFound(t *testing.T) {
 
 func TestPertanyaanDeteksiHandler_ServeHTTP_Update_ValidationError(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
-	handler := setupPertanyaanDeteksiHandler(repo, nil)
+	handler := setupPertanyaanDeteksiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return(&dto.PertanyaanDeteksiResponse{ID: 1}, nil)
 	repo.On("Update", 1, mock.Anything).Return(errors.New("pertanyaan_deteksi tidak boleh kosong"))
@@ -318,7 +334,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Update_ValidationError(t *testing.T)
 
 func TestPertanyaanDeteksiHandler_ServeHTTP_Update_SystemError(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
-	handler := setupPertanyaanDeteksiHandler(repo, nil)
+	handler := setupPertanyaanDeteksiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanDeteksiResponse)(nil), errors.New("db error"))
 
@@ -334,11 +350,13 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Update_SystemError(t *testing.T) {
 func TestPertanyaanDeteksiHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
 	producer := new(mockPertanyaanDeteksiProducer)
-	handler := setupPertanyaanDeteksiHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanDeteksiHandler(repo, producer, redis)
 
 	repo.On("GetByID", 1).Return(&dto.PertanyaanDeteksiResponse{ID: 1}, nil)
 	repo.On("Delete", 1).Return(nil)
 	producer.On("PublishPertanyaanDeteksiDeleted", mock.Anything, mock.Anything).Return(nil)
+	redis.On("Delete", services.PertanyaanDeteksiCacheKey).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/pertanyaan-deteksi/1", nil)
 	w := httptest.NewRecorder()
@@ -350,7 +368,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Delete_Success(t *testing.T) {
 
 func TestPertanyaanDeteksiHandler_ServeHTTP_Delete_NotFound(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
-	handler := setupPertanyaanDeteksiHandler(repo, nil)
+	handler := setupPertanyaanDeteksiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanDeteksiResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -364,7 +382,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Delete_NotFound(t *testing.T) {
 
 func TestPertanyaanDeteksiHandler_ServeHTTP_Delete_SystemError(t *testing.T) {
 	repo := new(mockPertanyaanDeteksiRepository)
-	handler := setupPertanyaanDeteksiHandler(repo, nil)
+	handler := setupPertanyaanDeteksiHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanDeteksiResponse)(nil), errors.New("system error"))
 
@@ -377,7 +395,7 @@ func TestPertanyaanDeteksiHandler_ServeHTTP_Delete_SystemError(t *testing.T) {
 }
 
 func TestPertanyaanDeteksiHandler_ServeHTTP_MethodValidation(t *testing.T) {
-	handler := setupPertanyaanDeteksiHandler(nil, nil)
+	handler := setupPertanyaanDeteksiHandler(nil, nil, nil)
 
 	t.Run("POST with ID", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-deteksi/1", nil)

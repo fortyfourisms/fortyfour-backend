@@ -89,18 +89,27 @@ func (m *mockPertanyaanGulihProducer) PublishPertanyaanGulihDeleted(ctx context.
 var _ repository.PertanyaanGulihRepositoryInterface = (*mockPertanyaanGulihRepository)(nil)
 var _ services.PertanyaanGulihProducerInterface = (*mockPertanyaanGulihProducer)(nil)
 
-func setupPertanyaanGulihHandler(repo *mockPertanyaanGulihRepository, producer *mockPertanyaanGulihProducer) *PertanyaanGulihHandler {
-	service := services.NewPertanyaanGulihService(repo, producer)
+func setupPertanyaanGulihHandler(repo *mockPertanyaanGulihRepository, producer *mockPertanyaanGulihProducer, redis *mockRedis) *PertanyaanGulihHandler {
+	if redis == nil {
+		redis = new(mockRedis)
+		redis.On("Get", mock.Anything).Return("", errors.New("cache miss")).Maybe()
+		redis.On("Delete", mock.Anything).Return(nil).Maybe()
+		redis.On("Set", mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
+	}
+	service := services.NewPertanyaanGulihService(repo, producer, redis)
 	return NewPertanyaanGulihHandler(service)
 }
 
 func TestPertanyaanGulihHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
 	producer := new(mockPertanyaanGulihProducer)
-	handler := setupPertanyaanGulihHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanGulihHandler(repo, producer, redis)
 
 	expectedData := []dto.PertanyaanGulihResponse{{ID: 1}}
+	redis.On("Get", services.PertanyaanGulihCacheKey).Return("", errors.New("miss"))
 	repo.On("GetAll").Return(expectedData, nil)
+	redis.On("Set", services.PertanyaanGulihCacheKey, mock.Anything, services.QuestionCacheExpiration).Return(nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/pertanyaan-gulih", nil)
 	w := httptest.NewRecorder()
@@ -113,8 +122,10 @@ func TestPertanyaanGulihHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 func TestPertanyaanGulihHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
 	producer := new(mockPertanyaanGulihProducer)
-	handler := setupPertanyaanGulihHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanGulihHandler(repo, producer, redis)
 
+	redis.On("Get", services.PertanyaanGulihCacheKey).Return("", errors.New("miss"))
 	repo.On("GetAll").Return([]dto.PertanyaanGulihResponse{}, errors.New("db error"))
 
 	req := httptest.NewRequest(http.MethodGet, "/api/maturity/pertanyaan-gulih", nil)
@@ -128,7 +139,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 func TestPertanyaanGulihHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
 	producer := new(mockPertanyaanGulihProducer)
-	handler := setupPertanyaanGulihHandler(repo, producer)
+	handler := setupPertanyaanGulihHandler(repo, producer, nil)
 
 	expectedData := &dto.PertanyaanGulihResponse{ID: 1}
 	repo.On("GetByID", 1).Return(expectedData, nil)
@@ -143,7 +154,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 
 func TestPertanyaanGulihHandler_ServeHTTP_GetByID_NotFound(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
-	handler := setupPertanyaanGulihHandler(repo, nil)
+	handler := setupPertanyaanGulihHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanGulihResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -157,7 +168,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_GetByID_NotFound(t *testing.T) {
 
 func TestPertanyaanGulihHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
-	handler := setupPertanyaanGulihHandler(repo, nil)
+	handler := setupPertanyaanGulihHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanGulihResponse)(nil), errors.New("system error"))
 
@@ -172,7 +183,8 @@ func TestPertanyaanGulihHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 func TestPertanyaanGulihHandler_ServeHTTP_Create_Success(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
 	producer := new(mockPertanyaanGulihProducer)
-	handler := setupPertanyaanGulihHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanGulihHandler(repo, producer, redis)
 
 	createReq := dto.CreatePertanyaanGulihRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanGulih: "Pertanyaan Test"}
 	repo.On("CheckSubKategoriExists", 1).Return(true, nil)
@@ -182,6 +194,8 @@ func TestPertanyaanGulihHandler_ServeHTTP_Create_Success(t *testing.T) {
 	producer.On("PublishPertanyaanGulihCreated", mock.Anything, mock.MatchedBy(func(e dto_event.PertanyaanGulihCreatedEvent) bool {
 		return e.Request.PertanyaanGulih == "Pertanyaan Test"
 	})).Return(nil)
+
+	redis.On("Delete", services.PertanyaanGulihCacheKey).Return(nil)
 
 	body, _ := json.Marshal(createReq)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-gulih", bytes.NewBuffer(body))
@@ -193,7 +207,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Create_Success(t *testing.T) {
 }
 
 func TestPertanyaanGulihHandler_ServeHTTP_Create_InvalidJSON(t *testing.T) {
-	handler := setupPertanyaanGulihHandler(nil, nil)
+	handler := setupPertanyaanGulihHandler(nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-gulih", bytes.NewBufferString("invalid json"))
 	w := httptest.NewRecorder()
@@ -205,7 +219,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Create_InvalidJSON(t *testing.T) {
 
 func TestPertanyaanGulihHandler_ServeHTTP_Create_SubKategoriNotFound(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
-	handler := setupPertanyaanGulihHandler(repo, nil)
+	handler := setupPertanyaanGulihHandler(repo, nil, nil)
 
 	createReq := dto.CreatePertanyaanGulihRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanGulih: "Pertanyaan Test"}
 	repo.On("CheckSubKategoriExists", 1).Return(false, nil)
@@ -221,7 +235,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Create_SubKategoriNotFound(t *testing.
 
 func TestPertanyaanGulihHandler_ServeHTTP_Create_ValidationError(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
-	handler := setupPertanyaanGulihHandler(repo, nil)
+	handler := setupPertanyaanGulihHandler(repo, nil, nil)
 
 	createReq := dto.CreatePertanyaanGulihRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanGulih: ""}
 	repo.On("CheckSubKategoriExists", 1).Return(true, nil)
@@ -239,7 +253,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Create_ValidationError(t *testing.T) {
 
 func TestPertanyaanGulihHandler_ServeHTTP_Create_SystemError(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
-	handler := setupPertanyaanGulihHandler(repo, nil)
+	handler := setupPertanyaanGulihHandler(repo, nil, nil)
 
 	createReq := dto.CreatePertanyaanGulihRequest{SubKategoriID: 1, RuangLingkupID: 1, PertanyaanGulih: "Test"}
 	repo.On("CheckSubKategoriExists", 1).Return(false, errors.New("db error"))
@@ -256,7 +270,8 @@ func TestPertanyaanGulihHandler_ServeHTTP_Create_SystemError(t *testing.T) {
 func TestPertanyaanGulihHandler_ServeHTTP_Update_Success(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
 	producer := new(mockPertanyaanGulihProducer)
-	handler := setupPertanyaanGulihHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanGulihHandler(repo, producer, redis)
 
 	updateReq := dto.UpdatePertanyaanGulihRequest{PertanyaanGulih: gulihStrPtr("Pertanyaan Ubah")}
 
@@ -264,6 +279,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Update_Success(t *testing.T) {
 	repo.On("Update", 1, mock.Anything).Return(nil)
 
 	producer.On("PublishPertanyaanGulihUpdated", mock.Anything, mock.Anything).Return(nil)
+	redis.On("Delete", services.PertanyaanGulihCacheKey).Return(nil)
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/pertanyaan-gulih/1", bytes.NewBuffer(body))
@@ -275,7 +291,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Update_Success(t *testing.T) {
 }
 
 func TestPertanyaanGulihHandler_ServeHTTP_Update_InvalidJSON(t *testing.T) {
-	handler := setupPertanyaanGulihHandler(nil, nil)
+	handler := setupPertanyaanGulihHandler(nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/pertanyaan-gulih/1", bytes.NewBufferString("invalid json"))
 	w := httptest.NewRecorder()
@@ -287,7 +303,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Update_InvalidJSON(t *testing.T) {
 
 func TestPertanyaanGulihHandler_ServeHTTP_Update_NotFound(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
-	handler := setupPertanyaanGulihHandler(repo, nil)
+	handler := setupPertanyaanGulihHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanGulihResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -302,7 +318,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Update_NotFound(t *testing.T) {
 
 func TestPertanyaanGulihHandler_ServeHTTP_Update_ValidationError(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
-	handler := setupPertanyaanGulihHandler(repo, nil)
+	handler := setupPertanyaanGulihHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return(&dto.PertanyaanGulihResponse{ID: 1}, nil)
 	repo.On("Update", 1, mock.Anything).Return(errors.New("pertanyaan_gulih tidak boleh kosong"))
@@ -318,7 +334,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Update_ValidationError(t *testing.T) {
 
 func TestPertanyaanGulihHandler_ServeHTTP_Update_SystemError(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
-	handler := setupPertanyaanGulihHandler(repo, nil)
+	handler := setupPertanyaanGulihHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanGulihResponse)(nil), errors.New("db error"))
 
@@ -334,11 +350,13 @@ func TestPertanyaanGulihHandler_ServeHTTP_Update_SystemError(t *testing.T) {
 func TestPertanyaanGulihHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
 	producer := new(mockPertanyaanGulihProducer)
-	handler := setupPertanyaanGulihHandler(repo, producer)
+	redis := new(mockRedis)
+	handler := setupPertanyaanGulihHandler(repo, producer, redis)
 
 	repo.On("GetByID", 1).Return(&dto.PertanyaanGulihResponse{ID: 1}, nil)
 	repo.On("Delete", 1).Return(nil)
 	producer.On("PublishPertanyaanGulihDeleted", mock.Anything, mock.Anything).Return(nil)
+	redis.On("Delete", services.PertanyaanGulihCacheKey).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/pertanyaan-gulih/1", nil)
 	w := httptest.NewRecorder()
@@ -350,7 +368,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Delete_Success(t *testing.T) {
 
 func TestPertanyaanGulihHandler_ServeHTTP_Delete_NotFound(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
-	handler := setupPertanyaanGulihHandler(repo, nil)
+	handler := setupPertanyaanGulihHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanGulihResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -364,7 +382,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Delete_NotFound(t *testing.T) {
 
 func TestPertanyaanGulihHandler_ServeHTTP_Delete_SystemError(t *testing.T) {
 	repo := new(mockPertanyaanGulihRepository)
-	handler := setupPertanyaanGulihHandler(repo, nil)
+	handler := setupPertanyaanGulihHandler(repo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.PertanyaanGulihResponse)(nil), errors.New("system error"))
 
@@ -377,7 +395,7 @@ func TestPertanyaanGulihHandler_ServeHTTP_Delete_SystemError(t *testing.T) {
 }
 
 func TestPertanyaanGulihHandler_ServeHTTP_MethodValidation(t *testing.T) {
-	handler := setupPertanyaanGulihHandler(nil, nil)
+	handler := setupPertanyaanGulihHandler(nil, nil, nil)
 
 	t.Run("POST with ID", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/maturity/pertanyaan-gulih/1", nil)

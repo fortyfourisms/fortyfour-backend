@@ -4,13 +4,19 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"encoding/json"
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
 	"ikas/internal/utils"
+	"ikas/pkg/cache"
 	"time"
 
 	"github.com/rollbar/rollbar-go"
+)
+
+const (
+	PertanyaanDeteksiCacheKey = "ikas:questions:deteksi"
 )
 
 type PertanyaanDeteksiProducerInterface interface {
@@ -22,12 +28,18 @@ type PertanyaanDeteksiProducerInterface interface {
 type PertanyaanDeteksiService struct {
 	repo     repository.PertanyaanDeteksiRepositoryInterface
 	producer PertanyaanDeteksiProducerInterface
+	cache    cache.RedisInterface
 }
 
-func NewPertanyaanDeteksiService(repo repository.PertanyaanDeteksiRepositoryInterface, producer PertanyaanDeteksiProducerInterface) *PertanyaanDeteksiService {
+func NewPertanyaanDeteksiService(
+	repo repository.PertanyaanDeteksiRepositoryInterface,
+	producer PertanyaanDeteksiProducerInterface,
+	cache cache.RedisInterface,
+) *PertanyaanDeteksiService {
 	return &PertanyaanDeteksiService{
 		repo:     repo,
 		producer: producer,
+		cache:    cache,
 	}
 }
 
@@ -174,11 +186,37 @@ func (s *PertanyaanDeteksiService) Create(req dto.CreatePertanyaanDeteksiRequest
 		return nil, err
 	}
 
+	// Invalidate cache
+	_ = s.cache.Delete(PertanyaanDeteksiCacheKey)
+
 	return nil, nil
 }
 
 func (s *PertanyaanDeteksiService) GetAll() ([]dto.PertanyaanDeteksiResponse, error) {
-	return s.repo.GetAll()
+	// Try to get from cache
+	cachedData, err := s.cache.Get(PertanyaanDeteksiCacheKey)
+	if err == nil && cachedData != "" {
+		var questions []dto.PertanyaanDeteksiResponse
+		if err := json.Unmarshal([]byte(cachedData), &questions); err == nil {
+			return questions, nil
+		}
+	}
+
+	// If not in cache or error, get from DB
+	questions, err := s.repo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+
+	// Store in cache (fire and forget for performance)
+	go func() {
+		jsonData, err := json.Marshal(questions)
+		if err == nil {
+			_ = s.cache.Set(PertanyaanDeteksiCacheKey, string(jsonData), QuestionCacheExpiration)
+		}
+	}()
+
+	return questions, nil
 }
 
 func (s *PertanyaanDeteksiService) GetByID(id int) (*dto.PertanyaanDeteksiResponse, error) {
@@ -240,6 +278,9 @@ func (s *PertanyaanDeteksiService) Update(id int, req dto.UpdatePertanyaanDeteks
 		return nil, err
 	}
 
+	// Invalidate cache
+	_ = s.cache.Delete(PertanyaanDeteksiCacheKey)
+
 	return nil, nil
 }
 
@@ -252,8 +293,16 @@ func (s *PertanyaanDeteksiService) Delete(id int) error {
 		return err
 	}
 
-	return s.producer.PublishPertanyaanDeteksiDeleted(context.Background(), dto_event.PertanyaanDeteksiDeletedEvent{
+	err = s.producer.PublishPertanyaanDeteksiDeleted(context.Background(), dto_event.PertanyaanDeteksiDeletedEvent{
 		ID:        id,
 		DeletedAt: time.Now(),
 	})
+	if err != nil {
+		return err
+	}
+
+	// Invalidate cache
+	_ = s.cache.Delete(PertanyaanDeteksiCacheKey)
+
+	return nil
 }
