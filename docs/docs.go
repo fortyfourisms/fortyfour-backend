@@ -379,7 +379,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Admin mendapat semua data CSIRT. User hanya mendapat CSIRT milik perusahaannya.",
+                "description": "Admin dan staff mendapat semua data CSIRT. User/PIC hanya mendapat CSIRT milik perusahaannya.",
                 "produces": [
                     "application/json"
                 ],
@@ -521,7 +521,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Admin: export semua CSIRT, atau filter by id_perusahaan. User: hanya milik perusahaannya.",
+                "description": "Admin dan staff: export semua CSIRT, atau filter by id_perusahaan. User: hanya milik perusahaannya.",
                 "produces": [
                     "application/pdf"
                 ],
@@ -745,7 +745,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Export data CSIRT berdasarkan ID. User hanya bisa akses CSIRT milik perusahaannya.",
+                "description": "Export data CSIRT berdasarkan ID. Admin dan staff bisa akses semua, user hanya bisa akses CSIRT milik perusahaannya.",
                 "produces": [
                     "application/pdf"
                 ],
@@ -1340,211 +1340,6 @@ const docTemplate = `{
                         "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/jabatan": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Mengambil seluruh data jabatan",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Jabatan"
-                ],
-                "summary": "List semua jabatan",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/fortyfour-backend_internal_dto.JabatanResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Membuat record jabatan",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Jabatan"
-                ],
-                "summary": "Tambah jabatan baru",
-                "parameters": [
-                    {
-                        "description": "Data jabatan",
-                        "name": "jabatan",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateJabatanRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.JabatanResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/jabatan/{id}": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Mengambil satu data jabatan",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Jabatan"
-                ],
-                "summary": "Ambil jabatan berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Jabatan ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.JabatanResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Mengubah data jabatan berdasarkan ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Jabatan"
-                ],
-                "summary": "Update jabatan",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Jabatan ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data update",
-                        "name": "jabatan",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateJabatanRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.JabatanResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Menghapus data jabatan berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Jabatan"
-                ],
-                "summary": "Hapus jabatan",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Jabatan ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.MessageResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
                     }
                 }
@@ -7024,7 +6819,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Admin mendapat semua SE. User hanya mendapat SE milik perusahaannya.",
+                "description": "Admin dan staff mendapat semua SE. User/PIC hanya mendapat SE milik perusahaannya.",
                 "consumes": [
                     "application/json"
                 ],
@@ -7205,7 +7000,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Admin: export semua SE, atau filter by id_perusahaan. User: hanya milik perusahaannya.",
+                "description": "Admin dan staff: export semua SE, atau filter by id_perusahaan. User: hanya milik perusahaannya.",
                 "produces": [
                     "application/pdf"
                 ],
@@ -7405,7 +7200,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Export data SE berdasarkan ID. User hanya bisa akses SE milik perusahaannya.",
+                "description": "Export data SE berdasarkan ID. Admin dan staff bisa akses semua, user hanya bisa akses SE milik perusahaannya.",
                 "produces": [
                     "application/pdf"
                 ],
@@ -7944,7 +7739,7 @@ const docTemplate = `{
         },
         "/api/survey/responden": {
             "get": {
-                "description": "Mengambil seluruh data responden",
+                "description": "Mengambil seluruh data responden beserta perusahaan dan sektor",
                 "produces": [
                     "application/json"
                 ],
@@ -7971,7 +7766,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Membuat data responden baru",
+                "description": "Membuat data responden baru berdasarkan perusahaan",
                 "consumes": [
                     "application/json"
                 ],
@@ -7984,7 +7779,7 @@ const docTemplate = `{
                 "summary": "Tambah responden",
                 "parameters": [
                     {
-                        "description": "Data responden",
+                        "description": "Create Responden Request",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -8006,8 +7801,8 @@ const docTemplate = `{
                             "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
                         }
                     },
-                    "409": {
-                        "description": "Conflict",
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
                         }
@@ -8023,7 +7818,7 @@ const docTemplate = `{
         },
         "/api/survey/responden/{id}": {
             "get": {
-                "description": "Mengambil data responden berdasarkan ID",
+                "description": "Mengambil detail responden beserta perusahaan dan sektor",
                 "produces": [
                     "application/json"
                 ],
@@ -8068,7 +7863,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Memperbarui data responden berdasarkan ID",
+                "description": "Memperbarui data responden",
                 "consumes": [
                     "application/json"
                 ],
@@ -8088,7 +7883,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Data responden",
+                        "description": "Update Responden Request",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -8102,60 +7897,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.RespondenResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Menghapus data responden berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Responden Survey"
-                ],
-                "summary": "Hapus responden",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Responden ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
                         }
                     },
                     "400": {
@@ -9330,6 +9071,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "id_perusahaan": {
+                    "type": "string"
+                },
                 "jabatan": {
                     "type": "string"
                 },
@@ -9337,15 +9081,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "no_telepon": {
-                    "type": "string"
-                },
-                "perusahaan": {
-                    "type": "string"
-                },
-                "sektor": {
-                    "type": "string"
-                },
-                "sektor_lainnya": {
                     "type": "string"
                 },
                 "sertifikat_training": {
@@ -10192,22 +9927,28 @@ const docTemplate = `{
                 "id": {
                     "type": "integer"
                 },
+                "id_perusahaan": {
+                    "description": "dari PERUSAHAAN",
+                    "type": "string"
+                },
                 "jabatan": {
                     "type": "string"
                 },
                 "nama_lengkap": {
+                    "description": "dari RESPONDEN",
+                    "type": "string"
+                },
+                "nama_perusahaan": {
+                    "type": "string"
+                },
+                "nama_sektor": {
+                    "type": "string"
+                },
+                "nama_sub_sektor": {
+                    "description": "dari SUB SEKTOR \u0026 SEKTOR (hasil JOIN)",
                     "type": "string"
                 },
                 "no_telepon": {
-                    "type": "string"
-                },
-                "perusahaan": {
-                    "type": "string"
-                },
-                "sektor": {
-                    "type": "string"
-                },
-                "sektor_lainnya": {
                     "type": "string"
                 },
                 "sertifikat_training": {
@@ -10535,6 +10276,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "id_perusahaan": {
+                    "type": "string"
+                },
                 "jabatan": {
                     "type": "string"
                 },
@@ -10542,15 +10286,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "no_telepon": {
-                    "type": "string"
-                },
-                "perusahaan": {
-                    "type": "string"
-                },
-                "sektor": {
-                    "type": "string"
-                },
-                "sektor_lainnya": {
                     "type": "string"
                 },
                 "sertifikat_training": {
@@ -10680,14 +10415,6 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.CreateJabatanRequest": {
-            "type": "object",
-            "properties": {
-                "nama_jabatan": {
-                    "type": "string"
-                }
-            }
-        },
         "fortyfour-backend_internal_dto.CreateKelasRequest": {
             "type": "object",
             "required": [
@@ -10697,10 +10424,28 @@ const docTemplate = `{
                 "deskripsi": {
                     "type": "string"
                 },
+                "durasi_jp": {
+                    "type": "integer"
+                },
+                "informasi_umum": {
+                    "type": "string"
+                },
                 "judul": {
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 3
+                },
+                "kategori": {
+                    "type": "string"
+                },
+                "penyelenggara": {
+                    "type": "string"
+                },
+                "syarat_pendaftaran": {
+                    "type": "string"
+                },
+                "target_peserta": {
+                    "type": "string"
                 },
                 "thumbnail": {
                     "type": "string"
@@ -11148,13 +10893,14 @@ const docTemplate = `{
         "fortyfour-backend_internal_dto.DashboardSummary": {
             "type": "object",
             "properties": {
+                "ikas": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.IkasAgg"
+                },
+                "ikas_status": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.IkasStatusCount"
+                },
                 "kse": {
-                    "description": "Ikas   IkasAgg       ` + "`" + `json:\"ikas\"` + "`" + ` // TODO: re-enable ikas summary when ikas table is ready",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SeAgg"
-                        }
-                    ]
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.SeAgg"
                 },
                 "kse_status": {
                     "$ref": "#/definitions/fortyfour-backend_internal_dto.SeStatusCount"
@@ -11259,20 +11005,31 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.JabatanResponse": {
+        "fortyfour-backend_internal_dto.IkasAgg": {
             "type": "object",
             "properties": {
-                "created_at": {
-                    "type": "string"
+                "avg_nilai_kematangan": {
+                    "type": "number"
                 },
-                "id": {
-                    "type": "string"
+                "avg_target_nilai": {
+                    "type": "number"
                 },
-                "nama_jabatan": {
-                    "type": "string"
+                "total_ikas": {
+                    "type": "integer"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.IkasStatusCount": {
+            "type": "object",
+            "properties": {
+                "belum_mengisi_ikas": {
+                    "type": "integer"
                 },
-                "updated_at": {
-                    "type": "string"
+                "sudah_mengisi_ikas": {
+                    "type": "integer"
+                },
+                "total_perusahaan": {
+                    "type": "integer"
                 }
             }
         },
@@ -11329,10 +11086,19 @@ const docTemplate = `{
                 "deskripsi": {
                     "type": "string"
                 },
+                "durasi_jp": {
+                    "type": "integer"
+                },
                 "id": {
                     "type": "string"
                 },
+                "informasi_umum": {
+                    "type": "string"
+                },
                 "judul": {
+                    "type": "string"
+                },
+                "kategori": {
                     "type": "string"
                 },
                 "kuis_list": {
@@ -11348,6 +11114,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/fortyfour-backend_internal_dto.MateriResponse"
                     }
                 },
+                "penyelenggara": {
+                    "type": "string"
+                },
                 "progress": {
                     "description": "progress user saat ini",
                     "allOf": [
@@ -11361,6 +11130,12 @@ const docTemplate = `{
                 },
                 "status": {
                     "$ref": "#/definitions/fortyfour-backend_internal_models.KelasStatus"
+                },
+                "syarat_pendaftaran": {
+                    "type": "string"
+                },
+                "target_peserta": {
+                    "type": "string"
                 },
                 "thumbnail": {
                     "type": "string"
@@ -12245,18 +12020,16 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.UpdateJabatanRequest": {
-            "type": "object",
-            "properties": {
-                "nama_jabatan": {
-                    "type": "string"
-                }
-            }
-        },
         "fortyfour-backend_internal_dto.UpdateKelasRequest": {
             "type": "object",
             "properties": {
                 "deskripsi": {
+                    "type": "string"
+                },
+                "durasi_jp": {
+                    "type": "integer"
+                },
+                "informasi_umum": {
                     "type": "string"
                 },
                 "judul": {
@@ -12264,12 +12037,24 @@ const docTemplate = `{
                     "maxLength": 255,
                     "minLength": 3
                 },
+                "kategori": {
+                    "type": "string"
+                },
+                "penyelenggara": {
+                    "type": "string"
+                },
                 "status": {
                     "type": "string",
                     "enum": [
                         "draft",
                         "published"
                     ]
+                },
+                "syarat_pendaftaran": {
+                    "type": "string"
+                },
+                "target_peserta": {
+                    "type": "string"
                 },
                 "thumbnail": {
                     "type": "string"

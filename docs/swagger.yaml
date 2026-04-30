@@ -186,17 +186,13 @@ definitions:
     properties:
       email:
         type: string
+      id_perusahaan:
+        type: string
       jabatan:
         type: string
       nama_lengkap:
         type: string
       no_telepon:
-        type: string
-      perusahaan:
-        type: string
-      sektor:
-        type: string
-      sektor_lainnya:
         type: string
       sertifikat_training:
         type: string
@@ -748,17 +744,22 @@ definitions:
         type: string
       id:
         type: integer
+      id_perusahaan:
+        description: dari PERUSAHAAN
+        type: string
       jabatan:
         type: string
       nama_lengkap:
+        description: dari RESPONDEN
+        type: string
+      nama_perusahaan:
+        type: string
+      nama_sektor:
+        type: string
+      nama_sub_sektor:
+        description: dari SUB SEKTOR & SEKTOR (hasil JOIN)
         type: string
       no_telepon:
-        type: string
-      perusahaan:
-        type: string
-      sektor:
-        type: string
-      sektor_lainnya:
         type: string
       sertifikat_training:
         type: string
@@ -971,17 +972,13 @@ definitions:
     properties:
       email:
         type: string
+      id_perusahaan:
+        type: string
       jabatan:
         type: string
       nama_lengkap:
         type: string
       no_telepon:
-        type: string
-      perusahaan:
-        type: string
-      sektor:
-        type: string
-      sektor_lainnya:
         type: string
       sertifikat_training:
         type: string
@@ -1066,18 +1063,25 @@ definitions:
     required:
     - konten
     type: object
-  fortyfour-backend_internal_dto.CreateJabatanRequest:
-    properties:
-      nama_jabatan:
-        type: string
-    type: object
   fortyfour-backend_internal_dto.CreateKelasRequest:
     properties:
       deskripsi:
         type: string
+      durasi_jp:
+        type: integer
+      informasi_umum:
+        type: string
       judul:
         maxLength: 255
         minLength: 3
+        type: string
+      kategori:
+        type: string
+      penyelenggara:
+        type: string
+      syarat_pendaftaran:
+        type: string
+      target_peserta:
         type: string
       thumbnail:
         type: string
@@ -1396,11 +1400,12 @@ definitions:
     type: object
   fortyfour-backend_internal_dto.DashboardSummary:
     properties:
+      ikas:
+        $ref: '#/definitions/fortyfour-backend_internal_dto.IkasAgg'
+      ikas_status:
+        $ref: '#/definitions/fortyfour-backend_internal_dto.IkasStatusCount'
       kse:
-        allOf:
-        - $ref: '#/definitions/fortyfour-backend_internal_dto.SeAgg'
-        description: 'Ikas   IkasAgg       `json:"ikas"` // TODO: re-enable ikas summary
-          when ikas table is ready'
+        $ref: '#/definitions/fortyfour-backend_internal_dto.SeAgg'
       kse_status:
         $ref: '#/definitions/fortyfour-backend_internal_dto.SeStatusCount'
       sektor_counts:
@@ -1469,16 +1474,23 @@ definitions:
       pertanyaan:
         type: string
     type: object
-  fortyfour-backend_internal_dto.JabatanResponse:
+  fortyfour-backend_internal_dto.IkasAgg:
     properties:
-      created_at:
-        type: string
-      id:
-        type: string
-      nama_jabatan:
-        type: string
-      updated_at:
-        type: string
+      avg_nilai_kematangan:
+        type: number
+      avg_target_nilai:
+        type: number
+      total_ikas:
+        type: integer
+    type: object
+  fortyfour-backend_internal_dto.IkasStatusCount:
+    properties:
+      belum_mengisi_ikas:
+        type: integer
+      sudah_mengisi_ikas:
+        type: integer
+      total_perusahaan:
+        type: integer
     type: object
   fortyfour-backend_internal_dto.JawabanItem:
     properties:
@@ -1515,9 +1527,15 @@ definitions:
         type: string
       deskripsi:
         type: string
+      durasi_jp:
+        type: integer
       id:
         type: string
+      informasi_umum:
+        type: string
       judul:
+        type: string
+      kategori:
         type: string
       kuis_list:
         items:
@@ -1528,6 +1546,8 @@ definitions:
         items:
           $ref: '#/definitions/fortyfour-backend_internal_dto.MateriResponse'
         type: array
+      penyelenggara:
+        type: string
       progress:
         allOf:
         - $ref: '#/definitions/fortyfour-backend_internal_dto.KelasProgress'
@@ -1536,6 +1556,10 @@ definitions:
         $ref: '#/definitions/fortyfour-backend_internal_dto.SertifikatResponse'
       status:
         $ref: '#/definitions/fortyfour-backend_internal_models.KelasStatus'
+      syarat_pendaftaran:
+        type: string
+      target_peserta:
+        type: string
       thumbnail:
         type: string
       updated_at:
@@ -2116,23 +2140,30 @@ definitions:
     required:
     - konten
     type: object
-  fortyfour-backend_internal_dto.UpdateJabatanRequest:
-    properties:
-      nama_jabatan:
-        type: string
-    type: object
   fortyfour-backend_internal_dto.UpdateKelasRequest:
     properties:
       deskripsi:
+        type: string
+      durasi_jp:
+        type: integer
+      informasi_umum:
         type: string
       judul:
         maxLength: 255
         minLength: 3
         type: string
+      kategori:
+        type: string
+      penyelenggara:
+        type: string
       status:
         enum:
         - draft
         - published
+        type: string
+      syarat_pendaftaran:
+        type: string
+      target_peserta:
         type: string
       thumbnail:
         type: string
@@ -2764,8 +2795,8 @@ paths:
       - Chat
   /api/csirt:
     get:
-      description: Admin mendapat semua data CSIRT. User hanya mendapat CSIRT milik
-        perusahaannya.
+      description: Admin dan staff mendapat semua data CSIRT. User/PIC hanya mendapat
+        CSIRT milik perusahaannya.
       produces:
       - application/json
       responses:
@@ -2972,8 +3003,8 @@ paths:
       - CSIRT
   /api/csirt/{id}/export-pdf:
     get:
-      description: Export data CSIRT berdasarkan ID. User hanya bisa akses CSIRT milik
-        perusahaannya.
+      description: Export data CSIRT berdasarkan ID. Admin dan staff bisa akses semua,
+        user hanya bisa akses CSIRT milik perusahaannya.
       parameters:
       - description: CSIRT ID
         in: path
@@ -3031,8 +3062,8 @@ paths:
       - CSIRT
   /api/csirt/export-pdf:
     get:
-      description: 'Admin: export semua CSIRT, atau filter by id_perusahaan. User:
-        hanya milik perusahaannya.'
+      description: 'Admin dan staff: export semua CSIRT, atau filter by id_perusahaan.
+        User: hanya milik perusahaannya.'
       parameters:
       - description: Filter by ID Perusahaan (admin only)
         in: query
@@ -3390,135 +3421,6 @@ paths:
       summary: Ambil identifikasi berdasarkan ID
       tags:
       - Identifikasi
-  /api/jabatan:
-    get:
-      description: Mengambil seluruh data jabatan
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/fortyfour-backend_internal_dto.JabatanResponse'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: List semua jabatan
-      tags:
-      - Jabatan
-    post:
-      consumes:
-      - application/json
-      description: Membuat record jabatan
-      parameters:
-      - description: Data jabatan
-        in: body
-        name: jabatan
-        required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.CreateJabatanRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.JabatanResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Tambah jabatan baru
-      tags:
-      - Jabatan
-  /api/jabatan/{id}:
-    delete:
-      description: Menghapus data jabatan berdasarkan ID
-      parameters:
-      - description: Jabatan ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.MessageResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Hapus jabatan
-      tags:
-      - Jabatan
-    get:
-      description: Mengambil satu data jabatan
-      parameters:
-      - description: Jabatan ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.JabatanResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Ambil jabatan berdasarkan ID
-      tags:
-      - Jabatan
-    put:
-      consumes:
-      - application/json
-      description: Mengubah data jabatan berdasarkan ID
-      parameters:
-      - description: Jabatan ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Data update
-        in: body
-        name: jabatan
-        required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.UpdateJabatanRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.JabatanResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Update jabatan
-      tags:
-      - Jabatan
   /api/kelas:
     get:
       description: Admin melihat semua kelas. User hanya melihat kelas yang published.
@@ -7078,7 +6980,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Admin mendapat semua SE. User hanya mendapat SE milik perusahaannya.
+      description: Admin dan staff mendapat semua SE. User/PIC hanya mendapat SE milik
+        perusahaannya.
       produces:
       - application/json
       responses:
@@ -7234,7 +7137,8 @@ paths:
       - SE
   /api/se/{id}/export-pdf:
     get:
-      description: Export data SE berdasarkan ID. User hanya bisa akses SE milik perusahaannya.
+      description: Export data SE berdasarkan ID. Admin dan staff bisa akses semua,
+        user hanya bisa akses SE milik perusahaannya.
       parameters:
       - description: SE ID
         in: path
@@ -7359,8 +7263,8 @@ paths:
       - SE - Edit Request
   /api/se/export-pdf:
     get:
-      description: 'Admin: export semua SE, atau filter by id_perusahaan. User: hanya
-        milik perusahaannya.'
+      description: 'Admin dan staff: export semua SE, atau filter by id_perusahaan.
+        User: hanya milik perusahaannya.'
       parameters:
       - description: Filter by ID Perusahaan (admin only)
         in: query
@@ -7665,7 +7569,7 @@ paths:
       - Risiko
   /api/survey/responden:
     get:
-      description: Mengambil seluruh data responden
+      description: Mengambil seluruh data responden beserta perusahaan dan sektor
       produces:
       - application/json
       responses:
@@ -7685,9 +7589,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Membuat data responden baru
+      description: Membuat data responden baru berdasarkan perusahaan
       parameters:
-      - description: Data responden
+      - description: Create Responden Request
         in: body
         name: request
         required: true
@@ -7704,8 +7608,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "409":
-          description: Conflict
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
         "500":
@@ -7716,40 +7620,8 @@ paths:
       tags:
       - Responden Survey
   /api/survey/responden/{id}:
-    delete:
-      description: Menghapus data responden berdasarkan ID
-      parameters:
-      - description: Responden ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Hapus responden
-      tags:
-      - Responden Survey
     get:
-      description: Mengambil data responden berdasarkan ID
+      description: Mengambil detail responden beserta perusahaan dan sektor
       parameters:
       - description: Responden ID
         in: path
@@ -7781,14 +7653,14 @@ paths:
     put:
       consumes:
       - application/json
-      description: Memperbarui data responden berdasarkan ID
+      description: Memperbarui data responden
       parameters:
       - description: Responden ID
         in: path
         name: id
         required: true
         type: integer
-      - description: Data responden
+      - description: Update Responden Request
         in: body
         name: request
         required: true
@@ -7807,10 +7679,6 @@ paths:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
         "404":
           description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "409":
-          description: Conflict
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
         "500":
