@@ -7,15 +7,21 @@ import (
 	"strings"
 
 	"survey/internal/dto"
-	"survey/internal/services"
 	"survey/internal/utils"
 )
 
-type RespondenHandler struct {
-	service *services.RespondenService
+type RespondenServiceInterface interface {
+	GetAll() ([]dto.RespondenResponse, error)
+	GetByID(id int) (*dto.RespondenResponse, error)
+	Create(req dto.CreateRespondenRequest) (*dto.RespondenResponse, error)
+	Update(id int, req dto.UpdateRespondenRequest) (*dto.RespondenResponse, error)
 }
 
-func NewRespondenHandler(service *services.RespondenService) *RespondenHandler {
+type RespondenHandler struct {
+	service RespondenServiceInterface
+}
+
+func NewRespondenHandler(service RespondenServiceInterface) *RespondenHandler {
 	return &RespondenHandler{service: service}
 }
 
@@ -52,10 +58,9 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GET ALL
 // GetAllResponden godoc
 // @Summary      Ambil semua responden
-// @Description  Mengambil seluruh data responden (join users, jabatan, perusahaan)
+// @Description  Mengambil seluruh data responden beserta perusahaan dan sektor
 // @Tags         Responden Survey
 // @Produce      json
 // @Success      200 {array} dto.RespondenResponse
@@ -72,10 +77,9 @@ func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
 	utils.RespondJSON(w, http.StatusOK, data)
 }
 
-// GET BY ID
 // GetRespondenByID godoc
 // @Summary      Ambil responden berdasarkan ID
-// @Description  Mengambil detail responden beserta data user, jabatan, dan perusahaan
+// @Description  Mengambil detail responden beserta perusahaan dan sektor
 // @Tags         Responden Survey
 // @Produce      json
 // @Param        id path int true "Responden ID"
@@ -106,10 +110,9 @@ func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 	utils.RespondJSON(w, http.StatusOK, data)
 }
 
-// CREATE
 // CreateResponden godoc
 // @Summary      Tambah responden
-// @Description  Membuat data responden baru (data utama diambil dari users)
+// @Description  Membuat data responden baru berdasarkan perusahaan
 // @Tags         Responden Survey
 // @Accept       json
 // @Produce      json
@@ -117,7 +120,6 @@ func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 // @Success      201 {object} dto.RespondenResponse
 // @Failure      400 {object} dto.ErrorResponse
 // @Failure      404 {object} dto.ErrorResponse
-// @Failure      409 {object} dto.ErrorResponse
 // @Failure      500 {object} dto.ErrorResponse
 // @Router       /api/survey/responden [post]
 func (h *RespondenHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
@@ -134,18 +136,15 @@ func (h *RespondenHandler) handleCreate(w http.ResponseWriter, r *http.Request) 
 
 		switch err.Error() {
 
-		case "user_id wajib diisi",
-			"nomor telepon tidak boleh kosong",
-			"sektor tidak boleh kosong",
-			"sertifikat training tidak boleh kosong",
-			"sektor lainnya wajib diisi jika sektor = lainnya":
+		case "id_perusahaan wajib diisi",
+			"nama lengkap tidak boleh kosong",
+			"jabatan tidak boleh kosong",
+			"email tidak boleh kosong",
+			"nomor telepon tidak boleh kosong":
 			utils.RespondError(w, http.StatusBadRequest, err.Error())
 
-		case "user tidak ditemukan":
+		case "perusahaan tidak ditemukan":
 			utils.RespondError(w, http.StatusNotFound, err.Error())
-
-		case "responden sudah ada":
-			utils.RespondError(w, http.StatusConflict, err.Error())
 
 		default:
 			utils.RespondError(w, http.StatusInternalServerError, err.Error())
@@ -157,10 +156,9 @@ func (h *RespondenHandler) handleCreate(w http.ResponseWriter, r *http.Request) 
 	utils.RespondJSON(w, http.StatusCreated, resp)
 }
 
-// UPDATE
 // UpdateResponden godoc
 // @Summary      Update responden
-// @Description  Memperbarui data responden (hanya field tambahan, bukan data users)
+// @Description  Memperbarui data responden
 // @Tags         Responden Survey
 // @Accept       json
 // @Produce      json
@@ -194,10 +192,11 @@ func (h *RespondenHandler) handleUpdate(w http.ResponseWriter, r *http.Request, 
 		case "data tidak ditemukan":
 			utils.RespondError(w, http.StatusNotFound, err.Error())
 
-		case "nomor telepon tidak boleh kosong",
-			"sektor tidak boleh kosong",
-			"sertifikat training tidak boleh kosong",
-			"sektor lainnya wajib diisi jika sektor = lainnya":
+		case "id_perusahaan wajib diisi",
+			"nama lengkap tidak boleh kosong",
+			"jabatan tidak boleh kosong",
+			"email tidak boleh kosong",
+			"nomor telepon tidak boleh kosong":
 			utils.RespondError(w, http.StatusBadRequest, err.Error())
 
 		default:

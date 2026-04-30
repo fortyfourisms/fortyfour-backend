@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+
 	"survey/internal/models"
 )
 
@@ -15,7 +16,7 @@ func NewRespondenRepository(db *sql.DB) *RespondenRepository {
 }
 
 // ========================
-// HELPER (ANTI NULL PANIC)
+// HELPER
 // ========================
 func nullToString(ns sql.NullString) *string {
 	if ns.Valid {
@@ -27,44 +28,54 @@ func nullToString(ns sql.NullString) *string {
 // ========================
 // CREATE
 // ========================
-func (r *RespondenRepository) Create(m models.Responden) error {
-	_, err := r.db.Exec(`
+func (r *RespondenRepository) Create(m models.Responden) (int64, error) {
+
+	res, err := r.db.Exec(`
 		INSERT INTO responden
-		(user_id, no_telepon, sektor, sektor_lainnya, sertifikat_training)
-		VALUES (?, ?, ?, ?, ?)
+		(id_perusahaan, nama_lengkap, jabatan, email, no_telepon, sertifikat_training)
+		VALUES (?, ?, ?, ?, ?, ?)
 	`,
-		m.UserID,
+		m.IdPerusahaan,
+		m.NamaLengkap,
+		m.Jabatan,
+		m.Email,
 		m.NoTelepon,
-		m.Sektor,
-		m.SektorLainnya,
 		m.SertifikatTraining,
 	)
 
-	return err
+	if err != nil {
+		return 0, err
+	}
+
+	insertID, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return insertID, nil
 }
 
 // ========================
-// BASE QUERY (REUSABLE)
+// BASE QUERY (FIXED)
 // ========================
 const baseDetailQuery = `
 SELECT 
 	r.id,
-	r.user_id,
-	u.display_name,
-	u.email,
-	j.nama_jabatan,
-	p.nama_perusahaan,
-	p.id AS perusahaan_id,
+	r.id_perusahaan,
+	r.nama_lengkap,
+	r.jabatan,
+	r.email,
 	r.no_telepon,
-	r.sektor,
-	r.sektor_lainnya,
 	r.sertifikat_training,
+	p.nama_perusahaan,
+	ss.nama_sub_sektor,
+	s.nama_sektor,
 	r.created_at,
 	r.updated_at
 FROM responden r
-LEFT JOIN users u ON r.user_id = u.id
-LEFT JOIN jabatan j ON u.id_jabatan = j.id
-LEFT JOIN perusahaan p ON u.id_perusahaan = p.id
+LEFT JOIN perusahaan p ON r.id_perusahaan = p.id
+LEFT JOIN sub_sektor ss ON p.id_sub_sektor = ss.id
+LEFT JOIN sektor s ON ss.id_sektor = s.id
 `
 
 // ========================
@@ -72,7 +83,7 @@ LEFT JOIN perusahaan p ON u.id_perusahaan = p.id
 // ========================
 func (r *RespondenRepository) GetAllDetail() ([]models.RespondenDetail, error) {
 
-	rows, err := r.db.Query(baseDetailQuery)
+	rows, err := r.db.Query(baseDetailQuery + " ORDER BY r.id DESC")
 	if err != nil {
 		return nil, err
 	}
@@ -85,26 +96,22 @@ func (r *RespondenRepository) GetAllDetail() ([]models.RespondenDetail, error) {
 		var (
 			m models.RespondenDetail
 
-			displayName   sql.NullString
-			email         sql.NullString
-			jabatan       sql.NullString
-			perusahaan    sql.NullString
-			perusahaanID  sql.NullString
-			sektorLainnya sql.NullString
+			namaPerusahaan sql.NullString
+			subSektor      sql.NullString
+			sektor         sql.NullString
 		)
 
 		err := rows.Scan(
 			&m.ID,
-			&m.UserID,
-			&displayName,
-			&email,
-			&jabatan,
-			&perusahaan,
-			&perusahaanID,
+			&m.IdPerusahaan,
+			&m.NamaLengkap,
+			&m.Jabatan,
+			&m.Email,
 			&m.NoTelepon,
-			&m.Sektor,
-			&sektorLainnya,
 			&m.SertifikatTraining,
+			&namaPerusahaan,
+			&subSektor,
+			&sektor,
 			&m.CreatedAt,
 			&m.UpdatedAt,
 		)
@@ -113,14 +120,15 @@ func (r *RespondenRepository) GetAllDetail() ([]models.RespondenDetail, error) {
 			return nil, err
 		}
 
-		m.NamaLengkap = nullToString(displayName)
-		m.Email = nullToString(email)
-		m.Jabatan = nullToString(jabatan)
-		m.NamaPerusahaan = nullToString(perusahaan)
-		m.PerusahaanID = nullToString(perusahaanID)
-		m.SektorLainnya = nullToString(sektorLainnya)
+		m.NamaPerusahaan = nullToString(namaPerusahaan)
+		m.NamaSubSektor = nullToString(subSektor)
+		m.NamaSektor = nullToString(sektor)
 
 		result = append(result, m)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return result, nil
@@ -136,26 +144,22 @@ func (r *RespondenRepository) GetDetailByID(id int) (*models.RespondenDetail, er
 	var (
 		m models.RespondenDetail
 
-		displayName   sql.NullString
-		email         sql.NullString
-		jabatan       sql.NullString
-		perusahaan    sql.NullString
-		perusahaanID  sql.NullString
-		sektorLainnya sql.NullString
+		namaPerusahaan sql.NullString
+		subSektor      sql.NullString
+		sektor         sql.NullString
 	)
 
 	err := row.Scan(
 		&m.ID,
-		&m.UserID,
-		&displayName,
-		&email,
-		&jabatan,
-		&perusahaan,
-		&perusahaanID,
+		&m.IdPerusahaan,
+		&m.NamaLengkap,
+		&m.Jabatan,
+		&m.Email,
 		&m.NoTelepon,
-		&m.Sektor,
-		&sektorLainnya,
 		&m.SertifikatTraining,
+		&namaPerusahaan,
+		&subSektor,
+		&sektor,
 		&m.CreatedAt,
 		&m.UpdatedAt,
 	)
@@ -167,63 +171,9 @@ func (r *RespondenRepository) GetDetailByID(id int) (*models.RespondenDetail, er
 		return nil, err
 	}
 
-	m.NamaLengkap = nullToString(displayName)
-	m.Email = nullToString(email)
-	m.Jabatan = nullToString(jabatan)
-	m.NamaPerusahaan = nullToString(perusahaan)
-	m.PerusahaanID = nullToString(perusahaanID)
-	m.SektorLainnya = nullToString(sektorLainnya)
-
-	return &m, nil
-}
-
-// ========================
-// GET BY USER ID
-// ========================
-func (r *RespondenRepository) GetDetailByUserID(userID string) (*models.RespondenDetail, error) {
-
-	row := r.db.QueryRow(baseDetailQuery+" WHERE r.user_id = ?", userID)
-
-	var (
-		m models.RespondenDetail
-
-		displayName   sql.NullString
-		email         sql.NullString
-		jabatan       sql.NullString
-		perusahaan    sql.NullString
-		perusahaanID  sql.NullString
-		sektorLainnya sql.NullString
-	)
-
-	err := row.Scan(
-		&m.ID,
-		&m.UserID,
-		&displayName,
-		&email,
-		&jabatan,
-		&perusahaan,
-		&perusahaanID,
-		&m.NoTelepon,
-		&m.Sektor,
-		&sektorLainnya,
-		&m.SertifikatTraining,
-		&m.CreatedAt,
-		&m.UpdatedAt,
-	)
-
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("data tidak ditemukan")
-		}
-		return nil, err
-	}
-
-	m.NamaLengkap = nullToString(displayName)
-	m.Email = nullToString(email)
-	m.Jabatan = nullToString(jabatan)
-	m.NamaPerusahaan = nullToString(perusahaan)
-	m.PerusahaanID = nullToString(perusahaanID)
-	m.SektorLainnya = nullToString(sektorLainnya)
+	m.NamaPerusahaan = nullToString(namaPerusahaan)
+	m.NamaSubSektor = nullToString(subSektor)
+	m.NamaSektor = nullToString(sektor)
 
 	return &m, nil
 }
@@ -234,18 +184,20 @@ func (r *RespondenRepository) GetDetailByUserID(userID string) (*models.Responde
 func (r *RespondenRepository) GetByID(id int) (*models.Responden, error) {
 
 	row := r.db.QueryRow(`
-		SELECT id, user_id, no_telepon, sektor, sektor_lainnya, sertifikat_training, created_at, updated_at
-		FROM responden WHERE id = ?
+		SELECT id, id_perusahaan, nama_lengkap, jabatan, email, no_telepon, sertifikat_training, created_at, updated_at
+		FROM responden
+		WHERE id = ?
 	`, id)
 
 	var m models.Responden
 
 	err := row.Scan(
 		&m.ID,
-		&m.UserID,
+		&m.IdPerusahaan,
+		&m.NamaLengkap,
+		&m.Jabatan,
+		&m.Email,
 		&m.NoTelepon,
-		&m.Sektor,
-		&m.SektorLainnya,
 		&m.SertifikatTraining,
 		&m.CreatedAt,
 		&m.UpdatedAt,
@@ -268,16 +220,20 @@ func (r *RespondenRepository) Update(id int, m models.Responden) error {
 
 	res, err := r.db.Exec(`
 		UPDATE responden SET
+			id_perusahaan = ?,
+			nama_lengkap = ?,
+			jabatan = ?,
+			email = ?,
 			no_telepon = ?,
-			sektor = ?,
-			sektor_lainnya = ?,
 			sertifikat_training = ?,
 			updated_at = NOW()
 		WHERE id = ?
 	`,
+		m.IdPerusahaan,
+		m.NamaLengkap,
+		m.Jabatan,
+		m.Email,
 		m.NoTelepon,
-		m.Sektor,
-		m.SektorLainnya,
 		m.SertifikatTraining,
 		id,
 	)
@@ -294,9 +250,7 @@ func (r *RespondenRepository) Update(id int, m models.Responden) error {
 	return nil
 }
 
-// ========================
 // EXISTS
-// ========================
 func (r *RespondenRepository) Exists(id int) (bool, error) {
 
 	var exists bool
