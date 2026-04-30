@@ -135,7 +135,7 @@ func setupJawabanDeteksiHandler(repo *mockJawabanDeteksiRepository, ikasRepo *mo
 		}, nil).Maybe()
 		ikasRepo.On("CheckOwnership", mock.Anything, mock.Anything).Return(true, nil).Maybe()
 	}
-	service := services.NewJawabanDeteksiService(repo, ikasRepo, producer, nil)
+	service := services.NewJawabanDeteksiService(repo, ikasRepo, producer, nil, nil)
 	return NewJawabanDeteksiHandler(service)
 }
 

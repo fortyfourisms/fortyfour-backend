@@ -135,7 +135,7 @@ func setupJawabanGulihHandler(repo *mockJawabanGulihRepository, ikasRepo *mockIk
 		}, nil).Maybe()
 		ikasRepo.On("CheckOwnership", mock.Anything, mock.Anything).Return(true, nil).Maybe()
 	}
-	service := services.NewJawabanGulihService(repo, ikasRepo, producer, nil)
+	service := services.NewJawabanGulihService(repo, ikasRepo, producer, nil, nil)
 	return NewJawabanGulihHandler(service)
 }
 
