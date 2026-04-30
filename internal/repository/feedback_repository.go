@@ -2,7 +2,9 @@ package repository
 
 import (
 	"database/sql"
+	"time"
 
+	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
 )
 
@@ -40,6 +42,41 @@ func (r *FeedbackRepository) FindByUserAndMateri(idUser, idMateri string) (*mode
 		return nil, err
 	}
 	return &f, nil
+}
+
+// FindByMateri mengembalikan semua feedback untuk materi tertentu (untuk admin).
+// Menyertakan username dari tabel users.
+func (r *FeedbackRepository) FindByMateri(idMateri string) ([]dto.FeedbackListItem, error) {
+	rows, err := r.db.Query(
+		`SELECT cp.id, cp.id_materi, cp.id_user, COALESCE(u.username, '') AS username,
+		        cp.konten, cp.created_at, cp.updated_at
+		 FROM catatan_pribadi cp
+		 LEFT JOIN users u ON cp.id_user = u.id
+		 WHERE cp.id_materi = ?
+		 ORDER BY cp.created_at DESC`,
+		idMateri,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []dto.FeedbackListItem
+	for rows.Next() {
+		var item dto.FeedbackListItem
+		var createdAt, updatedAt time.Time
+		if err := rows.Scan(&item.ID, &item.IDMateri, &item.IDUser, &item.Username,
+			&item.Konten, &createdAt, &updatedAt); err != nil {
+			return nil, err
+		}
+		item.CreatedAt = createdAt.Format(time.RFC3339)
+		item.UpdatedAt = updatedAt.Format(time.RFC3339)
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 func (r *FeedbackRepository) Delete(id string) error {

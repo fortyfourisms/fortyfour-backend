@@ -52,6 +52,18 @@ func (s *FeedbackService) GetByUserAndMateri(idUser, idMateri string) (*dto.Feed
 	return mapFeedbackToResponse(feedback), nil
 }
 
+// GetAllByMateri mengembalikan semua feedback untuk materi tertentu (untuk admin/staff).
+func (s *FeedbackService) GetAllByMateri(idMateri string) ([]dto.FeedbackListItem, error) {
+	items, err := s.repo.FindByMateri(idMateri)
+	if err != nil {
+		return nil, err
+	}
+	if items == nil {
+		items = []dto.FeedbackListItem{}
+	}
+	return items, nil
+}
+
 func mapFeedbackToResponse(f *models.Feedback) *dto.FeedbackResponse {
 	return &dto.FeedbackResponse{
 		ID:        f.ID,

@@ -363,6 +363,12 @@ func InitRouter(
 				return
 			}
 
+			// /api/materi/{id}/feedback/all → GET admin/staff only
+			if strings.HasSuffix(path, "/feedback/all") {
+				casbinM.Authorize(lmsH.ServeMateri)(w, r)
+				return
+			}
+
 			// /api/materi/{id}/feedback → GET/PUT user
 			if strings.Contains(path, "/feedback") {
 				lmsH.ServeMateri(w, r)

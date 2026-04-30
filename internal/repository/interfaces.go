@@ -211,6 +211,7 @@ type KuisAttemptRepositoryInterface interface {
 type FeedbackRepositoryInterface interface {
 	Upsert(feedback *models.Feedback) error
 	FindByUserAndMateri(idUser, idMateri string) (*models.Feedback, error)
+	FindByMateri(idMateri string) ([]dto.FeedbackListItem, error)
 	Delete(id string) error
 }
 

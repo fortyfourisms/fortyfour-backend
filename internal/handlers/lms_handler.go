@@ -354,6 +354,18 @@ func (h *LMSHandler) ServeMateri(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// /api/materi/{id}/feedback/all — admin/staff melihat semua feedback
+	if strings.HasSuffix(path, "/feedback/all") {
+		parts := strings.SplitN(strings.TrimPrefix(path, "/api/materi/"), "/feedback/all", 2)
+		idMateri := parts[0]
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		h.feedbackGetAll(w, r, idMateri)
+		return
+	}
+
 	// /api/materi/{id}/feedback
 	if strings.Contains(path, "/feedback") {
 		parts := strings.SplitN(strings.TrimPrefix(path, "/api/materi/"), "/feedback", 2)
@@ -1071,6 +1083,25 @@ func (h *LMSHandler) feedbackUpsert(w http.ResponseWriter, r *http.Request, idMa
 		return
 	}
 	utils.RespondJSON(w, 200, resp)
+}
+
+// @Summary		Get all feedback (admin)
+// @Description	Admin/staff melihat semua feedback dari semua user untuk suatu materi.
+// @Tags			LMS - Feedback
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Materi"
+// @Success		200	{array}		dto.FeedbackListItem
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/materi/{id}/feedback/all [get]
+func (h *LMSHandler) feedbackGetAll(w http.ResponseWriter, r *http.Request, idMateri string) {
+	items, err := h.feedbackSvc.GetAllByMateri(idMateri)
+	if err != nil {
+		logger.Error(err, "feedbackGetAll failed")
+		utils.RespondError(w, 500, err.Error())
+		return
+	}
+	utils.RespondJSON(w, 200, items)
 }
 
 // ════════════════════════════════════════════════════════════════════════════

@@ -285,6 +285,17 @@ type FeedbackResponse struct {
 	UpdatedAt string `json:"updated_at"`
 }
 
+// FeedbackListItem — item untuk admin melihat semua feedback per materi
+type FeedbackListItem struct {
+	ID        string `json:"id"`
+	IDMateri  string `json:"id_materi"`
+	IDUser    string `json:"id_user"`
+	Username  string `json:"username"`
+	Konten    string `json:"konten"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
 // ── Sertifikat ───────────────────────────────────────────────────────────────
 
 type SertifikatResponse struct {

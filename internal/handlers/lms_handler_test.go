@@ -168,12 +168,19 @@ func (m *lmsFPRepo) Delete(id string) error                            { return 
 type lmsFeedbackRepo struct {
 	UpsertFn              func(f *models.Feedback) error
 	FindByUserAndMateriFn func(idUser, idMateri string) (*models.Feedback, error)
+	FindByMateriFn        func(idMateri string) ([]dto.FeedbackListItem, error)
 	DeleteFn              func(id string) error
 }
 
 func (m *lmsFeedbackRepo) Upsert(f *models.Feedback) error { return m.UpsertFn(f) }
 func (m *lmsFeedbackRepo) FindByUserAndMateri(idUser, idMateri string) (*models.Feedback, error) {
 	return m.FindByUserAndMateriFn(idUser, idMateri)
+}
+func (m *lmsFeedbackRepo) FindByMateri(idMateri string) ([]dto.FeedbackListItem, error) {
+	if m.FindByMateriFn != nil {
+		return m.FindByMateriFn(idMateri)
+	}
+	return []dto.FeedbackListItem{}, nil
 }
 func (m *lmsFeedbackRepo) Delete(id string) error {
 	if m.DeleteFn != nil {

@@ -349,6 +349,7 @@ var defaultPolicies = []Policy{
 	{"staff", "/api/materi/:id/file-pendukung", "POST"},
 	{"staff", "/api/materi/:id/feedback", "GET"},
 	{"staff", "/api/materi/:id/feedback", "PUT"},
+	{"staff", "/api/materi/:id/feedback/all", "GET"},
 	{"staff", "/api/file-pendukung/:id/download", "GET"},
 	{"staff", "/api/kuis/:id_kuis/start", "POST"},
 	{"staff", "/api/kuis/attempt/:id_attempt/submit", "POST"},
