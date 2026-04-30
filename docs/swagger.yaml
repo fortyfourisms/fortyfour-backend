@@ -186,17 +186,13 @@ definitions:
     properties:
       email:
         type: string
+      id_perusahaan:
+        type: string
       jabatan:
         type: string
       nama_lengkap:
         type: string
       no_telepon:
-        type: string
-      perusahaan:
-        type: string
-      sektor:
-        type: string
-      sektor_lainnya:
         type: string
       sertifikat_training:
         type: string
@@ -762,17 +758,22 @@ definitions:
         type: string
       id:
         type: integer
+      id_perusahaan:
+        description: dari PERUSAHAAN
+        type: string
       jabatan:
         type: string
       nama_lengkap:
+        description: dari RESPONDEN
+        type: string
+      nama_perusahaan:
+        type: string
+      nama_sektor:
+        type: string
+      nama_sub_sektor:
+        description: dari SUB SEKTOR & SEKTOR (hasil JOIN)
         type: string
       no_telepon:
-        type: string
-      perusahaan:
-        type: string
-      sektor:
-        type: string
-      sektor_lainnya:
         type: string
       sertifikat_training:
         type: string
@@ -985,17 +986,13 @@ definitions:
     properties:
       email:
         type: string
+      id_perusahaan:
+        type: string
       jabatan:
         type: string
       nama_lengkap:
         type: string
       no_telepon:
-        type: string
-      perusahaan:
-        type: string
-      sektor:
-        type: string
-      sektor_lainnya:
         type: string
       sertifikat_training:
         type: string
@@ -7761,7 +7758,7 @@ paths:
       - Risiko
   /api/survey/responden:
     get:
-      description: Mengambil seluruh data responden
+      description: Mengambil seluruh data responden beserta perusahaan dan sektor
       produces:
       - application/json
       responses:
@@ -7781,9 +7778,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Membuat data responden baru
+      description: Membuat data responden baru berdasarkan perusahaan
       parameters:
-      - description: Data responden
+      - description: Create Responden Request
         in: body
         name: request
         required: true
@@ -7800,8 +7797,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "409":
-          description: Conflict
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
         "500":
@@ -7812,40 +7809,8 @@ paths:
       tags:
       - Responden Survey
   /api/survey/responden/{id}:
-    delete:
-      description: Menghapus data responden berdasarkan ID
-      parameters:
-      - description: Responden ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Hapus responden
-      tags:
-      - Responden Survey
     get:
-      description: Mengambil data responden berdasarkan ID
+      description: Mengambil detail responden beserta perusahaan dan sektor
       parameters:
       - description: Responden ID
         in: path
@@ -7877,14 +7842,14 @@ paths:
     put:
       consumes:
       - application/json
-      description: Memperbarui data responden berdasarkan ID
+      description: Memperbarui data responden
       parameters:
       - description: Responden ID
         in: path
         name: id
         required: true
         type: integer
-      - description: Data responden
+      - description: Update Responden Request
         in: body
         name: request
         required: true
@@ -7903,10 +7868,6 @@ paths:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
         "404":
           description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "409":
-          description: Conflict
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
         "500":

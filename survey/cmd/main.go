@@ -8,6 +8,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/redis/go-redis/v9"
+	"survey/internal/cache"
 	"survey/internal/config"
 	"survey/internal/handlers"
 	"survey/internal/repository"
@@ -33,13 +35,29 @@ func main() {
 	}
 	defer db.Close()
 
+	// INIT REDIS
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     cfg.Redis.Address(),
+		Password: cfg.Redis.Password,
+		DB:       cfg.Redis.DB,
+	})
+
+	// test connection (optional tapi bagus)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		panic("Redis connection failed: " + err.Error())
+	}
+
 	// REPOSITORY
 	respondenRepo := repository.NewRespondenRepository(db)
 	risikoRepo := repository.NewRisikoRepository(db)
 
 	// SERVICE
-	respondenService := services.NewRespondenService(respondenRepo)
-	risikoService := services.NewRisikoService(risikoRepo)
+	cache := cache.NewRedisCache(rdb)
+	respondenService := services.NewRespondenService(respondenRepo, services.DefaultValidator{}, cache)
+	risikoService := services.NewRisikoService(risikoRepo, cache)
 
 	// HANDLER
 	respondenHandler := handlers.NewRespondenHandler(respondenService)
@@ -57,7 +75,6 @@ func main() {
 		Handler: mux,
 	}
 
-	// Run server
 	go func() {
 		println("=======================================")
 		println("Survey API running on port :", cfg.Port)
@@ -68,17 +85,17 @@ func main() {
 		}
 	}()
 
-	// Graceful shutdown
+	// GRACEFUL SHUTDOWN
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
 	println("Shutting down server...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	ctxShutdown, cancelShutdown := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelShutdown()
 
-	if err := server.Shutdown(ctx); err != nil {
+	if err := server.Shutdown(ctxShutdown); err != nil {
 		panic(err)
 	}
 

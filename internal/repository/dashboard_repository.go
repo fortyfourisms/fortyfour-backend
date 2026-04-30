@@ -61,10 +61,10 @@ func (r *DashboardRepository) CountPerSektor(ctx context.Context, f dto.Dashboar
 	var args []interface{}
 	var thisMonthExpr string
 	if from != nil && to != nil {
-		thisMonthExpr = "SUM(CASE WHEN p.created_at BETWEEN ? AND ? THEN 1 ELSE 0 END) AS this_month"
+		thisMonthExpr = "COALESCE(SUM(CASE WHEN p.created_at BETWEEN ? AND ? THEN 1 ELSE 0 END), 0) AS this_month"
 		args = append(args, *from, *to)
 	} else {
-		thisMonthExpr = "SUM(CASE WHEN p.created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01') THEN 1 ELSE 0 END) AS this_month"
+		thisMonthExpr = "COALESCE(SUM(CASE WHEN p.created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01') THEN 1 ELSE 0 END), 0) AS this_month"
 	}
 
 	// Filter sub_sektor opsional
@@ -174,11 +174,11 @@ func (r *DashboardRepository) SeGlobalAgg(ctx context.Context, f dto.DashboardFi
 
 	query := fmt.Sprintf(`
 		SELECT
-			COUNT(id)                                                       AS total_se,
-			%s                                                              AS this_month,
-			SUM(CASE WHEN kategori_se = 'Strategis' THEN 1 ELSE 0 END)    AS strategis,
-			SUM(CASE WHEN kategori_se = 'Tinggi'    THEN 1 ELSE 0 END)    AS tinggi,
-			SUM(CASE WHEN kategori_se = 'Rendah'    THEN 1 ELSE 0 END)    AS rendah
+			COUNT(id)                                                            AS total_se,
+			COALESCE(%s, 0)                                                      AS this_month,
+			COALESCE(SUM(CASE WHEN kategori_se = 'Strategis' THEN 1 ELSE 0 END), 0) AS strategis,
+			COALESCE(SUM(CASE WHEN kategori_se = 'Tinggi'    THEN 1 ELSE 0 END), 0) AS tinggi,
+			COALESCE(SUM(CASE WHEN kategori_se = 'Rendah'    THEN 1 ELSE 0 END), 0) AS rendah
 		FROM se
 		%s
 	`, thisMonthExpr, whereClause)
@@ -193,7 +193,7 @@ func (r *DashboardRepository) SeGlobalAgg(ctx context.Context, f dto.DashboardFi
 	return out, nil
 }
 
-// SeStatusCount menghitung perusahaan yang sudah/belum mengisi KSE.
+// SeStatusCount menghitung perusahaan yang sudah/belum mengisi SE.
 // Filter opsional: sub_sektor_id.
 func (r *DashboardRepository) SeStatusCount(ctx context.Context, f dto.DashboardFilter) (dto.SeStatusCount, error) {
 	var out dto.SeStatusCount
@@ -208,8 +208,8 @@ func (r *DashboardRepository) SeStatusCount(ctx context.Context, f dto.Dashboard
 	query := fmt.Sprintf(`
 		SELECT
 			COUNT(p.id)                                         AS total_perusahaan,
-			COUNT(se.id_perusahaan)                             AS sudah_mengisi_kse,
-			COUNT(p.id) - COUNT(se.id_perusahaan)              AS belum_mengisi_kse
+			COUNT(se.id_perusahaan)                             AS sudah_mengisi_se,
+			COUNT(p.id) - COUNT(se.id_perusahaan)              AS belum_mengisi_se
 		FROM perusahaan p
 		LEFT JOIN (
 			SELECT DISTINCT id_perusahaan FROM se
@@ -218,7 +218,7 @@ func (r *DashboardRepository) SeStatusCount(ctx context.Context, f dto.Dashboard
 	`, whereClause)
 
 	row := r.db.QueryRowContext(ctx, query, args...)
-	if err := row.Scan(&out.TotalPerusahaan, &out.SudahMengisiKSE, &out.BelumMengisiKSE); err != nil {
+	if err := row.Scan(&out.TotalPerusahaan, &out.SudahMengisiSE, &out.BelumMengisiSE); err != nil {
 		if err == sql.ErrNoRows {
 			return out, nil
 		}
@@ -249,6 +249,77 @@ func (r *DashboardRepository) IkasStatusCount(ctx context.Context, f dto.Dashboa
 	`, whereClause)
 	row := r.db.QueryRowContext(ctx, query, args...)
 	if err := row.Scan(&out.TotalPerusahaan, &out.SudahMengisiIKAS, &out.BelumMengisiIKAS); err != nil {
+		if err == sql.ErrNoRows {
+			return out, nil
+		}
+		return out, err
+	}
+	return out, nil
+}
+
+// CsirtGlobalAgg returns statistik CSIRT (total dan this_month).
+// Filter opsional: from/to, year, quarter, sub_sektor_id.
+func (r *DashboardRepository) CsirtGlobalAgg(ctx context.Context, f dto.DashboardFilter) (dto.CsirtAgg, error) {
+	var out dto.CsirtAgg
+	from, to := buildDateRange(f)
+
+	var args []interface{}
+	var thisMonthExpr string
+	if from != nil && to != nil {
+		thisMonthExpr = "COALESCE(SUM(CASE WHEN c.created_at BETWEEN ? AND ? THEN 1 ELSE 0 END), 0)"
+		args = append(args, *from, *to)
+	} else {
+		thisMonthExpr = "COALESCE(SUM(CASE WHEN c.created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01') THEN 1 ELSE 0 END), 0)"
+	}
+
+	var whereClause string
+	if f.SubSektorID != nil {
+		whereClause = "WHERE p.id_sub_sektor = ?"
+		args = append(args, *f.SubSektorID)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT
+			COUNT(c.id)  AS total_csirt,
+			%s           AS this_month
+		FROM csirt c
+		JOIN perusahaan p ON p.id = c.id_perusahaan
+		%s
+	`, thisMonthExpr, whereClause)
+
+	row := r.db.QueryRowContext(ctx, query, args...)
+	if err := row.Scan(&out.TotalCSIRT, &out.ThisMonth); err != nil {
+		if err == sql.ErrNoRows {
+			return out, nil
+		}
+		return out, err
+	}
+	return out, nil
+}
+
+// CsirtStatusCount menghitung perusahaan yang sudah/belum membentuk CSIRT.
+// Filter opsional: sub_sektor_id.
+func (r *DashboardRepository) CsirtStatusCount(ctx context.Context, f dto.DashboardFilter) (dto.CsirtStatusCount, error) {
+	var out dto.CsirtStatusCount
+	var args []interface{}
+	var whereClause string
+	if f.SubSektorID != nil {
+		whereClause = "WHERE p.id_sub_sektor = ?"
+		args = append(args, *f.SubSektorID)
+	}
+	query := fmt.Sprintf(`
+		SELECT
+			COUNT(p.id)                            AS total_perusahaan,
+			COUNT(cs.id_perusahaan)                AS sudah_membentuk_csirt,
+			COUNT(p.id) - COUNT(cs.id_perusahaan)  AS belum_membentuk_csirt
+		FROM perusahaan p
+		LEFT JOIN (
+			SELECT DISTINCT id_perusahaan FROM csirt
+		) cs ON p.id = cs.id_perusahaan
+		%s
+	`, whereClause)
+	row := r.db.QueryRowContext(ctx, query, args...)
+	if err := row.Scan(&out.TotalPerusahaan, &out.SudahMembentukCSIRT, &out.BelumMembentukCSIRT); err != nil {
 		if err == sql.ErrNoRows {
 			return out, nil
 		}

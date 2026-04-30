@@ -28,28 +28,28 @@ func InitRouter(
 
 	mux := http.NewServeMux()
 
-	// Health
+	// HEALTH
 	mux.HandleFunc("/api/health", healthHandler)
 
-	// RESPONDEN ROUTES
+	// RESPONDEN
 	mux.Handle("/api/survey/responden", middleware.Logger(utils.AdaptHandler(respondenH)))
 	mux.Handle("/api/survey/responden/", middleware.Logger(utils.AdaptHandler(respondenH)))
 
-	// RISIKO (Intellectual Property Theft Survey)
+	// RISIKO
 	mux.HandleFunc("/api/survey/risiko/eligibility", risikoH.SubmitEligibility)
-	mux.HandleFunc("POST /api/survey/risiko/dampak", risikoH.SubmitDampak)
-	mux.HandleFunc("POST /api/survey/risiko/pengendalian", risikoH.SubmitPengendalian)
-	mux.HandleFunc("POST /api/survey/risiko/reason", risikoH.SubmitAlasan)
+	mux.HandleFunc("/api/survey/risiko/dampak", risikoH.SubmitDampak)
+	mux.HandleFunc("/api/survey/risiko/pengendalian", risikoH.SubmitPengendalian)
+	mux.HandleFunc("/api/survey/risiko/reason", risikoH.SubmitAlasan)
 	mux.HandleFunc("/api/survey/risiko/", risikoH.GetByRespondentID)
 
-	// Progress & navigation
+	// PROGRESS
 	mux.HandleFunc("/api/survey/progress/", risikoH.GetProgress)
 	mux.HandleFunc("/api/survey/navigate", risikoH.Navigate)
 
 	// Lanjutkan Nanti
 	mux.HandleFunc("/api/survey/save-progress", risikoH.SaveProgress)
 
-	// Custom Risiko
+	// CUSTOM RISIKO
 	mux.HandleFunc("/api/survey/custom-risk", risikoH.CreateCustomRisiko)
 	mux.HandleFunc("/api/survey/finish", risikoH.FinishSurvey)
 

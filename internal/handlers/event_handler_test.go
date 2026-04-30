@@ -11,13 +11,15 @@ import (
 	"testing"
 )
 
-// MockEventService
+// MockEventService implements services.EventServiceInterface for tests
 type MockEventService struct {
-	CreateFunc  func(req dto.CreateEventRequest) error
-	GetAllFunc  func() ([]dto.EventResponse, error)
-	GetByIDFunc func(id int64) (*dto.EventResponse, error)
-	UpdateFunc  func(id int64, req dto.UpdateEventRequest) error
-	DeleteFunc  func(id int64) error
+	CreateFunc   func(req dto.CreateEventRequest) error
+	GetAllFunc   func() ([]dto.EventResponse, error)
+	GetByIDFunc  func(id int64) (*dto.EventResponse, error)
+	UpdateFunc   func(id int64, req dto.UpdateEventRequest) error
+	DeleteFunc   func(id int64) error
+	RegisterFunc func(eventID int64, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error)
+	PDFFunc      func(registrationID int64) ([]byte, string, error)
 }
 
 func (m *MockEventService) Create(req dto.CreateEventRequest) error {
@@ -54,6 +56,22 @@ func (m *MockEventService) Delete(id int64) error {
 	}
 	return nil
 }
+
+func (m *MockEventService) Register(eventID int64, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error) {
+	if m.RegisterFunc != nil {
+		return m.RegisterFunc(eventID, req)
+	}
+	return nil, nil
+}
+
+func (m *MockEventService) DownloadRegistrationPDF(registrationID int64) ([]byte, string, error) {
+	if m.PDFFunc != nil {
+		return m.PDFFunc(registrationID)
+	}
+	return nil, "", nil
+}
+
+// ── CRUD Tests (from main) ──────────────────────────────────────────────────
 
 func TestEventHandler_GetAll(t *testing.T) {
 	mockSvc := &MockEventService{
@@ -350,5 +368,64 @@ func TestEventHandler_ServeHTTP_MethodNotAllowed(t *testing.T) {
 
 	if rec.Code != http.StatusMethodNotAllowed {
 		t.Errorf("expected status MethodNotAllowed, got %v", rec.Code)
+	}
+}
+
+// ── Registration Tests (from branch) ────────────────────────────────────────
+
+func TestEventHandler_Register(t *testing.T) {
+	handler := handlers.NewEventHandler(&MockEventService{
+		RegisterFunc: func(eventID int64, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error) {
+			return &dto.EventRegistrationResponse{
+				ID:           10,
+				EventID:      eventID,
+				Nama:         req.Nama,
+				Email:        req.Email,
+				Perusahaan:   req.Perusahaan,
+				Jabatan:      req.Jabatan,
+				NoHP:         req.NoHP,
+				Sektor:       req.Sektor,
+				QRCodeBase64: "ZmFrZQ==",
+				DownloadURL:  "/api/kegiatan/registrasi/10/download",
+			}, nil
+		},
+	})
+
+	body, _ := json.Marshal(dto.CreateEventRegistrationRequest{
+		Nama:       "Budi Santoso",
+		Email:      "budi@example.com",
+		Perusahaan: "PT ABC",
+		Jabatan:    "IT Manager",
+		NoHP:       "08123456789",
+		Sektor:     "Energi",
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/kegiatan/9/registrasi", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusCreated {
+		t.Errorf("expected status Created, got %v", w.Code)
+	}
+}
+
+func TestEventHandler_DownloadRegistrationPDF(t *testing.T) {
+	handler := handlers.NewEventHandler(&MockEventService{
+		PDFFunc: func(registrationID int64) ([]byte, string, error) {
+			return []byte("%PDF-1.4 fake"), "registrasi-event-9-10.pdf", nil
+		},
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/kegiatan/registrasi/10/download", nil)
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected status OK, got %v", w.Code)
+	}
+	if w.Header().Get("Content-Type") != "application/pdf" {
+		t.Errorf("expected Content-Type application/pdf, got %v", w.Header().Get("Content-Type"))
 	}
 }

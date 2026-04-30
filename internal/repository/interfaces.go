@@ -206,23 +206,12 @@ type KuisAttemptRepositoryInterface interface {
 	FindJawabanByAttempt(idAttempt string) ([]models.KuisJawaban, error)
 }
 
-// ── Diskusi ──────────────────────────────────────────────────────────────────
+// ── Feedback ─────────────────────────────────────────────────────────────────
 
-type DiskusiRepositoryInterface interface {
-	Create(diskusi *models.Diskusi) error
-	FindByMateri(idMateri string) ([]models.Diskusi, error)
-	FindByID(id string) (*models.Diskusi, error)
-	Update(diskusi *models.Diskusi) error
-	Delete(id string) error
-	// FindReplies untuk memuat replies secara nested
-	FindReplies(idParent string) ([]models.Diskusi, error)
-}
-
-// ── Catatan Pribadi ──────────────────────────────────────────────────────────
-
-type CatatanRepositoryInterface interface {
-	Upsert(catatan *models.CatatanPribadi) error
-	FindByUserAndMateri(idUser, idMateri string) (*models.CatatanPribadi, error)
+type FeedbackRepositoryInterface interface {
+	Upsert(feedback *models.Feedback) error
+	FindByUserAndMateri(idUser, idMateri string) (*models.Feedback, error)
+	FindByMateri(idMateri string) ([]dto.FeedbackListItem, error)
 	Delete(id string) error
 }
 
@@ -265,6 +254,10 @@ type EventRepositoryInterface interface {
 	FindByID(id int64) (*models.Event, error)
 	Update(event *models.Event) error
 	Delete(id int64) error
+	CreateRegistration(reg *models.EventRegistration) error
+	FindRegistrationByID(id int64) (*models.EventRegistration, error)
+	ExistsRegistrationByEventAndEmail(eventID int64, email string) (bool, error)
+	UpdateRegistrationPayload(id int64, payload string) error
 }
 
 // DTOnya tidak dipakai langsung di interface ini, tapi diimport

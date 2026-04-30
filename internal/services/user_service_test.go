@@ -891,6 +891,7 @@ func TestUserService_UpdateMe_NoFieldsChanged(t *testing.T) {
 type failingUserRepo struct {
 	*testhelpers.MockUserRepository
 	failFindAll bool
+	failUpdate  bool
 }
 
 func (f *failingUserRepo) FindAll() ([]models.User, error) {
@@ -900,15 +901,23 @@ func (f *failingUserRepo) FindAll() ([]models.User, error) {
 	return f.MockUserRepository.FindAll()
 }
 
+func (f *failingUserRepo) Update(user *models.User) error {
+	if f.failUpdate {
+		return errors.New("update failed")
+	}
+	return f.MockUserRepository.Update(user)
+}
+
 func (f *failingUserRepo) FindAllAdmins() ([]models.User, error) {
 	return f.MockUserRepository.FindAllAdmins()
 }
 
-func newFailingUserService(failFindAll bool) (*UserService, *failingUserRepo) {
+func newFailingUserService(failFindAll bool, failUpdate bool) (*UserService, *failingUserRepo) {
 	base := testhelpers.NewMockUserRepository()
 	repo := &failingUserRepo{
 		MockUserRepository: base,
 		failFindAll:        failFindAll,
+		failUpdate:         failUpdate,
 	}
 	uploadPath := "./test_uploads"
 	service := NewUserService(repo, uploadPath, nil)
@@ -924,7 +933,7 @@ func newFailingUserService(failFindAll bool) (*UserService, *failingUserRepo) {
 // TestUserService_GetAll_RepoError memverifikasi bahwa GetAll meneruskan
 // error dari repository ke pemanggil tanpa panik atau menghasilkan data parsial.
 func TestUserService_GetAll_RepoError(t *testing.T) {
-	service, _ := newFailingUserService(true)
+	service, _ := newFailingUserService(true, false)
 
 	result, err := service.GetAll()
 
@@ -993,6 +1002,44 @@ func TestUserService_GetAll_ReturnsDTONotModel(t *testing.T) {
 	// Verifikasi dengan cek tipe return saja — ini compile-time guarantee,
 	// cukup pastikan result adalah []dto.UserResponse (bukan pointer ke model)
 	var _ []dto.UserResponse = result
+}
+
+func TestUserService_Update_PropagatesRepoError(t *testing.T) {
+	service, repo := newFailingUserService(false, true)
+
+	user := testhelpers.CreateTestUser("test-id", "olduser", "old@test.com")
+	_ = repo.Create(user)
+
+	newUsername := "newuser"
+	req := dto.UpdateUserRequest{Username: &newUsername}
+
+	result, err := service.Update("test-id", req)
+
+	if err == nil {
+		t.Fatal("expected repository update error")
+	}
+	if result != nil {
+		t.Fatalf("expected nil result on error, got %+v", result)
+	}
+}
+
+func TestUserService_UpdateMe_PropagatesRepoError(t *testing.T) {
+	service, repo := newFailingUserService(false, true)
+
+	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
+	_ = repo.Create(user)
+
+	displayName := "Display Baru"
+	req := dto.UpdateMeRequest{DisplayName: &displayName}
+
+	result, err := service.UpdateMe("user-1", req)
+
+	if err == nil {
+		t.Fatal("expected repository update error")
+	}
+	if result != nil {
+		t.Fatalf("expected nil result on error, got %+v", result)
+	}
 }
 
 /*

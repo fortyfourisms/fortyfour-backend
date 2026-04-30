@@ -289,7 +289,7 @@ func TestGetKuisByKelas_Success(t *testing.T) {
 	}
 	svc := NewKuisService(nil, nil, kuisRepo, nil, nil)
 
-	data, err := svc.GetKuisByKelas("kelas-1")
+	data, err := svc.GetKuisByKelas("kelas-1", "")
 	assert.NoError(t, err)
 	assert.Len(t, data, 2)
 }
@@ -302,9 +302,54 @@ func TestGetKuisByKelas_Empty(t *testing.T) {
 	}
 	svc := NewKuisService(nil, nil, kuisRepo, nil, nil)
 
-	data, err := svc.GetKuisByKelas("kelas-1")
+	data, err := svc.GetKuisByKelas("kelas-1", "")
 	assert.NoError(t, err)
 	assert.Len(t, data, 0)
+}
+
+func TestGetKuisByKelas_WithUserProgress(t *testing.T) {
+	now := time.Now()
+	passedAt := now.Add(-1 * time.Hour)
+	kuisRepo := &mockKuisRepoForKuis{
+		FindByKelasFn: func(idKelas string) ([]models.Kuis, error) {
+			return []models.Kuis{
+				{ID: "k1", IDKelas: idKelas, Judul: "Kuis 1", CreatedAt: now, UpdatedAt: now},
+				{ID: "k2", IDKelas: idKelas, Judul: "Kuis 2", CreatedAt: now, UpdatedAt: now},
+			}, nil
+		},
+	}
+	attemptRepo := &mockKuisAttemptRepo{
+		FindByUserAndKuisFn: func(idUser, idKuis string) ([]models.KuisAttempt, error) {
+			if idKuis == "k1" {
+				return []models.KuisAttempt{
+					{ID: "a1", IDUser: idUser, IDKuis: idKuis, Skor: 100, IsPassed: true, FinishedAt: &passedAt},
+				}, nil
+			}
+			// k2: belum pernah dikerjakan
+			return nil, nil
+		},
+	}
+	svc := NewKuisService(attemptRepo, nil, kuisRepo, nil, nil)
+
+	data, err := svc.GetKuisByKelas("kelas-1", "user-1")
+	assert.NoError(t, err)
+	assert.Len(t, data, 2)
+
+	// k1: sudah lulus
+	assert.True(t, data[0].IsPassed)
+	assert.NotNil(t, data[0].LatestScore)
+	assert.Equal(t, float64(100), *data[0].LatestScore)
+	assert.Equal(t, 1, data[0].AttemptCount)
+	assert.NotNil(t, data[0].PassedAt)
+	assert.NotNil(t, data[0].LastAttemptID)
+	assert.Equal(t, "a1", *data[0].LastAttemptID)
+
+	// k2: belum dikerjakan
+	assert.False(t, data[1].IsPassed)
+	assert.Nil(t, data[1].LatestScore)
+	assert.Equal(t, 0, data[1].AttemptCount)
+	assert.Nil(t, data[1].PassedAt)
+	assert.Nil(t, data[1].LastAttemptID)
 }
 
 /*
@@ -451,6 +496,89 @@ func TestStartKuis_NoSoal(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, resp)
 	assert.Contains(t, err.Error(), "belum memiliki soal")
+}
+
+func TestStartKuis_MaxAttemptFailedWithinCooldown(t *testing.T) {
+	now := time.Now()
+	finishedAt := now.Add(-30 * time.Minute)
+
+	kuisRepo := &mockKuisRepoForKuis{
+		FindByIDFn: func(id string) (*models.Kuis, error) {
+			return &models.Kuis{
+				ID:         id,
+				IDKelas:    "k-1",
+				IsFinal:    false,
+				MaxAttempt: 3,
+				CreatedAt:  now,
+				UpdatedAt:  now,
+			}, nil
+		},
+	}
+	attemptRepo := &mockKuisAttemptRepo{
+		FindLatestByUserAndKuisFn: func(idUser, idKuis string) (*models.KuisAttempt, error) {
+			return nil, errors.New("not found")
+		},
+		FindByUserAndKuisFn: func(idUser, idKuis string) ([]models.KuisAttempt, error) {
+			return []models.KuisAttempt{
+				{ID: "a3", IDUser: idUser, IDKuis: idKuis, IsPassed: false, FinishedAt: &finishedAt},
+				{ID: "a2", IDUser: idUser, IDKuis: idKuis, IsPassed: false, FinishedAt: &finishedAt},
+				{ID: "a1", IDUser: idUser, IDKuis: idKuis, IsPassed: false, FinishedAt: &finishedAt},
+			}, nil
+		},
+	}
+	svc := NewKuisService(attemptRepo, nil, kuisRepo, nil, nil)
+
+	resp, err := svc.Start("user-1", "kuis-1")
+
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Contains(t, err.Error(), "coba lagi dalam")
+}
+
+func TestStartKuis_MaxAttemptFailedAfterCooldown(t *testing.T) {
+	now := time.Now()
+	finishedAt := now.Add(-2 * time.Hour)
+
+	kuisRepo := &mockKuisRepoForKuis{
+		FindByIDFn: func(id string) (*models.Kuis, error) {
+			return &models.Kuis{
+				ID:         id,
+				IDKelas:    "k-1",
+				IsFinal:    false,
+				MaxAttempt: 3,
+				CreatedAt:  now,
+				UpdatedAt:  now,
+			}, nil
+		},
+	}
+	attemptRepo := &mockKuisAttemptRepo{
+		FindLatestByUserAndKuisFn: func(idUser, idKuis string) (*models.KuisAttempt, error) {
+			return nil, errors.New("not found")
+		},
+		FindByUserAndKuisFn: func(idUser, idKuis string) ([]models.KuisAttempt, error) {
+			return []models.KuisAttempt{
+				{ID: "a3", IDUser: idUser, IDKuis: idKuis, IsPassed: false, FinishedAt: &finishedAt},
+				{ID: "a2", IDUser: idUser, IDKuis: idKuis, IsPassed: false, FinishedAt: &finishedAt},
+				{ID: "a1", IDUser: idUser, IDKuis: idKuis, IsPassed: false, FinishedAt: &finishedAt},
+			}, nil
+		},
+		CreateFn: func(a *models.KuisAttempt) error { return nil },
+	}
+	soalRepo := &mockSoalRepoKuis{
+		FindByKuisFn: func(idKuis string) ([]models.Soal, error) {
+			return []models.Soal{
+				{ID: "s1", Pertanyaan: "Q1", Pilihan: []models.PilihanJawaban{{ID: "p1", Teks: "A", Urutan: 1}}},
+			}, nil
+		},
+	}
+	svc := NewKuisService(attemptRepo, soalRepo, kuisRepo, nil, nil)
+
+	resp, err := svc.Start("user-1", "kuis-1")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.NotEmpty(t, resp.AttemptID)
+	assert.Len(t, resp.Soal, 1)
 }
 
 /*

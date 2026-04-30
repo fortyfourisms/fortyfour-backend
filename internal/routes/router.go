@@ -168,9 +168,11 @@ func InitRouter(
 		}
 	}))
 
-	// Route Dashboard
-	// Summary: counts per sektor + ikas + se
-	mux.HandleFunc("/api/dashboard/summary", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(dashboardH)))))
+	// Route Dashboard — dipecah per section
+	mux.HandleFunc("/api/dashboard/sektor", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(dashboardH)))))
+	mux.HandleFunc("/api/dashboard/ikas", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(dashboardH)))))
+	mux.HandleFunc("/api/dashboard/se", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(dashboardH)))))
+	mux.HandleFunc("/api/dashboard/csirt", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(dashboardH)))))
 
 	// Routes Notifications
 	mux.HandleFunc("/api/notifications", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(notificationH))))
@@ -201,9 +203,25 @@ func InitRouter(
 		}
 	})
 	mux.HandleFunc("/api/kegiatan/", func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+
+		// POST /api/kegiatan/{id}/registrasi → PUBLIC (peserta event eksternal)
+		if strings.HasSuffix(path, "/registrasi") && r.Method == http.MethodPost {
+			strictLimiter.LimitByIP(utils.AdaptHandler(eventH))(w, r)
+			return
+		}
+
+		// GET /api/kegiatan/registrasi/{id}/download → PUBLIC (download PDF registrasi)
+		if strings.Contains(path, "/registrasi/") && strings.HasSuffix(path, "/download") && r.Method == http.MethodGet {
+			lenientLimiter.LimitByIP(utils.AdaptHandler(eventH))(w, r)
+			return
+		}
+
+		// GET → PUBLIC (list/detail event)
 		if r.Method == http.MethodGet {
 			lenientLimiter.LimitByIP(utils.AdaptHandler(eventH))(w, r)
 		} else {
+			// POST/PUT/DELETE event → AUTH + CASBIN (admin only)
 			authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(eventH))))(w, r)
 		}
 	})
@@ -225,10 +243,8 @@ func InitRouter(
 	//   GET  /api/kelas/{id}                         → detail kelas + materi + progress
 	//   POST /api/materi/{id}/progress               → update progress video/teks
 	//   GET  /api/materi/{id}/file-pendukung         → list file pendukung (PDF)
-	//   GET  /api/materi/{id}/diskusi                → list diskusi per materi
-	//   POST /api/materi/{id}/diskusi                → buat diskusi/reply
-	//   GET  /api/materi/{id}/catatan                → get catatan pribadi
-	//   PUT  /api/materi/{id}/catatan                → upsert catatan pribadi
+	//   GET  /api/materi/{id}/feedback               → get feedback
+	//   PUT  /api/materi/{id}/feedback               → upsert feedback
 	//   GET  /api/kelas/{id}/kuis                    → list kuis dalam kelas
 	//   POST /api/kuis/{id_kuis}/start               → mulai kuis
 	//   POST /api/kuis/attempt/{id_attempt}/submit   → submit jawaban kuis
@@ -323,7 +339,7 @@ func InitRouter(
 	)))
 
 	// /api/materi/{id}, /api/materi/{id}/progress, /api/materi/{id}/file-pendukung,
-	// /api/materi/{id}/diskusi, /api/materi/{id}/catatan
+	// /api/materi/{id}/feedback
 	mux.HandleFunc("/api/materi/", authM.Authenticate(moderateLimiter.LimitByUser(
 		func(w http.ResponseWriter, r *http.Request) {
 			path := r.URL.Path
@@ -347,14 +363,14 @@ func InitRouter(
 				return
 			}
 
-			// /api/materi/{id}/diskusi → GET/POST user
-			if strings.Contains(path, "/diskusi") {
-				lmsH.ServeMateri(w, r)
+			// /api/materi/{id}/feedback/all → GET admin/staff only
+			if strings.HasSuffix(path, "/feedback/all") {
+				casbinM.Authorize(lmsH.ServeMateri)(w, r)
 				return
 			}
 
-			// /api/materi/{id}/catatan → GET/PUT user
-			if strings.Contains(path, "/catatan") {
+			// /api/materi/{id}/feedback → GET/PUT user
+			if strings.Contains(path, "/feedback") {
 				lmsH.ServeMateri(w, r)
 				return
 			}
@@ -380,9 +396,6 @@ func InitRouter(
 			casbinM.Authorize(lmsH.ServeFilePendukung)(w, r)
 		},
 	)))
-
-	// /api/diskusi/{id} → PUT/DELETE user
-	mux.HandleFunc("/api/diskusi/", authM.Authenticate(moderateLimiter.LimitByUser(lmsH.ServeDiskusi)))
 
 	// /api/soal/{id} → PUT/DELETE admin
 	mux.HandleFunc("/api/soal/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(lmsH.ServeSoal))))

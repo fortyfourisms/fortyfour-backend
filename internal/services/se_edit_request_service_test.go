@@ -7,6 +7,7 @@ import (
 
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/models"
+	"fortyfour-backend/internal/testhelpers"
 )
 
 type fakeSEEditRequestRepo struct {
@@ -118,6 +119,51 @@ func (f *fakeSEService) Delete(id string) error {
 	return nil
 }
 
+type fakeUserRepoForSEEdit struct {
+	findByIDFn      func(id string) (*models.User, error)
+	findAllAdminsFn func() ([]models.User, error)
+}
+
+func (f *fakeUserRepoForSEEdit) Create(user *models.User) error { return nil }
+func (f *fakeUserRepoForSEEdit) FindByUsername(username string) (*models.User, error) {
+	return nil, nil
+}
+func (f *fakeUserRepoForSEEdit) FindByEmail(email string) (*models.User, error) { return nil, nil }
+func (f *fakeUserRepoForSEEdit) FindByID(id string) (*models.User, error) {
+	if f.findByIDFn != nil {
+		return f.findByIDFn(id)
+	}
+	return nil, nil
+}
+func (f *fakeUserRepoForSEEdit) FindAll() ([]models.User, error) { return nil, nil }
+func (f *fakeUserRepoForSEEdit) FindAllAdmins() ([]models.User, error) {
+	if f.findAllAdminsFn != nil {
+		return f.findAllAdminsFn()
+	}
+	return nil, nil
+}
+func (f *fakeUserRepoForSEEdit) Update(user *models.User) error                 { return nil }
+func (f *fakeUserRepoForSEEdit) UpdateWithPhoto(user *models.User) error        { return nil }
+func (f *fakeUserRepoForSEEdit) UpdatePassword(id, hashedPassword string) error { return nil }
+func (f *fakeUserRepoForSEEdit) GetPasswordByID(id string) (string, error)      { return "", nil }
+func (f *fakeUserRepoForSEEdit) Delete(id string) error                         { return nil }
+func (f *fakeUserRepoForSEEdit) EmailExists(email string, excludeID *string) (bool, error) {
+	return false, nil
+}
+func (f *fakeUserRepoForSEEdit) UsernameExists(username string, excludeID *string) (bool, error) {
+	return false, nil
+}
+func (f *fakeUserRepoForSEEdit) SetMFA(userID string, secret *string, enabled bool) error { return nil }
+func (f *fakeUserRepoForSEEdit) ExistsByPerusahaan(idPerusahaan string) (bool, error) {
+	return false, nil
+}
+func (f *fakeUserRepoForSEEdit) UpdateStatus(userID string, status models.UserStatus) error {
+	return nil
+}
+func (f *fakeUserRepoForSEEdit) IncrementLoginAttempts(userID string) (int, error) { return 0, nil }
+func (f *fakeUserRepoForSEEdit) ResetLoginAttempts(userID string) error            { return nil }
+func (f *fakeUserRepoForSEEdit) UpdatePasswordChangedAt(userID string) error       { return nil }
+
 func TestSEEditRequestService_CreateRequest_Success(t *testing.T) {
 	var created *models.SEEditRequest
 	catatan := "tolong ubah nama"
@@ -136,6 +182,8 @@ func TestSEEditRequestService_CreateRequest_Success(t *testing.T) {
 			},
 		},
 		&fakeSEService{},
+		nil,
+		nil,
 	)
 
 	resp, err := svc.CreateRequest("user-1", "se-1", dto.CreateSEEditRequestDTO{
@@ -165,6 +213,46 @@ func TestSEEditRequestService_CreateRequest_Success(t *testing.T) {
 	}
 }
 
+func TestSEEditRequestService_CreateRequest_UsesCatatanUserAlias(t *testing.T) {
+	var created *models.SEEditRequest
+	catatan := "catatan dari frontend"
+	namaSE := "SE Baru"
+
+	svc := NewSEEditRequestService(
+		&fakeSEEditRequestRepo{
+			createFn: func(req *models.SEEditRequest) error {
+				created = req
+				return nil
+			},
+		},
+		&fakeSERepo{
+			getByIDFn: func(id string) (*dto.SEResponse, error) {
+				return &dto.SEResponse{ID: id}, nil
+			},
+		},
+		&fakeSEService{},
+		nil,
+		nil,
+	)
+
+	resp, err := svc.CreateRequest("user-1", "se-1", dto.CreateSEEditRequestDTO{
+		CatatanUser: &catatan,
+		DataPerubahan: dto.UpdateSERequest{
+			NamaSE: &namaSE,
+		},
+	})
+
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if resp == nil {
+		t.Fatal("expected response, got nil")
+	}
+	if created == nil || created.CatatanUser == nil || *created.CatatanUser != catatan {
+		t.Fatal("expected catatan_user alias to be persisted")
+	}
+}
+
 func TestSEEditRequestService_CreateRequest_SENotFound(t *testing.T) {
 	svc := NewSEEditRequestService(
 		&fakeSEEditRequestRepo{},
@@ -174,6 +262,8 @@ func TestSEEditRequestService_CreateRequest_SENotFound(t *testing.T) {
 			},
 		},
 		&fakeSEService{},
+		nil,
+		nil,
 	)
 
 	resp, err := svc.CreateRequest("user-1", "se-x", dto.CreateSEEditRequestDTO{})
@@ -208,6 +298,8 @@ func TestSEEditRequestService_GetPending_Success(t *testing.T) {
 		},
 		&fakeSERepo{},
 		&fakeSEService{},
+		nil,
+		nil,
 	)
 
 	resp, err := svc.GetPending()
@@ -231,6 +323,8 @@ func TestSEEditRequestService_GetByUser_RepoError(t *testing.T) {
 		},
 		&fakeSERepo{},
 		&fakeSEService{},
+		nil,
+		nil,
 	)
 
 	resp, err := svc.GetByUser("user-1")
@@ -285,6 +379,8 @@ func TestSEEditRequestService_Review_ApproveSuccess(t *testing.T) {
 				return &dto.SEResponse{ID: id}, nil
 			},
 		},
+		nil,
+		nil,
 	)
 
 	resp, err := svc.Review("req-1", dto.ReviewSEEditRequestDTO{
@@ -334,6 +430,8 @@ func TestSEEditRequestService_Review_RejectSuccess(t *testing.T) {
 				return nil, nil
 			},
 		},
+		nil,
+		nil,
 	)
 
 	resp, err := svc.Review("req-1", dto.ReviewSEEditRequestDTO{
@@ -365,6 +463,8 @@ func TestSEEditRequestService_Review_InvalidStatus(t *testing.T) {
 		},
 		&fakeSERepo{},
 		&fakeSEService{},
+		nil,
+		nil,
 	)
 
 	resp, err := svc.Review("req-1", dto.ReviewSEEditRequestDTO{Status: "draft"})
@@ -389,6 +489,8 @@ func TestSEEditRequestService_Review_AlreadyProcessed(t *testing.T) {
 		},
 		&fakeSERepo{},
 		&fakeSEService{},
+		nil,
+		nil,
 	)
 
 	resp, err := svc.Review("req-1", dto.ReviewSEEditRequestDTO{Status: "approved"})
@@ -414,6 +516,8 @@ func TestSEEditRequestService_Review_InvalidStoredPayload(t *testing.T) {
 		},
 		&fakeSERepo{},
 		&fakeSEService{},
+		nil,
+		nil,
 	)
 
 	resp, err := svc.Review("req-1", dto.ReviewSEEditRequestDTO{Status: "approved"})
@@ -422,5 +526,85 @@ func TestSEEditRequestService_Review_InvalidStoredPayload(t *testing.T) {
 	}
 	if resp != nil {
 		t.Fatal("expected nil response on error")
+	}
+}
+
+func TestSEEditRequestService_CreateRequest_NotifiesAdminsViaSSE(t *testing.T) {
+	var created *models.SEEditRequest
+	catatan := "tolong cek"
+	namaSE := "SE Penting"
+	notifRepo := testhelpers.NewMockNotificationRepository()
+	sseSvc := NewSSEService(NewNotificationService(notifRepo))
+
+	adminClient := &Client{ID: "admin-client", UserID: "admin-1", Channel: make(chan SSEEvent, 1)}
+	userClient := &Client{ID: "user-client", UserID: "user-1", Channel: make(chan SSEEvent, 1)}
+	sseSvc.RegisterClient(adminClient)
+	sseSvc.RegisterClient(userClient)
+	time.Sleep(50 * time.Millisecond)
+
+	svc := NewSEEditRequestService(
+		&fakeSEEditRequestRepo{
+			createFn: func(req *models.SEEditRequest) error {
+				created = req
+				return nil
+			},
+		},
+		&fakeSERepo{
+			getByIDFn: func(id string) (*dto.SEResponse, error) {
+				return &dto.SEResponse{ID: id, NamaSE: namaSE}, nil
+			},
+		},
+		&fakeSEService{},
+		&fakeUserRepoForSEEdit{
+			findByIDFn: func(id string) (*models.User, error) {
+				return &models.User{ID: id, Username: "requester-user"}, nil
+			},
+			findAllAdminsFn: func() ([]models.User, error) {
+				return []models.User{{ID: "admin-1"}}, nil
+			},
+		},
+		sseSvc,
+	)
+
+	_, err := svc.CreateRequest("user-1", "se-1", dto.CreateSEEditRequestDTO{
+		Catatan: &catatan,
+		DataPerubahan: dto.UpdateSERequest{
+			NamaSE: &namaSE,
+		},
+	})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if created == nil {
+		t.Fatal("expected request to be created")
+	}
+
+	select {
+	case evt := <-adminClient.Channel:
+		if evt.Resource != "se_request" {
+			t.Fatalf("expected resource se_request, got %s", evt.Resource)
+		}
+		if evt.Type != EventCreate {
+			t.Fatalf("expected type create, got %s", evt.Type)
+		}
+	case <-time.After(300 * time.Millisecond):
+		t.Fatal("expected admin client to receive SSE notification")
+	}
+
+	select {
+	case evt := <-userClient.Channel:
+		t.Fatalf("user client should not receive admin-targeted event, got %+v", evt)
+	default:
+	}
+
+	notifs, err := notifRepo.FindAllByUserID("admin-1")
+	if err != nil {
+		t.Fatalf("failed to read notifications: %v", err)
+	}
+	if len(notifs) != 1 {
+		t.Fatalf("expected 1 notification for admin, got %d", len(notifs))
+	}
+	if notifs[0].Type != models.NotifSEEditRequested {
+		t.Fatalf("expected notification type %s, got %s", models.NotifSEEditRequested, notifs[0].Type)
 	}
 }

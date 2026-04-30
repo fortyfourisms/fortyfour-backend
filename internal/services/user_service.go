@@ -200,7 +200,9 @@ func (s *UserService) Update(id string, req dto.UpdateUserRequest) (*dto.UserRes
 		user.Jabatan = req.Jabatan
 	}
 
-	s.repo.Update(user)
+	if err := s.repo.Update(user); err != nil {
+		return nil, err
+	}
 
 	user, err = s.repo.FindByID(id)
 	if err != nil {
@@ -286,7 +288,9 @@ func (s *UserService) UpdateMe(id string, req dto.UpdateMeRequest) (*dto.UserRes
 		user.Jabatan = req.Jabatan
 	}
 
-	s.repo.Update(user)
+	if err := s.repo.Update(user); err != nil {
+		return nil, err
+	}
 
 	user, err = s.repo.FindByID(id)
 	if err != nil {

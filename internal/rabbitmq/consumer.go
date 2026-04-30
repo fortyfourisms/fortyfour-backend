@@ -578,8 +578,12 @@ func (c *Consumer) ConsumeEventUpdated(ctx context.Context) error {
 		}
 
 		existing, err := c.eventRepo.FindByID(event.ID)
-		if err != nil || existing == nil {
+		if err != nil {
 			return err
+		}
+		if existing == nil {
+			log.Printf("Event with ID %d not found for update, skipping", event.ID)
+			return nil
 		}
 
 		if event.Request.Judul != nil {

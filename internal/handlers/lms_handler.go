@@ -21,7 +21,6 @@ import (
 //   /api/soal              → soal kuis (admin CRUD)
 //   /api/kuis              → kuis (admin CRUD + user: start & submit)
 //   /api/file-pendukung    → file pendukung (admin upload, user download)
-//   /api/diskusi           → diskusi per materi
 //   /api/sertifikat        → sertifikat user
 
 type LMSHandler struct {
@@ -30,8 +29,7 @@ type LMSHandler struct {
 	soalSvc       *services.SoalService
 	kuisSvc       *services.KuisService
 	fpSvc         *services.FilePendukungService
-	diskusiSvc    *services.DiskusiService
-	catatanSvc    *services.CatatanService
+	feedbackSvc   *services.FeedbackService
 	sertifikatSvc *services.SertifikatService
 	sseSvc        *services.SSEService
 }
@@ -42,8 +40,7 @@ func NewLMSHandler(
 	soalSvc *services.SoalService,
 	kuisSvc *services.KuisService,
 	fpSvc *services.FilePendukungService,
-	diskusiSvc *services.DiskusiService,
-	catatanSvc *services.CatatanService,
+	feedbackSvc *services.FeedbackService,
 	sertifikatSvc *services.SertifikatService,
 	sseSvc *services.SSEService,
 ) *LMSHandler {
@@ -53,8 +50,7 @@ func NewLMSHandler(
 		soalSvc:       soalSvc,
 		kuisSvc:       kuisSvc,
 		fpSvc:         fpSvc,
-		diskusiSvc:    diskusiSvc,
-		catatanSvc:    catatanSvc,
+		feedbackSvc:   feedbackSvc,
 		sertifikatSvc: sertifikatSvc,
 		sseSvc:        sseSvc,
 	}
@@ -88,24 +84,45 @@ func (h *LMSHandler) ServePublicKelas(w http.ResponseWriter, r *http.Request) {
 
 	id := trimID(r.URL.Path, "/api/public/kelas")
 	if id == "" {
-		// List semua kelas yang statusnya 'published'
-		data, err := h.kelasSvc.GetAll(true)
-		if err != nil {
-			logger.Error(err, "publicKelasGetAll failed")
-			utils.RespondError(w, 500, err.Error())
-			return
-		}
-		utils.RespondJSON(w, 200, data)
+		h.publicKelasGetAll(w, r)
 	} else {
-		// Detail kelas tanpa userID → progress di-skip oleh service
-		data, err := h.kelasSvc.GetDetail(id, "")
-		if err != nil {
-			logger.Error(err, "publicKelasGetDetail failed")
-			utils.RespondError(w, 404, err.Error())
-			return
-		}
-		utils.RespondJSON(w, 200, data)
+		h.publicKelasGetDetail(w, r, id)
 	}
+}
+
+// @Summary		List kelas (public)
+// @Description	Menampilkan daftar kelas yang sudah dipublikasikan. Tidak memerlukan autentikasi.
+// @Tags			LMS - Public
+// @Produce		json
+// @Success		200	{array}		dto.KelasResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/public/kelas [get]
+func (h *LMSHandler) publicKelasGetAll(w http.ResponseWriter, _ *http.Request) {
+	data, err := h.kelasSvc.GetAll(true)
+	if err != nil {
+		logger.Error(err, "publicKelasGetAll failed")
+		utils.RespondError(w, 500, err.Error())
+		return
+	}
+	utils.RespondJSON(w, 200, data)
+}
+
+// @Summary		Detail kelas (public)
+// @Description	Menampilkan detail kelas beserta daftar materi. Tidak memerlukan autentikasi, progress tidak disertakan.
+// @Tags			LMS - Public
+// @Produce		json
+// @Param			id	path		string	true	"ID Kelas"
+// @Success		200	{object}	dto.KelasDetailResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/public/kelas/{id} [get]
+func (h *LMSHandler) publicKelasGetDetail(w http.ResponseWriter, _ *http.Request, id string) {
+	data, err := h.kelasSvc.GetDetail(id, "")
+	if err != nil {
+		logger.Error(err, "publicKelasGetDetail failed")
+		utils.RespondError(w, 404, err.Error())
+		return
+	}
+	utils.RespondJSON(w, 200, data)
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -358,30 +375,27 @@ func (h *LMSHandler) ServeMateri(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// /api/materi/{id}/diskusi
-	if strings.Contains(path, "/diskusi") {
-		parts := strings.SplitN(strings.TrimPrefix(path, "/api/materi/"), "/diskusi", 2)
+	// /api/materi/{id}/feedback/all — admin/staff melihat semua feedback
+	if strings.HasSuffix(path, "/feedback/all") {
+		parts := strings.SplitN(strings.TrimPrefix(path, "/api/materi/"), "/feedback/all", 2)
 		idMateri := parts[0]
-		switch r.Method {
-		case http.MethodGet:
-			h.diskusiGetByMateri(w, r, idMateri)
-		case http.MethodPost:
-			h.diskusiCreate(w, r, idMateri)
-		default:
+		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
 		}
+		h.feedbackGetAll(w, r, idMateri)
 		return
 	}
 
-	// /api/materi/{id}/catatan
-	if strings.Contains(path, "/catatan") {
-		parts := strings.SplitN(strings.TrimPrefix(path, "/api/materi/"), "/catatan", 2)
+	// /api/materi/{id}/feedback
+	if strings.Contains(path, "/feedback") {
+		parts := strings.SplitN(strings.TrimPrefix(path, "/api/materi/"), "/feedback", 2)
 		idMateri := parts[0]
 		switch r.Method {
 		case http.MethodGet:
-			h.catatanGet(w, r, idMateri)
+			h.feedbackGet(w, r, idMateri)
 		case http.MethodPut:
-			h.catatanUpsert(w, r, idMateri)
+			h.feedbackUpsert(w, r, idMateri)
 		default:
 			w.WriteHeader(http.StatusMethodNotAllowed)
 		}
@@ -866,7 +880,7 @@ func (h *LMSHandler) ServeKuis(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary		List kuis per kelas
-// @Description	Mendapatkan daftar kuis dalam suatu kelas.
+// @Description	Mendapatkan daftar kuis dalam suatu kelas beserta progress user yang login.
 // @Tags			LMS - Kuis
 // @Produce		json
 // @Security		BearerAuth
@@ -874,8 +888,9 @@ func (h *LMSHandler) ServeKuis(w http.ResponseWriter, r *http.Request) {
 // @Success		200	{array}		dto.KuisResponse
 // @Failure		500	{object}	dto.ErrorResponse
 // @Router			/api/kelas/{id}/kuis [get]
-func (h *LMSHandler) kuisGetByKelas(w http.ResponseWriter, _ *http.Request, idKelas string) {
-	data, err := h.kuisSvc.GetKuisByKelas(idKelas)
+func (h *LMSHandler) kuisGetByKelas(w http.ResponseWriter, r *http.Request, idKelas string) {
+	userID := getUserID(r)
+	data, err := h.kuisSvc.GetKuisByKelas(idKelas, userID)
 	if err != nil {
 		logger.Error(err, "kuisGetByKelas failed")
 		utils.RespondError(w, 500, err.Error())
@@ -1034,150 +1049,25 @@ func (h *LMSHandler) kuisResult(w http.ResponseWriter, r *http.Request, idAttemp
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// DISKUSI  —  /api/diskusi/{id}
+// FEEDBACK  —  /api/materi/{id}/feedback
 // ════════════════════════════════════════════════════════════════════════════
 
-func (h *LMSHandler) ServeDiskusi(w http.ResponseWriter, r *http.Request) {
-	id := trimID(r.URL.Path, "/api/diskusi")
-	switch r.Method {
-	case http.MethodPut:
-		if id == "" {
-			utils.RespondError(w, 400, "ID wajib")
-			return
-		}
-		h.diskusiUpdate(w, r, id)
-	case http.MethodDelete:
-		if id == "" {
-			utils.RespondError(w, 400, "ID wajib")
-			return
-		}
-		h.diskusiDelete(w, r, id)
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
-	}
-}
-
-// @Summary		List diskusi per materi
-// @Description	Mendapatkan daftar diskusi untuk suatu materi.
-// @Tags			LMS - Diskusi
+// @Summary		Get feedback
+// @Description	User mendapatkan feedback untuk suatu materi.
+// @Tags			LMS - Feedback
 // @Produce		json
 // @Security		BearerAuth
 // @Param			id	path		string	true	"ID Materi"
-// @Success		200	{array}		dto.DiskusiResponse
-// @Failure		500	{object}	dto.ErrorResponse
-// @Router			/api/materi/{id}/diskusi [get]
-func (h *LMSHandler) diskusiGetByMateri(w http.ResponseWriter, _ *http.Request, idMateri string) {
-	data, err := h.diskusiSvc.GetByMateri(idMateri)
-	if err != nil {
-		logger.Error(err, "diskusiGetByMateri failed")
-		utils.RespondError(w, 500, err.Error())
-		return
-	}
-	utils.RespondJSON(w, 200, data)
-}
-
-// @Summary		Buat diskusi baru
-// @Description	User membuat diskusi atau reply di materi.
-// @Tags			LMS - Diskusi
-// @Accept			json
-// @Produce		json
-// @Security		BearerAuth
-// @Param			id		path		string						true	"ID Materi"
-// @Param			request	body		dto.CreateDiskusiRequest	true	"Data diskusi"
-// @Success		201		{object}	dto.DiskusiResponse
-// @Failure		400		{object}	dto.ErrorResponse
-// @Router			/api/materi/{id}/diskusi [post]
-func (h *LMSHandler) diskusiCreate(w http.ResponseWriter, r *http.Request, idMateri string) {
-	userID := getUserID(r)
-	if userID == "" {
-		utils.RespondError(w, 401, "Unauthorized")
-		return
-	}
-	var req dto.CreateDiskusiRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.RespondError(w, 400, "Invalid request body")
-		return
-	}
-	resp, err := h.diskusiSvc.Create(idMateri, userID, req)
-	if err != nil {
-		logger.Error(err, "diskusiCreate failed")
-		utils.RespondError(w, 400, err.Error())
-		return
-	}
-	utils.RespondJSON(w, 201, resp)
-}
-
-// @Summary		Update diskusi
-// @Description	User mengupdate diskusi miliknya.
-// @Tags			LMS - Diskusi
-// @Accept			json
-// @Produce		json
-// @Security		BearerAuth
-// @Param			id		path		string						true	"ID Diskusi"
-// @Param			request	body		dto.UpdateDiskusiRequest	true	"Data update"
-// @Success		200		{object}	dto.DiskusiResponse
-// @Failure		400		{object}	dto.ErrorResponse
-// @Router			/api/diskusi/{id} [put]
-func (h *LMSHandler) diskusiUpdate(w http.ResponseWriter, r *http.Request, id string) {
-	userID := getUserID(r)
-	if userID == "" {
-		utils.RespondError(w, 401, "Unauthorized")
-		return
-	}
-	var req dto.UpdateDiskusiRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.RespondError(w, 400, "Invalid request body")
-		return
-	}
-	resp, err := h.diskusiSvc.Update(id, userID, req)
-	if err != nil {
-		logger.Error(err, "diskusiUpdate failed")
-		utils.RespondError(w, 400, err.Error())
-		return
-	}
-	utils.RespondJSON(w, 200, resp)
-}
-
-// @Summary		Hapus diskusi
-// @Description	User menghapus diskusi miliknya. Admin bisa hapus diskusi siapa saja.
-// @Tags			LMS - Diskusi
-// @Produce		json
-// @Security		BearerAuth
-// @Param			id	path		string	true	"ID Diskusi"
-// @Success		200	{object}	map[string]string
-// @Failure		400	{object}	dto.ErrorResponse
-// @Router			/api/diskusi/{id} [delete]
-func (h *LMSHandler) diskusiDelete(w http.ResponseWriter, r *http.Request, id string) {
-	userID := getUserID(r)
-	role := middleware.GetRole(r.Context())
-	if err := h.diskusiSvc.Delete(id, userID, role); err != nil {
-		logger.Error(err, "diskusiDelete failed")
-		utils.RespondError(w, 400, err.Error())
-		return
-	}
-	utils.RespondJSON(w, 200, map[string]string{"message": "Diskusi berhasil dihapus"})
-}
-
-// ════════════════════════════════════════════════════════════════════════════
-// CATATAN PRIBADI  —  /api/materi/{id}/catatan
-// ════════════════════════════════════════════════════════════════════════════
-
-// @Summary		Get catatan pribadi
-// @Description	User mendapatkan catatan pribadinya untuk suatu materi.
-// @Tags			LMS - Catatan
-// @Produce		json
-// @Security		BearerAuth
-// @Param			id	path		string	true	"ID Materi"
-// @Success		200	{object}	dto.CatatanPribadiResponse
+// @Success		200	{object}	dto.FeedbackResponse
 // @Failure		404	{object}	dto.ErrorResponse
-// @Router			/api/materi/{id}/catatan [get]
-func (h *LMSHandler) catatanGet(w http.ResponseWriter, r *http.Request, idMateri string) {
+// @Router			/api/materi/{id}/feedback [get]
+func (h *LMSHandler) feedbackGet(w http.ResponseWriter, r *http.Request, idMateri string) {
 	userID := getUserID(r)
 	if userID == "" {
 		utils.RespondError(w, 401, "Unauthorized")
 		return
 	}
-	resp, err := h.catatanSvc.GetByUserAndMateri(userID, idMateri)
+	resp, err := h.feedbackSvc.GetByUserAndMateri(userID, idMateri)
 	if err != nil {
 		utils.RespondError(w, 404, err.Error())
 		return
@@ -1185,35 +1075,54 @@ func (h *LMSHandler) catatanGet(w http.ResponseWriter, r *http.Request, idMateri
 	utils.RespondJSON(w, 200, resp)
 }
 
-// @Summary		Upsert catatan pribadi
-// @Description	User membuat atau mengupdate catatan pribadinya untuk suatu materi.
-// @Tags			LMS - Catatan
+// @Summary		Upsert feedback
+// @Description	User membuat atau mengupdate feedback untuk suatu materi.
+// @Tags			LMS - Feedback
 // @Accept			json
 // @Produce		json
 // @Security		BearerAuth
 // @Param			id		path		string						true	"ID Materi"
-// @Param			request	body		dto.UpsertCatatanRequest	true	"Data catatan"
-// @Success		200		{object}	dto.CatatanPribadiResponse
+// @Param			request	body		dto.UpsertFeedbackRequest	true	"Data feedback"
+// @Success		200		{object}	dto.FeedbackResponse
 // @Failure		400		{object}	dto.ErrorResponse
-// @Router			/api/materi/{id}/catatan [put]
-func (h *LMSHandler) catatanUpsert(w http.ResponseWriter, r *http.Request, idMateri string) {
+// @Router			/api/materi/{id}/feedback [put]
+func (h *LMSHandler) feedbackUpsert(w http.ResponseWriter, r *http.Request, idMateri string) {
 	userID := getUserID(r)
 	if userID == "" {
 		utils.RespondError(w, 401, "Unauthorized")
 		return
 	}
-	var req dto.UpsertCatatanRequest
+	var req dto.UpsertFeedbackRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, 400, "Invalid request body")
 		return
 	}
-	resp, err := h.catatanSvc.Upsert(idMateri, userID, req)
+	resp, err := h.feedbackSvc.Upsert(idMateri, userID, req)
 	if err != nil {
-		logger.Error(err, "catatanUpsert failed")
+		logger.Error(err, "feedbackUpsert failed")
 		utils.RespondError(w, 400, err.Error())
 		return
 	}
 	utils.RespondJSON(w, 200, resp)
+}
+
+// @Summary		Get all feedback (admin)
+// @Description	Admin/staff melihat semua feedback dari semua user untuk suatu materi.
+// @Tags			LMS - Feedback
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		string	true	"ID Materi"
+// @Success		200	{array}		dto.FeedbackListItem
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/materi/{id}/feedback/all [get]
+func (h *LMSHandler) feedbackGetAll(w http.ResponseWriter, r *http.Request, idMateri string) {
+	items, err := h.feedbackSvc.GetAllByMateri(idMateri)
+	if err != nil {
+		logger.Error(err, "feedbackGetAll failed")
+		utils.RespondError(w, 500, err.Error())
+		return
+	}
+	utils.RespondJSON(w, 200, items)
 }
 
 // ════════════════════════════════════════════════════════════════════════════

@@ -5,7 +5,8 @@ import "fortyfour-backend/internal/models"
 // CreateSEEditRequestDTO — user mengirim request edit SE
 type CreateSEEditRequestDTO struct {
 	DataPerubahan UpdateSERequest `json:"data_perubahan" validate:"required"`
-	Catatan       *string         `json:"catatan,omitempty"` // alasan user
+	Catatan       *string         `json:"catatan,omitempty"`      // alasan user
+	CatatanUser   *string         `json:"catatan_user,omitempty"` // alias dari frontend
 }
 
 // ReviewSEEditRequestDTO — admin approve/reject request
