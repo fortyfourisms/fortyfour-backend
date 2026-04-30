@@ -736,6 +736,20 @@ definitions:
       nilai_subdomain6:
         type: number
     type: object
+  dto.RejectEditRequest:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
+  dto.RequestEditRequest:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
   dto.RespondenResponse:
     properties:
       created_at:
@@ -994,6 +1008,11 @@ definitions:
         type: integer
       nama_sub_kategori:
         type: string
+    type: object
+  dto.ValidasiIkasRequest:
+    properties:
+      status:
+        type: boolean
     type: object
   fortyfour-backend_internal_dto.AddPolicyRequest:
     properties:
@@ -1618,11 +1637,14 @@ definitions:
     type: object
   fortyfour-backend_internal_dto.LoginRequest:
     properties:
+      cf-turnstile-response:
+        type: string
       identifier:
         type: string
       password:
         type: string
     required:
+    - cf-turnstile-response
     - identifier
     - password
     type: object
@@ -3900,10 +3922,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Autentikasi user. Token dikirim via HTTP-only cookies, BUKAN di
-        response body.
+      description: Autentikasi user dengan dukungan Cloudflare Turnstile. Token dikirim
+        via HTTP-only cookies, BUKAN di response body.
       parameters:
-      - description: Login credentials
+      - description: Login credentials (termasuk cf-turnstile-response)
         in: body
         name: request
         required: true
@@ -4486,6 +4508,173 @@ paths:
           schema:
             $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
       summary: Update ikas
+      tags:
+      - Ikas
+  /api/maturity/ikas/{id}/approve-edit:
+    put:
+      description: Menyetujui permintaan edit dan membuka kembali kunci data IKAS.
+        Hanya bisa dilakukan oleh Admin atau Staff.
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Setujui permintaan edit IKAS
+      tags:
+      - Ikas
+  /api/maturity/ikas/{id}/export:
+    get:
+      description: Mengunduh file laporan IKAS dalam format PDF berdasarkan ID
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/pdf
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Export IKAS ke PDF
+      tags:
+      - Ikas
+  /api/maturity/ikas/{id}/reject-edit:
+    put:
+      consumes:
+      - application/json
+      description: Menolak permintaan edit data IKAS. Hanya bisa dilakukan oleh Admin
+        atau Staff.
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Alasan penolakan
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RejectEditRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Tolak permintaan edit IKAS
+      tags:
+      - Ikas
+  /api/maturity/ikas/{id}/request-edit:
+    post:
+      consumes:
+      - application/json
+      description: Mengajukan permintaan pembukaan kunci (unlock) data IKAS yang sudah
+        divalidasi kepada Admin/Staff
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Alasan pengajuan edit
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RequestEditRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ajukan permintaan edit IKAS
+      tags:
+      - Ikas
+  /api/maturity/ikas/{id}/validate:
+    put:
+      consumes:
+      - application/json
+      description: Melakukan validasi final (lock/unlock) data IKAS. Hanya bisa dilakukan
+        oleh Admin atau Staff.
+      parameters:
+      - description: Ikas ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status validasi (true=lock, false=unlock)
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ValidasiIkasRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Validasi final IKAS
       tags:
       - Ikas
   /api/maturity/ikas/import:

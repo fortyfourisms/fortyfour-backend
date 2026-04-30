@@ -71,7 +71,7 @@ func (h *PICHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *PICHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if idPerusahaan == "" {
 			utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
@@ -117,7 +117,7 @@ func (h *PICHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id st
 	}
 
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if data.Perusahaan == nil || data.Perusahaan.ID != idPerusahaan {
 			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
@@ -150,7 +150,7 @@ func (h *PICHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	// Ownership check: user tidak bisa set id_perusahaan sembarangan
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if idPerusahaan == "" {
 			utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
@@ -191,7 +191,7 @@ func (h *PICHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 func (h *PICHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	// Ownership check untuk non-admin
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		existing, err := h.service.GetByID(id)
 		if err != nil {
 			utils.RespondError(w, 404, "Data tidak ditemukan")
@@ -212,7 +212,7 @@ func (h *PICHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id str
 	}
 
 	// Pastikan user tidak bisa ganti id_perusahaan ke perusahaan lain
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		req.IDPerusahaan = nil
 	}
 
@@ -246,7 +246,7 @@ func (h *PICHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id str
 func (h *PICHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	// Ownership check untuk non-admin
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		existing, err := h.service.GetByID(id)
 		if err != nil {
 			utils.RespondError(w, 404, "Data tidak ditemukan")

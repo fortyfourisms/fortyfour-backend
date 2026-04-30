@@ -64,7 +64,7 @@ func (s *JawabanProteksiService) validateCreate(req *dto.CreateJawabanProteksiRe
 	}
 
 	// Restricted fields for non-admins
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		if req.Validasi != nil || (req.Keterangan != nil && utils.NormalizeInput(*req.Keterangan) != "") {
 			return errors.New("hanya admin yang dapat mengisi field validasi dan keterangan")
 		}
@@ -88,7 +88,7 @@ func (s *JawabanProteksiService) validateUpdate(req *dto.UpdateJawabanProteksiRe
 	}
 
 	// Restricted fields for non-admins
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		if req.Validasi != nil || (req.Keterangan != nil && utils.NormalizeInput(*req.Keterangan) != "") {
 			return errors.New("hanya admin yang dapat mengubah field validasi dan keterangan")
 		}
@@ -134,7 +134,7 @@ func (s *JawabanProteksiService) Create(req dto.CreateJawabanProteksiRequest, us
 	}
 
 	// VALIDASI KEPEMILIKAN
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		owned, err := s.ikasRepo.CheckOwnership(req.IkasID, userPerusahaanID)
 		if err != nil {
 			rollbar.Error(err)
@@ -175,7 +175,7 @@ func (s *JawabanProteksiService) Create(req dto.CreateJawabanProteksiRequest, us
 }
 
 func (s *JawabanProteksiService) GetAll(userRole string) ([]dto.JawabanProteksiResponse, error) {
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		return nil, errors.New("anda tidak memiliki akses untuk melihat semua data")
 	}
 	return s.repo.GetAll()
@@ -200,7 +200,7 @@ func (s *JawabanProteksiService) GetByID(id int, userRole string, userPerusahaan
 		return nil, errors.New("gagal memverifikasi kepemilikan asesmen")
 	}
 
-	if userRole != "admin" && ikasData.Perusahaan.ID != userPerusahaanID {
+	if userRole != "admin" && userRole != "staff" && ikasData.Perusahaan.ID != userPerusahaanID {
 		return nil, errors.New("anda tidak memiliki akses ke data ini")
 	}
 
@@ -212,7 +212,7 @@ func (s *JawabanProteksiService) GetByIkasID(ikasID string, userRole string, use
 		return nil, errors.New("format ikas_id tidak valid")
 	}
 
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		owned, err := s.ikasRepo.CheckOwnership(ikasID, userPerusahaanID)
 		if err != nil {
 			return nil, err
@@ -226,7 +226,7 @@ func (s *JawabanProteksiService) GetByIkasID(ikasID string, userRole string, use
 }
 
 func (s *JawabanProteksiService) GetByPerusahaanID(perusahaanID string, userRole string, userPerusahaanID string) ([]dto.JawabanProteksiResponse, error) {
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		if perusahaanID != userPerusahaanID {
 			return nil, errors.New("anda tidak memiliki akses ke data perusahaan ini")
 		}
@@ -288,7 +288,7 @@ func (s *JawabanProteksiService) Update(id int, req dto.UpdateJawabanProteksiReq
 	}
 	// -------------------------------------------------------
 
-	if userRole != "admin" && ikasData.Perusahaan.ID != userPerusahaanID {
+	if userRole != "admin" && userRole != "staff" && ikasData.Perusahaan.ID != userPerusahaanID {
 		return 0, "", errors.New("anda tidak memiliki akses untuk mengubah data ini")
 	}
 

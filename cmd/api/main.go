@@ -125,6 +125,10 @@ func main() {
 	geminiClient := utils.NewGeminiClient(cfg.GeminiAPIKey)
 	logger.Info("Gemini client initialized successfully")
 
+	// Initialize Turnstile Validator
+	turnstileValidator := utils.NewTurnstileValidator(cfg.TurnstileSecretKey)
+	logger.Info("Turnstile validator initialized successfully")
+
 	uploadPath := os.Getenv("UPLOAD_DIR")
 	if uploadPath == "" {
 		uploadPath = "/app/uploads" // default fallback
@@ -173,7 +177,7 @@ func main() {
 	subSektorService := services.NewSubSektorService(subSektorRepo, redisClient)
 	seService := services.NewSEService(seRepo, redisClient, rmqProducer)
 	seExportService := services.NewSEExportService(seService)
-	seEditReqService := services.NewSEEditRequestService(seEditReqRepo, seRepo, seService)
+	seEditReqService := services.NewSEEditRequestService(seEditReqRepo, seRepo, seService, userRepo, sseService)
 	dashboardService := services.NewDashboardService(dashboardRepo, redisClient)
 	kelasSvc := services.NewKelasService(kelasRepo, materiRepo, progressRepo, kuisRepo, kuisAttemptRepo, sertifikatRepo, fpRepo, redisClient)
 	materiSvc := services.NewMateriService(materiRepo, kelasRepo, progressRepo, redisClient)
@@ -183,11 +187,11 @@ func main() {
 	diskusiSvc := services.NewDiskusiService(diskusiRepo, userRepo)
 	catatanSvc := services.NewCatatanService(catatanRepo)
 	sertifikatSvc := services.NewSertifikatService(sertifikatRepo, kelasRepo, progressRepo, kuisAttemptRepo, kuisRepo, userRepo)
-	beritaSvc := services.NewBeritaService(beritaRepo)
-	eventSvc := services.NewEventService(eventRepo)
+	beritaSvc := services.NewBeritaService(beritaRepo, rmqProducer)
+	eventSvc := services.NewEventService(eventRepo, rmqProducer)
 
 	// Wrap with specific Consumer (after repositories are initialized)
-	rmqConsumer := internalRmq.NewConsumer(sharedConsumer, sseService, userRepo, notificationService)
+	rmqConsumer := internalRmq.NewConsumer(sharedConsumer, sseService, userRepo, notificationService, eventRepo, beritaRepo)
 
 	// Start consumers in background
 	ctx, cancel := context.WithCancel(context.Background())
@@ -198,7 +202,7 @@ func main() {
 	}
 
 	// Initialize Handler
-	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService, userService, uploadPath)
+	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService, userService, turnstileValidator, uploadPath)
 	userHandler := handlers.NewUserHandler(userService, uploadPath, sseService)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
 	picHandler := handlers.NewPICHandler(picService, sseService)

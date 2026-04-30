@@ -84,6 +84,7 @@ var defaultPolicies = []Policy{
 	{"user_pic", "/api/maturity/ikas/:id", "PUT"},
 	{"user_pic", "/api/maturity/ikas/:id", "DELETE"},
 	{"user_pic", "/api/maturity/ikas/:id/request-edit", "POST"},
+	{"user_pic", "/api/maturity/ikas/import", "POST"},
 
 	// Domain Identifikasi (read only untuk user_pic)
 	{"user_pic", "/api/maturity/identifikasi", "GET"},
@@ -218,13 +219,10 @@ var defaultPolicies = []Policy{
 	// Perusahaan (user hanya bisa baca perusahaan miliknya sendiri, dibatasi lagi di handler)
 	{"user", "/api/perusahaan", "GET"},
 	{"user", "/api/perusahaan/:id", "GET"},
-}
 
-// staffInitialPolicies adalah policy awal untuk role staff.
-// Policy ini HANYA di-seed sekali (saat staff belum punya policy apapun).
-// Setelah itu, admin bisa menambah/menghapus policy staff secara dinamis via API
-// tanpa khawatir seeder akan mengembalikan policy yang sudah dihapus.
-var staffInitialPolicies = []Policy{
+	// ── STAFF ────────────────────────────────────────────────────────────────
+	// Staff punya akses luas hampir seperti admin, kecuali delete dan manajemen user/casbin.
+
 	// SE
 	{"staff", "/api/se", "GET"},
 	{"staff", "/api/se", "POST"},
@@ -270,39 +268,66 @@ var staffInitialPolicies = []Policy{
 
 	// Maturity — master data
 	{"staff", "/api/maturity/ruang-lingkup", "GET"},
+	{"staff", "/api/maturity/ruang-lingkup", "POST"},
 	{"staff", "/api/maturity/ruang-lingkup/:id", "GET"},
+	{"staff", "/api/maturity/ruang-lingkup/:id", "PUT"},
 	{"staff", "/api/maturity/domain", "GET"},
+	{"staff", "/api/maturity/domain", "POST"},
 	{"staff", "/api/maturity/domain/:id", "GET"},
+	{"staff", "/api/maturity/domain/:id", "PUT"},
 	{"staff", "/api/maturity/kategori", "GET"},
+	{"staff", "/api/maturity/kategori", "POST"},
 	{"staff", "/api/maturity/kategori/:id", "GET"},
+	{"staff", "/api/maturity/kategori/:id", "PUT"},
 	{"staff", "/api/maturity/sub-kategori", "GET"},
+	{"staff", "/api/maturity/sub-kategori", "POST"},
 	{"staff", "/api/maturity/sub-kategori/:id", "GET"},
+	{"staff", "/api/maturity/sub-kategori/:id", "PUT"},
 
 	// IKAS
 	{"staff", "/api/maturity/ikas", "GET"},
 	{"staff", "/api/maturity/ikas", "POST"},
 	{"staff", "/api/maturity/ikas/:id", "GET"},
 	{"staff", "/api/maturity/ikas/:id", "PUT"},
+	{"staff", "/api/maturity/ikas/:id/approve-edit", "PUT"},
+	{"staff", "/api/maturity/ikas/:id/reject-edit", "PUT"},
+	{"staff", "/api/maturity/ikas/:id/validate", "PUT"},
 
 	// Domain sub-resources
 	{"staff", "/api/maturity/identifikasi", "GET"},
+	{"staff", "/api/maturity/identifikasi", "POST"},
 	{"staff", "/api/maturity/identifikasi/:id", "GET"},
+	{"staff", "/api/maturity/identifikasi/:id", "PUT"},
 	{"staff", "/api/maturity/proteksi", "GET"},
+	{"staff", "/api/maturity/proteksi", "POST"},
 	{"staff", "/api/maturity/proteksi/:id", "GET"},
+	{"staff", "/api/maturity/proteksi/:id", "PUT"},
 	{"staff", "/api/maturity/deteksi", "GET"},
+	{"staff", "/api/maturity/deteksi", "POST"},
 	{"staff", "/api/maturity/deteksi/:id", "GET"},
+	{"staff", "/api/maturity/deteksi/:id", "PUT"},
 	{"staff", "/api/maturity/gulih", "GET"},
+	{"staff", "/api/maturity/gulih", "POST"},
 	{"staff", "/api/maturity/gulih/:id", "GET"},
+	{"staff", "/api/maturity/gulih/:id", "PUT"},
 
 	// Pertanyaan
 	{"staff", "/api/maturity/pertanyaan-identifikasi", "GET"},
+	{"staff", "/api/maturity/pertanyaan-identifikasi", "POST"},
 	{"staff", "/api/maturity/pertanyaan-identifikasi/:id", "GET"},
+	{"staff", "/api/maturity/pertanyaan-identifikasi/:id", "PUT"},
 	{"staff", "/api/maturity/pertanyaan-proteksi", "GET"},
+	{"staff", "/api/maturity/pertanyaan-proteksi", "POST"},
 	{"staff", "/api/maturity/pertanyaan-proteksi/:id", "GET"},
+	{"staff", "/api/maturity/pertanyaan-proteksi/:id", "PUT"},
 	{"staff", "/api/maturity/pertanyaan-deteksi", "GET"},
+	{"staff", "/api/maturity/pertanyaan-deteksi", "POST"},
 	{"staff", "/api/maturity/pertanyaan-deteksi/:id", "GET"},
+	{"staff", "/api/maturity/pertanyaan-deteksi/:id", "PUT"},
 	{"staff", "/api/maturity/pertanyaan-gulih", "GET"},
+	{"staff", "/api/maturity/pertanyaan-gulih", "POST"},
 	{"staff", "/api/maturity/pertanyaan-gulih/:id", "GET"},
+	{"staff", "/api/maturity/pertanyaan-gulih/:id", "PUT"},
 
 	// Jawaban
 	{"staff", "/api/maturity/jawaban-identifikasi", "GET"},
@@ -358,13 +383,12 @@ var staffInitialPolicies = []Policy{
 
 // SeedCasbinPolicies memastikan semua default policy ada di database
 // dan menghapus policy lama yang sudah tidak ada di defaultPolicies.
-// Untuk role staff, policy hanya di-seed sekali (initial setup).
 // Aman dijalankan berulang kali.
 func SeedCasbinPolicies(casbinService *services.CasbinService) {
 	added := 0
 	skipped := 0
 
-	// 1. Tambah default policy (admin, user_pic, user) yang belum ada
+	// 1. Tambah default policy (admin, user_pic, user, staff) yang belum ada
 	for _, p := range defaultPolicies {
 		ok, err := casbinService.AddPolicy(p.Role, p.Resource, p.Action)
 		if err != nil {
@@ -379,47 +403,12 @@ func SeedCasbinPolicies(casbinService *services.CasbinService) {
 		}
 	}
 
-	// 2. Seed initial staff policies (hanya jika staff belum punya policy sama sekali)
-	staffAdded := seedStaffInitialPolicies(casbinService)
-
-	// 3. Hapus policy lama yang sudah tidak ada di defaultPolicies
+	// 2. Hapus policy lama yang sudah tidak ada di defaultPolicies
 	// (skip admin & staff agar policy dinamis staff tidak terhapus)
 	removed := cleanupStalePolicies(casbinService)
 
-	logger.Infof("Casbin seeder selesai: %d ditambahkan, %d sudah ada, %d staff initial, %d dihapus",
-		added, skipped, staffAdded, removed)
-}
-
-// seedStaffInitialPolicies menyemai policy awal untuk role staff.
-// Policy hanya ditambahkan jika staff belum memiliki policy APAPUN di database.
-// Ini memastikan:
-//   - Pertama kali: staff mendapat set policy default
-//   - Admin menghapus policy → tetap terhapus (tidak di-seed ulang)
-//   - Admin menambah policy → tetap ada (tidak dihapus oleh cleanup)
-func seedStaffInitialPolicies(casbinService *services.CasbinService) int {
-	// Cek apakah staff sudah punya policy di database
-	existingPolicies := casbinService.GetRolePermissions("staff")
-	if len(existingPolicies) > 0 {
-		logger.Infof("Casbin seeder: staff sudah punya %d policy, skip initial seed", len(existingPolicies))
-		return 0
-	}
-
-	// Staff belum punya policy → seed initial
-	added := 0
-	for _, p := range staffInitialPolicies {
-		ok, err := casbinService.AddPolicy(p.Role, p.Resource, p.Action)
-		if err != nil {
-			logger.Errorf(err, "Casbin seeder: gagal tambah staff initial policy (%s, %s, %s)",
-				p.Role, p.Resource, p.Action)
-			continue
-		}
-		if ok {
-			added++
-		}
-	}
-
-	logger.Infof("Casbin seeder: staff initial seed — %d policy ditambahkan", added)
-	return added
+	logger.Infof("Casbin seeder selesai: %d ditambahkan, %d sudah ada, %d dihapus",
+		added, skipped, removed)
 }
 
 // cleanupStalePolicies menghapus policy di database yang sudah tidak ada di defaultPolicies.

@@ -1,53 +1,61 @@
 package services
 
 import (
+	"context"
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"fortyfour-backend/internal/dto"
+	"fortyfour-backend/internal/dto/dto_event"
 	"fortyfour-backend/internal/models"
+	internalRmq "fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
+	"fortyfour-backend/internal/utils"
+	"strings"
 	"time"
+
+	mysqlDriver "github.com/go-sql-driver/mysql"
+	"github.com/google/uuid"
 )
 
 type EventServiceInterface interface {
-	Create(req dto.CreateEventRequest) (*dto.EventResponse, error)
+	Create(req dto.CreateEventRequest) error
 	GetAll() ([]dto.EventResponse, error)
 	GetByID(id int64) (*dto.EventResponse, error)
-	Update(id int64, req dto.UpdateEventRequest) (*dto.EventResponse, error)
+	Update(id int64, req dto.UpdateEventRequest) error
 	Delete(id int64) error
+	Register(eventID int64, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error)
+	DownloadRegistrationPDF(registrationID int64) ([]byte, string, error)
 }
 
 type EventService struct {
-	repo repository.EventRepositoryInterface
+	repo     repository.EventRepositoryInterface
+	producer *internalRmq.Producer
 }
 
-func NewEventService(repo repository.EventRepositoryInterface) *EventService {
-	return &EventService{repo: repo}
+func NewEventService(repo repository.EventRepositoryInterface, producer *internalRmq.Producer) *EventService {
+	return &EventService{
+		repo:     repo,
+		producer: producer,
+	}
 }
 
 var _ EventServiceInterface = (*EventService)(nil)
 
-func (s *EventService) Create(req dto.CreateEventRequest) (*dto.EventResponse, error) {
-	tanggal, err := time.Parse(time.RFC3339, req.Tanggal)
-	if err != nil {
-		return nil, errors.New("format tanggal tidak valid (gunakan RFC3339, contoh: 2024-12-31T15:00:00Z)")
+func (s *EventService) Create(req dto.CreateEventRequest) error {
+	if _, err := time.Parse(time.RFC3339, req.Tanggal); err != nil {
+		return errors.New("format tanggal tidak valid (gunakan RFC3339, contoh: 2024-12-31T15:00:00Z)")
 	}
 
-	event := &models.Event{
-		Judul:     req.Judul,
-		Deskripsi: req.Deskripsi,
-		Tanggal:   tanggal,
+	event := dto_event.EventCreatedEvent{
+		Request:   req,
+		CreatedAt: time.Now(),
 	}
 
-	if err := s.repo.Create(event); err != nil {
-		return nil, err
+	if s.producer != nil {
+		return s.producer.PublishEventCreated(context.Background(), event)
 	}
-
-	saved, err := s.repo.FindByID(event.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return mapEventToResponse(saved), nil
+	return nil
 }
 
 func (s *EventService) GetAll() ([]dto.EventResponse, error) {
@@ -74,34 +82,31 @@ func (s *EventService) GetByID(id int64) (*dto.EventResponse, error) {
 	return mapEventToResponse(e), nil
 }
 
-func (s *EventService) Update(id int64, req dto.UpdateEventRequest) (*dto.EventResponse, error) {
+func (s *EventService) Update(id int64, req dto.UpdateEventRequest) error {
 	existing, err := s.repo.FindByID(id)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if existing == nil {
-		return nil, errors.New("event tidak ditemukan")
+		return errors.New("event tidak ditemukan")
 	}
 
-	if req.Judul != nil {
-		existing.Judul = *req.Judul
-	}
-	if req.Deskripsi != nil {
-		existing.Deskripsi = *req.Deskripsi
-	}
 	if req.Tanggal != nil {
-		tanggal, err := time.Parse(time.RFC3339, *req.Tanggal)
-		if err != nil {
-			return nil, errors.New("format tanggal tidak valid")
+		if _, err := time.Parse(time.RFC3339, *req.Tanggal); err != nil {
+			return errors.New("format tanggal tidak valid")
 		}
-		existing.Tanggal = tanggal
 	}
 
-	if err := s.repo.Update(existing); err != nil {
-		return nil, err
+	event := dto_event.EventUpdatedEvent{
+		ID:        id,
+		Request:   req,
+		UpdatedAt: time.Now(),
 	}
 
-	return mapEventToResponse(existing), nil
+	if s.producer != nil {
+		return s.producer.PublishEventUpdated(context.Background(), event)
+	}
+	return nil
 }
 
 func (s *EventService) Delete(id int64) error {
@@ -113,7 +118,134 @@ func (s *EventService) Delete(id int64) error {
 		return errors.New("event tidak ditemukan")
 	}
 
-	return s.repo.Delete(id)
+	event := dto_event.EventDeletedEvent{
+		ID:        id,
+		DeletedAt: time.Now(),
+	}
+
+	if s.producer != nil {
+		return s.producer.PublishEventDeleted(context.Background(), event)
+	}
+	return nil
+}
+
+func (s *EventService) Register(eventID int64, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error) {
+	event, err := s.repo.FindByID(eventID)
+	if err != nil {
+		return nil, err
+	}
+	if event == nil {
+		return nil, errors.New("event tidak ditemukan")
+	}
+
+	exists, err := s.repo.ExistsRegistrationByEventAndEmail(eventID, strings.TrimSpace(req.Email))
+	if err != nil {
+		return nil, err
+	}
+	if exists {
+		return nil, errors.New("email sudah terdaftar pada event ini")
+	}
+
+	payload := utils.EventRegistrationQRPayload{
+		EventID:    event.ID,
+		EventTitle: event.Judul,
+		Nama:       req.Nama,
+		Email:      req.Email,
+		Perusahaan: req.Perusahaan,
+		Jabatan:    req.Jabatan,
+		NoHP:       req.NoHP,
+		Sektor:     req.Sektor,
+		QRToken:    uuid.NewString(),
+	}
+
+	reg := &models.EventRegistration{
+		EventID:    eventID,
+		Nama:       strings.TrimSpace(req.Nama),
+		Email:      strings.TrimSpace(req.Email),
+		Perusahaan: strings.TrimSpace(req.Perusahaan),
+		Jabatan:    strings.TrimSpace(req.Jabatan),
+		NoHP:       strings.TrimSpace(req.NoHP),
+		Sektor:     strings.TrimSpace(req.Sektor),
+		QRToken:    payload.QRToken,
+	}
+
+	rawPayload, err := payload.JSON()
+	if err != nil {
+		return nil, err
+	}
+	reg.QRPayload = rawPayload
+
+	if err := s.repo.CreateRegistration(reg); err != nil {
+		// Handle concurrent duplicate registration (MySQL UNIQUE constraint violation)
+		var mysqlErr *mysqlDriver.MySQLError
+		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
+			return nil, errors.New("email sudah terdaftar pada event ini")
+		}
+		return nil, err
+	}
+
+	payload.RegistrationID = reg.ID
+	rawPayload, err = payload.JSON()
+	if err != nil {
+		return nil, err
+	}
+	reg.QRPayload = rawPayload
+
+	if err := s.repo.UpdateRegistrationPayload(reg.ID, rawPayload); err != nil {
+		return nil, err
+	}
+
+	qrPNG, err := utils.GenerateQRCodePNG(rawPayload, 256)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.EventRegistrationResponse{
+		ID:           reg.ID,
+		EventID:      reg.EventID,
+		Nama:         reg.Nama,
+		Email:        reg.Email,
+		Perusahaan:   reg.Perusahaan,
+		Jabatan:      reg.Jabatan,
+		NoHP:         reg.NoHP,
+		Sektor:       reg.Sektor,
+		QRToken:      reg.QRToken,
+		QRPayload:    rawPayload,
+		QRCodeBase64: base64.StdEncoding.EncodeToString(qrPNG),
+		DownloadURL:  fmt.Sprintf("/api/kegiatan/registrasi/%d/download", reg.ID),
+		CreatedAt:    reg.CreatedAt.Format(time.RFC3339),
+	}, nil
+}
+
+func (s *EventService) DownloadRegistrationPDF(registrationID int64) ([]byte, string, error) {
+	reg, err := s.repo.FindRegistrationByID(registrationID)
+	if err != nil {
+		return nil, "", err
+	}
+	if reg == nil {
+		return nil, "", errors.New("registrasi event tidak ditemukan")
+	}
+
+	event, err := s.repo.FindByID(reg.EventID)
+	if err != nil {
+		return nil, "", err
+	}
+	if event == nil {
+		return nil, "", errors.New("event tidak ditemukan")
+	}
+
+	qrPNG, err := utils.GenerateQRCodePNG(reg.QRPayload, 256)
+	if err != nil {
+		return nil, "", err
+	}
+
+	pdf, err := utils.GenerateEventRegistrationPDF(event.Judul, reg, qrPNG)
+	if err != nil {
+		return nil, "", err
+	}
+
+	filename := fmt.Sprintf("registrasi-event-%d-%d.pdf", reg.EventID, reg.ID)
+	return pdf, filename, nil
 }
 
 func mapEventToResponse(e *models.Event) *dto.EventResponse {
@@ -126,6 +258,7 @@ func mapEventToResponse(e *models.Event) *dto.EventResponse {
 		ID:        e.ID,
 		Judul:     e.Judul,
 		Deskripsi: e.Deskripsi,
+		Lokasi:    e.Lokasi,
 		Tanggal:   e.Tanggal.Format(time.RFC3339),
 		Status:    status,
 		CreatedAt: e.CreatedAt.Format(time.RFC3339),

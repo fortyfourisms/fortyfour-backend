@@ -123,7 +123,7 @@ func (h *SEHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id str
 
 	// Validasi ownership untuk user
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if data.IDPerusahaan != idPerusahaan {
 			utils.RespondError(w, 403, "Anda tidak memiliki akses ke data ini")
@@ -154,7 +154,7 @@ func (h *SEHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 
 	// User biasa: paksa id_perusahaan dari JWT, tidak bisa diisi sembarangan
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		idPerusahaan := middleware.GetIDPerusahaan(r.Context())
 		if idPerusahaan == "" {
 			utils.RespondError(w, 403, "Akun Anda belum terhubung ke perusahaan")
@@ -193,7 +193,7 @@ func (h *SEHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 func (h *SEHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	// Validasi ownership sebelum update untuk user
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		existing, err := h.service.GetByID(id)
 		if err != nil {
 			utils.RespondError(w, 404, "Data tidak ditemukan")
@@ -241,7 +241,7 @@ func (h *SEHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id stri
 func (h *SEHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	// Validasi ownership sebelum delete untuk user
 	role := middleware.GetRole(r.Context())
-	if role == "user" {
+	if isCompanyScopedRole(role) {
 		existing, err := h.service.GetByID(id)
 		if err != nil {
 			utils.RespondError(w, 404, "Data tidak ditemukan")

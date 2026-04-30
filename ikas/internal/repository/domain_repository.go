@@ -113,3 +113,14 @@ func (r *DomainRepository) CheckDuplicateName(nama string, excludeID int) (bool,
 
 	return count > 0, nil
 }
+
+func (r *DomainRepository) CheckHasKategori(domainID int) (bool, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM kategori WHERE domain_id = ?`
+	err := r.db.QueryRow(query, domainID).Scan(&count)
+	if err != nil {
+		logger.Error(err, "operation failed")
+		return false, err
+	}
+	return count > 0, nil
+}

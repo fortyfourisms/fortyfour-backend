@@ -70,6 +70,9 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			i.target_nilai,
 			p.id,
 			p.nama_perusahaan,
+			p.alamat,
+			p.email,
+			COALESCE(s.nama_sektor, '-') as nama_sektor,
 			iden.id,
 			iden.nilai_identifikasi,
 			iden.nilai_subdomain1,
@@ -103,6 +106,8 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			i.updated_at
 		FROM ikas i
 		LEFT JOIN perusahaan p ON i.id_perusahaan = p.id
+		LEFT JOIN sub_sektor ss ON p.id_sub_sektor = ss.id
+		LEFT JOIN sektor s ON ss.id_sektor = s.id
 		LEFT JOIN identifikasi iden ON i.id_identifikasi = iden.id
 		LEFT JOIN proteksi prot ON i.id_proteksi = prot.id
 		LEFT JOIN deteksi det ON i.id_deteksi = det.id
@@ -121,7 +126,7 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 		var i dto.IkasResponse
 		var tanggal sql.NullString
 		var nilaiKematangan, targetNilai sql.NullFloat64
-		var perusahaanID, perusahaanNama sql.NullString
+		var perusahaanID, perusahaanNama, perusahaanAlamat, perusahaanEmail, perusahaanSektor sql.NullString
 		var idenID sql.NullInt64
 		var idenNilai, idenSub1, idenSub2, idenSub3, idenSub4, idenSub5 sql.NullFloat64
 		var protID sql.NullInt64
@@ -144,6 +149,9 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			&targetNilai,
 			&perusahaanID,
 			&perusahaanNama,
+			&perusahaanAlamat,
+			&perusahaanEmail,
+			&perusahaanSektor,
 			&idenID,
 			&idenNilai,
 			&idenSub1,
@@ -227,6 +235,9 @@ func (r *IkasRepository) GetAll() ([]dto.IkasResponse, error) {
 			i.Perusahaan = &dto.PerusahaanInIkas{
 				ID:             perusahaanID.String,
 				NamaPerusahaan: perusahaanNama.String,
+				Alamat:         perusahaanAlamat.String,
+				Email:          perusahaanEmail.String,
+				Sektor:         perusahaanSektor.String,
 			}
 		}
 
@@ -302,6 +313,9 @@ func (r *IkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasRespons
 			i.target_nilai,
 			p.id,
 			p.nama_perusahaan,
+			p.alamat,
+			p.email,
+			COALESCE(s.nama_sektor, '-') as nama_sektor,
 			iden.id,
 			iden.nilai_identifikasi,
 			iden.nilai_subdomain1,
@@ -333,6 +347,8 @@ func (r *IkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasRespons
 			i.updated_at
 		FROM ikas i
 		LEFT JOIN perusahaan p ON i.id_perusahaan = p.id
+		LEFT JOIN sub_sektor ss ON p.id_sub_sektor = ss.id
+		LEFT JOIN sektor s ON ss.id_sektor = s.id
 		LEFT JOIN identifikasi iden ON i.id_identifikasi = iden.id
 		LEFT JOIN proteksi prot ON i.id_proteksi = prot.id
 		LEFT JOIN deteksi det ON i.id_deteksi = det.id
@@ -352,7 +368,7 @@ func (r *IkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasRespons
 		var i dto.IkasResponse
 		var tanggal sql.NullString
 		var nilaiKematangan, targetNilai sql.NullFloat64
-		var perusahaanID, perusahaanNama sql.NullString
+		var perusahaanID, perusahaanNama, perusahaanAlamat, perusahaanEmail, perusahaanSektor sql.NullString
 		var idenID sql.NullInt64
 		var idenNilai, idenSub1, idenSub2, idenSub3, idenSub4, idenSub5 sql.NullFloat64
 		var protID sql.NullInt64
@@ -374,6 +390,9 @@ func (r *IkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasRespons
 			&targetNilai,
 			&perusahaanID,
 			&perusahaanNama,
+			&perusahaanAlamat,
+			&perusahaanEmail,
+			&perusahaanSektor,
 			&idenID,
 			&idenNilai,
 			&idenSub1,
@@ -443,6 +462,9 @@ func (r *IkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasRespons
 			i.Perusahaan = &dto.PerusahaanInIkas{
 				ID:             perusahaanID.String,
 				NamaPerusahaan: perusahaanNama.String,
+				Alamat:         perusahaanAlamat.String,
+				Email:          perusahaanEmail.String,
+				Sektor:         perusahaanSektor.String,
 			}
 		}
 
@@ -514,6 +536,9 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 			i.target_nilai,
 			p.id,
 			p.nama_perusahaan,
+			p.alamat,
+			p.email,
+			COALESCE(s.nama_sektor, '-') as nama_sektor,
 			iden.id,
 			iden.nilai_identifikasi,
 			iden.nilai_subdomain1,
@@ -547,6 +572,8 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 			i.updated_at
 		FROM ikas i
 		LEFT JOIN perusahaan p ON i.id_perusahaan = p.id
+		LEFT JOIN sub_sektor ss ON p.id_sub_sektor = ss.id
+		LEFT JOIN sektor s ON ss.id_sektor = s.id
 		LEFT JOIN identifikasi iden ON i.id_identifikasi = iden.id
 		LEFT JOIN proteksi prot ON i.id_proteksi = prot.id
 		LEFT JOIN deteksi det ON i.id_deteksi = det.id
@@ -559,7 +586,7 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 	var i dto.IkasResponse
 	var tanggal sql.NullString
 	var nilaiKematangan, targetNilai sql.NullFloat64
-	var perusahaanID, perusahaanNama sql.NullString
+	var perusahaanID, perusahaanNama, perusahaanAlamat, perusahaanEmail, perusahaanSektor sql.NullString
 	var idenID sql.NullInt64
 	var idenNilai, idenSub1, idenSub2, idenSub3, idenSub4, idenSub5 sql.NullFloat64
 	var protID sql.NullInt64
@@ -582,6 +609,9 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 		&targetNilai,
 		&perusahaanID,
 		&perusahaanNama,
+		&perusahaanAlamat,
+		&perusahaanEmail,
+		&perusahaanSektor,
 		&idenID,
 		&idenNilai,
 		&idenSub1,
@@ -665,6 +695,9 @@ func (r *IkasRepository) GetByID(id string) (*dto.IkasResponse, error) {
 		i.Perusahaan = &dto.PerusahaanInIkas{
 			ID:             perusahaanID.String,
 			NamaPerusahaan: perusahaanNama.String,
+			Alamat:         perusahaanAlamat.String,
+			Email:          perusahaanEmail.String,
+			Sektor:         perusahaanSektor.String,
 		}
 	}
 

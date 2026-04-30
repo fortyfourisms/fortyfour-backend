@@ -21,6 +21,9 @@ type KuisService struct {
 	rc           cache.RedisInterface
 }
 
+// Dapat diubah sesuai kebutuhan, misal 30 menit atau 2 jam. Tujuannya untuk memberikan jeda waktu sebelum user bisa mencoba lagi setelah mencapai batas maksimal attempt.
+const kuisRetryCooldown = time.Hour
+
 func NewKuisService(
 	attemptRepo repository.KuisAttemptRepositoryInterface,
 	soalRepo repository.SoalRepositoryInterface,
@@ -144,7 +147,7 @@ func (s *KuisService) DeleteKuis(id string) error {
 	return s.kuisRepo.Delete(id)
 }
 
-func (s *KuisService) GetKuisByKelas(idKelas string) ([]dto.KuisResponse, error) {
+func (s *KuisService) GetKuisByKelas(idKelas, userID string) ([]dto.KuisResponse, error) {
 	kuisList, err := s.kuisRepo.FindByKelas(idKelas)
 	if err != nil {
 		return nil, err
@@ -153,9 +156,57 @@ func (s *KuisService) GetKuisByKelas(idKelas string) ([]dto.KuisResponse, error)
 	result := make([]dto.KuisResponse, 0, len(kuisList))
 	for _, k := range kuisList {
 		k := k
-		result = append(result, *mapKuisToResponse(&k))
+		resp := mapKuisToResponse(&k)
+
+		// Enrich dengan progress user jika userID tersedia
+		if userID != "" {
+			s.enrichKuisProgress(resp, userID, k.ID)
+		}
+
+		result = append(result, *resp)
 	}
 	return result, nil
+}
+
+// enrichKuisProgress mengisi field progress user pada KuisResponse
+// berdasarkan riwayat kuis_attempt milik user untuk kuis tertentu.
+func (s *KuisService) enrichKuisProgress(resp *dto.KuisResponse, userID, kuisID string) {
+	attempts, err := s.attemptRepo.FindByUserAndKuis(userID, kuisID)
+	if err != nil || len(attempts) == 0 {
+		// User belum pernah mengerjakan kuis ini → default (is_passed=false, dll sudah zero-value)
+		return
+	}
+
+	// Hitung attempt yang sudah selesai (finished)
+	finishedCount := 0
+	for _, a := range attempts {
+		if a.FinishedAt != nil {
+			finishedCount++
+		}
+	}
+	resp.AttemptCount = finishedCount
+
+	// Cari attempt terakhir yang sudah selesai (attempts sudah ORDER BY started_at DESC)
+	for _, a := range attempts {
+		if a.FinishedAt != nil {
+			score := a.Skor
+			resp.LatestScore = &score
+			lastID := a.ID
+			resp.LastAttemptID = &lastID
+			break
+		}
+	}
+
+	// Cek apakah pernah lulus dan catat waktu kelulusan pertama
+	for i := len(attempts) - 1; i >= 0; i-- {
+		a := attempts[i]
+		if a.IsPassed && a.FinishedAt != nil {
+			resp.IsPassed = true
+			passedAt := a.FinishedAt.Format(time.RFC3339)
+			resp.PassedAt = &passedAt
+			break // ambil kelulusan pertama (paling awal)
+		}
+	}
 }
 
 // ── User: Start Kuis ──────────────────────────────────────────────────────────
@@ -207,7 +258,23 @@ func (s *KuisService) Start(userID, kuisID string) (*dto.StartKuisResponse, erro
 			}
 		}
 		if finishedCount >= kuis.MaxAttempt {
-			return nil, fmt.Errorf("sudah mencapai batas maksimal pengerjaan kuis (%d kali)", kuis.MaxAttempt)
+			latestFinished := latestFinishedAttempt(allAttempts)
+			if latestFinished != nil && !latestFinished.IsPassed && latestFinished.FinishedAt != nil {
+				nextRetryAt := latestFinished.FinishedAt.Add(kuisRetryCooldown)
+				if time.Now().Before(nextRetryAt) {
+					waitMinutes := int(time.Until(nextRetryAt).Minutes())
+					if waitMinutes < 1 {
+						waitMinutes = 1
+					}
+					return nil, fmt.Errorf(
+						"batas maksimal pengerjaan kuis (%d kali) sudah tercapai, coba lagi dalam %d menit",
+						kuis.MaxAttempt,
+						waitMinutes,
+					)
+				}
+			} else {
+				return nil, fmt.Errorf("sudah mencapai batas maksimal pengerjaan kuis (%d kali)", kuis.MaxAttempt)
+			}
 		}
 	}
 
@@ -446,4 +513,13 @@ func mapKuisToResponse(k *models.Kuis) *dto.KuisResponse {
 		CreatedAt:    k.CreatedAt.Format(time.RFC3339),
 		UpdatedAt:    k.UpdatedAt.Format(time.RFC3339),
 	}
+}
+
+func latestFinishedAttempt(attempts []models.KuisAttempt) *models.KuisAttempt {
+	for i := range attempts {
+		if attempts[i].FinishedAt != nil {
+			return &attempts[i]
+		}
+	}
+	return nil
 }

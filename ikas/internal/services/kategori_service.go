@@ -127,11 +127,6 @@ func (s *KategoriService) Create(req dto.CreateKategoriRequest) (*dto.KategoriRe
 		return nil, errors.New("nama_kategori sudah ada dalam domain ini")
 	}
 
-	newID, err := s.repo.Create(req)
-	if err != nil {
-		return nil, err
-	}
-
 	err = s.producer.PublishKategoriCreated(context.Background(), dto_event.KategoriCreatedEvent{
 		Request:   req,
 		CreatedAt: time.Now(),
@@ -140,7 +135,7 @@ func (s *KategoriService) Create(req dto.CreateKategoriRequest) (*dto.KategoriRe
 		return nil, err
 	}
 
-	return s.repo.GetByID(int(newID))
+	return nil, nil
 }
 
 func (s *KategoriService) GetAll() ([]dto.KategoriResponse, error) {
@@ -203,10 +198,6 @@ func (s *KategoriService) Update(id int, req dto.UpdateKategoriRequest) (*dto.Ka
 		}
 	}
 
-	if err := s.repo.Update(id, req); err != nil {
-		return nil, err
-	}
-
 	err = s.producer.PublishKategoriUpdated(context.Background(), dto_event.KategoriUpdatedEvent{
 		ID:        id,
 		Request:   req,
@@ -229,8 +220,12 @@ func (s *KategoriService) Delete(id int) error {
 		return err
 	}
 
-	if err := s.repo.Delete(id); err != nil {
+	hasSubKategori, err := s.repo.CheckHasSubKategori(id)
+	if err != nil {
 		return err
+	}
+	if hasSubKategori {
+		return errors.New("tidak dapat menghapus kategori karena masih memiliki sub kategori")
 	}
 
 	err = s.producer.PublishKategoriDeleted(context.Background(), dto_event.KategoriDeletedEvent{

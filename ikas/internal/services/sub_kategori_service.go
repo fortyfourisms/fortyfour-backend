@@ -136,12 +136,6 @@ func (s *SubKategoriService) Create(req dto.CreateSubKategoriRequest) (*dto.SubK
 		return nil, errors.New("nama_sub_kategori sudah ada dalam kategori ini")
 	}
 
-	// Opsi 1: tulis ke DB dulu
-	newID, err := s.repo.Create(req)
-	if err != nil {
-		return nil, err
-	}
-
 	err = s.producer.PublishSubKategoriCreated(context.Background(), dto_event.SubKategoriCreatedEvent{
 		Request:   req,
 		CreatedAt: time.Now(),
@@ -150,7 +144,7 @@ func (s *SubKategoriService) Create(req dto.CreateSubKategoriRequest) (*dto.SubK
 		return nil, err
 	}
 
-	return s.repo.GetByID(int(newID))
+	return nil, nil
 }
 
 func (s *SubKategoriService) GetAll() ([]dto.SubKategoriResponse, error) {
@@ -215,11 +209,6 @@ func (s *SubKategoriService) Update(id int, req dto.UpdateSubKategoriRequest) (*
 		}
 	}
 
-	// Opsi 1: tulis ke DB dulu
-	if err := s.repo.Update(id, req); err != nil {
-		return nil, err
-	}
-
 	err = s.producer.PublishSubKategoriUpdated(context.Background(), dto_event.SubKategoriUpdatedEvent{
 		ID:        id,
 		Request:   req,
@@ -242,9 +231,12 @@ func (s *SubKategoriService) Delete(id int) error {
 		return err
 	}
 
-	// Opsi 1: hapus dari DB dulu
-	if err := s.repo.Delete(id); err != nil {
+	hasPertanyaan, err := s.repo.CheckHasPertanyaan(id)
+	if err != nil {
 		return err
+	}
+	if hasPertanyaan {
+		return errors.New("tidak dapat menghapus sub kategori karena masih digunakan oleh pertanyaan")
 	}
 
 	err = s.producer.PublishSubKategoriDeleted(context.Background(), dto_event.SubKategoriDeletedEvent{

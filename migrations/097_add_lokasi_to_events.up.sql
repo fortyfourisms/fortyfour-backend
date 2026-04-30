@@ -1,0 +1,1 @@
+ALTER TABLE events ADD COLUMN lokasi VARCHAR(255) NOT NULL AFTER deskripsi;

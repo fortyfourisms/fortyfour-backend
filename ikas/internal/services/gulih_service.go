@@ -22,14 +22,14 @@ func NewGulihService(
 }
 
 func (s *GulihService) GetAll(userRole string) ([]models.Gulih, error) {
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		return nil, errors.New("anda tidak memiliki akses untuk melihat semua data")
 	}
 	return s.repo.GetAll()
 }
 
 func (s *GulihService) GetByIkasID(ikasID string, userRole string, userPerusahaanID string) ([]models.Gulih, error) {
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		owned, err := s.ikasRepo.CheckOwnership(ikasID, userPerusahaanID)
 		if err != nil {
 			return nil, err
@@ -47,7 +47,7 @@ func (s *GulihService) GetByID(id string, userRole string, userPerusahaanID stri
 		return nil, err
 	}
 
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		owned, err := s.ikasRepo.CheckOwnership(data.IkasID, userPerusahaanID)
 		if err != nil {
 			return nil, err
@@ -61,7 +61,7 @@ func (s *GulihService) GetByID(id string, userRole string, userPerusahaanID stri
 }
 
 func (s *GulihService) GetByPerusahaanID(perusahaanID string, userRole string, userPerusahaanID string) ([]models.Gulih, error) {
-	if userRole != "admin" {
+	if userRole != "admin" && userRole != "staff" {
 		if perusahaanID != userPerusahaanID {
 			return nil, errors.New("anda tidak memiliki akses ke data perusahaan ini")
 		}

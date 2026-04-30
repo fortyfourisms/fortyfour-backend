@@ -55,6 +55,11 @@ func (m *mockRuangLingkupRepository) CheckDuplicateName(nama string, excludeID i
 	return args.Get(0).(bool), args.Error(1)
 }
 
+func (m *mockRuangLingkupRepository) CheckHasPertanyaan(ruangLingkupID int) (bool, error) {
+	args := m.Called(ruangLingkupID)
+	return args.Get(0).(bool), args.Error(1)
+}
+
 // mockRuangLingkupProducer implements services.RuangLingkupProducerInterface
 type mockRuangLingkupProducer struct {
 	mock.Mock
@@ -100,7 +105,7 @@ func TestRuangLingkupHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var response map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &response)
-	assert.Equal(t, "Berhasil mengambil data", response["message"])
+	assert.Equal(t, "Berhasil mengambil data ruang lingkup", response["message"])
 }
 
 func TestRuangLingkupHandler_ServeHTTP_GetAll_Error(t *testing.T) {
@@ -293,7 +298,7 @@ func TestRuangLingkupHandler_ServeHTTP_Update_InvalidJSON(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-func TestRuangLingkupHandler_ServeHTTP_Update_Duplicate(t *testing.T) {
+func TestRuangLingkupHandler_ServeHTTP_Update_PublishError(t *testing.T) {
 	repo := new(mockRuangLingkupRepository)
 	producer := new(mockRuangLingkupProducer)
 	handler := setupRuangLingkupHandler(repo, producer)
@@ -354,6 +359,7 @@ func TestRuangLingkupHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	// _, err := s.repo.GetByID(id)
 	// return s.producer.PublishRuangLingkupDeleted(...)
 	repo.On("GetByID", 1).Return(&dto.RuangLingkupResponse{ID: 1}, nil)
+	repo.On("CheckHasPertanyaan", 1).Return(false, nil)
 	repo.On("Delete", 1).Return(nil)
 	producer.On("PublishRuangLingkupDeleted", mock.Anything, mock.MatchedBy(func(e dto_event.RuangLingkupDeletedEvent) bool {
 		return e.ID == 1

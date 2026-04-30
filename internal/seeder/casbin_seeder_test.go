@@ -63,7 +63,7 @@ func hasPolicy(t *testing.T, svc *services.CasbinService, role, resource, action
 	return ok
 }
 
-func TestSeedCasbinPolicies_AddsDefaultPoliciesAndCleansStaleNonStaff(t *testing.T) {
+func TestSeedCasbinPolicies_AddsDefaultPoliciesIncludingStaff(t *testing.T) {
 	svc := newSeederTestService(t, [][]string{
 		{"user", "/api/legacy", "DELETE"},
 		{"staff", "/api/custom-staff", "PATCH"},
@@ -77,7 +77,11 @@ func TestSeedCasbinPolicies_AddsDefaultPoliciesAndCleansStaleNonStaff(t *testing
 	}
 
 	if !hasPolicy(t, svc, "user", "/api/kelas", "GET") {
-		t.Fatal("expected one of default user policies to be seeded")
+		t.Fatal("expected default user policies to be seeded")
+	}
+
+	if !hasPolicy(t, svc, "staff", "/api/maturity/ikas", "GET") {
+		t.Fatal("expected default staff policies to be seeded")
 	}
 
 	if hasPolicy(t, svc, "user", "/api/legacy", "DELETE") {
@@ -90,49 +94,6 @@ func TestSeedCasbinPolicies_AddsDefaultPoliciesAndCleansStaleNonStaff(t *testing
 
 	if !hasPolicy(t, svc, "admin", "/api/custom-admin", "PATCH") {
 		t.Fatal("expected custom admin policy to be preserved")
-	}
-}
-
-func TestSeedStaffInitialPolicies_SeedsWhenStaffHasNoPolicies(t *testing.T) {
-	svc := newSeederTestService(t, nil)
-
-	added := seedStaffInitialPolicies(svc)
-
-	if added != len(staffInitialPolicies) {
-		t.Fatalf("expected %d staff policies added, got %d", len(staffInitialPolicies), added)
-	}
-
-	if !hasPolicy(t, svc, "staff", "/api/se", "GET") {
-		t.Fatal("expected staff SE policy to be seeded")
-	}
-
-	if !hasPolicy(t, svc, "staff", "/api/dashboard/summary", "GET") {
-		t.Fatal("expected staff dashboard policy to be seeded")
-	}
-}
-
-func TestSeedStaffInitialPolicies_SkipsWhenStaffAlreadyHasPolicies(t *testing.T) {
-	svc := newSeederTestService(t, [][]string{
-		{"staff", "/api/custom", "GET"},
-	})
-
-	added := seedStaffInitialPolicies(svc)
-
-	if added != 0 {
-		t.Fatalf("expected no staff policy added, got %d", added)
-	}
-
-	policies := svc.GetRolePermissions("staff")
-	if len(policies) != 1 {
-		t.Fatalf("expected existing staff policies to remain untouched, got %d", len(policies))
-	}
-
-	if !hasPolicy(t, svc, "staff", "/api/custom", "GET") {
-		t.Fatal("expected existing staff policy to remain")
-	}
-
-	if hasPolicy(t, svc, "staff", "/api/se", "GET") {
-		t.Fatal("expected initial staff policies to be skipped when staff already has policies")
 	}
 }
 

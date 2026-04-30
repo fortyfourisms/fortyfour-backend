@@ -177,12 +177,52 @@ func InitRouter(
 	mux.HandleFunc("/api/notifications/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(notificationH))))
 
 	// Routes Berita
-	mux.HandleFunc("/api/berita", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(beritaH)))))
-	mux.HandleFunc("/api/berita/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(beritaH)))))
+	mux.HandleFunc("/api/berita", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			lenientLimiter.LimitByIP(utils.AdaptHandler(beritaH))(w, r)
+		} else {
+			authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(beritaH))))(w, r)
+		}
+	})
+	mux.HandleFunc("/api/berita/", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			lenientLimiter.LimitByIP(utils.AdaptHandler(beritaH))(w, r)
+		} else {
+			authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(beritaH))))(w, r)
+		}
+	})
 
 	// Routes Events (Kegiatan)
-	mux.HandleFunc("/api/kegiatan", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(eventH)))))
-	mux.HandleFunc("/api/kegiatan/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(eventH)))))
+	mux.HandleFunc("/api/kegiatan", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			lenientLimiter.LimitByIP(utils.AdaptHandler(eventH))(w, r)
+		} else {
+			authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(eventH))))(w, r)
+		}
+	})
+	mux.HandleFunc("/api/kegiatan/", func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+
+		// POST /api/kegiatan/{id}/registrasi → PUBLIC (peserta event eksternal)
+		if strings.HasSuffix(path, "/registrasi") && r.Method == http.MethodPost {
+			strictLimiter.LimitByIP(utils.AdaptHandler(eventH))(w, r)
+			return
+		}
+
+		// GET /api/kegiatan/registrasi/{id}/download → PUBLIC (download PDF registrasi)
+		if strings.Contains(path, "/registrasi/") && strings.HasSuffix(path, "/download") && r.Method == http.MethodGet {
+			lenientLimiter.LimitByIP(utils.AdaptHandler(eventH))(w, r)
+			return
+		}
+
+		// GET → PUBLIC (list/detail event)
+		if r.Method == http.MethodGet {
+			lenientLimiter.LimitByIP(utils.AdaptHandler(eventH))(w, r)
+		} else {
+			// POST/PUT/DELETE event → AUTH + CASBIN (admin only)
+			authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(eventH))))(w, r)
+		}
+	})
 
 	// Routes Chat
 	mux.HandleFunc("/api/chat", authM.Authenticate(chatHandler.Stream))

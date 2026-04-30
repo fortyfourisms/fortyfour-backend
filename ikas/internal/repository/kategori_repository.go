@@ -145,3 +145,14 @@ func (r *KategoriRepository) CheckDomainExists(domainID int) (bool, error) {
 
 	return count > 0, nil
 }
+
+func (r *KategoriRepository) CheckHasSubKategori(kategoriID int) (bool, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM sub_kategori WHERE kategori_id = ?`
+	err := r.db.QueryRow(query, kategoriID).Scan(&count)
+	if err != nil {
+		logger.Error(err, "operation failed")
+		return false, err
+	}
+	return count > 0, nil
+}

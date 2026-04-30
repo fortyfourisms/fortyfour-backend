@@ -2098,7 +2098,7 @@ const docTemplate = `{
         },
         "/api/login": {
             "post": {
-                "description": "Autentikasi user. Token dikirim via HTTP-only cookies, BUKAN di response body.",
+                "description": "Autentikasi user dengan dukungan Cloudflare Turnstile. Token dikirim via HTTP-only cookies, BUKAN di response body.",
                 "consumes": [
                     "application/json"
                 ],
@@ -2111,7 +2111,7 @@ const docTemplate = `{
                 "summary": "Login user",
                 "parameters": [
                     {
-                        "description": "Login credentials",
+                        "description": "Login credentials (termasuk cf-turnstile-response)",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -3075,6 +3075,251 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/ikas/{id}/approve-edit": {
+            "put": {
+                "description": "Menyetujui permintaan edit dan membuka kembali kunci data IKAS. Hanya bisa dilakukan oleh Admin atau Staff.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Ikas"
+                ],
+                "summary": "Setujui permintaan edit IKAS",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ikas ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/ikas/{id}/export": {
+            "get": {
+                "description": "Mengunduh file laporan IKAS dalam format PDF berdasarkan ID",
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "Ikas"
+                ],
+                "summary": "Export IKAS ke PDF",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ikas ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/ikas/{id}/reject-edit": {
+            "put": {
+                "description": "Menolak permintaan edit data IKAS. Hanya bisa dilakukan oleh Admin atau Staff.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Ikas"
+                ],
+                "summary": "Tolak permintaan edit IKAS",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ikas ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Alasan penolakan",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RejectEditRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/ikas/{id}/request-edit": {
+            "post": {
+                "description": "Mengajukan permintaan pembukaan kunci (unlock) data IKAS yang sudah divalidasi kepada Admin/Staff",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Ikas"
+                ],
+                "summary": "Ajukan permintaan edit IKAS",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ikas ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Alasan pengajuan edit",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RequestEditRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/ikas/{id}/validate": {
+            "put": {
+                "description": "Melakukan validasi final (lock/unlock) data IKAS. Hanya bisa dilakukan oleh Admin atau Staff.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Ikas"
+                ],
+                "summary": "Validasi final IKAS",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Ikas ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status validasi (true=lock, false=unlock)",
+                        "name": "req",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ValidasiIkasRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
@@ -9915,6 +10160,28 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.RejectEditRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RequestEditRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.RespondenResponse": {
             "type": "object",
             "properties": {
@@ -10309,6 +10576,14 @@ const docTemplate = `{
                 },
                 "nama_sub_kategori": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.ValidasiIkasRequest": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "boolean"
                 }
             }
         },
@@ -11225,10 +11500,14 @@ const docTemplate = `{
         "fortyfour-backend_internal_dto.LoginRequest": {
             "type": "object",
             "required": [
+                "cf-turnstile-response",
                 "identifier",
                 "password"
             ],
             "properties": {
+                "cf-turnstile-response": {
+                    "type": "string"
+                },
                 "identifier": {
                     "type": "string"
                 },
