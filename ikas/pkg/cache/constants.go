@@ -25,4 +25,11 @@ const (
 	CacheKeyPrefixJawabanProteksi     = "ikas:jawaban:proteksi:"
 	CacheKeyPrefixJawabanDeteksi      = "ikas:jawaban:deteksi:"
 	CacheKeyPrefixJawabanGulih        = "ikas:jawaban:gulih:"
+
+	// Cache Key Prefixes for Domain (per ikas_id)
+	// Usage: fmt.Sprintf(CacheKeyPrefixIdentifikasi+"%s", ikasID)
+	CacheKeyPrefixIdentifikasi = "ikas:domain:identifikasi:"
+	CacheKeyPrefixProteksi     = "ikas:domain:proteksi:"
+	CacheKeyPrefixDeteksi      = "ikas:domain:deteksi:"
+	CacheKeyPrefixGulih        = "ikas:domain:gulih:"
 )

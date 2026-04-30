@@ -179,6 +179,7 @@ func (s *JawabanGulihService) Create(req dto.CreateJawabanGulihRequest, userRole
 
 	if s.cache != nil {
 		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixJawabanGulih, req.IkasID))
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixGulih, req.IkasID))
 	}
 
 	return "Berhasil menyimpan data", nil
@@ -387,6 +388,7 @@ func (s *JawabanGulihService) Update(id int, req dto.UpdateJawabanGulihRequest, 
 
 	if s.cache != nil {
 		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixJawabanGulih, existing.IkasID))
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixGulih, existing.IkasID))
 	}
 
 	return id, msg, nil
@@ -445,6 +447,7 @@ func (s *JawabanGulihService) Delete(id int, userID string, userRole string, use
 
 	if s.cache != nil {
 		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixJawabanGulih, existing.IkasID))
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixGulih, existing.IkasID))
 	}
 
 	return nil

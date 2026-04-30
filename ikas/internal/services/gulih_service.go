@@ -1,23 +1,29 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"ikas/internal/models"
 	"ikas/internal/repository"
+	"ikas/pkg/cache"
 )
 
 type GulihService struct {
 	repo     repository.GulihRepositoryInterface
 	ikasRepo repository.IkasRepositoryInterface
+	cache    cache.RedisInterface
 }
 
 func NewGulihService(
 	repo repository.GulihRepositoryInterface,
 	ikasRepo repository.IkasRepositoryInterface,
+	cache cache.RedisInterface,
 ) *GulihService {
 	return &GulihService{
 		repo:     repo,
 		ikasRepo: ikasRepo,
+		cache:    cache,
 	}
 }
 
@@ -38,7 +44,33 @@ func (s *GulihService) GetByIkasID(ikasID string, userRole string, userPerusahaa
 			return nil, errors.New("anda tidak memiliki akses ke data asesmen ini")
 		}
 	}
-	return s.repo.GetByIkasID(ikasID)
+
+	cacheKey := fmt.Sprintf("%s%s", cache.CacheKeyPrefixGulih, ikasID)
+	if s.cache != nil {
+		cachedData, err := s.cache.Get(cacheKey)
+		if err == nil && cachedData != "" {
+			var data []models.Gulih
+			if err := json.Unmarshal([]byte(cachedData), &data); err == nil {
+				return data, nil
+			}
+		}
+	}
+
+	data, err := s.repo.GetByIkasID(ikasID)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.cache != nil {
+		go func(key string, dataToCache []models.Gulih) {
+			jsonData, err := json.Marshal(dataToCache)
+			if err == nil {
+				_ = s.cache.Set(key, string(jsonData), cache.DefaultCacheExpiration)
+			}
+		}(cacheKey, data)
+	}
+
+	return data, nil
 }
 
 func (s *GulihService) GetByID(id string, userRole string, userPerusahaanID string) (*models.Gulih, error) {

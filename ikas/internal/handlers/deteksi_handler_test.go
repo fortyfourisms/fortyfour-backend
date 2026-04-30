@@ -52,7 +52,7 @@ func (m *mockDeteksiRepository) CloneByIkasID(oldIkasID string, newIkasID string
 var _ repository.DeteksiRepositoryInterface = (*mockDeteksiRepository)(nil)
 
 func setupDeteksiHandler(repo repository.DeteksiRepositoryInterface, ikasRepo repository.IkasRepositoryInterface) *DeteksiHandler {
-	service := services.NewDeteksiService(repo, ikasRepo)
+	service := services.NewDeteksiService(repo, ikasRepo, nil)
 	return NewDeteksiHandler(service)
 }
 

@@ -179,6 +179,7 @@ func (s *JawabanProteksiService) Create(req dto.CreateJawabanProteksiRequest, us
 
 	if s.cache != nil {
 		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixJawabanProteksi, req.IkasID))
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixProteksi, req.IkasID))
 	}
 
 	return "Berhasil menyimpan data", nil
@@ -387,6 +388,7 @@ func (s *JawabanProteksiService) Update(id int, req dto.UpdateJawabanProteksiReq
 
 	if s.cache != nil {
 		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixJawabanProteksi, existing.IkasID))
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixProteksi, existing.IkasID))
 	}
 
 	return id, msg, nil
@@ -445,6 +447,7 @@ func (s *JawabanProteksiService) Delete(id int, userID string, userRole string, 
 
 	if s.cache != nil {
 		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixJawabanProteksi, existing.IkasID))
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixProteksi, existing.IkasID))
 	}
 
 	return nil

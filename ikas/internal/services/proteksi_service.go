@@ -1,23 +1,29 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"ikas/internal/models"
 	"ikas/internal/repository"
+	"ikas/pkg/cache"
 )
 
 type ProteksiService struct {
 	repo     repository.ProteksiRepositoryInterface
 	ikasRepo repository.IkasRepositoryInterface
+	cache    cache.RedisInterface
 }
 
 func NewProteksiService(
 	repo repository.ProteksiRepositoryInterface,
 	ikasRepo repository.IkasRepositoryInterface,
+	cache cache.RedisInterface,
 ) *ProteksiService {
 	return &ProteksiService{
 		repo:     repo,
 		ikasRepo: ikasRepo,
+		cache:    cache,
 	}
 }
 
@@ -38,7 +44,33 @@ func (s *ProteksiService) GetByIkasID(ikasID string, userRole string, userPerusa
 			return nil, errors.New("anda tidak memiliki akses ke data asesmen ini")
 		}
 	}
-	return s.repo.GetByIkasID(ikasID)
+
+	cacheKey := fmt.Sprintf("%s%s", cache.CacheKeyPrefixProteksi, ikasID)
+	if s.cache != nil {
+		cachedData, err := s.cache.Get(cacheKey)
+		if err == nil && cachedData != "" {
+			var data []models.Proteksi
+			if err := json.Unmarshal([]byte(cachedData), &data); err == nil {
+				return data, nil
+			}
+		}
+	}
+
+	data, err := s.repo.GetByIkasID(ikasID)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.cache != nil {
+		go func(key string, dataToCache []models.Proteksi) {
+			jsonData, err := json.Marshal(dataToCache)
+			if err == nil {
+				_ = s.cache.Set(key, string(jsonData), cache.DefaultCacheExpiration)
+			}
+		}(cacheKey, data)
+	}
+
+	return data, nil
 }
 
 func (s *ProteksiService) GetByID(id string, userRole string, userPerusahaanID string) (*models.Proteksi, error) {

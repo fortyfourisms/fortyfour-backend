@@ -182,6 +182,7 @@ func (s *JawabanIdentifikasiService) Create(req dto.CreateJawabanIdentifikasiReq
 
 	if s.cache != nil {
 		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixJawabanIdentifikasi, req.IkasID))
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixIdentifikasi, req.IkasID))
 	}
 
 	return "Berhasil menyimpan data", nil
@@ -395,6 +396,7 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 
 	if s.cache != nil {
 		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixJawabanIdentifikasi, existing.IkasID))
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixIdentifikasi, existing.IkasID))
 	}
 
 	return id, msg, nil
@@ -453,6 +455,7 @@ func (s *JawabanIdentifikasiService) Delete(id int, userID string, userRole stri
 
 	if s.cache != nil {
 		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixJawabanIdentifikasi, existing.IkasID))
+		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixIdentifikasi, existing.IkasID))
 	}
 
 	return nil
