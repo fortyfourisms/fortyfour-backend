@@ -44,6 +44,9 @@ type RabbitMQConfig struct {
 	Password string
 	Vhost    string
 }
+func (r RedisConfig) Address() string {
+	return r.Host + ":" + r.Port
+}
 
 func Load() *Config {
 	absPath, _ := filepath.Abs("casbin/casbin_model.conf")
