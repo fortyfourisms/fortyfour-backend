@@ -260,6 +260,15 @@ type EventRepositoryInterface interface {
 	UpdateRegistrationPayload(id int64, payload string) error
 }
 
+type AktivitasRepositoryInterface interface {
+	Create(req dto.CreateAktivitasRequest) (int64, error)
+	GetAll() ([]dto.AktivitasResponse, error)
+	GetByID(id int) (*dto.AktivitasResponse, error)
+	GetByPerusahaanID(perusahaanID string) ([]dto.AktivitasResponse, error)
+	Update(id int, req dto.UpdateAktivitasRequest) error
+	Delete(id int) error
+}
+
 // DTOnya tidak dipakai langsung di interface ini, tapi diimport
 // agar tetap terkompilasi jika ada helper yang butuh dto.
 var _ = dto.KelasResponse{}

@@ -65,7 +65,7 @@ func TestBeritaService_Create(t *testing.T) {
 			return &models.Berita{ID: id, Judul: "Test"}, nil
 		},
 	}
-	svc := services.NewBeritaService(mockRepo, nil)
+	svc := services.NewBeritaService(mockRepo, nil, nil)
 
 	req := dto.CreateBeritaRequest{Judul: "Test", Deskripsi: "Desc"}
 	err := svc.Create("author1", req)
@@ -87,7 +87,7 @@ func TestBeritaService_Create_WithProducer(t *testing.T) {
 	}
 	pkgProducer := pkgRmq.NewProducer(nil) // nil rmq, will return error but not panic
 	mockProducer := internalRmq.NewProducer(pkgProducer)
-	svc := services.NewBeritaService(mockRepo, mockProducer)
+	svc := services.NewBeritaService(mockRepo, mockProducer, nil)
 
 	req := dto.CreateBeritaRequest{Judul: "Test", Deskripsi: "Desc"}
 	err := svc.Create("author1", req)
@@ -108,7 +108,7 @@ func TestBeritaService_GetAll(t *testing.T) {
 			}, nil
 		},
 	}
-	svc := services.NewBeritaService(mockRepo, nil)
+	svc := services.NewBeritaService(mockRepo, nil, nil)
 
 	res, err := svc.GetAll()
 
@@ -126,7 +126,7 @@ func TestBeritaService_GetAll_Error(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	svc := services.NewBeritaService(mockRepo, nil)
+	svc := services.NewBeritaService(mockRepo, nil, nil)
 
 	_, err := svc.GetAll()
 
@@ -142,7 +142,7 @@ func TestBeritaService_GetByID(t *testing.T) {
 			return &models.Berita{ID: id, Judul: "Test", CreatedAt: now, UpdatedAt: now}, nil
 		},
 	}
-	svc := services.NewBeritaService(mockRepo, nil)
+	svc := services.NewBeritaService(mockRepo, nil, nil)
 
 	res, err := svc.GetByID(1)
 
@@ -160,7 +160,7 @@ func TestBeritaService_GetByID_NotFound(t *testing.T) {
 			return nil, nil
 		},
 	}
-	svc := services.NewBeritaService(mockRepo, nil)
+	svc := services.NewBeritaService(mockRepo, nil, nil)
 
 	_, err := svc.GetByID(1)
 
@@ -175,7 +175,7 @@ func TestBeritaService_GetByID_Error(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	svc := services.NewBeritaService(mockRepo, nil)
+	svc := services.NewBeritaService(mockRepo, nil, nil)
 
 	_, err := svc.GetByID(1)
 
@@ -190,7 +190,7 @@ func TestBeritaService_Update(t *testing.T) {
 			return &models.Berita{ID: id, Judul: "Old"}, nil
 		},
 	}
-	svc := services.NewBeritaService(mockRepo, nil)
+	svc := services.NewBeritaService(mockRepo, nil, nil)
 
 	judul := "New"
 	desc := "New Desc"
@@ -210,7 +210,7 @@ func TestBeritaService_Update_WithProducer(t *testing.T) {
 	}
 	pkgProducer := pkgRmq.NewProducer(nil)
 	mockProducer := internalRmq.NewProducer(pkgProducer)
-	svc := services.NewBeritaService(mockRepo, mockProducer)
+	svc := services.NewBeritaService(mockRepo, mockProducer, nil)
 
 	judul := "New"
 	req := dto.UpdateBeritaRequest{Judul: &judul}
@@ -227,7 +227,7 @@ func TestBeritaService_Update_NotFound(t *testing.T) {
 			return nil, nil
 		},
 	}
-	svc := services.NewBeritaService(mockRepo, nil)
+	svc := services.NewBeritaService(mockRepo, nil, nil)
 
 	req := dto.UpdateBeritaRequest{}
 	err := svc.Update(1, req)
@@ -243,7 +243,7 @@ func TestBeritaService_Update_ErrorFind(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	svc := services.NewBeritaService(mockRepo, nil)
+	svc := services.NewBeritaService(mockRepo, nil, nil)
 
 	req := dto.UpdateBeritaRequest{}
 	err := svc.Update(1, req)
@@ -259,7 +259,7 @@ func TestBeritaService_Delete(t *testing.T) {
 			return &models.Berita{ID: id}, nil
 		},
 	}
-	svc := services.NewBeritaService(mockRepo, nil)
+	svc := services.NewBeritaService(mockRepo, nil, nil)
 
 	err := svc.Delete(1)
 
@@ -276,7 +276,7 @@ func TestBeritaService_Delete_WithProducer(t *testing.T) {
 	}
 	pkgProducer := pkgRmq.NewProducer(nil)
 	mockProducer := internalRmq.NewProducer(pkgProducer)
-	svc := services.NewBeritaService(mockRepo, mockProducer)
+	svc := services.NewBeritaService(mockRepo, mockProducer, nil)
 
 	err := svc.Delete(1)
 
@@ -291,7 +291,7 @@ func TestBeritaService_Delete_NotFound(t *testing.T) {
 			return nil, nil
 		},
 	}
-	svc := services.NewBeritaService(mockRepo, nil)
+	svc := services.NewBeritaService(mockRepo, nil, nil)
 
 	err := svc.Delete(1)
 
@@ -306,7 +306,7 @@ func TestBeritaService_Delete_ErrorFind(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	svc := services.NewBeritaService(mockRepo, nil)
+	svc := services.NewBeritaService(mockRepo, nil, nil)
 
 	err := svc.Delete(1)
 

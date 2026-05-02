@@ -26,22 +26,31 @@ type NotificationPusher interface {
 // Consumer wrapper
 type Consumer struct {
 	*rabbitmq.Consumer
-	sseService   SSEBroadcaster
-	userRepo     repository.UserRepositoryInterface
-	notifService NotificationPusher
-	eventRepo    repository.EventRepositoryInterface
-	beritaRepo   repository.BeritaRepositoryInterface
+	sseService    SSEBroadcaster
+	userRepo      repository.UserRepositoryInterface
+	notifService  NotificationPusher
+	eventRepo     repository.EventRepositoryInterface
+	beritaRepo    repository.BeritaRepositoryInterface
+	aktivitasRepo repository.AktivitasRepositoryInterface
 }
 
-// NewConsumer
-func NewConsumer(c *rabbitmq.Consumer, sseService SSEBroadcaster, userRepo repository.UserRepositoryInterface, notifService NotificationPusher, eventRepo repository.EventRepositoryInterface, beritaRepo repository.BeritaRepositoryInterface) *Consumer {
+func NewConsumer(
+	c *rabbitmq.Consumer,
+	sseService SSEBroadcaster,
+	userRepo repository.UserRepositoryInterface,
+	notifService NotificationPusher,
+	eventRepo repository.EventRepositoryInterface,
+	beritaRepo repository.BeritaRepositoryInterface,
+	aktivitasRepo repository.AktivitasRepositoryInterface,
+) *Consumer {
 	return &Consumer{
-		Consumer:     c,
-		sseService:   sseService,
-		userRepo:     userRepo,
-		notifService: notifService,
-		eventRepo:    eventRepo,
-		beritaRepo:   beritaRepo,
+		Consumer:      c,
+		sseService:    sseService,
+		userRepo:      userRepo,
+		notifService:  notifService,
+		eventRepo:     eventRepo,
+		beritaRepo:    beritaRepo,
+		aktivitasRepo: aktivitasRepo,
 	}
 }
 
@@ -359,6 +368,9 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeBeritaCreated,
 		c.ConsumeBeritaUpdated,
 		c.ConsumeBeritaDeleted,
+		c.ConsumeAktivitasCreated,
+		c.ConsumeAktivitasUpdated,
+		c.ConsumeAktivitasDeleted,
 	}
 
 	for _, consumer := range consumers {
@@ -702,6 +714,70 @@ func (c *Consumer) ConsumeBeritaDeleted(ctx context.Context) error {
 
 		if c.sseService != nil {
 			c.sseService.NotifyDelete("berita", event.ID, "system")
+		}
+
+		return nil
+	})
+}
+
+// Aktivitas
+func (c *Consumer) ConsumeAktivitasCreated(ctx context.Context) error {
+	return c.Consume(ctx, "aktivitas.created", func(ctx context.Context, body []byte) error {
+		var event dto_event.AktivitasCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		log.Printf("Aktivitas Created Event: %+v", event)
+		_, err := c.aktivitasRepo.Create(event.Request)
+		if err != nil {
+			return err
+		}
+
+		if c.sseService != nil {
+			c.sseService.NotifyCreate("aktivitas", event, "system")
+		}
+
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeAktivitasUpdated(ctx context.Context) error {
+	return c.Consume(ctx, "aktivitas.updated", func(ctx context.Context, body []byte) error {
+		var event dto_event.AktivitasUpdatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		log.Printf("Aktivitas Updated Event: %+v", event)
+		err := c.aktivitasRepo.Update(event.ID, event.Request)
+		if err != nil {
+			return err
+		}
+
+		if c.sseService != nil {
+			c.sseService.NotifyUpdate("aktivitas", event, "system")
+		}
+
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeAktivitasDeleted(ctx context.Context) error {
+	return c.Consume(ctx, "aktivitas.deleted", func(ctx context.Context, body []byte) error {
+		var event dto_event.AktivitasDeletedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		log.Printf("Aktivitas Deleted Event: %+v", event)
+		err := c.aktivitasRepo.Delete(event.ID)
+		if err != nil {
+			return err
+		}
+
+		if c.sseService != nil {
+			c.sseService.NotifyDelete("aktivitas", event.ID, "system")
 		}
 
 		return nil

@@ -3,11 +3,13 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/dto/dto_event"
 	"fortyfour-backend/internal/models"
 	internalRmq "fortyfour-backend/internal/rabbitmq"
 	"fortyfour-backend/internal/repository"
+	"fortyfour-backend/pkg/cache"
 	"time"
 )
 
@@ -22,12 +24,18 @@ type BeritaServiceInterface interface {
 type BeritaService struct {
 	repo     repository.BeritaRepositoryInterface
 	producer *internalRmq.Producer
+	rc       cache.RedisInterface
 }
 
-func NewBeritaService(repo repository.BeritaRepositoryInterface, producer *internalRmq.Producer) *BeritaService {
+func NewBeritaService(
+	repo repository.BeritaRepositoryInterface,
+	producer *internalRmq.Producer,
+	rc cache.RedisInterface,
+) *BeritaService {
 	return &BeritaService{
 		repo:     repo,
 		producer: producer,
+		rc:       rc,
 	}
 }
 
@@ -41,25 +49,46 @@ func (s *BeritaService) Create(authorID string, req dto.CreateBeritaRequest) err
 	}
 
 	if s.producer != nil {
-		return s.producer.PublishBeritaCreated(context.Background(), event)
+		err := s.producer.PublishBeritaCreated(context.Background(), event)
+		if err != nil {
+			return err
+		}
 	}
+
+	// Invalidate list cache
+	cacheDelete(s.rc, keyList("berita"))
 	return nil
 }
 
 func (s *BeritaService) GetAll() ([]dto.BeritaResponse, error) {
+	key := keyList("berita")
+	var res []dto.BeritaResponse
+
+	if cacheGet(s.rc, key, &res) {
+		return res, nil
+	}
+
 	list, err := s.repo.FindAll()
 	if err != nil {
 		return nil, err
 	}
 
-	var res []dto.BeritaResponse
 	for _, b := range list {
 		res = append(res, *mapBeritaToResponse(&b))
 	}
+
+	cacheSet(s.rc, key, res, TTLList)
 	return res, nil
 }
 
 func (s *BeritaService) GetByID(id int64) (*dto.BeritaResponse, error) {
+	key := keyDetail("berita", fmt.Sprintf("%d", id))
+	var res dto.BeritaResponse
+
+	if cacheGet(s.rc, key, &res) {
+		return &res, nil
+	}
+
 	b, err := s.repo.FindByID(id)
 	if err != nil {
 		return nil, err
@@ -67,7 +96,10 @@ func (s *BeritaService) GetByID(id int64) (*dto.BeritaResponse, error) {
 	if b == nil {
 		return nil, errors.New("berita tidak ditemukan")
 	}
-	return mapBeritaToResponse(b), nil
+
+	resp := mapBeritaToResponse(b)
+	cacheSet(s.rc, key, resp, TTLDetail)
+	return resp, nil
 }
 
 func (s *BeritaService) Update(id int64, req dto.UpdateBeritaRequest) error {
@@ -86,8 +118,15 @@ func (s *BeritaService) Update(id int64, req dto.UpdateBeritaRequest) error {
 	}
 
 	if s.producer != nil {
-		return s.producer.PublishBeritaUpdated(context.Background(), event)
+		err = s.producer.PublishBeritaUpdated(context.Background(), event)
+		if err != nil {
+			return err
+		}
 	}
+
+	// Invalidate caches
+	cacheDelete(s.rc, keyList("berita"))
+	cacheDelete(s.rc, keyDetail("berita", fmt.Sprintf("%d", id)))
 	return nil
 }
 
@@ -106,8 +145,15 @@ func (s *BeritaService) Delete(id int64) error {
 	}
 
 	if s.producer != nil {
-		return s.producer.PublishBeritaDeleted(context.Background(), event)
+		err = s.producer.PublishBeritaDeleted(context.Background(), event)
+		if err != nil {
+			return err
+		}
 	}
+
+	// Invalidate caches
+	cacheDelete(s.rc, keyList("berita"))
+	cacheDelete(s.rc, keyDetail("berita", fmt.Sprintf("%d", id)))
 	return nil
 }
 
