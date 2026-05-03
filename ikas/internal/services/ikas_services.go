@@ -648,7 +648,7 @@ func (s *IkasService) ImportFromExcel(ctx context.Context, fileData []byte, user
 
 	return newID, nil
 }
-func (s *IkasService) ValidateIkas(ctx context.Context, id string, status bool) error {
+func (s *IkasService) ValidateIkas(ctx context.Context, id string, status bool, userID string) error {
 	// Existence Check
 	existing, err := s.repo.GetByID(id)
 	if err != nil {
@@ -672,7 +672,7 @@ func (s *IkasService) ValidateIkas(ctx context.Context, id string, status bool) 
 
 	auditEvent := dto_event.IkasAuditLogEvent{
 		IkasID:    id,
-		UserID:    "system_admin", // TODO: Pass user ID if possible
+		UserID:    userID,
 		Action:    action,
 		Changes:   map[string]interface{}{"is_validated": status},
 		Timestamp: time.Now(),
@@ -707,7 +707,7 @@ func (s *IkasService) ExportByIDPDF(ctx context.Context, id string, userRole str
 	return ikas, pdfBytes, nil
 }
 
-func (s *IkasService) RequestEdit(ctx context.Context, id string, reason string, userRole string, userPerusahaanID string) error {
+func (s *IkasService) RequestEdit(ctx context.Context, id string, reason string, userID string, userRole string, userPerusahaanID string) error {
 	// 1. Get current data
 	ikas, err := s.GetByID(id, userRole, userPerusahaanID)
 	if err != nil {
@@ -740,10 +740,22 @@ func (s *IkasService) RequestEdit(ctx context.Context, id string, reason string,
 		_ = s.producer.PublishIkasEditRequested(ctx, event)
 	}
 
+	// Audit Log
+	auditEvent := dto_event.IkasAuditLogEvent{
+		IkasID:    id,
+		UserID:    userID,
+		Action:    "REQUEST_EDIT_IKAS",
+		Changes:   map[string]interface{}{"reason": reason},
+		Timestamp: time.Now(),
+	}
+	if s.producer != nil {
+		_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
+	}
+
 	return nil
 }
 
-func (s *IkasService) ApproveEdit(ctx context.Context, id string) error {
+func (s *IkasService) ApproveEdit(ctx context.Context, id string, userID string) error {
 	// 1. Get current data (admin check is handled by handler/middleware)
 	ikas, err := s.GetByID(id, "admin", "")
 	if err != nil {
@@ -776,6 +788,18 @@ func (s *IkasService) ApproveEdit(ctx context.Context, id string) error {
 		_ = s.producer.PublishIkasEditActioned(ctx, event)
 	}
 
+	// Audit Log
+	auditEvent := dto_event.IkasAuditLogEvent{
+		IkasID:    id,
+		UserID:    userID,
+		Action:    "APPROVE_EDIT_IKAS",
+		Changes:   map[string]interface{}{"status": "approved"},
+		Timestamp: time.Now(),
+	}
+	if s.producer != nil {
+		_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
+	}
+
 	// Invalidate Cache
 	if s.cache != nil {
 		s.cache.Delete(cache.CacheKeyIkasRecords)
@@ -787,7 +811,7 @@ func (s *IkasService) ApproveEdit(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *IkasService) RejectEdit(ctx context.Context, id string, adminReason string) error {
+func (s *IkasService) RejectEdit(ctx context.Context, id string, adminReason string, userID string) error {
 	// 1. Get current data
 	ikas, err := s.GetByID(id, "admin", "")
 	if err != nil {
@@ -814,6 +838,18 @@ func (s *IkasService) RejectEdit(ctx context.Context, id string, adminReason str
 			ActionedAt:     time.Now(),
 		}
 		_ = s.producer.PublishIkasEditActioned(ctx, event)
+	}
+
+	// Audit Log
+	auditEvent := dto_event.IkasAuditLogEvent{
+		IkasID:    id,
+		UserID:    userID,
+		Action:    "REJECT_EDIT_IKAS",
+		Changes:   map[string]interface{}{"status": "rejected", "reason": adminReason},
+		Timestamp: time.Now(),
+	}
+	if s.producer != nil {
+		_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
 	}
 
 	return nil

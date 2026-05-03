@@ -392,7 +392,9 @@ func (h *IkasHandler) handleValidate(w http.ResponseWriter, r *http.Request, id 
 		return
 	}
 
-	if err := h.service.ValidateIkas(r.Context(), id, req.Status); err != nil {
+	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
+
+	if err := h.service.ValidateIkas(r.Context(), id, req.Status, userID); err != nil {
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
@@ -475,7 +477,9 @@ func (h *IkasHandler) handleRequestEdit(w http.ResponseWriter, r *http.Request, 
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	err := h.service.RequestEdit(r.Context(), id, req.Reason, userRole, userPerusahaanID)
+	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
+
+	err := h.service.RequestEdit(r.Context(), id, req.Reason, userID, userRole, userPerusahaanID)
 	if err != nil {
 		utils.RespondError(w, 500, err.Error())
 		return
@@ -509,7 +513,9 @@ func (h *IkasHandler) handleApproveEdit(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	err := h.service.ApproveEdit(r.Context(), id)
+	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
+
+	err := h.service.ApproveEdit(r.Context(), id, userID)
 	if err != nil {
 		utils.RespondError(w, 500, err.Error())
 		return
@@ -551,7 +557,9 @@ func (h *IkasHandler) handleRejectEdit(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 
-	err := h.service.RejectEdit(r.Context(), id, req.Reason)
+	userID, _ := r.Context().Value(middleware.UserIDKey).(string)
+
+	err := h.service.RejectEdit(r.Context(), id, req.Reason, userID)
 	if err != nil {
 		utils.RespondError(w, 500, err.Error())
 		return
