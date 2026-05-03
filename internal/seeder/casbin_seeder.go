@@ -283,6 +283,7 @@ var defaultPolicies = []Policy{
 	{"staff", "/api/maturity/ikas/:id/reject-edit", "PUT"},
 	{"staff", "/api/maturity/ikas/:id/validate", "PUT"},
 	{"staff", "/api/maturity/ikas/:id/export", "GET"},
+	{"staff", "/api/maturity/ikas-audit-logs", "GET"},
 
 	// Domain sub-resources
 	{"staff", "/api/maturity/identifikasi", "GET"},
