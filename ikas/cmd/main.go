@@ -138,6 +138,7 @@ func main() {
 	jawabanProteksiRepo := repository.NewJawabanProteksiRepository(db)
 	jawabanDeteksiRepo := repository.NewJawabanDeteksiRepository(db)
 	jawabanGulihRepo := repository.NewJawabanGulihRepository(db)
+	auditLogRepo := repository.NewAuditLogRepository(db)
 
 	// services
 	ikasService := services.NewIkasService(
@@ -169,6 +170,7 @@ func main() {
 	jawabanProteksiService := services.NewJawabanProteksiService(jawabanProteksiRepo, ikasRepo, msgProducer, ikasService, redisClient)
 	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo, ikasRepo, msgProducer, ikasService, redisClient)
 	jawabanGulihService := services.NewJawabanGulihService(jawabanGulihRepo, ikasRepo, msgProducer, ikasService, redisClient)
+	auditLogService := services.NewAuditLogService(auditLogRepo)
 
 	// handlers
 	ikasHandler := handlers.NewIkasHandler(ikasService)
@@ -188,6 +190,7 @@ func main() {
 	jawabanProteksiHandler := handlers.NewJawabanProteksiHandler(jawabanProteksiService)
 	jawabanDeteksiHandler := handlers.NewJawabanDeteksiHandler(jawabanDeteksiService)
 	jawabanGulihHandler := handlers.NewJawabanGulihHandler(jawabanGulihService)
+	auditLogHandler := handlers.NewAuditLogHandler(auditLogService)
 
 	// Middleware
 	authMiddleware := middleware.NewAuthMiddleware(cfg.InternalGatewayKey)
@@ -211,6 +214,7 @@ func main() {
 		jawabanProteksiHandler,
 		jawabanDeteksiHandler,
 		jawabanGulihHandler,
+		auditLogHandler,
 		authMiddleware,
 	)
 

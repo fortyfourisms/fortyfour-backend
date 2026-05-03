@@ -53,6 +53,7 @@ func InitRouter(
 	jawabanProteksiH *handlers.JawabanProteksiHandler,
 	jawabanDeteksiH *handlers.JawabanDeteksiHandler,
 	jawabanGulihH *handlers.JawabanGulihHandler,
+	auditLogH *handlers.AuditLogHandler,
 	authM *middleware.AuthMiddleware,
 ) *http.ServeMux {
 	mux := http.NewServeMux()
@@ -81,6 +82,7 @@ func InitRouter(
 	handle(mux, "/jawaban-proteksi", withAuth(utils.AdaptHandler(jawabanProteksiH)))
 	handle(mux, "/jawaban-deteksi", withAuth(utils.AdaptHandler(jawabanDeteksiH)))
 	handle(mux, "/jawaban-gulih", withAuth(utils.AdaptHandler(jawabanGulihH)))
+	handle(mux, "/ikas-audit-logs", withAuth(utils.AdaptHandler(auditLogH)))
 
 	return mux
 }

@@ -4078,6 +4078,64 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/maturity/ikas-audit-logs": {
+            "get": {
+                "description": "Mengambil seluruh riwayat perubahan IKAS (opsional filter berdasarkan ikas_id)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit Logs"
+                ],
+                "summary": "List semua audit logs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "IKAS ID",
+                        "name": "ikas_id",
+                        "in": "query",
+                        "required": false
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "data": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/dto.AuditLogResponse"
+                                    }
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "status": {
+                                    "type": "string"
+                                },
+                                "total": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/maturity/jawaban-deteksi": {
             "get": {
                 "description": "Get all answers for detection questions, optionally filtered by ikas_id or pertanyaan_deteksi_id",
@@ -10426,6 +10484,40 @@ const docTemplate = `{
                 },
                 "nilai_subdomain5": {
                     "type": "number"
+                }
+            }
+        },
+        "dto.AuditLogResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "changes": {
+                    "type": "object"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ikas_id": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/dto.UserAuditLogResponse"
+                }
+            }
+        },
+        "dto.UserAuditLogResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
