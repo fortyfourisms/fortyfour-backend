@@ -205,34 +205,6 @@ func (m *lmsSertifikatRepo) FindByUser(idUser string) ([]models.Sertifikat, erro
 	return m.FindByUserFn(idUser)
 }
 
-type lmsUserRepo struct {
-	FindByIDFn func(id string) (*models.User, error)
-}
-
-func (m *lmsUserRepo) Create(user *models.User) error { return nil }
-func (m *lmsUserRepo) FindByUsername(username string) (*models.User, error) {
-	return nil, errors.New("not found")
-}
-func (m *lmsUserRepo) FindByEmail(email string) (*models.User, error) {
-	return nil, errors.New("not found")
-}
-func (m *lmsUserRepo) FindByID(id string) (*models.User, error)           { return m.FindByIDFn(id) }
-func (m *lmsUserRepo) FindAll() ([]models.User, error)                    { return nil, nil }
-func (m *lmsUserRepo) Update(user *models.User) error                     { return nil }
-func (m *lmsUserRepo) UpdateWithPhoto(user *models.User) error            { return nil }
-func (m *lmsUserRepo) UpdatePassword(id, hp string) error                 { return nil }
-func (m *lmsUserRepo) GetPasswordByID(id string) (string, error)          { return "", errors.New("not found") }
-func (m *lmsUserRepo) Delete(id string) error                             { return nil }
-func (m *lmsUserRepo) EmailExists(email string, ex *string) (bool, error) { return false, nil }
-func (m *lmsUserRepo) UsernameExists(un string, ex *string) (bool, error) { return false, nil }
-func (m *lmsUserRepo) SetMFA(uid string, s *string, e bool) error         { return nil }
-func (m *lmsUserRepo) ExistsByPerusahaan(idP string) (bool, error)        { return false, nil }
-func (m *lmsUserRepo) UpdateStatus(uid string, s models.UserStatus) error { return nil }
-func (m *lmsUserRepo) IncrementLoginAttempts(uid string) (int, error)     { return 0, nil }
-func (m *lmsUserRepo) ResetLoginAttempts(uid string) error                { return nil }
-func (m *lmsUserRepo) UpdatePasswordChangedAt(uid string) error           { return nil }
-func (m *lmsUserRepo) FindAllAdmins() ([]models.User, error)              { return nil, nil }
-
 // ── setup helpers ────────────────────────────────────────────────────────────
 
 func newDefaultKelasRepo() *lmsKelasRepo {

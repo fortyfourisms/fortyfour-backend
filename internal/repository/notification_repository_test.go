@@ -67,7 +67,7 @@ func TestNotificationRepository_FindAll(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 		fotoProfile := "alice.jpg"
-		mock.ExpectQuery("SELECT n.id, n.user_id, u.username, COALESCE\\(u.display_name, ''\\) as display_name").
+		mock.ExpectQuery("SELECT n.id, n.user_id, COALESCE\\(u.username, ''\\) as username, COALESCE\\(u.display_name, ''\\) as display_name").
 			WillReturnRows(sqlmock.NewRows(notificationColumns).
 				AddRow(1, "user-1", "alice", "Alice", fotoProfile, "resource_created", "created", false, now).
 				AddRow(2, "user-2", "bob", "", nil, "resource_deleted", "deleted", true, now))
@@ -84,7 +84,7 @@ func TestNotificationRepository_FindAll(t *testing.T) {
 	})
 
 	t.Run("query error", func(t *testing.T) {
-		mock.ExpectQuery("SELECT n.id, n.user_id, u.username, COALESCE\\(u.display_name, ''\\) as display_name").
+		mock.ExpectQuery("SELECT n.id, n.user_id, COALESCE\\(u.username, ''\\) as username, COALESCE\\(u.display_name, ''\\) as display_name").
 			WillReturnError(errors.New("db error"))
 
 		result, err := repo.FindAll()
