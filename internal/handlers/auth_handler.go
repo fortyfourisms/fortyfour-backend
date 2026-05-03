@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -142,13 +143,19 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	// Validasi Turnstile
 	if h.turnstileValidator != nil {
-		remoteIP := r.Header.Get("X-Forwarded-For")
+		remoteIP := r.Header.Get("CF-Connecting-IP")
 		if remoteIP == "" {
-			remoteIP = r.RemoteAddr
+			remoteIP = r.Header.Get("X-Forwarded-For")
 		}
-		// Clean up remoteIP if it contains port
-		if strings.Contains(remoteIP, ":") {
-			remoteIP = strings.Split(remoteIP, ":")[0]
+		if remoteIP != "" {
+			// Get the first IP if it's a comma-separated list
+			remoteIP = strings.TrimSpace(strings.Split(remoteIP, ",")[0])
+		} else {
+			remoteIP = r.RemoteAddr
+			// Clean up port from RemoteAddr properly (works for IPv4 and IPv6)
+			if host, _, err := net.SplitHostPort(remoteIP); err == nil {
+				remoteIP = host
+			}
 		}
 
 		turnstileResp, err := h.turnstileValidator.Validate(req.TurnstileToken, remoteIP)
