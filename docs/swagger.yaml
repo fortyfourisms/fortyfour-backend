@@ -11,6 +11,23 @@ definitions:
       risiko_id:
         type: integer
     type: object
+  dto.AuditLogResponse:
+    properties:
+      action:
+        type: string
+      changes:
+        items:
+          type: integer
+        type: array
+      created_at:
+        type: string
+      id:
+        type: integer
+      ikas_id:
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserAuditLogResponse'
+    type: object
   dto.CreateDomainRequest:
     properties:
       nama_domain:
@@ -1015,6 +1032,13 @@ definitions:
       nama_sub_kategori:
         type: string
     type: object
+  dto.UserAuditLogResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
   dto.ValidasiIkasRequest:
     properties:
       status:
@@ -1069,6 +1093,32 @@ definitions:
       user:
         $ref: '#/definitions/fortyfour-backend_internal_models.User'
     type: object
+  fortyfour-backend_internal_dto.BeritaAuthor:
+    properties:
+      display_name:
+        type: string
+      id:
+        type: string
+      username:
+        type: string
+    type: object
+  fortyfour-backend_internal_dto.BeritaResponse:
+    properties:
+      author:
+        $ref: '#/definitions/fortyfour-backend_internal_dto.BeritaAuthor'
+      author_id:
+        type: string
+      created_at:
+        type: string
+      deskripsi:
+        type: string
+      id:
+        type: integer
+      judul:
+        type: string
+      updated_at:
+        type: string
+    type: object
   fortyfour-backend_internal_dto.BulkAddPolicyRequest:
     properties:
       policies:
@@ -1104,6 +1154,18 @@ definitions:
         type: string
       tanggal_selesai:
         type: string
+    type: object
+  fortyfour-backend_internal_dto.CreateBeritaRequest:
+    properties:
+      deskripsi:
+        type: string
+      judul:
+        maxLength: 255
+        minLength: 5
+        type: string
+    required:
+    - deskripsi
+    - judul
     type: object
   fortyfour-backend_internal_dto.CreateEventRegistrationRequest:
     properties:
@@ -2370,6 +2432,15 @@ definitions:
       tanggal_selesai:
         type: string
     type: object
+  fortyfour-backend_internal_dto.UpdateBeritaRequest:
+    properties:
+      deskripsi:
+        type: string
+      judul:
+        maxLength: 255
+        minLength: 5
+        type: string
+    type: object
   fortyfour-backend_internal_dto.UpdateEventRequest:
     properties:
       deskripsi:
@@ -2987,6 +3058,153 @@ paths:
       summary: List jenis aktivitas
       tags:
       - Aktivitas
+  /api/berita:
+    get:
+      description: Mengambil seluruh data berita
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/fortyfour-backend_internal_dto.BeritaResponse'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+      summary: List semua berita
+      tags:
+      - Berita
+    post:
+      consumes:
+      - application/json
+      description: Membuat berita baru
+      parameters:
+      - description: Data berita
+        in: body
+        name: berita
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.CreateBeritaRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+      security:
+      - BearerAuth: []
+      summary: Tambah berita baru
+      tags:
+      - Berita
+  /api/berita/{id}:
+    delete:
+      description: Menghapus data berita berdasarkan ID
+      parameters:
+      - description: Berita ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+      security:
+      - BearerAuth: []
+      summary: Hapus berita
+      tags:
+      - Berita
+    get:
+      description: Mengambil satu data berita
+      parameters:
+      - description: Berita ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/fortyfour-backend_internal_dto.BeritaResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+      summary: Ambil berita berdasarkan ID
+      tags:
+      - Berita
+    put:
+      consumes:
+      - application/json
+      description: Mengubah data berita berdasarkan ID
+      parameters:
+      - description: Berita ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data update
+        in: body
+        name: berita
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.UpdateBeritaRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_utils.JSONResponse'
+      security:
+      - BearerAuth: []
+      summary: Update berita
+      tags:
+      - Berita
   /api/casbin/permissions:
     get:
       description: Mengambil permissions untuk role tertentu
@@ -5131,6 +5349,31 @@ paths:
       summary: Tambah ikas baru
       tags:
       - Ikas
+  /api/maturity/ikas-audit-logs:
+    get:
+      description: Mengambil seluruh riwayat perubahan IKAS (opsional filter berdasarkan
+        ikas_id)
+      parameters:
+      - description: IKAS ID
+        in: query
+        name: ikas_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.AuditLogResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua audit logs
+      tags:
+      - Audit Logs
   /api/maturity/ikas/{id}:
     delete:
       description: Menghapus data ikas berdasarkan ID

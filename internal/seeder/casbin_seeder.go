@@ -164,6 +164,11 @@ var defaultPolicies = []Policy{
 	{"user_pic", "/api/sertifikat/:id", "GET"},
 	{"user_pic", "/api/sertifikat/:id/download", "GET"},
 
+	// Notifikasi
+	{"user_pic", "/api/notifications", "GET"},
+	{"user_pic", "/api/notifications/read-all", "PATCH"},
+	{"user_pic", "/api/notifications/:id/read", "PATCH"},
+
 	// ── USER ─────────────────────────────────────────────────────────────────
 	// User biasa — hanya bisa mengakses LMS
 
@@ -368,7 +373,8 @@ var defaultPolicies = []Policy{
 
 	// Notifications
 	{"staff", "/api/notifications", "GET"},
-	{"staff", "/api/notifications/:id", "PUT"},
+	{"staff", "/api/notifications/read-all", "PATCH"},
+	{"staff", "/api/notifications/:id/read", "PATCH"},
 
 	// Casbin — staff bisa lihat policies (tapi tidak bisa manage)
 	{"staff", "/api/casbin/policies", "GET"},
