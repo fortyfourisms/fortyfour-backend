@@ -12,9 +12,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
-// =====================
-// CREATE
-// =====================
+// CREATE 
 func TestCreate_Success(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
@@ -43,9 +41,7 @@ func TestCreate_Success(t *testing.T) {
 	}
 }
 
-// =====================
-// GET ALL
-// =====================
+// GET ALL 
 func TestGetAllDetail_Success(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
@@ -78,9 +74,7 @@ func TestGetAllDetail_Success(t *testing.T) {
 	}
 }
 
-// =====================
-// GET BY ID
-// =====================
+// GET BY ID 
 func TestGetDetailByID_NotFound(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
@@ -98,9 +92,7 @@ func TestGetDetailByID_NotFound(t *testing.T) {
 	}
 }
 
-// =====================
-// UPDATE SUCCESS
-// =====================
+// UPDATE SUCCESS 
 func TestUpdate_Success(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
@@ -125,9 +117,7 @@ func TestUpdate_Success(t *testing.T) {
 	}
 }
 
-// =====================
-// UPDATE NOT FOUND
-// =====================
+// UPDATE NOT FOUND 
 func TestUpdate_NotFound(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
@@ -144,9 +134,7 @@ func TestUpdate_NotFound(t *testing.T) {
 	}
 }
 
-// =====================
-// EXISTS
-// =====================
+// EXISTS 
 func TestExists_True(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
@@ -168,9 +156,7 @@ func TestExists_True(t *testing.T) {
 	}
 }
 
-// =====================
-// EXISTS ERROR
-// =====================
+// EXISTS ERROR 
 func TestExists_Error(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()

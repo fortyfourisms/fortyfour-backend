@@ -14,37 +14,29 @@ import (
 
 const cacheTTL = 10 * time.Minute
 
-// =======================
-// REPOSITORY
-// =======================
+// REPOSITORY 
 type RespondenRepositoryInterface interface {
-	Create(m models.Responden) (int64, error) // ✅ return insert ID
+	Create(m models.Responden) (int64, error) 
 	GetAllDetail() ([]models.RespondenDetail, error)
 	GetDetailByID(id int) (*models.RespondenDetail, error)
 	GetByID(id int) (*models.Responden, error)
 	Update(id int, m models.Responden) error
 }
 
-// =======================
-// VALIDATOR
-// =======================
+// VALIDATOR 
 type Validator interface {
 	ValidateCreate(dto.CreateRespondenRequest) error
 	ValidateUpdate(dto.UpdateRespondenRequest) error
 }
 
-// =======================
-// CACHE
-// =======================
+// CACHE 
 type CacheRepository interface {
 	Get(ctx context.Context, key string) (string, bool, error)
 	Set(ctx context.Context, key string, value string, ttlSeconds int) error
 	Del(ctx context.Context, key string) error
 }
 
-// =======================
-// SERVICE
-// =======================
+// SERVICE 
 type RespondenService struct {
 	repo      RespondenRepositoryInterface
 	validator Validator
@@ -65,9 +57,7 @@ func NewRespondenService(
 	}
 }
 
-// =======================
-// CREATE
-// =======================
+// CREATE 
 func (s *RespondenService) Create(req dto.CreateRespondenRequest) (*dto.RespondenResponse, error) {
 
 	if err := s.validator.ValidateCreate(req); err != nil {
@@ -83,13 +73,13 @@ func (s *RespondenService) Create(req dto.CreateRespondenRequest) (*dto.Responde
 		SertifikatTraining: strings.TrimSpace(req.SertifikatTraining),
 	}
 
-	// ✅ insert + ambil ID
+	// insert + ambil ID
 	insertID, err := s.repo.Create(model)
 	if err != nil {
 		return nil, err
 	}
 
-	// ✅ ambil data berdasarkan ID
+	// ambil data berdasarkan ID
 	data, err := s.repo.GetDetailByID(int(insertID))
 	if err != nil {
 		return nil, err
@@ -107,14 +97,12 @@ func (s *RespondenService) Create(req dto.CreateRespondenRequest) (*dto.Responde
 	return &resp, nil
 }
 
-// =======================
 // GET ALL (CACHE)
-// =======================
 func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
 
 	cacheKey := "responden:all"
 
-	// ✅ CACHE HIT
+	// CACHE HIT
 	if val, ok, err := s.cache.Get(s.ctx, cacheKey); err == nil && ok && val != "" && val != "null" {
 		var cached []dto.RespondenResponse
 		if json.Unmarshal([]byte(val), &cached) == nil {
@@ -132,7 +120,7 @@ func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
 		result = append(result, s.toResponse(&data[i]))
 	}
 
-	// ✅ hanya cache kalau ada data
+	// hanya cache kalau ada data
 	if len(result) > 0 {
 		if b, err := json.Marshal(result); err == nil {
 			_ = s.cache.Set(s.ctx, cacheKey, string(b), int(cacheTTL.Seconds()))
@@ -142,9 +130,7 @@ func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
 	return result, nil
 }
 
-// =======================
 // GET BY ID (CACHE)
-// =======================
 func (s *RespondenService) GetByID(id int) (*dto.RespondenResponse, error) {
 
 	if id <= 0 {
@@ -153,7 +139,7 @@ func (s *RespondenService) GetByID(id int) (*dto.RespondenResponse, error) {
 
 	cacheKey := "responden:id:" + strconv.Itoa(id)
 
-	// ✅ CACHE HIT
+	// CACHE HIT
 	if val, ok, err := s.cache.Get(s.ctx, cacheKey); err == nil && ok && val != "" && val != "null" {
 		var cached dto.RespondenResponse
 		if json.Unmarshal([]byte(val), &cached) == nil {
@@ -180,9 +166,7 @@ func (s *RespondenService) GetByID(id int) (*dto.RespondenResponse, error) {
 	return &resp, nil
 }
 
-// =======================
-// UPDATE
-// =======================
+// UPDATE 
 func (s *RespondenService) Update(id int, req dto.UpdateRespondenRequest) (*dto.RespondenResponse, error) {
 
 	if id <= 0 {
@@ -230,9 +214,7 @@ func (s *RespondenService) Update(id int, req dto.UpdateRespondenRequest) (*dto.
 	return &resp, nil
 }
 
-// =======================
 // MAPPER
-// =======================
 func (s *RespondenService) toResponse(m *models.RespondenDetail) dto.RespondenResponse {
 
 	return dto.RespondenResponse{

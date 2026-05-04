@@ -15,9 +15,7 @@ func NewRespondenRepository(db *sql.DB) *RespondenRepository {
 	return &RespondenRepository{db: db}
 }
 
-// ========================
-// HELPER
-// ========================
+// HELPER 
 func nullToString(ns sql.NullString) *string {
 	if ns.Valid {
 		return &ns.String
@@ -25,9 +23,7 @@ func nullToString(ns sql.NullString) *string {
 	return nil
 }
 
-// ========================
-// CREATE
-// ========================
+// CREATE 
 func (r *RespondenRepository) Create(m models.Responden) (int64, error) {
 
 	res, err := r.db.Exec(`
@@ -55,9 +51,7 @@ func (r *RespondenRepository) Create(m models.Responden) (int64, error) {
 	return insertID, nil
 }
 
-// ========================
 // BASE QUERY (FIXED)
-// ========================
 const baseDetailQuery = `
 SELECT 
 	r.id,
@@ -78,9 +72,7 @@ LEFT JOIN sub_sektor ss ON p.id_sub_sektor = ss.id
 LEFT JOIN sektor s ON ss.id_sektor = s.id
 `
 
-// ========================
-// GET ALL
-// ========================
+// GET ALL 
 func (r *RespondenRepository) GetAllDetail() ([]models.RespondenDetail, error) {
 
 	rows, err := r.db.Query(baseDetailQuery + " ORDER BY r.id DESC")
@@ -134,9 +126,7 @@ func (r *RespondenRepository) GetAllDetail() ([]models.RespondenDetail, error) {
 	return result, nil
 }
 
-// ========================
-// GET BY ID
-// ========================
+// GET BY ID 
 func (r *RespondenRepository) GetDetailByID(id int) (*models.RespondenDetail, error) {
 
 	row := r.db.QueryRow(baseDetailQuery+" WHERE r.id = ?", id)
@@ -178,9 +168,7 @@ func (r *RespondenRepository) GetDetailByID(id int) (*models.RespondenDetail, er
 	return &m, nil
 }
 
-// ========================
-// GET BASIC BY ID
-// ========================
+// GET BASIC BY ID 
 func (r *RespondenRepository) GetByID(id int) (*models.Responden, error) {
 
 	row := r.db.QueryRow(`
@@ -213,9 +201,7 @@ func (r *RespondenRepository) GetByID(id int) (*models.Responden, error) {
 	return &m, nil
 }
 
-// ========================
-// UPDATE
-// ========================
+// UPDATE 
 func (r *RespondenRepository) Update(id int, m models.Responden) error {
 
 	res, err := r.db.Exec(`
