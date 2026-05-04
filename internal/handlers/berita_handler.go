@@ -44,6 +44,13 @@ func (h *BeritaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// @Summary		List semua berita
+// @Description	Mengambil seluruh data berita
+// @Tags			Berita
+// @Produce		json
+// @Success		200	{object}	utils.JSONResponse{data=[]dto.BeritaResponse}
+// @Failure		500	{object}	utils.JSONResponse
+// @Router			/api/berita [get]
 func (h *BeritaHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -60,6 +67,15 @@ func (h *BeritaHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// @Summary		Ambil berita berdasarkan ID
+// @Description	Mengambil satu data berita
+// @Tags			Berita
+// @Produce		json
+// @Param			id	path		int	true	"Berita ID"
+// @Success		200	{object}	utils.JSONResponse{data=dto.BeritaResponse}
+// @Failure		400	{object}	utils.JSONResponse
+// @Failure		404	{object}	utils.JSONResponse
+// @Router			/api/berita/{id} [get]
 func (h *BeritaHandler) handleGetByID(w http.ResponseWriter, r *http.Request, idStr string) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -80,6 +96,18 @@ func (h *BeritaHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id
 	})
 }
 
+// @Summary		Tambah berita baru
+// @Description	Membuat berita baru
+// @Tags			Berita
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			berita	body		dto.CreateBeritaRequest	true	"Data berita"
+// @Success		201		{object}	utils.JSONResponse
+// @Failure		400		{object}	utils.JSONResponse
+// @Failure		401		{object}	utils.JSONResponse
+// @Failure		500		{object}	utils.JSONResponse
+// @Router			/api/berita [post]
 func (h *BeritaHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateBeritaRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -114,6 +142,17 @@ func (h *BeritaHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// @Summary		Update berita
+// @Description	Mengubah data berita berdasarkan ID
+// @Tags			Berita
+// @Accept			json
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id		path		int						true	"Berita ID"
+// @Param			berita	body		dto.UpdateBeritaRequest	true	"Data update"
+// @Success		200		{object}	utils.JSONResponse
+// @Failure		400		{object}	utils.JSONResponse
+// @Router			/api/berita/{id} [put]
 func (h *BeritaHandler) handleUpdate(w http.ResponseWriter, r *http.Request, idStr string) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
@@ -149,6 +188,15 @@ func (h *BeritaHandler) handleUpdate(w http.ResponseWriter, r *http.Request, idS
 	})
 }
 
+// @Summary		Hapus berita
+// @Description	Menghapus data berita berdasarkan ID
+// @Tags			Berita
+// @Produce		json
+// @Security		BearerAuth
+// @Param			id	path		int	true	"Berita ID"
+// @Success		200	{object}	utils.JSONResponse
+// @Failure		400	{object}	utils.JSONResponse
+// @Router			/api/berita/{id} [delete]
 func (h *BeritaHandler) handleDelete(w http.ResponseWriter, r *http.Request, idStr string) {
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
