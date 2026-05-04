@@ -47,7 +47,7 @@ COPY --from=builder /build/ikas-app .
 COPY --from=builder /build/casbin/ ./casbin/
 
 # Copy the internal assets
-COPY --from=builder /build/ikas/internal/assets/ ./internal/assets/
+COPY --from=builder /build/ikas/internal/assets/ ./ikas/internal/assets/
 
 # Copy the timezone
 COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
