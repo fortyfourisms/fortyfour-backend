@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"fortyfour-backend/internal/dto"
@@ -158,10 +159,19 @@ func (s *BeritaService) Delete(id int64) error {
 }
 
 func mapBeritaToResponse(b *models.Berita) *dto.BeritaResponse {
+	var tags []string
+	if b.Tags != "" {
+		_ = json.Unmarshal([]byte(b.Tags), &tags)
+	}
+	if tags == nil {
+		tags = []string{}
+	}
+
 	res := &dto.BeritaResponse{
 		ID:        b.ID,
 		Judul:     b.Judul,
 		Deskripsi: b.Deskripsi,
+		Tags:      tags,
 		AuthorID:  b.AuthorID,
 		CreatedAt: b.CreatedAt.Format(time.RFC3339),
 		UpdatedAt: b.UpdatedAt.Format(time.RFC3339),

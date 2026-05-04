@@ -1,0 +1,1 @@
+ALTER TABLE berita DROP COLUMN tags;
