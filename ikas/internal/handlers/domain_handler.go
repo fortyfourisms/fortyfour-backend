@@ -70,12 +70,7 @@ func (h *DomainHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 200, utils.JSONResponse{
-		Status:  "success",
-		Message: "Berhasil mengambil data domain",
-		Data:    data,
-		Total:   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data domain IKAS", data, len(data))
 }
 
 // GetDomainByID godoc
@@ -100,11 +95,7 @@ func (h *DomainHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id
 		return
 	}
 
-	utils.RespondJSON(w, 200, utils.JSONResponse{
-		Status:  "success",
-		Message: "Berhasil mengambil data domain",
-		Data:    data,
-	})
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data domain IKAS", data)
 }
 
 // CreateDomain godoc
@@ -145,10 +136,7 @@ func (h *DomainHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 201, utils.JSONResponse{
-		Status:  "success",
-		Message: "Permintaan pembuatan domain telah diterima dan sedang diproses",
-	})
+	utils.RespondSuccess(w, 201, "Permintaan pembuatan domain IKAS telah diterima dan sedang diproses", nil)
 }
 
 // UpdateDomain godoc

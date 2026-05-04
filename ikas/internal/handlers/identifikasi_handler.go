@@ -52,11 +52,7 @@ func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 	ikasID := r.URL.Query().Get("ikas_id")
 
 	if userRole != "admin" && userRole != "staff" && (userPerusahaanID == "" || userPerusahaanID == "null") {
-		utils.RespondJSON(w, 200, map[string]interface{}{
-			"message": "Berhasil mengambil data",
-			"data":    []interface{}{},
-			"total":   0,
-		})
+		utils.RespondListData(w, 200, "Berhasil mengambil data", []interface{}{}, 0)
 		return
 	}
 
@@ -90,11 +86,7 @@ func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   total,
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data identifikasi", data, total)
 }
 
 // GetIdentifikasiByID godoc
@@ -121,8 +113,5 @@ func (h *IdentifikasiHandler) handleGetByID(w http.ResponseWriter, r *http.Reque
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-	})
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data identifikasi", data)
 }
