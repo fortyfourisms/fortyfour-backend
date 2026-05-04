@@ -69,11 +69,7 @@ func (h *PertanyaanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, _ *h
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data pertanyaan identifikasi", data, len(data))
 }
 
 // GetPertanyaanIdentifikasiByID godoc
@@ -97,10 +93,7 @@ func (h *PertanyaanIdentifikasiHandler) handleGetByID(w http.ResponseWriter, _ *
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-	})
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data pertanyaan identifikasi", data)
 }
 
 // CreatePertanyaanIdentifikasi godoc
