@@ -3886,30 +3886,41 @@ const docTemplate = `{
         },
         "/api/maturity/ikas-audit-logs": {
             "get": {
-                "description": "Mengambil seluruh riwayat perubahan IKAS (opsional filter berdasarkan ikas_id)",
+                "description": "Mengambil seluruh riwayat perubahan IKAS dengan pagination. Opsional filter berdasarkan ikas_id.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Audit Logs"
                 ],
-                "summary": "List semua audit logs",
+                "summary": "List semua audit logs IKAS (paginated)",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "IKAS ID",
+                        "description": "Filter berdasarkan IKAS ID",
                         "name": "ikas_id",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Halaman (default: 1)",
+                        "name": "page",
+                        "in": "query",
+                        "example": 1
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Jumlah data per halaman, maks 100 (default: 20)",
+                        "name": "limit",
+                        "in": "query",
+                        "example": 10
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.AuditLogResponse"
-                            }
+                            "$ref": "#/definitions/utils.PaginatedJSONResponse"
                         }
                     },
                     "500": {
@@ -10174,10 +10185,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "changes": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "type": "object"
                 },
                 "created_at": {
                     "type": "string"
@@ -10190,6 +10198,48 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/dto.UserAuditLogResponse"
+                }
+            }
+        },
+        "utils.PaginatedJSONResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/utils.PaginationMeta"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.AuditLogResponse"
+                    }
+                }
+            }
+        },
+        "utils.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer",
+                    "description": "Total seluruh data"
+                },
+                "page": {
+                    "type": "integer",
+                    "description": "Halaman saat ini"
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Jumlah data per halaman"
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "description": "Total halaman"
                 }
             }
         },

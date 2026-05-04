@@ -32,6 +32,15 @@ const (
 	CacheKeyPrefixProteksi     = "ikas:domain:proteksi:"
 	CacheKeyPrefixDeteksi      = "ikas:domain:deteksi:"
 	CacheKeyPrefixGulih        = "ikas:domain:gulih:"
+
+	// Cache Key Prefixes for Audit Logs (paginated, keyed by page, limit, and optional ikas_id)
+	// Usage: fmt.Sprintf(CacheKeyPrefixAuditLogs+"%d:%d", page, limit)
+	//        fmt.Sprintf(CacheKeyPrefixAuditLogsByIkas+"%s:%d:%d", ikasID, page, limit)
+	CacheKeyPrefixAuditLogs       = "ikas:audit_logs:all:"
+	CacheKeyPrefixAuditLogsByIkas = "ikas:audit_logs:ikas:"
+
+	// AuditLogsCacheExpiration is shorter than default to keep audit data fresher.
+	AuditLogsCacheExpiration = 5 * time.Minute
 )
 
 // GetJawabanIdentifikasiKey returns the cache key for Jawaban Identifikasi
