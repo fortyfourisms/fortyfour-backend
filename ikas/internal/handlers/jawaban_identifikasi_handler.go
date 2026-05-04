@@ -154,14 +154,14 @@ func (h *JawabanIdentifikasiHandler) handleGetByPertanyaan(w http.ResponseWriter
 	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban identifikasi", data, len(data))
 }
 
-//	@Summary		Ambil jawaban identifikasi berdasarkan ID
-//	@Description	Mengambil satu data jawaban identifikasi
-//	@Tags			JawabanIdentifikasi
-//	@Produce		json
-//	@Param			id	path		int	true	"JawabanIdentifikasi ID"
-//	@Success		200	{object}	dto.JawabanIdentifikasiResponse
-//	@Failure		404	{object}	dto.ErrorResponse
-//	@Router			/api/maturity/jawaban-identifikasi/{id} [get]
+// @Summary		Ambil jawaban identifikasi berdasarkan ID
+// @Description	Mengambil satu data jawaban identifikasi
+// @Tags			JawabanIdentifikasi
+// @Produce		json
+// @Param			id	path		int	true	"JawabanIdentifikasi ID"
+// @Success		200	{object}	dto.JawabanIdentifikasiResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/maturity/jawaban-identifikasi/{id} [get]
 func (h *JawabanIdentifikasiHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id int) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)

@@ -131,7 +131,8 @@ func (h *JawabanDeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban deteksi", data, len(data))}
+	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban deteksi", data, len(data))
+}
 
 func (h *JawabanDeteksiHandler) handleGetByIkasID(w http.ResponseWriter, r *http.Request, ikasID string) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
