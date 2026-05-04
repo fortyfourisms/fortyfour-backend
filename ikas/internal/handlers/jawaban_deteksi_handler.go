@@ -101,11 +101,7 @@ func (h *JawabanDeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Requ
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
 	if userRole != "admin" && userRole != "staff" && (userPerusahaanID == "" || userPerusahaanID == "null") {
-		utils.RespondJSON(w, 200, map[string]interface{}{
-			"message": "Berhasil mengambil data",
-			"data":    []dto.JawabanDeteksiResponse{},
-			"total":   0,
-		})
+		utils.RespondListData(w, 200, "Berhasil mengambil data jawaban deteksi", []dto.JawabanDeteksiResponse{}, 0)
 		return
 	}
 
@@ -135,12 +131,7 @@ func (h *JawabanDeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
-	})
-}
+	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban deteksi", data, len(data))}
 
 func (h *JawabanDeteksiHandler) handleGetByIkasID(w http.ResponseWriter, r *http.Request, ikasID string) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
@@ -155,11 +146,7 @@ func (h *JawabanDeteksiHandler) handleGetByIkasID(w http.ResponseWriter, r *http
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban deteksi", data, len(data))
 }
 
 // @Summary		Get Jawaban Deteksi by ID
@@ -189,10 +176,7 @@ func (h *JawabanDeteksiHandler) handleGetByID(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    resp,
-	})
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data jawaban deteksi", resp)
 }
 
 // @Summary		Update Jawaban Deteksi
@@ -249,9 +233,8 @@ func (h *JawabanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": msg,
-		"id":      updatedID,
+	utils.RespondSuccess(w, 200, msg, map[string]interface{}{
+		"id": updatedID,
 	})
 }
 
@@ -287,8 +270,7 @@ func (h *JawabanDeteksiHandler) handleDelete(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menghapus data",
-		"id":      id,
+	utils.RespondSuccess(w, 200, "Berhasil menghapus data", map[string]interface{}{
+		"id": id,
 	})
 }
