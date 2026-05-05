@@ -23,23 +23,6 @@ definitions:
       risiko_id:
         type: integer
     type: object
-  dto.AuditLogResponse:
-    properties:
-      action:
-        type: string
-      changes:
-        items:
-          type: integer
-        type: array
-      created_at:
-        type: string
-      id:
-        type: integer
-      ikas_id:
-        type: string
-      user:
-        $ref: '#/definitions/dto.UserAuditLogResponse'
-    type: object
   dto.CreateDomainRequest:
     properties:
       nama_domain:
@@ -1017,13 +1000,6 @@ definitions:
       kategori_id:
         type: integer
       nama_sub_kategori:
-        type: string
-    type: object
-  dto.UserAuditLogResponse:
-    properties:
-      id:
-        type: string
-      name:
         type: string
     type: object
   dto.ValidasiIkasRequest:
@@ -2837,6 +2813,15 @@ definitions:
       message:
         type: string
     type: object
+  ikas_internal_utils.JSONResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: string
+      total: {}
+    type: object
   models.FrequencyLevel:
     enum:
     - 1
@@ -2878,6 +2863,27 @@ definitions:
         type: integer
       selesai:
         type: boolean
+    type: object
+  utils.PaginatedJSONResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      pagination:
+        $ref: '#/definitions/utils.PaginationMeta'
+      status:
+        type: string
+    type: object
+  utils.PaginationMeta:
+    properties:
+      limit:
+        type: integer
+      page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
     type: object
 host: localhost:8080
 info:
@@ -5349,27 +5355,35 @@ paths:
       - Ikas
   /api/maturity/ikas-audit-logs:
     get:
-      description: Mengambil seluruh riwayat perubahan IKAS (opsional filter berdasarkan
-        ikas_id)
+      description: Mengambil seluruh riwayat perubahan IKAS dengan pagination. Opsional
+        filter berdasarkan ikas_id.
       parameters:
-      - description: IKAS ID
+      - description: Filter berdasarkan IKAS ID
         in: query
         name: ikas_id
         type: string
+      - description: 'Halaman (default: 1)'
+        example: 1
+        in: query
+        name: page
+        type: integer
+      - description: 'Jumlah data per halaman, maks 100 (default: 20)'
+        example: 10
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/dto.AuditLogResponse'
-            type: array
+            $ref: '#/definitions/utils.PaginatedJSONResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
-      summary: List semua audit logs
+            $ref: '#/definitions/ikas_internal_utils.JSONResponse'
+      summary: List semua audit logs IKAS (paginated)
       tags:
       - Audit Logs
   /api/maturity/ikas/{id}:
@@ -8803,7 +8817,7 @@ paths:
       - BearerAuth: []
       summary: Ambil semua responden
       tags:
-      - Responden (Admin)
+      - Responden
   /api/survey/responden/{id}:
     get:
       description: Hanya admin yang dapat melihat detail responden
@@ -8832,7 +8846,7 @@ paths:
       - BearerAuth: []
       summary: Ambil responden berdasarkan ID
       tags:
-      - Responden (Admin)
+      - Responden
   /api/survey/responden/me:
     get:
       description: User hanya dapat melihat data dirinya sendiri
@@ -8855,7 +8869,7 @@ paths:
       - BearerAuth: []
       summary: Ambil data responden milik user login
       tags:
-      - Responden (User)
+      - Responden
     post:
       consumes:
       - application/json
@@ -8886,7 +8900,7 @@ paths:
       - BearerAuth: []
       summary: Create / Update responden milik user login
       tags:
-      - Responden (User)
+      - Responden
   /api/survey/risiko/{id}:
     get:
       consumes:

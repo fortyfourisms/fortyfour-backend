@@ -3880,19 +3880,33 @@
         },
         "/api/maturity/ikas-audit-logs": {
             "get": {
-                "description": "Mengambil seluruh riwayat perubahan IKAS (opsional filter berdasarkan ikas_id)",
+                "description": "Mengambil seluruh riwayat perubahan IKAS dengan pagination. Opsional filter berdasarkan ikas_id.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Audit Logs"
                 ],
-                "summary": "List semua audit logs",
+                "summary": "List semua audit logs IKAS (paginated)",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "IKAS ID",
+                        "description": "Filter berdasarkan IKAS ID",
                         "name": "ikas_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Halaman (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Jumlah data per halaman, maks 100 (default: 20)",
+                        "name": "limit",
                         "in": "query"
                     }
                 ],
@@ -3900,16 +3914,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.AuditLogResponse"
-                            }
+                            "$ref": "#/definitions/utils.PaginatedJSONResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_utils.JSONResponse"
                         }
                     }
                 }
@@ -9146,7 +9157,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (Admin)"
+                    "Responden"
                 ],
                 "summary": "Ambil semua responden",
                 "responses": {
@@ -9186,7 +9197,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (User)"
+                    "Responden"
                 ],
                 "summary": "Ambil data responden milik user login",
                 "responses": {
@@ -9224,7 +9235,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (User)"
+                    "Responden"
                 ],
                 "summary": "Create / Update responden milik user login",
                 "parameters": [
@@ -9272,7 +9283,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (Admin)"
+                    "Responden"
                 ],
                 "summary": "Ambil responden berdasarkan ID",
                 "parameters": [
@@ -10047,32 +10058,6 @@
                 },
                 "risiko_id": {
                     "type": "integer"
-                }
-            }
-        },
-        "dto.AuditLogResponse": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string"
-                },
-                "changes": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/dto.UserAuditLogResponse"
                 }
             }
         },
@@ -11573,17 +11558,6 @@
                     "type": "integer"
                 },
                 "nama_sub_kategori": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserAuditLogResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
                     "type": "string"
                 }
             }
@@ -14263,6 +14237,19 @@
                 }
             }
         },
+        "ikas_internal_utils.JSONResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total": {}
+            }
+        },
         "models.FrequencyLevel": {
             "type": "integer",
             "enum": [
@@ -14318,6 +14305,38 @@
                 },
                 "selesai": {
                     "type": "boolean"
+                }
+            }
+        },
+        "utils.PaginatedJSONResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/utils.PaginationMeta"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
                 }
             }
         }

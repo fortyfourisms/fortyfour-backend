@@ -94,7 +94,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // GetAllResponden godoc
 // @Summary      Ambil semua responden
 // @Description  Hanya admin yang dapat melihat semua data responden
-// @Tags         Responden (Admin)
+// @Tags         Responden
 // @Produce      json
 // @Security     BearerAuth
 // @Success      200 {array} dto.RespondenResponse
@@ -115,7 +115,7 @@ func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
 // GetRespondenByID godoc
 // @Summary      Ambil responden berdasarkan ID
 // @Description  Hanya admin yang dapat melihat detail responden
-// @Tags         Responden (Admin)
+// @Tags         Responden
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id path int true "Responden ID"
@@ -145,7 +145,7 @@ func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 // GetMyResponden godoc
 // @Summary      Ambil data responden milik user login
 // @Description  User hanya dapat melihat data dirinya sendiri
-// @Tags         Responden (User)
+// @Tags         Responden 
 // @Produce      json
 // @Security     BearerAuth
 // @Success      200 {object} dto.RespondenResponse
@@ -173,7 +173,7 @@ func (h *RespondenHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 // UpsertMyResponden godoc
 // @Summary      Create / Update responden milik user login
 // @Description  Jika belum ada maka create, jika sudah ada maka update (upsert)
-// @Tags         Responden (User)
+// @Tags         Responden
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth

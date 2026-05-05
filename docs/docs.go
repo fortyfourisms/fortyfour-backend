@@ -3903,17 +3903,17 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
+                        "example": 1,
                         "description": "Halaman (default: 1)",
                         "name": "page",
-                        "in": "query",
-                        "example": 1
+                        "in": "query"
                     },
                     {
                         "type": "integer",
+                        "example": 10,
                         "description": "Jumlah data per halaman, maks 100 (default: 20)",
                         "name": "limit",
-                        "in": "query",
-                        "example": 10
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3926,7 +3926,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/ikas_internal_utils.JSONResponse"
                         }
                     }
                 }
@@ -9163,7 +9163,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (Admin)"
+                    "Responden"
                 ],
                 "summary": "Ambil semua responden",
                 "responses": {
@@ -9203,7 +9203,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (User)"
+                    "Responden"
                 ],
                 "summary": "Ambil data responden milik user login",
                 "responses": {
@@ -9241,7 +9241,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (User)"
+                    "Responden"
                 ],
                 "summary": "Create / Update responden milik user login",
                 "parameters": [
@@ -9289,7 +9289,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (Admin)"
+                    "Responden"
                 ],
                 "summary": "Ambil responden berdasarkan ID",
                 "parameters": [
@@ -10064,71 +10064,6 @@ const docTemplate = `{
                 },
                 "risiko_id": {
                     "type": "integer"
-                }
-            }
-        },
-        "dto.AuditLogResponse": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string"
-                },
-                "changes": {
-                    "type": "object"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/dto.UserAuditLogResponse"
-                }
-            }
-        },
-        "utils.PaginatedJSONResponse": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "type": "string",
-                    "example": "success"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "pagination": {
-                    "$ref": "#/definitions/utils.PaginationMeta"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dto.AuditLogResponse"
-                    }
-                }
-            }
-        },
-        "utils.PaginationMeta": {
-            "type": "object",
-            "properties": {
-                "total": {
-                    "type": "integer",
-                    "description": "Total seluruh data"
-                },
-                "page": {
-                    "type": "integer",
-                    "description": "Halaman saat ini"
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "Jumlah data per halaman"
-                },
-                "total_pages": {
-                    "type": "integer",
-                    "description": "Total halaman"
                 }
             }
         },
@@ -11629,17 +11564,6 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "nama_sub_kategori": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UserAuditLogResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
                     "type": "string"
                 }
             }
@@ -14319,6 +14243,19 @@ const docTemplate = `{
                 }
             }
         },
+        "ikas_internal_utils.JSONResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total": {}
+            }
+        },
         "models.FrequencyLevel": {
             "type": "integer",
             "enum": [
@@ -14374,6 +14311,38 @@ const docTemplate = `{
                 },
                 "selesai": {
                     "type": "boolean"
+                }
+            }
+        },
+        "utils.PaginatedJSONResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/utils.PaginationMeta"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
                 }
             }
         }
