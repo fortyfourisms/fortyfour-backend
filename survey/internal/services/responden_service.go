@@ -11,10 +11,10 @@ import (
 	"survey/internal/models"
 )
 
-// CONFIG 
+// CONFIG
 const cacheTTL = 10 * time.Minute
 
-// REPOSITORY 
+// REPOSITORY
 type RespondenRepositoryInterface interface {
 	GetAllDetail() ([]models.RespondenDetail, error)
 	GetDetailByID(id int64) (*models.RespondenDetail, error)
@@ -25,19 +25,19 @@ type RespondenRepositoryInterface interface {
 	UpsertByUserID(userID string, m models.Responden) error
 }
 
-// VALIDATOR 
+// VALIDATOR
 type Validator interface {
 	ValidateCreate(dto.CreateRespondenRequest) error
 }
 
-// CACHE 
+// CACHE
 type CacheRepository interface {
 	Get(ctx context.Context, key string) (string, bool, error)
 	Set(ctx context.Context, key string, value string, ttlSeconds int) error
 	Del(ctx context.Context, key string) error
 }
 
-// SERVICE 
+// SERVICE
 type RespondenService struct {
 	repo      RespondenRepositoryInterface
 	validator Validator
@@ -56,9 +56,9 @@ func NewRespondenService(
 	}
 }
 
-// USER FLOW 
+// USER FLOW
 
-// ADAPTER 
+// ADAPTER
 func (s *RespondenService) GetByUserID(userID string) (*dto.RespondenResponse, error) {
 	return s.GetMe(userID)
 }
@@ -125,7 +125,7 @@ func (s *RespondenService) UpsertByUserID(userID string, req dto.CreateResponden
 	return &resp, nil
 }
 
-// ADMIN FLOW 
+// ADMIN FLOW
 
 // GET ALL
 func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
@@ -154,7 +154,7 @@ func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
 	return result, nil
 }
 
-// GET BY ID 
+// GET BY ID
 func (s *RespondenService) GetByID(id int) (*dto.RespondenResponse, error) {
 
 	ctx := context.Background()
@@ -178,7 +178,7 @@ func (s *RespondenService) GetByID(id int) (*dto.RespondenResponse, error) {
 	return &resp, nil
 }
 
-// CACHE 
+// CACHE
 
 func (s *RespondenService) setCache(ctx context.Context, key string, data any) {
 	b, err := json.Marshal(data)
@@ -200,7 +200,7 @@ func (s *RespondenService) invalidateUserCache(userID string, id int64) {
 	_ = s.cache.Del(ctx, "responden:id:"+strconv.FormatInt(id, 10))
 }
 
-// MAPPER 
+// MAPPER
 
 func (s *RespondenService) toResponse(m *models.RespondenDetail) dto.RespondenResponse {
 
@@ -222,7 +222,7 @@ func (s *RespondenService) toResponse(m *models.RespondenDetail) dto.RespondenRe
 	}
 }
 
-// HELPER 
+// HELPER
 func safeString(s *string) *string {
 	if s == nil {
 		return nil

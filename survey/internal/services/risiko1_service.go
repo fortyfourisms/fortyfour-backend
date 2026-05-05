@@ -14,7 +14,7 @@ import (
 
 const CustomRiskIndex = 14
 
-// REPOSITORY INTERFACE 
+// REPOSITORY INTERFACE
 type RisikoRepositoryInterface interface {
 	ExistsResponden(int) (bool, error)
 	ExistsRisiko(int) (bool, error)
@@ -40,7 +40,7 @@ type RisikoRepositoryInterface interface {
 // 	Del(ctx context.Context, key string) error
 // }
 
-// SERVICE 
+// SERVICE
 type RisikoService struct {
 	repo  RisikoRepositoryInterface
 	cache CacheRepository
@@ -53,7 +53,7 @@ func NewRisikoService(repo RisikoRepositoryInterface, cache CacheRepository) *Ri
 	}
 }
 
-// CACHE KEY 
+// CACHE KEY
 func progressKey(id int) string {
 	return fmt.Sprintf("progress:%d", id)
 }
@@ -62,7 +62,7 @@ func respondentKey(id int) string {
 	return fmt.Sprintf("respondent:%d", id)
 }
 
-// CACHE HELPERS 
+// CACHE HELPERS
 func (s *RisikoService) setCache(key string, value any, ttl int) {
 	if s.cache == nil {
 		return
@@ -98,7 +98,7 @@ func (s *RisikoService) invalidate(respondenID int) {
 	_ = s.cache.Del(context.Background(), respondentKey(respondenID))
 }
 
-// HELPER 
+// HELPER
 func toIntPtr(v int) *int {
 	if v == 0 {
 		return nil
@@ -113,7 +113,7 @@ func assignRisk(risikoID int, customID int) (int, *int) {
 	return risikoID, nil
 }
 
-// VALIDATION FK 
+// VALIDATION FK
 func (s *RisikoService) validateFK(respondenID, risikoID, customID int) error {
 
 	existResponden, err := s.repo.ExistsResponden(respondenID)
@@ -146,7 +146,7 @@ func (s *RisikoService) validateFK(respondenID, risikoID, customID int) error {
 	return nil
 }
 
-// STEP 1 ELIGIBILITY 
+// STEP 1 ELIGIBILITY
 func (s *RisikoService) ProcessEligibility(req dto.EligibilityRequest) (map[string]interface{}, error) {
 
 	if req.RespondenID == 0 {
@@ -183,7 +183,7 @@ func (s *RisikoService) ProcessEligibility(req dto.EligibilityRequest) (map[stri
 	}, nil
 }
 
-// STEP 2A ALASAN 
+// STEP 2A ALASAN
 func (s *RisikoService) ProcessAlasan(req dto.AlasanRequest) (map[string]interface{}, error) {
 
 	if req.RespondenID == 0 {
@@ -219,7 +219,7 @@ func (s *RisikoService) ProcessAlasan(req dto.AlasanRequest) (map[string]interfa
 	}, nil
 }
 
-// STEP 2B DAMPAK 
+// STEP 2B DAMPAK
 func (s *RisikoService) ProcessDampak(req dto.DampakRequest) (map[string]interface{}, error) {
 
 	if req.RespondenID == 0 {
@@ -266,7 +266,7 @@ func (s *RisikoService) ProcessDampak(req dto.DampakRequest) (map[string]interfa
 	}, nil
 }
 
-// STEP 2C PENGENDALIAN 
+// STEP 2C PENGENDALIAN
 func (s *RisikoService) ProcessPengendalian(req dto.PengendalianRequest) (map[string]interface{}, error) {
 
 	if req.RespondenID == 0 {
@@ -303,7 +303,7 @@ func (s *RisikoService) ProcessPengendalian(req dto.PengendalianRequest) (map[st
 	}, nil
 }
 
-// GET PROGRESS (CACHE) 
+// GET PROGRESS (CACHE)
 func (s *RisikoService) GetProgress(id int) (dto.ProgressResponse, error) {
 
 	var cached dto.ProgressResponse
@@ -339,7 +339,7 @@ func (s *RisikoService) GetByRespondentID(id int) (map[string]interface{}, error
 	return data, nil
 }
 
-// NAVIGATE 
+// NAVIGATE
 func (s *RisikoService) Navigate(req dto.NavigateRequest) (dto.ProgressResponse, error) {
 
 	progress, err := s.repo.GetProgress(req.RespondenID)
@@ -380,7 +380,7 @@ func (s *RisikoService) Navigate(req dto.NavigateRequest) (dto.ProgressResponse,
 	return mapProgressToResponse(progress), nil
 }
 
-// SAVE PROGRESS 
+// SAVE PROGRESS
 func (s *RisikoService) SaveProgress(req dto.NavigateRequest) (dto.ProgressResponse, error) {
 
 	progress, err := s.repo.GetProgress(req.RespondenID)
@@ -409,7 +409,7 @@ func (s *RisikoService) SaveProgress(req dto.NavigateRequest) (dto.ProgressRespo
 	return mapProgressToResponse(progress), nil
 }
 
-// CUSTOM RISIKO 
+// CUSTOM RISIKO
 func (s *RisikoService) CreateCustomRisiko(req dto.CustomRisikoRequest) (int, error) {
 
 	if req.NamaRisiko == "" {
@@ -419,7 +419,7 @@ func (s *RisikoService) CreateCustomRisiko(req dto.CustomRisikoRequest) (int, er
 	return s.repo.InsertCustomRisiko(req.RespondenID, req.NamaRisiko)
 }
 
-// FINISH 
+// FINISH
 func (s *RisikoService) FinishSurvey(respondenID int) error {
 
 	progress, err := s.repo.GetProgress(respondenID)
@@ -435,7 +435,7 @@ func (s *RisikoService) FinishSurvey(respondenID int) error {
 	return s.repo.UpsertProgress(*progress)
 }
 
-// MAPPING 
+// MAPPING
 func mapProgressToResponse(p *models.SurveyProgress) dto.ProgressResponse {
 
 	var risikoID *int

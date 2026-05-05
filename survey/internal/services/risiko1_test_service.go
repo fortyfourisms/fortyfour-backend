@@ -9,7 +9,7 @@ import (
 	"survey/internal/models"
 )
 
-// MOCK CACHE 
+// MOCK CACHE
 type mockCache struct{}
 
 func (m *mockCache) Get(ctx context.Context, key string) (string, bool, error) {
@@ -24,7 +24,7 @@ func (m *mockCache) Del(ctx context.Context, key string) error {
 	return nil
 }
 
-// MOCK REPOSITORY 
+// MOCK REPOSITORY
 type mockRisikoRepo struct {
 	existsRespondenFn    func(id int) (bool, error)
 	existsRisikoFn       func(id int) (bool, error)
@@ -73,12 +73,12 @@ func (m *mockRisikoRepo) InsertCustomRisiko(id int, nama string) (int, error) {
 	return m.insertCustomFn(id, nama)
 }
 
-// HELPER 
+// HELPER
 func newService(mock *mockRisikoRepo) *RisikoService {
 	return NewRisikoService(mock, &mockCache{})
 }
 
-// TEST ELIGIBILITY SUCCESS 
+// TEST ELIGIBILITY SUCCESS
 func TestProcessEligibility_Success(t *testing.T) {
 	mock := &mockRisikoRepo{
 		existsRespondenFn: func(id int) (bool, error) { return true, nil },
@@ -105,7 +105,7 @@ func TestProcessEligibility_Success(t *testing.T) {
 	}
 }
 
-// TEST ELIGIBILITY INVALID RESPONDEN 
+// TEST ELIGIBILITY INVALID RESPONDEN
 func TestProcessEligibility_InvalidResponden(t *testing.T) {
 	mock := &mockRisikoRepo{
 		existsRespondenFn: func(id int) (bool, error) { return false, nil },
@@ -123,7 +123,7 @@ func TestProcessEligibility_InvalidResponden(t *testing.T) {
 	}
 }
 
-// TEST ALASAN SUCCESS 
+// TEST ALASAN SUCCESS
 func TestProcessAlasan_Success(t *testing.T) {
 	mock := &mockRisikoRepo{
 		existsRespondenFn: func(id int) (bool, error) { return true, nil },
@@ -150,7 +150,7 @@ func TestProcessAlasan_Success(t *testing.T) {
 	}
 }
 
-// TEST DAMPAK INVALID 
+// TEST DAMPAK INVALID
 func TestProcessDampak_InvalidImpact(t *testing.T) {
 	mock := &mockRisikoRepo{
 		existsRespondenFn: func(id int) (bool, error) { return true, nil },
@@ -169,7 +169,7 @@ func TestProcessDampak_InvalidImpact(t *testing.T) {
 	}
 }
 
-// TEST PENGENDALIAN SUCCESS 
+// TEST PENGENDALIAN SUCCESS
 func TestProcessPengendalian_Success(t *testing.T) {
 	mock := &mockRisikoRepo{
 		existsRespondenFn: func(id int) (bool, error) { return true, nil },
@@ -197,7 +197,7 @@ func TestProcessPengendalian_Success(t *testing.T) {
 	}
 }
 
-// TEST NAVIGATE NEXT 
+// TEST NAVIGATE NEXT
 func TestNavigate_Next(t *testing.T) {
 	mock := &mockRisikoRepo{
 		getProgressFn: func(id int) (*models.SurveyProgress, error) {
@@ -227,7 +227,7 @@ func TestNavigate_Next(t *testing.T) {
 	}
 }
 
-// TEST SAVE PROGRESS 
+// TEST SAVE PROGRESS
 func TestSaveProgress_Success(t *testing.T) {
 	mock := &mockRisikoRepo{
 		getProgressFn: func(id int) (*models.SurveyProgress, error) {
@@ -256,7 +256,7 @@ func TestSaveProgress_Success(t *testing.T) {
 	}
 }
 
-// TEST CREATE CUSTOM RISIKO 
+// TEST CREATE CUSTOM RISIKO
 func TestCreateCustomRisiko_Success(t *testing.T) {
 	mock := &mockRisikoRepo{
 		insertCustomFn: func(id int, nama string) (int, error) {
@@ -280,7 +280,7 @@ func TestCreateCustomRisiko_Success(t *testing.T) {
 	}
 }
 
-// TEST FINISH SURVEY 
+// TEST FINISH SURVEY
 func TestFinishSurvey_Success(t *testing.T) {
 	mock := &mockRisikoRepo{
 		getProgressFn: func(id int) (*models.SurveyProgress, error) {

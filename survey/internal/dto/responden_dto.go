@@ -20,7 +20,7 @@ type UpdateRespondenRequest struct {
 	SertifikatTraining *string `json:"sertifikat_training,omitempty"`
 }
 
-// RESPONSE 
+// RESPONSE
 type RespondenResponse struct {
 	ID int64 `json:"id"`
 
@@ -35,7 +35,7 @@ type RespondenResponse struct {
 	SertifikatTraining *string `json:"sertifikat_training,omitempty"`
 
 	// dari PERUSAHAAN
-	IdPerusahaan   string `json:"id_perusahaan"`
+	IdPerusahaan   string  `json:"id_perusahaan"`
 	NamaPerusahaan *string `json:"nama_perusahaan"`
 
 	// dari JOIN (opsional)

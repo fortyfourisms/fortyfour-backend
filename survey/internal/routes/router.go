@@ -45,11 +45,11 @@ func InitRouter(
 		return protected(http.HandlerFunc(h))
 	}
 
-	// RESPONDEN 
+	// RESPONDEN
 	mux.Handle("/api/survey/responden", protected(respondenH))
 	mux.Handle("/api/survey/responden/", protected(respondenH))
 
-	// RISIKO 
+	// RISIKO
 	mux.Handle("/api/survey/risiko/eligibility", protectedFunc(risikoH.SubmitEligibility))
 	mux.Handle("/api/survey/risiko/dampak", protectedFunc(risikoH.SubmitDampak))
 	mux.Handle("/api/survey/risiko/pengendalian", protectedFunc(risikoH.SubmitPengendalian))

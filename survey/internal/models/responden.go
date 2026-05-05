@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-// BASE 
+// BASE
 type Responden struct {
 	ID int64 `json:"id" db:"id"`
 

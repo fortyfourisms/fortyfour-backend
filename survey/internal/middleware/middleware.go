@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// BASIC MIDDLEWARE 
+// BASIC MIDDLEWARE
 func Recovery(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
@@ -52,7 +52,7 @@ func CORS(next http.Handler) http.Handler {
 	})
 }
 
-// CONTEXT KEY 
+// CONTEXT KEY
 type contextKey string
 
 const (
@@ -83,7 +83,7 @@ func GetRole(ctx context.Context) string {
 	return ""
 }
 
-// JWT VALIDATION 
+// JWT VALIDATION
 func validateToken(token string) (userID string, role string, err error) {
 
 	if token == "" {
@@ -101,7 +101,7 @@ func validateToken(token string) (userID string, role string, err error) {
 	return "", "", errors.New("invalid token")
 }
 
-// AUTH MIDDLEWARE 
+// AUTH MIDDLEWARE
 func Auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
@@ -124,20 +124,20 @@ func Auth(next http.Handler) http.Handler {
 			role = rle
 		}
 
-		// FALLBACK HEADER 
+		// FALLBACK HEADER
 		if userID == "" {
 			userID = r.Header.Get("X-User-ID")
 			role = r.Header.Get("X-Role")
 		}
 
-		// VALIDATION 
+		// VALIDATION
 		if userID == "" {
 			http.Error(w, "Unauthorized: user_id required", http.StatusUnauthorized)
 			return
 		}
 
 		if role == "" {
-			role = "user" 
+			role = "user"
 		}
 
 		// CONTEXT

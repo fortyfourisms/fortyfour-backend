@@ -15,7 +15,7 @@ func NewRespondenRepository(db *sql.DB) *RespondenRepository {
 	return &RespondenRepository{db: db}
 }
 
-// HELPER 
+// HELPER
 func nullToString(ns sql.NullString) *string {
 	if ns.Valid {
 		return &ns.String
@@ -23,7 +23,7 @@ func nullToString(ns sql.NullString) *string {
 	return nil
 }
 
-// CREATE 
+// CREATE
 func (r *RespondenRepository) Create(m models.Responden) (int64, error) {
 
 	res, err := r.db.Exec(`
@@ -47,7 +47,7 @@ func (r *RespondenRepository) Create(m models.Responden) (int64, error) {
 	return res.LastInsertId()
 }
 
-// UPSERT BY USER ID 
+// UPSERT BY USER ID
 func (r *RespondenRepository) UpsertByUserID(userID string, m models.Responden) error {
 
 	_, err := r.db.Exec(`
@@ -75,7 +75,7 @@ func (r *RespondenRepository) UpsertByUserID(userID string, m models.Responden) 
 	return err
 }
 
-// BASE QUERY 
+// BASE QUERY
 const baseDetailQuery = `
 SELECT 
 	r.id,
@@ -191,7 +191,7 @@ func (r *RespondenRepository) GetDetailByID(id int64) (*models.RespondenDetail, 
 	return &m, nil
 }
 
-//GET BY USER ID (USER) 
+// GET BY USER ID (USER)
 func (r *RespondenRepository) GetByUserID(userID string) (*models.RespondenDetail, error) {
 
 	row := r.db.QueryRow(baseDetailQuery+" WHERE r.user_id = ?", userID)
@@ -234,7 +234,7 @@ func (r *RespondenRepository) GetByUserID(userID string) (*models.RespondenDetai
 	return &m, nil
 }
 
-// BASIC GET 
+// BASIC GET
 func (r *RespondenRepository) GetByID(id int64) (*models.Responden, error) {
 
 	row := r.db.QueryRow(`

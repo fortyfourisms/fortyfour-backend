@@ -57,12 +57,12 @@ func ValidateCreateResponden(req dto.CreateRespondenRequest) error {
 		return errors.New("format no_telepon tidak valid")
 	}
 
-	_ = sertifikat 
+	_ = sertifikat
 
 	return nil
 }
 
-// PHONE VALIDATION 
+// PHONE VALIDATION
 func isPhone(phone string) bool {
 	if phone == "" {
 		return false

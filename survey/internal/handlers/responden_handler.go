@@ -11,7 +11,7 @@ import (
 	"survey/internal/utils"
 )
 
-// SERVICE 
+// SERVICE
 type RespondenServiceInterface interface {
 	GetAll() ([]dto.RespondenResponse, error)
 	GetByID(id int) (*dto.RespondenResponse, error)
@@ -20,7 +20,7 @@ type RespondenServiceInterface interface {
 	UpsertByUserID(userID string, req dto.CreateRespondenRequest) (*dto.RespondenResponse, error)
 }
 
-// HANDLER 
+// HANDLER
 type RespondenHandler struct {
 	service RespondenServiceInterface
 }
@@ -29,7 +29,7 @@ func NewRespondenHandler(service RespondenServiceInterface) *RespondenHandler {
 	return &RespondenHandler{service: service}
 }
 
-// ROUTER 
+// ROUTER
 func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	role := middleware.GetRole(r.Context())
@@ -39,7 +39,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 
-	// GET 
+	// GET
 	case http.MethodGet:
 
 		// USER: /me
@@ -69,7 +69,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		h.handleGetByID(w, path)
 
-	// POST 
+	// POST
 	case http.MethodPost:
 
 		if path != "me" {
@@ -140,7 +140,7 @@ func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 	utils.RespondJSON(w, http.StatusOK, data)
 }
 
-// USER 
+// USER
 
 // GetMyResponden godoc
 // @Summary      Ambil data responden milik user login
