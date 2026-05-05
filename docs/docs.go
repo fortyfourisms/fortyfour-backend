@@ -294,6 +294,243 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/berita": {
+            "get": {
+                "description": "Mengambil seluruh data berita",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "List semua berita",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/fortyfour-backend_internal_dto.BeritaResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Membuat berita baru",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Tambah berita baru",
+                "parameters": [
+                    {
+                        "description": "Data berita",
+                        "name": "berita",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateBeritaRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/berita/{id}": {
+            "get": {
+                "description": "Mengambil satu data berita",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Ambil berita berdasarkan ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Berita ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/fortyfour-backend_internal_dto.BeritaResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Mengubah data berita berdasarkan ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Update berita",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Berita ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data update",
+                        "name": "berita",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateBeritaRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menghapus data berita berdasarkan ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Berita"
+                ],
+                "summary": "Hapus berita",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Berita ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_utils.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/casbin/permissions": {
             "get": {
                 "security": [
@@ -3649,30 +3886,41 @@ const docTemplate = `{
         },
         "/api/maturity/ikas-audit-logs": {
             "get": {
-                "description": "Mengambil seluruh riwayat perubahan IKAS (opsional filter berdasarkan ikas_id)",
+                "description": "Mengambil seluruh riwayat perubahan IKAS dengan pagination. Opsional filter berdasarkan ikas_id.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Audit Logs"
                 ],
-                "summary": "List semua audit logs",
+                "summary": "List semua audit logs IKAS (paginated)",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "IKAS ID",
+                        "description": "Filter berdasarkan IKAS ID",
                         "name": "ikas_id",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Halaman (default: 1)",
+                        "name": "page",
+                        "in": "query",
+                        "example": 1
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Jumlah data per halaman, maks 100 (default: 20)",
+                        "name": "limit",
+                        "in": "query",
+                        "example": 10
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.AuditLogResponse"
-                            }
+                            "$ref": "#/definitions/utils.PaginatedJSONResponse"
                         }
                     },
                     "500": {
@@ -9826,10 +10074,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "changes": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "type": "object"
                 },
                 "created_at": {
                     "type": "string"
@@ -9842,6 +10087,48 @@ const docTemplate = `{
                 },
                 "user": {
                     "$ref": "#/definitions/dto.UserAuditLogResponse"
+                }
+            }
+        },
+        "utils.PaginatedJSONResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/utils.PaginationMeta"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.AuditLogResponse"
+                    }
+                }
+            }
+        },
+        "utils.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer",
+                    "description": "Total seluruh data"
+                },
+                "page": {
+                    "type": "integer",
+                    "description": "Halaman saat ini"
+                },
+                "limit": {
+                    "type": "integer",
+                    "description": "Jumlah data per halaman"
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "description": "Total halaman"
                 }
             }
         },
@@ -11439,6 +11726,46 @@ const docTemplate = `{
                 }
             }
         },
+        "fortyfour-backend_internal_dto.BeritaAuthor": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.BeritaResponse": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "$ref": "#/definitions/fortyfour-backend_internal_dto.BeritaAuthor"
+                },
+                "author_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "deskripsi": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "judul": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "fortyfour-backend_internal_dto.BulkAddPolicyRequest": {
             "type": "object",
             "required": [
@@ -11491,6 +11818,23 @@ const docTemplate = `{
                 },
                 "tanggal_selesai": {
                     "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.CreateBeritaRequest": {
+            "type": "object",
+            "required": [
+                "deskripsi",
+                "judul"
+            ],
+            "properties": {
+                "deskripsi": {
+                    "type": "string"
+                },
+                "judul": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 5
                 }
             }
         },
@@ -13366,6 +13710,19 @@ const docTemplate = `{
                 },
                 "tanggal_selesai": {
                     "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.UpdateBeritaRequest": {
+            "type": "object",
+            "properties": {
+                "deskripsi": {
+                    "type": "string"
+                },
+                "judul": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 5
                 }
             }
         },
