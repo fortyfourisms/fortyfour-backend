@@ -145,7 +145,7 @@ func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 // GetMyResponden godoc
 // @Summary      Ambil data responden milik user login
 // @Description  User hanya dapat melihat data dirinya sendiri
-// @Tags         Responden 
+// @Tags         Responden
 // @Produce      json
 // @Security     BearerAuth
 // @Success      200 {object} dto.RespondenResponse
