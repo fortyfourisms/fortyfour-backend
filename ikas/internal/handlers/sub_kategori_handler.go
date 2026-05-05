@@ -69,12 +69,7 @@ func (h *SubKategoriHandler) handleGetAll(w http.ResponseWriter, _ *http.Request
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, utils.JSONResponse{
-		Status:  "success",
-		Message: "Berhasil mengambil data sub kategori",
-		Data:    data,
-		Total:   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data sub kategori IKAS", data, len(data))
 }
 
 // GetSubKategoriByID godoc
@@ -98,11 +93,7 @@ func (h *SubKategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Reques
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, utils.JSONResponse{
-		Status:  "success",
-		Message: "Berhasil mengambil data sub kategori",
-		Data:    data,
-	})
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data sub kategori IKAS", data)
 }
 
 // CreateSubKategori godoc
@@ -148,10 +139,7 @@ func (h *SubKategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.RespondJSON(w, 201, utils.JSONResponse{
-		Status:  "success",
-		Message: "Permintaan pembuatan sub kategori telah diterima dan sedang diproses",
-	})
+	utils.RespondSuccess(w, 201, "Permintaan pembuatan sub kategori IKAS telah diterima dan sedang diproses", nil)
 }
 
 // UpdateSubKategori godoc
@@ -201,10 +189,7 @@ func (h *SubKategoriHandler) handleUpdate(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.RespondJSON(w, 200, utils.JSONResponse{
-		Status:  "success",
-		Message: "Permintaan pembaruan sub kategori telah diterima dan sedang diproses",
-	})
+	utils.RespondSuccess(w, 200, "Permintaan pembaruan sub kategori IKAS telah diterima dan sedang diproses", nil)
 }
 
 // DeleteSubKategori godoc
@@ -231,8 +216,5 @@ func (h *SubKategoriHandler) handleDelete(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.RespondJSON(w, 200, utils.JSONResponse{
-		Status:  "success",
-		Message: "Permintaan penghapusan sub kategori telah diterima dan sedang diproses",
-	})
+	utils.RespondSuccess(w, 200, "Permintaan penghapusan sub kategori IKAS telah diterima dan sedang diproses", nil)
 }

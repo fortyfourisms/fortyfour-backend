@@ -343,6 +343,8 @@ func (r *IkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasRespons
 			g.nilai_subdomain3,
 			g.nilai_subdomain4,
 			i.is_validated,
+			i.edit_request_status,
+			i.edit_request_reason,
 			i.created_at,
 			i.updated_at
 		FROM ikas i
@@ -378,6 +380,7 @@ func (r *IkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasRespons
 		var gulihID sql.NullInt64
 		var gulihNilai, gulihSub1, gulihSub2, gulihSub3, gulihSub4 sql.NullFloat64
 		var isValidated sql.NullBool
+		var editStatus, editReason sql.NullString
 		var createdAt, updatedAt sql.NullString
 
 		err := rows.Scan(
@@ -420,6 +423,8 @@ func (r *IkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasRespons
 			&gulihSub3,
 			&gulihSub4,
 			&isValidated,
+			&editStatus,
+			&editReason,
 			&createdAt,
 			&updatedAt,
 		)
@@ -441,6 +446,14 @@ func (r *IkasRepository) GetByPerusahaan(perusahaanID string) ([]dto.IkasRespons
 
 		if updatedAt.Valid {
 			i.UpdatedAt = updatedAt.String
+		}
+
+		if editStatus.Valid {
+			i.EditRequestStatus = editStatus.String
+		}
+
+		if editReason.Valid {
+			i.EditRequestReason = editReason.String
 		}
 
 		if targetNilai.Valid {
@@ -1238,9 +1251,9 @@ func (r *IkasRepository) GetLatestByPerusahaan(perusahaanID string) (*dto.IkasRe
 func (r *IkasRepository) CreateInitial(sourceID, targetID, targetDate string) error {
 	query := `
 		INSERT INTO ikas
-			(id, id_perusahaan, tanggal, responden, telepon, jabatan, nilai_kematangan, target_nilai, is_validated)
+			(id, id_perusahaan, tanggal, responden, telepon, jabatan, nilai_kematangan, target_nilai, is_validated, edit_request_status, edit_request_reason)
 		SELECT 
-			?, id_perusahaan, ?, responden, telepon, jabatan, nilai_kematangan, target_nilai, false
+			?, id_perusahaan, ?, responden, telepon, jabatan, nilai_kematangan, target_nilai, false, 'none', ''
 		FROM ikas 
 		WHERE id = ?`
 

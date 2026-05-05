@@ -24,7 +24,7 @@ func (r *konversiRepository) GetAllKonversi(perusahaanID string) ([]dto.Konversi
 			p.nama_perusahaan,
 			EXISTS(SELECT 1 FROM ikas i WHERE i.id_perusahaan = p.id) as has_ikas,
 			EXISTS(SELECT 1 FROM se s WHERE s.id_perusahaan = p.id) as has_kse,
-			EXISTS(SELECT 1 FROM responden r JOIN users u ON r.user_id = u.id WHERE u.id_perusahaan = p.id) as has_survey,
+			EXISTS(SELECT 1 FROM responden r WHERE r.id_perusahaan = p.id) as has_survey,
 			EXISTS(SELECT 1 FROM csirt c WHERE c.id_perusahaan = p.id) as has_csirt
 		FROM perusahaan p
 	`

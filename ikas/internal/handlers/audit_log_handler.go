@@ -68,7 +68,7 @@ func (h *AuditLogHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 
 	utils.RespondJSON(w, http.StatusOK, utils.PaginatedJSONResponse{
 		Status:  "success",
-		Message: "Berhasil mengambil data audit logs",
+		Message: "Berhasil mengambil data audit logs IKAS",
 		Pagination: utils.PaginationMeta{
 			Total:      result.Total,
 			Page:       result.Page,

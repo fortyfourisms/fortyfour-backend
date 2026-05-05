@@ -112,11 +112,7 @@ func (h *IkasHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	// Implicit filtering for non-admins
 	if userRole != "admin" && userRole != "staff" {
 		if userPerusahaanID == "" || userPerusahaanID == "null" {
-			utils.RespondJSON(w, 200, map[string]interface{}{
-				"message": "Berhasil mengambil data",
-				"data":    []dto.IkasResponse{},
-				"total":   0,
-			})
+			utils.RespondListData(w, 200, "Berhasil mengambil data IKAS", []dto.IkasResponse{}, 0)
 			return
 		}
 		perusahaanID = userPerusahaanID
@@ -139,11 +135,7 @@ func (h *IkasHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	if data == nil {
 		data = []dto.IkasResponse{}
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data IKAS", data, len(data))
 }
 
 // GetIkasByID godoc
@@ -170,10 +162,7 @@ func (h *IkasHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id s
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-	})
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data IKAS", data)
 }
 
 // CreateIkas godoc
@@ -210,9 +199,8 @@ func (h *IkasHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 201, map[string]interface{}{
-		"message": "Berhasil menyimpan data",
-		"id":      newID,
+	utils.RespondSuccess(w, 201, "Berhasil menyimpan data IKAS", map[string]interface{}{
+		"id": newID,
 	})
 }
 
@@ -253,9 +241,8 @@ func (h *IkasHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id st
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menyimpan data",
-		"id":      updatedID,
+	utils.RespondSuccess(w, 200, "Berhasil menyimpan data IKAS", map[string]interface{}{
+		"id": updatedID,
 	})
 }
 
@@ -285,9 +272,8 @@ func (h *IkasHandler) handleDelete(w http.ResponseWriter, r *http.Request, id st
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menghapus data",
-		"id":      id,
+	utils.RespondSuccess(w, 200, "Berhasil menghapus data IKAS", map[string]interface{}{
+		"id": id,
 	})
 }
 
@@ -359,9 +345,8 @@ func (h *IkasHandler) handleImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 201, map[string]interface{}{
+	utils.RespondSuccess(w, 201, "Berhasil menyimpan data IKAS", map[string]interface{}{
 		"success": true,
-		"message": "Berhasil menyimpan data",
 		"id":      newID,
 	})
 }
@@ -404,9 +389,7 @@ func (h *IkasHandler) handleValidate(w http.ResponseWriter, r *http.Request, id 
 		msg = "Berhasil membuka validasi final"
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": msg,
-	})
+	utils.RespondSuccess(w, 200, msg, nil)
 }
 
 // ExportIkasPDF godoc
@@ -485,9 +468,7 @@ func (h *IkasHandler) handleRequestEdit(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Permintaan edit berhasil diajukan ke admin",
-	})
+	utils.RespondSuccess(w, 200, "Permintaan edit IKAS berhasil diajukan ke admin", nil)
 }
 
 // ApproveEditIkas godoc
@@ -521,9 +502,7 @@ func (h *IkasHandler) handleApproveEdit(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Permintaan edit disetujui, data IKAS telah dibuka",
-	})
+	utils.RespondSuccess(w, 200, "Permintaan edit IKAS disetujui, data IKAS telah dibuka", nil)
 }
 
 // RejectEditIkas godoc
@@ -565,7 +544,5 @@ func (h *IkasHandler) handleRejectEdit(w http.ResponseWriter, r *http.Request, i
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Permintaan edit ditolak",
-	})
+	utils.RespondSuccess(w, 200, "Permintaan edit IKAS ditolak", nil)
 }

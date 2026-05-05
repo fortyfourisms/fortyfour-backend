@@ -69,12 +69,7 @@ func (h *RuangLingkupHandler) handleGetAll(w http.ResponseWriter, _ *http.Reques
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, utils.JSONResponse{
-		Status:  "success",
-		Message: "Berhasil mengambil data ruang lingkup",
-		Data:    data,
-		Total:   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data ruang lingkup IKAS", data, len(data))
 }
 
 // GetRuangLingkupByID godoc
@@ -98,11 +93,7 @@ func (h *RuangLingkupHandler) handleGetByID(w http.ResponseWriter, _ *http.Reque
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, utils.JSONResponse{
-		Status:  "success",
-		Message: "Berhasil mengambil data ruang lingkup",
-		Data:    data,
-	})
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data ruang lingkup IKAS", data)
 }
 
 // CreateRuangLingkup godoc
@@ -142,10 +133,7 @@ func (h *RuangLingkupHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	utils.RespondJSON(w, 201, utils.JSONResponse{
-		Status:  "success",
-		Message: "Permintaan pembuatan ruang lingkup telah diterima dan sedang diproses",
-	})
+	utils.RespondSuccess(w, 201, "Permintaan pembuatan ruang lingkup IKAS telah diterima dan sedang diproses", nil)
 }
 
 // UpdateRuangLingkup godoc
@@ -189,10 +177,7 @@ func (h *RuangLingkupHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	utils.RespondJSON(w, 200, utils.JSONResponse{
-		Status:  "success",
-		Message: "Permintaan pembaruan ruang lingkup telah diterima dan sedang diproses",
-	})
+	utils.RespondSuccess(w, 200, "Permintaan pembaruan ruang lingkup IKAS telah diterima dan sedang diproses", nil)
 }
 
 // DeleteRuangLingkup godoc
@@ -218,8 +203,5 @@ func (h *RuangLingkupHandler) handleDelete(w http.ResponseWriter, r *http.Reques
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, utils.JSONResponse{
-		Status:  "success",
-		Message: "Permintaan penghapusan ruang lingkup telah diterima dan sedang diproses",
-	})
+	utils.RespondSuccess(w, 200, "Permintaan penghapusan ruang lingkup IKAS telah diterima dan sedang diproses", nil)
 }

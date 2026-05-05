@@ -17,10 +17,10 @@ var _ BeritaRepositoryInterface = (*BeritaRepository)(nil)
 
 func (r *BeritaRepository) Create(berita *models.Berita) error {
 	query := `
-		INSERT INTO berita (judul, deskripsi, author_id, created_at, updated_at)
-		VALUES (?, ?, ?, NOW(), NOW())
+		INSERT INTO berita (judul, deskripsi, tags, author_id, created_at, updated_at)
+		VALUES (?, ?, ?, ?, NOW(), NOW())
 	`
-	res, err := r.db.Exec(query, berita.Judul, berita.Deskripsi, berita.AuthorID)
+	res, err := r.db.Exec(query, berita.Judul, berita.Deskripsi, berita.Tags, berita.AuthorID)
 	if err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (r *BeritaRepository) Create(berita *models.Berita) error {
 
 func (r *BeritaRepository) FindAll() ([]models.Berita, error) {
 	query := `
-		SELECT b.id, b.judul, b.deskripsi, b.author_id, b.created_at, b.updated_at,
+		SELECT b.id, b.judul, b.deskripsi, b.tags, b.author_id, b.created_at, b.updated_at,
 		       u.username, u.display_name
 		FROM berita b
 		LEFT JOIN users u ON b.author_id = u.id
@@ -52,13 +52,20 @@ func (r *BeritaRepository) FindAll() ([]models.Berita, error) {
 		var b models.Berita
 		var author models.User
 		var displayName sql.NullString
+		var tags sql.NullString
 
 		err := rows.Scan(
-			&b.ID, &b.Judul, &b.Deskripsi, &b.AuthorID, &b.CreatedAt, &b.UpdatedAt,
+			&b.ID, &b.Judul, &b.Deskripsi, &tags, &b.AuthorID, &b.CreatedAt, &b.UpdatedAt,
 			&author.Username, &displayName,
 		)
 		if err != nil {
 			return nil, err
+		}
+
+		if tags.Valid {
+			b.Tags = tags.String
+		} else {
+			b.Tags = "[]"
 		}
 
 		if displayName.Valid {
@@ -73,7 +80,7 @@ func (r *BeritaRepository) FindAll() ([]models.Berita, error) {
 
 func (r *BeritaRepository) FindByID(id int64) (*models.Berita, error) {
 	query := `
-		SELECT b.id, b.judul, b.deskripsi, b.author_id, b.created_at, b.updated_at,
+		SELECT b.id, b.judul, b.deskripsi, b.tags, b.author_id, b.created_at, b.updated_at,
 		       u.username, u.display_name
 		FROM berita b
 		LEFT JOIN users u ON b.author_id = u.id
@@ -84,9 +91,10 @@ func (r *BeritaRepository) FindByID(id int64) (*models.Berita, error) {
 	var b models.Berita
 	var author models.User
 	var displayName sql.NullString
+	var tags sql.NullString
 
 	err := row.Scan(
-		&b.ID, &b.Judul, &b.Deskripsi, &b.AuthorID, &b.CreatedAt, &b.UpdatedAt,
+		&b.ID, &b.Judul, &b.Deskripsi, &tags, &b.AuthorID, &b.CreatedAt, &b.UpdatedAt,
 		&author.Username, &displayName,
 	)
 	if err == sql.ErrNoRows {
@@ -94,6 +102,12 @@ func (r *BeritaRepository) FindByID(id int64) (*models.Berita, error) {
 	}
 	if err != nil {
 		return nil, err
+	}
+
+	if tags.Valid {
+		b.Tags = tags.String
+	} else {
+		b.Tags = "[]"
 	}
 
 	if displayName.Valid {
@@ -107,10 +121,10 @@ func (r *BeritaRepository) FindByID(id int64) (*models.Berita, error) {
 func (r *BeritaRepository) Update(berita *models.Berita) error {
 	query := `
 		UPDATE berita
-		SET judul = ?, deskripsi = ?, updated_at = NOW()
+		SET judul = ?, deskripsi = ?, tags = ?, updated_at = NOW()
 		WHERE id = ?
 	`
-	_, err := r.db.Exec(query, berita.Judul, berita.Deskripsi, berita.ID)
+	_, err := r.db.Exec(query, berita.Judul, berita.Deskripsi, berita.Tags, berita.ID)
 	return err
 }
 

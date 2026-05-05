@@ -69,11 +69,7 @@ func (h *PertanyaanGulihHandler) handleGetAll(w http.ResponseWriter, _ *http.Req
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data pertanyaan gulih", data, len(data))
 }
 
 // GetPertanyaanGulihByID godoc
@@ -97,10 +93,7 @@ func (h *PertanyaanGulihHandler) handleGetByID(w http.ResponseWriter, _ *http.Re
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-	})
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data pertanyaan gulih", data)
 }
 
 // CreatePertanyaanGulih godoc
