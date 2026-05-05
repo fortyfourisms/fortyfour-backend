@@ -7,16 +7,20 @@ import (
 	"strings"
 
 	"survey/internal/dto"
+	"survey/internal/middleware"
 	"survey/internal/utils"
 )
 
+// SERVICE 
 type RespondenServiceInterface interface {
 	GetAll() ([]dto.RespondenResponse, error)
 	GetByID(id int) (*dto.RespondenResponse, error)
-	Create(req dto.CreateRespondenRequest) (*dto.RespondenResponse, error)
-	Update(id int, req dto.UpdateRespondenRequest) (*dto.RespondenResponse, error)
+
+	GetByUserID(userID string) (*dto.RespondenResponse, error)
+	UpsertByUserID(userID string, req dto.CreateRespondenRequest) (*dto.RespondenResponse, error)
 }
 
+// HANDLER 
 type RespondenHandler struct {
 	service RespondenServiceInterface
 }
@@ -25,45 +29,76 @@ func NewRespondenHandler(service RespondenServiceInterface) *RespondenHandler {
 	return &RespondenHandler{service: service}
 }
 
+// ROUTER 
 func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
+	role := middleware.GetRole(r.Context())
+
 	path := strings.TrimPrefix(r.URL.Path, "/api/survey/responden")
-	id := strings.TrimPrefix(path, "/")
+	path = strings.Trim(path, "/")
 
 	switch r.Method {
 
+	// GET 
 	case http.MethodGet:
-		if id == "" {
+
+		// USER: /me
+		if path == "me" {
+			if role != "user" {
+				utils.RespondError(w, http.StatusForbidden, "forbidden")
+				return
+			}
+			h.GetMe(w, r)
+			return
+		}
+
+		// ADMIN: GET ALL
+		if path == "" {
+			if role != "admin" {
+				utils.RespondError(w, http.StatusForbidden, "forbidden")
+				return
+			}
 			h.handleGetAll(w)
-		} else {
-			h.handleGetByID(w, id)
+			return
 		}
 
+		// ADMIN: GET BY ID
+		if role != "admin" {
+			utils.RespondError(w, http.StatusForbidden, "forbidden")
+			return
+		}
+		h.handleGetByID(w, path)
+
+	// POST 
 	case http.MethodPost:
-		if id != "" {
-			utils.RespondError(w, http.StatusBadRequest, "ID tidak diperlukan untuk create")
-			return
-		}
-		h.handleCreate(w, r)
 
-	case http.MethodPut:
-		if id == "" {
-			utils.RespondError(w, http.StatusBadRequest, "ID wajib")
+		if path != "me" {
+			utils.RespondError(w, http.StatusForbidden, "only /me allowed")
 			return
 		}
-		h.handleUpdate(w, r, id)
+
+		if role != "user" {
+			utils.RespondError(w, http.StatusForbidden, "forbidden")
+			return
+		}
+
+		h.UpsertMe(w, r)
 
 	default:
-		utils.RespondError(w, http.StatusMethodNotAllowed, "Method tidak diizinkan")
+		utils.RespondError(w, http.StatusMethodNotAllowed, "method not allowed")
 	}
 }
 
+// ADMIN
+
 // GetAllResponden godoc
 // @Summary      Ambil semua responden
-// @Description  Mengambil seluruh data responden beserta perusahaan dan sektor
-// @Tags         Responden Survey
+// @Description  Hanya admin yang dapat melihat semua data responden
+// @Tags         Responden (Admin)
 // @Produce      json
+// @Security     BearerAuth
 // @Success      200 {array} dto.RespondenResponse
+// @Failure      403 {object} dto.ErrorResponse
 // @Failure      500 {object} dto.ErrorResponse
 // @Router       /api/survey/responden [get]
 func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
@@ -79,130 +114,91 @@ func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
 
 // GetRespondenByID godoc
 // @Summary      Ambil responden berdasarkan ID
-// @Description  Mengambil detail responden beserta perusahaan dan sektor
-// @Tags         Responden Survey
+// @Description  Hanya admin yang dapat melihat detail responden
+// @Tags         Responden (Admin)
 // @Produce      json
+// @Security     BearerAuth
 // @Param        id path int true "Responden ID"
 // @Success      200 {object} dto.RespondenResponse
 // @Failure      400 {object} dto.ErrorResponse
 // @Failure      404 {object} dto.ErrorResponse
-// @Failure      500 {object} dto.ErrorResponse
 // @Router       /api/survey/responden/{id} [get]
 func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "ID harus berupa angka")
+		utils.RespondError(w, http.StatusBadRequest, "id harus angka")
 		return
 	}
 
 	data, err := h.service.GetByID(idInt)
 	if err != nil {
-
-		if err.Error() == "data tidak ditemukan" {
-			utils.RespondError(w, http.StatusNotFound, err.Error())
-		} else {
-			utils.RespondError(w, http.StatusInternalServerError, err.Error())
-		}
+		utils.RespondError(w, http.StatusNotFound, err.Error())
 		return
 	}
 
 	utils.RespondJSON(w, http.StatusOK, data)
 }
 
-// CreateResponden godoc
-// @Summary      Tambah responden
-// @Description  Membuat data responden baru berdasarkan perusahaan
-// @Tags         Responden Survey
-// @Accept       json
+// USER 
+
+// GetMyResponden godoc
+// @Summary      Ambil data responden milik user login
+// @Description  User hanya dapat melihat data dirinya sendiri
+// @Tags         Responden (User)
 // @Produce      json
-// @Param        request body dto.CreateRespondenRequest true "Create Responden Request"
-// @Success      201 {object} dto.RespondenResponse
-// @Failure      400 {object} dto.ErrorResponse
+// @Security     BearerAuth
+// @Success      200 {object} dto.RespondenResponse
+// @Failure      401 {object} dto.ErrorResponse
 // @Failure      404 {object} dto.ErrorResponse
-// @Failure      500 {object} dto.ErrorResponse
-// @Router       /api/survey/responden [post]
-func (h *RespondenHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
+// @Router       /api/survey/responden/me [get]
+func (h *RespondenHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 
-	var req dto.CreateRespondenRequest
+	userID := middleware.GetUserID(r.Context())
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "invalid request body")
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
-	resp, err := h.service.Create(req)
+	data, err := h.service.GetByUserID(userID)
 	if err != nil {
-
-		switch err.Error() {
-
-		case "id_perusahaan wajib diisi",
-			"nama lengkap tidak boleh kosong",
-			"jabatan tidak boleh kosong",
-			"email tidak boleh kosong",
-			"nomor telepon tidak boleh kosong":
-			utils.RespondError(w, http.StatusBadRequest, err.Error())
-
-		case "perusahaan tidak ditemukan":
-			utils.RespondError(w, http.StatusNotFound, err.Error())
-
-		default:
-			utils.RespondError(w, http.StatusInternalServerError, err.Error())
-		}
-
+		utils.RespondError(w, http.StatusNotFound, err.Error())
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusCreated, resp)
+	utils.RespondJSON(w, http.StatusOK, data)
 }
 
-// UpdateResponden godoc
-// @Summary      Update responden
-// @Description  Memperbarui data responden
-// @Tags         Responden Survey
+// UpsertMyResponden godoc
+// @Summary      Create / Update responden milik user login
+// @Description  Jika belum ada maka create, jika sudah ada maka update (upsert)
+// @Tags         Responden (User)
 // @Accept       json
 // @Produce      json
-// @Param        id path int true "Responden ID"
-// @Param        request body dto.UpdateRespondenRequest true "Update Responden Request"
+// @Security     BearerAuth
+// @Param        request body dto.CreateRespondenRequest true "Data Responden"
 // @Success      200 {object} dto.RespondenResponse
 // @Failure      400 {object} dto.ErrorResponse
-// @Failure      404 {object} dto.ErrorResponse
-// @Failure      500 {object} dto.ErrorResponse
-// @Router       /api/survey/responden/{id} [put]
-func (h *RespondenHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
+// @Failure      401 {object} dto.ErrorResponse
+// @Router       /api/survey/responden/me [post]
+func (h *RespondenHandler) UpsertMe(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
 
-	idInt, err := strconv.Atoi(id)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "ID harus berupa angka")
+	if userID == "" {
+		utils.RespondError(w, http.StatusUnauthorized, "unauthorized")
 		return
 	}
 
-	var req dto.UpdateRespondenRequest
-
+	var req dto.CreateRespondenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "invalid request body")
+		utils.RespondError(w, http.StatusBadRequest, "invalid body")
 		return
 	}
 
-	resp, err := h.service.Update(idInt, req)
+	resp, err := h.service.UpsertByUserID(userID, req)
 	if err != nil {
-
-		switch err.Error() {
-
-		case "data tidak ditemukan":
-			utils.RespondError(w, http.StatusNotFound, err.Error())
-
-		case "id_perusahaan wajib diisi",
-			"nama lengkap tidak boleh kosong",
-			"jabatan tidak boleh kosong",
-			"email tidak boleh kosong",
-			"nomor telepon tidak boleh kosong":
-			utils.RespondError(w, http.StatusBadRequest, err.Error())
-
-		default:
-			utils.RespondError(w, http.StatusInternalServerError, err.Error())
-		}
-
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 

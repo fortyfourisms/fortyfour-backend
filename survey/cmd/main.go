@@ -14,6 +14,7 @@ import (
 	"survey/internal/handlers"
 	"survey/internal/repository"
 	"survey/internal/routes"
+	"survey/internal/middleware"
 	"survey/internal/services"
 	"survey/pkg/database"
 )
@@ -67,6 +68,7 @@ func main() {
 	mux := routes.InitRouter(
 		respondenHandler,
 		risikoHandler,
+		middleware.Auth,
 	)
 
 	// SERVER
