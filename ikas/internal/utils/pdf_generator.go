@@ -30,17 +30,36 @@ func toSafe(s string) string {
 
 // GenerateIkasPDF generates a professional report for IKAS assessment based on the BSSN template.
 func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
-	pdf := fpdf.New("P", "mm", "A4", "")
+	pdf := fpdf.NewCustom(&fpdf.InitType{
+		OrientationStr: "P",
+		UnitStr:        "mm",
+		Size: fpdf.SizeType{
+			Wd: 215.9,
+			Ht: 330.2,
+		},
+	})
 	pdf.SetMargins(pageMargin, pageMargin, pageMargin)
 	pdf.SetAutoPageBreak(true, 25)
+
+	// Set Footer to appear on every page
+	pdf.SetFooterFunc(func() {
+		pdf.SetY(-25)
+		pdf.SetFont("Arial", "", 8)
+		footerText := "Dokumen ini telah ditandatangani secara elektronik menggunakan sertifikat elektronik\nyang diterbitkan oleh Balai Besar Sertifikasi Elektronik (BSrE), Badan Siber dan Sandi Negara"
+		pdf.MultiCell(0, 4, toSafe(footerText), "", "C", false)
+	})
 
 	// Add Page
 	pdf.AddPage()
 
 	// 1. Logo BSSN at Top Center
 	pwd, _ := os.Getwd()
-	logoPath := filepath.Join(pwd, "ikas", "internal", "assets", "bssn.png")
-	pdf.ImageOptions(logoPath, (210-35)/2, 10, 35, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
+	basePath := pwd
+	if !strings.HasSuffix(pwd, "ikas") {
+		basePath = filepath.Join(pwd, "ikas")
+	}
+	logoPath := filepath.Join(basePath, "internal", "assets", "bssn.png")
+	pdf.ImageOptions(logoPath, (215.9-36.1)/2, 10, 36.1, 36.1, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
 	pdf.Ln(32)
 
 	// 2. Header Titles
@@ -119,14 +138,14 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.Ln(3)
 
 	// --- WATERMARK IKAS (Centered on the page) ---
-	watermarkPath := filepath.Join(pwd, "ikas", "internal", "assets", "ikas.png")
+	watermarkPath := filepath.Join(basePath, "internal", "assets", "ikas.png")
 	wmW := 180.0
 	// Centering 300mm on 210mm paper: (210 - 300) / 2 = -45
 	pdf.ImageOptions(watermarkPath, -45, pdf.GetY()-15, wmW, 0, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
 
 	// 6. Results Table
 	tableW := 140.0
-	startX := (210 - tableW) / 2
+	startX := (215.9 - tableW) / 2
 	pdf.SetX(startX)
 	pdf.SetFont("Arial", "B", 10)
 	pdf.SetFillColor(240, 240, 240)
@@ -236,7 +255,7 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 
 	// 9. Signature
 	sigW := 55.0
-	sigX := 210 - pageMargin - sigW
+	sigX := 215.9 - pageMargin - sigW
 
 	pdf.SetFont("Arial", "B", 10)
 	pdf.SetX(sigX)
@@ -244,11 +263,7 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.SetX(sigX)
 	pdf.CellFormat(sigW, 5, "Keamanan Siber Sektor Industri,", "", 1, "C", false, 0, "")
 
-	// 10. Footer
-	pdf.SetY(275)
-	pdf.SetFont("Arial", "", 8)
-	footerText := "Dokumen ini telah ditandatangani secara elektronik menggunakan sertifikat elektronik\nyang diterbitkan oleh Balai Besar Sertifikasi Elektronik (BSrE), Badan Siber dan Sandi Negara"
-	pdf.MultiCell(0, 4, toSafe(footerText), "", "C", false)
+	// Footer is now handled by SetFooterFunc
 
 	var buf bytes.Buffer
 	if err := pdf.Output(&buf); err != nil {
