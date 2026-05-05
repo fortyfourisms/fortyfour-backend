@@ -60,7 +60,7 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	}
 	logoPath := filepath.Join(basePath, "internal", "assets", "bssn.png")
 	pdf.ImageOptions(logoPath, (215.9-36.1)/2, 10, 36.1, 36.1, false, fpdf.ImageOptions{ReadDpi: true}, 0, "")
-	pdf.Ln(32)
+	pdf.SetY(50)
 
 	// 2. Header Titles
 	pdf.SetFont("Arial", "B", 12)
@@ -71,8 +71,11 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 
 	// 3. Opening Text
 	pdf.SetFont("Arial", "", 11)
-	openingText := "Berdasarkan hasil Penilaian Mandiri Kematangan Keamanan Siber Organisasi Sektor Industri untuk Penyelenggara Sistem Elektronik (PSE) yang dilakukan oleh:"
-	pdf.MultiCell(0, 5, toSafe(openingText), "", "L", false)
+	pdf.Write(5, "Berdasarkan hasil ")
+	pdf.SetFont("Arial", "B", 11)
+	pdf.Write(5, "Penilaian Mandiri Kematangan Keamanan Siber Organisasi Sektor Industri untuk Penyelenggara Sistem Elektronik (PSE)")
+	pdf.SetFont("Arial", "", 11)
+	pdf.Write(5, " yang dilakukan oleh:\n")
 	pdf.Ln(5)
 
 	// 4. PSE Details
@@ -248,8 +251,23 @@ func GenerateIkasPDF(data *dto.IkasResponse) ([]byte, error) {
 	pdf.Ln(4)
 
 	pdf.SetFont("Arial", "", 10)
-	closingText := fmt.Sprintf("Setelah mengetahui hasil penilaian mandiri IKAS sebagaimana tercantum pada tabel di atas yang dilakukan pada tanggal %s oleh %s, maka Badan Siber dan Sandi Negara dalam hal ini Direktorat Keamanan Siber dan Sandi Industri melalui Tim Asistensi IKAS %s, menerima hasil penilaian mandiri IKAS %s.", tanggalStr, data.Perusahaan.NamaPerusahaan, data.Perusahaan.NamaPerusahaan, data.Perusahaan.NamaPerusahaan)
-	pdf.MultiCell(0, 5, toSafe(closingText), "", "L", false)
+	pdf.Write(5, "Setelah mengetahui hasil penilaian mandiri IKAS sebagaimana tercantum pada tabel di atas yang dilakukan pada tanggal ")
+	pdf.SetFont("Arial", "B", 10)
+	pdf.Write(5, toSafe(tanggalStr))
+	pdf.SetFont("Arial", "", 10)
+	pdf.Write(5, " oleh ")
+	pdf.SetFont("Arial", "B", 10)
+	pdf.Write(5, toSafe(data.Perusahaan.NamaPerusahaan))
+	pdf.SetFont("Arial", "", 10)
+	pdf.Write(5, ", maka Badan Siber dan Sandi Negara dalam hal ini Direktorat Keamanan Siber dan Sandi Industri melalui Tim Asistensi IKAS ")
+	pdf.SetFont("Arial", "B", 10)
+	pdf.Write(5, toSafe(data.Perusahaan.NamaPerusahaan))
+	pdf.SetFont("Arial", "", 10)
+	pdf.Write(5, ", menerima hasil penilaian mandiri IKAS ")
+	pdf.SetFont("Arial", "B", 10)
+	pdf.Write(5, toSafe(data.Perusahaan.NamaPerusahaan))
+	pdf.SetFont("Arial", "", 10)
+	pdf.Write(5, ".\n")
 
 	pdf.Ln(10)
 
