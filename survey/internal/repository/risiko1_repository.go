@@ -16,15 +16,21 @@ func NewRisikoRepository(db *sql.DB) *RisikoRepository {
 	return &RisikoRepository{db: db}
 }
 
-// MASTER RISIKO
+// MASTER RISIKO 
 func (r *RisikoRepository) GetAllRisiko() ([]models.RisikoResponse, error) {
-	rows, err := r.db.Query(`SELECT id, nama, deskripsi FROM risiko`)
+	rows, err := r.db.Query(`
+		SELECT id, nama, COALESCE(deskripsi, '')
+		FROM risiko
+		WHERE aktif = TRUE
+		ORDER BY urutan ASC
+	`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	var result []models.RisikoResponse
+
 	for rows.Next() {
 		var m models.RisikoResponse
 		if err := rows.Scan(&m.ID, &m.NamaRisiko, &m.Deskripsi); err != nil {
@@ -36,30 +42,37 @@ func (r *RisikoRepository) GetAllRisiko() ([]models.RisikoResponse, error) {
 	return result, nil
 }
 
-// GET BY ID
-func (r *RisikoRepository) GetByID(id int) (*models.Risiko, error) {
+func (r *RisikoRepository) GetByID(id int64) (*models.Risiko, error) {
 
 	row := r.db.QueryRow(`
-		SELECT id, responden_id
+		SELECT id, kode, nama, deskripsi, urutan, aktif, created_at, updated_at
 		FROM risiko
 		WHERE id = ?
 	`, id)
 
-	var risiko models.Risiko
+	var m models.Risiko
 
 	err := row.Scan(
-		&risiko.ID,
+		&m.ID,
+		&m.Kode,
+		&m.Nama,
+		&m.Deskripsi,
+		&m.Urutan,
+		&m.Aktif,
+		&m.CreatedAt,
+		&m.UpdatedAt,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &risiko, nil
+	return &m, nil
 }
 
-// STEP 1 - ELIGIBILITY
+// STEP 1 - ELIGIBILITY 
 func (r *RisikoRepository) UpsertEligibility(m models.RisikoEligibility) error {
+
 	query := `
 	INSERT INTO risiko_eligibility 
 	(responden_id, risiko_id, pernah_terjadi)
@@ -68,17 +81,23 @@ func (r *RisikoRepository) UpsertEligibility(m models.RisikoEligibility) error {
 	pernah_terjadi = VALUES(pernah_terjadi)
 	`
 
+	var risikoID interface{}
+	if m.RisikoID != nil {
+		risikoID = *m.RisikoID
+	}
+
 	_, err := r.db.Exec(query,
 		m.RespondenID,
-		m.RisikoID,
+		risikoID,
 		m.PernahTerjadi,
 	)
 
 	return err
 }
 
-// STEP 2A - ALASAN
+// STEP 2A - ALASAN 
 func (r *RisikoRepository) UpsertAlasan(m models.RisikoAlasan) error {
+
 	query := `
 	INSERT INTO risiko_alasan 
 	(responden_id, risiko_id, alasan)
@@ -87,17 +106,23 @@ func (r *RisikoRepository) UpsertAlasan(m models.RisikoAlasan) error {
 	alasan = VALUES(alasan)
 	`
 
+	var risikoID interface{}
+	if m.RisikoID != nil {
+		risikoID = *m.RisikoID
+	}
+
 	_, err := r.db.Exec(query,
 		m.RespondenID,
-		m.RisikoID,
+		risikoID,
 		m.Alasan,
 	)
 
 	return err
 }
 
-// STEP 2B - DAMPAK (FIX MAPPING)
+// STEP 2B - DAMPAK 
 func (r *RisikoRepository) UpsertDampak(m models.RisikoDampak) error {
+
 	query := `
 	INSERT INTO risiko_dampak
 	(responden_id, risiko_id,
@@ -112,21 +137,27 @@ func (r *RisikoRepository) UpsertDampak(m models.RisikoDampak) error {
 	frekuensi = VALUES(frekuensi)
 	`
 
+	var risikoID interface{}
+	if m.RisikoID != nil {
+		risikoID = *m.RisikoID
+	}
+
 	_, err := r.db.Exec(query,
 		m.RespondenID,
-		m.RisikoID,
-		models.MapImpactIntToString(m.DampakReputasi),
-		models.MapImpactIntToString(m.DampakOperasional),
-		models.MapImpactIntToString(m.DampakFinansial),
-		models.MapImpactIntToString(m.DampakHukum),
-		models.MapFrequencyIntToString(m.Frekuensi),
+		risikoID,
+		m.DampakReputasi,
+		m.DampakOperasional,
+		m.DampakFinansial,
+		m.DampakHukum,
+		m.Frekuensi,
 	)
 
 	return err
 }
 
-// STEP 2C - PENGENDALIAN
+// STEP 2C - PENGENDALIAN 
 func (r *RisikoRepository) UpsertPengendalian(m models.RisikoPengendalian) error {
+
 	query := `
 	INSERT INTO risiko_pengendalian
 	(responden_id, risiko_id, ada_pengendalian, deskripsi_pengendalian)
@@ -136,9 +167,14 @@ func (r *RisikoRepository) UpsertPengendalian(m models.RisikoPengendalian) error
 	deskripsi_pengendalian = VALUES(deskripsi_pengendalian)
 	`
 
+	var risikoID interface{}
+	if m.RisikoID != nil {
+		risikoID = *m.RisikoID
+	}
+
 	_, err := r.db.Exec(query,
 		m.RespondenID,
-		m.RisikoID,
+		risikoID,
 		m.AdaPengendalian,
 		m.DeskripsiPengendalian,
 	)
@@ -146,10 +182,11 @@ func (r *RisikoRepository) UpsertPengendalian(m models.RisikoPengendalian) error
 	return err
 }
 
-// GET FULL RESPONSE (FIX SCAN + MAPPING)
-func (r *RisikoRepository) FindByRespondentID(respondenID int) (map[string]interface{}, error) {
+// GET FULL RISIKO 
+func (r *RisikoRepository) FindByRespondentID(respondenID int64) (map[string]interface{}, error) {
 
-	query := `SELECT 
+	query := `
+	SELECT 
 		e.pernah_terjadi,
 		a.alasan,
 		d.dampak_reputasi, d.dampak_operasional, d.dampak_finansial, d.dampak_hukum,
@@ -162,7 +199,8 @@ func (r *RisikoRepository) FindByRespondentID(respondenID int) (map[string]inter
 		ON e.responden_id = d.responden_id AND e.risiko_id = d.risiko_id
 	LEFT JOIN risiko_pengendalian p 
 		ON e.responden_id = p.responden_id AND e.risiko_id = p.risiko_id
-	WHERE e.responden_id = ?`
+	WHERE e.responden_id = ?
+	`
 
 	row := r.db.QueryRow(query, respondenID)
 
@@ -199,7 +237,6 @@ func (r *RisikoRepository) FindByRespondentID(respondenID int) (map[string]inter
 		return nil, err
 	}
 
-	// SAFE mapping (tidak jadi 0 kalau NULL)
 	result := map[string]interface{}{
 		"pernah_terjadi":         pernahTerjadi,
 		"alasan":                 alasan.String,
@@ -208,53 +245,27 @@ func (r *RisikoRepository) FindByRespondentID(respondenID int) (map[string]inter
 	}
 
 	if dampakReputasi.Valid {
-		result["dampak_reputasi"] = models.MapImpactStringToInt(dampakReputasi.String)
+		result["dampak_reputasi"] = dampakReputasi.String
 	}
 	if dampakOperasional.Valid {
-		result["dampak_operasional"] = models.MapImpactStringToInt(dampakOperasional.String)
+		result["dampak_operasional"] = dampakOperasional.String
 	}
 	if dampakFinansial.Valid {
-		result["dampak_finansial"] = models.MapImpactStringToInt(dampakFinansial.String)
+		result["dampak_finansial"] = dampakFinansial.String
 	}
 	if dampakHukum.Valid {
-		result["dampak_hukum"] = models.MapImpactStringToInt(dampakHukum.String)
+		result["dampak_hukum"] = dampakHukum.String
 	}
 	if frekuensi.Valid {
-		result["frekuensi"] = models.MapFrequencyStringToInt(frekuensi.String)
+		result["frekuensi"] = frekuensi.String
 	}
 
 	return result, nil
 }
 
-// UPDATE PARTIAL
-func (r *RisikoRepository) UpdatePartial(id int, data map[string]interface{}) error {
-
-	if len(data) == 0 {
-		return nil
-	}
-
-	query := "UPDATE risiko SET "
-	args := []interface{}{}
-
-	i := 0
-	for k, v := range data {
-		if i > 0 {
-			query += ", "
-		}
-		query += k + " = ?"
-		args = append(args, v)
-		i++
-	}
-
-	query += ", updated_at = NOW() WHERE id = ?"
-	args = append(args, id)
-
-	_, err := r.db.Exec(query, args...)
-	return err
-}
-
-// PROGRESS
+// PROGRESS 
 func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
+
 	query := `
 	INSERT INTO survey_progress
 	(responden_id, risiko_id, langkah_saat_ini, selesai)
@@ -268,15 +279,11 @@ func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 	var risikoID interface{}
 	if p.RisikoID.Valid {
 		risikoID = p.RisikoID.Int64
-	} else {
-		risikoID = nil
 	}
 
 	var langkah interface{}
 	if p.LangkahSaatIni.Valid {
 		langkah = p.LangkahSaatIni.String
-	} else {
-		langkah = nil
 	}
 
 	_, err := r.db.Exec(query,
@@ -289,15 +296,16 @@ func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 	return err
 }
 
-func (r *RisikoRepository) GetProgress(respondenID int) (*models.SurveyProgress, error) {
-	query := `
-	SELECT id, responden_id, risiko_id, langkah_saat_ini, selesai, terakhir_update
-	FROM survey_progress
-	WHERE responden_id = ?
-	`
-	row := r.db.QueryRow(query, respondenID)
+func (r *RisikoRepository) GetProgress(respondenID int64) (*models.SurveyProgress, error) {
+
+	row := r.db.QueryRow(`
+		SELECT id, responden_id, risiko_id, langkah_saat_ini, selesai, terakhir_update
+		FROM survey_progress
+		WHERE responden_id = ?
+	`, respondenID)
 
 	var p models.SurveyProgress
+
 	err := row.Scan(
 		&p.ID,
 		&p.RespondenID,
@@ -309,18 +317,13 @@ func (r *RisikoRepository) GetProgress(respondenID int) (*models.SurveyProgress,
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-
-			// insert default progress
 			_, err := r.db.Exec(`
 				INSERT INTO survey_progress (responden_id, langkah_saat_ini, selesai)
 				VALUES (?, 'eligibility', false)
 			`, respondenID)
-
 			if err != nil {
 				return nil, err
 			}
-
-			// ambil ulang
 			return r.GetProgress(respondenID)
 		}
 		return nil, err
@@ -329,44 +332,47 @@ func (r *RisikoRepository) GetProgress(respondenID int) (*models.SurveyProgress,
 	return &p, nil
 }
 
-func (r *RisikoRepository) ExistsRisiko(id int) (bool, error) {
-	var exists bool
-	err := r.db.QueryRow("SELECT EXISTS(SELECT 1 FROM risiko WHERE id = ?)", id).Scan(&exists)
-	return exists, err
+func (r *RisikoRepository) GetRespondentIDByUserID(userID string) (int64, error) {
+	row := r.db.QueryRow(`
+		SELECT id
+		FROM responden
+		WHERE user_id = ?
+	`, userID)
+
+	var id int64
+	if err := row.Scan(&id); err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }
 
-// CUSTOM RISIKO
-func (r *RisikoRepository) InsertCustomRisiko(respondenID int, nama string) (int, error) {
-
+func (r *RisikoRepository) InsertCustomRisiko(respondenID int64, nama string) (int, error) {
 	result, err := r.db.Exec(`
-		INSERT INTO risiko_custom (responden_id, nama_risiko)
+		INSERT INTO risiko_custom (responden_id, nama)
 		VALUES (?, ?)
 	`, respondenID, nama)
-
 	if err != nil {
 		return 0, err
 	}
 
-	id, _ := result.LastInsertId()
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
 	return int(id), nil
 }
 
-func (r *RisikoRepository) ExistsCustomRisiko(id int) (bool, error) {
+// EXISTS 
+func (r *RisikoRepository) ExistsRisiko(id int64) (bool, error) {
 	var exists bool
-	err := r.db.QueryRow(`
-		SELECT EXISTS(SELECT 1 FROM risiko_custom WHERE id = ?)
-	`, id).Scan(&exists)
+	err := r.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM risiko WHERE id = ?)`, id).Scan(&exists)
 	return exists, err
 }
 
-// Exists Responden
-func (r *RisikoRepository) ExistsResponden(id int) (bool, error) {
+func (r *RisikoRepository) ExistsResponden(id int64) (bool, error) {
 	var exists bool
-
-	err := r.db.QueryRow(
-		"SELECT EXISTS(SELECT 1 FROM responden WHERE id = ?)",
-		id,
-	).Scan(&exists)
-
+	err := r.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM responden WHERE id = ?)`, id).Scan(&exists)
 	return exists, err
 }

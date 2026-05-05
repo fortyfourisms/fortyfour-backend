@@ -41,25 +41,21 @@ func InitRouter(
 		)
 	}
 
-	protectedFunc := func(h http.HandlerFunc) http.Handler {
-		return protected(http.HandlerFunc(h))
-	}
-
 	// RESPONDEN
 	mux.Handle("/api/survey/responden", protected(respondenH))
 	mux.Handle("/api/survey/responden/", protected(respondenH))
 
 	// RISIKO
-	mux.Handle("/api/survey/risiko/eligibility", protectedFunc(risikoH.SubmitEligibility))
-	mux.Handle("/api/survey/risiko/dampak", protectedFunc(risikoH.SubmitDampak))
-	mux.Handle("/api/survey/risiko/pengendalian", protectedFunc(risikoH.SubmitPengendalian))
-	mux.Handle("/api/survey/risiko/reason", protectedFunc(risikoH.SubmitAlasan))
-	mux.Handle("/api/survey/risiko/", protectedFunc(risikoH.GetByRespondentID))
+	mux.Handle("/api/survey/risiko/eligibility", protected(http.HandlerFunc(risikoH.SubmitEligibility)))
+	mux.Handle("/api/survey/risiko/dampak", protected(http.HandlerFunc(risikoH.SubmitDampak)))
+	mux.Handle("/api/survey/risiko/pengendalian", protected(http.HandlerFunc(risikoH.SubmitPengendalian)))
+	mux.Handle("/api/survey/risiko/reason", protected(http.HandlerFunc(risikoH.SubmitAlasan)))
+	mux.Handle("/api/survey/risiko/", protected(http.HandlerFunc(risikoH.GetByRespondentID)))
 
 	// PROGRESS & NAVIGATION
-	mux.Handle("/api/survey/navigate", protectedFunc(risikoH.Navigate))
-	mux.Handle("/api/survey/save-progress", protectedFunc(risikoH.SaveProgress))
-	mux.Handle("/api/survey/finish", protectedFunc(risikoH.FinishSurvey))
+	mux.Handle("/api/survey/navigate", protected(http.HandlerFunc(risikoH.Navigate)))
+	mux.Handle("/api/survey/save-progress", protected(http.HandlerFunc(risikoH.SaveProgress)))
+	mux.Handle("/api/survey/finish", protected(http.HandlerFunc(risikoH.FinishSurvey)))
 
 	return mux
 }
