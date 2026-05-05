@@ -664,6 +664,11 @@ func (s *IkasService) ValidateIkas(ctx context.Context, id string, status bool, 
 		return err
 	}
 
+	// Clear edit request status if validated
+	if status {
+		_ = s.repo.UpdateRequestEditStatus(id, "none", "")
+	}
+
 	// Audit Log
 	action := "VALIDATE_IKAS"
 	if !status {
@@ -752,6 +757,14 @@ func (s *IkasService) RequestEdit(ctx context.Context, id string, reason string,
 		_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
 	}
 
+	// Invalidate Cache
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyIkasRecords)
+		if ikas.Perusahaan != nil {
+			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, ikas.Perusahaan.ID))
+		}
+	}
+
 	return nil
 }
 
@@ -772,7 +785,7 @@ func (s *IkasService) ApproveEdit(ctx context.Context, id string, userID string)
 		return err
 	}
 
-	err = s.repo.UpdateRequestEditStatus(id, "none", "")
+	err = s.repo.UpdateRequestEditStatus(id, "disetujui", "")
 	if err != nil {
 		return err
 	}
@@ -850,6 +863,14 @@ func (s *IkasService) RejectEdit(ctx context.Context, id string, adminReason str
 	}
 	if s.producer != nil {
 		_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
+	}
+
+	// Invalidate Cache
+	if s.cache != nil {
+		s.cache.Delete(cache.CacheKeyIkasRecords)
+		if ikas.Perusahaan != nil {
+			s.cache.Delete(fmt.Sprintf("%s:perusahaan:%s", cache.CacheKeyIkasRecords, ikas.Perusahaan.ID))
+		}
 	}
 
 	return nil

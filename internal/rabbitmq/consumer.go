@@ -651,9 +651,17 @@ func (c *Consumer) ConsumeBeritaCreated(ctx context.Context) error {
 			return err
 		}
 
+		tagsStr := "[]"
+		if event.Request.Tags != nil {
+			if tagsBytes, err := json.Marshal(event.Request.Tags); err == nil {
+				tagsStr = string(tagsBytes)
+			}
+		}
+
 		model := &models.Berita{
 			Judul:     event.Request.Judul,
 			Deskripsi: event.Request.Deskripsi,
+			Tags:      tagsStr,
 			AuthorID:  event.AuthorID,
 		}
 
@@ -687,6 +695,11 @@ func (c *Consumer) ConsumeBeritaUpdated(ctx context.Context) error {
 		}
 		if event.Request.Deskripsi != nil {
 			existing.Deskripsi = *event.Request.Deskripsi
+		}
+		if event.Request.Tags != nil {
+			if tagsBytes, err := json.Marshal(*event.Request.Tags); err == nil {
+				existing.Tags = string(tagsBytes)
+			}
 		}
 
 		if err := c.beritaRepo.Update(existing); err != nil {

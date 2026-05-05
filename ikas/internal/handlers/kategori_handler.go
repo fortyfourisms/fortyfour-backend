@@ -70,12 +70,7 @@ func (h *KategoriHandler) handleGetAll(w http.ResponseWriter, _ *http.Request) {
 		utils.RespondError(w, 500, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, utils.JSONResponse{
-		Status:  "success",
-		Message: "Berhasil mengambil data kategori",
-		Data:    data,
-		Total:   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data kategori IKAS", data, len(data))
 }
 
 // GetKategoriByID godoc
@@ -99,11 +94,7 @@ func (h *KategoriHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, 
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, utils.JSONResponse{
-		Status:  "success",
-		Message: "Berhasil mengambil data kategori",
-		Data:    data,
-	})
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data kategori IKAS", data)
 }
 
 // CreateKategori godoc
@@ -149,10 +140,7 @@ func (h *KategoriHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, 201, utils.JSONResponse{
-		Status:  "success",
-		Message: "Permintaan pembuatan kategori telah diterima dan sedang diproses",
-	})
+	utils.RespondSuccess(w, 201, "Permintaan pembuatan kategori IKAS telah diterima dan sedang diproses", nil)
 }
 
 // UpdateKategori godoc

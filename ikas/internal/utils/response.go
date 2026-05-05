@@ -13,8 +13,7 @@ type JSONResponse struct {
 	Data    interface{} `json:"data,omitempty"`
 }
 
-// PaginationMeta holds pagination metadata, following the industry-standard
-// pattern used by GitHub, Stripe, and Google APIs.
+// PaginationMeta holds pagination metadata
 type PaginationMeta struct {
 	Total      int `json:"total"`
 	Page       int `json:"page"`
@@ -23,8 +22,6 @@ type PaginationMeta struct {
 }
 
 // PaginatedJSONResponse is the standard API envelope for paginated list responses.
-// Data contains the array of items directly (no double-nesting).
-// Pagination metadata is isolated in the "pagination" object.
 type PaginatedJSONResponse struct {
 	Status     string         `json:"status"`
 	Message    string         `json:"message"`
@@ -36,6 +33,23 @@ func RespondJSON(w http.ResponseWriter, status int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(data)
+}
+
+func RespondSuccess(w http.ResponseWriter, status int, message string, data interface{}) {
+	RespondJSON(w, status, JSONResponse{
+		Status:  "success",
+		Message: message,
+		Data:    data,
+	})
+}
+
+func RespondListData(w http.ResponseWriter, status int, message string, data interface{}, total int) {
+	RespondJSON(w, status, JSONResponse{
+		Status:  "success",
+		Message: message,
+		Data:    data,
+		Total:   total,
+	})
 }
 
 func RespondError(w http.ResponseWriter, status int, message string) {
