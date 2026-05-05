@@ -3647,6 +3647,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/maturity/ikas-audit-logs": {
+            "get": {
+                "description": "Mengambil seluruh riwayat perubahan IKAS (opsional filter berdasarkan ikas_id)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit Logs"
+                ],
+                "summary": "List semua audit logs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "IKAS ID",
+                        "name": "ikas_id",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.AuditLogResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/maturity/ikas/import": {
             "post": {
                 "description": "Import data IKAS dari file Excel (sheet ke-7)",
@@ -4065,64 +4102,6 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/ikas-audit-logs": {
-            "get": {
-                "description": "Mengambil seluruh riwayat perubahan IKAS (opsional filter berdasarkan ikas_id)",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Audit Logs"
-                ],
-                "summary": "List semua audit logs",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "IKAS ID",
-                        "name": "ikas_id",
-                        "in": "query",
-                        "required": false
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "data": {
-                                    "type": "array",
-                                    "items": {
-                                        "$ref": "#/definitions/dto.AuditLogResponse"
-                                    }
-                                },
-                                "message": {
-                                    "type": "string"
-                                },
-                                "status": {
-                                    "type": "string"
-                                },
-                                "total": {
-                                    "type": "integer"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
@@ -8887,12 +8866,17 @@ const docTemplate = `{
         },
         "/api/survey/responden": {
             "get": {
-                "description": "Mengambil seluruh data responden beserta perusahaan dan sektor",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Hanya admin yang dapat melihat semua data responden",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Responden Survey"
+                    "Responden (Admin)"
                 ],
                 "summary": "Ambil semua responden",
                 "responses": {
@@ -8905,52 +8889,8 @@ const docTemplate = `{
                             }
                         }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Membuat data responden baru berdasarkan perusahaan",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Responden Survey"
-                ],
-                "summary": "Tambah responden",
-                "parameters": [
-                    {
-                        "description": "Create Responden Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateRespondenRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.RespondenResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
                         }
@@ -8964,14 +8904,105 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/survey/responden/{id}": {
+        "/api/survey/responden/me": {
             "get": {
-                "description": "Mengambil detail responden beserta perusahaan dan sektor",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "User hanya dapat melihat data dirinya sendiri",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Responden Survey"
+                    "Responden (User)"
+                ],
+                "summary": "Ambil data responden milik user login",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.RespondenResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Jika belum ada maka create, jika sudah ada maka update (upsert)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Responden (User)"
+                ],
+                "summary": "Create / Update responden milik user login",
+                "parameters": [
+                    {
+                        "description": "Data Responden",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateRespondenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.RespondenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/survey/responden/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Hanya admin yang dapat melihat detail responden",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Responden (Admin)"
                 ],
                 "summary": "Ambil responden berdasarkan ID",
                 "parameters": [
@@ -8998,69 +9029,6 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Memperbarui data responden",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Responden Survey"
-                ],
-                "summary": "Update responden",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Responden ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Update Responden Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateRespondenRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.RespondenResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
                         }
@@ -9951,6 +9919,32 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.AuditLogResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "changes": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ikas_id": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/dto.UserAuditLogResponse"
+                }
+            }
+        },
         "dto.CreateDomainRequest": {
             "type": "object",
             "properties": {
@@ -10484,40 +10478,6 @@ const docTemplate = `{
                 },
                 "nilai_subdomain5": {
                     "type": "number"
-                }
-            }
-        },
-        "dto.AuditLogResponse": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string"
-                },
-                "changes": {
-                    "type": "object"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "user": {
-                    "$ref": "#/definitions/dto.UserAuditLogResponse"
-                }
-            }
-        },
-        "dto.UserAuditLogResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
                 }
             }
         },
@@ -11158,7 +11118,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "nama_sub_sektor": {
-                    "description": "dari SUB SEKTOR \u0026 SEKTOR (hasil JOIN)",
+                    "description": "dari JOIN (opsional)",
                     "type": "string"
                 },
                 "no_telepon": {
@@ -11168,6 +11128,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "dari backend (JWT)",
                     "type": "string"
                 }
             }
@@ -11483,29 +11447,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.UpdateRespondenRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "id_perusahaan": {
-                    "type": "string"
-                },
-                "jabatan": {
-                    "type": "string"
-                },
-                "nama_lengkap": {
-                    "type": "string"
-                },
-                "no_telepon": {
-                    "type": "string"
-                },
-                "sertifikat_training": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.UpdateRuangLingkupRequest": {
             "type": "object",
             "properties": {
@@ -11521,6 +11462,17 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "nama_sub_kategori": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UserAuditLogResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }

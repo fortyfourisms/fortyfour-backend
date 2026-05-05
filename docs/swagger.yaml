@@ -11,6 +11,23 @@ definitions:
       risiko_id:
         type: integer
     type: object
+  dto.AuditLogResponse:
+    properties:
+      action:
+        type: string
+      changes:
+        items:
+          type: integer
+        type: array
+      created_at:
+        type: string
+      id:
+        type: integer
+      ikas_id:
+        type: string
+      user:
+        $ref: '#/definitions/dto.UserAuditLogResponse'
+    type: object
   dto.CreateDomainRequest:
     properties:
       nama_domain:
@@ -777,13 +794,16 @@ definitions:
       nama_sektor:
         type: string
       nama_sub_sektor:
-        description: dari SUB SEKTOR & SEKTOR (hasil JOIN)
+        description: dari JOIN (opsional)
         type: string
       no_telepon:
         type: string
       sertifikat_training:
         type: string
       updated_at:
+        type: string
+      user_id:
+        description: dari backend (JWT)
         type: string
     type: object
   dto.RuangLingkupInfo:
@@ -988,21 +1008,6 @@ definitions:
       sub_kategori_id:
         type: integer
     type: object
-  dto.UpdateRespondenRequest:
-    properties:
-      email:
-        type: string
-      id_perusahaan:
-        type: string
-      jabatan:
-        type: string
-      nama_lengkap:
-        type: string
-      no_telepon:
-        type: string
-      sertifikat_training:
-        type: string
-    type: object
   dto.UpdateRuangLingkupRequest:
     properties:
       nama_ruang_lingkup:
@@ -1013,6 +1018,13 @@ definitions:
       kategori_id:
         type: integer
       nama_sub_kategori:
+        type: string
+    type: object
+  dto.UserAuditLogResponse:
+    properties:
+      id:
+        type: string
+      name:
         type: string
     type: object
   dto.ValidasiIkasRequest:
@@ -5131,6 +5143,31 @@ paths:
       summary: Tambah ikas baru
       tags:
       - Ikas
+  /api/maturity/ikas-audit-logs:
+    get:
+      description: Mengambil seluruh riwayat perubahan IKAS (opsional filter berdasarkan
+        ikas_id)
+      parameters:
+      - description: IKAS ID
+        in: query
+        name: ikas_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.AuditLogResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua audit logs
+      tags:
+      - Audit Logs
   /api/maturity/ikas/{id}:
     delete:
       description: Menghapus data ikas berdasarkan ID
@@ -8518,7 +8555,7 @@ paths:
       - Risiko
   /api/survey/responden:
     get:
-      description: Mengambil seluruh data responden beserta perusahaan dan sektor
+      description: Hanya admin yang dapat melihat semua data responden
       produces:
       - application/json
       responses:
@@ -8528,19 +8565,77 @@ paths:
             items:
               $ref: '#/definitions/dto.RespondenResponse'
             type: array
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
       summary: Ambil semua responden
       tags:
-      - Responden Survey
+      - Responden (Admin)
+  /api/survey/responden/{id}:
+    get:
+      description: Hanya admin yang dapat melihat detail responden
+      parameters:
+      - description: Responden ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.RespondenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Ambil responden berdasarkan ID
+      tags:
+      - Responden (Admin)
+  /api/survey/responden/me:
+    get:
+      description: User hanya dapat melihat data dirinya sendiri
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.RespondenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Ambil data responden milik user login
+      tags:
+      - Responden (User)
     post:
       consumes:
       - application/json
-      description: Membuat data responden baru berdasarkan perusahaan
+      description: Jika belum ada maka create, jika sudah ada maka update (upsert)
       parameters:
-      - description: Create Responden Request
+      - description: Data Responden
         in: body
         name: request
         required: true
@@ -8549,37 +8644,6 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/dto.RespondenResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Tambah responden
-      tags:
-      - Responden Survey
-  /api/survey/responden/{id}:
-    get:
-      description: Mengambil detail responden beserta perusahaan dan sektor
-      parameters:
-      - description: Responden ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
         "200":
           description: OK
           schema:
@@ -8588,55 +8652,15 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "404":
-          description: Not Found
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Ambil responden berdasarkan ID
+      security:
+      - BearerAuth: []
+      summary: Create / Update responden milik user login
       tags:
-      - Responden Survey
-    put:
-      consumes:
-      - application/json
-      description: Memperbarui data responden
-      parameters:
-      - description: Responden ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Update Responden Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UpdateRespondenRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.RespondenResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Update responden
-      tags:
-      - Responden Survey
+      - Responden (User)
   /api/survey/risiko/{responden_id}:
     get:
       description: Mengambil data risiko berdasarkan responden_id
