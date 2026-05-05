@@ -1,11 +1,23 @@
 basePath: /
 definitions:
+  dto.APIResponse:
+    properties:
+      data: {}
+      error:
+        type: string
+      errors:
+        additionalProperties:
+          type: string
+        type: object
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   dto.AlasanRequest:
     properties:
       alasan:
         type: string
-      custom_risiko_id:
-        type: integer
       responden_id:
         type: integer
       risiko_id:
@@ -226,17 +238,8 @@ definitions:
       nama_sub_kategori:
         type: string
     type: object
-  dto.CustomRisikoRequest:
-    properties:
-      nama_risiko:
-        type: string
-      responden_id:
-        type: integer
-    type: object
   dto.DampakRequest:
     properties:
-      custom_risiko_id:
-        type: integer
       dampak_finansial:
         $ref: '#/definitions/models.ImpactLevel'
       dampak_hukum:
@@ -300,8 +303,6 @@ definitions:
     type: object
   dto.EligibilityRequest:
     properties:
-      custom_risiko_id:
-        type: integer
       pernah_terjadi:
         type: boolean
       responden_id:
@@ -534,8 +535,6 @@ definitions:
     properties:
       ada_pengendalian:
         type: boolean
-      custom_risiko_id:
-        type: integer
       deskripsi_pengendalian:
         type: string
       responden_id:
@@ -2820,6 +2819,17 @@ definitions:
       message:
         type: string
       success:
+        type: boolean
+    type: object
+  survey_internal_dto.ProgressResponse:
+    properties:
+      langkah_saat_ini:
+        type: string
+      responden_id:
+        type: integer
+      risiko_id:
+        type: integer
+      selesai:
         type: boolean
     type: object
 host: localhost:8080
@@ -8525,32 +8535,54 @@ paths:
       summary: Ambil sub sektor berdasarkan Sektor ID
       tags:
       - SubSektor
-  /api/survey/progress/{responden_id}:
-    get:
-      description: Mengambil progress pengisian survey
-      parameters:
-      - description: Responden ID
-        in: path
-        name: responden_id
-        required: true
-        type: integer
+  /api/survey/finish:
+    post:
+      consumes:
+      - application/json
+      description: Complete the survey
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get Progress Risiko
+      summary: Finish Survey
+      tags:
+      - Risiko
+  /api/survey/navigate:
+    post:
+      consumes:
+      - application/json
+      description: Navigate through survey steps
+      parameters:
+      - description: Navigate request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.NavigateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/survey_internal_dto.ProgressResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      summary: Navigate Survey
       tags:
       - Risiko
   /api/survey/responden:
@@ -8661,13 +8693,15 @@ paths:
       summary: Create / Update responden milik user login
       tags:
       - Responden (User)
-  /api/survey/risiko/{responden_id}:
+  /api/survey/risiko/{id}:
     get:
-      description: Mengambil data risiko berdasarkan responden_id
+      consumes:
+      - application/json
+      description: Get risk data by respondent ID (admin only)
       parameters:
-      - description: Responden ID
+      - description: Respondent ID
         in: path
-        name: responden_id
+        name: id
         required: true
         type: integer
       produces:
@@ -8676,58 +8710,25 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Invalid ID
+            $ref: '#/definitions/dto.APIResponse'
+        "403":
+          description: Forbidden
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
         "404":
-          description: Data tidak ditemukan
+          description: Not Found
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get Risiko by Responden
-      tags:
-      - Risiko
-  /api/survey/risiko/custom-risk:
-    post:
-      consumes:
-      - application/json
-      description: Menambahkan risiko baru di luar daftar sistem
-      parameters:
-      - description: Custom Risiko Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.CustomRisikoRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: integer
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Tambah Risiko Custom
+      summary: Get Risiko by Respondent ID
       tags:
       - Risiko
   /api/survey/risiko/dampak:
     post:
       consumes:
       - application/json
-      description: Mengisi dampak jika eligible
+      description: Submit impact assessment for risk
       parameters:
-      - description: Dampak Request
+      - description: Dampak request
         in: body
         name: request
         required: true
@@ -8739,26 +8740,21 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Step 2B - Dampak
+      summary: Submit Dampak
       tags:
       - Risiko
   /api/survey/risiko/eligibility:
     post:
       consumes:
       - application/json
-      description: Menentukan apakah responden masuk kategori risiko
+      description: Submit eligibility for risk assessment
       parameters:
-      - description: Eligibility Request
+      - description: Eligibility request
         in: body
         name: request
         required: true
@@ -8768,85 +8764,23 @@ paths:
       - application/json
       responses:
         "200":
-          description: Success response
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Invalid request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Step 1 - Eligibility
-      tags:
-      - Risiko
-  /api/survey/risiko/finish:
-    post:
-      consumes:
-      - application/json
-      description: Menandai survey telah selesai
-      parameters:
-      - description: Finish Request
-        in: body
-        name: request
-        required: true
-        schema:
-          properties:
-            responden_id:
-              type: integer
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Selesaikan Survey
-      tags:
-      - Risiko
-  /api/survey/risiko/navigate:
-    post:
-      consumes:
-      - application/json
-      description: Mengatur alur step survey (next/back)
-      parameters:
-      - description: Navigate Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.NavigateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Navigasi Step Risiko
+      summary: Submit Eligibility
       tags:
       - Risiko
   /api/survey/risiko/pengendalian:
     post:
       consumes:
       - application/json
-      description: Mengisi tindakan pengendalian risiko
+      description: Submit control measures for risk
       parameters:
-      - description: Pengendalian Request
+      - description: Pengendalian request
         in: body
         name: request
         required: true
@@ -8858,26 +8792,21 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Step 2C - Pengendalian
+      summary: Submit Pengendalian
       tags:
       - Risiko
   /api/survey/risiko/reason:
     post:
       consumes:
       - application/json
-      description: Mengisi alasan jika tidak eligible
+      description: Submit reason for risk
       parameters:
-      - description: Alasan Request
+      - description: Alasan request
         in: body
         name: request
         required: true
@@ -8889,26 +8818,21 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Step 2A - Alasan
+      summary: Submit Alasan
       tags:
       - Risiko
-  /api/survey/risiko/save-progress:
+  /api/survey/save-progress:
     post:
       consumes:
       - application/json
-      description: Menyimpan progress agar bisa dilanjutkan nanti
+      description: Save current survey progress
       parameters:
-      - description: Save Progress Request
+      - description: Save progress request
         in: body
         name: request
         required: true
@@ -8920,17 +8844,17 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/survey_internal_dto.ProgressResponse'
+              type: object
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Simpan Progress
+      summary: Save Progress
       tags:
       - Risiko
   /api/users:
