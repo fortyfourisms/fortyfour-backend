@@ -16,7 +16,7 @@ func NewRisikoRepository(db *sql.DB) *RisikoRepository {
 	return &RisikoRepository{db: db}
 }
 
-// MASTER RISIKO 
+// MASTER RISIKO
 func (r *RisikoRepository) GetAllRisiko() ([]models.RisikoResponse, error) {
 	rows, err := r.db.Query(`
 		SELECT id, nama, COALESCE(deskripsi, '')
@@ -70,7 +70,7 @@ func (r *RisikoRepository) GetByID(id int64) (*models.Risiko, error) {
 	return &m, nil
 }
 
-// STEP 1 - ELIGIBILITY 
+// STEP 1 - ELIGIBILITY
 func (r *RisikoRepository) UpsertEligibility(m models.RisikoEligibility) error {
 
 	query := `
@@ -95,7 +95,7 @@ func (r *RisikoRepository) UpsertEligibility(m models.RisikoEligibility) error {
 	return err
 }
 
-// STEP 2A - ALASAN 
+// STEP 2A - ALASAN
 func (r *RisikoRepository) UpsertAlasan(m models.RisikoAlasan) error {
 
 	query := `
@@ -120,7 +120,7 @@ func (r *RisikoRepository) UpsertAlasan(m models.RisikoAlasan) error {
 	return err
 }
 
-// STEP 2B - DAMPAK 
+// STEP 2B - DAMPAK
 func (r *RisikoRepository) UpsertDampak(m models.RisikoDampak) error {
 
 	query := `
@@ -155,7 +155,7 @@ func (r *RisikoRepository) UpsertDampak(m models.RisikoDampak) error {
 	return err
 }
 
-// STEP 2C - PENGENDALIAN 
+// STEP 2C - PENGENDALIAN
 func (r *RisikoRepository) UpsertPengendalian(m models.RisikoPengendalian) error {
 
 	query := `
@@ -182,7 +182,7 @@ func (r *RisikoRepository) UpsertPengendalian(m models.RisikoPengendalian) error
 	return err
 }
 
-// GET FULL RISIKO 
+// GET FULL RISIKO
 func (r *RisikoRepository) FindByRespondentID(respondenID int64) (map[string]interface{}, error) {
 
 	query := `
@@ -263,7 +263,7 @@ func (r *RisikoRepository) FindByRespondentID(respondenID int64) (map[string]int
 	return result, nil
 }
 
-// PROGRESS 
+// PROGRESS
 func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 
 	query := `
@@ -364,7 +364,7 @@ func (r *RisikoRepository) InsertCustomRisiko(respondenID int64, nama string) (i
 	return int(id), nil
 }
 
-// EXISTS 
+// EXISTS
 func (r *RisikoRepository) ExistsRisiko(id int64) (bool, error) {
 	var exists bool
 	err := r.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM risiko WHERE id = ?)`, id).Scan(&exists)

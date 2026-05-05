@@ -47,7 +47,7 @@ func NewRisikoService(repo RisikoRepositoryInterface, cache CacheRepository) *Ri
 	return &RisikoService{repo: repo, cache: cache}
 }
 
-// CACHE 
+// CACHE
 func progressKey(id int64) string {
 	return fmt.Sprintf("risiko:progress:%d", id)
 }
@@ -72,7 +72,7 @@ func (s *RisikoService) invalidate(id int64) {
 	_ = s.cache.Del(context.Background(), respondentKey(id))
 }
 
-// HELPER 
+// HELPER
 func (s *RisikoService) getRespondenID(userID string) (int64, error) {
 	id, err := s.repo.GetRespondentIDByUserID(userID)
 	if err != nil {
@@ -97,7 +97,7 @@ func toStringPtr(s string) *string {
 	return &s
 }
 
-//  STEP 1 
+// STEP 1
 func (s *RisikoService) ProcessEligibility(userID string, req dto.EligibilityRequest) (map[string]interface{}, error) {
 
 	if err := validation.ValidateEligibilityRequest(req); err != nil {
@@ -137,7 +137,7 @@ func (s *RisikoService) ProcessEligibility(userID string, req dto.EligibilityReq
 	}, nil
 }
 
-// STEP 2A 
+// STEP 2A
 func (s *RisikoService) ProcessAlasan(userID string, req dto.AlasanRequest) (map[string]interface{}, error) {
 
 	if err := validation.ValidateAlasanRequest(req); err != nil {
@@ -280,7 +280,7 @@ func (s *RisikoService) GetProgress(userID string) (dto.ProgressResponse, error)
 	}, nil
 }
 
-// HELPER SQL 
+// HELPER SQL
 func sqlInt64(v int) sql.NullInt64 {
 	return sql.NullInt64{
 		Int64: int64(v),

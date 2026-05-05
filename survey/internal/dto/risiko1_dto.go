@@ -4,9 +4,9 @@ import "survey/internal/models"
 
 // STEP 1: ELIGIBILITY
 type EligibilityRequest struct {
-	RespondenID   int64  `json:"responden_id"`
-	RisikoID      *int   `json:"risiko_id,omitempty"`
-	PernahTerjadi bool   `json:"pernah_terjadi"`
+	RespondenID   int64 `json:"responden_id"`
+	RisikoID      *int  `json:"risiko_id,omitempty"`
+	PernahTerjadi bool  `json:"pernah_terjadi"`
 }
 
 // STEP 2A: ALASAN

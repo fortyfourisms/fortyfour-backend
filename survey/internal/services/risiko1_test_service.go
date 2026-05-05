@@ -26,18 +26,18 @@ func (m *mockCache) Del(ctx context.Context, key string) error {
 
 // MOCK REPOSITORY
 type mockRisikoRepo struct {
-	existsRespondenFn    func(id int64) (bool, error)
-	existsRisikoFn       func(id int64) (bool, error)
-	existsCustomFn       func(id int64) (bool, error)
-	upsertEligibilityFn  func(m models.RisikoEligibility) error
-	upsertAlasanFn       func(m models.RisikoAlasan) error
-	upsertDampakFn       func(m models.RisikoDampak) error
-	upsertPengendalianFn func(m models.RisikoPengendalian) error
-	findByRespondentFn   func(id int64) (map[string]interface{}, error)
-	getProgressFn            func(id int64) (*models.SurveyProgress, error)
-	upsertProgressFn         func(p models.SurveyProgress) error
+	existsRespondenFn         func(id int64) (bool, error)
+	existsRisikoFn            func(id int64) (bool, error)
+	existsCustomFn            func(id int64) (bool, error)
+	upsertEligibilityFn       func(m models.RisikoEligibility) error
+	upsertAlasanFn            func(m models.RisikoAlasan) error
+	upsertDampakFn            func(m models.RisikoDampak) error
+	upsertPengendalianFn      func(m models.RisikoPengendalian) error
+	findByRespondentFn        func(id int64) (map[string]interface{}, error)
+	getProgressFn             func(id int64) (*models.SurveyProgress, error)
+	upsertProgressFn          func(p models.SurveyProgress) error
 	getRespondentIDByUserIDFn func(userID string) (int64, error)
-	insertCustomFn           func(id int64, nama string) (int, error)
+	insertCustomFn            func(id int64, nama string) (int, error)
 }
 
 func (m *mockRisikoRepo) ExistsResponden(id int64) (bool, error) {

@@ -39,7 +39,7 @@ func NewRisikoHandler(svc RisikoServiceInterface) *RisikoHandler {
 	return &RisikoHandler{svc: svc}
 }
 
-// HANDLER METHODS 
+// HANDLER METHODS
 
 // @Summary Submit Eligibility
 // @Description Submit eligibility for risk assessment

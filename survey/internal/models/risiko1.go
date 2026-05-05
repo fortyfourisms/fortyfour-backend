@@ -37,21 +37,21 @@ type Risiko struct {
 	ID        int64     `db:"id"`
 	Kode      string    `db:"kode"`
 	Nama      string    `db:"nama"`
-	Deskripsi *string   `db:"deskripsi"` 
+	Deskripsi *string   `db:"deskripsi"`
 	Urutan    int       `db:"urutan"`
 	Aktif     bool      `db:"aktif"`
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
-// STEP 1 — ELIGIBILITY 
+// STEP 1 — ELIGIBILITY
 type RisikoEligibility struct {
-	ID          int64     `db:"id"`
-	RespondenID int64     `db:"responden_id"`
-	RisikoID    *int64    `db:"risiko_id"` 
-	PernahTerjadi bool    `db:"pernah_terjadi"`
-	CreatedAt   time.Time `db:"created_at"`
-	UpdatedAt   time.Time `db:"updated_at"`
+	ID            int64     `db:"id"`
+	RespondenID   int64     `db:"responden_id"`
+	RisikoID      *int64    `db:"risiko_id"`
+	PernahTerjadi bool      `db:"pernah_terjadi"`
+	CreatedAt     time.Time `db:"created_at"`
+	UpdatedAt     time.Time `db:"updated_at"`
 }
 
 // STEP 2A — ALASAN
@@ -64,13 +64,13 @@ type RisikoAlasan struct {
 	UpdatedAt   time.Time `db:"updated_at"`
 }
 
-// STEP 2B — DAMPAK 
+// STEP 2B — DAMPAK
 type RisikoDampak struct {
-	ID          int64     `db:"id"`
-	RespondenID int64     `db:"responden_id"`
-	RisikoID    *int64    `db:"risiko_id"`
+	ID          int64  `db:"id"`
+	RespondenID int64  `db:"responden_id"`
+	RisikoID    *int64 `db:"risiko_id"`
 
-	DampakReputasi    string `db:"dampak_reputasi"`    // ENUM DB (string)
+	DampakReputasi    string `db:"dampak_reputasi"` // ENUM DB (string)
 	DampakOperasional string `db:"dampak_operasional"`
 	DampakFinansial   string `db:"dampak_finansial"`
 	DampakHukum       string `db:"dampak_hukum"`
@@ -82,9 +82,9 @@ type RisikoDampak struct {
 
 // STEP 2C — PENGENDALIAN
 type RisikoPengendalian struct {
-	ID          int64     `db:"id"`
-	RespondenID int64     `db:"responden_id"`
-	RisikoID    *int64    `db:"risiko_id"`
+	ID          int64  `db:"id"`
+	RespondenID int64  `db:"responden_id"`
+	RisikoID    *int64 `db:"risiko_id"`
 
 	AdaPengendalian       bool    `db:"ada_pengendalian"`
 	DeskripsiPengendalian *string `db:"deskripsi_pengendalian"` // nullable
@@ -93,7 +93,7 @@ type RisikoPengendalian struct {
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
-// PROGRESS SURVEY 
+// PROGRESS SURVEY
 type SurveyProgress struct {
 	ID             int64          `db:"id"`
 	RespondenID    int64          `db:"responden_id"`
@@ -103,7 +103,7 @@ type SurveyProgress struct {
 	TerakhirUpdate time.Time      `db:"terakhir_update"`
 }
 
-// RESPONSE 
+// RESPONSE
 type RisikoResponse struct {
 	ID         int64  `json:"id"`
 	NamaRisiko string `json:"nama_risiko"`
