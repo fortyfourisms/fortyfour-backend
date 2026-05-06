@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -12,44 +11,37 @@ import (
 	"survey/internal/models"
 )
 
+// CONFIG
 const cacheTTL = 10 * time.Minute
 
-// =======================
 // REPOSITORY
-// =======================
 type RespondenRepositoryInterface interface {
-	Create(m models.Responden) (int64, error) // ✅ return insert ID
 	GetAllDetail() ([]models.RespondenDetail, error)
-	GetDetailByID(id int) (*models.RespondenDetail, error)
-	GetByID(id int) (*models.Responden, error)
-	Update(id int, m models.Responden) error
+	GetDetailByID(id int64) (*models.RespondenDetail, error)
+
+	GetByUserID(userID string) (*models.RespondenDetail, error)
+
+	Create(m models.Responden) (int64, error)
+	UpsertByUserID(userID string, m models.Responden) error
 }
 
-// =======================
 // VALIDATOR
-// =======================
 type Validator interface {
 	ValidateCreate(dto.CreateRespondenRequest) error
-	ValidateUpdate(dto.UpdateRespondenRequest) error
 }
 
-// =======================
 // CACHE
-// =======================
 type CacheRepository interface {
 	Get(ctx context.Context, key string) (string, bool, error)
 	Set(ctx context.Context, key string, value string, ttlSeconds int) error
 	Del(ctx context.Context, key string) error
 }
 
-// =======================
 // SERVICE
-// =======================
 type RespondenService struct {
 	repo      RespondenRepositoryInterface
 	validator Validator
 	cache     CacheRepository
-	ctx       context.Context
 }
 
 func NewRespondenService(
@@ -61,61 +53,87 @@ func NewRespondenService(
 		repo:      repo,
 		validator: v,
 		cache:     cache,
-		ctx:       context.Background(),
 	}
 }
 
-// =======================
-// CREATE
-// =======================
-func (s *RespondenService) Create(req dto.CreateRespondenRequest) (*dto.RespondenResponse, error) {
+// USER FLOW
+
+// ADAPTER
+func (s *RespondenService) GetByUserID(userID string) (*dto.RespondenResponse, error) {
+	return s.GetMe(userID)
+}
+
+// GET ME
+func (s *RespondenService) GetMe(userID string) (*dto.RespondenResponse, error) {
+
+	ctx := context.Background()
+	cacheKey := "responden:user:" + userID
+
+	if val, ok, _ := s.cache.Get(ctx, cacheKey); ok {
+		var cached dto.RespondenResponse
+		if json.Unmarshal([]byte(val), &cached) == nil {
+			return &cached, nil
+		}
+	}
+
+	data, err := s.repo.GetByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := s.toResponse(data)
+
+	s.setCache(ctx, cacheKey, resp)
+	return &resp, nil
+}
+
+// UPSERT ME
+func (s *RespondenService) UpsertByUserID(userID string, req dto.CreateRespondenRequest) (*dto.RespondenResponse, error) {
 
 	if err := s.validator.ValidateCreate(req); err != nil {
 		return nil, err
 	}
 
 	model := models.Responden{
-		IdPerusahaan:       strings.TrimSpace(req.IdPerusahaan),
-		NamaLengkap:        strings.TrimSpace(req.NamaLengkap),
-		Jabatan:            strings.TrimSpace(req.Jabatan),
-		Email:              strings.TrimSpace(req.Email),
-		NoTelepon:          strings.TrimSpace(req.NoTelepon),
-		SertifikatTraining: strings.TrimSpace(req.SertifikatTraining),
+		UserID:       userID,
+		IdPerusahaan: strings.TrimSpace(req.IdPerusahaan),
+		NamaLengkap:  strings.TrimSpace(req.NamaLengkap),
+		Jabatan:      strings.TrimSpace(req.Jabatan),
+		Email:        strings.TrimSpace(req.Email),
+		NoTelepon:    strings.TrimSpace(req.NoTelepon),
 	}
 
-	// ✅ insert + ambil ID
-	insertID, err := s.repo.Create(model)
+	// FIX POINTER
+	if req.SertifikatTraining != nil {
+		val := strings.TrimSpace(*req.SertifikatTraining)
+		model.SertifikatTraining = &val
+	}
+
+	err := s.repo.UpsertByUserID(userID, model)
 	if err != nil {
 		return nil, err
 	}
 
-	// ✅ ambil data berdasarkan ID
-	data, err := s.repo.GetDetailByID(int(insertID))
+	updated, err := s.repo.GetByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	if data == nil {
-		return nil, errors.New("data tidak ditemukan setelah insert")
-	}
+	resp := s.toResponse(updated)
 
-	resp := s.toResponse(data)
-
-	// invalidate cache
-	_ = s.cache.Del(s.ctx, "responden:all")
-
+	s.invalidateUserCache(userID, updated.ID)
 	return &resp, nil
 }
 
-// =======================
-// GET ALL (CACHE)
-// =======================
+// ADMIN FLOW
+
+// GET ALL
 func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
 
+	ctx := context.Background()
 	cacheKey := "responden:all"
 
-	// ✅ CACHE HIT
-	if val, ok, err := s.cache.Get(s.ctx, cacheKey); err == nil && ok && val != "" && val != "null" {
+	if val, ok, _ := s.cache.Get(ctx, cacheKey); ok {
 		var cached []dto.RespondenResponse
 		if json.Unmarshal([]byte(val), &cached) == nil {
 			return cached, nil
@@ -132,107 +150,58 @@ func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
 		result = append(result, s.toResponse(&data[i]))
 	}
 
-	// ✅ hanya cache kalau ada data
-	if len(result) > 0 {
-		if b, err := json.Marshal(result); err == nil {
-			_ = s.cache.Set(s.ctx, cacheKey, string(b), int(cacheTTL.Seconds()))
-		}
-	}
-
+	s.setCache(ctx, cacheKey, result)
 	return result, nil
 }
 
-// =======================
-// GET BY ID (CACHE)
-// =======================
+// GET BY ID
 func (s *RespondenService) GetByID(id int) (*dto.RespondenResponse, error) {
 
-	if id <= 0 {
-		return nil, errors.New("id tidak valid")
-	}
-
+	ctx := context.Background()
 	cacheKey := "responden:id:" + strconv.Itoa(id)
 
-	// ✅ CACHE HIT
-	if val, ok, err := s.cache.Get(s.ctx, cacheKey); err == nil && ok && val != "" && val != "null" {
+	if val, ok, _ := s.cache.Get(ctx, cacheKey); ok {
 		var cached dto.RespondenResponse
 		if json.Unmarshal([]byte(val), &cached) == nil {
 			return &cached, nil
 		}
 	}
 
-	data, err := s.repo.GetDetailByID(id)
+	data, err := s.repo.GetDetailByID(int64(id))
 	if err != nil {
 		return nil, err
-	}
-
-	if data == nil {
-		return nil, errors.New("data tidak ditemukan")
 	}
 
 	resp := s.toResponse(data)
 
-	// cache
-	if b, err := json.Marshal(resp); err == nil {
-		_ = s.cache.Set(s.ctx, cacheKey, string(b), int(cacheTTL.Seconds()))
-	}
-
+	s.setCache(ctx, cacheKey, resp)
 	return &resp, nil
 }
 
-// =======================
-// UPDATE
-// =======================
-func (s *RespondenService) Update(id int, req dto.UpdateRespondenRequest) (*dto.RespondenResponse, error) {
+// CACHE
 
-	if id <= 0 {
-		return nil, errors.New("id tidak valid")
-	}
-
-	// cek exist
-	_, err := s.repo.GetByID(id)
+func (s *RespondenService) setCache(ctx context.Context, key string, data any) {
+	b, err := json.Marshal(data)
 	if err != nil {
-		return nil, err
+		return
 	}
-
-	if err := s.validator.ValidateUpdate(req); err != nil {
-		return nil, err
-	}
-
-	model := models.Responden{
-		IdPerusahaan:       strings.TrimSpace(req.IdPerusahaan),
-		NamaLengkap:        strings.TrimSpace(req.NamaLengkap),
-		Jabatan:            strings.TrimSpace(req.Jabatan),
-		Email:              strings.TrimSpace(req.Email),
-		NoTelepon:          strings.TrimSpace(req.NoTelepon),
-		SertifikatTraining: strings.TrimSpace(req.SertifikatTraining),
-	}
-
-	if err := s.repo.Update(id, model); err != nil {
-		return nil, err
-	}
-
-	updated, err := s.repo.GetDetailByID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	if updated == nil {
-		return nil, errors.New("data tidak ditemukan setelah update")
-	}
-
-	resp := s.toResponse(updated)
-
-	// invalidate cache
-	_ = s.cache.Del(s.ctx, "responden:all")
-	_ = s.cache.Del(s.ctx, "responden:id:"+strconv.Itoa(id))
-
-	return &resp, nil
+	_ = s.cache.Set(ctx, key, string(b), int(cacheTTL.Seconds()))
 }
 
-// =======================
+func (s *RespondenService) invalidateUserCache(userID string, id int64) {
+	ctx := context.Background()
+
+	_ = s.cache.Del(ctx, "responden:all")
+
+	if userID != "" {
+		_ = s.cache.Del(ctx, "responden:user:"+userID)
+	}
+
+	_ = s.cache.Del(ctx, "responden:id:"+strconv.FormatInt(id, 10))
+}
+
 // MAPPER
-// =======================
+
 func (s *RespondenService) toResponse(m *models.RespondenDetail) dto.RespondenResponse {
 
 	return dto.RespondenResponse{
@@ -242,18 +211,22 @@ func (s *RespondenService) toResponse(m *models.RespondenDetail) dto.RespondenRe
 		Jabatan:            m.Jabatan,
 		Email:              m.Email,
 		NoTelepon:          m.NoTelepon,
-		SertifikatTraining: m.SertifikatTraining,
-		NamaPerusahaan:     safeString(m.NamaPerusahaan),
-		NamaSubSektor:      safeString(m.NamaSubSektor),
-		NamaSektor:         safeString(m.NamaSektor),
-		CreatedAt:          m.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:          m.UpdatedAt.Format(time.RFC3339),
+		SertifikatTraining: safeString(m.SertifikatTraining),
+
+		NamaPerusahaan: safeString(m.NamaPerusahaan),
+		NamaSubSektor:  safeString(m.NamaSubSektor),
+		NamaSektor:     safeString(m.NamaSektor),
+
+		CreatedAt: m.CreatedAt.Format(time.RFC3339),
+		UpdatedAt: m.UpdatedAt.Format(time.RFC3339),
 	}
 }
 
-func safeString(s *string) string {
+// HELPER
+func safeString(s *string) *string {
 	if s == nil {
-		return ""
+		return nil
 	}
-	return *s
+	val := *s
+	return &val
 }

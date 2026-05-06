@@ -5889,37 +5889,24 @@
                 }
             }
         },
-        "/api/survey/progress/{responden_id}": {
-            "get": {
-                "description": "Mengambil progress pengisian survey",
+        "/api/survey/finish": {
+            "post": {
+                "description": "Complete the survey",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Risiko"
                 ],
-                "summary": "Get Progress Risiko",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Responden ID",
-                        "name": "responden_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
+                "summary": "Finish Survey",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "500": {
@@ -5931,14 +5918,71 @@
                 }
             }
         },
-        "/api/survey/responden": {
-            "get": {
-                "description": "Mengambil seluruh data responden beserta perusahaan dan sektor",
+        "/api/survey/navigate": {
+            "post": {
+                "description": "Navigate through survey steps",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Responden Survey"
+                    "Risiko"
+                ],
+                "summary": "Navigate Survey",
+                "parameters": [
+                    {
+                        "description": "Navigate request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.NavigateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/survey_internal_dto.ProgressResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/survey/responden": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Hanya admin yang dapat melihat semua data responden",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Responden"
                 ],
                 "summary": "Ambil semua responden",
                 "responses": {
@@ -5951,52 +5995,8 @@
                             }
                         }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Membuat data responden baru berdasarkan perusahaan",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Responden Survey"
-                ],
-                "summary": "Tambah responden",
-                "parameters": [
-                    {
-                        "description": "Create Responden Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateRespondenRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.RespondenResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
                         }
@@ -6010,14 +6010,105 @@
                 }
             }
         },
-        "/api/survey/responden/{id}": {
+        "/api/survey/responden/me": {
             "get": {
-                "description": "Mengambil detail responden beserta perusahaan dan sektor",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "User hanya dapat melihat data dirinya sendiri",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Responden Survey"
+                    "Responden"
+                ],
+                "summary": "Ambil data responden milik user login",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.RespondenResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Jika belum ada maka create, jika sudah ada maka update (upsert)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Responden"
+                ],
+                "summary": "Create / Update responden milik user login",
+                "parameters": [
+                    {
+                        "description": "Data Responden",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.CreateRespondenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.RespondenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/survey/responden/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Hanya admin yang dapat melihat detail responden",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Responden"
                 ],
                 "summary": "Ambil responden berdasarkan ID",
                 "parameters": [
@@ -6047,119 +6138,13 @@
                         "schema": {
                             "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
                         }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Memperbarui data responden",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Responden Survey"
-                ],
-                "summary": "Update responden",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Responden ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Update Responden Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateRespondenRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.RespondenResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/survey/risiko/custom-risk": {
-            "post": {
-                "description": "Menambahkan risiko baru di luar daftar sistem",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Risiko"
-                ],
-                "summary": "Tambah Risiko Custom",
-                "parameters": [
-                    {
-                        "description": "Custom Risiko Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CustomRisikoRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "integer"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
                     }
                 }
             }
         },
         "/api/survey/risiko/dampak": {
             "post": {
-                "description": "Mengisi dampak jika eligible",
+                "description": "Submit impact assessment for risk",
                 "consumes": [
                     "application/json"
                 ],
@@ -6169,10 +6154,10 @@
                 "tags": [
                     "Risiko"
                 ],
-                "summary": "Step 2B - Dampak",
+                "summary": "Submit Dampak",
                 "parameters": [
                     {
-                        "description": "Dampak Request",
+                        "description": "Dampak request",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -6185,18 +6170,11 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
                         }
@@ -6206,7 +6184,7 @@
         },
         "/api/survey/risiko/eligibility": {
             "post": {
-                "description": "Menentukan apakah responden masuk kategori risiko",
+                "description": "Submit eligibility for risk assessment",
                 "consumes": [
                     "application/json"
                 ],
@@ -6216,10 +6194,10 @@
                 "tags": [
                     "Risiko"
                 ],
-                "summary": "Step 1 - Eligibility",
+                "summary": "Submit Eligibility",
                 "parameters": [
                     {
-                        "description": "Eligibility Request",
+                        "description": "Eligibility request",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -6230,103 +6208,9 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success response",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/survey/risiko/finish": {
-            "post": {
-                "description": "Menandai survey telah selesai",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Risiko"
-                ],
-                "summary": "Selesaikan Survey",
-                "parameters": [
-                    {
-                        "description": "Finish Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "responden_id": {
-                                    "type": "integer"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/survey/risiko/navigate": {
-            "post": {
-                "description": "Mengatur alur step survey (next/back)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Risiko"
-                ],
-                "summary": "Navigasi Step Risiko",
-                "parameters": [
-                    {
-                        "description": "Navigate Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.NavigateRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
@@ -6340,7 +6224,7 @@
         },
         "/api/survey/risiko/pengendalian": {
             "post": {
-                "description": "Mengisi tindakan pengendalian risiko",
+                "description": "Submit control measures for risk",
                 "consumes": [
                     "application/json"
                 ],
@@ -6350,10 +6234,10 @@
                 "tags": [
                     "Risiko"
                 ],
-                "summary": "Step 2C - Pengendalian",
+                "summary": "Submit Pengendalian",
                 "parameters": [
                     {
-                        "description": "Pengendalian Request",
+                        "description": "Pengendalian request",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -6366,18 +6250,11 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
                         }
@@ -6387,7 +6264,7 @@
         },
         "/api/survey/risiko/reason": {
             "post": {
-                "description": "Mengisi alasan jika tidak eligible",
+                "description": "Submit reason for risk",
                 "consumes": [
                     "application/json"
                 ],
@@ -6397,10 +6274,10 @@
                 "tags": [
                     "Risiko"
                 ],
-                "summary": "Step 2A - Alasan",
+                "summary": "Submit Alasan",
                 "parameters": [
                     {
-                        "description": "Alasan Request",
+                        "description": "Alasan request",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -6413,12 +6290,49 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/survey/risiko/{id}": {
+            "get": {
+                "description": "Get risk data by respondent ID (admin only)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Get Risiko by Respondent ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Respondent ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
                         }
@@ -6432,9 +6346,9 @@
                 }
             }
         },
-        "/api/survey/risiko/save-progress": {
+        "/api/survey/save-progress": {
             "post": {
-                "description": "Menyimpan progress agar bisa dilanjutkan nanti",
+                "description": "Save current survey progress",
                 "consumes": [
                     "application/json"
                 ],
@@ -6444,10 +6358,10 @@
                 "tags": [
                     "Risiko"
                 ],
-                "summary": "Simpan Progress",
+                "summary": "Save Progress",
                 "parameters": [
                     {
-                        "description": "Save Progress Request",
+                        "description": "Save progress request",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -6460,66 +6374,23 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/survey_internal_dto.ProgressResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/survey/risiko/{responden_id}": {
-            "get": {
-                "description": "Mengambil data risiko berdasarkan responden_id",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Risiko"
-                ],
-                "summary": "Get Risiko by Responden",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Responden ID",
-                        "name": "responden_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid ID",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Data tidak ditemukan",
-                        "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
                         }
@@ -6980,14 +6851,32 @@
         }
     },
     "definitions": {
+        "dto.APIResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "error": {
+                    "type": "string"
+                },
+                "errors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "dto.AlasanRequest": {
             "type": "object",
             "properties": {
                 "alasan": {
                     "type": "string"
-                },
-                "custom_risiko_id": {
-                    "type": "integer"
                 },
                 "responden_id": {
                     "type": "integer"
@@ -7034,9 +6923,6 @@
         "dto.DampakRequest": {
             "type": "object",
             "properties": {
-                "custom_risiko_id": {
-                    "type": "integer"
-                },
                 "dampak_finansial": {
                     "$ref": "#/definitions/models.ImpactLevel"
                 },
@@ -7063,9 +6949,6 @@
         "dto.EligibilityRequest": {
             "type": "object",
             "properties": {
-                "custom_risiko_id": {
-                    "type": "integer"
-                },
                 "pernah_terjadi": {
                     "type": "boolean"
                 },
@@ -7096,9 +6979,6 @@
             "properties": {
                 "ada_pengendalian": {
                     "type": "boolean"
-                },
-                "custom_risiko_id": {
-                    "type": "integer"
                 },
                 "deskripsi_pengendalian": {
                     "type": "string"
@@ -7141,7 +7021,7 @@
                     "type": "string"
                 },
                 "nama_sub_sektor": {
-                    "description": "dari SUB SEKTOR \u0026 SEKTOR (hasil JOIN)",
+                    "description": "dari JOIN (opsional)",
                     "type": "string"
                 },
                 "no_telepon": {
@@ -7151,6 +7031,10 @@
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "dari backend (JWT)",
                     "type": "string"
                 }
             }
@@ -9882,6 +9766,55 @@
                 },
                 "success": {
                     "type": "boolean"
+                }
+            }
+        },
+        "survey_internal_dto.ProgressResponse": {
+            "type": "object",
+            "properties": {
+                "langkah_saat_ini": {
+                    "type": "string"
+                },
+                "responden_id": {
+                    "type": "integer"
+                },
+                "risiko_id": {
+                    "type": "integer"
+                },
+                "selesai": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "utils.PaginatedJSONResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/utils.PaginationMeta"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "utils.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
                 }
             }
         }
