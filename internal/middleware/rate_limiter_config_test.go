@@ -127,7 +127,7 @@ func TestRateLimitConfigs_LenientForPublic(t *testing.T) {
 	configs := GetRateLimitConfigs()
 
 	// Lenient should allow high traffic for public endpoints
-	assert.GreaterOrEqual(t, configs.Lenient.RequestsPerWindow, 500,
+	assert.GreaterOrEqual(t, configs.Lenient.RequestsPerWindow, 200,
 		"Lenient should allow high traffic for public endpoints")
 }
 

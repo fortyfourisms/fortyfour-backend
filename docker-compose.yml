@@ -27,6 +27,8 @@ services:
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY}
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY}
 
+      INTERNAL_GATEWAY_KEY: ${INTERNAL_GATEWAY_KEY}
+
       LOG_LEVEL: ${LOG_LEVEL:-info}
 
       # Gemini AI
@@ -85,6 +87,8 @@ services:
       REDIS_PASSWORD: ${REDIS_PASSWORD}
 
       LOG_LEVEL: ${LOG_LEVEL:-info}
+
+      INTERNAL_GATEWAY_KEY: ${INTERNAL_GATEWAY_KEY}
 
       # RabbitMQ
       RABBITMQ_HOST: rabbitmq
