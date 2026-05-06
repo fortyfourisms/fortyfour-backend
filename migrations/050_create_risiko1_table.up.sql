@@ -1,4 +1,3 @@
--- RESET
 DROP TABLE IF EXISTS survey_progress;
 DROP TABLE IF EXISTS risiko_pengendalian;
 DROP TABLE IF EXISTS risiko_dampak;
@@ -22,50 +21,30 @@ CREATE TABLE risiko (
 -- 2. STEP 1: ELIGIBILITY
 CREATE TABLE risiko_eligibility (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    responden_id BIGINT NOT NULL,
-    risiko_id INT NOT NULL,
+    responden_id INT NOT NULL,
+    risiko_id INT NULL,
     pernah_terjadi BOOLEAN NOT NULL,
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    UNIQUE KEY uk_eligibility (responden_id, risiko_id),
-
-    CONSTRAINT fk_eligibility_responden
-        FOREIGN KEY (responden_id) REFERENCES responden(id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-
-    CONSTRAINT fk_eligibility_risiko
-        FOREIGN KEY (risiko_id) REFERENCES risiko(id)
-        ON DELETE CASCADE ON UPDATE CASCADE
+    UNIQUE KEY uk_eligibility (responden_id, risiko_id)
 ) ENGINE=InnoDB;
 
 -- 3. STEP 2A: ALASAN
 CREATE TABLE risiko_alasan (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    responden_id BIGINT NOT NULL,
-    risiko_id INT NOT NULL,
+    responden_id INT NOT NULL,
+    risiko_id INT NULL,
     alasan TEXT NOT NULL,
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    UNIQUE KEY uk_alasan (responden_id, risiko_id),
-
-    CONSTRAINT fk_alasan_responden
-        FOREIGN KEY (responden_id) REFERENCES responden(id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-
-    CONSTRAINT fk_alasan_risiko
-        FOREIGN KEY (risiko_id) REFERENCES risiko(id)
-        ON DELETE CASCADE ON UPDATE CASCADE
+    UNIQUE KEY uk_alasan (responden_id, risiko_id)
 ) ENGINE=InnoDB;
 
 -- 4. STEP 2B: DAMPAK
 CREATE TABLE risiko_dampak (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    responden_id BIGINT NOT NULL,
-    risiko_id INT NOT NULL,
+    responden_id INT NOT NULL,
+    risiko_id INT NULL,
 
     dampak_reputasi ENUM('Tidak Signifikan','Cukup Signifikan','Signifikan','Sangat Signifikan'),
     dampak_operasional ENUM('Tidak Signifikan','Cukup Signifikan','Signifikan','Sangat Signifikan'),
@@ -77,22 +56,14 @@ CREATE TABLE risiko_dampak (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-    UNIQUE KEY uk_dampak (responden_id, risiko_id),
-
-    CONSTRAINT fk_dampak_responden
-        FOREIGN KEY (responden_id) REFERENCES responden(id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-
-    CONSTRAINT fk_dampak_risiko
-        FOREIGN KEY (risiko_id) REFERENCES risiko(id)
-        ON DELETE CASCADE ON UPDATE CASCADE
+    UNIQUE KEY uk_dampak (responden_id, risiko_id)
 ) ENGINE=InnoDB;
 
 -- 5. STEP 2C: PENGENDALIAN
 CREATE TABLE risiko_pengendalian (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    responden_id BIGINT NOT NULL,
-    risiko_id INT NOT NULL,
+    responden_id INT NOT NULL,
+    risiko_id INT NULL,
 
     ada_pengendalian BOOLEAN NOT NULL,
     deskripsi_pengendalian TEXT,
@@ -105,36 +76,18 @@ CREATE TABLE risiko_pengendalian (
         (ada_pengendalian = true AND deskripsi_pengendalian IS NOT NULL)
     ),
 
-    UNIQUE KEY uk_pengendalian (responden_id, risiko_id),
-
-    CONSTRAINT fk_pengendalian_responden
-        FOREIGN KEY (responden_id) REFERENCES responden(id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-
-    CONSTRAINT fk_pengendalian_risiko
-        FOREIGN KEY (risiko_id) REFERENCES risiko(id)
-        ON DELETE CASCADE ON UPDATE CASCADE
+    UNIQUE KEY uk_pengendalian (responden_id, risiko_id)
 ) ENGINE=InnoDB;
 
--- 6. TRACKING PROGRESS
+-- 6. TRACKING PROGRESS 
 CREATE TABLE survey_progress (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    responden_id BIGINT NOT NULL,
+    responden_id INT NOT NULL,
     risiko_id INT,
-
     langkah_saat_ini VARCHAR(50),
     selesai BOOLEAN DEFAULT FALSE,
-
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     terakhir_update TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
-    UNIQUE KEY uk_progress (responden_id),
-
-    CONSTRAINT fk_progress_responden
-        FOREIGN KEY (responden_id) REFERENCES responden(id)
-        ON DELETE CASCADE ON UPDATE CASCADE,
-
-    CONSTRAINT fk_progress_risiko
-        FOREIGN KEY (risiko_id) REFERENCES risiko(id)
-        ON DELETE SET NULL ON UPDATE CASCADE
+    UNIQUE KEY uk_progress (responden_id)
 ) ENGINE=InnoDB;

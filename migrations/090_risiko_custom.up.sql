@@ -1,0 +1,6 @@
+CREATE TABLE risiko_custom (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    responden_id INT NOT NULL,
+    nama_risiko VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
