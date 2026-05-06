@@ -170,7 +170,7 @@ func main() {
 	jawabanProteksiService := services.NewJawabanProteksiService(jawabanProteksiRepo, ikasRepo, msgProducer, ikasService, redisClient)
 	jawabanDeteksiService := services.NewJawabanDeteksiService(jawabanDeteksiRepo, ikasRepo, msgProducer, ikasService, redisClient)
 	jawabanGulihService := services.NewJawabanGulihService(jawabanGulihRepo, ikasRepo, msgProducer, ikasService, redisClient)
-	auditLogService := services.NewAuditLogService(auditLogRepo)
+	auditLogService := services.NewAuditLogService(auditLogRepo, redisClient)
 
 	// handlers
 	ikasHandler := handlers.NewIkasHandler(ikasService)

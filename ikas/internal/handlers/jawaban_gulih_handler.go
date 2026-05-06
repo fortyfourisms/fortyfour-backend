@@ -98,11 +98,7 @@ func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
 	if userRole != "admin" && userRole != "staff" && (userPerusahaanID == "" || userPerusahaanID == "null") {
-		utils.RespondJSON(w, 200, map[string]interface{}{
-			"message": "Berhasil mengambil data",
-			"data":    []dto.JawabanGulihResponse{},
-			"total":   0,
-		})
+		utils.RespondListData(w, 200, "Berhasil mengambil data jawaban gulih", []dto.JawabanGulihResponse{}, 0)
 		return
 	}
 
@@ -134,11 +130,7 @@ func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban gulih", data, len(data))
 }
 
 // @Summary		Get Jawaban Gulih by ID
@@ -168,10 +160,7 @@ func (h *JawabanGulihHandler) handleGetByID(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    resp,
-	})
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data jawaban gulih", resp)
 }
 
 // @Summary		Update Jawaban Gulih
@@ -228,9 +217,8 @@ func (h *JawabanGulihHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": msg,
-		"id":      updatedID,
+	utils.RespondSuccess(w, 200, msg, map[string]interface{}{
+		"id": updatedID,
 	})
 }
 
@@ -266,8 +254,7 @@ func (h *JawabanGulihHandler) handleDelete(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menghapus data",
-		"id":      id,
+	utils.RespondSuccess(w, 200, "Berhasil menghapus data", map[string]interface{}{
+		"id": id,
 	})
 }

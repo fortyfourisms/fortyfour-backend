@@ -92,11 +92,7 @@ func (h *JawabanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
 	if userRole != "admin" && userRole != "staff" && (userPerusahaanID == "" || userPerusahaanID == "null") {
-		utils.RespondJSON(w, 200, map[string]interface{}{
-			"message": "Berhasil mengambil data",
-			"data":    []dto.JawabanIdentifikasiResponse{},
-			"total":   0,
-		})
+		utils.RespondListData(w, 200, "Berhasil mengambil data jawaban identifikasi", []dto.JawabanIdentifikasiResponse{}, 0)
 		return
 	}
 
@@ -125,11 +121,7 @@ func (h *JawabanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http
 		utils.RespondError(w, status, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban identifikasi", data, len(data))
 }
 
 func (h *JawabanIdentifikasiHandler) handleGetByIkasID(w http.ResponseWriter, r *http.Request, ikasID string) {
@@ -145,11 +137,7 @@ func (h *JawabanIdentifikasiHandler) handleGetByIkasID(w http.ResponseWriter, r 
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban identifikasi", data, len(data))
 }
 
 func (h *JawabanIdentifikasiHandler) handleGetByPertanyaan(w http.ResponseWriter, _ *http.Request, pertanyaanID int) {
@@ -163,23 +151,17 @@ func (h *JawabanIdentifikasiHandler) handleGetByPertanyaan(w http.ResponseWriter
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban identifikasi", data, len(data))
 }
 
-// GetJawabanIdentifikasiByID godoc
-//
-//	@Summary		Ambil jawaban identifikasi berdasarkan ID
-//	@Description	Mengambil satu data jawaban identifikasi
-//	@Tags			JawabanIdentifikasi
-//	@Produce		json
-//	@Param			id	path		int	true	"JawabanIdentifikasi ID"
-//	@Success		200	{object}	dto.JawabanIdentifikasiResponse
-//	@Failure		404	{object}	dto.ErrorResponse
-//	@Router			/api/maturity/jawaban-identifikasi/{id} [get]
+// @Summary		Ambil jawaban identifikasi berdasarkan ID
+// @Description	Mengambil satu data jawaban identifikasi
+// @Tags			JawabanIdentifikasi
+// @Produce		json
+// @Param			id	path		int	true	"JawabanIdentifikasi ID"
+// @Success		200	{object}	dto.JawabanIdentifikasiResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Router			/api/maturity/jawaban-identifikasi/{id} [get]
 func (h *JawabanIdentifikasiHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id int) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
@@ -194,10 +176,7 @@ func (h *JawabanIdentifikasiHandler) handleGetByID(w http.ResponseWriter, r *htt
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-	})
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data jawaban identifikasi", data)
 }
 
 // CreateJawabanIdentifikasi godoc
@@ -254,9 +233,7 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 		return
 	}
 
-	utils.RespondJSON(w, 201, map[string]interface{}{
-		"message": msg,
-	})
+	utils.RespondSuccess(w, 201, msg, nil)
 }
 
 // UpdateJawabanIdentifikasi godoc
@@ -316,9 +293,8 @@ func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": msg,
-		"id":      updatedID,
+	utils.RespondSuccess(w, 200, msg, map[string]interface{}{
+		"id": updatedID,
 	})
 }
 
@@ -352,8 +328,7 @@ func (h *JawabanIdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menghapus data",
-		"id":      id,
+	utils.RespondSuccess(w, 200, "Berhasil menghapus data", map[string]interface{}{
+		"id": id,
 	})
 }

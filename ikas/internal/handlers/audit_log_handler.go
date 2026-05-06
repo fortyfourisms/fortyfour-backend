@@ -5,6 +5,13 @@ import (
 	"ikas/internal/services"
 	"ikas/internal/utils"
 	"net/http"
+	"strconv"
+)
+
+const (
+	defaultAuditLogPage  = 1
+	defaultAuditLogLimit = 20
+	maxAuditLogLimit     = 100
 )
 
 type AuditLogHandler struct {
@@ -21,43 +28,65 @@ func (h *AuditLogHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ikasID := r.URL.Query().Get("ikas_id")
-	h.handleGetAll(w, r, ikasID)
+	h.handleGetAll(w, r)
 }
 
 // GetAllAuditLogs godoc
 //
-//	@Summary		List semua audit logs
-//	@Description	Mengambil seluruh riwayat perubahan IKAS (opsional filter berdasarkan ikas_id)
+//	@Summary		List semua audit logs IKAS (paginated)
+//	@Description	Mengambil seluruh riwayat perubahan IKAS dengan pagination. Opsional filter berdasarkan ikas_id.
 //	@Tags			Audit Logs
 //	@Produce		json
-//	@Param			ikas_id	query		string	false	"IKAS ID"
-//	@Success		200		{array}		dto.AuditLogResponse
-//	@Failure		500		{object}	dto.ErrorResponse
+//	@Param			ikas_id	query		string	false	"Filter berdasarkan IKAS ID"
+//	@Param			page	query		int		false	"Halaman (default: 1)"					example(1)
+//	@Param			limit	query		int		false	"Jumlah data per halaman, maks 100 (default: 20)"	example(10)
+//	@Success		200		{object}	utils.PaginatedJSONResponse
+//	@Failure		500		{object}	utils.JSONResponse
 //	@Router			/api/maturity/ikas-audit-logs [get]
-func (h *AuditLogHandler) handleGetAll(w http.ResponseWriter, r *http.Request, ikasID string) {
-	var data []dto.AuditLogResponse
-	var err error
+func (h *AuditLogHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
 
-	if ikasID != "" {
-		data, err = h.service.GetAuditLogsByIkasID(ikasID)
-	} else {
-		data, err = h.service.GetAllAuditLogs()
+	page := parsePositiveInt(q.Get("page"), defaultAuditLogPage)
+	limit := parsePositiveInt(q.Get("limit"), defaultAuditLogLimit)
+
+	// Enforce maximum limit to prevent DB overload
+	if limit > maxAuditLogLimit {
+		limit = maxAuditLogLimit
 	}
 
+	req := dto.AuditLogListRequest{
+		IkasID: q.Get("ikas_id"),
+		Page:   page,
+		Limit:  limit,
+	}
+
+	result, err := h.service.GetAuditLogs(req)
 	if err != nil {
-		utils.RespondError(w, 500, err.Error())
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	if data == nil {
-		data = []dto.AuditLogResponse{}
-	}
-
-	utils.RespondJSON(w, 200, utils.JSONResponse{
+	utils.RespondJSON(w, http.StatusOK, utils.PaginatedJSONResponse{
 		Status:  "success",
-		Message: "Berhasil mengambil data audit logs",
-		Data:    data,
-		Total:   len(data),
+		Message: "Berhasil mengambil data audit logs IKAS",
+		Pagination: utils.PaginationMeta{
+			Total:      result.Total,
+			Page:       result.Page,
+			Limit:      result.Limit,
+			TotalPages: result.TotalPages,
+		},
+		Data: result.Data,
 	})
+}
+
+// parsePositiveInt parses a string to a positive int, returning the fallback if invalid.
+func parsePositiveInt(s string, fallback int) int {
+	if s == "" {
+		return fallback
+	}
+	v, err := strconv.Atoi(s)
+	if err != nil || v < 1 {
+		return fallback
+	}
+	return v
 }

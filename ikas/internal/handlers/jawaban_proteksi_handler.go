@@ -90,11 +90,7 @@ func (h *JawabanProteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Req
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
 	if userRole != "admin" && userRole != "staff" && (userPerusahaanID == "" || userPerusahaanID == "null") {
-		utils.RespondJSON(w, 200, map[string]interface{}{
-			"message": "Berhasil mengambil data",
-			"data":    []dto.JawabanProteksiResponse{},
-			"total":   0,
-		})
+		utils.RespondListData(w, 200, "Berhasil mengambil data jawaban proteksi", []dto.JawabanProteksiResponse{}, 0)
 		return
 	}
 
@@ -123,11 +119,7 @@ func (h *JawabanProteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Req
 		utils.RespondError(w, status, err.Error())
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban proteksi", data, len(data))
 }
 
 func (h *JawabanProteksiHandler) handleGetByIkasID(w http.ResponseWriter, r *http.Request, ikasID string) {
@@ -143,11 +135,7 @@ func (h *JawabanProteksiHandler) handleGetByIkasID(w http.ResponseWriter, r *htt
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban proteksi", data, len(data))
 }
 
 func (h *JawabanProteksiHandler) handleGetByPertanyaan(w http.ResponseWriter, _ *http.Request, pertanyaanID int) {
@@ -161,11 +149,7 @@ func (h *JawabanProteksiHandler) handleGetByPertanyaan(w http.ResponseWriter, _ 
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-		"total":   len(data),
-	})
+	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban proteksi", data, len(data))
 }
 
 // GetJawabanProteksiByID godoc
@@ -192,10 +176,7 @@ func (h *JawabanProteksiHandler) handleGetByID(w http.ResponseWriter, r *http.Re
 		}
 		return
 	}
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil mengambil data",
-		"data":    data,
-	})
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data jawaban proteksi", data)
 }
 
 // CreateJawabanProteksi godoc
@@ -314,9 +295,8 @@ func (h *JawabanProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": msg,
-		"id":      updatedID,
+	utils.RespondSuccess(w, 200, msg, map[string]interface{}{
+		"id": updatedID,
 	})
 }
 
@@ -350,8 +330,7 @@ func (h *JawabanProteksiHandler) handleDelete(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.RespondJSON(w, 200, map[string]interface{}{
-		"message": "Berhasil menghapus data",
-		"id":      id,
+	utils.RespondSuccess(w, 200, "Berhasil menghapus data", map[string]interface{}{
+		"id": id,
 	})
 }
