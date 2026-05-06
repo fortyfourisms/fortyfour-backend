@@ -26,6 +26,11 @@ func (m *mockRedis) Delete(key string) error {
 	return args.Error(0)
 }
 
+func (m *mockRedis) DeletePattern(pattern string) error {
+	args := m.Called(pattern)
+	return args.Error(0)
+}
+
 func (m *mockRedis) Exists(key string) (bool, error) {
 	args := m.Called(key)
 	return args.Bool(0), args.Error(1)

@@ -225,11 +225,12 @@ func (s *IkasService) Create(ctx context.Context, req dto.CreateIkasRequest, id 
 	}
 
 	// Audit Log for Create
+	changesJSON, _ := json.Marshal(map[string]interface{}{"perusahaan_id": req.IDPerusahaan, "tanggal": req.Tanggal, "responden": req.Responden})
 	auditEvent := dto_event.IkasAuditLogEvent{
 		IkasID:    id,
 		UserID:    userID,
 		Action:    "CREATE_IKAS",
-		Changes:   map[string]interface{}{"perusahaan_id": req.IDPerusahaan, "tanggal": req.Tanggal, "responden": req.Responden},
+		Changes:   changesJSON,
 		Timestamp: time.Now(),
 	}
 	_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
@@ -387,11 +388,12 @@ func (s *IkasService) Update(ctx context.Context, id string, req dto.UpdateIkasR
 
 	// Publish audit log if there are changes
 	if len(changes) > 0 {
+		changesJSON, _ := json.Marshal(changes)
 		auditEvent := dto_event.IkasAuditLogEvent{
 			IkasID:    id,
 			UserID:    userID,
 			Action:    "UPDATE",
-			Changes:   changes,
+			Changes:   changesJSON,
 			Timestamp: time.Now(),
 		}
 		_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
@@ -570,11 +572,12 @@ func (s *IkasService) Delete(ctx context.Context, id string, userID string, user
 	}
 
 	// Audit Log for Delete
+	changesJSON, _ := json.Marshal(map[string]interface{}{"status": "deleted"})
 	auditEvent := dto_event.IkasAuditLogEvent{
 		IkasID:    id,
 		UserID:    userID,
 		Action:    "DELETE_IKAS",
-		Changes:   map[string]interface{}{"status": "deleted"},
+		Changes:   changesJSON,
 		Timestamp: time.Now(),
 	}
 	_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
@@ -675,11 +678,12 @@ func (s *IkasService) ValidateIkas(ctx context.Context, id string, status bool, 
 		action = "UNVALIDATE_IKAS"
 	}
 
+	changesJSON, _ := json.Marshal(map[string]interface{}{"is_validated": status})
 	auditEvent := dto_event.IkasAuditLogEvent{
 		IkasID:    id,
 		UserID:    userID,
 		Action:    action,
-		Changes:   map[string]interface{}{"is_validated": status},
+		Changes:   changesJSON,
 		Timestamp: time.Now(),
 	}
 	if s.producer != nil {
@@ -746,11 +750,12 @@ func (s *IkasService) RequestEdit(ctx context.Context, id string, reason string,
 	}
 
 	// Audit Log
+	changesJSON, _ := json.Marshal(map[string]interface{}{"reason": reason})
 	auditEvent := dto_event.IkasAuditLogEvent{
 		IkasID:    id,
 		UserID:    userID,
 		Action:    "REQUEST_EDIT_IKAS",
-		Changes:   map[string]interface{}{"reason": reason},
+		Changes:   changesJSON,
 		Timestamp: time.Now(),
 	}
 	if s.producer != nil {
@@ -802,11 +807,12 @@ func (s *IkasService) ApproveEdit(ctx context.Context, id string, userID string)
 	}
 
 	// Audit Log
+	changesJSON, _ := json.Marshal(map[string]interface{}{"status": "approved"})
 	auditEvent := dto_event.IkasAuditLogEvent{
 		IkasID:    id,
 		UserID:    userID,
 		Action:    "APPROVE_EDIT_IKAS",
-		Changes:   map[string]interface{}{"status": "approved"},
+		Changes:   changesJSON,
 		Timestamp: time.Now(),
 	}
 	if s.producer != nil {
@@ -854,11 +860,12 @@ func (s *IkasService) RejectEdit(ctx context.Context, id string, adminReason str
 	}
 
 	// Audit Log
+	changesJSON, _ := json.Marshal(map[string]interface{}{"status": "rejected", "reason": adminReason})
 	auditEvent := dto_event.IkasAuditLogEvent{
 		IkasID:    id,
 		UserID:    userID,
 		Action:    "REJECT_EDIT_IKAS",
-		Changes:   map[string]interface{}{"status": "rejected", "reason": adminReason},
+		Changes:   changesJSON,
 		Timestamp: time.Now(),
 	}
 	if s.producer != nil {

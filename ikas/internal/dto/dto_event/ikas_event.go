@@ -1,6 +1,9 @@
 package dto_event
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // IkasCreatedEvent
 type IkasCreatedEvent struct {
@@ -57,11 +60,11 @@ type EmailNotificationPayload struct {
 
 // IkasAuditLogEvent
 type IkasAuditLogEvent struct {
-	IkasID    string                 `json:"ikas_id"`
-	UserID    string                 `json:"user_id"`
-	Action    string                 `json:"action"`
-	Changes   map[string]interface{} `json:"changes"`
-	Timestamp time.Time              `json:"timestamp"`
+	IkasID    string          `json:"ikas_id"`
+	UserID    string          `json:"user_id"`
+	Action    string          `json:"action"`
+	Changes   json.RawMessage `json:"changes"`
+	Timestamp time.Time       `json:"timestamp"`
 }
 
 // IkasEditRequestedEvent
