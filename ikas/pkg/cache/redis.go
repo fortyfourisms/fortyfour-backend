@@ -15,6 +15,7 @@ type RedisInterface interface {
 	Set(key string, value interface{}, expiration time.Duration) error
 	Get(key string) (string, error)
 	Delete(key string) error
+	DeletePattern(pattern string) error
 	Exists(key string) (bool, error)
 	Close() error
 }
@@ -65,6 +66,17 @@ func (r *RedisClient) Get(key string) (string, error) {
 // Delete removes a key
 func (r *RedisClient) Delete(key string) error {
 	return r.client.Del(r.ctx, key).Err()
+}
+
+// DeletePattern removes all keys matching the given pattern
+func (r *RedisClient) DeletePattern(pattern string) error {
+	iter := r.client.Scan(r.ctx, 0, pattern, 0).Iterator()
+	for iter.Next(r.ctx) {
+		if err := r.client.Del(r.ctx, iter.Val()).Err(); err != nil {
+			return err
+		}
+	}
+	return iter.Err()
 }
 
 // Exists checks if a key exists

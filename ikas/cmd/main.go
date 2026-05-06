@@ -107,6 +107,7 @@ func main() {
 		repository.NewKategoriRepository(db),
 		repository.NewSubKategoriRepository(db),
 		repository.NewAuditLogRepository(db),
+		redisClient,
 	)
 
 	// Start consumers in background
