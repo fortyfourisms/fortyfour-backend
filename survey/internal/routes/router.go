@@ -7,10 +7,9 @@ import (
 
 	"survey/internal/handlers"
 	"survey/internal/middleware"
-	"survey/internal/utils"
 )
 
-// Health handler
+// HEALTH CHECK
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -21,37 +20,42 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// INIT ROUTER
 func InitRouter(
 	respondenH *handlers.RespondenHandler,
 	risikoH *handlers.RisikoHandler,
+	authMiddleware func(http.Handler) http.Handler,
 ) *http.ServeMux {
 
 	mux := http.NewServeMux()
 
-	// HEALTH
+	// PUBLIC
 	mux.HandleFunc("/api/health", healthHandler)
 
+	// MIDDLEWARE WRAPPER
+	protected := func(h http.Handler) http.Handler {
+		return middleware.Logger(
+			middleware.Recovery(
+				authMiddleware(h),
+			),
+		)
+	}
+
 	// RESPONDEN
-	mux.Handle("/api/survey/responden", middleware.Logger(utils.AdaptHandler(respondenH)))
-	mux.Handle("/api/survey/responden/", middleware.Logger(utils.AdaptHandler(respondenH)))
+	mux.Handle("/api/survey/responden", protected(respondenH))
+	mux.Handle("/api/survey/responden/", protected(respondenH))
 
 	// RISIKO
-	mux.HandleFunc("/api/survey/risiko/eligibility", risikoH.SubmitEligibility)
-	mux.HandleFunc("/api/survey/risiko/dampak", risikoH.SubmitDampak)
-	mux.HandleFunc("/api/survey/risiko/pengendalian", risikoH.SubmitPengendalian)
-	mux.HandleFunc("/api/survey/risiko/reason", risikoH.SubmitAlasan)
-	mux.HandleFunc("/api/survey/risiko/", risikoH.GetByRespondentID)
+	mux.Handle("/api/survey/risiko/eligibility", protected(http.HandlerFunc(risikoH.SubmitEligibility)))
+	mux.Handle("/api/survey/risiko/dampak", protected(http.HandlerFunc(risikoH.SubmitDampak)))
+	mux.Handle("/api/survey/risiko/pengendalian", protected(http.HandlerFunc(risikoH.SubmitPengendalian)))
+	mux.Handle("/api/survey/risiko/reason", protected(http.HandlerFunc(risikoH.SubmitAlasan)))
+	mux.Handle("/api/survey/risiko/", protected(http.HandlerFunc(risikoH.GetByRespondentID)))
 
-	// PROGRESS
-	mux.HandleFunc("/api/survey/progress/", risikoH.GetProgress)
-	mux.HandleFunc("/api/survey/navigate", risikoH.Navigate)
-
-	// Lanjutkan Nanti
-	mux.HandleFunc("/api/survey/save-progress", risikoH.SaveProgress)
-
-	// CUSTOM RISIKO
-	mux.HandleFunc("/api/survey/custom-risk", risikoH.CreateCustomRisiko)
-	mux.HandleFunc("/api/survey/finish", risikoH.FinishSurvey)
+	// PROGRESS & NAVIGATION
+	mux.Handle("/api/survey/navigate", protected(http.HandlerFunc(risikoH.Navigate)))
+	mux.Handle("/api/survey/save-progress", protected(http.HandlerFunc(risikoH.SaveProgress)))
+	mux.Handle("/api/survey/finish", protected(http.HandlerFunc(risikoH.FinishSurvey)))
 
 	return mux
 }

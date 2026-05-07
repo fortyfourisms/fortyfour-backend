@@ -29,7 +29,7 @@ func GetRateLimitConfigs() RateLimitConfigs {
 			KeyPrefix:         "rate_limit_moderate",
 		},
 		Lenient: RateLimiterConfig{
-			RequestsPerWindow: 1000,
+			RequestsPerWindow: 200,
 			WindowDuration:    1 * time.Minute,
 			KeyPrefix:         "rate_limit_lenient",
 		},

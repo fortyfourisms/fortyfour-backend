@@ -6,6 +6,7 @@ import (
 	"ikas/internal/dto"
 	"ikas/internal/dto/dto_event"
 	"ikas/internal/repository"
+	"ikas/pkg/cache"
 	"log"
 	"strings"
 
@@ -32,6 +33,7 @@ type Consumer struct {
 	kategoriRepo               repository.KategoriRepositoryInterface
 	subKategoriRepo            repository.SubKategoriRepositoryInterface
 	auditLogRepo               repository.AuditLogRepositoryInterface
+	cache                      cache.RedisInterface
 }
 
 func NewConsumer(
@@ -54,6 +56,7 @@ func NewConsumer(
 	kategoriRepo repository.KategoriRepositoryInterface,
 	subKategoriRepo repository.SubKategoriRepositoryInterface,
 	auditLogRepo repository.AuditLogRepositoryInterface,
+	cache cache.RedisInterface,
 ) *Consumer {
 	return &Consumer{
 		Consumer:                   c,
@@ -75,6 +78,7 @@ func NewConsumer(
 		kategoriRepo:               kategoriRepo,
 		subKategoriRepo:            subKategoriRepo,
 		auditLogRepo:               auditLogRepo,
+		cache:                      cache,
 	}
 }
 
@@ -897,6 +901,13 @@ func (c *Consumer) ConsumeIkasAuditLog(ctx context.Context) error {
 			log.Printf("Error saving audit log: %v", err)
 			return err
 		}
+
+		// Invalidate audit logs cache
+		if c.cache != nil {
+			_ = c.cache.DeletePattern(cache.CacheKeyPrefixAuditLogs + "*")
+			_ = c.cache.DeletePattern(cache.CacheKeyPrefixAuditLogsByIkas + "*")
+		}
+
 		return nil
 	})
 }

@@ -371,11 +371,22 @@ func (s *JawabanProteksiService) Update(id int, req dto.UpdateJawabanProteksiReq
 	}
 
 	if s.producer != nil && len(changes) > 0 {
+		payload := struct {
+			Pertanyaan interface{} `json:"pertanyaan"`
+			Diff       interface{} `json:"diff"`
+		}{
+			Pertanyaan: map[string]interface{}{
+				"id":   existing.PertanyaanProteksi.ID,
+				"teks": existing.PertanyaanProteksi.PertanyaanProteksi,
+			},
+			Diff: changes,
+		}
+		changesJSON, _ := json.Marshal(payload)
 		auditEvent := dto_event.IkasAuditLogEvent{
 			IkasID:    existing.IkasID,
 			UserID:    userID,
 			Action:    "UPDATE_PROTEKSI",
-			Changes:   changes,
+			Changes:   changesJSON,
 			Timestamp: time.Now(),
 		}
 		_ = s.producer.PublishIkasAuditLog(context.Background(), auditEvent)
@@ -430,11 +441,22 @@ func (s *JawabanProteksiService) Delete(id int, userID string, userRole string, 
 	}
 
 	if s.producer != nil {
+		payload := struct {
+			Pertanyaan interface{} `json:"pertanyaan"`
+			Status     string      `json:"status"`
+		}{
+			Pertanyaan: map[string]interface{}{
+				"id":   existing.PertanyaanProteksi.ID,
+				"teks": existing.PertanyaanProteksi.PertanyaanProteksi,
+			},
+			Status: "deleted",
+		}
+		changesJSON, _ := json.Marshal(payload)
 		auditEvent := dto_event.IkasAuditLogEvent{
 			IkasID:    existing.IkasID,
 			UserID:    userID,
 			Action:    "DELETE_PROTEKSI",
-			Changes:   map[string]interface{}{"pertanyaan_id": existing.PertanyaanProteksi.ID, "status": "deleted"},
+			Changes:   changesJSON,
 			Timestamp: time.Now(),
 		}
 		_ = s.producer.PublishIkasAuditLog(context.Background(), auditEvent)

@@ -29,7 +29,7 @@ func TestGetRateLimitConfigs(t *testing.T) {
 
 	// Verify Lenient config
 	t.Run("Lenient config", func(t *testing.T) {
-		assert.Equal(t, 1000, configs.Lenient.RequestsPerWindow, "Lenient should allow 1000 requests")
+		assert.Equal(t, 200, configs.Lenient.RequestsPerWindow, "Lenient should allow 200 requests")
 		assert.Equal(t, 1*time.Minute, configs.Lenient.WindowDuration, "Lenient window should be 1 minute")
 		assert.Equal(t, "rate_limit_lenient", configs.Lenient.KeyPrefix, "Lenient key prefix should be correct")
 	})
@@ -127,7 +127,7 @@ func TestRateLimitConfigs_LenientForPublic(t *testing.T) {
 	configs := GetRateLimitConfigs()
 
 	// Lenient should allow high traffic for public endpoints
-	assert.GreaterOrEqual(t, configs.Lenient.RequestsPerWindow, 500,
+	assert.GreaterOrEqual(t, configs.Lenient.RequestsPerWindow, 200,
 		"Lenient should allow high traffic for public endpoints")
 }
 
@@ -191,8 +191,8 @@ func TestRateLimitConfigs_LenientValues(t *testing.T) {
 	// Test exact values for Lenient config
 	lenientConfig := configs.Lenient
 
-	assert.Equal(t, 1000, lenientConfig.RequestsPerWindow,
-		"Lenient requests per window should be 1000")
+	assert.Equal(t, 200, lenientConfig.RequestsPerWindow,
+		"Lenient requests per window should be 200")
 	assert.Equal(t, 1*time.Minute, lenientConfig.WindowDuration,
 		"Lenient window duration should be 1 minute")
 	assert.Equal(t, "rate_limit_lenient", lenientConfig.KeyPrefix,
