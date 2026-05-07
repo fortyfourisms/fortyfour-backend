@@ -68,11 +68,11 @@ func TestConfig_DSNConstruction(t *testing.T) {
 		{
 			name: "standard config",
 			config: database.Config{
-				Host:   "localhost",
-				Port:   "3306",
-				User:   "root",
+				Host:     "localhost",
+				Port:     "3306",
+				User:     "root",
 				Password: "pass",
-				DBName: "mydb",
+				DBName:   "mydb",
 			},
 			want: "root:pass@tcp(localhost:3306)/mydb?parseTime=true",
 		},
