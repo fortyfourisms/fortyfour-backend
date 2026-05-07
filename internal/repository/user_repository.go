@@ -439,3 +439,66 @@ func (r *UserRepository) FindAllAdmins() ([]models.User, error) {
 	}
 	return admins, nil
 }
+
+func (r *UserRepository) FindUsersByPerusahaan(idPerusahaan string) ([]models.User, error) {
+	query := selectUserColumns + ` WHERE u.id_perusahaan = ?`
+	rows, err := r.db.Query(query, idPerusahaan)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		var (
+			displayName sql.NullString
+			roleID      sql.NullString
+			roleName    sql.NullString
+			jabatan     sql.NullString
+			idPerus     sql.NullString
+			fotoProfile sql.NullString
+			banner      sql.NullString
+			mfaSecret   sql.NullString
+		)
+
+		err := rows.Scan(
+			&user.ID, &user.Username, &displayName, &user.Password, &user.Email,
+			&roleID, &roleName, &jabatan, &idPerus, &fotoProfile, &banner,
+			&user.MFAEnabled, &mfaSecret, &user.Status, &user.PasswordChangedAt,
+			&user.LoginAttempts, &user.CreatedAt, &user.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if displayName.Valid {
+			tmp := displayName.String
+			user.DisplayName = &tmp
+		}
+		if roleID.Valid {
+			user.RoleID = &roleID.String
+		}
+		if roleName.Valid {
+			user.RoleName = roleName.String
+		}
+		if jabatan.Valid {
+			user.Jabatan = &jabatan.String
+		}
+		if idPerus.Valid {
+			tmp := idPerus.String
+			user.IDPerusahaan = &tmp
+		}
+		if fotoProfile.Valid {
+			tmp := fotoProfile.String
+			user.FotoProfile = &tmp
+		}
+		if banner.Valid {
+			tmp := banner.String
+			user.Banner = &tmp
+		}
+
+		users = append(users, user)
+	}
+	return users, nil
+}

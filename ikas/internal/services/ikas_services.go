@@ -799,6 +799,7 @@ func (s *IkasService) ApproveEdit(ctx context.Context, id string, userID string)
 	if s.producer != nil {
 		event := dto_event.IkasEditActionedEvent{
 			IkasID:         ikas.ID,
+			IDPerusahaan:   ikas.Perusahaan.ID,
 			NamaPerusahaan: ikas.Perusahaan.NamaPerusahaan,
 			Status:         "approved",
 			ActionedAt:     time.Now(),
@@ -851,6 +852,7 @@ func (s *IkasService) RejectEdit(ctx context.Context, id string, adminReason str
 	if s.producer != nil {
 		event := dto_event.IkasEditActionedEvent{
 			IkasID:         ikas.ID,
+			IDPerusahaan:   ikas.Perusahaan.ID,
 			NamaPerusahaan: ikas.Perusahaan.NamaPerusahaan,
 			Status:         "rejected",
 			AdminReason:    adminReason,

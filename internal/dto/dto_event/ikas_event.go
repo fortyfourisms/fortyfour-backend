@@ -59,6 +59,7 @@ type IkasEditRequestedEvent struct {
 // IkasEditActionedEvent
 type IkasEditActionedEvent struct {
 	IkasID         string    `json:"ikas_id"`
+	IDPerusahaan   string    `json:"id_perusahaan"`
 	NamaPerusahaan string    `json:"nama_perusahaan"`
 	Status         string    `json:"status"` // approved/rejected
 	AdminReason    string    `json:"admin_reason,omitempty"`

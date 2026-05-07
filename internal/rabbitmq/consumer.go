@@ -17,6 +17,7 @@ type SSEBroadcaster interface {
 	NotifyCreate(resource string, data interface{}, userID string)
 	NotifyUpdate(resource string, data interface{}, userID string)
 	NotifyDelete(resource string, id interface{}, userID string)
+	NotifyCustom(resource string, eventType string, message string, data interface{}, userID string)
 }
 
 type NotificationPusher interface {
@@ -188,7 +189,7 @@ func (c *Consumer) ConsumeIkasEditRequested(ctx context.Context) error {
 
 		// 2. Real-time SSE (send to admin topic/all admins)
 		if c.sseService != nil {
-			c.sseService.NotifyCreate("ikas_request", event, "admin")
+			c.sseService.NotifyCustom("ikas_request", "create", "User "+event.Responden+" (Perusahaan: "+event.NamaPerusahaan+") mengajukan permintaan edit data IKAS.", event, "admin")
 		}
 
 		return nil
@@ -206,16 +207,37 @@ func (c *Consumer) ConsumeIkasEditActioned(ctx context.Context) error {
 
 		// 1. Find user owner of this IKAS ID (this might require another event enrichment or repo call)
 		// For now, we'll notify the 'ikas' resource which might be observed by the user
-		msg := "Permintaan edit data IKAS Anda telah " + event.Status
+		msg := "Permintaan edit data IKAS untuk perusahaan " + event.NamaPerusahaan + " telah "
+		if event.Status == "approved" {
+			msg += "disetujui."
+		} else {
+			msg += "ditolak"
+		}
 		if event.Status == "rejected" && event.AdminReason != "" {
 			msg += ". Alasan: " + event.AdminReason
 		}
 
-		// Ideally we find the UserID of the owner here to persist notification
-		// If we don't have it in the event, we might need to fetch it or include it in event
-
-		if c.sseService != nil {
-			c.sseService.NotifyUpdate("ikas_action", event, "") // Broadcast or targeted
+		if c.userRepo != nil {
+			users, err := c.userRepo.FindUsersByPerusahaan(event.IDPerusahaan)
+			if err == nil && len(users) > 0 {
+				for _, u := range users {
+					// 1. Persist notification
+					if c.notifService != nil {
+						_ = c.notifService.Push(u.ID, models.NotifIkasEditActioned, msg)
+					}
+					// 2. Real-time SSE (targeted)
+					if c.sseService != nil {
+						c.sseService.NotifyCustom("ikas_action", "update", msg, event, u.ID)
+					}
+				}
+			} else {
+				// Fallback broadcast if no users found or error
+				if c.sseService != nil {
+					c.sseService.NotifyCustom("ikas_action", "update", msg, event, "")
+				}
+			}
+		} else if c.sseService != nil {
+			c.sseService.NotifyCustom("ikas_action", "update", msg, event, "")
 		}
 
 		return nil
