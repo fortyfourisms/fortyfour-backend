@@ -10,11 +10,11 @@ import (
 	"log"
 	"strings"
 
-	"fortyfour-backend/pkg/rabbitmq"
+	pkgRabbitmq "fortyfour-backend/pkg/rabbitmq"
 )
 
 type Consumer struct {
-	*rabbitmq.Consumer
+	*pkgRabbitmq.Consumer
 	ikasRepo                   repository.IkasRepositoryInterface
 	identifikasiRepo           repository.IdentifikasiRepositoryInterface
 	pertanyaanIdentifikasiRepo repository.PertanyaanIdentifikasiRepositoryInterface
@@ -37,7 +37,7 @@ type Consumer struct {
 }
 
 func NewConsumer(
-	c *rabbitmq.Consumer,
+	c *pkgRabbitmq.Consumer,
 	ikasRepo repository.IkasRepositoryInterface,
 	identifikasiRepo repository.IdentifikasiRepositoryInterface,
 	pertanyaanIdentifikasiRepo repository.PertanyaanIdentifikasiRepositoryInterface,
@@ -86,7 +86,7 @@ func (c *Consumer) ConsumeIkasCreated(ctx context.Context) error {
 	return c.Consume(ctx, "ikas.created", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasCreatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from ikas.created: %v. Body: %s", err, string(body))
+			log.Printf("Fatal: Unmarshal error from ikas.created: %v. Body: %s", err, string(body))
 			return nil // Acknowledge to remove invalid JSON from queue
 		}
 
@@ -95,7 +95,7 @@ func (c *Consumer) ConsumeIkasCreated(ctx context.Context) error {
 		// Validate mandatory fields (Poison Pill Prevention)
 		// Hanya id_perusahaan yang wajib ada (foreign key). tanggal boleh kosong karena nullable di DB.
 		if strings.TrimSpace(event.IDPerusahaan) == "" {
-			log.Printf("❌ Skipping invalid message from ikas.created: id_perusahaan is empty. ID: %s", event.IkasID)
+			log.Printf("Skipping invalid message from ikas.created: id_perusahaan is empty. ID: %s", event.IkasID)
 			return nil // Acknowledge to remove from queue
 		}
 
@@ -110,7 +110,7 @@ func (c *Consumer) ConsumeIkasCreated(ctx context.Context) error {
 
 		if err := c.ikasRepo.Create(req, event.IkasID, event.NilaiKematangan); err != nil {
 			if strings.Contains(err.Error(), "Incorrect datetime value") {
-				log.Printf("❌ Skipping message from ikas.created due to invalid date value: %v", err)
+				log.Printf("Skipping message from ikas.created due to invalid date value: %v", err)
 				return nil // Acknowledge to remove poison pill
 			}
 			return err
@@ -123,7 +123,7 @@ func (c *Consumer) ConsumeIkasUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "ikas.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasUpdatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from ikas.updated: %v. Body: %s", err, string(body))
+			log.Printf("Fatal: Unmarshal error from ikas.updated: %v. Body: %s", err, string(body))
 			return nil // Acknowledge to remove invalid JSON from queue
 		}
 
@@ -143,7 +143,7 @@ func (c *Consumer) ConsumeIkasUpdated(ctx context.Context) error {
 
 		if err := c.ikasRepo.Update(event.IkasID, req); err != nil {
 			if strings.Contains(err.Error(), "Incorrect datetime value") {
-				log.Printf("❌ Skipping message from ikas.updated due to invalid date value: %v", err)
+				log.Printf("Skipping message from ikas.updated due to invalid date value: %v", err)
 				return nil // Acknowledge to remove poison pill
 			}
 			return err
@@ -156,7 +156,7 @@ func (c *Consumer) ConsumeIkasDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "ikas.deleted", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasDeletedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from ikas.deleted: %v. Body: %s", err, string(body))
+			log.Printf("Fatal: Unmarshal error from ikas.deleted: %v. Body: %s", err, string(body))
 			return nil // Acknowledge to remove invalid JSON from queue
 		}
 
@@ -191,55 +191,75 @@ func (c *Consumer) ConsumeEmailNotifications(ctx context.Context) error {
 }
 
 func (c *Consumer) ConsumeJawabanIdentifikasiCreated(ctx context.Context) error {
-	return c.Consume(ctx, "jawaban.identifikasi.created", func(ctx context.Context, body []byte) error {
-		log.Printf("Raw Message from jawaban.identifikasi.created: %s", string(body))
+	cfg := pkgRabbitmq.BatchConsumerConfig{
+		BatchSize:    JawabanBatchSize,
+		BatchTimeout: JawabanBatchTimeout,
+		BatchDelay:   JawabanBatchDelay,
+		UseAdaptive:  true,
+	}
 
-		var req dto.CreateJawabanIdentifikasiRequest
-		if err := json.Unmarshal(body, &req); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from jawaban.identifikasi.created: %v. Body: %s", err, string(body))
-			return nil // Acknowledge to remove invalid JSON from queue
-		}
-
-		// 1. Validate mandatory fields (Poison Pill Prevention)
-		if req.JawabanIdentifikasi == nil {
-			log.Printf("❌ Skipping invalid message from jawaban.identifikasi.created: jawaban_identifikasi is null. Ikas: %s, Question: %d", req.IkasID, req.PertanyaanIdentifikasiID)
-			return nil // Acknowledge to remove from queue
-		}
-
-		// 2. Save to buffer
-		if err := c.jawabanIdentifikasiRepo.UpsertToBuffer(req); err != nil {
-			log.Printf("Error upserting to buffer: %v", err)
-			return err
-		}
-
-		// 2. Check if all questions are answered
-		totalQuestions, err := c.pertanyaanIdentifikasiRepo.GetTotalCount()
-		if err != nil {
-			log.Printf("Error getting total questions: %v", err)
-			return err
-		}
-
-		currentCount, err := c.jawabanIdentifikasiRepo.GetBufferCount(req.IkasID)
-		if err != nil {
-			log.Printf("Error getting buffer count: %v", err)
-			return err
-		}
-
-		if currentCount >= totalQuestions {
-			log.Printf("All questions answered for IkasID %s (%d/%d). Flushing buffer...", req.IkasID, currentCount, totalQuestions)
-			// 3. Flush buffer to main table
-			if err := c.jawabanIdentifikasiRepo.FlushBuffer(req.IkasID); err != nil {
-				log.Printf("Error flushing buffer: %v", err)
-				return err
+	return c.ConsumeBatch(ctx, "jawaban.identifikasi.created", cfg, func(ctx context.Context, msgs []pkgRabbitmq.Delivery) {
+		for _, msg := range msgs {
+			if err := c.processJawabanIdentifikasiCreated(ctx, msg.Body); err != nil {
+				pkgRabbitmq.DropOrRequeue(msg, "jawaban.identifikasi.created", err)
+			} else {
+				msg.Ack(false)
 			}
-			// 4. Recalculate scores
-			log.Printf("Recalculating scores for IkasID %s", req.IkasID)
-			return c.jawabanIdentifikasiRepo.RecalculateIdentifikasi(req.IkasID)
 		}
-
-		log.Printf("Progress for IkasID %s: %d/%d", req.IkasID, currentCount, totalQuestions)
-		return nil
 	})
+}
+
+// processJawabanIdentifikasiCreated contains the business logic for a single
+// jawaban.identifikasi.created message. Extracted so it can be called per-message
+// inside a batch without duplicating code.
+func (c *Consumer) processJawabanIdentifikasiCreated(ctx context.Context, body []byte) error {
+	log.Printf("Raw Message from jawaban.identifikasi.created: %s", string(body))
+
+	var req dto.CreateJawabanIdentifikasiRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		log.Printf("Fatal: Unmarshal error from jawaban.identifikasi.created: %v. Body: %s", err, string(body))
+		return nil // treat as poison pill — caller will Ack to remove from queue
+	}
+
+	// 1. Validate mandatory fields (Poison Pill Prevention)
+	if req.JawabanIdentifikasi == nil {
+		log.Printf("Skipping invalid message from jawaban.identifikasi.created: jawaban_identifikasi is null. Ikas: %s, Question: %d", req.IkasID, req.PertanyaanIdentifikasiID)
+		return nil // caller will Ack
+	}
+
+	// 2. Save to buffer
+	if err := c.jawabanIdentifikasiRepo.UpsertToBuffer(req); err != nil {
+		log.Printf("Error upserting to buffer: %v", err)
+		return err
+	}
+
+	// 3. Check if all questions are answered
+	totalQuestions, err := c.pertanyaanIdentifikasiRepo.GetTotalCount()
+	if err != nil {
+		log.Printf("Error getting total questions: %v", err)
+		return err
+	}
+
+	currentCount, err := c.jawabanIdentifikasiRepo.GetBufferCount(req.IkasID)
+	if err != nil {
+		log.Printf("Error getting buffer count: %v", err)
+		return err
+	}
+
+	if currentCount >= totalQuestions {
+		log.Printf("All questions answered for IkasID %s (%d/%d). Flushing buffer...", req.IkasID, currentCount, totalQuestions)
+		// 4. Flush buffer to main table
+		if err := c.jawabanIdentifikasiRepo.FlushBuffer(req.IkasID); err != nil {
+			log.Printf("Error flushing buffer: %v", err)
+			return err
+		}
+		// 5. Recalculate scores
+		log.Printf("Recalculating scores for IkasID %s", req.IkasID)
+		return c.jawabanIdentifikasiRepo.RecalculateIdentifikasi(req.IkasID)
+	}
+
+	log.Printf("Progress for IkasID %s: %d/%d", req.IkasID, currentCount, totalQuestions)
+	return nil
 }
 
 // ConsumeJawabanIdentifikasiUpdated (Pola 2 Asynchronous Write)
@@ -290,55 +310,74 @@ func (c *Consumer) ConsumeJawabanIdentifikasiDeleted(ctx context.Context) error 
 
 // ConsumeJawabanProteksiCreated (Pola 2 Batch Write)
 func (c *Consumer) ConsumeJawabanProteksiCreated(ctx context.Context) error {
-	return c.Consume(ctx, "jawaban.proteksi.created", func(ctx context.Context, body []byte) error {
-		log.Printf("Raw Message from jawaban.proteksi.created: %s", string(body))
+	cfg := pkgRabbitmq.BatchConsumerConfig{
+		BatchSize:    JawabanBatchSize,
+		BatchTimeout: JawabanBatchTimeout,
+		BatchDelay:   JawabanBatchDelay,
+		UseAdaptive:  true,
+	}
 
-		var req dto.CreateJawabanProteksiRequest
-		if err := json.Unmarshal(body, &req); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from jawaban.proteksi.created: %v. Body: %s", err, string(body))
-			return nil // Acknowledge to remove invalid JSON from queue
-		}
-
-		// 1. Validate mandatory fields (Poison Pill Prevention)
-		if req.JawabanProteksi == nil {
-			log.Printf("❌ Skipping invalid message from jawaban.proteksi.created: jawaban_proteksi is null. Ikas: %s, Question: %d", req.IkasID, req.PertanyaanProteksiID)
-			return nil // Acknowledge to remove from queue
-		}
-
-		// 2. Save to buffer
-		if err := c.jawabanProteksiRepo.UpsertToBuffer(req); err != nil {
-			log.Printf("Error upserting to buffer: %v", err)
-			return err
-		}
-
-		// 2. Check if all questions are answered
-		totalQuestions, err := c.pertanyaanProteksiRepo.GetTotalCount()
-		if err != nil {
-			log.Printf("Error getting total questions: %v", err)
-			return err
-		}
-
-		currentCount, err := c.jawabanProteksiRepo.GetBufferCount(req.IkasID)
-		if err != nil {
-			log.Printf("Error getting buffer count: %v", err)
-			return err
-		}
-
-		if currentCount >= totalQuestions {
-			log.Printf("All questions answered for IkasID %s (%d/%d). Flushing buffer...", req.IkasID, currentCount, totalQuestions)
-			// 3. Flush buffer to main table
-			if err := c.jawabanProteksiRepo.FlushBuffer(req.IkasID); err != nil {
-				log.Printf("Error flushing buffer: %v", err)
-				return err
+	return c.ConsumeBatch(ctx, "jawaban.proteksi.created", cfg, func(ctx context.Context, msgs []pkgRabbitmq.Delivery) {
+		for _, msg := range msgs {
+			if err := c.processJawabanProteksiCreated(ctx, msg.Body); err != nil {
+				pkgRabbitmq.DropOrRequeue(msg, "jawaban.proteksi.created", err)
+			} else {
+				msg.Ack(false)
 			}
-			// 4. Recalculate scores
-			log.Printf("Recalculating scores for IkasID %s", req.IkasID)
-			return c.jawabanProteksiRepo.RecalculateProteksi(req.IkasID)
 		}
-
-		log.Printf("Progress for IkasID %s: %d/%d", req.IkasID, currentCount, totalQuestions)
-		return nil
 	})
+}
+
+// processJawabanProteksiCreated contains the business logic for a single
+// jawaban.proteksi.created message.
+func (c *Consumer) processJawabanProteksiCreated(ctx context.Context, body []byte) error {
+	log.Printf("Raw Message from jawaban.proteksi.created: %s", string(body))
+
+	var req dto.CreateJawabanProteksiRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		log.Printf("Fatal: Unmarshal error from jawaban.proteksi.created: %v. Body: %s", err, string(body))
+		return nil // poison pill — caller will Ack
+	}
+
+	// 1. Validate mandatory fields (Poison Pill Prevention)
+	if req.JawabanProteksi == nil {
+		log.Printf("Skipping invalid message from jawaban.proteksi.created: jawaban_proteksi is null. Ikas: %s, Question: %d", req.IkasID, req.PertanyaanProteksiID)
+		return nil // caller will Ack
+	}
+
+	// 2. Save to buffer
+	if err := c.jawabanProteksiRepo.UpsertToBuffer(req); err != nil {
+		log.Printf("Error upserting to buffer: %v", err)
+		return err
+	}
+
+	// 3. Check if all questions are answered
+	totalQuestions, err := c.pertanyaanProteksiRepo.GetTotalCount()
+	if err != nil {
+		log.Printf("Error getting total questions: %v", err)
+		return err
+	}
+
+	currentCount, err := c.jawabanProteksiRepo.GetBufferCount(req.IkasID)
+	if err != nil {
+		log.Printf("Error getting buffer count: %v", err)
+		return err
+	}
+
+	if currentCount >= totalQuestions {
+		log.Printf("All questions answered for IkasID %s (%d/%d). Flushing buffer...", req.IkasID, currentCount, totalQuestions)
+		// 4. Flush buffer to main table
+		if err := c.jawabanProteksiRepo.FlushBuffer(req.IkasID); err != nil {
+			log.Printf("Error flushing buffer: %v", err)
+			return err
+		}
+		// 5. Recalculate scores
+		log.Printf("Recalculating scores for IkasID %s", req.IkasID)
+		return c.jawabanProteksiRepo.RecalculateProteksi(req.IkasID)
+	}
+
+	log.Printf("Progress for IkasID %s: %d/%d", req.IkasID, currentCount, totalQuestions)
+	return nil
 }
 
 // ConsumeJawabanProteksiUpdated (Pola 2 Asynchronous Write)
@@ -389,55 +428,74 @@ func (c *Consumer) ConsumeJawabanProteksiDeleted(ctx context.Context) error {
 
 // ConsumeJawabanDeteksiCreated (Pola 2 Batch Write)
 func (c *Consumer) ConsumeJawabanDeteksiCreated(ctx context.Context) error {
-	return c.Consume(ctx, "jawaban.deteksi.created", func(ctx context.Context, body []byte) error {
-		log.Printf("Raw Message from jawaban.deteksi.created: %s", string(body))
+	cfg := pkgRabbitmq.BatchConsumerConfig{
+		BatchSize:    JawabanBatchSize,
+		BatchTimeout: JawabanBatchTimeout,
+		BatchDelay:   JawabanBatchDelay,
+		UseAdaptive:  true,
+	}
 
-		var req dto.CreateJawabanDeteksiRequest
-		if err := json.Unmarshal(body, &req); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from jawaban.deteksi.created: %v. Body: %s", err, string(body))
-			return nil // Acknowledge to remove invalid JSON from queue
-		}
-
-		// 1. Validate mandatory fields (Poison Pill Prevention)
-		if req.JawabanDeteksi == nil {
-			log.Printf("❌ Skipping invalid message from jawaban.deteksi.created: jawaban_deteksi is null. Ikas: %s, Question: %d", req.IkasID, req.PertanyaanDeteksiID)
-			return nil // Acknowledge to remove from queue
-		}
-
-		// 2. Save to buffer
-		if err := c.jawabanDeteksiRepo.UpsertToBuffer(req); err != nil {
-			log.Printf("Error upserting to buffer: %v", err)
-			return err
-		}
-
-		// 2. Check if all questions are answered
-		totalQuestions, err := c.pertanyaanDeteksiRepo.GetTotalCount()
-		if err != nil {
-			log.Printf("Error getting total questions: %v", err)
-			return err
-		}
-
-		currentCount, err := c.jawabanDeteksiRepo.GetBufferCount(req.IkasID)
-		if err != nil {
-			log.Printf("Error getting buffer count: %v", err)
-			return err
-		}
-
-		if currentCount >= totalQuestions {
-			log.Printf("All questions answered for IkasID %s (%d/%d). Flushing buffer...", req.IkasID, currentCount, totalQuestions)
-			// 3. Flush buffer to main table
-			if err := c.jawabanDeteksiRepo.FlushBuffer(req.IkasID); err != nil {
-				log.Printf("Error flushing buffer: %v", err)
-				return err
+	return c.ConsumeBatch(ctx, "jawaban.deteksi.created", cfg, func(ctx context.Context, msgs []pkgRabbitmq.Delivery) {
+		for _, msg := range msgs {
+			if err := c.processJawabanDeteksiCreated(ctx, msg.Body); err != nil {
+				pkgRabbitmq.DropOrRequeue(msg, "jawaban.deteksi.created", err)
+			} else {
+				msg.Ack(false)
 			}
-			// 4. Recalculate scores
-			log.Printf("Recalculating scores for IkasID %s", req.IkasID)
-			return c.jawabanDeteksiRepo.RecalculateDeteksi(req.IkasID)
 		}
-
-		log.Printf("Progress for IkasID %s: %d/%d", req.IkasID, currentCount, totalQuestions)
-		return nil
 	})
+}
+
+// processJawabanDeteksiCreated contains the business logic for a single
+// jawaban.deteksi.created message.
+func (c *Consumer) processJawabanDeteksiCreated(ctx context.Context, body []byte) error {
+	log.Printf("Raw Message from jawaban.deteksi.created: %s", string(body))
+
+	var req dto.CreateJawabanDeteksiRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		log.Printf("Fatal: Unmarshal error from jawaban.deteksi.created: %v. Body: %s", err, string(body))
+		return nil // poison pill — caller will Ack
+	}
+
+	// 1. Validate mandatory fields (Poison Pill Prevention)
+	if req.JawabanDeteksi == nil {
+		log.Printf("Skipping invalid message from jawaban.deteksi.created: jawaban_deteksi is null. Ikas: %s, Question: %d", req.IkasID, req.PertanyaanDeteksiID)
+		return nil // caller will Ack
+	}
+
+	// 2. Save to buffer
+	if err := c.jawabanDeteksiRepo.UpsertToBuffer(req); err != nil {
+		log.Printf("Error upserting to buffer: %v", err)
+		return err
+	}
+
+	// 3. Check if all questions are answered
+	totalQuestions, err := c.pertanyaanDeteksiRepo.GetTotalCount()
+	if err != nil {
+		log.Printf("Error getting total questions: %v", err)
+		return err
+	}
+
+	currentCount, err := c.jawabanDeteksiRepo.GetBufferCount(req.IkasID)
+	if err != nil {
+		log.Printf("Error getting buffer count: %v", err)
+		return err
+	}
+
+	if currentCount >= totalQuestions {
+		log.Printf("All questions answered for IkasID %s (%d/%d). Flushing buffer...", req.IkasID, currentCount, totalQuestions)
+		// 4. Flush buffer to main table
+		if err := c.jawabanDeteksiRepo.FlushBuffer(req.IkasID); err != nil {
+			log.Printf("Error flushing buffer: %v", err)
+			return err
+		}
+		// 5. Recalculate scores
+		log.Printf("Recalculating scores for IkasID %s", req.IkasID)
+		return c.jawabanDeteksiRepo.RecalculateDeteksi(req.IkasID)
+	}
+
+	log.Printf("Progress for IkasID %s: %d/%d", req.IkasID, currentCount, totalQuestions)
+	return nil
 }
 
 // ConsumeJawabanDeteksiUpdated (Pola 2 Asynchronous Write)
@@ -488,55 +546,74 @@ func (c *Consumer) ConsumeJawabanDeteksiDeleted(ctx context.Context) error {
 
 // ConsumeJawabanGulihCreated (Pola 2 Batch Write)
 func (c *Consumer) ConsumeJawabanGulihCreated(ctx context.Context) error {
-	return c.Consume(ctx, "jawaban.gulih.created", func(ctx context.Context, body []byte) error {
-		log.Printf("Raw Message from jawaban.gulih.created: %s", string(body))
+	cfg := pkgRabbitmq.BatchConsumerConfig{
+		BatchSize:    JawabanBatchSize,
+		BatchTimeout: JawabanBatchTimeout,
+		BatchDelay:   JawabanBatchDelay,
+		UseAdaptive:  true,
+	}
 
-		var req dto.CreateJawabanGulihRequest
-		if err := json.Unmarshal(body, &req); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from jawaban.gulih.created: %v. Body: %s", err, string(body))
-			return nil // Acknowledge to remove invalid JSON from queue
-		}
-
-		// 1. Validate mandatory fields (Poison Pill Prevention)
-		if req.JawabanGulih == nil {
-			log.Printf("❌ Skipping invalid message from jawaban.gulih.created: jawaban_gulih is null. Ikas: %s, Question: %d", req.IkasID, req.PertanyaanGulihID)
-			return nil // Acknowledge to remove from queue
-		}
-
-		// 2. Save to buffer
-		if err := c.jawabanGulihRepo.UpsertToBuffer(req); err != nil {
-			log.Printf("Error upserting to buffer: %v", err)
-			return err
-		}
-
-		// 2. Check if all questions are answered
-		totalQuestions, err := c.pertanyaanGulihRepo.GetTotalCount()
-		if err != nil {
-			log.Printf("Error getting total questions: %v", err)
-			return err
-		}
-
-		currentCount, err := c.jawabanGulihRepo.GetBufferCount(req.IkasID)
-		if err != nil {
-			log.Printf("Error getting buffer count: %v", err)
-			return err
-		}
-
-		if currentCount >= totalQuestions {
-			log.Printf("All questions answered for IkasID %s (%d/%d). Flushing buffer...", req.IkasID, currentCount, totalQuestions)
-			// 3. Flush buffer to main table
-			if err := c.jawabanGulihRepo.FlushBuffer(req.IkasID); err != nil {
-				log.Printf("Error flushing buffer: %v", err)
-				return err
+	return c.ConsumeBatch(ctx, "jawaban.gulih.created", cfg, func(ctx context.Context, msgs []pkgRabbitmq.Delivery) {
+		for _, msg := range msgs {
+			if err := c.processJawabanGulihCreated(ctx, msg.Body); err != nil {
+				pkgRabbitmq.DropOrRequeue(msg, "jawaban.gulih.created", err)
+			} else {
+				msg.Ack(false)
 			}
-			// 4. Recalculate scores
-			log.Printf("Recalculating scores for IkasID %s", req.IkasID)
-			return c.jawabanGulihRepo.RecalculateGulih(req.IkasID)
 		}
-
-		log.Printf("Progress for IkasID %s: %d/%d", req.IkasID, currentCount, totalQuestions)
-		return nil
 	})
+}
+
+// processJawabanGulihCreated contains the business logic for a single
+// jawaban.gulih.created message.
+func (c *Consumer) processJawabanGulihCreated(ctx context.Context, body []byte) error {
+	log.Printf("Raw Message from jawaban.gulih.created: %s", string(body))
+
+	var req dto.CreateJawabanGulihRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		log.Printf("Fatal: Unmarshal error from jawaban.gulih.created: %v. Body: %s", err, string(body))
+		return nil // poison pill — caller will Ack
+	}
+
+	// 1. Validate mandatory fields (Poison Pill Prevention)
+	if req.JawabanGulih == nil {
+		log.Printf("Skipping invalid message from jawaban.gulih.created: jawaban_gulih is null. Ikas: %s, Question: %d", req.IkasID, req.PertanyaanGulihID)
+		return nil // caller will Ack
+	}
+
+	// 2. Save to buffer
+	if err := c.jawabanGulihRepo.UpsertToBuffer(req); err != nil {
+		log.Printf("Error upserting to buffer: %v", err)
+		return err
+	}
+
+	// 3. Check if all questions are answered
+	totalQuestions, err := c.pertanyaanGulihRepo.GetTotalCount()
+	if err != nil {
+		log.Printf("Error getting total questions: %v", err)
+		return err
+	}
+
+	currentCount, err := c.jawabanGulihRepo.GetBufferCount(req.IkasID)
+	if err != nil {
+		log.Printf("Error getting buffer count: %v", err)
+		return err
+	}
+
+	if currentCount >= totalQuestions {
+		log.Printf("All questions answered for IkasID %s (%d/%d). Flushing buffer...", req.IkasID, currentCount, totalQuestions)
+		// 4. Flush buffer to main table
+		if err := c.jawabanGulihRepo.FlushBuffer(req.IkasID); err != nil {
+			log.Printf("Error flushing buffer: %v", err)
+			return err
+		}
+		// 5. Recalculate scores
+		log.Printf("Recalculating scores for IkasID %s", req.IkasID)
+		return c.jawabanGulihRepo.RecalculateGulih(req.IkasID)
+	}
+
+	log.Printf("Progress for IkasID %s: %d/%d", req.IkasID, currentCount, totalQuestions)
+	return nil
 }
 
 // ConsumeJawabanGulihUpdated (Pola 2 Asynchronous Write)
@@ -589,7 +666,7 @@ func (c *Consumer) ConsumeDomainCreated(ctx context.Context) error {
 	return c.Consume(ctx, "domain.created", func(ctx context.Context, body []byte) error {
 		var event dto_event.DomainCreatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from domain.created: %v", err)
+			log.Printf("Fatal: Unmarshal error from domain.created: %v", err)
 			return nil
 		}
 
@@ -604,7 +681,7 @@ func (c *Consumer) ConsumeDomainUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "domain.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.DomainUpdatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from domain.updated: %v", err)
+			log.Printf("Fatal: Unmarshal error from domain.updated: %v", err)
 			return nil
 		}
 
@@ -618,7 +695,7 @@ func (c *Consumer) ConsumeDomainDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "domain.deleted", func(ctx context.Context, body []byte) error {
 		var event dto_event.DomainDeletedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from domain.deleted: %v", err)
+			log.Printf("Fatal: Unmarshal error from domain.deleted: %v", err)
 			return nil
 		}
 
@@ -632,7 +709,7 @@ func (c *Consumer) ConsumeRuangLingkupCreated(ctx context.Context) error {
 	return c.Consume(ctx, "ruang_lingkup.created", func(ctx context.Context, body []byte) error {
 		var event dto_event.RuangLingkupCreatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from ruang_lingkup.created: %v", err)
+			log.Printf("Fatal: Unmarshal error from ruang_lingkup.created: %v", err)
 			return nil
 		}
 		log.Printf("Processing Ruang Lingkup Created: %s", event.Request.NamaRuangLingkup)
@@ -645,7 +722,7 @@ func (c *Consumer) ConsumeRuangLingkupUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "ruang_lingkup.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.RuangLingkupUpdatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from ruang_lingkup.updated: %v", err)
+			log.Printf("Fatal: Unmarshal error from ruang_lingkup.updated: %v", err)
 			return nil
 		}
 		log.Printf("Processing Ruang Lingkup Updated for ID: %d", event.ID)
@@ -657,7 +734,7 @@ func (c *Consumer) ConsumeRuangLingkupDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "ruang_lingkup.deleted", func(ctx context.Context, body []byte) error {
 		var event dto_event.RuangLingkupDeletedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from ruang_lingkup.deleted: %v", err)
+			log.Printf("Fatal: Unmarshal error from ruang_lingkup.deleted: %v", err)
 			return nil
 		}
 		log.Printf("Processing Ruang Lingkup Deleted for ID: %d", event.ID)
@@ -669,7 +746,7 @@ func (c *Consumer) ConsumeKategoriCreated(ctx context.Context) error {
 	return c.Consume(ctx, "kategori.created", func(ctx context.Context, body []byte) error {
 		var event dto_event.KategoriCreatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from kategori.created: %v", err)
+			log.Printf("Fatal: Unmarshal error from kategori.created: %v", err)
 			return nil
 		}
 		log.Printf("Processing Kategori Created: %s", event.Request.NamaKategori)
@@ -682,7 +759,7 @@ func (c *Consumer) ConsumeKategoriUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "kategori.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.KategoriUpdatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from kategori.updated: %v", err)
+			log.Printf("Fatal: Unmarshal error from kategori.updated: %v", err)
 			return nil
 		}
 		log.Printf("Processing Kategori Updated for ID: %d", event.ID)
@@ -694,7 +771,7 @@ func (c *Consumer) ConsumeKategoriDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "kategori.deleted", func(ctx context.Context, body []byte) error {
 		var event dto_event.KategoriDeletedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from kategori.deleted: %v", err)
+			log.Printf("Fatal: Unmarshal error from kategori.deleted: %v", err)
 			return nil
 		}
 		log.Printf("Processing Kategori Deleted for ID: %d", event.ID)
@@ -706,7 +783,7 @@ func (c *Consumer) ConsumeSubKategoriCreated(ctx context.Context) error {
 	return c.Consume(ctx, "sub_kategori.created", func(ctx context.Context, body []byte) error {
 		var event dto_event.SubKategoriCreatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from sub_kategori.created: %v", err)
+			log.Printf("Fatal: Unmarshal error from sub_kategori.created: %v", err)
 			return nil
 		}
 		log.Printf("Processing Sub Kategori Created: %s", event.Request.NamaSubKategori)
@@ -719,7 +796,7 @@ func (c *Consumer) ConsumeSubKategoriUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "sub_kategori.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.SubKategoriUpdatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from sub_kategori.updated: %v", err)
+			log.Printf("Fatal: Unmarshal error from sub_kategori.updated: %v", err)
 			return nil
 		}
 		log.Printf("Processing Sub Kategori Updated for ID: %d", event.ID)
@@ -731,7 +808,7 @@ func (c *Consumer) ConsumeSubKategoriDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "sub_kategori.deleted", func(ctx context.Context, body []byte) error {
 		var event dto_event.SubKategoriDeletedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from sub_kategori.deleted: %v", err)
+			log.Printf("Fatal: Unmarshal error from sub_kategori.deleted: %v", err)
 			return nil
 		}
 		log.Printf("Processing Sub Kategori Deleted for ID: %d", event.ID)
@@ -743,7 +820,7 @@ func (c *Consumer) ConsumePertanyaanIdentifikasiCreated(ctx context.Context) err
 	return c.Consume(ctx, "pertanyaan_identifikasi.created", func(ctx context.Context, body []byte) error {
 		var event dto_event.PertanyaanIdentifikasiCreatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_identifikasi.created: %v", err)
+			log.Printf("Fatal: Unmarshal error from pertanyaan_identifikasi.created: %v", err)
 			return nil
 		}
 		log.Printf("Processing Pertanyaan Identifikasi Created: %s", event.Request.PertanyaanIdentifikasi)
@@ -756,7 +833,7 @@ func (c *Consumer) ConsumePertanyaanIdentifikasiUpdated(ctx context.Context) err
 	return c.Consume(ctx, "pertanyaan_identifikasi.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.PertanyaanIdentifikasiUpdatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_identifikasi.updated: %v", err)
+			log.Printf("Fatal: Unmarshal error from pertanyaan_identifikasi.updated: %v", err)
 			return nil
 		}
 		log.Printf("Processing Pertanyaan Identifikasi Updated for ID: %d", event.ID)
@@ -768,7 +845,7 @@ func (c *Consumer) ConsumePertanyaanIdentifikasiDeleted(ctx context.Context) err
 	return c.Consume(ctx, "pertanyaan_identifikasi.deleted", func(ctx context.Context, body []byte) error {
 		var event dto_event.PertanyaanIdentifikasiDeletedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_identifikasi.deleted: %v", err)
+			log.Printf("Fatal: Unmarshal error from pertanyaan_identifikasi.deleted: %v", err)
 			return nil
 		}
 		log.Printf("Processing Pertanyaan Identifikasi Deleted for ID: %d", event.ID)
@@ -780,7 +857,7 @@ func (c *Consumer) ConsumePertanyaanProteksiCreated(ctx context.Context) error {
 	return c.Consume(ctx, "pertanyaan_proteksi.created", func(ctx context.Context, body []byte) error {
 		var event dto_event.PertanyaanProteksiCreatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_proteksi.created: %v", err)
+			log.Printf("Fatal: Unmarshal error from pertanyaan_proteksi.created: %v", err)
 			return nil
 		}
 		log.Printf("Processing Pertanyaan Proteksi Created: %s", event.Request.PertanyaanProteksi)
@@ -793,7 +870,7 @@ func (c *Consumer) ConsumePertanyaanProteksiUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "pertanyaan_proteksi.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.PertanyaanProteksiUpdatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_proteksi.updated: %v", err)
+			log.Printf("Fatal: Unmarshal error from pertanyaan_proteksi.updated: %v", err)
 			return nil
 		}
 		log.Printf("Processing Pertanyaan Proteksi Updated for ID: %d", event.ID)
@@ -805,7 +882,7 @@ func (c *Consumer) ConsumePertanyaanProteksiDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "pertanyaan_proteksi.deleted", func(ctx context.Context, body []byte) error {
 		var event dto_event.PertanyaanProteksiDeletedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_proteksi.deleted: %v", err)
+			log.Printf("Fatal: Unmarshal error from pertanyaan_proteksi.deleted: %v", err)
 			return nil
 		}
 		log.Printf("Processing Pertanyaan Proteksi Deleted for ID: %d", event.ID)
@@ -817,7 +894,7 @@ func (c *Consumer) ConsumePertanyaanDeteksiCreated(ctx context.Context) error {
 	return c.Consume(ctx, "pertanyaan_deteksi.created", func(ctx context.Context, body []byte) error {
 		var event dto_event.PertanyaanDeteksiCreatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_deteksi.created: %v", err)
+			log.Printf("Fatal: Unmarshal error from pertanyaan_deteksi.created: %v", err)
 			return nil
 		}
 		log.Printf("Processing Pertanyaan Deteksi Created: %s", event.Request.PertanyaanDeteksi)
@@ -830,7 +907,7 @@ func (c *Consumer) ConsumePertanyaanDeteksiUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "pertanyaan_deteksi.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.PertanyaanDeteksiUpdatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_deteksi.updated: %v", err)
+			log.Printf("Fatal: Unmarshal error from pertanyaan_deteksi.updated: %v", err)
 			return nil
 		}
 		log.Printf("Processing Pertanyaan Deteksi Updated for ID: %d", event.ID)
@@ -842,7 +919,7 @@ func (c *Consumer) ConsumePertanyaanDeteksiDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "pertanyaan_deteksi.deleted", func(ctx context.Context, body []byte) error {
 		var event dto_event.PertanyaanDeteksiDeletedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_deteksi.deleted: %v", err)
+			log.Printf("Fatal: Unmarshal error from pertanyaan_deteksi.deleted: %v", err)
 			return nil
 		}
 		log.Printf("Processing Pertanyaan Deteksi Deleted for ID: %d", event.ID)
@@ -854,7 +931,7 @@ func (c *Consumer) ConsumePertanyaanGulihCreated(ctx context.Context) error {
 	return c.Consume(ctx, "pertanyaan_gulih.created", func(ctx context.Context, body []byte) error {
 		var event dto_event.PertanyaanGulihCreatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_gulih.created: %v", err)
+			log.Printf("Fatal: Unmarshal error from pertanyaan_gulih.created: %v", err)
 			return nil
 		}
 		log.Printf("Processing Pertanyaan Gulih Created: %s", event.Request.PertanyaanGulih)
@@ -867,7 +944,7 @@ func (c *Consumer) ConsumePertanyaanGulihUpdated(ctx context.Context) error {
 	return c.Consume(ctx, "pertanyaan_gulih.updated", func(ctx context.Context, body []byte) error {
 		var event dto_event.PertanyaanGulihUpdatedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_gulih.updated: %v", err)
+			log.Printf("Fatal: Unmarshal error from pertanyaan_gulih.updated: %v", err)
 			return nil
 		}
 		log.Printf("Processing Pertanyaan Gulih Updated for ID: %d", event.ID)
@@ -879,7 +956,7 @@ func (c *Consumer) ConsumePertanyaanGulihDeleted(ctx context.Context) error {
 	return c.Consume(ctx, "pertanyaan_gulih.deleted", func(ctx context.Context, body []byte) error {
 		var event dto_event.PertanyaanGulihDeletedEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from pertanyaan_gulih.deleted: %v", err)
+			log.Printf("Fatal: Unmarshal error from pertanyaan_gulih.deleted: %v", err)
 			return nil
 		}
 		log.Printf("Processing Pertanyaan Gulih Deleted for ID: %d", event.ID)
@@ -891,7 +968,7 @@ func (c *Consumer) ConsumeIkasAuditLog(ctx context.Context) error {
 	return c.Consume(ctx, "ikas.audit_logs", func(ctx context.Context, body []byte) error {
 		var event dto_event.IkasAuditLogEvent
 		if err := json.Unmarshal(body, &event); err != nil {
-			log.Printf("❌ Fatal: Unmarshal error from ikas.audit_logs: %v. Body: %s", err, string(body))
+			log.Printf("Fatal: Unmarshal error from ikas.audit_logs: %v. Body: %s", err, string(body))
 			return nil // Acknowledge to remove invalid JSON from queue
 		}
 
