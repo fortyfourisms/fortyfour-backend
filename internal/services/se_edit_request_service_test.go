@@ -120,8 +120,13 @@ func (f *fakeSEService) Delete(id string) error {
 }
 
 type fakeUserRepoForSEEdit struct {
+	users           map[string]*models.User
 	findByIDFn      func(id string) (*models.User, error)
 	findAllAdminsFn func() ([]models.User, error)
+}
+
+func (m *fakeUserRepoForSEEdit) FindUsersByPerusahaan(id string) ([]models.User, error) {
+	return nil, nil
 }
 
 func (f *fakeUserRepoForSEEdit) Create(user *models.User) error { return nil }

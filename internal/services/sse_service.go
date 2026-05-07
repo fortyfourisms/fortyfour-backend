@@ -227,6 +227,19 @@ func (s *SSEService) NotifyDelete(resource string, id interface{}, userID string
 	})
 }
 
+// NotifyCustom sends an event with a custom message
+func (s *SSEService) NotifyCustom(resource string, eventType string, message string, data interface{}, userID string) {
+	// Optional: Persist notification if you want NotifyCustom to also push to DB
+	// But in your consumer, you already push to DB separately, so we only broadcast here.
+	s.Broadcast(SSEEvent{
+		Type:     eventType,
+		Resource: resource,
+		Message:  message,
+		Data:     data,
+		UserID:   userID,
+	})
+}
+
 // generateMessage membuat pesan notifikasi
 func (s *SSEService) generateMessage(resource, eventType string, data interface{}) string {
 	resourceName := s.formatResourceName(resource)

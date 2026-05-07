@@ -13,6 +13,7 @@ type UserRepositoryInterface interface {
 	FindByID(id string) (*models.User, error)
 	FindAll() ([]models.User, error)
 	FindAllAdmins() ([]models.User, error)
+	FindUsersByPerusahaan(idPerusahaan string) ([]models.User, error)
 	Update(user *models.User) error
 	UpdateWithPhoto(user *models.User) error
 	UpdatePassword(id, hashedPassword string) error
