@@ -375,27 +375,6 @@ definitions:
       validasi:
         type: string
     type: object
-  ikas_internal_dto.JawabanGulihResponse:
-    properties:
-      created_at:
-        type: string
-      evidence:
-        type: string
-      id:
-        type: integer
-      ikas_id:
-        type: string
-      jawaban_gulih:
-        type: number
-      keterangan:
-        type: string
-      pertanyaan_gulih:
-        $ref: '#/definitions/ikas_internal_dto.PertanyaanGulihInfo'
-      updated_at:
-        type: string
-      validasi:
-        type: string
-    type: object
   ikas_internal_dto.JawabanIdentifikasiResponse:
     properties:
       created_at:
@@ -516,15 +495,6 @@ definitions:
         $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
       updated_at:
         type: string
-    type: object
-  ikas_internal_dto.PertanyaanGulihInfo:
-    properties:
-      id:
-        type: integer
-      pertanyaan_gulih:
-        type: string
-      sub_kategori:
-        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
     type: object
   ikas_internal_dto.PertanyaanGulihMessageResponse:
     properties:
@@ -648,15 +618,9 @@ definitions:
     type: object
   ikas_internal_dto.PerusahaanInIkas:
     properties:
-      alamat:
-        type: string
-      email:
-        type: string
       id:
         type: string
       nama_perusahaan:
-        type: string
-      sektor:
         type: string
     type: object
   ikas_internal_dto.ProteksiInIkas:
@@ -759,58 +723,6 @@ definitions:
         type: string
       updated_at:
         type: string
-    type: object
-  ikas_internal_dto.UnifiedJawabanDeteksiResponse:
-    properties:
-      completion_percentage:
-        type: number
-      count:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/ikas_internal_dto.JawabanDeteksiResponse'
-        type: array
-      is_draft:
-        type: boolean
-    type: object
-  ikas_internal_dto.UnifiedJawabanGulihResponse:
-    properties:
-      completion_percentage:
-        type: number
-      count:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/ikas_internal_dto.JawabanGulihResponse'
-        type: array
-      is_draft:
-        type: boolean
-    type: object
-  ikas_internal_dto.UnifiedJawabanIdentifikasiResponse:
-    properties:
-      completion_percentage:
-        type: number
-      count:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse'
-        type: array
-      is_draft:
-        type: boolean
-    type: object
-  ikas_internal_dto.UnifiedJawabanProteksiResponse:
-    properties:
-      completion_percentage:
-        type: number
-      count:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/ikas_internal_dto.JawabanProteksiResponse'
-        type: array
-      is_draft:
-        type: boolean
     type: object
   ikas_internal_dto.UpdateDomainRequest:
     properties:
@@ -983,36 +895,6 @@ definitions:
     properties:
       status:
         type: boolean
-    type: object
-  ikas_internal_utils.JSONResponse:
-    properties:
-      data: {}
-      message:
-        type: string
-      status:
-        type: string
-      total: {}
-    type: object
-  ikas_internal_utils.PaginatedJSONResponse:
-    properties:
-      data: {}
-      message:
-        type: string
-      pagination:
-        $ref: '#/definitions/ikas_internal_utils.PaginationMeta'
-      status:
-        type: string
-    type: object
-  ikas_internal_utils.PaginationMeta:
-    properties:
-      limit:
-        type: integer
-      page:
-        type: integer
-      total:
-        type: integer
-      total_pages:
-        type: integer
     type: object
 host: localhost:8081
 info:
@@ -1339,39 +1221,6 @@ paths:
       summary: Tambah ikas baru
       tags:
       - Ikas
-  /api/maturity/ikas-audit-logs:
-    get:
-      description: Mengambil seluruh riwayat perubahan IKAS dengan pagination. Opsional
-        filter berdasarkan ikas_id.
-      parameters:
-      - description: Filter berdasarkan IKAS ID
-        in: query
-        name: ikas_id
-        type: string
-      - description: 'Halaman (default: 1)'
-        example: 1
-        in: query
-        name: page
-        type: integer
-      - description: 'Jumlah data per halaman, maks 100 (default: 20)'
-        example: 10
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ikas_internal_utils.PaginatedJSONResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ikas_internal_utils.JSONResponse'
-      summary: List semua audit logs IKAS (paginated)
-      tags:
-      - Audit Logs
   /api/maturity/ikas/{id}:
     delete:
       description: Menghapus data ikas berdasarkan ID
@@ -1683,7 +1532,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.UnifiedJawabanDeteksiResponse'
+            items:
+              $ref: '#/definitions/ikas_internal_dto.JawabanDeteksiResponse'
+            type: array
       summary: Get All Jawaban Deteksi
       tags:
       - Jawaban Deteksi
@@ -1791,7 +1642,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.UnifiedJawabanGulihResponse'
+            additionalProperties: true
+            type: object
       summary: Get All Jawaban Gulih
       tags:
       - Jawaban Gulih
@@ -1902,7 +1754,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.UnifiedJawabanIdentifikasiResponse'
+            items:
+              $ref: '#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse'
+            type: array
         "500":
           description: Internal Server Error
           schema:
@@ -2045,7 +1899,9 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.UnifiedJawabanProteksiResponse'
+            items:
+              $ref: '#/definitions/ikas_internal_dto.JawabanProteksiResponse'
+            type: array
         "500":
           description: Internal Server Error
           schema:
