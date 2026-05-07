@@ -26,7 +26,7 @@ func TestBeritaRepository_Create(t *testing.T) {
 	}
 
 	mock.ExpectExec("INSERT INTO berita").
-		WithArgs("Test", "Desc", "author1").
+		WithArgs("Test", "Desc", "", "author1").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err = repo.Create(berita)
@@ -59,7 +59,7 @@ func TestBeritaRepository_Create_ExecError(t *testing.T) {
 	}
 
 	mock.ExpectExec("INSERT INTO berita").
-		WithArgs("Test", "Desc", "author1").
+		WithArgs("Test", "Desc", "", "author1").
 		WillReturnError(sql.ErrConnDone)
 
 	err = repo.Create(berita)
@@ -85,7 +85,7 @@ func TestBeritaRepository_Create_LastInsertIdError(t *testing.T) {
 	}
 
 	mock.ExpectExec("INSERT INTO berita").
-		WithArgs("Test", "Desc", "author1").
+		WithArgs("Test", "Desc", "", "author1").
 		WillReturnResult(sqlmock.NewErrorResult(sql.ErrConnDone))
 
 	err = repo.Create(berita)
@@ -105,11 +105,11 @@ func TestBeritaRepository_FindAll(t *testing.T) {
 	repo := repository.NewBeritaRepository(db)
 	now := time.Now()
 
-	rows := sqlmock.NewRows([]string{"id", "judul", "deskripsi", "author_id", "created_at", "updated_at", "username", "display_name"}).
-		AddRow(1, "Test", "Desc", "author1", now, now, "user1", "User One").
-		AddRow(2, "Test 2", "Desc 2", "author2", now, now, "user2", nil)
+	rows := sqlmock.NewRows([]string{"id", "judul", "deskripsi", "tags", "author_id", "created_at", "updated_at", "username", "display_name"}).
+		AddRow(1, "Test", "Desc", "[]", "author1", now, now, "user1", "User One").
+		AddRow(2, "Test 2", "Desc 2", "[\"tag1\"]", "author2", now, now, "user2", nil)
 
-	mock.ExpectQuery("SELECT b.id, b.judul, b.deskripsi, b.author_id, b.created_at, b.updated_at").
+	mock.ExpectQuery("SELECT b.id, b.judul, b.deskripsi, b.tags, b.author_id, b.created_at, b.updated_at").
 		WillReturnRows(rows)
 
 	res, err := repo.FindAll()
@@ -182,8 +182,8 @@ func TestBeritaRepository_FindByID(t *testing.T) {
 	repo := repository.NewBeritaRepository(db)
 	now := time.Now()
 
-	row := sqlmock.NewRows([]string{"id", "judul", "deskripsi", "author_id", "created_at", "updated_at", "username", "display_name"}).
-		AddRow(1, "Test", "Desc", "author1", now, now, "user1", "User One")
+	row := sqlmock.NewRows([]string{"id", "judul", "deskripsi", "tags", "author_id", "created_at", "updated_at", "username", "display_name"}).
+		AddRow(1, "Test", "Desc", "[]", "author1", now, now, "user1", "User One")
 
 	mock.ExpectQuery("SELECT b.id").WithArgs(1).WillReturnRows(row)
 
@@ -256,7 +256,7 @@ func TestBeritaRepository_Update(t *testing.T) {
 	}
 
 	mock.ExpectExec("UPDATE berita").
-		WithArgs("Test Updated", "Desc Updated", 1).
+		WithArgs("Test Updated", "Desc Updated", "", 1).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err = repo.Update(berita)

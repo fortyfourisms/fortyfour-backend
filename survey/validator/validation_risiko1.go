@@ -17,12 +17,17 @@ var (
 	ErrMissingControl = errors.New("deskripsi pengendalian wajib diisi jika ada_pengendalian = true")
 )
 
+// helper untuk pointer int
+func isInvalidIntPtr(v *int) bool {
+	return v == nil || *v <= 0
+}
+
 // STEP 1 — ELIGIBILITY
 func ValidateEligibilityRequest(req dto.EligibilityRequest) error {
 	if req.RespondenID <= 0 {
 		return ErrMissingRespondentID
 	}
-	if req.RisikoID <= 0 {
+	if isInvalidIntPtr(req.RisikoID) {
 		return ErrMissingRisikoID
 	}
 	return nil
@@ -33,7 +38,7 @@ func ValidateAlasanRequest(req dto.AlasanRequest) error {
 	if req.RespondenID <= 0 {
 		return ErrMissingRespondentID
 	}
-	if req.RisikoID <= 0 {
+	if isInvalidIntPtr(req.RisikoID) {
 		return ErrMissingRisikoID
 	}
 	if req.Alasan == "" {
@@ -47,11 +52,11 @@ func ValidateDampakRequest(req dto.DampakRequest) error {
 	if req.RespondenID <= 0 {
 		return ErrMissingRespondentID
 	}
-	if req.RisikoID <= 0 {
+	if isInvalidIntPtr(req.RisikoID) {
 		return ErrMissingRisikoID
 	}
 
-	// karena ImpactLevel = int (1-4)
+	// ImpactLevel = 1-4
 	if req.DampakReputasi < 1 || req.DampakReputasi > 4 {
 		return ErrInvalidImpact
 	}
@@ -77,7 +82,7 @@ func ValidatePengendalianRequest(req dto.PengendalianRequest) error {
 	if req.RespondenID <= 0 {
 		return ErrMissingRespondentID
 	}
-	if req.RisikoID <= 0 {
+	if isInvalidIntPtr(req.RisikoID) {
 		return ErrMissingRisikoID
 	}
 

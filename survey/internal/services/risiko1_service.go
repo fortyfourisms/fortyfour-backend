@@ -6,230 +6,162 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+	"time"
 
 	"survey/internal/dto"
 	"survey/internal/models"
-	"survey/validator"
+	validation "survey/validator"
 )
 
-const CustomRiskIndex = 14
+// CONFIG
+const risikoCacheTTL = 300 * time.Second
 
-// =======================
-// REPOSITORY INTERFACE
-// =======================
+// REPOSITORY
 type RisikoRepositoryInterface interface {
-	ExistsResponden(int) (bool, error)
-	ExistsRisiko(int) (bool, error)
-	ExistsCustomRisiko(int) (bool, error)
+	ExistsResponden(int64) (bool, error)
+	ExistsRisiko(int64) (bool, error)
 
 	UpsertEligibility(models.RisikoEligibility) error
 	UpsertAlasan(models.RisikoAlasan) error
 	UpsertDampak(models.RisikoDampak) error
 	UpsertPengendalian(models.RisikoPengendalian) error
 
-	FindByRespondentID(int) (map[string]interface{}, error)
+	FindByRespondentID(int64) (map[string]interface{}, error)
 
-	GetProgress(int) (*models.SurveyProgress, error)
+	GetProgress(int64) (*models.SurveyProgress, error)
 	UpsertProgress(models.SurveyProgress) error
+	InsertCustomRisiko(int64, string) (int, error)
 
-	InsertCustomRisiko(int, string) (int, error)
+	GetRespondentIDByUserID(userID string) (int64, error)
 }
 
-// =======================
-// REDIS CACHE INTERFACE
-// =======================
-// type CacheRepository interface {
-// 	Get(ctx context.Context, key string) (string, error)
-// 	Set(ctx context.Context, key string, value string, ttlSeconds int) error
-// 	Del(ctx context.Context, key string) error
-// }
-
-// =======================
 // SERVICE
-// =======================
 type RisikoService struct {
 	repo  RisikoRepositoryInterface
 	cache CacheRepository
 }
 
 func NewRisikoService(repo RisikoRepositoryInterface, cache CacheRepository) *RisikoService {
-	return &RisikoService{
-		repo:  repo,
-		cache: cache,
-	}
+	return &RisikoService{repo: repo, cache: cache}
 }
 
-// =======================
-// CACHE KEY
-// =======================
-func progressKey(id int) string {
-	return fmt.Sprintf("progress:%d", id)
+// CACHE
+func progressKey(id int64) string {
+	return fmt.Sprintf("risiko:progress:%d", id)
 }
 
-func respondentKey(id int) string {
-	return fmt.Sprintf("respondent:%d", id)
+func respondentKey(id int64) string {
+	return fmt.Sprintf("risiko:data:%d", id)
 }
 
-// =======================
-// CACHE HELPERS
-// =======================
-func (s *RisikoService) setCache(key string, value any, ttl int) {
+func (s *RisikoService) setCache(key string, val any) {
 	if s.cache == nil {
 		return
 	}
-
-	b, err := json.Marshal(value)
-	if err != nil {
-		return
-	}
-
-	_ = s.cache.Set(context.Background(), key, string(b), ttl)
+	b, _ := json.Marshal(val)
+	_ = s.cache.Set(context.Background(), key, string(b), int(risikoCacheTTL.Seconds()))
 }
 
-func (s *RisikoService) getCache(key string, target any) bool {
-	if s.cache == nil {
-		return false
-	}
-
-	data, ok, err := s.cache.Get(context.Background(), key)
-	if err != nil || !ok {
-		return false
-	}
-
-	return json.Unmarshal([]byte(data), target) == nil
-}
-
-func (s *RisikoService) invalidate(respondenID int) {
+func (s *RisikoService) invalidate(id int64) {
 	if s.cache == nil {
 		return
 	}
-
-	_ = s.cache.Del(context.Background(), progressKey(respondenID))
-	_ = s.cache.Del(context.Background(), respondentKey(respondenID))
+	_ = s.cache.Del(context.Background(), progressKey(id))
+	_ = s.cache.Del(context.Background(), respondentKey(id))
 }
 
-// =======================
 // HELPER
-// =======================
-func toIntPtr(v int) *int {
-	if v == 0 {
-		return nil
-	}
-	return &v
-}
-
-func assignRisk(risikoID int, customID int) (int, *int) {
-	if customID != 0 {
-		return 0, toIntPtr(customID)
-	}
-	return risikoID, nil
-}
-
-// =======================
-// VALIDATION FK
-// =======================
-func (s *RisikoService) validateFK(respondenID, risikoID, customID int) error {
-
-	existResponden, err := s.repo.ExistsResponden(respondenID)
+func (s *RisikoService) getRespondenID(userID string) (int64, error) {
+	id, err := s.repo.GetRespondentIDByUserID(userID)
 	if err != nil {
-		return err
+		return 0, errors.New("responden tidak ditemukan")
 	}
-	if !existResponden {
-		return errors.New("responden tidak ditemukan")
-	}
-
-	if customID != 0 {
-		exist, err := s.repo.ExistsCustomRisiko(customID)
-		if err != nil {
-			return err
-		}
-		if !exist {
-			return errors.New("custom risiko tidak ditemukan")
-		}
-		return nil
-	}
-
-	exist, err := s.repo.ExistsRisiko(risikoID)
-	if err != nil {
-		return err
-	}
-	if !exist {
-		return errors.New("risiko tidak ditemukan")
-	}
-
-	return nil
+	return id, nil
 }
 
-// =======================
-// STEP 1 ELIGIBILITY
-// =======================
-func (s *RisikoService) ProcessEligibility(req dto.EligibilityRequest) (map[string]interface{}, error) {
-
-	if req.RespondenID == 0 {
-		return nil, validation.ErrMissingRespondentID
+func toInt(ptr *int) (int, error) {
+	if ptr == nil {
+		return 0, validation.ErrMissingRisikoID
 	}
+	return *ptr, nil
+}
 
-	if err := s.validateFK(req.RespondenID, req.RisikoID, req.CustomRisikoID); err != nil {
+func toInt64Ptr(v int) *int64 {
+	val := int64(v)
+	return &val
+}
+
+func toStringPtr(s string) *string {
+	return &s
+}
+
+// STEP 1
+func (s *RisikoService) ProcessEligibility(userID string, req dto.EligibilityRequest) (map[string]interface{}, error) {
+
+	if err := validation.ValidateEligibilityRequest(req); err != nil {
 		return nil, err
 	}
 
-	risikoID, customPtr := assignRisk(req.RisikoID, req.CustomRisikoID)
+	respondenID, err := s.getRespondenID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	risikoID, err := toInt(req.RisikoID)
+	if err != nil {
+		return nil, err
+	}
 
 	data := models.RisikoEligibility{
-		RespondenID:    req.RespondenID,
-		RisikoID:       risikoID,
-		CustomRisikoID: customPtr,
-		PernahTerjadi:  req.PernahTerjadi,
+		RespondenID:   int64(respondenID),
+		RisikoID:      toInt64Ptr(risikoID),
+		PernahTerjadi: req.PernahTerjadi,
 	}
 
 	if err := s.repo.UpsertEligibility(data); err != nil {
 		return nil, err
 	}
 
-	s.invalidate(req.RespondenID)
+	s.invalidate(respondenID)
 
-	nextStep := "reason"
+	next := "reason"
 	if req.PernahTerjadi {
-		nextStep = "dampak"
+		next = "dampak"
 	}
 
 	return map[string]interface{}{
 		"message":   "eligibility tersimpan",
-		"next_step": nextStep,
+		"next_step": next,
 	}, nil
 }
 
-// =======================
-// STEP 2A ALASAN
-// =======================
-func (s *RisikoService) ProcessAlasan(req dto.AlasanRequest) (map[string]interface{}, error) {
+// STEP 2A
+func (s *RisikoService) ProcessAlasan(userID string, req dto.AlasanRequest) (map[string]interface{}, error) {
 
-	if req.RespondenID == 0 {
-		return nil, validation.ErrMissingRespondentID
-	}
-
-	if req.Alasan == "" {
-		return nil, validation.ErrMissingReason
-	}
-
-	if err := s.validateFK(req.RespondenID, req.RisikoID, req.CustomRisikoID); err != nil {
+	if err := validation.ValidateAlasanRequest(req); err != nil {
 		return nil, err
 	}
 
-	risikoID, customPtr := assignRisk(req.RisikoID, req.CustomRisikoID)
+	respondenID, err := s.getRespondenID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	risikoID, _ := toInt(req.RisikoID)
 
 	data := models.RisikoAlasan{
-		RespondenID:    req.RespondenID,
-		RisikoID:       risikoID,
-		CustomRisikoID: customPtr,
-		Alasan:         req.Alasan,
+		RespondenID: int64(respondenID),
+		RisikoID:    toInt64Ptr(risikoID),
+		Alasan:      req.Alasan,
 	}
 
 	if err := s.repo.UpsertAlasan(data); err != nil {
 		return nil, err
 	}
 
-	s.invalidate(req.RespondenID)
+	s.invalidate(respondenID)
 
 	return map[string]interface{}{
 		"message":   "alasan tersimpan",
@@ -237,48 +169,35 @@ func (s *RisikoService) ProcessAlasan(req dto.AlasanRequest) (map[string]interfa
 	}, nil
 }
 
-// =======================
-// STEP 2B DAMPAK
-// =======================
-func (s *RisikoService) ProcessDampak(req dto.DampakRequest) (map[string]interface{}, error) {
+// STEP 2B
+func (s *RisikoService) ProcessDampak(userID string, req dto.DampakRequest) (map[string]interface{}, error) {
 
-	if req.RespondenID == 0 {
-		return nil, validation.ErrMissingRespondentID
-	}
-
-	if err := s.validateFK(req.RespondenID, req.RisikoID, req.CustomRisikoID); err != nil {
+	if err := validation.ValidateDampakRequest(req); err != nil {
 		return nil, err
 	}
 
-	if !req.DampakReputasi.Valid() ||
-		!req.DampakOperasional.Valid() ||
-		!req.DampakFinansial.Valid() ||
-		!req.DampakHukum.Valid() {
-		return nil, validation.ErrInvalidImpact
+	respondenID, err := s.getRespondenID(userID)
+	if err != nil {
+		return nil, err
 	}
 
-	if !req.Frekuensi.Valid() {
-		return nil, validation.ErrInvalidFreq
-	}
-
-	risikoID, customPtr := assignRisk(req.RisikoID, req.CustomRisikoID)
+	risikoID, _ := toInt(req.RisikoID)
 
 	data := models.RisikoDampak{
-		RespondenID:       req.RespondenID,
-		RisikoID:          risikoID,
-		CustomRisikoID:    customPtr,
-		DampakReputasi:    req.DampakReputasi,
-		DampakOperasional: req.DampakOperasional,
-		DampakFinansial:   req.DampakFinansial,
-		DampakHukum:       req.DampakHukum,
-		Frekuensi:         req.Frekuensi,
+		RespondenID:       int64(respondenID),
+		RisikoID:          toInt64Ptr(risikoID),
+		DampakReputasi:    strconv.Itoa(int(req.DampakReputasi)),
+		DampakOperasional: strconv.Itoa(int(req.DampakOperasional)),
+		DampakFinansial:   strconv.Itoa(int(req.DampakFinansial)),
+		DampakHukum:       strconv.Itoa(int(req.DampakHukum)),
+		Frekuensi:         strconv.Itoa(int(req.Frekuensi)),
 	}
 
 	if err := s.repo.UpsertDampak(data); err != nil {
 		return nil, err
 	}
 
-	s.invalidate(req.RespondenID)
+	s.invalidate(respondenID)
 
 	return map[string]interface{}{
 		"message":   "dampak tersimpan",
@@ -286,38 +205,32 @@ func (s *RisikoService) ProcessDampak(req dto.DampakRequest) (map[string]interfa
 	}, nil
 }
 
-// =======================
-// STEP 2C PENGENDALIAN
-// =======================
-func (s *RisikoService) ProcessPengendalian(req dto.PengendalianRequest) (map[string]interface{}, error) {
+// STEP 2C
+func (s *RisikoService) ProcessPengendalian(userID string, req dto.PengendalianRequest) (map[string]interface{}, error) {
 
-	if req.RespondenID == 0 {
-		return nil, validation.ErrMissingRespondentID
-	}
-
-	if req.AdaPengendalian && req.DeskripsiPengendalian == "" {
-		return nil, validation.ErrMissingControl
-	}
-
-	if err := s.validateFK(req.RespondenID, req.RisikoID, req.CustomRisikoID); err != nil {
+	if err := validation.ValidatePengendalianRequest(req); err != nil {
 		return nil, err
 	}
 
-	risikoID, customPtr := assignRisk(req.RisikoID, req.CustomRisikoID)
+	respondenID, err := s.getRespondenID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	risikoID, _ := toInt(req.RisikoID)
 
 	data := models.RisikoPengendalian{
-		RespondenID:           req.RespondenID,
-		RisikoID:              risikoID,
-		CustomRisikoID:        customPtr,
+		RespondenID:           int64(respondenID),
+		RisikoID:              toInt64Ptr(risikoID),
 		AdaPengendalian:       req.AdaPengendalian,
-		DeskripsiPengendalian: req.DeskripsiPengendalian,
+		DeskripsiPengendalian: toStringPtr(req.DeskripsiPengendalian),
 	}
 
 	if err := s.repo.UpsertPengendalian(data); err != nil {
 		return nil, err
 	}
 
-	s.invalidate(req.RespondenID)
+	s.invalidate(respondenID)
 
 	return map[string]interface{}{
 		"message":   "pengendalian tersimpan",
@@ -325,136 +238,150 @@ func (s *RisikoService) ProcessPengendalian(req dto.PengendalianRequest) (map[st
 	}, nil
 }
 
-// =======================
-// GET PROGRESS (CACHE)
-// =======================
-func (s *RisikoService) GetProgress(id int) (dto.ProgressResponse, error) {
-
-	var cached dto.ProgressResponse
-	if s.getCache(progressKey(id), &cached) {
-		return cached, nil
-	}
-
-	progress, err := s.repo.GetProgress(id)
-	if err != nil {
-		return dto.ProgressResponse{}, err
-	}
-
-	resp := mapProgressToResponse(progress)
-	s.setCache(progressKey(id), resp, 300)
-
-	return resp, nil
-}
-
-// =======================
-// FIND RESPONDENT (CACHE)
-// =======================
-func (s *RisikoService) GetByRespondentID(id int) (map[string]interface{}, error) {
-
-	var cached map[string]interface{}
-	if s.getCache(respondentKey(id), &cached) {
-		return cached, nil
-	}
-
-	data, err := s.repo.FindByRespondentID(id)
+func (s *RisikoService) GetByUserID(userID string) (map[string]interface{}, error) {
+	respondenID, err := s.getRespondenID(userID)
 	if err != nil {
 		return nil, err
 	}
-
-	s.setCache(respondentKey(id), data, 300)
-	return data, nil
+	return s.repo.FindByRespondentID(respondenID)
 }
 
-// =======================
-// NAVIGATE
-// =======================
-func (s *RisikoService) Navigate(req dto.NavigateRequest) (dto.ProgressResponse, error) {
+func (s *RisikoService) GetByRespondentID(id int64) (map[string]interface{}, error) {
+	return s.repo.FindByRespondentID(id)
+}
 
-	progress, err := s.repo.GetProgress(req.RespondenID)
+func (s *RisikoService) GetProgress(userID string) (dto.ProgressResponse, error) {
+	respondenID, err := s.getRespondenID(userID)
 	if err != nil {
 		return dto.ProgressResponse{}, err
 	}
 
-	current := progress.RisikoID.Int64
-	if !progress.RisikoID.Valid {
-		current = 1
-	}
-
-	switch req.Direction {
-	case "next":
-		current++
-	case "previous":
-		if current > 1 {
-			current--
-		}
-	default:
-		return dto.ProgressResponse{}, errors.New("direction tidak valid")
-	}
-
-	step := "normal"
-	if current == CustomRiskIndex {
-		step = "custom_risk"
-	}
-
-	progress.RisikoID = sql.NullInt64{Int64: current, Valid: true}
-	progress.LangkahSaatIni = sql.NullString{String: step, Valid: true}
-
-	if err := s.repo.UpsertProgress(*progress); err != nil {
-		return dto.ProgressResponse{}, err
-	}
-
-	s.invalidate(req.RespondenID)
-
-	return mapProgressToResponse(progress), nil
-}
-
-// =======================
-// SAVE PROGRESS
-// =======================
-func (s *RisikoService) SaveProgress(req dto.NavigateRequest) (dto.ProgressResponse, error) {
-
-	progress, err := s.repo.GetProgress(req.RespondenID)
+	progress, err := s.repo.GetProgress(respondenID)
 	if err != nil {
 		return dto.ProgressResponse{}, err
 	}
 
-	progress.RisikoID = sql.NullInt64{
-		Int64: int64(req.CurrentRisk),
+	var risikoID *int
+	if progress.RisikoID.Valid {
+		val := int(progress.RisikoID.Int64)
+		risikoID = &val
+	}
+
+	var langkahSaatIni *string
+	if progress.LangkahSaatIni.Valid {
+		langkahSaatIni = &progress.LangkahSaatIni.String
+	}
+
+	return dto.ProgressResponse{
+		RespondenID:    progress.RespondenID,
+		RisikoID:       risikoID,
+		LangkahSaatIni: langkahSaatIni,
+		Selesai:        progress.Selesai,
+	}, nil
+}
+
+// HELPER SQL
+func sqlInt64(v int) sql.NullInt64 {
+	return sql.NullInt64{
+		Int64: int64(v),
 		Valid: true,
 	}
+}
 
-	progress.LangkahSaatIni = sql.NullString{
-		String: "paused",
-		Valid:  true,
+func intPtr(v int) *int {
+	return &v
+}
+
+func (s *RisikoService) Navigate(userID string, req dto.NavigateRequest) (dto.ProgressResponse, error) {
+	respondenID, err := s.getRespondenID(userID)
+	if err != nil {
+		return dto.ProgressResponse{}, err
 	}
 
-	progress.Selesai = false
+	progress, err := s.repo.GetProgress(respondenID)
+	if err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	currentRisk := 0
+	if progress.RisikoID.Valid {
+		currentRisk = int(progress.RisikoID.Int64)
+	}
+
+	switch strings.ToLower(req.Direction) {
+	case "next":
+		currentRisk++
+	case "prev":
+		if currentRisk > 1 {
+			currentRisk--
+		}
+	default:
+		return dto.ProgressResponse{}, errors.New("invalid direction")
+	}
+
+	if currentRisk > 0 {
+		progress.RisikoID = sqlInt64(currentRisk)
+	} else {
+		progress.RisikoID = sql.NullInt64{Valid: false}
+	}
+	progress.LangkahSaatIni = sql.NullString{String: "navigate", Valid: true}
 
 	if err := s.repo.UpsertProgress(*progress); err != nil {
 		return dto.ProgressResponse{}, err
 	}
 
-	s.invalidate(req.RespondenID)
+	var risikoID *int
+	if currentRisk > 0 {
+		risikoID = intPtr(currentRisk)
+	}
 
-	return mapProgressToResponse(progress), nil
+	return dto.ProgressResponse{
+		RespondenID:    int64(respondenID),
+		RisikoID:       risikoID,
+		LangkahSaatIni: toStringPtr("navigate"),
+		Selesai:        progress.Selesai,
+	}, nil
 }
 
-// =======================
-// CUSTOM RISIKO
-// =======================
-func (s *RisikoService) CreateCustomRisiko(req dto.CustomRisikoRequest) (int, error) {
+func (s *RisikoService) SaveProgress(userID string, req dto.NavigateRequest) (dto.ProgressResponse, error) {
+	respondenID, err := s.getRespondenID(userID)
+	if err != nil {
+		return dto.ProgressResponse{}, err
+	}
 
-	if req.NamaRisiko == "" {
+	progress := models.SurveyProgress{
+		RespondenID:    int64(respondenID),
+		RisikoID:       sqlInt64(req.CurrentRisk),
+		LangkahSaatIni: sql.NullString{String: "save-progress", Valid: true},
+		Selesai:        false,
+	}
+
+	if err := s.repo.UpsertProgress(progress); err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	return dto.ProgressResponse{
+		RespondenID:    int64(respondenID),
+		RisikoID:       intPtr(req.CurrentRisk),
+		LangkahSaatIni: toStringPtr("save-progress"),
+		Selesai:        false,
+	}, nil
+}
+
+func (s *RisikoService) CreateCustomRisiko(req dto.CustomRisikoRequest) (int, error) {
+	nama := strings.TrimSpace(req.NamaRisiko)
+	if nama == "" {
 		return 0, errors.New("nama risiko wajib diisi")
 	}
 
-	return s.repo.InsertCustomRisiko(req.RespondenID, req.NamaRisiko)
+	return s.repo.InsertCustomRisiko(req.RespondenID, nama)
 }
 
-// =======================
-// FINISH
-// =======================
-func (s *RisikoService) FinishSurvey(respondenID int) error {
+func (s *RisikoService) FinishSurvey(userID string) error {
+	respondenID, err := s.getRespondenID(userID)
+	if err != nil {
+		return err
+	}
 
 	progress, err := s.repo.GetProgress(respondenID)
 	if err != nil {
@@ -464,31 +391,5 @@ func (s *RisikoService) FinishSurvey(respondenID int) error {
 	progress.Selesai = true
 	progress.LangkahSaatIni = sql.NullString{String: "finish", Valid: true}
 
-	s.invalidate(respondenID)
-
 	return s.repo.UpsertProgress(*progress)
-}
-
-// =======================
-// MAPPING
-// =======================
-func mapProgressToResponse(p *models.SurveyProgress) dto.ProgressResponse {
-
-	var risikoID *int
-	if p.RisikoID.Valid {
-		val := int(p.RisikoID.Int64)
-		risikoID = &val
-	}
-
-	var langkah *string
-	if p.LangkahSaatIni.Valid {
-		langkah = &p.LangkahSaatIni.String
-	}
-
-	return dto.ProgressResponse{
-		RespondenID:    p.RespondenID,
-		RisikoID:       risikoID,
-		LangkahSaatIni: langkah,
-		Selesai:        p.Selesai,
-	}
 }

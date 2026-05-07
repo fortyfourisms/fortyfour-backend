@@ -2,36 +2,29 @@ package models
 
 import "time"
 
+// BASE
 type Responden struct {
-	ID                 int       `json:"id"`
-	IdPerusahaan       string    `json:"id_perusahaan"`
-	NamaLengkap        string    `json:"nama_lengkap"`
-	Jabatan            string    `json:"jabatan"`
-	Email              string    `json:"email"`
-	NoTelepon          string    `json:"no_telepon"`
-	SertifikatTraining string    `json:"sertifikat_training"`
-	CreatedAt          time.Time `json:"created_at"`
-	UpdatedAt          time.Time `json:"updated_at"`
+	ID int64 `json:"id" db:"id"`
+
+	UserID       string `json:"user_id" db:"user_id"`
+	IdPerusahaan string `json:"id_perusahaan" db:"id_perusahaan"`
+
+	NamaLengkap string `json:"nama_lengkap" db:"nama_lengkap"`
+	Jabatan     string `json:"jabatan" db:"jabatan"`
+	Email       string `json:"email" db:"email"`
+	NoTelepon   string `json:"no_telepon" db:"no_telepon"`
+
+	SertifikatTraining *string `json:"sertifikat_training,omitempty" db:"sertifikat_training"`
+
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
 
+// DETAIL (JOIN)
 type RespondenDetail struct {
-	ID int `json:"id"`
+	Responden
 
-	// dari responden
-	IdPerusahaan       string `json:"id_perusahaan"`
-	NamaLengkap        string `json:"nama_lengkap"`
-	Jabatan            string `json:"jabatan"`
-	Email              string `json:"email"`
-	NoTelepon          string `json:"no_telepon"`
-	SertifikatTraining string `json:"sertifikat_training"`
-
-	// dari perusahaan
 	NamaPerusahaan *string `json:"nama_perusahaan,omitempty"`
-
-	// dari sub sektor & sektor
-	NamaSubSektor *string `json:"nama_sub_sektor,omitempty"`
-	NamaSektor    *string `json:"nama_sektor,omitempty"`
-
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	NamaSubSektor  *string `json:"nama_sub_sektor,omitempty"`
+	NamaSektor     *string `json:"nama_sektor,omitempty"`
 }

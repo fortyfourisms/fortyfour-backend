@@ -9,9 +9,7 @@ import (
 	"survey/internal/models"
 )
 
-// =====================
 // MOCK CACHE
-// =====================
 type mockCache struct{}
 
 func (m *mockCache) Get(ctx context.Context, key string) (string, bool, error) {
@@ -26,30 +24,29 @@ func (m *mockCache) Del(ctx context.Context, key string) error {
 	return nil
 }
 
-// =====================
 // MOCK REPOSITORY
-// =====================
 type mockRisikoRepo struct {
-	existsRespondenFn    func(id int) (bool, error)
-	existsRisikoFn       func(id int) (bool, error)
-	existsCustomFn       func(id int) (bool, error)
-	upsertEligibilityFn  func(m models.RisikoEligibility) error
-	upsertAlasanFn       func(m models.RisikoAlasan) error
-	upsertDampakFn       func(m models.RisikoDampak) error
-	upsertPengendalianFn func(m models.RisikoPengendalian) error
-	findByRespondentFn   func(id int) (map[string]interface{}, error)
-	getProgressFn        func(id int) (*models.SurveyProgress, error)
-	upsertProgressFn     func(p models.SurveyProgress) error
-	insertCustomFn       func(id int, nama string) (int, error)
+	existsRespondenFn         func(id int64) (bool, error)
+	existsRisikoFn            func(id int64) (bool, error)
+	existsCustomFn            func(id int64) (bool, error)
+	upsertEligibilityFn       func(m models.RisikoEligibility) error
+	upsertAlasanFn            func(m models.RisikoAlasan) error
+	upsertDampakFn            func(m models.RisikoDampak) error
+	upsertPengendalianFn      func(m models.RisikoPengendalian) error
+	findByRespondentFn        func(id int64) (map[string]interface{}, error)
+	getProgressFn             func(id int64) (*models.SurveyProgress, error)
+	upsertProgressFn          func(p models.SurveyProgress) error
+	getRespondentIDByUserIDFn func(userID string) (int64, error)
+	insertCustomFn            func(id int64, nama string) (int, error)
 }
 
-func (m *mockRisikoRepo) ExistsResponden(id int) (bool, error) {
+func (m *mockRisikoRepo) ExistsResponden(id int64) (bool, error) {
 	return m.existsRespondenFn(id)
 }
-func (m *mockRisikoRepo) ExistsRisiko(id int) (bool, error) {
+func (m *mockRisikoRepo) ExistsRisiko(id int64) (bool, error) {
 	return m.existsRisikoFn(id)
 }
-func (m *mockRisikoRepo) ExistsCustomRisiko(id int) (bool, error) {
+func (m *mockRisikoRepo) ExistsCustomRisiko(id int64) (bool, error) {
 	return m.existsCustomFn(id)
 }
 func (m *mockRisikoRepo) UpsertEligibility(r models.RisikoEligibility) error {
@@ -64,33 +61,41 @@ func (m *mockRisikoRepo) UpsertDampak(r models.RisikoDampak) error {
 func (m *mockRisikoRepo) UpsertPengendalian(r models.RisikoPengendalian) error {
 	return m.upsertPengendalianFn(r)
 }
-func (m *mockRisikoRepo) FindByRespondentID(id int) (map[string]interface{}, error) {
+func (m *mockRisikoRepo) FindByRespondentID(id int64) (map[string]interface{}, error) {
 	return m.findByRespondentFn(id)
 }
-func (m *mockRisikoRepo) GetProgress(id int) (*models.SurveyProgress, error) {
+func (m *mockRisikoRepo) GetProgress(id int64) (*models.SurveyProgress, error) {
 	return m.getProgressFn(id)
 }
 func (m *mockRisikoRepo) UpsertProgress(p models.SurveyProgress) error {
 	return m.upsertProgressFn(p)
 }
-func (m *mockRisikoRepo) InsertCustomRisiko(id int, nama string) (int, error) {
+func (m *mockRisikoRepo) GetRespondentIDByUserID(userID string) (int64, error) {
+	return m.getRespondentIDByUserIDFn(userID)
+}
+func (m *mockRisikoRepo) InsertCustomRisiko(id int64, nama string) (int, error) {
 	return m.insertCustomFn(id, nama)
 }
 
-// =====================
 // HELPER
-// =====================
+func ptrInt(v int) *int {
+	return &v
+}
+
 func newService(mock *mockRisikoRepo) *RisikoService {
+	if mock.getRespondentIDByUserIDFn == nil {
+		mock.getRespondentIDByUserIDFn = func(userID string) (int64, error) {
+			return 1, nil
+		}
+	}
 	return NewRisikoService(mock, &mockCache{})
 }
 
-// =====================
 // TEST ELIGIBILITY SUCCESS
-// =====================
 func TestProcessEligibility_Success(t *testing.T) {
 	mock := &mockRisikoRepo{
-		existsRespondenFn: func(id int) (bool, error) { return true, nil },
-		existsRisikoFn:    func(id int) (bool, error) { return true, nil },
+		existsRespondenFn: func(id int64) (bool, error) { return true, nil },
+		existsRisikoFn:    func(id int64) (bool, error) { return true, nil },
 		upsertEligibilityFn: func(m models.RisikoEligibility) error {
 			return nil
 		},
@@ -98,9 +103,9 @@ func TestProcessEligibility_Success(t *testing.T) {
 
 	svc := newService(mock)
 
-	res, err := svc.ProcessEligibility(dto.EligibilityRequest{
+	res, err := svc.ProcessEligibility("user-1", dto.EligibilityRequest{
 		RespondenID:   1,
-		RisikoID:      1,
+		RisikoID:      ptrInt(1),
 		PernahTerjadi: true,
 	})
 
@@ -113,19 +118,19 @@ func TestProcessEligibility_Success(t *testing.T) {
 	}
 }
 
-// =====================
 // TEST ELIGIBILITY INVALID RESPONDEN
-// =====================
 func TestProcessEligibility_InvalidResponden(t *testing.T) {
 	mock := &mockRisikoRepo{
-		existsRespondenFn: func(id int) (bool, error) { return false, nil },
+		getRespondentIDByUserIDFn: func(userID string) (int64, error) {
+			return 0, sql.ErrNoRows
+		},
 	}
 
 	svc := newService(mock)
 
-	_, err := svc.ProcessEligibility(dto.EligibilityRequest{
+	_, err := svc.ProcessEligibility("user-1", dto.EligibilityRequest{
 		RespondenID: 1,
-		RisikoID:    1,
+		RisikoID:    ptrInt(1),
 	})
 
 	if err == nil {
@@ -133,13 +138,11 @@ func TestProcessEligibility_InvalidResponden(t *testing.T) {
 	}
 }
 
-// =====================
 // TEST ALASAN SUCCESS
-// =====================
 func TestProcessAlasan_Success(t *testing.T) {
 	mock := &mockRisikoRepo{
-		existsRespondenFn: func(id int) (bool, error) { return true, nil },
-		existsRisikoFn:    func(id int) (bool, error) { return true, nil },
+		existsRespondenFn: func(id int64) (bool, error) { return true, nil },
+		existsRisikoFn:    func(id int64) (bool, error) { return true, nil },
 		upsertAlasanFn: func(m models.RisikoAlasan) error {
 			return nil
 		},
@@ -147,9 +150,9 @@ func TestProcessAlasan_Success(t *testing.T) {
 
 	svc := newService(mock)
 
-	res, err := svc.ProcessAlasan(dto.AlasanRequest{
+	res, err := svc.ProcessAlasan("user-1", dto.AlasanRequest{
 		RespondenID: 1,
-		RisikoID:    1,
+		RisikoID:    ptrInt(1),
 		Alasan:      "test",
 	})
 
@@ -162,20 +165,18 @@ func TestProcessAlasan_Success(t *testing.T) {
 	}
 }
 
-// =====================
 // TEST DAMPAK INVALID
-// =====================
 func TestProcessDampak_InvalidImpact(t *testing.T) {
 	mock := &mockRisikoRepo{
-		existsRespondenFn: func(id int) (bool, error) { return true, nil },
-		existsRisikoFn:    func(id int) (bool, error) { return true, nil },
+		existsRespondenFn: func(id int64) (bool, error) { return true, nil },
+		existsRisikoFn:    func(id int64) (bool, error) { return true, nil },
 	}
 
 	svc := newService(mock)
 
-	_, err := svc.ProcessDampak(dto.DampakRequest{
+	_, err := svc.ProcessDampak("user-1", dto.DampakRequest{
 		RespondenID: 1,
-		RisikoID:    1,
+		RisikoID:    ptrInt(1),
 	})
 
 	if err == nil {
@@ -183,13 +184,11 @@ func TestProcessDampak_InvalidImpact(t *testing.T) {
 	}
 }
 
-// =====================
 // TEST PENGENDALIAN SUCCESS
-// =====================
 func TestProcessPengendalian_Success(t *testing.T) {
 	mock := &mockRisikoRepo{
-		existsRespondenFn: func(id int) (bool, error) { return true, nil },
-		existsRisikoFn:    func(id int) (bool, error) { return true, nil },
+		existsRespondenFn: func(id int64) (bool, error) { return true, nil },
+		existsRisikoFn:    func(id int64) (bool, error) { return true, nil },
 		upsertPengendalianFn: func(m models.RisikoPengendalian) error {
 			return nil
 		},
@@ -197,9 +196,9 @@ func TestProcessPengendalian_Success(t *testing.T) {
 
 	svc := newService(mock)
 
-	res, err := svc.ProcessPengendalian(dto.PengendalianRequest{
+	res, err := svc.ProcessPengendalian("user-1", dto.PengendalianRequest{
 		RespondenID:           1,
-		RisikoID:              1,
+		RisikoID:              ptrInt(1),
 		AdaPengendalian:       false,
 		DeskripsiPengendalian: "",
 	})
@@ -213,14 +212,12 @@ func TestProcessPengendalian_Success(t *testing.T) {
 	}
 }
 
-// =====================
 // TEST NAVIGATE NEXT
-// =====================
 func TestNavigate_Next(t *testing.T) {
 	mock := &mockRisikoRepo{
-		getProgressFn: func(id int) (*models.SurveyProgress, error) {
+		getProgressFn: func(id int64) (*models.SurveyProgress, error) {
 			return &models.SurveyProgress{
-				RespondenID: id,
+				RespondenID: int64(id),
 				RisikoID:    sql.NullInt64{Int64: 1, Valid: true},
 			}, nil
 		},
@@ -231,7 +228,7 @@ func TestNavigate_Next(t *testing.T) {
 
 	svc := newService(mock)
 
-	res, err := svc.Navigate(dto.NavigateRequest{
+	res, err := svc.Navigate("user-1", dto.NavigateRequest{
 		RespondenID: 1,
 		Direction:   "next",
 	})
@@ -245,14 +242,12 @@ func TestNavigate_Next(t *testing.T) {
 	}
 }
 
-// =====================
 // TEST SAVE PROGRESS
-// =====================
 func TestSaveProgress_Success(t *testing.T) {
 	mock := &mockRisikoRepo{
-		getProgressFn: func(id int) (*models.SurveyProgress, error) {
+		getProgressFn: func(id int64) (*models.SurveyProgress, error) {
 			return &models.SurveyProgress{
-				RespondenID: id,
+				RespondenID: int64(id),
 			}, nil
 		},
 		upsertProgressFn: func(p models.SurveyProgress) error {
@@ -262,7 +257,7 @@ func TestSaveProgress_Success(t *testing.T) {
 
 	svc := newService(mock)
 
-	res, err := svc.SaveProgress(dto.NavigateRequest{
+	res, err := svc.SaveProgress("user-1", dto.NavigateRequest{
 		RespondenID: 1,
 		CurrentRisk: 5,
 	})
@@ -276,12 +271,10 @@ func TestSaveProgress_Success(t *testing.T) {
 	}
 }
 
-// =====================
 // TEST CREATE CUSTOM RISIKO
-// =====================
 func TestCreateCustomRisiko_Success(t *testing.T) {
 	mock := &mockRisikoRepo{
-		insertCustomFn: func(id int, nama string) (int, error) {
+		insertCustomFn: func(id int64, nama string) (int, error) {
 			return 99, nil
 		},
 	}
@@ -302,14 +295,12 @@ func TestCreateCustomRisiko_Success(t *testing.T) {
 	}
 }
 
-// =====================
 // TEST FINISH SURVEY
-// =====================
 func TestFinishSurvey_Success(t *testing.T) {
 	mock := &mockRisikoRepo{
-		getProgressFn: func(id int) (*models.SurveyProgress, error) {
+		getProgressFn: func(id int64) (*models.SurveyProgress, error) {
 			return &models.SurveyProgress{
-				RespondenID: id,
+				RespondenID: int64(id),
 			}, nil
 		},
 		upsertProgressFn: func(p models.SurveyProgress) error {
@@ -319,7 +310,7 @@ func TestFinishSurvey_Success(t *testing.T) {
 
 	svc := newService(mock)
 
-	err := svc.FinishSurvey(1)
+	err := svc.FinishSurvey("user-1")
 
 	if err != nil {
 		t.Fatal(err)

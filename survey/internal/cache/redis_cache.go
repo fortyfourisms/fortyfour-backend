@@ -15,7 +15,6 @@ func NewRedisCache(client *redis.Client) *RedisCache {
 	return &RedisCache{client: client}
 }
 
-// ✅ FIX DI SINI
 func (r *RedisCache) Get(ctx context.Context, key string) (string, bool, error) {
 	val, err := r.client.Get(ctx, key).Result()
 
