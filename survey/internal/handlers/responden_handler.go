@@ -97,7 +97,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // @Tags         Responden
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200 {array} dto.RespondenResponse
+// @Success      200 {array} map[string]interface{}
 // @Failure      403 {object} dto.ErrorResponse
 // @Failure      500 {object} dto.ErrorResponse
 // @Router       /api/survey/responden [get]
@@ -119,7 +119,7 @@ func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id path int true "Responden ID"
-// @Success      200 {object} dto.RespondenResponse
+// @Success      200 {object} map[string]interface{}
 // @Failure      400 {object} dto.ErrorResponse
 // @Failure      404 {object} dto.ErrorResponse
 // @Router       /api/survey/responden/{id} [get]
@@ -148,7 +148,7 @@ func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 // @Tags         Responden
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200 {object} dto.RespondenResponse
+// @Success      200 {object} map[string]interface{}
 // @Failure      401 {object} dto.ErrorResponse
 // @Failure      404 {object} dto.ErrorResponse
 // @Router       /api/survey/responden/me [get]
@@ -178,7 +178,7 @@ func (h *RespondenHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        request body dto.CreateRespondenRequest true "Data Responden"
-// @Success      200 {object} dto.RespondenResponse
+// @Success      200 {object} map[string]interface{}
 // @Failure      400 {object} dto.ErrorResponse
 // @Failure      401 {object} dto.ErrorResponse
 // @Router       /api/survey/responden/me [post]

@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/deteksi": {
+        "/api/maturity/deteksi": {
             "get": {
                 "description": "Mengambil seluruh data deteksi",
                 "produces": [
@@ -44,7 +44,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/deteksi/{id}": {
+        "/api/maturity/deteksi/{id}": {
             "get": {
                 "produces": [
                     "application/json"
@@ -67,156 +67,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/ikas_internal_dto.DeteksiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/gulih": {
-            "get": {
-                "description": "Mengambil seluruh data gulih",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Gulih"
-                ],
-                "summary": "List semua gulih",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.GulihResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/gulih/{id}": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Gulih"
-                ],
-                "summary": "Ambil gulih berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Gulih ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.GulihResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/health": {
-            "get": {
-                "description": "Check if the API is running and healthy",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Health"
-                ],
-                "summary": "Health check",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/identifikasi": {
-            "get": {
-                "description": "Mengambil seluruh data identifikasi",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Identifikasi"
-                ],
-                "summary": "List semua identifikasi",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.IdentifikasiResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/identifikasi/{id}": {
-            "get": {
-                "description": "Mengambil satu data identifikasi",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Identifikasi"
-                ],
-                "summary": "Ambil identifikasi berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Identifikasi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.IdentifikasiResponse"
                         }
                     },
                     "404": {
@@ -432,6 +282,156 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/maturity/gulih": {
+            "get": {
+                "description": "Mengambil seluruh data gulih",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Gulih"
+                ],
+                "summary": "List semua gulih",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ikas_internal_dto.GulihResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/gulih/{id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Gulih"
+                ],
+                "summary": "Ambil gulih berdasarkan ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Gulih ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.GulihResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/health": {
+            "get": {
+                "description": "Check if the API is running and healthy",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/identifikasi": {
+            "get": {
+                "description": "Mengambil seluruh data identifikasi",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Identifikasi"
+                ],
+                "summary": "List semua identifikasi",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ikas_internal_dto.IdentifikasiResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/identifikasi/{id}": {
+            "get": {
+                "description": "Mengambil satu data identifikasi",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Identifikasi"
+                ],
+                "summary": "Ambil identifikasi berdasarkan ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Identifikasi ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.IdentifikasiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/maturity/ikas": {
             "get": {
                 "description": "Mengambil seluruh data ikas",
@@ -494,6 +494,56 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/ikas-audit-logs": {
+            "get": {
+                "description": "Mengambil seluruh riwayat perubahan IKAS dengan pagination. Opsional filter berdasarkan ikas_id.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit Logs"
+                ],
+                "summary": "List semua audit logs IKAS (paginated)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter berdasarkan IKAS ID",
+                        "name": "ikas_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Halaman (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Jumlah data per halaman, maks 100 (default: 20)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -2693,6 +2743,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/maturity/proteksi": {
+            "get": {
+                "description": "Mengambil seluruh data proteksi",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Proteksi"
+                ],
+                "summary": "List semua proteksi",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ikas_internal_dto.ProteksiResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/proteksi/{id}": {
+            "get": {
+                "description": "Mengambil satu data proteksi",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Proteksi"
+                ],
+                "summary": "Ambil proteksi berdasarkan ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Proteksi ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ProteksiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/maturity/ruang-lingkup": {
             "get": {
                 "description": "Mengambil seluruh data ruang lingkup",
@@ -3094,70 +3208,6 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/proteksi": {
-            "get": {
-                "description": "Mengambil seluruh data proteksi",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Proteksi"
-                ],
-                "summary": "List semua proteksi",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.ProteksiResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/proteksi/{id}": {
-            "get": {
-                "description": "Mengambil satu data proteksi",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Proteksi"
-                ],
-                "summary": "Ambil proteksi berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Proteksi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ProteksiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
                         }
@@ -4115,10 +4165,19 @@ const docTemplate = `{
         "ikas_internal_dto.PerusahaanInIkas": {
             "type": "object",
             "properties": {
+                "alamat": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
                 "nama_perusahaan": {
+                    "type": "string"
+                },
+                "sektor": {
                     "type": "string"
                 }
             }

@@ -18,7 +18,7 @@ import (
 // @Tags			Health
 // @Produce		json
 // @Success		200	{object}	map[string]string
-// @Router			/api/health [get]
+// @Router			/api/maturity/health [get]
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

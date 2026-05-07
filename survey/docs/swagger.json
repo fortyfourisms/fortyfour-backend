@@ -1,9 +1,37 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "API documentation for Survey service.",
+        "title": "Survey API",
+        "contact": {},
+        "version": "1.0"
     },
+    "host": "localhost:8082",
+    "basePath": "/",
     "paths": {
+        "/api/health": {
+            "get": {
+                "description": "Check if the Survey API is running and healthy",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/survey/finish": {
             "post": {
                 "description": "Complete the survey",
@@ -14,7 +42,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Finish Survey",
                 "responses": {
@@ -43,7 +71,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Navigate Survey",
                 "parameters": [
@@ -97,7 +125,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (Admin)"
+                    "Responden"
                 ],
                 "summary": "Ambil semua responden",
                 "responses": {
@@ -106,7 +134,8 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/survey_internal_dto.RespondenResponse"
+                                "type": "object",
+                                "additionalProperties": true
                             }
                         }
                     },
@@ -137,14 +166,15 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (User)"
+                    "Responden"
                 ],
                 "summary": "Ambil data responden milik user login",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.RespondenResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
@@ -175,7 +205,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (User)"
+                    "Responden"
                 ],
                 "summary": "Create / Update responden milik user login",
                 "parameters": [
@@ -193,7 +223,8 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.RespondenResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
@@ -223,7 +254,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (Admin)"
+                    "Responden"
                 ],
                 "summary": "Ambil responden berdasarkan ID",
                 "parameters": [
@@ -239,7 +270,8 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.RespondenResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
@@ -267,7 +299,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Submit Dampak",
                 "parameters": [
@@ -307,7 +339,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Submit Eligibility",
                 "parameters": [
@@ -347,7 +379,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Submit Pengendalian",
                 "parameters": [
@@ -387,7 +419,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Submit Alasan",
                 "parameters": [
@@ -427,7 +459,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Get Risiko by Respondent ID",
                 "parameters": [
@@ -471,7 +503,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Save Progress",
                 "parameters": [
@@ -672,54 +704,6 @@
                 }
             }
         },
-        "survey_internal_dto.RespondenResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "id_perusahaan": {
-                    "description": "dari PERUSAHAAN",
-                    "type": "string"
-                },
-                "jabatan": {
-                    "type": "string"
-                },
-                "nama_lengkap": {
-                    "description": "dari RESPONDEN",
-                    "type": "string"
-                },
-                "nama_perusahaan": {
-                    "type": "string"
-                },
-                "nama_sektor": {
-                    "type": "string"
-                },
-                "nama_sub_sektor": {
-                    "description": "dari JOIN (opsional)",
-                    "type": "string"
-                },
-                "no_telepon": {
-                    "type": "string"
-                },
-                "sertifikat_training": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "description": "dari backend (JWT)",
-                    "type": "string"
-                }
-            }
-        },
         "survey_internal_models.FrequencyLevel": {
             "type": "integer",
             "enum": [
@@ -749,6 +733,13 @@
                 "ImpactSignificant",
                 "ImpactVerySignificant"
             ]
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

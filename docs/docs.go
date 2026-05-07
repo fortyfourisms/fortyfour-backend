@@ -22,21 +22,20 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Mengambil data aktivitas per perusahaan",
+                "description": "Mengambil seluruh data aktivitas. Jika query ` + "`" + `perusahaan_id` + "`" + ` dikirim, hasil akan difilter berdasarkan perusahaan.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Aktivitas"
                 ],
-                "summary": "List aktivitas berdasarkan Perusahaan ID",
+                "summary": "List semua aktivitas",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Perusahaan ID",
+                        "description": "Perusahaan ID untuk filter aktivitas",
                         "name": "perusahaan_id",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2140,9 +2139,9 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Admin membuat kelas baru.",
+                "description": "Admin membuat kelas baru. Thumbnail bisa diupload sebagai file (thumbnail_file) atau diisi sebagai URL (thumbnail_url). Jika keduanya diisi, file yang digunakan.",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -2153,13 +2152,65 @@ const docTemplate = `{
                 "summary": "Buat kelas baru",
                 "parameters": [
                     {
-                        "description": "Data kelas",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateKelasRequest"
-                        }
+                        "type": "string",
+                        "description": "Judul kelas",
+                        "name": "judul",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Deskripsi kelas",
+                        "name": "deskripsi",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Upload gambar thumbnail",
+                        "name": "thumbnail_file",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "URL thumbnail (digunakan jika file tidak diupload)",
+                        "name": "thumbnail_url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Kategori kelas",
+                        "name": "kategori",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Durasi jam pelajaran",
+                        "name": "durasi_jp",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Penyelenggara",
+                        "name": "penyelenggara",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Target peserta",
+                        "name": "target_peserta",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Syarat pendaftaran",
+                        "name": "syarat_pendaftaran",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Informasi umum",
+                        "name": "informasi_umum",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -2223,9 +2274,9 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Admin mengupdate kelas.",
+                "description": "Admin mengupdate kelas. Thumbnail bisa diupload sebagai file (thumbnail_file) atau diisi sebagai URL (thumbnail_url). Jika keduanya diisi, file yang digunakan.",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -2243,13 +2294,70 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Data update",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateKelasRequest"
-                        }
+                        "type": "string",
+                        "description": "Judul kelas",
+                        "name": "judul",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Deskripsi kelas",
+                        "name": "deskripsi",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Upload gambar thumbnail",
+                        "name": "thumbnail_file",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "URL thumbnail (digunakan jika file tidak diupload)",
+                        "name": "thumbnail_url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Kategori kelas",
+                        "name": "kategori",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Durasi jam pelajaran",
+                        "name": "durasi_jp",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Penyelenggara",
+                        "name": "penyelenggara",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Target peserta",
+                        "name": "target_peserta",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Syarat pendaftaran",
+                        "name": "syarat_pendaftaran",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Informasi umum",
+                        "name": "informasi_umum",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Status kelas (draft / published)",
+                        "name": "status",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -3423,534 +3531,36 @@ const docTemplate = `{
                 }
             }
         },
-<<<<<<< HEAD
-        "/api/maturity/domain": {
+        "/api/maturity": {
             "get": {
-                "description": "Mengambil seluruh data domain",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
                 "produces": [
+                    "application/json",
                     "application/json"
                 ],
                 "tags": [
-                    "Domain"
+                    "IKAS Proxy",
+                    "IKAS Proxy"
                 ],
-                "summary": "List semua domain",
+                "summary": "Proxy request ke layanan IKAS subpath",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.DomainResponse"
-                            }
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Membuat record domain baru",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Domain"
-                ],
-                "summary": "Tambah domain baru",
-                "parameters": [
-                    {
-                        "description": "Data domain",
-                        "name": "domain",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateDomainRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.DomainResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/domain/{id}": {
-            "get": {
-                "description": "Mengambil satu data domain",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Domain"
-                ],
-                "summary": "Ambil domain berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Domain ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.DomainResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Mengubah data domain berdasarkan ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Domain"
-                ],
-                "summary": "Update domain",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Domain ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data update",
-                        "name": "domain",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateDomainRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.DomainResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Menghapus data domain berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Domain"
-                ],
-                "summary": "Hapus domain",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Domain ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.MessageResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/ikas": {
-            "get": {
-                "description": "Mengambil seluruh data ikas",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "List semua ikas",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.IkasResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Membuat record ikas",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "Tambah ikas baru",
-                "parameters": [
-                    {
-                        "description": "Data ikas",
-                        "name": "ikas",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateIkasRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.IkasResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/ikas-audit-logs": {
-            "get": {
-                "description": "Mengambil seluruh riwayat perubahan IKAS dengan pagination. Opsional filter berdasarkan ikas_id.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Audit Logs"
-                ],
-                "summary": "List semua audit logs IKAS (paginated)",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Filter berdasarkan IKAS ID",
-                        "name": "ikas_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "example": 1,
-                        "description": "Halaman (default: 1)",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "example": 10,
-                        "description": "Jumlah data per halaman, maks 100 (default: 20)",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/utils.PaginatedJSONResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_utils.JSONResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/ikas/import": {
-            "post": {
-                "description": "Import data IKAS dari file Excel (sheet ke-7)",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "Import IKAS dari Excel",
-                "parameters": [
-                    {
-                        "type": "file",
-                        "description": "File Excel (.xlsx)",
-                        "name": "file",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "ID Perusahaan",
-                        "name": "id_perusahaan",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Tanggal (YYYY-MM-DD)",
-                        "name": "tanggal",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Nama Responden",
-                        "name": "responden",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Nomor Telepon",
-                        "name": "telepon",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Jabatan",
-                        "name": "jabatan",
-                        "in": "formData",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ImportIkasResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/ikas/{id}": {
-            "get": {
-                "description": "Mengambil satu data ikas",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "Ambil ikas berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Ikas ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.IkasResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Mengubah data ikas berdasarkan ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "Update ikas",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Ikas ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data update",
-                        "name": "ikas",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateIkasRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.IkasResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Menghapus data ikas berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "Hapus ikas",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Ikas ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.MessageResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/ikas/{id}/approve-edit": {
-            "put": {
-                "description": "Menyetujui permintaan edit dan membuka kembali kunci data IKAS. Hanya bisa dilakukan oleh Admin atau Staff.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "Setujui permintaan edit IKAS",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Ikas ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -3959,93 +3569,48 @@ const docTemplate = `{
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
-            }
-        },
-        "/api/maturity/ikas/{id}/export": {
-            "get": {
-                "description": "Mengunduh file laporan IKAS dalam format PDF berdasarkan ID",
-                "produces": [
-                    "application/pdf"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "Export IKAS ke PDF",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Ikas ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "file"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/ikas/{id}/reject-edit": {
+            },
             "put": {
-                "description": "Menolak permintaan edit data IKAS. Hanya bisa dilakukan oleh Admin atau Staff.",
-                "consumes": [
-                    "application/json"
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
                 ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
                 "produces": [
+                    "application/json",
                     "application/json"
                 ],
                 "tags": [
-                    "Ikas"
+                    "IKAS Proxy",
+                    "IKAS Proxy"
                 ],
-                "summary": "Tolak permintaan edit IKAS",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Ikas ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Alasan penolakan",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.RejectEditRequest"
-                        }
-                    }
-                ],
+                "summary": "Proxy request ke layanan IKAS subpath",
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -4054,49 +3619,38 @@ const docTemplate = `{
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
-            }
-        },
-        "/api/maturity/ikas/{id}/request-edit": {
+            },
             "post": {
-                "description": "Mengajukan permintaan pembukaan kunci (unlock) data IKAS yang sudah divalidasi kepada Admin/Staff",
-                "consumes": [
-                    "application/json"
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
                 ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
                 "produces": [
+                    "application/json",
                     "application/json"
                 ],
                 "tags": [
-                    "Ikas"
+                    "IKAS Proxy",
+                    "IKAS Proxy"
                 ],
-                "summary": "Ajukan permintaan edit IKAS",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Ikas ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Alasan pengajuan edit",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.RequestEditRequest"
-                        }
-                    }
-                ],
+                "summary": "Proxy request ke layanan IKAS subpath",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4105,55 +3659,8 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/ikas/{id}/validate": {
-            "put": {
-                "description": "Melakukan validasi final (lock/unlock) data IKAS. Hanya bisa dilakukan oleh Admin atau Staff.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Ikas"
-                ],
-                "summary": "Validasi final IKAS",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Ikas ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Status validasi (true=lock, false=unlock)",
-                        "name": "req",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.ValidasiIkasRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -4162,168 +3669,95 @@ const docTemplate = `{
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/jawaban-deteksi": {
-            "get": {
-                "description": "Get all answers for detection questions, optionally filtered by ikas_id or pertanyaan_deteksi_id",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Jawaban Deteksi"
-                ],
-                "summary": "Get All Jawaban Deteksi",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Filter by Ikas ID",
-                        "name": "ikas_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Filter by Pertanyaan Deteksi ID",
-                        "name": "pertanyaan_deteksi_id",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.JawabanDeteksiResponse"
-                            }
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Create a new answer for detection question",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Jawaban Deteksi"
-                ],
-                "summary": "Create Jawaban Deteksi",
-                "parameters": [
-                    {
-                        "description": "Jawaban Deteksi Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateJawabanDeteksiRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.JawabanDeteksiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/jawaban-deteksi/{id}": {
-            "get": {
-                "description": "Get a specific detection answer by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Jawaban Deteksi"
-                ],
-                "summary": "Get Jawaban Deteksi by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Jawaban Deteksi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.JawabanDeteksiResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Update an existing detection answer",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Jawaban Deteksi"
-                ],
-                "summary": "Update Jawaban Deteksi",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Jawaban Deteksi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Update Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateJawabanDeteksiRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.JawabanDeteksiResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
             },
             "delete": {
-                "description": "Delete a specific detection answer",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
                 "produces": [
+                    "application/json",
                     "application/json"
                 ],
                 "tags": [
-                    "Jawaban Deteksi"
+                    "IKAS Proxy",
+                    "IKAS Proxy"
                 ],
-                "summary": "Delete Jawaban Deteksi",
+                "summary": "Proxy request ke layanan IKAS subpath",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/{path}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
+                "produces": [
+                    "application/json",
+                    "application/json"
+                ],
+                "tags": [
+                    "IKAS Proxy",
+                    "IKAS Proxy"
+                ],
+                "summary": "Proxy request ke layanan IKAS subpath",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Jawaban Deteksi ID",
-                        "name": "id",
+                        "type": "string",
+                        "description": "Subpath endpoint IKAS",
+                        "name": "path",
                         "in": "path",
                         "required": true
                     }
@@ -4335,37 +3769,23 @@ const docTemplate = `{
                             "type": "object",
                             "additionalProperties": true
                         }
-                    }
-                }
-            }
-        },
-        "/api/maturity/jawaban-gulih": {
-            "get": {
-                "description": "Get all answers for gulih questions, optionally filtered by perusahaan_id or pertanyaan_gulih_id",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Jawaban Gulih"
-                ],
-                "summary": "Get All Jawaban Gulih",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Filter by Perusahaan ID",
-                        "name": "perusahaan_id",
-                        "in": "query"
                     },
-                    {
-                        "type": "integer",
-                        "description": "Filter by Pertanyaan Gulih ID",
-                        "name": "pertanyaan_gulih_id",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -4373,55 +3793,30 @@ const docTemplate = `{
                     }
                 }
             },
-            "post": {
-                "description": "Create a new answer for gulih question",
-                "consumes": [
-                    "application/json"
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
                 ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
                 "produces": [
+                    "application/json",
                     "application/json"
                 ],
                 "tags": [
-                    "Jawaban Gulih"
+                    "IKAS Proxy",
+                    "IKAS Proxy"
                 ],
-                "summary": "Create Jawaban Gulih",
+                "summary": "Proxy request ke layanan IKAS subpath",
                 "parameters": [
                     {
-                        "description": "Jawaban Gulih Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateJawabanGulihRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/jawaban-gulih/{id}": {
-            "get": {
-                "description": "Get a specific gulih answer by its ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Jawaban Gulih"
-                ],
-                "summary": "Get Jawaban Gulih by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Jawaban Gulih ID",
-                        "name": "id",
+                        "type": "string",
+                        "description": "Subpath endpoint IKAS",
+                        "name": "path",
                         "in": "path",
                         "required": true
                     }
@@ -4433,42 +3828,23 @@ const docTemplate = `{
                             "type": "object",
                             "additionalProperties": true
                         }
-                    }
-                }
-            },
-            "put": {
-                "description": "Update an existing gulih answer",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Jawaban Gulih"
-                ],
-                "summary": "Update Jawaban Gulih",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Jawaban Gulih ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
                     },
-                    {
-                        "description": "Update Request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/dto.UpdateJawabanGulihRequest"
+                            "type": "object",
+                            "additionalProperties": true
                         }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -4476,20 +3852,30 @@ const docTemplate = `{
                     }
                 }
             },
-            "delete": {
-                "description": "Delete a specific gulih answer",
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
                 "produces": [
+                    "application/json",
                     "application/json"
                 ],
                 "tags": [
-                    "Jawaban Gulih"
+                    "IKAS Proxy",
+                    "IKAS Proxy"
                 ],
-                "summary": "Delete Jawaban Gulih",
+                "summary": "Proxy request ke layanan IKAS subpath",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Jawaban Gulih ID",
-                        "name": "id",
+                        "type": "string",
+                        "description": "Subpath endpoint IKAS",
+                        "name": "path",
                         "in": "path",
                         "required": true
                     }
@@ -4501,1852 +3887,90 @@ const docTemplate = `{
                             "type": "object",
                             "additionalProperties": true
                         }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
                     }
                 }
-            }
-        },
-        "/api/maturity/jawaban-identifikasi": {
-            "get": {
-                "description": "Mengambil seluruh data jawaban identifikasi. Bisa difilter dengan query param perusahaan_id atau pertanyaan_identifikasi_id",
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
                 "produces": [
+                    "application/json",
                     "application/json"
                 ],
                 "tags": [
-                    "JawabanIdentifikasi"
+                    "IKAS Proxy",
+                    "IKAS Proxy"
                 ],
-                "summary": "List semua jawaban identifikasi",
+                "summary": "Proxy request ke layanan IKAS subpath",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Filter by perusahaan ID",
-                        "name": "perusahaan_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by pertanyaan identifikasi ID",
-                        "name": "pertanyaan_identifikasi_id",
-                        "in": "query"
+                        "description": "Subpath endpoint IKAS",
+                        "name": "path",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.JawabanIdentifikasiResponse"
-                            }
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Membuat record jawaban identifikasi baru",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "JawabanIdentifikasi"
-                ],
-                "summary": "Tambah jawaban identifikasi baru",
-                "parameters": [
-                    {
-                        "description": "Data jawaban identifikasi",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateJawabanIdentifikasiRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.JawabanIdentifikasiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
             }
         },
-        "/api/maturity/jawaban-identifikasi/{id}": {
-            "get": {
-                "description": "Mengambil satu data jawaban identifikasi",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "JawabanIdentifikasi"
-                ],
-                "summary": "Ambil jawaban identifikasi berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "JawabanIdentifikasi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.JawabanIdentifikasiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Mengubah data jawaban identifikasi berdasarkan ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "JawabanIdentifikasi"
-                ],
-                "summary": "Update jawaban identifikasi",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "JawabanIdentifikasi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data update",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateJawabanIdentifikasiRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.JawabanIdentifikasiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Menghapus data jawaban identifikasi berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "JawabanIdentifikasi"
-                ],
-                "summary": "Hapus jawaban identifikasi",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "JawabanIdentifikasi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.MessageResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/jawaban-proteksi": {
-            "get": {
-                "description": "Mengambil seluruh data jawaban proteksi. Bisa difilter dengan query param perusahaan_id atau pertanyaan_proteksi_id",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "JawabanProteksi"
-                ],
-                "summary": "List semua jawaban proteksi",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Filter by perusahaan ID",
-                        "name": "perusahaan_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by pertanyaan proteksi ID",
-                        "name": "pertanyaan_proteksi_id",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.JawabanProteksiResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Membuat record jawaban proteksi baru",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "JawabanProteksi"
-                ],
-                "summary": "Tambah jawaban proteksi baru",
-                "parameters": [
-                    {
-                        "description": "Data jawaban proteksi",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateJawabanProteksiRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.JawabanProteksiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/jawaban-proteksi/{id}": {
-            "get": {
-                "description": "Mengambil satu data jawaban proteksi",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "JawabanProteksi"
-                ],
-                "summary": "Ambil jawaban proteksi berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "JawabanProteksi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.JawabanProteksiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Mengubah data jawaban proteksi berdasarkan ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "JawabanProteksi"
-                ],
-                "summary": "Update jawaban proteksi",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "JawabanProteksi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data update",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateJawabanProteksiRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.JawabanProteksiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Menghapus data jawaban proteksi berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "JawabanProteksi"
-                ],
-                "summary": "Hapus jawaban proteksi",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "JawabanProteksi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.MessageResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/kategori": {
-            "get": {
-                "description": "Mengambil seluruh data kategori",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Kategori"
-                ],
-                "summary": "List semua kategori",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.KategoriResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Membuat record kategori baru",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Kategori"
-                ],
-                "summary": "Tambah kategori baru",
-                "parameters": [
-                    {
-                        "description": "Data kategori",
-                        "name": "kategori",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateKategoriRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.KategoriResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/kategori/{id}": {
-            "get": {
-                "description": "Mengambil satu data kategori",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Kategori"
-                ],
-                "summary": "Ambil kategori berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Kategori ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.KategoriResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Mengubah data kategori berdasarkan ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Kategori"
-                ],
-                "summary": "Update kategori",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Kategori ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data update",
-                        "name": "kategori",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateKategoriRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.KategoriResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Menghapus data kategori berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Kategori"
-                ],
-                "summary": "Hapus kategori",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Kategori ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.KategoriMessageResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/pertanyaan-deteksi": {
-            "get": {
-                "description": "Mengambil seluruh data pertanyaan deteksi",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanDeteksi"
-                ],
-                "summary": "List semua pertanyaan deteksi",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.PertanyaanDeteksiResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Membuat record pertanyaan deteksi baru",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanDeteksi"
-                ],
-                "summary": "Tambah pertanyaan deteksi baru",
-                "parameters": [
-                    {
-                        "description": "Data pertanyaan deteksi",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreatePertanyaanDeteksiRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanDeteksiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/pertanyaan-deteksi/{id}": {
-            "get": {
-                "description": "Mengambil satu data pertanyaan deteksi",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanDeteksi"
-                ],
-                "summary": "Ambil pertanyaan deteksi berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "PertanyaanDeteksi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanDeteksiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Mengubah data pertanyaan deteksi berdasarkan ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanDeteksi"
-                ],
-                "summary": "Update pertanyaan deteksi",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "PertanyaanDeteksi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data update",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdatePertanyaanDeteksiRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanDeteksiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Menghapus data pertanyaan deteksi berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanDeteksi"
-                ],
-                "summary": "Hapus pertanyaan deteksi",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "PertanyaanDeteksi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanDeteksiMessageResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/pertanyaan-gulih": {
-            "get": {
-                "description": "Mengambil seluruh data pertanyaan gulih",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanGulih"
-                ],
-                "summary": "List semua pertanyaan gulih",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.PertanyaanGulihResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Membuat record pertanyaan gulih baru",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanGulih"
-                ],
-                "summary": "Tambah pertanyaan gulih baru",
-                "parameters": [
-                    {
-                        "description": "Data pertanyaan gulih",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreatePertanyaanGulihRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanGulihResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/pertanyaan-gulih/{id}": {
-            "get": {
-                "description": "Mengambil satu data pertanyaan gulih",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanGulih"
-                ],
-                "summary": "Ambil pertanyaan gulih berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "PertanyaanGulih ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanGulihResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Mengubah data pertanyaan gulih berdasarkan ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanGulih"
-                ],
-                "summary": "Update pertanyaan gulih",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "PertanyaanGulih ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data update",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdatePertanyaanGulihRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanGulihResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Menghapus data pertanyaan gulih berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanGulih"
-                ],
-                "summary": "Hapus pertanyaan gulih",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "PertanyaanGulih ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanGulihMessageResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/pertanyaan-identifikasi": {
-            "get": {
-                "description": "Mengambil seluruh data pertanyaan identifikasi",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanIdentifikasi"
-                ],
-                "summary": "List semua pertanyaan identifikasi",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.PertanyaanIdentifikasiResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Membuat record pertanyaan identifikasi baru",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanIdentifikasi"
-                ],
-                "summary": "Tambah pertanyaan identifikasi baru",
-                "parameters": [
-                    {
-                        "description": "Data pertanyaan identifikasi",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreatePertanyaanIdentifikasiRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanIdentifikasiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/pertanyaan-identifikasi/{id}": {
-            "get": {
-                "description": "Mengambil satu data pertanyaan identifikasi",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanIdentifikasi"
-                ],
-                "summary": "Ambil pertanyaan identifikasi berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "PertanyaanIdentifikasi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanIdentifikasiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Mengubah data pertanyaan identifikasi berdasarkan ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanIdentifikasi"
-                ],
-                "summary": "Update pertanyaan identifikasi",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "PertanyaanIdentifikasi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data update",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdatePertanyaanIdentifikasiRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanIdentifikasiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Menghapus data pertanyaan identifikasi berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanIdentifikasi"
-                ],
-                "summary": "Hapus pertanyaan identifikasi",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "PertanyaanIdentifikasi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanIdentifikasiMessageResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/pertanyaan-proteksi": {
-            "get": {
-                "description": "Mengambil seluruh data pertanyaan proteksi",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanProteksi"
-                ],
-                "summary": "List semua pertanyaan proteksi",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.PertanyaanProteksiResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Membuat record pertanyaan proteksi baru",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanProteksi"
-                ],
-                "summary": "Tambah pertanyaan proteksi baru",
-                "parameters": [
-                    {
-                        "description": "Data pertanyaan proteksi",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreatePertanyaanProteksiRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanProteksiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/pertanyaan-proteksi/{id}": {
-            "get": {
-                "description": "Mengambil satu data pertanyaan proteksi",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanProteksi"
-                ],
-                "summary": "Ambil pertanyaan proteksi berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "PertanyaanProteksi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanProteksiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Mengubah data pertanyaan proteksi berdasarkan ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanProteksi"
-                ],
-                "summary": "Update pertanyaan proteksi",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "PertanyaanProteksi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data update",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdatePertanyaanProteksiRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanProteksiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Menghapus data pertanyaan proteksi berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "PertanyaanProteksi"
-                ],
-                "summary": "Hapus pertanyaan proteksi",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "PertanyaanProteksi ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.PertanyaanProteksiMessageResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/ruang-lingkup": {
-            "get": {
-                "description": "Mengambil seluruh data ruang lingkup",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "RuangLingkup"
-                ],
-                "summary": "List semua ruang lingkup",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.RuangLingkupResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Membuat record ruang lingkup baru",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "RuangLingkup"
-                ],
-                "summary": "Tambah ruang lingkup baru",
-                "parameters": [
-                    {
-                        "description": "Data ruang lingkup",
-                        "name": "ruangLingkup",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateRuangLingkupRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.RuangLingkupResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/ruang-lingkup/{id}": {
-            "get": {
-                "description": "Mengambil satu data ruang lingkup",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "RuangLingkup"
-                ],
-                "summary": "Ambil ruang lingkup berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "RuangLingkup ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.RuangLingkupResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Mengubah data ruang lingkup berdasarkan ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "RuangLingkup"
-                ],
-                "summary": "Update ruang lingkup",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "RuangLingkup ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data update",
-                        "name": "ruangLingkup",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateRuangLingkupRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.RuangLingkupResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Menghapus data ruang lingkup berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "RuangLingkup"
-                ],
-                "summary": "Hapus ruang lingkup",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "RuangLingkup ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.MessageResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/sub-kategori": {
-            "get": {
-                "description": "Mengambil seluruh data sub kategori",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "SubKategori"
-                ],
-                "summary": "List semua sub kategori",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/dto.SubKategoriResponse"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "Membuat record sub kategori baru",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "SubKategori"
-                ],
-                "summary": "Tambah sub kategori baru",
-                "parameters": [
-                    {
-                        "description": "Data sub kategori",
-                        "name": "subKategori",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateSubKategoriRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/dto.SubKategoriResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/maturity/sub-kategori/{id}": {
-            "get": {
-                "description": "Mengambil satu data sub kategori",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "SubKategori"
-                ],
-                "summary": "Ambil sub kategori berdasarkan ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "SubKategori ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.SubKategoriResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "Mengubah data sub kategori berdasarkan ID",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "SubKategori"
-                ],
-                "summary": "Update sub kategori",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "SubKategori ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Data update",
-                        "name": "subKategori",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateSubKategoriRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.SubKategoriResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "409": {
-                        "description": "Conflict",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Menghapus data sub kategori berdasarkan ID",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "SubKategori"
-                ],
-                "summary": "Hapus sub kategori",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "SubKategori ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.SubKategoriMessageResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-=======
->>>>>>> origin
         "/api/me": {
             "get": {
                 "security": [
@@ -9816,271 +7440,6 @@ const docTemplate = `{
                 }
             }
         },
-<<<<<<< HEAD
-        "dto.CreateDomainRequest": {
-            "type": "object",
-            "properties": {
-                "nama_domain": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.CreateIkasRequest": {
-            "type": "object",
-            "properties": {
-                "id_perusahaan": {
-                    "type": "string"
-                },
-                "jabatan": {
-                    "type": "string"
-                },
-                "responden": {
-                    "type": "string"
-                },
-                "tanggal": {
-                    "type": "string"
-                },
-                "target_nilai": {
-                    "type": "number"
-                },
-                "telepon": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.CreateJawabanDeteksiRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "jawaban_deteksi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "pertanyaan_deteksi_id": {
-                    "type": "integer"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.CreateJawabanGulihRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "jawaban_gulih": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "pertanyaan_gulih_id": {
-                    "type": "integer"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.CreateJawabanIdentifikasiRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "jawaban_identifikasi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "pertanyaan_identifikasi_id": {
-                    "type": "integer"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.CreateJawabanProteksiRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "jawaban_proteksi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "pertanyaan_proteksi_id": {
-                    "type": "integer"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.CreateKategoriRequest": {
-            "type": "object",
-            "properties": {
-                "domain_id": {
-                    "type": "integer"
-                },
-                "nama_kategori": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.CreatePertanyaanDeteksiRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_deteksi": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.CreatePertanyaanGulihRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_gulih": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.CreatePertanyaanIdentifikasiRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_identifikasi": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.CreatePertanyaanProteksiRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_proteksi": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-=======
->>>>>>> origin
         "dto.CreateRespondenRequest": {
             "type": "object",
             "properties": {
@@ -10101,36 +7460,6 @@ const docTemplate = `{
                 },
                 "sertifikat_training": {
                     "type": "string"
-                }
-            }
-        },
-<<<<<<< HEAD
-        "dto.CreateRuangLingkupRequest": {
-            "type": "object",
-            "properties": {
-                "nama_ruang_lingkup": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.CreateSubKategoriRequest": {
-            "type": "object",
-            "properties": {
-                "kategori_id": {
-                    "type": "integer"
-                },
-                "nama_sub_kategori": {
-                    "type": "string"
-=======
-        "dto.CustomRisikoRequest": {
-            "type": "object",
-            "properties": {
-                "nama_risiko": {
-                    "type": "string"
-                },
-                "responden_id": {
-                    "type": "integer"
->>>>>>> origin
                 }
             }
         },
@@ -10253,366 +7582,6 @@ const docTemplate = `{
                 }
             }
         },
-<<<<<<< HEAD
-        "dto.RuangLingkupInfo": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "nama_ruang_lingkup": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.RuangLingkupResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "nama_ruang_lingkup": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.SubKategoriInfo": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "kategori": {
-                    "$ref": "#/definitions/dto.KategoriInfo"
-                },
-                "nama_sub_kategori": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.SubKategoriMessageResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.SubKategoriResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "kategori_id": {
-                    "type": "integer"
-                },
-                "nama_sub_kategori": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UpdateDomainRequest": {
-            "type": "object",
-            "properties": {
-                "nama_domain": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UpdateIkasRequest": {
-            "type": "object",
-            "properties": {
-=======
-        "dto.UpdateRespondenRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
->>>>>>> origin
-                "id_perusahaan": {
-                    "type": "string"
-                },
-                "jabatan": {
-                    "type": "string"
-                },
-<<<<<<< HEAD
-                "responden": {
-                    "type": "string"
-                },
-                "tanggal": {
-                    "type": "string"
-                },
-                "target_nilai": {
-                    "type": "number"
-                },
-                "telepon": {
-=======
-                "nama_lengkap": {
-                    "type": "string"
-                },
-                "no_telepon": {
-                    "type": "string"
-                },
-                "sertifikat_training": {
->>>>>>> origin
-                    "type": "string"
-                }
-            }
-        },
-<<<<<<< HEAD
-        "dto.UpdateJawabanDeteksiRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "jawaban_deteksi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UpdateJawabanGulihRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "jawaban_gulih": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UpdateJawabanIdentifikasiRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "jawaban_identifikasi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UpdateJawabanProteksiRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "jawaban_proteksi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UpdateKategoriRequest": {
-            "type": "object",
-            "properties": {
-                "domain_id": {
-                    "type": "integer"
-                },
-                "nama_kategori": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UpdatePertanyaanDeteksiRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_deteksi": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.UpdatePertanyaanGulihRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_gulih": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.UpdatePertanyaanIdentifikasiRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_identifikasi": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.UpdatePertanyaanProteksiRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_proteksi": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.UpdateRuangLingkupRequest": {
-            "type": "object",
-            "properties": {
-                "nama_ruang_lingkup": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UpdateSubKategoriRequest": {
-            "type": "object",
-            "properties": {
-                "kategori_id": {
-                    "type": "integer"
-                },
-                "nama_sub_kategori": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.ValidasiIkasRequest": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "type": "boolean"
-                }
-            }
-        },
-=======
->>>>>>> origin
         "fortyfour-backend_internal_dto.AddPolicyRequest": {
             "type": "object",
             "required": [
@@ -10876,43 +7845,6 @@ const docTemplate = `{
                 "tanggal": {
                     "type": "string",
                     "example": "2024-12-31T15:00:00Z"
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.CreateKelasRequest": {
-            "type": "object",
-            "required": [
-                "judul"
-            ],
-            "properties": {
-                "deskripsi": {
-                    "type": "string"
-                },
-                "durasi_jp": {
-                    "type": "integer"
-                },
-                "informasi_umum": {
-                    "type": "string"
-                },
-                "judul": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
-                },
-                "kategori": {
-                    "type": "string"
-                },
-                "penyelenggara": {
-                    "type": "string"
-                },
-                "syarat_pendaftaran": {
-                    "type": "string"
-                },
-                "target_peserta": {
-                    "type": "string"
-                },
-                "thumbnail": {
-                    "type": "string"
                 }
             }
         },
@@ -12724,47 +9656,6 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.UpdateKelasRequest": {
-            "type": "object",
-            "properties": {
-                "deskripsi": {
-                    "type": "string"
-                },
-                "durasi_jp": {
-                    "type": "integer"
-                },
-                "informasi_umum": {
-                    "type": "string"
-                },
-                "judul": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
-                },
-                "kategori": {
-                    "type": "string"
-                },
-                "penyelenggara": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "draft",
-                        "published"
-                    ]
-                },
-                "syarat_pendaftaran": {
-                    "type": "string"
-                },
-                "target_peserta": {
-                    "type": "string"
-                },
-                "thumbnail": {
-                    "type": "string"
-                }
-            }
-        },
         "fortyfour-backend_internal_dto.UpdateKuisRequest": {
             "type": "object",
             "properties": {
@@ -13279,41 +10170,6 @@ const docTemplate = `{
                 "total": {}
             }
         },
-<<<<<<< HEAD
-        "ikas_internal_dto.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.MessageResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_utils.JSONResponse": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "message": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "total": {}
-            }
-        },
-=======
->>>>>>> origin
         "models.FrequencyLevel": {
             "type": "integer",
             "enum": [
@@ -13369,38 +10225,6 @@ const docTemplate = `{
                 },
                 "selesai": {
                     "type": "boolean"
-                }
-            }
-        },
-        "utils.PaginatedJSONResponse": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "message": {
-                    "type": "string"
-                },
-                "pagination": {
-                    "$ref": "#/definitions/utils.PaginationMeta"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "utils.PaginationMeta": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "total_pages": {
-                    "type": "integer"
                 }
             }
         }
