@@ -499,6 +499,54 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/maturity/ikas-audit-logs": {
+            "get": {
+                "description": "Mengambil seluruh riwayat perubahan IKAS dengan pagination. Opsional filter berdasarkan ikas_id.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Audit Logs"
+                ],
+                "summary": "List semua audit logs IKAS (paginated)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter berdasarkan IKAS ID",
+                        "name": "ikas_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 1,
+                        "description": "Halaman (default: 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 10,
+                        "description": "Jumlah data per halaman, maks 100 (default: 20)",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_utils.PaginatedJSONResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ikas_internal_utils.JSONResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/maturity/ikas/import": {
             "post": {
                 "description": "Import data IKAS dari file Excel (sheet ke-7)",
@@ -958,10 +1006,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.JawabanDeteksiResponse"
-                            }
+                            "$ref": "#/definitions/ikas_internal_dto.UnifiedJawabanDeteksiResponse"
                         }
                     }
                 }
@@ -1123,8 +1168,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/ikas_internal_dto.UnifiedJawabanGulihResponse"
                         }
                     }
                 }
@@ -1289,10 +1333,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse"
-                            }
+                            "$ref": "#/definitions/ikas_internal_dto.UnifiedJawabanIdentifikasiResponse"
                         }
                     },
                     "500": {
@@ -1507,10 +1548,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.JawabanProteksiResponse"
-                            }
+                            "$ref": "#/definitions/ikas_internal_dto.UnifiedJawabanProteksiResponse"
                         }
                     },
                     "500": {
@@ -3742,6 +3780,38 @@ const docTemplate = `{
                 }
             }
         },
+        "ikas_internal_dto.JawabanGulihResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "evidence": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ikas_id": {
+                    "type": "string"
+                },
+                "jawaban_gulih": {
+                    "type": "number"
+                },
+                "keterangan": {
+                    "type": "string"
+                },
+                "pertanyaan_gulih": {
+                    "$ref": "#/definitions/ikas_internal_dto.PertanyaanGulihInfo"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "validasi": {
+                    "type": "string"
+                }
+            }
+        },
         "ikas_internal_dto.JawabanIdentifikasiResponse": {
             "type": "object",
             "properties": {
@@ -3925,6 +3995,20 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "ikas_internal_dto.PertanyaanGulihInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "pertanyaan_gulih": {
+                    "type": "string"
+                },
+                "sub_kategori": {
+                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
                 }
             }
         },
@@ -4115,10 +4199,19 @@ const docTemplate = `{
         "ikas_internal_dto.PerusahaanInIkas": {
             "type": "object",
             "properties": {
+                "alamat": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "string"
                 },
                 "nama_perusahaan": {
+                    "type": "string"
+                },
+                "sektor": {
                     "type": "string"
                 }
             }
@@ -4276,6 +4369,86 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "ikas_internal_dto.UnifiedJawabanDeteksiResponse": {
+            "type": "object",
+            "properties": {
+                "completion_percentage": {
+                    "type": "number"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ikas_internal_dto.JawabanDeteksiResponse"
+                    }
+                },
+                "is_draft": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "ikas_internal_dto.UnifiedJawabanGulihResponse": {
+            "type": "object",
+            "properties": {
+                "completion_percentage": {
+                    "type": "number"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ikas_internal_dto.JawabanGulihResponse"
+                    }
+                },
+                "is_draft": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "ikas_internal_dto.UnifiedJawabanIdentifikasiResponse": {
+            "type": "object",
+            "properties": {
+                "completion_percentage": {
+                    "type": "number"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse"
+                    }
+                },
+                "is_draft": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "ikas_internal_dto.UnifiedJawabanProteksiResponse": {
+            "type": "object",
+            "properties": {
+                "completion_percentage": {
+                    "type": "number"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ikas_internal_dto.JawabanProteksiResponse"
+                    }
+                },
+                "is_draft": {
+                    "type": "boolean"
                 }
             }
         },
@@ -4541,6 +4714,51 @@ const docTemplate = `{
             "properties": {
                 "status": {
                     "type": "boolean"
+                }
+            }
+        },
+        "ikas_internal_utils.JSONResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "total": {}
+            }
+        },
+        "ikas_internal_utils.PaginatedJSONResponse": {
+            "type": "object",
+            "properties": {
+                "data": {},
+                "message": {
+                    "type": "string"
+                },
+                "pagination": {
+                    "$ref": "#/definitions/ikas_internal_utils.PaginationMeta"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "ikas_internal_utils.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "total_pages": {
+                    "type": "integer"
                 }
             }
         }
