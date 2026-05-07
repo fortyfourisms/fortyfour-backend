@@ -79,6 +79,11 @@ func (m *mockIkasProducer) PublishIkasEditActioned(ctx context.Context, event in
 	return args.Error(0)
 }
 
+func (m *mockIkasProducer) PublishIkasValidated(ctx context.Context, event interface{}) error {
+	args := m.Called(ctx, event)
+	return args.Error(0)
+}
+
 // Check interfaces compliance
 var _ repository.IkasRepositoryInterface = (*mockIkasRepository)(nil)
 var _ services.IkasProducerInterface = (*mockIkasProducer)(nil)

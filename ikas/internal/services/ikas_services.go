@@ -27,6 +27,7 @@ type IkasProducerInterface interface {
 	PublishJawabanGulihCreated(ctx context.Context, event interface{}) error
 	PublishIkasEditRequested(ctx context.Context, event interface{}) error
 	PublishIkasEditActioned(ctx context.Context, event interface{}) error
+	PublishIkasValidated(ctx context.Context, event interface{}) error
 }
 
 type IkasService struct {
@@ -688,6 +689,17 @@ func (s *IkasService) ValidateIkas(ctx context.Context, id string, status bool, 
 	}
 	if s.producer != nil {
 		_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
+
+		// Publish IkasValidatedEvent for DB Notification & SSE
+		if status {
+			valEvent := dto_event.IkasValidatedEvent{
+				IkasID:         existing.ID,
+				IDPerusahaan:   existing.Perusahaan.ID,
+				NamaPerusahaan: existing.Perusahaan.NamaPerusahaan,
+				ValidatedAt:    time.Now(),
+			}
+			_ = s.producer.PublishIkasValidated(ctx, valEvent)
+		}
 	}
 
 	// Invalidate Cache

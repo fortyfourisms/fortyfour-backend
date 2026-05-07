@@ -244,6 +244,45 @@ func (c *Consumer) ConsumeIkasEditActioned(ctx context.Context) error {
 	})
 }
 
+// ConsumeIkasValidated
+func (c *Consumer) ConsumeIkasValidated(ctx context.Context) error {
+	return c.Consume(ctx, "main_api.ikas.validated", func(ctx context.Context, body []byte) error {
+		var event dto_event.IkasValidatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		log.Printf("IKAS Validated Event: %+v", event)
+
+		msg := "Data IKAS untuk perusahaan " + event.NamaPerusahaan + " telah divalidasi oleh admin."
+
+		if c.userRepo != nil {
+			users, err := c.userRepo.FindUsersByPerusahaan(event.IDPerusahaan)
+			if err == nil && len(users) > 0 {
+				for _, u := range users {
+					// 1. Persist notification
+					if c.notifService != nil {
+						_ = c.notifService.Push(u.ID, models.NotifIkasValidated, msg)
+					}
+					// 2. Real-time SSE
+					if c.sseService != nil {
+						c.sseService.NotifyCustom("ikas_action", "update", msg, event, u.ID)
+					}
+				}
+			} else {
+				// Fallback broadcast
+				if c.sseService != nil {
+					c.sseService.NotifyCustom("ikas_action", "update", msg, event, "")
+				}
+			}
+		} else if c.sseService != nil {
+			c.sseService.NotifyCustom("ikas_action", "update", msg, event, "")
+		}
+
+		return nil
+	})
+}
+
 // Csirt
 func (c *Consumer) ConsumeCsirtCreated(ctx context.Context) error {
 	return c.Consume(ctx, "csirt.created", func(ctx context.Context, body []byte) error {
@@ -330,6 +369,7 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeIkasDeleted,
 		c.ConsumeIkasEditRequested,
 		c.ConsumeIkasEditActioned,
+		c.ConsumeIkasValidated,
 		func(ctx context.Context) error {
 			return c.consumeGenericIkasEvent(ctx, "main_api.ruang_lingkup.created", "ruang_lingkup", "Created")
 		},

@@ -62,6 +62,7 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"main_api.sub_kategori.deleted",
 		"main_api.ikas.edit_requested",
 		"main_api.ikas.edit_actioned",
+		"main_api.ikas.validated",
 	}
 
 	for _, queueName := range ikasQueues {
