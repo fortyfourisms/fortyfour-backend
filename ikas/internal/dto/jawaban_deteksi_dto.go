@@ -35,3 +35,10 @@ type JawabanDeteksiResponse struct {
 	CreatedAt         time.Time             `json:"created_at"`
 	UpdatedAt         time.Time             `json:"updated_at"`
 }
+
+type UnifiedJawabanDeteksiResponse struct {
+	Data                 []JawabanDeteksiResponse `json:"data"`
+	Count                int                      `json:"count"`
+	IsDraft              bool                     `json:"is_draft"`
+	CompletionPercentage float64                  `json:"completion_percentage"`
+}

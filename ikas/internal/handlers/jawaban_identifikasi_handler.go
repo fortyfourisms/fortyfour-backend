@@ -81,7 +81,7 @@ func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 //	@Produce		json
 //	@Param			perusahaan_id				query		string	false	"Filter by perusahaan ID"
 //	@Param			pertanyaan_identifikasi_id	query		string	false	"Filter by pertanyaan identifikasi ID"
-//	@Success		200							{array}		dto.JawabanIdentifikasiResponse
+//	@Success		200							{object}	dto.UnifiedJawabanIdentifikasiResponse
 //	@Failure		500							{object}	dto.ErrorResponse
 //	@Router			/api/maturity/jawaban-identifikasi [get]
 func (h *JawabanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
@@ -137,7 +137,8 @@ func (h *JawabanIdentifikasiHandler) handleGetByIkasID(w http.ResponseWriter, r 
 		}
 		return
 	}
-	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban identifikasi", data, len(data))
+
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data jawaban identifikasi", data)
 }
 
 func (h *JawabanIdentifikasiHandler) handleGetByPertanyaan(w http.ResponseWriter, _ *http.Request, pertanyaanID int) {

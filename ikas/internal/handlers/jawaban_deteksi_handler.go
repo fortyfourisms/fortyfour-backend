@@ -91,7 +91,7 @@ func (h *JawabanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.Requ
 // @Produce		json
 // @Param			ikas_id					query	string	false	"Filter by Ikas ID"
 // @Param			pertanyaan_deteksi_id	query	int		false	"Filter by Pertanyaan Deteksi ID"
-// @Success		200						{array}	dto.JawabanDeteksiResponse
+// @Success		200						{object}	dto.UnifiedJawabanDeteksiResponse
 // @Router			/api/maturity/jawaban-deteksi [get]
 func (h *JawabanDeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	ikasID := r.URL.Query().Get("ikas_id")
@@ -147,7 +147,8 @@ func (h *JawabanDeteksiHandler) handleGetByIkasID(w http.ResponseWriter, r *http
 		}
 		return
 	}
-	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban deteksi", data, len(data))
+
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data jawaban deteksi", data)
 }
 
 // @Summary		Get Jawaban Deteksi by ID

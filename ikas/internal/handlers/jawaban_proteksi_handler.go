@@ -79,7 +79,7 @@ func (h *JawabanProteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 //	@Produce		json
 //	@Param			perusahaan_id			query		string	false	"Filter by perusahaan ID"
 //	@Param			pertanyaan_proteksi_id	query		string	false	"Filter by pertanyaan proteksi ID"
-//	@Success		200						{array}		dto.JawabanProteksiResponse
+//	@Success		200						{object}	dto.UnifiedJawabanProteksiResponse
 //	@Failure		500						{object}	dto.ErrorResponse
 //	@Router			/api/maturity/jawaban-proteksi [get]
 func (h *JawabanProteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
@@ -135,7 +135,8 @@ func (h *JawabanProteksiHandler) handleGetByIkasID(w http.ResponseWriter, r *htt
 		}
 		return
 	}
-	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban proteksi", data, len(data))
+
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data jawaban proteksi", data)
 }
 
 func (h *JawabanProteksiHandler) handleGetByPertanyaan(w http.ResponseWriter, _ *http.Request, pertanyaanID int) {

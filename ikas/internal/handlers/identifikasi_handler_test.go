@@ -83,7 +83,7 @@ func TestIdentifikasiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "Berhasil mengambil data", response["message"])
+	assert.Equal(t, "Berhasil mengambil data identifikasi", response["message"])
 	assert.Equal(t, float64(2), response["total"]) // JSON unmarshals numbers to float64
 	assert.NotNil(t, response["data"])
 }
@@ -133,7 +133,7 @@ func TestIdentifikasiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "Berhasil mengambil data", response["message"])
+	assert.Equal(t, "Berhasil mengambil data identifikasi", response["message"])
 	assert.NotNil(t, response["data"])
 }
 

@@ -24,26 +24,29 @@ type JawabanGulihProducerInterface interface {
 }
 
 type JawabanGulihService struct {
-	repo     repository.JawabanGulihRepositoryInterface
-	ikasRepo repository.IkasRepositoryInterface
-	producer JawabanGulihProducerInterface
-	ikasSvc  *IkasService
-	cache    cache.RedisInterface
+	repo           repository.JawabanGulihRepositoryInterface
+	ikasRepo       repository.IkasRepositoryInterface
+	pertanyaanRepo repository.PertanyaanGulihRepositoryInterface
+	producer       JawabanGulihProducerInterface
+	ikasSvc        *IkasService
+	cache          cache.RedisInterface
 }
 
 func NewJawabanGulihService(
 	repo repository.JawabanGulihRepositoryInterface,
 	ikasRepo repository.IkasRepositoryInterface,
+	pertanyaanRepo repository.PertanyaanGulihRepositoryInterface,
 	producer JawabanGulihProducerInterface,
 	ikasSvc *IkasService,
 	cache cache.RedisInterface,
 ) *JawabanGulihService {
 	return &JawabanGulihService{
-		repo:     repo,
-		ikasRepo: ikasRepo,
-		producer: producer,
-		ikasSvc:  ikasSvc,
-		cache:    cache,
+		repo:           repo,
+		ikasRepo:       ikasRepo,
+		pertanyaanRepo: pertanyaanRepo,
+		producer:       producer,
+		ikasSvc:        ikasSvc,
+		cache:          cache,
 	}
 }
 
@@ -218,7 +221,7 @@ func (s *JawabanGulihService) GetByID(id int, userRole string, userPerusahaanID 
 	return data, nil
 }
 
-func (s *JawabanGulihService) GetByIkasID(ikasID string, userRole string, userPerusahaanID string) ([]dto.JawabanGulihResponse, error) {
+func (s *JawabanGulihService) GetByIkasID(ikasID string, userRole string, userPerusahaanID string) (*dto.UnifiedJawabanGulihResponse, error) {
 	if !utils.IsValidUUID(ikasID) {
 		return nil, errors.New("format ikas_id tidak valid")
 	}
@@ -237,28 +240,67 @@ func (s *JawabanGulihService) GetByIkasID(ikasID string, userRole string, userPe
 	if s.cache != nil {
 		cachedData, err := s.cache.Get(cacheKey)
 		if err == nil && cachedData != "" {
-			var data []dto.JawabanGulihResponse
+			var data dto.UnifiedJawabanGulihResponse
 			if err := json.Unmarshal([]byte(cachedData), &data); err == nil {
-				return data, nil
+				return &data, nil
 			}
 		}
 	}
 
+	// 1. Get total questions
+	totalPertanyaan, err := s.pertanyaanRepo.GetTotalCount()
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Get from main table
 	data, err := s.repo.GetByIkasID(ikasID)
 	if err != nil {
 		return nil, err
 	}
 
+	isDraft := false
+	if len(data) < totalPertanyaan {
+		// 3. If incomplete, check buffer
+		bufferData, err := s.repo.GetByIkasIDFromBuffer(ikasID)
+		if err == nil && len(bufferData) > 0 {
+			// Combine data
+			exists := make(map[int]bool)
+			for _, d := range data {
+				exists[d.PertanyaanGulih.ID] = true
+			}
+			for _, b := range bufferData {
+				if !exists[b.PertanyaanGulih.ID] {
+					data = append(data, b)
+				}
+			}
+			isDraft = true
+		}
+	}
+
+	// Calculate completion percentage
+	completionPercentage := 0.0
+	if totalPertanyaan > 0 {
+		completionPercentage = utils.RoundToTwo((float64(len(data)) / float64(totalPertanyaan)) * 100.0)
+	}
+
+	response := &dto.UnifiedJawabanGulihResponse{
+		Data:                 data,
+		Count:                len(data),
+		IsDraft:              isDraft,
+		CompletionPercentage: completionPercentage,
+	}
+
 	if s.cache != nil {
-		go func(key string, dataToCache []dto.JawabanGulihResponse) {
+		go func(key string, dataToCache *dto.UnifiedJawabanGulihResponse) {
 			jsonData, err := json.Marshal(dataToCache)
 			if err == nil {
 				_ = s.cache.Set(key, string(jsonData), cache.DefaultCacheExpiration)
 			}
-		}(cacheKey, data)
+		}(cacheKey, response)
 	}
 
-	return data, nil
+	return response, nil
 }
 
 func (s *JawabanGulihService) GetByPerusahaanID(perusahaanID string, userRole string, userPerusahaanID string) ([]dto.JawabanGulihResponse, error) {

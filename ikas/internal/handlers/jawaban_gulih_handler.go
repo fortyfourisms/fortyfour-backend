@@ -91,14 +91,14 @@ func (h *JawabanGulihHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 // @Produce		json
 // @Param			perusahaan_id		query		string	false	"Filter by Perusahaan ID"
 // @Param			pertanyaan_gulih_id	query		int		false	"Filter by Pertanyaan Gulih ID"
-// @Success		200					{object}	map[string]interface{}
+// @Success		200					{object}	dto.UnifiedJawabanGulihResponse
 // @Router			/api/maturity/jawaban-gulih [get]
 func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
 	if userRole != "admin" && userRole != "staff" && (userPerusahaanID == "" || userPerusahaanID == "null") {
-		utils.RespondListData(w, 200, "Berhasil mengambil data jawaban gulih", []dto.JawabanGulihResponse{}, 0)
+		utils.RespondSuccess(w, 200, "Berhasil mengambil data jawaban gulih", dto.UnifiedJawabanGulihResponse{Data: []dto.JawabanGulihResponse{}, Count: 0})
 		return
 	}
 
@@ -109,7 +109,17 @@ func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 	var err error
 
 	if ikasID != "" {
-		data, err = h.service.GetByIkasID(ikasID, userRole, userPerusahaanID)
+		data, err := h.service.GetByIkasID(ikasID, userRole, userPerusahaanID)
+		if err != nil {
+			status := http.StatusInternalServerError
+			if err.Error() == "format ikas_id tidak valid" {
+				status = http.StatusBadRequest
+			}
+			utils.RespondError(w, status, err.Error())
+			return
+		}
+		utils.RespondSuccess(w, 200, "Berhasil mengambil data jawaban gulih", data)
+		return
 	} else if pertanyaanIDStr != "" {
 		pID, _ := strconv.Atoi(pertanyaanIDStr)
 		data, err = h.service.GetByPertanyaan(pID)
@@ -122,11 +132,7 @@ func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err != nil {
-		status := http.StatusInternalServerError
-		if err.Error() == "format ikas_id tidak valid" {
-			status = http.StatusBadRequest
-		}
-		utils.RespondError(w, status, err.Error())
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
