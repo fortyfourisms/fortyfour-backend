@@ -73,17 +73,16 @@ func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 	}
 }
 
-// GetAllJawabanIdentifikasi godoc
-//
-//	@Summary		List semua jawaban identifikasi
-//	@Description	Mengambil seluruh data jawaban identifikasi. Bisa difilter dengan query param perusahaan_id atau pertanyaan_identifikasi_id
-//	@Tags			JawabanIdentifikasi
-//	@Produce		json
-//	@Param			perusahaan_id				query		string	false	"Filter by perusahaan ID"
-//	@Param			pertanyaan_identifikasi_id	query		string	false	"Filter by pertanyaan identifikasi ID"
-//	@Success		200							{object}	dto.UnifiedJawabanIdentifikasiResponse
-//	@Failure		500							{object}	dto.ErrorResponse
-//	@Router			/api/maturity/jawaban-identifikasi [get]
+// @Summary		List semua jawaban identifikasi
+// @Description	Mengambil seluruh data jawaban identifikasi. Jika ikas_id diberikan, mengembalikan Unified Response (Main + Buffer) dengan metrik penyelesaian.
+// @Tags			JawabanIdentifikasi
+// @Produce		json
+// @Param			ikas_id						query		string	false	"Filter by IKAS ID (Unified API)"
+// @Param			perusahaan_id				query		string	false	"Filter by perusahaan ID"
+// @Param			pertanyaan_identifikasi_id	query		string	false	"Filter by pertanyaan identifikasi ID"
+// @Success		200							{object}	dto.UnifiedJawabanIdentifikasiResponse
+// @Failure		500							{object}	dto.ErrorResponse
+// @Router			/api/maturity/jawaban-identifikasi [get]
 func (h *JawabanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	ikasID := r.URL.Query().Get("ikas_id")
 	pertanyaanIDStr := r.URL.Query().Get("pertanyaan_identifikasi_id")
@@ -180,19 +179,17 @@ func (h *JawabanIdentifikasiHandler) handleGetByID(w http.ResponseWriter, r *htt
 	utils.RespondSuccess(w, 200, "Berhasil mengambil data jawaban identifikasi", data)
 }
 
-// CreateJawabanIdentifikasi godoc
-//
-//	@Summary		Tambah jawaban identifikasi baru
-//	@Description	Membuat record jawaban identifikasi baru
-//	@Tags			JawabanIdentifikasi
-//	@Accept			json
-//	@Produce		json
-//	@Param			body	body		dto.CreateJawabanIdentifikasiRequest	true	"Data jawaban identifikasi"
-//	@Success		201		{object}	dto.JawabanIdentifikasiResponse
-//	@Failure		400		{object}	dto.ErrorResponse
-//	@Failure		404		{object}	dto.ErrorResponse
-//	@Failure		409		{object}	dto.ErrorResponse
-//	@Router			/api/maturity/jawaban-identifikasi [post]
+// @Summary		Tambah jawaban identifikasi baru
+// @Description	Membuat record jawaban identifikasi baru (dikirim ke buffer RabbitMQ)
+// @Tags			JawabanIdentifikasi
+// @Accept			json
+// @Produce		json
+// @Param			body	body		dto.CreateJawabanIdentifikasiRequest	true	"Data jawaban identifikasi"
+// @Success		201		{object}	utils.JSONResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		404		{object}	dto.ErrorResponse
+// @Failure		409		{object}	dto.ErrorResponse
+// @Router			/api/maturity/jawaban-identifikasi [post]
 func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateJawabanIdentifikasiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -237,19 +234,17 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 	utils.RespondSuccess(w, 201, msg, nil)
 }
 
-// UpdateJawabanIdentifikasi godoc
-//
-//	@Summary		Update jawaban identifikasi
-//	@Description	Mengubah data jawaban identifikasi berdasarkan ID
-//	@Tags			JawabanIdentifikasi
-//	@Accept			json
-//	@Produce		json
-//	@Param			id		path		int										true	"JawabanIdentifikasi ID"
-//	@Param			body	body		dto.UpdateJawabanIdentifikasiRequest	true	"Data update"
-//	@Success		200		{object}	dto.JawabanIdentifikasiResponse
-//	@Failure		400		{object}	dto.ErrorResponse
-//	@Failure		404		{object}	dto.ErrorResponse
-//	@Router			/api/maturity/jawaban-identifikasi/{id} [put]
+// @Summary		Update jawaban identifikasi
+// @Description	Mengubah data jawaban identifikasi berdasarkan ID
+// @Tags			JawabanIdentifikasi
+// @Accept			json
+// @Produce		json
+// @Param			id		path		int										true	"JawabanIdentifikasi ID"
+// @Param			body	body		dto.UpdateJawabanIdentifikasiRequest	true	"Data update"
+// @Success		200		{object}	utils.JSONResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		404		{object}	dto.ErrorResponse
+// @Router			/api/maturity/jawaban-identifikasi/{id} [put]
 func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id int) {
 	var req dto.UpdateJawabanIdentifikasiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -299,17 +294,15 @@ func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http
 	})
 }
 
-// DeleteJawabanIdentifikasi godoc
-//
-//	@Summary		Hapus jawaban identifikasi
-//	@Description	Menghapus data jawaban identifikasi berdasarkan ID
-//	@Tags			JawabanIdentifikasi
-//	@Produce		json
-//	@Param			id	path		int	true	"JawabanIdentifikasi ID"
-//	@Success		200	{object}	dto.MessageResponse
-//	@Failure		404	{object}	dto.ErrorResponse
-//	@Failure		500	{object}	dto.ErrorResponse
-//	@Router			/api/maturity/jawaban-identifikasi/{id} [delete]
+// @Summary		Hapus jawaban identifikasi
+// @Description	Menghapus data jawaban identifikasi berdasarkan ID
+// @Tags			JawabanIdentifikasi
+// @Produce		json
+// @Param			id	path		int	true	"JawabanIdentifikasi ID"
+// @Success		200	{object}	utils.JSONResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/maturity/jawaban-identifikasi/{id} [delete]
 func (h *JawabanIdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id int) {
 	userID := ""
 	if val := r.Context().Value(middleware.UserIDKey); val != nil {

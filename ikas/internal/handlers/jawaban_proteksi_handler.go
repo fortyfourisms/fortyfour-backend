@@ -71,17 +71,16 @@ func (h *JawabanProteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-// GetAllJawabanProteksi godoc
-//
-//	@Summary		List semua jawaban proteksi
-//	@Description	Mengambil seluruh data jawaban proteksi. Bisa difilter dengan query param perusahaan_id atau pertanyaan_proteksi_id
-//	@Tags			JawabanProteksi
-//	@Produce		json
-//	@Param			perusahaan_id			query		string	false	"Filter by perusahaan ID"
-//	@Param			pertanyaan_proteksi_id	query		string	false	"Filter by pertanyaan proteksi ID"
-//	@Success		200						{object}	dto.UnifiedJawabanProteksiResponse
-//	@Failure		500						{object}	dto.ErrorResponse
-//	@Router			/api/maturity/jawaban-proteksi [get]
+// @Summary		List semua jawaban proteksi
+// @Description	Mengambil seluruh data jawaban proteksi. Jika ikas_id diberikan, mengembalikan Unified Response (Main + Buffer) dengan metrik penyelesaian.
+// @Tags			JawabanProteksi
+// @Produce		json
+// @Param			ikas_id					query		string	false	"Filter by IKAS ID (Unified API)"
+// @Param			perusahaan_id			query		string	false	"Filter by perusahaan ID"
+// @Param			pertanyaan_proteksi_id	query		string	false	"Filter by pertanyaan proteksi ID"
+// @Success		200						{object}	dto.UnifiedJawabanProteksiResponse
+// @Failure		500						{object}	dto.ErrorResponse
+// @Router			/api/maturity/jawaban-proteksi [get]
 func (h *JawabanProteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	ikasID := r.URL.Query().Get("ikas_id")
 	pertanyaanIDStr := r.URL.Query().Get("pertanyaan_proteksi_id")
@@ -180,19 +179,17 @@ func (h *JawabanProteksiHandler) handleGetByID(w http.ResponseWriter, r *http.Re
 	utils.RespondSuccess(w, 200, "Berhasil mengambil data jawaban proteksi", data)
 }
 
-// CreateJawabanProteksi godoc
-//
-//	@Summary		Tambah jawaban proteksi baru
-//	@Description	Membuat record jawaban proteksi baru
-//	@Tags			JawabanProteksi
-//	@Accept			json
-//	@Produce		json
-//	@Param			body	body		dto.CreateJawabanProteksiRequest	true	"Data jawaban proteksi"
-//	@Success		201		{object}	dto.JawabanProteksiResponse
-//	@Failure		400		{object}	dto.ErrorResponse
-//	@Failure		404		{object}	dto.ErrorResponse
-//	@Failure		409		{object}	dto.ErrorResponse
-//	@Router			/api/maturity/jawaban-proteksi [post]
+// @Summary		Tambah jawaban proteksi baru
+// @Description	Membuat record jawaban proteksi baru (dikirim ke buffer RabbitMQ)
+// @Tags			JawabanProteksi
+// @Accept			json
+// @Produce		json
+// @Param			body	body		dto.CreateJawabanProteksiRequest	true	"Data jawaban proteksi"
+// @Success		201		{object}	utils.JSONResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		404		{object}	dto.ErrorResponse
+// @Failure		409		{object}	dto.ErrorResponse
+// @Router			/api/maturity/jawaban-proteksi [post]
 func (h *JawabanProteksiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateJawabanProteksiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -237,19 +234,17 @@ func (h *JawabanProteksiHandler) handleCreate(w http.ResponseWriter, r *http.Req
 	utils.RespondSuccess(w, 201, msg, nil)
 }
 
-// UpdateJawabanProteksi godoc
-//
-//	@Summary		Update jawaban proteksi
-//	@Description	Mengubah data jawaban proteksi berdasarkan ID
-//	@Tags			JawabanProteksi
-//	@Accept			json
-//	@Produce		json
-//	@Param			id		path		int									true	"JawabanProteksi ID"
-//	@Param			body	body		dto.UpdateJawabanProteksiRequest	true	"Data update"
-//	@Success		200		{object}	dto.JawabanProteksiResponse
-//	@Failure		400		{object}	dto.ErrorResponse
-//	@Failure		404		{object}	dto.ErrorResponse
-//	@Router			/api/maturity/jawaban-proteksi/{id} [put]
+// @Summary		Update jawaban proteksi
+// @Description	Mengubah data jawaban proteksi berdasarkan ID
+// @Tags			JawabanProteksi
+// @Accept			json
+// @Produce		json
+// @Param			id		path		int									true	"JawabanProteksi ID"
+// @Param			body	body		dto.UpdateJawabanProteksiRequest	true	"Data update"
+// @Success		200		{object}	utils.JSONResponse
+// @Failure		400		{object}	dto.ErrorResponse
+// @Failure		404		{object}	dto.ErrorResponse
+// @Router			/api/maturity/jawaban-proteksi/{id} [put]
 func (h *JawabanProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id int) {
 	var req dto.UpdateJawabanProteksiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -299,17 +294,15 @@ func (h *JawabanProteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Req
 	})
 }
 
-// DeleteJawabanProteksi godoc
-//
-//	@Summary		Hapus jawaban proteksi
-//	@Description	Menghapus data jawaban proteksi berdasarkan ID
-//	@Tags			JawabanProteksi
-//	@Produce		json
-//	@Param			id	path		int	true	"JawabanProteksi ID"
-//	@Success		200	{object}	dto.MessageResponse
-//	@Failure		404	{object}	dto.ErrorResponse
-//	@Failure		500	{object}	dto.ErrorResponse
-//	@Router			/api/maturity/jawaban-proteksi/{id} [delete]
+// @Summary		Hapus jawaban proteksi
+// @Description	Menghapus data jawaban proteksi berdasarkan ID
+// @Tags			JawabanProteksi
+// @Produce		json
+// @Param			id	path		int	true	"JawabanProteksi ID"
+// @Success		200	{object}	utils.JSONResponse
+// @Failure		404	{object}	dto.ErrorResponse
+// @Failure		500	{object}	dto.ErrorResponse
+// @Router			/api/maturity/jawaban-proteksi/{id} [delete]
 func (h *JawabanProteksiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id int) {
 	userID := ""
 	if val := r.Context().Value(middleware.UserIDKey); val != nil {
