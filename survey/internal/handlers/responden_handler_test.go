@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"survey/internal/dto"
+	"survey/internal/middleware"
 )
 
 // MOCK SERVICE
@@ -34,6 +35,14 @@ func (m *mockService) UpsertByUserID(userID string, req dto.CreateRespondenReque
 	return m.UpsertByUserIDFunc(userID, req)
 }
 
+// helper: inject role and userID into context (simulates Auth middleware)
+func withContext(req *http.Request, userID, role string) *http.Request {
+	ctx := req.Context()
+	ctx = middleware.SetUserID(ctx, userID)
+	ctx = middleware.SetRole(ctx, role)
+	return req.WithContext(ctx)
+}
+
 // GET ALL
 func TestGetAllResponden(t *testing.T) {
 	mock := &mockService{
@@ -45,7 +54,7 @@ func TestGetAllResponden(t *testing.T) {
 	handler := NewRespondenHandler(mock)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/survey/responden", nil)
-	req.Header.Set("X-User-Role", "admin")
+	req = withContext(req, "admin1", "admin")
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -66,7 +75,7 @@ func TestGetByID_Success(t *testing.T) {
 	handler := NewRespondenHandler(mock)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/survey/responden/1", nil)
-	req.Header.Set("X-User-Role", "admin")
+	req = withContext(req, "admin1", "admin")
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -81,7 +90,7 @@ func TestGetByID_InvalidID(t *testing.T) {
 	handler := NewRespondenHandler(&mockService{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/survey/responden/abc", nil)
-	req.Header.Set("X-User-Role", "admin")
+	req = withContext(req, "admin1", "admin")
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -102,8 +111,7 @@ func TestGetMe_Success(t *testing.T) {
 	handler := NewRespondenHandler(mock)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/survey/responden/me", nil)
-	req.Header.Set("X-User-ID", "user1")
-	req.Header.Set("X-User-Role", "user")
+	req = withContext(req, "user1", "user")
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -125,8 +133,7 @@ func TestUpsertMe_Success(t *testing.T) {
 
 	body, _ := json.Marshal(dto.CreateRespondenRequest{})
 	req := httptest.NewRequest(http.MethodPost, "/api/survey/responden/me", bytes.NewBuffer(body))
-	req.Header.Set("X-User-ID", "user1")
-	req.Header.Set("X-User-Role", "user")
+	req = withContext(req, "user1", "user")
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)

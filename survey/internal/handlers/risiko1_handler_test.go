@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"survey/internal/dto"
+	"survey/internal/middleware"
 	"survey/internal/repository"
 )
 
@@ -57,6 +58,14 @@ func (m *mockRisikoService) FinishSurvey(userID string) error {
 	return m.FinishSurveyFunc(userID)
 }
 
+// helper: inject role and userID into request context
+func withRisikoCtx(req *http.Request, userID, role string) *http.Request {
+	ctx := req.Context()
+	ctx = middleware.SetUserID(ctx, userID)
+	ctx = middleware.SetRole(ctx, role)
+	return req.WithContext(ctx)
+}
+
 // ELIGIBILITY
 func TestSubmitEligibility_Success(t *testing.T) {
 	mock := &mockRisikoService{
@@ -69,7 +78,7 @@ func TestSubmitEligibility_Success(t *testing.T) {
 
 	body, _ := json.Marshal(dto.EligibilityRequest{})
 	req := httptest.NewRequest(http.MethodPost, "/eligibility", bytes.NewBuffer(body))
-	req.Header.Set("X-User-ID", "user1")
+	req = withRisikoCtx(req, "user1", "user")
 	w := httptest.NewRecorder()
 
 	h.SubmitEligibility(w, req)
@@ -103,13 +112,13 @@ func TestGetByRespondentID_Success(t *testing.T) {
 	h := NewRisikoHandler(mock)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/survey/risiko/1", nil)
-	req.Header.Set("X-User-Role", "admin")
+	req = withRisikoCtx(req, "admin1", "admin")
 	w := httptest.NewRecorder()
 
 	h.GetByRespondentID(w, req)
 
 	if w.Code != http.StatusOK {
-		t.Errorf("expected 200")
+		t.Errorf("expected 200, got %d", w.Code)
 	}
 }
 
@@ -123,13 +132,13 @@ func TestGetByRespondentID_NotFound(t *testing.T) {
 	h := NewRisikoHandler(mock)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/survey/risiko/1", nil)
-	req.Header.Set("X-User-Role", "admin")
+	req = withRisikoCtx(req, "admin1", "admin")
 	w := httptest.NewRecorder()
 
 	h.GetByRespondentID(w, req)
 
 	if w.Code != http.StatusNotFound {
-		t.Errorf("expected 404")
+		t.Errorf("expected 404, got %d", w.Code)
 	}
 }
 
@@ -137,13 +146,13 @@ func TestGetByRespondentID_InvalidID(t *testing.T) {
 	h := NewRisikoHandler(&mockRisikoService{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/survey/risiko/abc", nil)
-	req.Header.Set("X-User-Role", "admin")
+	req = withRisikoCtx(req, "admin1", "admin")
 	w := httptest.NewRecorder()
 
 	h.GetByRespondentID(w, req)
 
 	if w.Code != http.StatusBadRequest {
-		t.Errorf("expected 400")
+		t.Errorf("expected 400, got %d", w.Code)
 	}
 }
 
@@ -158,13 +167,13 @@ func TestFinishSurvey_Success(t *testing.T) {
 	h := NewRisikoHandler(mock)
 
 	req := httptest.NewRequest(http.MethodPost, "/finish", nil)
-	req.Header.Set("X-User-ID", "user1")
+	req = withRisikoCtx(req, "user1", "user")
 	w := httptest.NewRecorder()
 
 	h.FinishSurvey(w, req)
 
 	if w.Code != http.StatusOK {
-		t.Errorf("expected 200")
+		t.Errorf("expected 200, got %d", w.Code)
 	}
 }
 
@@ -178,12 +187,12 @@ func TestFinishSurvey_Error(t *testing.T) {
 	h := NewRisikoHandler(mock)
 
 	req := httptest.NewRequest(http.MethodPost, "/finish", nil)
-	req.Header.Set("X-User-ID", "user1")
+	req = withRisikoCtx(req, "user1", "user")
 	w := httptest.NewRecorder()
 
 	h.FinishSurvey(w, req)
 
 	if w.Code != http.StatusInternalServerError {
-		t.Errorf("expected 500")
+		t.Errorf("expected 500, got %d", w.Code)
 	}
 }

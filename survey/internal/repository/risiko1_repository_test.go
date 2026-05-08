@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"regexp"
 	"testing"
 	"time"
 
@@ -24,7 +25,7 @@ func TestGetAllRisiko_Success(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "nama", "deskripsi"}).
 		AddRow(1, "Risiko A", "Deskripsi A")
 
-	mock.ExpectQuery("SELECT id, nama, deskripsi FROM risiko").
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, nama, COALESCE(deskripsi, '')")).
 		WillReturnRows(rows)
 
 	result, err := repo.GetAllRisiko()
@@ -48,7 +49,7 @@ func TestGetRisikoByID_Success(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "kode", "nama", "deskripsi", "urutan", "aktif", "created_at", "updated_at"}).
 		AddRow(1, "R01", "Risiko A", nil, 1, true, time.Now(), time.Now())
 
-	mock.ExpectQuery("SELECT id, kode, nama, deskripsi").
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, kode, nama, deskripsi")).
 		WithArgs(int64(1)).
 		WillReturnRows(rows)
 
@@ -71,7 +72,7 @@ func TestUpsertEligibility(t *testing.T) {
 	repo := NewRisikoRepository(db)
 
 	mock.ExpectExec("INSERT INTO risiko_eligibility").
-		WithArgs(int64(1), int64(2), true).
+		WithArgs(int64(1), int64Ptr(2), true).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err := repo.UpsertEligibility(models.RisikoEligibility{
