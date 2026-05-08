@@ -44,7 +44,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// USER: /me
 		if path == "me" {
-			if role != "user" {
+			if role != "user" && role != "pic" {
 				utils.RespondError(w, http.StatusForbidden, "forbidden")
 				return
 			}
@@ -54,7 +54,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// ADMIN: GET ALL
 		if path == "" {
-			if role != "admin" {
+			if role != "admin" && role != "staff" {
 				utils.RespondError(w, http.StatusForbidden, "forbidden")
 				return
 			}
@@ -63,7 +63,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// ADMIN: GET BY ID
-		if role != "admin" {
+		if role != "admin" && role != "staff" {
 			utils.RespondError(w, http.StatusForbidden, "forbidden")
 			return
 		}
@@ -77,7 +77,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if role != "user" {
+		if role != "user" && role != "pic" {
 			utils.RespondError(w, http.StatusForbidden, "forbidden")
 			return
 		}

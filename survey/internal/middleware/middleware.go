@@ -127,7 +127,7 @@ func Auth(next http.Handler) http.Handler {
 		// FALLBACK HEADER
 		if userID == "" {
 			userID = r.Header.Get("X-User-ID")
-			role = r.Header.Get("X-Role")
+			role = r.Header.Get("X-User-Role")
 		}
 
 		// VALIDATION
