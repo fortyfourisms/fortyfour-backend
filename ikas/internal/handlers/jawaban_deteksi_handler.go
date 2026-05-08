@@ -80,9 +80,7 @@ func (h *JawabanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	utils.RespondJSON(w, 201, map[string]interface{}{
-		"message": msg,
-	})
+	utils.RespondSuccess(w, 201, msg, nil)
 }
 
 // @Summary		Get All Jawaban Deteksi

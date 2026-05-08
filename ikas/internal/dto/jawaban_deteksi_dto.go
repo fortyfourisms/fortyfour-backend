@@ -37,8 +37,8 @@ type JawabanDeteksiResponse struct {
 }
 
 type UnifiedJawabanDeteksiResponse struct {
-	Data                 []JawabanDeteksiResponse `json:"data"`
 	Count                int                      `json:"count"`
 	IsDraft              bool                     `json:"is_draft"`
 	CompletionPercentage float64                  `json:"completion_percentage"`
+	Data                 []JawabanDeteksiResponse `json:"data"`
 }

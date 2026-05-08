@@ -37,8 +37,8 @@ type JawabanProteksiResponse struct {
 }
 
 type UnifiedJawabanProteksiResponse struct {
-	Data                 []JawabanProteksiResponse `json:"data"`
 	Count                int                       `json:"count"`
 	IsDraft              bool                      `json:"is_draft"`
 	CompletionPercentage float64                   `json:"completion_percentage"`
+	Data                 []JawabanProteksiResponse `json:"data"`
 }

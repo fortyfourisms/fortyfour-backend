@@ -234,9 +234,7 @@ func (h *JawabanProteksiHandler) handleCreate(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	utils.RespondJSON(w, 201, map[string]interface{}{
-		"message": msg,
-	})
+	utils.RespondSuccess(w, 201, msg, nil)
 }
 
 // UpdateJawabanProteksi godoc
