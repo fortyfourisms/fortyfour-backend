@@ -44,7 +44,7 @@ func (h *DeteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Produce		json
 //	@Success		200	{array}		dto.DeteksiResponse
 //	@Failure		500	{object}	dto.ErrorResponse
-//	@Router			/api/deteksi [get]
+//	@Router			/api/maturity/deteksi [get]
 func (h *DeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
@@ -96,7 +96,7 @@ func (h *DeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 //	@Param		id	path		string	true	"Deteksi ID"
 //	@Success	200	{object}	dto.DeteksiResponse
 //	@Failure	404	{object}	dto.ErrorResponse
-//	@Router		/api/deteksi/{id} [get]
+//	@Router		/api/maturity/deteksi/{id} [get]
 func (h *DeteksiHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)

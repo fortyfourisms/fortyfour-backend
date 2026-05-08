@@ -149,7 +149,10 @@ func (s *RisikoService) ProcessAlasan(userID string, req dto.AlasanRequest) (map
 		return nil, err
 	}
 
-	risikoID, _ := toInt(req.RisikoID)
+	risikoID, err := toInt(req.RisikoID)
+	if err != nil {
+		return nil, err
+	}
 
 	data := models.RisikoAlasan{
 		RespondenID: int64(respondenID),
@@ -181,7 +184,10 @@ func (s *RisikoService) ProcessDampak(userID string, req dto.DampakRequest) (map
 		return nil, err
 	}
 
-	risikoID, _ := toInt(req.RisikoID)
+	risikoID, err := toInt(req.RisikoID)
+	if err != nil {
+		return nil, err
+	}
 
 	data := models.RisikoDampak{
 		RespondenID:       int64(respondenID),
@@ -217,7 +223,10 @@ func (s *RisikoService) ProcessPengendalian(userID string, req dto.PengendalianR
 		return nil, err
 	}
 
-	risikoID, _ := toInt(req.RisikoID)
+	risikoID, err := toInt(req.RisikoID)
+	if err != nil {
+		return nil, err
+	}
 
 	data := models.RisikoPengendalian{
 		RespondenID:           int64(respondenID),

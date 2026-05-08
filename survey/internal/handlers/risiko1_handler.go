@@ -136,6 +136,7 @@ func (h *RisikoHandler) SubmitPengendalian(w http.ResponseWriter, r *http.Reques
 // @Produce json
 // @Success 200 {object} dto.APIResponse
 // @Failure 404 {object} dto.ErrorResponse
+// @Router /api/survey/risiko/me [get]
 func (h *RisikoHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
@@ -161,7 +162,7 @@ func (h *RisikoHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
-	if role != "admin" {
+	if role != "admin" && role != "staff" {
 		writeError(w, 403, "forbidden")
 		return
 	}
@@ -184,6 +185,22 @@ func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request
 	}
 
 	writeSuccess(w, data)
+}
+
+// @Summary Get Survey Progress
+// @Description Get current user's survey progress and current step
+// @Tags Risiko
+// @Accept json
+// @Produce json
+// @Success 200 {object} dto.APIResponse{data=dto.ProgressResponse}
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Router /api/survey/progress [get]
+func (h *RisikoHandler) GetProgress(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	res, err := h.svc.GetProgress(userID)
+	handleResult(w, res, err)
 }
 
 // @Summary Navigate Survey

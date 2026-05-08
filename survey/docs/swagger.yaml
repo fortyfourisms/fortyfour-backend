@@ -1,3 +1,4 @@
+basePath: /
 definitions:
   survey_internal_dto.APIResponse:
     properties:
@@ -101,39 +102,6 @@ definitions:
       selesai:
         type: boolean
     type: object
-  survey_internal_dto.RespondenResponse:
-    properties:
-      created_at:
-        type: string
-      email:
-        type: string
-      id:
-        type: integer
-      id_perusahaan:
-        description: dari PERUSAHAAN
-        type: string
-      jabatan:
-        type: string
-      nama_lengkap:
-        description: dari RESPONDEN
-        type: string
-      nama_perusahaan:
-        type: string
-      nama_sektor:
-        type: string
-      nama_sub_sektor:
-        description: dari JOIN (opsional)
-        type: string
-      no_telepon:
-        type: string
-      sertifikat_training:
-        type: string
-      updated_at:
-        type: string
-      user_id:
-        description: dari backend (JWT)
-        type: string
-    type: object
   survey_internal_models.FrequencyLevel:
     enum:
     - 1
@@ -158,9 +126,28 @@ definitions:
     - ImpactFairlySignificant
     - ImpactSignificant
     - ImpactVerySignificant
+host: localhost:8082
 info:
   contact: {}
+  description: API documentation for Survey service.
+  title: Survey API
+  version: "1.0"
 paths:
+  /api/health:
+    get:
+      description: Check if the Survey API is running and healthy
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - Health
   /api/survey/finish:
     post:
       consumes:
@@ -179,7 +166,7 @@ paths:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
       summary: Finish Survey
       tags:
-      - risiko
+      - Risiko
   /api/survey/navigate:
     post:
       consumes:
@@ -210,7 +197,7 @@ paths:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
       summary: Navigate Survey
       tags:
-      - risiko
+      - Risiko
   /api/survey/responden:
     get:
       description: Hanya admin yang dapat melihat semua data responden
@@ -221,7 +208,8 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/survey_internal_dto.RespondenResponse'
+              additionalProperties: true
+              type: object
             type: array
         "403":
           description: Forbidden
@@ -235,7 +223,7 @@ paths:
       - BearerAuth: []
       summary: Ambil semua responden
       tags:
-      - Responden (Admin)
+      - Responden
   /api/survey/responden/{id}:
     get:
       description: Hanya admin yang dapat melihat detail responden
@@ -251,7 +239,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.RespondenResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
@@ -264,7 +253,7 @@ paths:
       - BearerAuth: []
       summary: Ambil responden berdasarkan ID
       tags:
-      - Responden (Admin)
+      - Responden
   /api/survey/responden/me:
     get:
       description: User hanya dapat melihat data dirinya sendiri
@@ -274,7 +263,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.RespondenResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
@@ -287,7 +277,7 @@ paths:
       - BearerAuth: []
       summary: Ambil data responden milik user login
       tags:
-      - Responden (User)
+      - Responden
     post:
       consumes:
       - application/json
@@ -305,7 +295,8 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.RespondenResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
@@ -318,7 +309,7 @@ paths:
       - BearerAuth: []
       summary: Create / Update responden milik user login
       tags:
-      - Responden (User)
+      - Responden
   /api/survey/risiko/{id}:
     get:
       consumes:
@@ -347,7 +338,7 @@ paths:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
       summary: Get Risiko by Respondent ID
       tags:
-      - risiko
+      - Risiko
   /api/survey/risiko/dampak:
     post:
       consumes:
@@ -373,7 +364,7 @@ paths:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
       summary: Submit Dampak
       tags:
-      - risiko
+      - Risiko
   /api/survey/risiko/eligibility:
     post:
       consumes:
@@ -399,7 +390,7 @@ paths:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
       summary: Submit Eligibility
       tags:
-      - risiko
+      - Risiko
   /api/survey/risiko/pengendalian:
     post:
       consumes:
@@ -425,7 +416,7 @@ paths:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
       summary: Submit Pengendalian
       tags:
-      - risiko
+      - Risiko
   /api/survey/risiko/reason:
     post:
       consumes:
@@ -451,7 +442,7 @@ paths:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
       summary: Submit Alasan
       tags:
-      - risiko
+      - Risiko
   /api/survey/save-progress:
     post:
       consumes:
@@ -482,5 +473,10 @@ paths:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
       summary: Save Progress
       tags:
-      - risiko
+      - Risiko
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

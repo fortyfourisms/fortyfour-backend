@@ -44,7 +44,7 @@ func (h *ProteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Produce		json
 //	@Success		200	{array}		dto.ProteksiResponse
 //	@Failure		500	{object}	dto.ErrorResponse
-//	@Router			/api/proteksi [get]
+//	@Router			/api/maturity/proteksi [get]
 func (h *ProteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
@@ -97,7 +97,7 @@ func (h *ProteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 //	@Param			id	path		string	true	"Proteksi ID"
 //	@Success		200	{object}	dto.ProteksiResponse
 //	@Failure		404	{object}	dto.ErrorResponse
-//	@Router			/api/proteksi/{id} [get]
+//	@Router			/api/maturity/proteksi/{id} [get]
 func (h *ProteksiHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)

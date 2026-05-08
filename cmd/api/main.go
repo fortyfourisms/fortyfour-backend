@@ -233,6 +233,9 @@ func main() {
 	// Proxy Handler for IKAS
 	ikasProxyHandler := handlers.NewProxyHandler("http://ikas:8081", cfg.InternalGatewayKey)
 
+	// Proxy Handler for Survey
+	surveyProxyHandler := handlers.NewProxyHandler("http://survey:8082", cfg.InternalGatewayKey)
+
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(tokenService, userRepo)
 	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
@@ -270,6 +273,7 @@ func main() {
 		dashboardHandler,
 		notificationHandler,
 		ikasProxyHandler,
+		surveyProxyHandler,
 		lmsHandler,
 		beritaHandler,
 		eventHandler,

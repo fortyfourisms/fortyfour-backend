@@ -44,7 +44,7 @@ func (h *GulihHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Produce		json
 //	@Success		200	{array}		dto.GulihResponse
 //	@Failure		500	{object}	dto.ErrorResponse
-//	@Router			/api/gulih [get]
+//	@Router			/api/maturity/gulih [get]
 func (h *GulihHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
@@ -96,7 +96,7 @@ func (h *GulihHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 //	@Param		id	path		string	true	"Gulih ID"
 //	@Success	200	{object}	dto.GulihResponse
 //	@Failure	404	{object}	dto.ErrorResponse
-//	@Router		/api/gulih/{id} [get]
+//	@Router		/api/maturity/gulih/{id} [get]
 func (h *GulihHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)

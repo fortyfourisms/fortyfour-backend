@@ -136,6 +136,16 @@ var defaultPolicies = []Policy{
 	{"user_pic", "/api/maturity/jawaban-gulih/:id", "GET"},
 	{"user_pic", "/api/maturity/jawaban-gulih/:id", "PUT"},
 
+	// ── SURVEY ───────────────────────────────────────────────────────────────
+	{"user_pic", "/api/survey/responden/me", "GET"},
+	{"user_pic", "/api/survey/responden/me", "POST"},
+	{"user_pic", "/api/survey/risiko/me", "GET"},
+	{"user_pic", "/api/survey/risiko/*", "POST"},
+	{"user_pic", "/api/survey/progress", "GET"},
+	{"user_pic", "/api/survey/navigate", "POST"},
+	{"user_pic", "/api/survey/save-progress", "POST"},
+	{"user_pic", "/api/survey/finish", "POST"},
+
 	// ── LMS (user_pic juga bisa akses LMS) ──────────────────────────────────
 
 	// Kelas
@@ -343,6 +353,11 @@ var defaultPolicies = []Policy{
 	{"staff", "/api/maturity/jawaban-gulih", "POST"},
 	{"staff", "/api/maturity/jawaban-gulih/:id", "GET"},
 	{"staff", "/api/maturity/jawaban-gulih/:id", "PUT"},
+
+	// Survey
+	{"staff", "/api/survey/responden", "GET"},
+	{"staff", "/api/survey/responden/:id", "GET"},
+	{"staff", "/api/survey/risiko/:id", "GET"},
 
 	// LMS — staff bisa manage kelas, materi, kuis, soal (GET, POST, PUT)
 	{"staff", "/api/kelas", "GET"},

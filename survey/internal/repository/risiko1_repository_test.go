@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"errors"
+	"regexp"
 	"testing"
 	"time"
 
@@ -10,6 +11,9 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 )
+
+// helper
+func int64Ptr(v int64) *int64 { return &v }
 
 // GET ALL RISIKO
 func TestGetAllRisiko_Success(t *testing.T) {
@@ -21,7 +25,7 @@ func TestGetAllRisiko_Success(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "nama", "deskripsi"}).
 		AddRow(1, "Risiko A", "Deskripsi A")
 
-	mock.ExpectQuery("SELECT id, nama, deskripsi FROM risiko").
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, nama, COALESCE(deskripsi, '')")).
 		WillReturnRows(rows)
 
 	result, err := repo.GetAllRisiko()
@@ -36,16 +40,17 @@ func TestGetAllRisiko_Success(t *testing.T) {
 }
 
 // GET BY ID
-func TestGetByID_Success(t *testing.T) {
+func TestGetRisikoByID_Success(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
 	repo := NewRisikoRepository(db)
 
-	rows := sqlmock.NewRows([]string{"id"}).AddRow(1)
+	rows := sqlmock.NewRows([]string{"id", "kode", "nama", "deskripsi", "urutan", "aktif", "created_at", "updated_at"}).
+		AddRow(1, "R01", "Risiko A", nil, 1, true, time.Now(), time.Now())
 
-	mock.ExpectQuery("SELECT id, responden_id").
-		WithArgs(1).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, kode, nama, deskripsi")).
+		WithArgs(int64(1)).
 		WillReturnRows(rows)
 
 	res, err := repo.GetByID(1)
@@ -67,12 +72,12 @@ func TestUpsertEligibility(t *testing.T) {
 	repo := NewRisikoRepository(db)
 
 	mock.ExpectExec("INSERT INTO risiko_eligibility").
-		WithArgs(1, 2, true).
+		WithArgs(int64(1), int64Ptr(2), true).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err := repo.UpsertEligibility(models.RisikoEligibility{
 		RespondenID:   1,
-		RisikoID:      2,
+		RisikoID:      int64Ptr(2),
 		PernahTerjadi: true,
 	})
 
@@ -102,7 +107,7 @@ func TestFindByRespondentID_Success(t *testing.T) {
 	)
 
 	mock.ExpectQuery("SELECT").
-		WithArgs(1).
+		WithArgs(int64(1)).
 		WillReturnRows(rows)
 
 	result, err := repo.FindByRespondentID(1)
@@ -124,32 +129,13 @@ func TestFindByRespondentID_NotFound(t *testing.T) {
 	repo := NewRisikoRepository(db)
 
 	mock.ExpectQuery("SELECT").
-		WithArgs(1).
+		WithArgs(int64(1)).
 		WillReturnError(sql.ErrNoRows)
 
 	_, err := repo.FindByRespondentID(1)
 
 	if !errors.Is(err, ErrNotFound) {
 		t.Error("expected ErrNotFound")
-	}
-}
-
-// UPDATE PARTIAL
-func TestUpdatePartial(t *testing.T) {
-	db, mock, _ := sqlmock.New()
-	defer db.Close()
-
-	repo := NewRisikoRepository(db)
-
-	mock.ExpectExec("UPDATE risiko SET").
-		WillReturnResult(sqlmock.NewResult(1, 1))
-
-	err := repo.UpdatePartial(1, map[string]interface{}{
-		"nama": "baru",
-	})
-
-	if err != nil {
-		t.Error(err)
 	}
 }
 
@@ -162,12 +148,12 @@ func TestGetProgress_InsertDefault(t *testing.T) {
 
 	// first query -> no rows
 	mock.ExpectQuery("SELECT id, responden_id").
-		WithArgs(1).
+		WithArgs(int64(1)).
 		WillReturnError(sql.ErrNoRows)
 
 	// insert default
 	mock.ExpectExec("INSERT INTO survey_progress").
-		WithArgs(1).
+		WithArgs(int64(1)).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// second query (after insert)
@@ -177,7 +163,7 @@ func TestGetProgress_InsertDefault(t *testing.T) {
 	}).AddRow(1, 1, nil, "eligibility", false, time.Now())
 
 	mock.ExpectQuery("SELECT id, responden_id").
-		WithArgs(1).
+		WithArgs(int64(1)).
 		WillReturnRows(rows)
 
 	res, err := repo.GetProgress(1)
@@ -199,7 +185,7 @@ func TestExistsRisiko(t *testing.T) {
 	repo := NewRisikoRepository(db)
 
 	mock.ExpectQuery("SELECT EXISTS").
-		WithArgs(1).
+		WithArgs(int64(1)).
 		WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
 
 	exists, err := repo.ExistsRisiko(1)
@@ -217,7 +203,7 @@ func TestInsertCustomRisiko(t *testing.T) {
 	repo := NewRisikoRepository(db)
 
 	mock.ExpectExec("INSERT INTO risiko_custom").
-		WithArgs(1, "custom").
+		WithArgs(int64(1), "custom").
 		WillReturnResult(sqlmock.NewResult(10, 1))
 
 	id, err := repo.InsertCustomRisiko(1, "custom")

@@ -6,6 +6,8 @@ import (
 	"survey/internal/dto"
 )
 
+func strPtr(s string) *string { return &s }
+
 func TestValidateCreateResponden_Success(t *testing.T) {
 	req := dto.CreateRespondenRequest{
 		IdPerusahaan:       "perusahaan1",
@@ -13,7 +15,7 @@ func TestValidateCreateResponden_Success(t *testing.T) {
 		Jabatan:            "Manager",
 		Email:              "email@mail.com",
 		NoTelepon:          "+62812345678",
-		SertifikatTraining: "yes",
+		SertifikatTraining: strPtr("yes"),
 	}
 
 	err := ValidateCreateResponden(req)
@@ -29,7 +31,7 @@ func TestValidateCreateResponden_IdPerusahaanEmpty(t *testing.T) {
 		Jabatan:            "Manager",
 		Email:              "email@mail.com",
 		NoTelepon:          "+62812345678",
-		SertifikatTraining: "yes",
+		SertifikatTraining: strPtr("yes"),
 	}
 
 	err := ValidateCreateResponden(req)
@@ -45,7 +47,7 @@ func TestValidateCreateResponden_NamaLengkapEmpty(t *testing.T) {
 		Jabatan:            "Manager",
 		Email:              "email@mail.com",
 		NoTelepon:          "+62812345678",
-		SertifikatTraining: "yes",
+		SertifikatTraining: strPtr("yes"),
 	}
 
 	err := ValidateCreateResponden(req)
@@ -61,7 +63,7 @@ func TestValidateCreateResponden_NamaLengkapTooShort(t *testing.T) {
 		Jabatan:            "Manager",
 		Email:              "email@mail.com",
 		NoTelepon:          "+62812345678",
-		SertifikatTraining: "yes",
+		SertifikatTraining: strPtr("yes"),
 	}
 
 	err := ValidateCreateResponden(req)
@@ -77,7 +79,7 @@ func TestValidateCreateResponden_JabatanEmpty(t *testing.T) {
 		Jabatan:            "",
 		Email:              "email@mail.com",
 		NoTelepon:          "+62812345678",
-		SertifikatTraining: "yes",
+		SertifikatTraining: strPtr("yes"),
 	}
 
 	err := ValidateCreateResponden(req)
@@ -93,7 +95,7 @@ func TestValidateCreateResponden_EmailEmpty(t *testing.T) {
 		Jabatan:            "Manager",
 		Email:              "",
 		NoTelepon:          "+62812345678",
-		SertifikatTraining: "yes",
+		SertifikatTraining: strPtr("yes"),
 	}
 
 	err := ValidateCreateResponden(req)
@@ -109,7 +111,7 @@ func TestValidateCreateResponden_EmailInvalid(t *testing.T) {
 		Jabatan:            "Manager",
 		Email:              "invalid-email",
 		NoTelepon:          "+62812345678",
-		SertifikatTraining: "yes",
+		SertifikatTraining: strPtr("yes"),
 	}
 
 	err := ValidateCreateResponden(req)
@@ -125,7 +127,7 @@ func TestValidateCreateResponden_PhoneEmpty(t *testing.T) {
 		Jabatan:            "Manager",
 		Email:              "email@mail.com",
 		NoTelepon:          "",
-		SertifikatTraining: "yes",
+		SertifikatTraining: strPtr("yes"),
 	}
 
 	err := ValidateCreateResponden(req)
@@ -141,7 +143,7 @@ func TestValidateCreateResponden_PhoneInvalidFormat(t *testing.T) {
 		Jabatan:            "Manager",
 		Email:              "email@mail.com",
 		NoTelepon:          "abc12345",
-		SertifikatTraining: "yes",
+		SertifikatTraining: strPtr("yes"),
 	}
 
 	err := ValidateCreateResponden(req)
@@ -157,7 +159,7 @@ func TestValidateCreateResponden_PhoneTooShort(t *testing.T) {
 		Jabatan:            "Manager",
 		Email:              "email@mail.com",
 		NoTelepon:          "123",
-		SertifikatTraining: "yes",
+		SertifikatTraining: strPtr("yes"),
 	}
 
 	err := ValidateCreateResponden(req)
@@ -166,19 +168,18 @@ func TestValidateCreateResponden_PhoneTooShort(t *testing.T) {
 	}
 }
 
-func TestValidateUpdateResponden_Success(t *testing.T) {
-	req := dto.UpdateRespondenRequest{
-		IdPerusahaan:       "perusahaan1",
-		NamaLengkap:        "Nama Lengkap",
-		Jabatan:            "Manager",
-		Email:              "email@mail.com",
-		NoTelepon:          "+62812345678",
-		SertifikatTraining: "yes",
+func TestValidateCreateResponden_NilSertifikat(t *testing.T) {
+	req := dto.CreateRespondenRequest{
+		IdPerusahaan: "perusahaan1",
+		NamaLengkap:  "Nama Lengkap",
+		Jabatan:      "Manager",
+		Email:        "email@mail.com",
+		NoTelepon:    "+62812345678",
 	}
 
-	err := ValidateUpdateResponden(req)
+	err := ValidateCreateResponden(req)
 	if err != nil {
-		t.Fatalf("expected success, got %v", err)
+		t.Fatalf("expected no error with nil sertifikat, got %v", err)
 	}
 }
 
