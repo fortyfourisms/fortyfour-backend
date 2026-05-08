@@ -5,11 +5,19 @@ import (
 	"net/http"
 	"time"
 
+	_ "survey/docs"
 	"survey/internal/handlers"
 	"survey/internal/middleware"
+
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-// HEALTH CHECK
+// @Summary		Health check
+// @Description	Check if the Survey API is running and healthy
+// @Tags			Health
+// @Produce		json
+// @Success		200	{object}	map[string]string
+// @Router			/api/health [get]
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -50,12 +58,17 @@ func InitRouter(
 	mux.Handle("/api/survey/risiko/dampak", protected(http.HandlerFunc(risikoH.SubmitDampak)))
 	mux.Handle("/api/survey/risiko/pengendalian", protected(http.HandlerFunc(risikoH.SubmitPengendalian)))
 	mux.Handle("/api/survey/risiko/reason", protected(http.HandlerFunc(risikoH.SubmitAlasan)))
+	mux.Handle("/api/survey/risiko/me", protected(http.HandlerFunc(risikoH.GetMe)))
 	mux.Handle("/api/survey/risiko/", protected(http.HandlerFunc(risikoH.GetByRespondentID)))
 
 	// PROGRESS & NAVIGATION
+	mux.Handle("/api/survey/progress", protected(http.HandlerFunc(risikoH.GetProgress)))
 	mux.Handle("/api/survey/navigate", protected(http.HandlerFunc(risikoH.Navigate)))
 	mux.Handle("/api/survey/save-progress", protected(http.HandlerFunc(risikoH.SaveProgress)))
 	mux.Handle("/api/survey/finish", protected(http.HandlerFunc(risikoH.FinishSurvey)))
+
+	// Swagger UI
+	mux.HandleFunc("/swagger/survey/", httpSwagger.WrapHandler)
 
 	return mux
 }

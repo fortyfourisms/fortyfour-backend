@@ -13,9 +13,9 @@ import (
 type mockRepo struct {
 	createFn        func(m models.Responden) (int64, error)
 	getAllFn        func() ([]models.RespondenDetail, error)
-	getDetailByIDFn func(id int) (*models.RespondenDetail, error)
-	getByIDFn       func(id int) (*models.Responden, error)
-	updateFn        func(id int, m models.Responden) error
+	getDetailByIDFn func(id int64) (*models.RespondenDetail, error)
+	getByUserIDFn   func(userID string) (*models.RespondenDetail, error)
+	upsertByUserFn  func(userID string, m models.Responden) error
 }
 
 func (m *mockRepo) Create(r models.Responden) (int64, error) {
@@ -24,14 +24,14 @@ func (m *mockRepo) Create(r models.Responden) (int64, error) {
 func (m *mockRepo) GetAllDetail() ([]models.RespondenDetail, error) {
 	return m.getAllFn()
 }
-func (m *mockRepo) GetDetailByID(id int) (*models.RespondenDetail, error) {
+func (m *mockRepo) GetDetailByID(id int64) (*models.RespondenDetail, error) {
 	return m.getDetailByIDFn(id)
 }
-func (m *mockRepo) GetByID(id int) (*models.Responden, error) {
-	return m.getByIDFn(id)
+func (m *mockRepo) GetByUserID(userID string) (*models.RespondenDetail, error) {
+	return m.getByUserIDFn(userID)
 }
-func (m *mockRepo) Update(id int, r models.Responden) error {
-	return m.updateFn(id, r)
+func (m *mockRepo) UpsertByUserID(userID string, r models.Responden) error {
+	return m.upsertByUserFn(userID, r)
 }
 
 type mockValidator struct{}
@@ -39,13 +39,6 @@ type mockValidator struct{}
 func (m mockValidator) ValidateCreate(req dto.CreateRespondenRequest) error {
 	if req.IdPerusahaan == "" {
 		return errors.New("id_perusahaan wajib diisi")
-	}
-	return nil
-}
-
-func (m mockValidator) ValidateUpdate(req dto.UpdateRespondenRequest) error {
-	if req.NoTelepon == "" {
-		return errors.New("nomor telepon tidak boleh kosong")
 	}
 	return nil
 }
@@ -63,18 +56,23 @@ func (m *mockCacheForService) Del(ctx context.Context, key string) error {
 	return nil
 }
 
-func TestCreate_Success(t *testing.T) {
+func strPtr(s string) *string { return &s }
+
+func TestUpsertByUserID_Success(t *testing.T) {
 	mock := &mockRepo{
-		createFn: func(m models.Responden) (int64, error) { return 1, nil },
-		getDetailByIDFn: func(id int) (*models.RespondenDetail, error) {
+		upsertByUserFn: func(userID string, m models.Responden) error { return nil },
+		getByUserIDFn: func(userID string) (*models.RespondenDetail, error) {
 			return &models.RespondenDetail{
-				ID:           id,
-				IdPerusahaan: "perusahaan1",
-				NamaLengkap:  "Nama Lengkap",
-				Jabatan:      "Manager",
-				Email:        "email@mail.com",
-				CreatedAt:    time.Now(),
-				UpdatedAt:    time.Now(),
+				Responden: models.Responden{
+					ID:           1,
+					UserID:       userID,
+					IdPerusahaan: "perusahaan1",
+					NamaLengkap:  "Nama Lengkap",
+					Jabatan:      "Manager",
+					Email:        "email@mail.com",
+					CreatedAt:    time.Now(),
+					UpdatedAt:    time.Now(),
+				},
 			}, nil
 		},
 	}
@@ -87,10 +85,10 @@ func TestCreate_Success(t *testing.T) {
 		Jabatan:            "Manager",
 		Email:              "email@mail.com",
 		NoTelepon:          "08123456789",
-		SertifikatTraining: "yes",
+		SertifikatTraining: strPtr("yes"),
 	}
 
-	res, err := svc.Create(req)
+	res, err := svc.UpsertByUserID("user1", req)
 
 	if err != nil {
 		t.Fatal(err)
@@ -105,7 +103,7 @@ func TestGetAll_Success(t *testing.T) {
 	mock := &mockRepo{
 		getAllFn: func() ([]models.RespondenDetail, error) {
 			return []models.RespondenDetail{
-				{ID: 1, CreatedAt: time.Now(), UpdatedAt: time.Now()},
+				{Responden: models.Responden{ID: 1, CreatedAt: time.Now(), UpdatedAt: time.Now()}},
 			}, nil
 		},
 	}

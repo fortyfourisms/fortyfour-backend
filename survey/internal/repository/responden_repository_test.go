@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"errors"
 	"regexp"
 	"testing"
 	"time"
@@ -12,6 +11,9 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 )
 
+// helper
+func strPtr(s string) *string { return &s }
+
 // CREATE
 func TestCreate_Success(t *testing.T) {
 	db, mock, _ := sqlmock.New()
@@ -20,16 +22,17 @@ func TestCreate_Success(t *testing.T) {
 	repo := NewRespondenRepository(db)
 
 	mock.ExpectExec("INSERT INTO responden").
-		WithArgs("perusahaan1", "Nama Lengkap", "Manager", "email@mail.com", "08123", "yes").
+		WithArgs("user1", "perusahaan1", "Nama Lengkap", "Manager", "email@mail.com", "08123", strPtr("yes")).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	id, err := repo.Create(models.Responden{
+		UserID:             "user1",
 		IdPerusahaan:       "perusahaan1",
 		NamaLengkap:        "Nama Lengkap",
 		Jabatan:            "Manager",
 		Email:              "email@mail.com",
 		NoTelepon:          "08123",
-		SertifikatTraining: "yes",
+		SertifikatTraining: strPtr("yes"),
 	})
 
 	if err != nil {
@@ -49,12 +52,12 @@ func TestGetAllDetail_Success(t *testing.T) {
 	repo := NewRespondenRepository(db)
 
 	rows := sqlmock.NewRows([]string{
-		"id", "id_perusahaan", "nama_lengkap", "jabatan", "email",
+		"id", "user_id", "id_perusahaan", "nama_lengkap", "jabatan", "email",
 		"no_telepon", "sertifikat_training",
 		"nama_perusahaan", "nama_sub_sektor", "nama_sektor",
 		"created_at", "updated_at",
 	}).AddRow(
-		1, "perusahaan1", "Nama", "Manager", "email@mail.com",
+		1, "user1", "perusahaan1", "Nama", "Manager", "email@mail.com",
 		"08123", "yes",
 		"PT A", "Sub Sektor 1", "Sektor 1",
 		time.Now(), time.Now(),
@@ -92,84 +95,20 @@ func TestGetDetailByID_NotFound(t *testing.T) {
 	}
 }
 
-// UPDATE SUCCESS
-func TestUpdate_Success(t *testing.T) {
+// GET BY USER ID
+func TestGetByUserID_NotFound(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	defer db.Close()
 
 	repo := NewRespondenRepository(db)
 
-	mock.ExpectExec("UPDATE responden").
-		WithArgs("perusahaan1", "Nama", "Manager", "email@mail.com", "08123", "yes", 1).
-		WillReturnResult(sqlmock.NewResult(0, 1))
+	mock.ExpectQuery(regexp.QuoteMeta(baseDetailQuery + " WHERE r.user_id = ?")).
+		WithArgs("nonexistent").
+		WillReturnError(sql.ErrNoRows)
 
-	err := repo.Update(1, models.Responden{
-		IdPerusahaan:       "perusahaan1",
-		NamaLengkap:        "Nama",
-		Jabatan:            "Manager",
-		Email:              "email@mail.com",
-		NoTelepon:          "08123",
-		SertifikatTraining: "yes",
-	})
-
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-}
-
-// UPDATE NOT FOUND
-func TestUpdate_NotFound(t *testing.T) {
-	db, mock, _ := sqlmock.New()
-	defer db.Close()
-
-	repo := NewRespondenRepository(db)
-
-	mock.ExpectExec("UPDATE responden").
-		WillReturnResult(sqlmock.NewResult(0, 0))
-
-	err := repo.Update(1, models.Responden{})
+	_, err := repo.GetByUserID("nonexistent")
 
 	if err == nil || err.Error() != "data tidak ditemukan" {
 		t.Errorf("expected not found error")
-	}
-}
-
-// EXISTS
-func TestExists_True(t *testing.T) {
-	db, mock, _ := sqlmock.New()
-	defer db.Close()
-
-	repo := NewRespondenRepository(db)
-
-	mock.ExpectQuery("SELECT EXISTS").
-		WithArgs(1).
-		WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
-
-	exists, err := repo.Exists(1)
-
-	if err != nil {
-		t.Errorf("unexpected error")
-	}
-
-	if !exists {
-		t.Errorf("expected true")
-	}
-}
-
-// EXISTS ERROR
-func TestExists_Error(t *testing.T) {
-	db, mock, _ := sqlmock.New()
-	defer db.Close()
-
-	repo := NewRespondenRepository(db)
-
-	mock.ExpectQuery("SELECT EXISTS").
-		WithArgs(1).
-		WillReturnError(errors.New("db error"))
-
-	_, err := repo.Exists(1)
-
-	if err == nil {
-		t.Errorf("expected error")
 	}
 }

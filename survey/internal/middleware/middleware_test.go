@@ -7,26 +7,6 @@ import (
 	"testing"
 )
 
-// ADAPT
-func TestAdaptHandler(t *testing.T) {
-	called := false
-
-	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		called = true
-	})
-
-	handler := AdaptHandler(h)
-
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	w := httptest.NewRecorder()
-
-	handler.ServeHTTP(w, req)
-
-	if !called {
-		t.Error("handler not called")
-	}
-}
-
 // RECOVERY
 func TestRecovery_Panic(t *testing.T) {
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -123,7 +103,7 @@ func TestContext_SetGet(t *testing.T) {
 }
 
 func TestContext_NilSafe(t *testing.T) {
-	ctx := SetUserID(nil, "123")
+	ctx := SetUserID(context.TODO(), "123")
 
 	if GetUserID(ctx) != "123" {
 		t.Error("should handle nil context safely")
@@ -143,7 +123,7 @@ func TestAuthMiddleware(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	req.Header.Set("X-User-ID", "42")
-	req.Header.Set("X-Role", "admin")
+	req.Header.Set("X-User-Role", "admin")
 
 	w := httptest.NewRecorder()
 

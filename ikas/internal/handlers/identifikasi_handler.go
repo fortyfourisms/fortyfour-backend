@@ -44,7 +44,7 @@ func (h *IdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 //	@Produce		json
 //	@Success		200	{array}		dto.IdentifikasiResponse
 //	@Failure		500	{object}	dto.ErrorResponse
-//	@Router			/api/identifikasi [get]
+//	@Router			/api/maturity/identifikasi [get]
 func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
@@ -98,7 +98,7 @@ func (h *IdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 //	@Param			id	path		string	true	"Identifikasi ID"
 //	@Success		200	{object}	dto.IdentifikasiResponse
 //	@Failure		404	{object}	dto.ErrorResponse
-//	@Router			/api/identifikasi/{id} [get]
+//	@Router			/api/maturity/identifikasi/{id} [get]
 func (h *IdentifikasiHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)

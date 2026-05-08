@@ -223,7 +223,6 @@ func TestGenerateSEPDF_NilNestedStructs(t *testing.T) {
 	se := makeSEResponse("Server Tanpa Relasi")
 	se.Perusahaan = nil
 	se.SubSektor = nil
-	se.SubSektor = nil
 
 	result, err := GenerateSEPDF([]dto.SEResponse{se}, "")
 	require.NoError(t, err)
@@ -254,7 +253,6 @@ func TestGenerateSEByIDPDF_NilNestedStructs(t *testing.T) {
 	se := makeSEResponse("Server Single")
 	se.Perusahaan = nil
 	se.SubSektor = nil
-	se.SubSektor = nil
 
 	result, err := GenerateSEByIDPDF(&se)
 	require.NoError(t, err)
@@ -271,7 +269,6 @@ func TestGenerateSEByIDPDF_SpecialCharsInName(t *testing.T) {
 func TestGenerateSEByIDPDF_EmptyOptionalFields(t *testing.T) {
 	se := makeSEResponse("Server Minimal")
 	se.FiturSE = ""
-	se.IDSubSektor = ""
 	se.IDSubSektor = ""
 
 	result, err := GenerateSEByIDPDF(&se)
@@ -360,6 +357,18 @@ func TestGenerateCsirtPDF_EmailNilFallbackToDash(t *testing.T) {
 	assert.True(t, isPDFBytes(result))
 }
 
+func TestGenerateCsirtPDF_EmptyPointerFieldsFallbackToDash(t *testing.T) {
+	csirt := makeCsirtResponse("CSIRT Pointer Kosong")
+	email := ""
+	telepon := ""
+	csirt.EmailCsirt = &email
+	csirt.TeleponCsirt = &telepon
+
+	result, err := GenerateCsirtPDF([]dto.CsirtResponse{csirt}, "")
+	require.NoError(t, err)
+	assert.True(t, isPDFBytes(result))
+}
+
 func TestGenerateCsirtPDF_PerusahaanNameFallbackToID(t *testing.T) {
 	// NamaPerusahaan kosong → harus fallback ke ID di printCsirtBlock
 	csirt := makeCsirtResponse("CSIRT Fallback")
@@ -421,6 +430,18 @@ func TestGenerateCsirtByIDPDF_EmailNilFallbackToDash(t *testing.T) {
 	// EmailCsirt nil → harus fallback ke "-" tanpa panic
 	csirt := makeCsirtResponse("CSIRT Detail Tanpa Email")
 	csirt.EmailCsirt = nil
+
+	result, err := GenerateCsirtByIDPDF(&csirt)
+	require.NoError(t, err)
+	assert.True(t, isPDFBytes(result))
+}
+
+func TestGenerateCsirtByIDPDF_EmptyPointerFieldsFallbackToDash(t *testing.T) {
+	csirt := makeCsirtResponse("CSIRT Detail Pointer Kosong")
+	email := ""
+	telepon := ""
+	csirt.EmailCsirt = &email
+	csirt.TeleponCsirt = &telepon
 
 	result, err := GenerateCsirtByIDPDF(&csirt)
 	require.NoError(t, err)

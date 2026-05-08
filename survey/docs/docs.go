@@ -15,6 +15,29 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/health": {
+            "get": {
+                "description": "Check if the Survey API is running and healthy",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Health"
+                ],
+                "summary": "Health check",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/survey/finish": {
             "post": {
                 "description": "Complete the survey",
@@ -25,7 +48,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Finish Survey",
                 "responses": {
@@ -54,7 +77,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Navigate Survey",
                 "parameters": [
@@ -108,7 +131,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (Admin)"
+                    "Responden"
                 ],
                 "summary": "Ambil semua responden",
                 "responses": {
@@ -117,7 +140,8 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/survey_internal_dto.RespondenResponse"
+                                "type": "object",
+                                "additionalProperties": true
                             }
                         }
                     },
@@ -148,14 +172,15 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (User)"
+                    "Responden"
                 ],
                 "summary": "Ambil data responden milik user login",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.RespondenResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
@@ -186,7 +211,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (User)"
+                    "Responden"
                 ],
                 "summary": "Create / Update responden milik user login",
                 "parameters": [
@@ -204,7 +229,8 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.RespondenResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
@@ -234,7 +260,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Responden (Admin)"
+                    "Responden"
                 ],
                 "summary": "Ambil responden berdasarkan ID",
                 "parameters": [
@@ -250,7 +276,8 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.RespondenResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
@@ -278,7 +305,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Submit Dampak",
                 "parameters": [
@@ -318,7 +345,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Submit Eligibility",
                 "parameters": [
@@ -358,7 +385,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Submit Pengendalian",
                 "parameters": [
@@ -398,7 +425,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Submit Alasan",
                 "parameters": [
@@ -438,7 +465,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Get Risiko by Respondent ID",
                 "parameters": [
@@ -482,7 +509,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "risiko"
+                    "Risiko"
                 ],
                 "summary": "Save Progress",
                 "parameters": [
@@ -683,54 +710,6 @@ const docTemplate = `{
                 }
             }
         },
-        "survey_internal_dto.RespondenResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "id_perusahaan": {
-                    "description": "dari PERUSAHAAN",
-                    "type": "string"
-                },
-                "jabatan": {
-                    "type": "string"
-                },
-                "nama_lengkap": {
-                    "description": "dari RESPONDEN",
-                    "type": "string"
-                },
-                "nama_perusahaan": {
-                    "type": "string"
-                },
-                "nama_sektor": {
-                    "type": "string"
-                },
-                "nama_sub_sektor": {
-                    "description": "dari JOIN (opsional)",
-                    "type": "string"
-                },
-                "no_telepon": {
-                    "type": "string"
-                },
-                "sertifikat_training": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "description": "dari backend (JWT)",
-                    "type": "string"
-                }
-            }
-        },
         "survey_internal_models.FrequencyLevel": {
             "type": "integer",
             "enum": [
@@ -761,17 +740,24 @@ const docTemplate = `{
                 "ImpactVerySignificant"
             ]
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8082",
+	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Survey API",
+	Description:      "API documentation for Survey service.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
