@@ -58,9 +58,11 @@ func InitRouter(
 	mux.Handle("/api/survey/risiko/dampak", protected(http.HandlerFunc(risikoH.SubmitDampak)))
 	mux.Handle("/api/survey/risiko/pengendalian", protected(http.HandlerFunc(risikoH.SubmitPengendalian)))
 	mux.Handle("/api/survey/risiko/reason", protected(http.HandlerFunc(risikoH.SubmitAlasan)))
+	mux.Handle("/api/survey/risiko/me", protected(http.HandlerFunc(risikoH.GetMe)))
 	mux.Handle("/api/survey/risiko/", protected(http.HandlerFunc(risikoH.GetByRespondentID)))
 
 	// PROGRESS & NAVIGATION
+	mux.Handle("/api/survey/progress", protected(http.HandlerFunc(risikoH.GetProgress)))
 	mux.Handle("/api/survey/navigate", protected(http.HandlerFunc(risikoH.Navigate)))
 	mux.Handle("/api/survey/save-progress", protected(http.HandlerFunc(risikoH.SaveProgress)))
 	mux.Handle("/api/survey/finish", protected(http.HandlerFunc(risikoH.FinishSurvey)))
