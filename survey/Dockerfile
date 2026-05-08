@@ -1,7 +1,7 @@
 # =========================
 # 1. Build Stage
 # =========================
-FROM golang:1.25-alpine AS builder
+FROM golang:1.26.3-alpine3.23 AS builder
 
 WORKDIR /app
 
@@ -21,7 +21,7 @@ RUN go build -o survey-app ./cmd/main.go
 # =========================
 # 2. Run Stage
 # =========================
-FROM alpine:3.19
+FROM alpine:latest
 
 WORKDIR /app
 
