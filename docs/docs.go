@@ -771,6 +771,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/challenge/verify": {
+            "post": {
+                "description": "Validasi token Cloudflare Turnstile untuk mendapatkan akses ke aplikasi. Memberikan cookie gate_verified.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Challenge"
+                ],
+                "summary": "Verifikasi Challenge Gate",
+                "parameters": [
+                    {
+                        "description": "Turnstile Token",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ChallengeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "message",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/chat": {
             "post": {
                 "security": [
@@ -3749,7 +3798,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.DeteksiResponse"
+                                "$ref": "#/definitions/dto.DeteksiResponse"
                             }
                         }
                     },
@@ -3784,7 +3833,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.DeteksiResponse"
+                            "$ref": "#/definitions/dto.DeteksiResponse"
                         }
                     },
                     "404": {
@@ -3812,7 +3861,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.DomainResponse"
+                                "$ref": "#/definitions/dto.DomainResponse"
                             }
                         }
                     },
@@ -3843,7 +3892,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.CreateDomainRequest"
+                            "$ref": "#/definitions/dto.CreateDomainRequest"
                         }
                     }
                 ],
@@ -3851,7 +3900,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.DomainResponse"
+                            "$ref": "#/definitions/dto.DomainResponse"
                         }
                     },
                     "400": {
@@ -3892,7 +3941,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.DomainResponse"
+                            "$ref": "#/definitions/dto.DomainResponse"
                         }
                     },
                     "404": {
@@ -3929,7 +3978,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UpdateDomainRequest"
+                            "$ref": "#/definitions/dto.UpdateDomainRequest"
                         }
                     }
                 ],
@@ -3937,7 +3986,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.DomainResponse"
+                            "$ref": "#/definitions/dto.DomainResponse"
                         }
                     },
                     "400": {
@@ -4016,7 +4065,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.GulihResponse"
+                                "$ref": "#/definitions/dto.GulihResponse"
                             }
                         }
                     },
@@ -4051,7 +4100,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.GulihResponse"
+                            "$ref": "#/definitions/dto.GulihResponse"
                         }
                     },
                     "404": {
@@ -4102,7 +4151,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.IdentifikasiResponse"
+                                "$ref": "#/definitions/dto.IdentifikasiResponse"
                             }
                         }
                     },
@@ -4138,7 +4187,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.IdentifikasiResponse"
+                            "$ref": "#/definitions/dto.IdentifikasiResponse"
                         }
                     },
                     "404": {
@@ -4166,7 +4215,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.IkasResponse"
+                                "$ref": "#/definitions/dto.IkasResponse"
                             }
                         }
                     },
@@ -4197,7 +4246,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.CreateIkasRequest"
+                            "$ref": "#/definitions/dto.CreateIkasRequest"
                         }
                     }
                 ],
@@ -4205,7 +4254,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.IkasResponse"
+                            "$ref": "#/definitions/dto.IkasResponse"
                         }
                     },
                     "400": {
@@ -4328,7 +4377,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ImportIkasResponse"
+                            "$ref": "#/definitions/dto.ImportIkasResponse"
                         }
                     },
                     "400": {
@@ -4363,7 +4412,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.IkasResponse"
+                            "$ref": "#/definitions/dto.IkasResponse"
                         }
                     },
                     "404": {
@@ -4400,7 +4449,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UpdateIkasRequest"
+                            "$ref": "#/definitions/dto.UpdateIkasRequest"
                         }
                     }
                 ],
@@ -4408,7 +4457,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.IkasResponse"
+                            "$ref": "#/definitions/dto.IkasResponse"
                         }
                     },
                     "400": {
@@ -4563,7 +4612,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.RejectEditRequest"
+                            "$ref": "#/definitions/dto.RejectEditRequest"
                         }
                     }
                 ],
@@ -4617,7 +4666,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.RequestEditRequest"
+                            "$ref": "#/definitions/dto.RequestEditRequest"
                         }
                     }
                 ],
@@ -4671,7 +4720,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ValidasiIkasRequest"
+                            "$ref": "#/definitions/dto.ValidasiIkasRequest"
                         }
                     }
                 ],
@@ -4726,7 +4775,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UnifiedJawabanDeteksiResponse"
+                            "$ref": "#/definitions/dto.UnifiedJawabanDeteksiResponse"
                         }
                     }
                 }
@@ -4750,7 +4799,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.CreateJawabanDeteksiRequest"
+                            "$ref": "#/definitions/dto.CreateJawabanDeteksiRequest"
                         }
                     }
                 ],
@@ -4787,7 +4836,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.JawabanDeteksiResponse"
+                            "$ref": "#/definitions/dto.JawabanDeteksiResponse"
                         }
                     }
                 }
@@ -4818,7 +4867,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UpdateJawabanDeteksiRequest"
+                            "$ref": "#/definitions/dto.UpdateJawabanDeteksiRequest"
                         }
                     }
                 ],
@@ -4893,7 +4942,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UnifiedJawabanGulihResponse"
+                            "$ref": "#/definitions/dto.UnifiedJawabanGulihResponse"
                         }
                     }
                 }
@@ -4917,7 +4966,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.CreateJawabanGulihRequest"
+                            "$ref": "#/definitions/dto.CreateJawabanGulihRequest"
                         }
                     }
                 ],
@@ -4986,7 +5035,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UpdateJawabanGulihRequest"
+                            "$ref": "#/definitions/dto.UpdateJawabanGulihRequest"
                         }
                     }
                 ],
@@ -5061,7 +5110,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UnifiedJawabanIdentifikasiResponse"
+                            "$ref": "#/definitions/dto.UnifiedJawabanIdentifikasiResponse"
                         }
                     },
                     "500": {
@@ -5091,7 +5140,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.CreateJawabanIdentifikasiRequest"
+                            "$ref": "#/definitions/dto.CreateJawabanIdentifikasiRequest"
                         }
                     }
                 ],
@@ -5146,7 +5195,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse"
+                            "$ref": "#/definitions/dto.JawabanIdentifikasiResponse"
                         }
                     },
                     "404": {
@@ -5183,7 +5232,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UpdateJawabanIdentifikasiRequest"
+                            "$ref": "#/definitions/dto.UpdateJawabanIdentifikasiRequest"
                         }
                     }
                 ],
@@ -5282,7 +5331,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UnifiedJawabanProteksiResponse"
+                            "$ref": "#/definitions/dto.UnifiedJawabanProteksiResponse"
                         }
                     },
                     "500": {
@@ -5312,7 +5361,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.CreateJawabanProteksiRequest"
+                            "$ref": "#/definitions/dto.CreateJawabanProteksiRequest"
                         }
                     }
                 ],
@@ -5367,7 +5416,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.JawabanProteksiResponse"
+                            "$ref": "#/definitions/dto.JawabanProteksiResponse"
                         }
                     },
                     "404": {
@@ -5404,7 +5453,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UpdateJawabanProteksiRequest"
+                            "$ref": "#/definitions/dto.UpdateJawabanProteksiRequest"
                         }
                     }
                 ],
@@ -5485,7 +5534,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.KategoriResponse"
+                                "$ref": "#/definitions/dto.KategoriResponse"
                             }
                         }
                     },
@@ -5516,7 +5565,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.CreateKategoriRequest"
+                            "$ref": "#/definitions/dto.CreateKategoriRequest"
                         }
                     }
                 ],
@@ -5524,7 +5573,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.KategoriResponse"
+                            "$ref": "#/definitions/dto.KategoriResponse"
                         }
                     },
                     "400": {
@@ -5565,7 +5614,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.KategoriResponse"
+                            "$ref": "#/definitions/dto.KategoriResponse"
                         }
                     },
                     "404": {
@@ -5602,7 +5651,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UpdateKategoriRequest"
+                            "$ref": "#/definitions/dto.UpdateKategoriRequest"
                         }
                     }
                 ],
@@ -5610,7 +5659,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.KategoriResponse"
+                            "$ref": "#/definitions/dto.KategoriResponse"
                         }
                     },
                     "400": {
@@ -5655,7 +5704,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.KategoriMessageResponse"
+                            "$ref": "#/definitions/dto.KategoriMessageResponse"
                         }
                     },
                     "404": {
@@ -5689,7 +5738,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse"
+                                "$ref": "#/definitions/dto.PertanyaanDeteksiResponse"
                             }
                         }
                     },
@@ -5720,7 +5769,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.CreatePertanyaanDeteksiRequest"
+                            "$ref": "#/definitions/dto.CreatePertanyaanDeteksiRequest"
                         }
                     }
                 ],
@@ -5728,7 +5777,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse"
+                            "$ref": "#/definitions/dto.PertanyaanDeteksiResponse"
                         }
                     },
                     "400": {
@@ -5769,7 +5818,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse"
+                            "$ref": "#/definitions/dto.PertanyaanDeteksiResponse"
                         }
                     },
                     "404": {
@@ -5806,7 +5855,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UpdatePertanyaanDeteksiRequest"
+                            "$ref": "#/definitions/dto.UpdatePertanyaanDeteksiRequest"
                         }
                     }
                 ],
@@ -5814,7 +5863,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse"
+                            "$ref": "#/definitions/dto.PertanyaanDeteksiResponse"
                         }
                     },
                     "400": {
@@ -5853,7 +5902,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanDeteksiMessageResponse"
+                            "$ref": "#/definitions/dto.PertanyaanDeteksiMessageResponse"
                         }
                     },
                     "404": {
@@ -5887,7 +5936,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.PertanyaanGulihResponse"
+                                "$ref": "#/definitions/dto.PertanyaanGulihResponse"
                             }
                         }
                     },
@@ -5918,7 +5967,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.CreatePertanyaanGulihRequest"
+                            "$ref": "#/definitions/dto.CreatePertanyaanGulihRequest"
                         }
                     }
                 ],
@@ -5926,7 +5975,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanGulihResponse"
+                            "$ref": "#/definitions/dto.PertanyaanGulihResponse"
                         }
                     },
                     "400": {
@@ -5967,7 +6016,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanGulihResponse"
+                            "$ref": "#/definitions/dto.PertanyaanGulihResponse"
                         }
                     },
                     "404": {
@@ -6004,7 +6053,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UpdatePertanyaanGulihRequest"
+                            "$ref": "#/definitions/dto.UpdatePertanyaanGulihRequest"
                         }
                     }
                 ],
@@ -6012,7 +6061,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanGulihResponse"
+                            "$ref": "#/definitions/dto.PertanyaanGulihResponse"
                         }
                     },
                     "400": {
@@ -6051,7 +6100,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanGulihMessageResponse"
+                            "$ref": "#/definitions/dto.PertanyaanGulihMessageResponse"
                         }
                     },
                     "404": {
@@ -6085,7 +6134,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse"
+                                "$ref": "#/definitions/dto.PertanyaanIdentifikasiResponse"
                             }
                         }
                     },
@@ -6116,7 +6165,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.CreatePertanyaanIdentifikasiRequest"
+                            "$ref": "#/definitions/dto.CreatePertanyaanIdentifikasiRequest"
                         }
                     }
                 ],
@@ -6124,7 +6173,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse"
+                            "$ref": "#/definitions/dto.PertanyaanIdentifikasiResponse"
                         }
                     },
                     "400": {
@@ -6165,7 +6214,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse"
+                            "$ref": "#/definitions/dto.PertanyaanIdentifikasiResponse"
                         }
                     },
                     "404": {
@@ -6202,7 +6251,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UpdatePertanyaanIdentifikasiRequest"
+                            "$ref": "#/definitions/dto.UpdatePertanyaanIdentifikasiRequest"
                         }
                     }
                 ],
@@ -6210,7 +6259,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse"
+                            "$ref": "#/definitions/dto.PertanyaanIdentifikasiResponse"
                         }
                     },
                     "400": {
@@ -6249,7 +6298,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanIdentifikasiMessageResponse"
+                            "$ref": "#/definitions/dto.PertanyaanIdentifikasiMessageResponse"
                         }
                     },
                     "404": {
@@ -6283,7 +6332,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.PertanyaanProteksiResponse"
+                                "$ref": "#/definitions/dto.PertanyaanProteksiResponse"
                             }
                         }
                     },
@@ -6314,7 +6363,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.CreatePertanyaanProteksiRequest"
+                            "$ref": "#/definitions/dto.CreatePertanyaanProteksiRequest"
                         }
                     }
                 ],
@@ -6322,7 +6371,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanProteksiResponse"
+                            "$ref": "#/definitions/dto.PertanyaanProteksiResponse"
                         }
                     },
                     "400": {
@@ -6363,7 +6412,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanProteksiResponse"
+                            "$ref": "#/definitions/dto.PertanyaanProteksiResponse"
                         }
                     },
                     "404": {
@@ -6400,7 +6449,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UpdatePertanyaanProteksiRequest"
+                            "$ref": "#/definitions/dto.UpdatePertanyaanProteksiRequest"
                         }
                     }
                 ],
@@ -6408,7 +6457,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanProteksiResponse"
+                            "$ref": "#/definitions/dto.PertanyaanProteksiResponse"
                         }
                     },
                     "400": {
@@ -6447,7 +6496,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.PertanyaanProteksiMessageResponse"
+                            "$ref": "#/definitions/dto.PertanyaanProteksiMessageResponse"
                         }
                     },
                     "404": {
@@ -6481,7 +6530,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.ProteksiResponse"
+                                "$ref": "#/definitions/dto.ProteksiResponse"
                             }
                         }
                     },
@@ -6517,7 +6566,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.ProteksiResponse"
+                            "$ref": "#/definitions/dto.ProteksiResponse"
                         }
                     },
                     "404": {
@@ -6545,7 +6594,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.RuangLingkupResponse"
+                                "$ref": "#/definitions/dto.RuangLingkupResponse"
                             }
                         }
                     },
@@ -6576,7 +6625,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.CreateRuangLingkupRequest"
+                            "$ref": "#/definitions/dto.CreateRuangLingkupRequest"
                         }
                     }
                 ],
@@ -6584,7 +6633,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.RuangLingkupResponse"
+                            "$ref": "#/definitions/dto.RuangLingkupResponse"
                         }
                     },
                     "400": {
@@ -6625,7 +6674,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.RuangLingkupResponse"
+                            "$ref": "#/definitions/dto.RuangLingkupResponse"
                         }
                     },
                     "404": {
@@ -6662,7 +6711,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UpdateRuangLingkupRequest"
+                            "$ref": "#/definitions/dto.UpdateRuangLingkupRequest"
                         }
                     }
                 ],
@@ -6670,7 +6719,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.RuangLingkupResponse"
+                            "$ref": "#/definitions/dto.RuangLingkupResponse"
                         }
                     },
                     "400": {
@@ -6749,7 +6798,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/ikas_internal_dto.SubKategoriResponse"
+                                "$ref": "#/definitions/dto.SubKategoriResponse"
                             }
                         }
                     },
@@ -6780,7 +6829,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.CreateSubKategoriRequest"
+                            "$ref": "#/definitions/dto.CreateSubKategoriRequest"
                         }
                     }
                 ],
@@ -6788,7 +6837,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.SubKategoriResponse"
+                            "$ref": "#/definitions/dto.SubKategoriResponse"
                         }
                     },
                     "400": {
@@ -6829,7 +6878,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.SubKategoriResponse"
+                            "$ref": "#/definitions/dto.SubKategoriResponse"
                         }
                     },
                     "404": {
@@ -6866,7 +6915,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.UpdateSubKategoriRequest"
+                            "$ref": "#/definitions/dto.UpdateSubKategoriRequest"
                         }
                     }
                 ],
@@ -6874,7 +6923,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.SubKategoriResponse"
+                            "$ref": "#/definitions/dto.SubKategoriResponse"
                         }
                     },
                     "400": {
@@ -6919,7 +6968,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ikas_internal_dto.SubKategoriMessageResponse"
+                            "$ref": "#/definitions/dto.SubKategoriMessageResponse"
                         }
                     },
                     "404": {
@@ -10724,6 +10773,268 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CreateDomainRequest": {
+            "type": "object",
+            "properties": {
+                "nama_domain": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateIkasRequest": {
+            "type": "object",
+            "properties": {
+                "id_perusahaan": {
+                    "type": "string"
+                },
+                "jabatan": {
+                    "type": "string"
+                },
+                "responden": {
+                    "type": "string"
+                },
+                "tanggal": {
+                    "type": "string"
+                },
+                "target_nilai": {
+                    "type": "number"
+                },
+                "telepon": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateJawabanDeteksiRequest": {
+            "type": "object",
+            "properties": {
+                "evidence": {
+                    "type": "string"
+                },
+                "ikas_id": {
+                    "type": "string"
+                },
+                "jawaban_deteksi": {
+                    "type": "number"
+                },
+                "keterangan": {
+                    "type": "string"
+                },
+                "pertanyaan_deteksi_id": {
+                    "type": "integer"
+                },
+                "validasi": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateJawabanGulihRequest": {
+            "type": "object",
+            "properties": {
+                "evidence": {
+                    "type": "string"
+                },
+                "ikas_id": {
+                    "type": "string"
+                },
+                "jawaban_gulih": {
+                    "type": "number"
+                },
+                "keterangan": {
+                    "type": "string"
+                },
+                "pertanyaan_gulih_id": {
+                    "type": "integer"
+                },
+                "validasi": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateJawabanIdentifikasiRequest": {
+            "type": "object",
+            "properties": {
+                "evidence": {
+                    "type": "string"
+                },
+                "ikas_id": {
+                    "type": "string"
+                },
+                "jawaban_identifikasi": {
+                    "type": "number"
+                },
+                "keterangan": {
+                    "type": "string"
+                },
+                "pertanyaan_identifikasi_id": {
+                    "type": "integer"
+                },
+                "validasi": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateJawabanProteksiRequest": {
+            "type": "object",
+            "properties": {
+                "evidence": {
+                    "type": "string"
+                },
+                "ikas_id": {
+                    "type": "string"
+                },
+                "jawaban_proteksi": {
+                    "type": "number"
+                },
+                "keterangan": {
+                    "type": "string"
+                },
+                "pertanyaan_proteksi_id": {
+                    "type": "integer"
+                },
+                "validasi": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateKategoriRequest": {
+            "type": "object",
+            "properties": {
+                "domain_id": {
+                    "type": "integer"
+                },
+                "nama_kategori": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreatePertanyaanDeteksiRequest": {
+            "type": "object",
+            "properties": {
+                "index0": {
+                    "type": "string"
+                },
+                "index1": {
+                    "type": "string"
+                },
+                "index2": {
+                    "type": "string"
+                },
+                "index3": {
+                    "type": "string"
+                },
+                "index4": {
+                    "type": "string"
+                },
+                "index5": {
+                    "type": "string"
+                },
+                "pertanyaan_deteksi": {
+                    "type": "string"
+                },
+                "ruang_lingkup_id": {
+                    "type": "integer"
+                },
+                "sub_kategori_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CreatePertanyaanGulihRequest": {
+            "type": "object",
+            "properties": {
+                "index0": {
+                    "type": "string"
+                },
+                "index1": {
+                    "type": "string"
+                },
+                "index2": {
+                    "type": "string"
+                },
+                "index3": {
+                    "type": "string"
+                },
+                "index4": {
+                    "type": "string"
+                },
+                "index5": {
+                    "type": "string"
+                },
+                "pertanyaan_gulih": {
+                    "type": "string"
+                },
+                "ruang_lingkup_id": {
+                    "type": "integer"
+                },
+                "sub_kategori_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CreatePertanyaanIdentifikasiRequest": {
+            "type": "object",
+            "properties": {
+                "index0": {
+                    "type": "string"
+                },
+                "index1": {
+                    "type": "string"
+                },
+                "index2": {
+                    "type": "string"
+                },
+                "index3": {
+                    "type": "string"
+                },
+                "index4": {
+                    "type": "string"
+                },
+                "index5": {
+                    "type": "string"
+                },
+                "pertanyaan_identifikasi": {
+                    "type": "string"
+                },
+                "ruang_lingkup_id": {
+                    "type": "integer"
+                },
+                "sub_kategori_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.CreatePertanyaanProteksiRequest": {
+            "type": "object",
+            "properties": {
+                "index0": {
+                    "type": "string"
+                },
+                "index1": {
+                    "type": "string"
+                },
+                "index2": {
+                    "type": "string"
+                },
+                "index3": {
+                    "type": "string"
+                },
+                "index4": {
+                    "type": "string"
+                },
+                "index5": {
+                    "type": "string"
+                },
+                "pertanyaan_proteksi": {
+                    "type": "string"
+                },
+                "ruang_lingkup_id": {
+                    "type": "integer"
+                },
+                "sub_kategori_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.CreateRespondenRequest": {
             "type": "object",
             "properties": {
@@ -10743,6 +11054,25 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "sertifikat_training": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateRuangLingkupRequest": {
+            "type": "object",
+            "properties": {
+                "nama_ruang_lingkup": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CreateSubKategoriRequest": {
+            "type": "object",
+            "properties": {
+                "kategori_id": {
+                    "type": "integer"
+                },
+                "nama_sub_kategori": {
                     "type": "string"
                 }
             }
@@ -10773,6 +11103,77 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.DeteksiInIkas": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "kategori_tingkat_kematangan_domain": {
+                    "type": "string"
+                },
+                "nilai_deteksi": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.DeteksiResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nilai_deteksi": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.DomainInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "nama_domain": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.DomainResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "nama_domain": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.EligibilityRequest": {
             "type": "object",
             "properties": {
@@ -10784,6 +11185,362 @@ const docTemplate = `{
                 },
                 "risiko_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.GulihInIkas": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "kategori_tingkat_kematangan_domain": {
+                    "type": "string"
+                },
+                "nilai_gulih": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.GulihResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nilai_deteksi": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.IdentifikasiInIkas": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "kategori_tingkat_kematangan_domain": {
+                    "type": "string"
+                },
+                "nilai_identifikasi": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.IdentifikasiResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nilai_identiifasi": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.IkasResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "deteksi": {
+                    "$ref": "#/definitions/dto.DeteksiInIkas"
+                },
+                "edit_request_reason": {
+                    "type": "string"
+                },
+                "edit_request_status": {
+                    "type": "string"
+                },
+                "gulih": {
+                    "$ref": "#/definitions/dto.GulihInIkas"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "identifikasi": {
+                    "$ref": "#/definitions/dto.IdentifikasiInIkas"
+                },
+                "is_validated": {
+                    "type": "boolean"
+                },
+                "jabatan": {
+                    "type": "string"
+                },
+                "kategori_kematangan_keamanan_siber": {
+                    "type": "string"
+                },
+                "nilai_kematangan": {
+                    "type": "number"
+                },
+                "perusahaan": {
+                    "$ref": "#/definitions/dto.PerusahaanInIkas"
+                },
+                "proteksi": {
+                    "$ref": "#/definitions/dto.ProteksiInIkas"
+                },
+                "responden": {
+                    "type": "string"
+                },
+                "tanggal": {
+                    "type": "string"
+                },
+                "target_nilai": {
+                    "type": "number"
+                },
+                "telepon": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ImportIkasResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.IkasResponse"
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.JawabanDeteksiResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "evidence": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ikas_id": {
+                    "type": "string"
+                },
+                "jawaban_deteksi": {
+                    "type": "number"
+                },
+                "keterangan": {
+                    "type": "string"
+                },
+                "pertanyaan_deteksi": {
+                    "$ref": "#/definitions/dto.PertanyaanDeteksiInfo"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "validasi": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.JawabanGulihResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "evidence": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ikas_id": {
+                    "type": "string"
+                },
+                "jawaban_gulih": {
+                    "type": "number"
+                },
+                "keterangan": {
+                    "type": "string"
+                },
+                "pertanyaan_gulih": {
+                    "$ref": "#/definitions/dto.PertanyaanGulihInfo"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "validasi": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.JawabanIdentifikasiResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "evidence": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ikas_id": {
+                    "type": "string"
+                },
+                "jawaban_identifikasi": {
+                    "type": "number"
+                },
+                "keterangan": {
+                    "type": "string"
+                },
+                "pertanyaan_identifikasi": {
+                    "$ref": "#/definitions/dto.PertanyaanIdentifikasiInfo"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "validasi": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.JawabanProteksiResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "evidence": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ikas_id": {
+                    "type": "string"
+                },
+                "jawaban_proteksi": {
+                    "type": "number"
+                },
+                "keterangan": {
+                    "type": "string"
+                },
+                "pertanyaan_proteksi": {
+                    "$ref": "#/definitions/dto.PertanyaanProteksiInfo"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "validasi": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.KategoriInfo": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "$ref": "#/definitions/dto.DomainInfo"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "nama_kategori": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.KategoriMessageResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.KategoriResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "domain_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "nama_kategori": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -10815,6 +11572,791 @@ const docTemplate = `{
                 },
                 "risiko_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.PertanyaanDeteksiInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "pertanyaan_deteksi": {
+                    "type": "string"
+                },
+                "sub_kategori": {
+                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                }
+            }
+        },
+        "dto.PertanyaanDeteksiMessageResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PertanyaanDeteksiResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "index0": {
+                    "type": "string"
+                },
+                "index1": {
+                    "type": "string"
+                },
+                "index2": {
+                    "type": "string"
+                },
+                "index3": {
+                    "type": "string"
+                },
+                "index4": {
+                    "type": "string"
+                },
+                "index5": {
+                    "type": "string"
+                },
+                "pertanyaan_deteksi": {
+                    "type": "string"
+                },
+                "ruang_lingkup": {
+                    "$ref": "#/definitions/dto.RuangLingkupInfo"
+                },
+                "sub_kategori": {
+                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PertanyaanGulihInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "pertanyaan_gulih": {
+                    "type": "string"
+                },
+                "sub_kategori": {
+                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                }
+            }
+        },
+        "dto.PertanyaanGulihMessageResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PertanyaanGulihResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "index0": {
+                    "type": "string"
+                },
+                "index1": {
+                    "type": "string"
+                },
+                "index2": {
+                    "type": "string"
+                },
+                "index3": {
+                    "type": "string"
+                },
+                "index4": {
+                    "type": "string"
+                },
+                "index5": {
+                    "type": "string"
+                },
+                "pertanyaan_gulih": {
+                    "type": "string"
+                },
+                "ruang_lingkup": {
+                    "$ref": "#/definitions/dto.RuangLingkupInfo"
+                },
+                "sub_kategori": {
+                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PertanyaanIdentifikasiInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "pertanyaan_identifikasi": {
+                    "type": "string"
+                },
+                "sub_kategori": {
+                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                }
+            }
+        },
+        "dto.PertanyaanIdentifikasiMessageResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PertanyaanIdentifikasiResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "index0": {
+                    "type": "string"
+                },
+                "index1": {
+                    "type": "string"
+                },
+                "index2": {
+                    "type": "string"
+                },
+                "index3": {
+                    "type": "string"
+                },
+                "index4": {
+                    "type": "string"
+                },
+                "index5": {
+                    "type": "string"
+                },
+                "pertanyaan_identifikasi": {
+                    "type": "string"
+                },
+                "ruang_lingkup": {
+                    "$ref": "#/definitions/dto.RuangLingkupInfo"
+                },
+                "sub_kategori": {
+                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PertanyaanProteksiInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "pertanyaan_proteksi": {
+                    "type": "string"
+                },
+                "sub_kategori": {
+                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                }
+            }
+        },
+        "dto.PertanyaanProteksiMessageResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PertanyaanProteksiResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "index0": {
+                    "type": "string"
+                },
+                "index1": {
+                    "type": "string"
+                },
+                "index2": {
+                    "type": "string"
+                },
+                "index3": {
+                    "type": "string"
+                },
+                "index4": {
+                    "type": "string"
+                },
+                "index5": {
+                    "type": "string"
+                },
+                "pertanyaan_proteksi": {
+                    "type": "string"
+                },
+                "ruang_lingkup": {
+                    "$ref": "#/definitions/dto.RuangLingkupInfo"
+                },
+                "sub_kategori": {
+                    "$ref": "#/definitions/dto.SubKategoriInfo"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.PerusahaanInIkas": {
+            "type": "object",
+            "properties": {
+                "alamat": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "nama_perusahaan": {
+                    "type": "string"
+                },
+                "sektor": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ProteksiInIkas": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "kategori_tingkat_kematangan_domain": {
+                    "type": "string"
+                },
+                "nilai_proteksi": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
+                    "type": "number"
+                },
+                "nilai_subdomain6": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.ProteksiResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "nilai_proteksi": {
+                    "type": "number"
+                },
+                "nilai_subdomain1": {
+                    "type": "number"
+                },
+                "nilai_subdomain2": {
+                    "type": "number"
+                },
+                "nilai_subdomain3": {
+                    "type": "number"
+                },
+                "nilai_subdomain4": {
+                    "type": "number"
+                },
+                "nilai_subdomain5": {
+                    "type": "number"
+                },
+                "nilai_subdomain6": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.RejectEditRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RequestEditRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RuangLingkupInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "nama_ruang_lingkup": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RuangLingkupResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "nama_ruang_lingkup": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SubKategoriInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "kategori": {
+                    "$ref": "#/definitions/dto.KategoriInfo"
+                },
+                "nama_sub_kategori": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SubKategoriMessageResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SubKategoriResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "kategori_id": {
+                    "type": "integer"
+                },
+                "nama_sub_kategori": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UnifiedJawabanDeteksiResponse": {
+            "type": "object",
+            "properties": {
+                "completion_percentage": {
+                    "type": "number"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.JawabanDeteksiResponse"
+                    }
+                },
+                "is_draft": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.UnifiedJawabanGulihResponse": {
+            "type": "object",
+            "properties": {
+                "completion_percentage": {
+                    "type": "number"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.JawabanGulihResponse"
+                    }
+                },
+                "is_draft": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.UnifiedJawabanIdentifikasiResponse": {
+            "type": "object",
+            "properties": {
+                "completion_percentage": {
+                    "type": "number"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.JawabanIdentifikasiResponse"
+                    }
+                },
+                "is_draft": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.UnifiedJawabanProteksiResponse": {
+            "type": "object",
+            "properties": {
+                "completion_percentage": {
+                    "type": "number"
+                },
+                "count": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.JawabanProteksiResponse"
+                    }
+                },
+                "is_draft": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "dto.UpdateDomainRequest": {
+            "type": "object",
+            "properties": {
+                "nama_domain": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateIkasRequest": {
+            "type": "object",
+            "properties": {
+                "id_perusahaan": {
+                    "type": "string"
+                },
+                "jabatan": {
+                    "type": "string"
+                },
+                "responden": {
+                    "type": "string"
+                },
+                "tanggal": {
+                    "type": "string"
+                },
+                "target_nilai": {
+                    "type": "number"
+                },
+                "telepon": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateJawabanDeteksiRequest": {
+            "type": "object",
+            "properties": {
+                "evidence": {
+                    "type": "string"
+                },
+                "jawaban_deteksi": {
+                    "type": "number"
+                },
+                "keterangan": {
+                    "type": "string"
+                },
+                "validasi": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateJawabanGulihRequest": {
+            "type": "object",
+            "properties": {
+                "evidence": {
+                    "type": "string"
+                },
+                "jawaban_gulih": {
+                    "type": "number"
+                },
+                "keterangan": {
+                    "type": "string"
+                },
+                "validasi": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateJawabanIdentifikasiRequest": {
+            "type": "object",
+            "properties": {
+                "evidence": {
+                    "type": "string"
+                },
+                "jawaban_identifikasi": {
+                    "type": "number"
+                },
+                "keterangan": {
+                    "type": "string"
+                },
+                "validasi": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateJawabanProteksiRequest": {
+            "type": "object",
+            "properties": {
+                "evidence": {
+                    "type": "string"
+                },
+                "jawaban_proteksi": {
+                    "type": "number"
+                },
+                "keterangan": {
+                    "type": "string"
+                },
+                "validasi": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateKategoriRequest": {
+            "type": "object",
+            "properties": {
+                "domain_id": {
+                    "type": "integer"
+                },
+                "nama_kategori": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdatePertanyaanDeteksiRequest": {
+            "type": "object",
+            "properties": {
+                "index0": {
+                    "type": "string"
+                },
+                "index1": {
+                    "type": "string"
+                },
+                "index2": {
+                    "type": "string"
+                },
+                "index3": {
+                    "type": "string"
+                },
+                "index4": {
+                    "type": "string"
+                },
+                "index5": {
+                    "type": "string"
+                },
+                "pertanyaan_deteksi": {
+                    "type": "string"
+                },
+                "ruang_lingkup_id": {
+                    "type": "integer"
+                },
+                "sub_kategori_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.UpdatePertanyaanGulihRequest": {
+            "type": "object",
+            "properties": {
+                "index0": {
+                    "type": "string"
+                },
+                "index1": {
+                    "type": "string"
+                },
+                "index2": {
+                    "type": "string"
+                },
+                "index3": {
+                    "type": "string"
+                },
+                "index4": {
+                    "type": "string"
+                },
+                "index5": {
+                    "type": "string"
+                },
+                "pertanyaan_gulih": {
+                    "type": "string"
+                },
+                "ruang_lingkup_id": {
+                    "type": "integer"
+                },
+                "sub_kategori_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.UpdatePertanyaanIdentifikasiRequest": {
+            "type": "object",
+            "properties": {
+                "index0": {
+                    "type": "string"
+                },
+                "index1": {
+                    "type": "string"
+                },
+                "index2": {
+                    "type": "string"
+                },
+                "index3": {
+                    "type": "string"
+                },
+                "index4": {
+                    "type": "string"
+                },
+                "index5": {
+                    "type": "string"
+                },
+                "pertanyaan_identifikasi": {
+                    "type": "string"
+                },
+                "ruang_lingkup_id": {
+                    "type": "integer"
+                },
+                "sub_kategori_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.UpdatePertanyaanProteksiRequest": {
+            "type": "object",
+            "properties": {
+                "index0": {
+                    "type": "string"
+                },
+                "index1": {
+                    "type": "string"
+                },
+                "index2": {
+                    "type": "string"
+                },
+                "index3": {
+                    "type": "string"
+                },
+                "index4": {
+                    "type": "string"
+                },
+                "index5": {
+                    "type": "string"
+                },
+                "pertanyaan_proteksi": {
+                    "type": "string"
+                },
+                "ruang_lingkup_id": {
+                    "type": "integer"
+                },
+                "sub_kategori_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.UpdateRuangLingkupRequest": {
+            "type": "object",
+            "properties": {
+                "nama_ruang_lingkup": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.UpdateSubKategoriRequest": {
+            "type": "object",
+            "properties": {
+                "kategori_id": {
+                    "type": "integer"
+                },
+                "nama_sub_kategori": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ValidasiIkasRequest": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "boolean"
                 }
             }
         },
@@ -10952,6 +12494,17 @@ const docTemplate = `{
                     }
                 },
                 "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.ChallengeRequest": {
+            "type": "object",
+            "required": [
+                "cf-turnstile-response"
+            ],
+            "properties": {
+                "cf-turnstile-response": {
                     "type": "string"
                 }
             }
@@ -12040,14 +13593,10 @@ const docTemplate = `{
         "fortyfour-backend_internal_dto.LoginRequest": {
             "type": "object",
             "required": [
-                "cf-turnstile-response",
                 "identifier",
                 "password"
             ],
             "properties": {
-                "cf-turnstile-response": {
-                    "type": "string"
-                },
                 "identifier": {
                     "type": "string"
                 },
@@ -13406,718 +14955,10 @@ const docTemplate = `{
                 "total": {}
             }
         },
-        "ikas_internal_dto.CreateDomainRequest": {
-            "type": "object",
-            "properties": {
-                "nama_domain": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.CreateIkasRequest": {
-            "type": "object",
-            "properties": {
-                "id_perusahaan": {
-                    "type": "string"
-                },
-                "jabatan": {
-                    "type": "string"
-                },
-                "responden": {
-                    "type": "string"
-                },
-                "tanggal": {
-                    "type": "string"
-                },
-                "target_nilai": {
-                    "type": "number"
-                },
-                "telepon": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.CreateJawabanDeteksiRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "jawaban_deteksi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "pertanyaan_deteksi_id": {
-                    "type": "integer"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.CreateJawabanGulihRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "jawaban_gulih": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "pertanyaan_gulih_id": {
-                    "type": "integer"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.CreateJawabanIdentifikasiRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "jawaban_identifikasi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "pertanyaan_identifikasi_id": {
-                    "type": "integer"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.CreateJawabanProteksiRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "jawaban_proteksi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "pertanyaan_proteksi_id": {
-                    "type": "integer"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.CreateKategoriRequest": {
-            "type": "object",
-            "properties": {
-                "domain_id": {
-                    "type": "integer"
-                },
-                "nama_kategori": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.CreatePertanyaanDeteksiRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_deteksi": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "ikas_internal_dto.CreatePertanyaanGulihRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_gulih": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "ikas_internal_dto.CreatePertanyaanIdentifikasiRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_identifikasi": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "ikas_internal_dto.CreatePertanyaanProteksiRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_proteksi": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "ikas_internal_dto.CreateRuangLingkupRequest": {
-            "type": "object",
-            "properties": {
-                "nama_ruang_lingkup": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.CreateSubKategoriRequest": {
-            "type": "object",
-            "properties": {
-                "kategori_id": {
-                    "type": "integer"
-                },
-                "nama_sub_kategori": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.DeteksiInIkas": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "kategori_tingkat_kematangan_domain": {
-                    "type": "string"
-                },
-                "nilai_deteksi": {
-                    "type": "number"
-                },
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                }
-            }
-        },
-        "ikas_internal_dto.DeteksiResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "nilai_deteksi": {
-                    "type": "number"
-                },
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                }
-            }
-        },
-        "ikas_internal_dto.DomainInfo": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "nama_domain": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.DomainResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "nama_domain": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
         "ikas_internal_dto.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.GulihInIkas": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "kategori_tingkat_kematangan_domain": {
-                    "type": "string"
-                },
-                "nilai_gulih": {
-                    "type": "number"
-                },
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
-                    "type": "number"
-                }
-            }
-        },
-        "ikas_internal_dto.GulihResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "nilai_deteksi": {
-                    "type": "number"
-                },
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
-                    "type": "number"
-                }
-            }
-        },
-        "ikas_internal_dto.IdentifikasiInIkas": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "kategori_tingkat_kematangan_domain": {
-                    "type": "string"
-                },
-                "nilai_identifikasi": {
-                    "type": "number"
-                },
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
-                    "type": "number"
-                },
-                "nilai_subdomain5": {
-                    "type": "number"
-                }
-            }
-        },
-        "ikas_internal_dto.IdentifikasiResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "nilai_identiifasi": {
-                    "type": "number"
-                },
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
-                    "type": "number"
-                },
-                "nilai_subdomain5": {
-                    "type": "number"
-                }
-            }
-        },
-        "ikas_internal_dto.IkasResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "deteksi": {
-                    "$ref": "#/definitions/ikas_internal_dto.DeteksiInIkas"
-                },
-                "edit_request_reason": {
-                    "type": "string"
-                },
-                "edit_request_status": {
-                    "type": "string"
-                },
-                "gulih": {
-                    "$ref": "#/definitions/ikas_internal_dto.GulihInIkas"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "identifikasi": {
-                    "$ref": "#/definitions/ikas_internal_dto.IdentifikasiInIkas"
-                },
-                "is_validated": {
-                    "type": "boolean"
-                },
-                "jabatan": {
-                    "type": "string"
-                },
-                "kategori_kematangan_keamanan_siber": {
-                    "type": "string"
-                },
-                "nilai_kematangan": {
-                    "type": "number"
-                },
-                "perusahaan": {
-                    "$ref": "#/definitions/ikas_internal_dto.PerusahaanInIkas"
-                },
-                "proteksi": {
-                    "$ref": "#/definitions/ikas_internal_dto.ProteksiInIkas"
-                },
-                "responden": {
-                    "type": "string"
-                },
-                "tanggal": {
-                    "type": "string"
-                },
-                "target_nilai": {
-                    "type": "number"
-                },
-                "telepon": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.ImportIkasResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/ikas_internal_dto.IkasResponse"
-                },
-                "errors": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "ikas_internal_dto.JawabanDeteksiResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "evidence": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "jawaban_deteksi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "pertanyaan_deteksi": {
-                    "$ref": "#/definitions/ikas_internal_dto.PertanyaanDeteksiInfo"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.JawabanGulihResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "evidence": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "jawaban_gulih": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "pertanyaan_gulih": {
-                    "$ref": "#/definitions/ikas_internal_dto.PertanyaanGulihInfo"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.JawabanIdentifikasiResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "evidence": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "jawaban_identifikasi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "pertanyaan_identifikasi": {
-                    "$ref": "#/definitions/ikas_internal_dto.PertanyaanIdentifikasiInfo"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.JawabanProteksiResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "evidence": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "ikas_id": {
-                    "type": "string"
-                },
-                "jawaban_proteksi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "pertanyaan_proteksi": {
-                    "$ref": "#/definitions/ikas_internal_dto.PertanyaanProteksiInfo"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.KategoriInfo": {
-            "type": "object",
-            "properties": {
-                "domain": {
-                    "$ref": "#/definitions/ikas_internal_dto.DomainInfo"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "nama_kategori": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.KategoriMessageResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.KategoriResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "domain_id": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "nama_kategori": {
-                    "type": "string"
-                },
-                "updated_at": {
                     "type": "string"
                 }
             }
@@ -14130,791 +14971,6 @@ const docTemplate = `{
                 },
                 "message": {
                     "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.PertanyaanDeteksiInfo": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "pertanyaan_deteksi": {
-                    "type": "string"
-                },
-                "sub_kategori": {
-                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
-                }
-            }
-        },
-        "ikas_internal_dto.PertanyaanDeteksiMessageResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.PertanyaanDeteksiResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_deteksi": {
-                    "type": "string"
-                },
-                "ruang_lingkup": {
-                    "$ref": "#/definitions/ikas_internal_dto.RuangLingkupInfo"
-                },
-                "sub_kategori": {
-                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.PertanyaanGulihInfo": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "pertanyaan_gulih": {
-                    "type": "string"
-                },
-                "sub_kategori": {
-                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
-                }
-            }
-        },
-        "ikas_internal_dto.PertanyaanGulihMessageResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.PertanyaanGulihResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_gulih": {
-                    "type": "string"
-                },
-                "ruang_lingkup": {
-                    "$ref": "#/definitions/ikas_internal_dto.RuangLingkupInfo"
-                },
-                "sub_kategori": {
-                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.PertanyaanIdentifikasiInfo": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "pertanyaan_identifikasi": {
-                    "type": "string"
-                },
-                "sub_kategori": {
-                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
-                }
-            }
-        },
-        "ikas_internal_dto.PertanyaanIdentifikasiMessageResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.PertanyaanIdentifikasiResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_identifikasi": {
-                    "type": "string"
-                },
-                "ruang_lingkup": {
-                    "$ref": "#/definitions/ikas_internal_dto.RuangLingkupInfo"
-                },
-                "sub_kategori": {
-                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.PertanyaanProteksiInfo": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "pertanyaan_proteksi": {
-                    "type": "string"
-                },
-                "sub_kategori": {
-                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
-                }
-            }
-        },
-        "ikas_internal_dto.PertanyaanProteksiMessageResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.PertanyaanProteksiResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_proteksi": {
-                    "type": "string"
-                },
-                "ruang_lingkup": {
-                    "$ref": "#/definitions/ikas_internal_dto.RuangLingkupInfo"
-                },
-                "sub_kategori": {
-                    "$ref": "#/definitions/ikas_internal_dto.SubKategoriInfo"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.PerusahaanInIkas": {
-            "type": "object",
-            "properties": {
-                "alamat": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "nama_perusahaan": {
-                    "type": "string"
-                },
-                "sektor": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.ProteksiInIkas": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "kategori_tingkat_kematangan_domain": {
-                    "type": "string"
-                },
-                "nilai_proteksi": {
-                    "type": "number"
-                },
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
-                    "type": "number"
-                },
-                "nilai_subdomain5": {
-                    "type": "number"
-                },
-                "nilai_subdomain6": {
-                    "type": "number"
-                }
-            }
-        },
-        "ikas_internal_dto.ProteksiResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "nilai_proteksi": {
-                    "type": "number"
-                },
-                "nilai_subdomain1": {
-                    "type": "number"
-                },
-                "nilai_subdomain2": {
-                    "type": "number"
-                },
-                "nilai_subdomain3": {
-                    "type": "number"
-                },
-                "nilai_subdomain4": {
-                    "type": "number"
-                },
-                "nilai_subdomain5": {
-                    "type": "number"
-                },
-                "nilai_subdomain6": {
-                    "type": "number"
-                }
-            }
-        },
-        "ikas_internal_dto.RejectEditRequest": {
-            "type": "object",
-            "required": [
-                "reason"
-            ],
-            "properties": {
-                "reason": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.RequestEditRequest": {
-            "type": "object",
-            "required": [
-                "reason"
-            ],
-            "properties": {
-                "reason": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.RuangLingkupInfo": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "nama_ruang_lingkup": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.RuangLingkupResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "nama_ruang_lingkup": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.SubKategoriInfo": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "kategori": {
-                    "$ref": "#/definitions/ikas_internal_dto.KategoriInfo"
-                },
-                "nama_sub_kategori": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.SubKategoriMessageResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.SubKategoriResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "kategori_id": {
-                    "type": "integer"
-                },
-                "nama_sub_kategori": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.UnifiedJawabanDeteksiResponse": {
-            "type": "object",
-            "properties": {
-                "completion_percentage": {
-                    "type": "number"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ikas_internal_dto.JawabanDeteksiResponse"
-                    }
-                },
-                "is_draft": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "ikas_internal_dto.UnifiedJawabanGulihResponse": {
-            "type": "object",
-            "properties": {
-                "completion_percentage": {
-                    "type": "number"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ikas_internal_dto.JawabanGulihResponse"
-                    }
-                },
-                "is_draft": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "ikas_internal_dto.UnifiedJawabanIdentifikasiResponse": {
-            "type": "object",
-            "properties": {
-                "completion_percentage": {
-                    "type": "number"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse"
-                    }
-                },
-                "is_draft": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "ikas_internal_dto.UnifiedJawabanProteksiResponse": {
-            "type": "object",
-            "properties": {
-                "completion_percentage": {
-                    "type": "number"
-                },
-                "count": {
-                    "type": "integer"
-                },
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ikas_internal_dto.JawabanProteksiResponse"
-                    }
-                },
-                "is_draft": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "ikas_internal_dto.UpdateDomainRequest": {
-            "type": "object",
-            "properties": {
-                "nama_domain": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.UpdateIkasRequest": {
-            "type": "object",
-            "properties": {
-                "id_perusahaan": {
-                    "type": "string"
-                },
-                "jabatan": {
-                    "type": "string"
-                },
-                "responden": {
-                    "type": "string"
-                },
-                "tanggal": {
-                    "type": "string"
-                },
-                "target_nilai": {
-                    "type": "number"
-                },
-                "telepon": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.UpdateJawabanDeteksiRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "jawaban_deteksi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.UpdateJawabanGulihRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "jawaban_gulih": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.UpdateJawabanIdentifikasiRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "jawaban_identifikasi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.UpdateJawabanProteksiRequest": {
-            "type": "object",
-            "properties": {
-                "evidence": {
-                    "type": "string"
-                },
-                "jawaban_proteksi": {
-                    "type": "number"
-                },
-                "keterangan": {
-                    "type": "string"
-                },
-                "validasi": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.UpdateKategoriRequest": {
-            "type": "object",
-            "properties": {
-                "domain_id": {
-                    "type": "integer"
-                },
-                "nama_kategori": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.UpdatePertanyaanDeteksiRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_deteksi": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "ikas_internal_dto.UpdatePertanyaanGulihRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_gulih": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "ikas_internal_dto.UpdatePertanyaanIdentifikasiRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_identifikasi": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "ikas_internal_dto.UpdatePertanyaanProteksiRequest": {
-            "type": "object",
-            "properties": {
-                "index0": {
-                    "type": "string"
-                },
-                "index1": {
-                    "type": "string"
-                },
-                "index2": {
-                    "type": "string"
-                },
-                "index3": {
-                    "type": "string"
-                },
-                "index4": {
-                    "type": "string"
-                },
-                "index5": {
-                    "type": "string"
-                },
-                "pertanyaan_proteksi": {
-                    "type": "string"
-                },
-                "ruang_lingkup_id": {
-                    "type": "integer"
-                },
-                "sub_kategori_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "ikas_internal_dto.UpdateRuangLingkupRequest": {
-            "type": "object",
-            "properties": {
-                "nama_ruang_lingkup": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.UpdateSubKategoriRequest": {
-            "type": "object",
-            "properties": {
-                "kategori_id": {
-                    "type": "integer"
-                },
-                "nama_sub_kategori": {
-                    "type": "string"
-                }
-            }
-        },
-        "ikas_internal_dto.ValidasiIkasRequest": {
-            "type": "object",
-            "properties": {
-                "status": {
-                    "type": "boolean"
                 }
             }
         },

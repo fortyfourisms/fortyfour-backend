@@ -7,10 +7,6 @@ import (
 	"ikas/internal/utils"
 	"net/http"
 	"time"
-
-	_ "ikas/docs"
-
-	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // @Summary		Health check
@@ -59,7 +55,6 @@ func InitRouter(
 	mux := http.NewServeMux()
 
 	mux.HandleFunc(baseURL+"/health", healthHandler)
-	mux.HandleFunc("/swagger/maturity/", httpSwagger.WrapHandler)
 
 	withAuth := func(h http.HandlerFunc) http.Handler {
 		return authM.Authenticate(h)

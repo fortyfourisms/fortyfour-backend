@@ -204,7 +204,8 @@ func main() {
 	}
 
 	// Initialize Handler
-	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService, userService, turnstileValidator, uploadPath)
+	authHandler := handlers.NewAuthHandler(authService, tokenService, perusahaanService, userService, uploadPath)
+	challengeHandler := handlers.NewChallengeHandler(turnstileValidator, tokenService)
 	userHandler := handlers.NewUserHandler(userService, uploadPath, sseService)
 	perusahaanHandler := handlers.NewPerusahaanHandler(perusahaanService, uploadPath, sseService)
 	picHandler := handlers.NewPICHandler(picService, sseService)
@@ -238,6 +239,7 @@ func main() {
 
 	// Initialize Middleware
 	authMiddleware := middleware.NewAuthMiddleware(tokenService, userRepo)
+	challengeMiddleware := middleware.NewChallengeMiddleware(tokenService)
 	casbinMiddleware := middleware.NewCasbinMiddleware(casbinService.GetEnforcer())
 
 	// Initialize rate limiters with different configurations
@@ -279,6 +281,8 @@ func main() {
 		eventHandler,
 		aktivitasHandler,
 		konversiHandler,
+		challengeHandler,
+		challengeMiddleware,
 	)
 
 	// Start server

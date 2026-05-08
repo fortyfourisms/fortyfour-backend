@@ -23,6 +23,177 @@ definitions:
       risiko_id:
         type: integer
     type: object
+  dto.CreateDomainRequest:
+    properties:
+      nama_domain:
+        type: string
+    type: object
+  dto.CreateIkasRequest:
+    properties:
+      id_perusahaan:
+        type: string
+      jabatan:
+        type: string
+      responden:
+        type: string
+      tanggal:
+        type: string
+      target_nilai:
+        type: number
+      telepon:
+        type: string
+    type: object
+  dto.CreateJawabanDeteksiRequest:
+    properties:
+      evidence:
+        type: string
+      ikas_id:
+        type: string
+      jawaban_deteksi:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_deteksi_id:
+        type: integer
+      validasi:
+        type: string
+    type: object
+  dto.CreateJawabanGulihRequest:
+    properties:
+      evidence:
+        type: string
+      ikas_id:
+        type: string
+      jawaban_gulih:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_gulih_id:
+        type: integer
+      validasi:
+        type: string
+    type: object
+  dto.CreateJawabanIdentifikasiRequest:
+    properties:
+      evidence:
+        type: string
+      ikas_id:
+        type: string
+      jawaban_identifikasi:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_identifikasi_id:
+        type: integer
+      validasi:
+        type: string
+    type: object
+  dto.CreateJawabanProteksiRequest:
+    properties:
+      evidence:
+        type: string
+      ikas_id:
+        type: string
+      jawaban_proteksi:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_proteksi_id:
+        type: integer
+      validasi:
+        type: string
+    type: object
+  dto.CreateKategoriRequest:
+    properties:
+      domain_id:
+        type: integer
+      nama_kategori:
+        type: string
+    type: object
+  dto.CreatePertanyaanDeteksiRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_deteksi:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
+  dto.CreatePertanyaanGulihRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_gulih:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
+  dto.CreatePertanyaanIdentifikasiRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_identifikasi:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
+  dto.CreatePertanyaanProteksiRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_proteksi:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
   dto.CreateRespondenRequest:
     properties:
       email:
@@ -36,6 +207,18 @@ definitions:
       no_telepon:
         type: string
       sertifikat_training:
+        type: string
+    type: object
+  dto.CreateRuangLingkupRequest:
+    properties:
+      nama_ruang_lingkup:
+        type: string
+    type: object
+  dto.CreateSubKategoriRequest:
+    properties:
+      kategori_id:
+        type: integer
+      nama_sub_kategori:
         type: string
     type: object
   dto.DampakRequest:
@@ -55,6 +238,52 @@ definitions:
       risiko_id:
         type: integer
     type: object
+  dto.DeteksiInIkas:
+    properties:
+      id:
+        type: integer
+      kategori_tingkat_kematangan_domain:
+        type: string
+      nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+    type: object
+  dto.DeteksiResponse:
+    properties:
+      id:
+        type: string
+      nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+    type: object
+  dto.DomainInfo:
+    properties:
+      id:
+        type: integer
+      nama_domain:
+        type: string
+    type: object
+  dto.DomainResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      nama_domain:
+        type: string
+      updated_at:
+        type: string
+    type: object
   dto.EligibilityRequest:
     properties:
       pernah_terjadi:
@@ -63,6 +292,239 @@ definitions:
         type: integer
       risiko_id:
         type: integer
+    type: object
+  dto.GulihInIkas:
+    properties:
+      id:
+        type: integer
+      kategori_tingkat_kematangan_domain:
+        type: string
+      nilai_gulih:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+    type: object
+  dto.GulihResponse:
+    properties:
+      id:
+        type: string
+      nilai_deteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+    type: object
+  dto.IdentifikasiInIkas:
+    properties:
+      id:
+        type: integer
+      kategori_tingkat_kematangan_domain:
+        type: string
+      nilai_identifikasi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+    type: object
+  dto.IdentifikasiResponse:
+    properties:
+      id:
+        type: string
+      nilai_identiifasi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+    type: object
+  dto.IkasResponse:
+    properties:
+      created_at:
+        type: string
+      deteksi:
+        $ref: '#/definitions/dto.DeteksiInIkas'
+      edit_request_reason:
+        type: string
+      edit_request_status:
+        type: string
+      gulih:
+        $ref: '#/definitions/dto.GulihInIkas'
+      id:
+        type: string
+      identifikasi:
+        $ref: '#/definitions/dto.IdentifikasiInIkas'
+      is_validated:
+        type: boolean
+      jabatan:
+        type: string
+      kategori_kematangan_keamanan_siber:
+        type: string
+      nilai_kematangan:
+        type: number
+      perusahaan:
+        $ref: '#/definitions/dto.PerusahaanInIkas'
+      proteksi:
+        $ref: '#/definitions/dto.ProteksiInIkas'
+      responden:
+        type: string
+      tanggal:
+        type: string
+      target_nilai:
+        type: number
+      telepon:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.ImportIkasResponse:
+    properties:
+      data:
+        $ref: '#/definitions/dto.IkasResponse'
+      errors:
+        items:
+          type: string
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  dto.JawabanDeteksiResponse:
+    properties:
+      created_at:
+        type: string
+      evidence:
+        type: string
+      id:
+        type: integer
+      ikas_id:
+        type: string
+      jawaban_deteksi:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_deteksi:
+        $ref: '#/definitions/dto.PertanyaanDeteksiInfo'
+      updated_at:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.JawabanGulihResponse:
+    properties:
+      created_at:
+        type: string
+      evidence:
+        type: string
+      id:
+        type: integer
+      ikas_id:
+        type: string
+      jawaban_gulih:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_gulih:
+        $ref: '#/definitions/dto.PertanyaanGulihInfo'
+      updated_at:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.JawabanIdentifikasiResponse:
+    properties:
+      created_at:
+        type: string
+      evidence:
+        type: string
+      id:
+        type: integer
+      ikas_id:
+        type: string
+      jawaban_identifikasi:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_identifikasi:
+        $ref: '#/definitions/dto.PertanyaanIdentifikasiInfo'
+      updated_at:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.JawabanProteksiResponse:
+    properties:
+      created_at:
+        type: string
+      evidence:
+        type: string
+      id:
+        type: integer
+      ikas_id:
+        type: string
+      jawaban_proteksi:
+        type: number
+      keterangan:
+        type: string
+      pertanyaan_proteksi:
+        $ref: '#/definitions/dto.PertanyaanProteksiInfo'
+      updated_at:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.KategoriInfo:
+    properties:
+      domain:
+        $ref: '#/definitions/dto.DomainInfo'
+      id:
+        type: integer
+      nama_kategori:
+        type: string
+    type: object
+  dto.KategoriMessageResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.KategoriResponse:
+    properties:
+      created_at:
+        type: string
+      domain_id:
+        type: integer
+      id:
+        type: integer
+      nama_kategori:
+        type: string
+      updated_at:
+        type: string
     type: object
   dto.NavigateRequest:
     properties:
@@ -83,6 +545,516 @@ definitions:
         type: integer
       risiko_id:
         type: integer
+    type: object
+  dto.PertanyaanDeteksiInfo:
+    properties:
+      id:
+        type: integer
+      pertanyaan_deteksi:
+        type: string
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
+    type: object
+  dto.PertanyaanDeteksiMessageResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.PertanyaanDeteksiResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_deteksi:
+        type: string
+      ruang_lingkup:
+        $ref: '#/definitions/dto.RuangLingkupInfo'
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
+      updated_at:
+        type: string
+    type: object
+  dto.PertanyaanGulihInfo:
+    properties:
+      id:
+        type: integer
+      pertanyaan_gulih:
+        type: string
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
+    type: object
+  dto.PertanyaanGulihMessageResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.PertanyaanGulihResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_gulih:
+        type: string
+      ruang_lingkup:
+        $ref: '#/definitions/dto.RuangLingkupInfo'
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
+      updated_at:
+        type: string
+    type: object
+  dto.PertanyaanIdentifikasiInfo:
+    properties:
+      id:
+        type: integer
+      pertanyaan_identifikasi:
+        type: string
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
+    type: object
+  dto.PertanyaanIdentifikasiMessageResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.PertanyaanIdentifikasiResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_identifikasi:
+        type: string
+      ruang_lingkup:
+        $ref: '#/definitions/dto.RuangLingkupInfo'
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
+      updated_at:
+        type: string
+    type: object
+  dto.PertanyaanProteksiInfo:
+    properties:
+      id:
+        type: integer
+      pertanyaan_proteksi:
+        type: string
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
+    type: object
+  dto.PertanyaanProteksiMessageResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.PertanyaanProteksiResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_proteksi:
+        type: string
+      ruang_lingkup:
+        $ref: '#/definitions/dto.RuangLingkupInfo'
+      sub_kategori:
+        $ref: '#/definitions/dto.SubKategoriInfo'
+      updated_at:
+        type: string
+    type: object
+  dto.PerusahaanInIkas:
+    properties:
+      alamat:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      nama_perusahaan:
+        type: string
+      sektor:
+        type: string
+    type: object
+  dto.ProteksiInIkas:
+    properties:
+      id:
+        type: integer
+      kategori_tingkat_kematangan_domain:
+        type: string
+      nilai_proteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      nilai_subdomain6:
+        type: number
+    type: object
+  dto.ProteksiResponse:
+    properties:
+      id:
+        type: string
+      nilai_proteksi:
+        type: number
+      nilai_subdomain1:
+        type: number
+      nilai_subdomain2:
+        type: number
+      nilai_subdomain3:
+        type: number
+      nilai_subdomain4:
+        type: number
+      nilai_subdomain5:
+        type: number
+      nilai_subdomain6:
+        type: number
+    type: object
+  dto.RejectEditRequest:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
+  dto.RequestEditRequest:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
+  dto.RuangLingkupInfo:
+    properties:
+      id:
+        type: integer
+      nama_ruang_lingkup:
+        type: string
+    type: object
+  dto.RuangLingkupResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      nama_ruang_lingkup:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.SubKategoriInfo:
+    properties:
+      id:
+        type: integer
+      kategori:
+        $ref: '#/definitions/dto.KategoriInfo'
+      nama_sub_kategori:
+        type: string
+    type: object
+  dto.SubKategoriMessageResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  dto.SubKategoriResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      kategori_id:
+        type: integer
+      nama_sub_kategori:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  dto.UnifiedJawabanDeteksiResponse:
+    properties:
+      completion_percentage:
+        type: number
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/dto.JawabanDeteksiResponse'
+        type: array
+      is_draft:
+        type: boolean
+    type: object
+  dto.UnifiedJawabanGulihResponse:
+    properties:
+      completion_percentage:
+        type: number
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/dto.JawabanGulihResponse'
+        type: array
+      is_draft:
+        type: boolean
+    type: object
+  dto.UnifiedJawabanIdentifikasiResponse:
+    properties:
+      completion_percentage:
+        type: number
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/dto.JawabanIdentifikasiResponse'
+        type: array
+      is_draft:
+        type: boolean
+    type: object
+  dto.UnifiedJawabanProteksiResponse:
+    properties:
+      completion_percentage:
+        type: number
+      count:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/dto.JawabanProteksiResponse'
+        type: array
+      is_draft:
+        type: boolean
+    type: object
+  dto.UpdateDomainRequest:
+    properties:
+      nama_domain:
+        type: string
+    type: object
+  dto.UpdateIkasRequest:
+    properties:
+      id_perusahaan:
+        type: string
+      jabatan:
+        type: string
+      responden:
+        type: string
+      tanggal:
+        type: string
+      target_nilai:
+        type: number
+      telepon:
+        type: string
+    type: object
+  dto.UpdateJawabanDeteksiRequest:
+    properties:
+      evidence:
+        type: string
+      jawaban_deteksi:
+        type: number
+      keterangan:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.UpdateJawabanGulihRequest:
+    properties:
+      evidence:
+        type: string
+      jawaban_gulih:
+        type: number
+      keterangan:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.UpdateJawabanIdentifikasiRequest:
+    properties:
+      evidence:
+        type: string
+      jawaban_identifikasi:
+        type: number
+      keterangan:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.UpdateJawabanProteksiRequest:
+    properties:
+      evidence:
+        type: string
+      jawaban_proteksi:
+        type: number
+      keterangan:
+        type: string
+      validasi:
+        type: string
+    type: object
+  dto.UpdateKategoriRequest:
+    properties:
+      domain_id:
+        type: integer
+      nama_kategori:
+        type: string
+    type: object
+  dto.UpdatePertanyaanDeteksiRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_deteksi:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
+  dto.UpdatePertanyaanGulihRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_gulih:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
+  dto.UpdatePertanyaanIdentifikasiRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_identifikasi:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
+  dto.UpdatePertanyaanProteksiRequest:
+    properties:
+      index0:
+        type: string
+      index1:
+        type: string
+      index2:
+        type: string
+      index3:
+        type: string
+      index4:
+        type: string
+      index5:
+        type: string
+      pertanyaan_proteksi:
+        type: string
+      ruang_lingkup_id:
+        type: integer
+      sub_kategori_id:
+        type: integer
+    type: object
+  dto.UpdateRuangLingkupRequest:
+    properties:
+      nama_ruang_lingkup:
+        type: string
+    type: object
+  dto.UpdateSubKategoriRequest:
+    properties:
+      kategori_id:
+        type: integer
+      nama_sub_kategori:
+        type: string
+    type: object
+  dto.ValidasiIkasRequest:
+    properties:
+      status:
+        type: boolean
     type: object
   fortyfour-backend_internal_dto.AddPolicyRequest:
     properties:
@@ -174,6 +1146,13 @@ definitions:
     required:
     - policies
     - role
+    type: object
+  fortyfour-backend_internal_dto.ChallengeRequest:
+    properties:
+      cf-turnstile-response:
+        type: string
+    required:
+    - cf-turnstile-response
     type: object
   fortyfour-backend_internal_dto.ChatRequest:
     properties:
@@ -920,14 +1899,11 @@ definitions:
     type: object
   fortyfour-backend_internal_dto.LoginRequest:
     properties:
-      cf-turnstile-response:
-        type: string
       identifier:
         type: string
       password:
         type: string
     required:
-    - cf-turnstile-response
     - identifier
     - password
     type: object
@@ -1837,471 +2813,9 @@ definitions:
         type: string
       total: {}
     type: object
-  ikas_internal_dto.CreateDomainRequest:
-    properties:
-      nama_domain:
-        type: string
-    type: object
-  ikas_internal_dto.CreateIkasRequest:
-    properties:
-      id_perusahaan:
-        type: string
-      jabatan:
-        type: string
-      responden:
-        type: string
-      tanggal:
-        type: string
-      target_nilai:
-        type: number
-      telepon:
-        type: string
-    type: object
-  ikas_internal_dto.CreateJawabanDeteksiRequest:
-    properties:
-      evidence:
-        type: string
-      ikas_id:
-        type: string
-      jawaban_deteksi:
-        type: number
-      keterangan:
-        type: string
-      pertanyaan_deteksi_id:
-        type: integer
-      validasi:
-        type: string
-    type: object
-  ikas_internal_dto.CreateJawabanGulihRequest:
-    properties:
-      evidence:
-        type: string
-      ikas_id:
-        type: string
-      jawaban_gulih:
-        type: number
-      keterangan:
-        type: string
-      pertanyaan_gulih_id:
-        type: integer
-      validasi:
-        type: string
-    type: object
-  ikas_internal_dto.CreateJawabanIdentifikasiRequest:
-    properties:
-      evidence:
-        type: string
-      ikas_id:
-        type: string
-      jawaban_identifikasi:
-        type: number
-      keterangan:
-        type: string
-      pertanyaan_identifikasi_id:
-        type: integer
-      validasi:
-        type: string
-    type: object
-  ikas_internal_dto.CreateJawabanProteksiRequest:
-    properties:
-      evidence:
-        type: string
-      ikas_id:
-        type: string
-      jawaban_proteksi:
-        type: number
-      keterangan:
-        type: string
-      pertanyaan_proteksi_id:
-        type: integer
-      validasi:
-        type: string
-    type: object
-  ikas_internal_dto.CreateKategoriRequest:
-    properties:
-      domain_id:
-        type: integer
-      nama_kategori:
-        type: string
-    type: object
-  ikas_internal_dto.CreatePertanyaanDeteksiRequest:
-    properties:
-      index0:
-        type: string
-      index1:
-        type: string
-      index2:
-        type: string
-      index3:
-        type: string
-      index4:
-        type: string
-      index5:
-        type: string
-      pertanyaan_deteksi:
-        type: string
-      ruang_lingkup_id:
-        type: integer
-      sub_kategori_id:
-        type: integer
-    type: object
-  ikas_internal_dto.CreatePertanyaanGulihRequest:
-    properties:
-      index0:
-        type: string
-      index1:
-        type: string
-      index2:
-        type: string
-      index3:
-        type: string
-      index4:
-        type: string
-      index5:
-        type: string
-      pertanyaan_gulih:
-        type: string
-      ruang_lingkup_id:
-        type: integer
-      sub_kategori_id:
-        type: integer
-    type: object
-  ikas_internal_dto.CreatePertanyaanIdentifikasiRequest:
-    properties:
-      index0:
-        type: string
-      index1:
-        type: string
-      index2:
-        type: string
-      index3:
-        type: string
-      index4:
-        type: string
-      index5:
-        type: string
-      pertanyaan_identifikasi:
-        type: string
-      ruang_lingkup_id:
-        type: integer
-      sub_kategori_id:
-        type: integer
-    type: object
-  ikas_internal_dto.CreatePertanyaanProteksiRequest:
-    properties:
-      index0:
-        type: string
-      index1:
-        type: string
-      index2:
-        type: string
-      index3:
-        type: string
-      index4:
-        type: string
-      index5:
-        type: string
-      pertanyaan_proteksi:
-        type: string
-      ruang_lingkup_id:
-        type: integer
-      sub_kategori_id:
-        type: integer
-    type: object
-  ikas_internal_dto.CreateRuangLingkupRequest:
-    properties:
-      nama_ruang_lingkup:
-        type: string
-    type: object
-  ikas_internal_dto.CreateSubKategoriRequest:
-    properties:
-      kategori_id:
-        type: integer
-      nama_sub_kategori:
-        type: string
-    type: object
-  ikas_internal_dto.DeteksiInIkas:
-    properties:
-      id:
-        type: integer
-      kategori_tingkat_kematangan_domain:
-        type: string
-      nilai_deteksi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-    type: object
-  ikas_internal_dto.DeteksiResponse:
-    properties:
-      id:
-        type: string
-      nilai_deteksi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-    type: object
-  ikas_internal_dto.DomainInfo:
-    properties:
-      id:
-        type: integer
-      nama_domain:
-        type: string
-    type: object
-  ikas_internal_dto.DomainResponse:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      nama_domain:
-        type: string
-      updated_at:
-        type: string
-    type: object
   ikas_internal_dto.ErrorResponse:
     properties:
       error:
-        type: string
-    type: object
-  ikas_internal_dto.GulihInIkas:
-    properties:
-      id:
-        type: integer
-      kategori_tingkat_kematangan_domain:
-        type: string
-      nilai_gulih:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-    type: object
-  ikas_internal_dto.GulihResponse:
-    properties:
-      id:
-        type: string
-      nilai_deteksi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-    type: object
-  ikas_internal_dto.IdentifikasiInIkas:
-    properties:
-      id:
-        type: integer
-      kategori_tingkat_kematangan_domain:
-        type: string
-      nilai_identifikasi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-      nilai_subdomain5:
-        type: number
-    type: object
-  ikas_internal_dto.IdentifikasiResponse:
-    properties:
-      id:
-        type: string
-      nilai_identiifasi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-      nilai_subdomain5:
-        type: number
-    type: object
-  ikas_internal_dto.IkasResponse:
-    properties:
-      created_at:
-        type: string
-      deteksi:
-        $ref: '#/definitions/ikas_internal_dto.DeteksiInIkas'
-      edit_request_reason:
-        type: string
-      edit_request_status:
-        type: string
-      gulih:
-        $ref: '#/definitions/ikas_internal_dto.GulihInIkas'
-      id:
-        type: string
-      identifikasi:
-        $ref: '#/definitions/ikas_internal_dto.IdentifikasiInIkas'
-      is_validated:
-        type: boolean
-      jabatan:
-        type: string
-      kategori_kematangan_keamanan_siber:
-        type: string
-      nilai_kematangan:
-        type: number
-      perusahaan:
-        $ref: '#/definitions/ikas_internal_dto.PerusahaanInIkas'
-      proteksi:
-        $ref: '#/definitions/ikas_internal_dto.ProteksiInIkas'
-      responden:
-        type: string
-      tanggal:
-        type: string
-      target_nilai:
-        type: number
-      telepon:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  ikas_internal_dto.ImportIkasResponse:
-    properties:
-      data:
-        $ref: '#/definitions/ikas_internal_dto.IkasResponse'
-      errors:
-        items:
-          type: string
-        type: array
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  ikas_internal_dto.JawabanDeteksiResponse:
-    properties:
-      created_at:
-        type: string
-      evidence:
-        type: string
-      id:
-        type: integer
-      ikas_id:
-        type: string
-      jawaban_deteksi:
-        type: number
-      keterangan:
-        type: string
-      pertanyaan_deteksi:
-        $ref: '#/definitions/ikas_internal_dto.PertanyaanDeteksiInfo'
-      updated_at:
-        type: string
-      validasi:
-        type: string
-    type: object
-  ikas_internal_dto.JawabanGulihResponse:
-    properties:
-      created_at:
-        type: string
-      evidence:
-        type: string
-      id:
-        type: integer
-      ikas_id:
-        type: string
-      jawaban_gulih:
-        type: number
-      keterangan:
-        type: string
-      pertanyaan_gulih:
-        $ref: '#/definitions/ikas_internal_dto.PertanyaanGulihInfo'
-      updated_at:
-        type: string
-      validasi:
-        type: string
-    type: object
-  ikas_internal_dto.JawabanIdentifikasiResponse:
-    properties:
-      created_at:
-        type: string
-      evidence:
-        type: string
-      id:
-        type: integer
-      ikas_id:
-        type: string
-      jawaban_identifikasi:
-        type: number
-      keterangan:
-        type: string
-      pertanyaan_identifikasi:
-        $ref: '#/definitions/ikas_internal_dto.PertanyaanIdentifikasiInfo'
-      updated_at:
-        type: string
-      validasi:
-        type: string
-    type: object
-  ikas_internal_dto.JawabanProteksiResponse:
-    properties:
-      created_at:
-        type: string
-      evidence:
-        type: string
-      id:
-        type: integer
-      ikas_id:
-        type: string
-      jawaban_proteksi:
-        type: number
-      keterangan:
-        type: string
-      pertanyaan_proteksi:
-        $ref: '#/definitions/ikas_internal_dto.PertanyaanProteksiInfo'
-      updated_at:
-        type: string
-      validasi:
-        type: string
-    type: object
-  ikas_internal_dto.KategoriInfo:
-    properties:
-      domain:
-        $ref: '#/definitions/ikas_internal_dto.DomainInfo'
-      id:
-        type: integer
-      nama_kategori:
-        type: string
-    type: object
-  ikas_internal_dto.KategoriMessageResponse:
-    properties:
-      id:
-        type: integer
-      message:
-        type: string
-    type: object
-  ikas_internal_dto.KategoriResponse:
-    properties:
-      created_at:
-        type: string
-      domain_id:
-        type: integer
-      id:
-        type: integer
-      nama_kategori:
-        type: string
-      updated_at:
         type: string
     type: object
   ikas_internal_dto.MessageResponse:
@@ -2310,516 +2824,6 @@ definitions:
         type: integer
       message:
         type: string
-    type: object
-  ikas_internal_dto.PertanyaanDeteksiInfo:
-    properties:
-      id:
-        type: integer
-      pertanyaan_deteksi:
-        type: string
-      sub_kategori:
-        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
-    type: object
-  ikas_internal_dto.PertanyaanDeteksiMessageResponse:
-    properties:
-      id:
-        type: integer
-      message:
-        type: string
-    type: object
-  ikas_internal_dto.PertanyaanDeteksiResponse:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      index0:
-        type: string
-      index1:
-        type: string
-      index2:
-        type: string
-      index3:
-        type: string
-      index4:
-        type: string
-      index5:
-        type: string
-      pertanyaan_deteksi:
-        type: string
-      ruang_lingkup:
-        $ref: '#/definitions/ikas_internal_dto.RuangLingkupInfo'
-      sub_kategori:
-        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
-      updated_at:
-        type: string
-    type: object
-  ikas_internal_dto.PertanyaanGulihInfo:
-    properties:
-      id:
-        type: integer
-      pertanyaan_gulih:
-        type: string
-      sub_kategori:
-        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
-    type: object
-  ikas_internal_dto.PertanyaanGulihMessageResponse:
-    properties:
-      id:
-        type: integer
-      message:
-        type: string
-    type: object
-  ikas_internal_dto.PertanyaanGulihResponse:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      index0:
-        type: string
-      index1:
-        type: string
-      index2:
-        type: string
-      index3:
-        type: string
-      index4:
-        type: string
-      index5:
-        type: string
-      pertanyaan_gulih:
-        type: string
-      ruang_lingkup:
-        $ref: '#/definitions/ikas_internal_dto.RuangLingkupInfo'
-      sub_kategori:
-        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
-      updated_at:
-        type: string
-    type: object
-  ikas_internal_dto.PertanyaanIdentifikasiInfo:
-    properties:
-      id:
-        type: integer
-      pertanyaan_identifikasi:
-        type: string
-      sub_kategori:
-        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
-    type: object
-  ikas_internal_dto.PertanyaanIdentifikasiMessageResponse:
-    properties:
-      id:
-        type: integer
-      message:
-        type: string
-    type: object
-  ikas_internal_dto.PertanyaanIdentifikasiResponse:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      index0:
-        type: string
-      index1:
-        type: string
-      index2:
-        type: string
-      index3:
-        type: string
-      index4:
-        type: string
-      index5:
-        type: string
-      pertanyaan_identifikasi:
-        type: string
-      ruang_lingkup:
-        $ref: '#/definitions/ikas_internal_dto.RuangLingkupInfo'
-      sub_kategori:
-        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
-      updated_at:
-        type: string
-    type: object
-  ikas_internal_dto.PertanyaanProteksiInfo:
-    properties:
-      id:
-        type: integer
-      pertanyaan_proteksi:
-        type: string
-      sub_kategori:
-        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
-    type: object
-  ikas_internal_dto.PertanyaanProteksiMessageResponse:
-    properties:
-      id:
-        type: integer
-      message:
-        type: string
-    type: object
-  ikas_internal_dto.PertanyaanProteksiResponse:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      index0:
-        type: string
-      index1:
-        type: string
-      index2:
-        type: string
-      index3:
-        type: string
-      index4:
-        type: string
-      index5:
-        type: string
-      pertanyaan_proteksi:
-        type: string
-      ruang_lingkup:
-        $ref: '#/definitions/ikas_internal_dto.RuangLingkupInfo'
-      sub_kategori:
-        $ref: '#/definitions/ikas_internal_dto.SubKategoriInfo'
-      updated_at:
-        type: string
-    type: object
-  ikas_internal_dto.PerusahaanInIkas:
-    properties:
-      alamat:
-        type: string
-      email:
-        type: string
-      id:
-        type: string
-      nama_perusahaan:
-        type: string
-      sektor:
-        type: string
-    type: object
-  ikas_internal_dto.ProteksiInIkas:
-    properties:
-      id:
-        type: integer
-      kategori_tingkat_kematangan_domain:
-        type: string
-      nilai_proteksi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-      nilai_subdomain5:
-        type: number
-      nilai_subdomain6:
-        type: number
-    type: object
-  ikas_internal_dto.ProteksiResponse:
-    properties:
-      id:
-        type: string
-      nilai_proteksi:
-        type: number
-      nilai_subdomain1:
-        type: number
-      nilai_subdomain2:
-        type: number
-      nilai_subdomain3:
-        type: number
-      nilai_subdomain4:
-        type: number
-      nilai_subdomain5:
-        type: number
-      nilai_subdomain6:
-        type: number
-    type: object
-  ikas_internal_dto.RejectEditRequest:
-    properties:
-      reason:
-        type: string
-    required:
-    - reason
-    type: object
-  ikas_internal_dto.RequestEditRequest:
-    properties:
-      reason:
-        type: string
-    required:
-    - reason
-    type: object
-  ikas_internal_dto.RuangLingkupInfo:
-    properties:
-      id:
-        type: integer
-      nama_ruang_lingkup:
-        type: string
-    type: object
-  ikas_internal_dto.RuangLingkupResponse:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      nama_ruang_lingkup:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  ikas_internal_dto.SubKategoriInfo:
-    properties:
-      id:
-        type: integer
-      kategori:
-        $ref: '#/definitions/ikas_internal_dto.KategoriInfo'
-      nama_sub_kategori:
-        type: string
-    type: object
-  ikas_internal_dto.SubKategoriMessageResponse:
-    properties:
-      id:
-        type: integer
-      message:
-        type: string
-    type: object
-  ikas_internal_dto.SubKategoriResponse:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: integer
-      kategori_id:
-        type: integer
-      nama_sub_kategori:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  ikas_internal_dto.UnifiedJawabanDeteksiResponse:
-    properties:
-      completion_percentage:
-        type: number
-      count:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/ikas_internal_dto.JawabanDeteksiResponse'
-        type: array
-      is_draft:
-        type: boolean
-    type: object
-  ikas_internal_dto.UnifiedJawabanGulihResponse:
-    properties:
-      completion_percentage:
-        type: number
-      count:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/ikas_internal_dto.JawabanGulihResponse'
-        type: array
-      is_draft:
-        type: boolean
-    type: object
-  ikas_internal_dto.UnifiedJawabanIdentifikasiResponse:
-    properties:
-      completion_percentage:
-        type: number
-      count:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse'
-        type: array
-      is_draft:
-        type: boolean
-    type: object
-  ikas_internal_dto.UnifiedJawabanProteksiResponse:
-    properties:
-      completion_percentage:
-        type: number
-      count:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/ikas_internal_dto.JawabanProteksiResponse'
-        type: array
-      is_draft:
-        type: boolean
-    type: object
-  ikas_internal_dto.UpdateDomainRequest:
-    properties:
-      nama_domain:
-        type: string
-    type: object
-  ikas_internal_dto.UpdateIkasRequest:
-    properties:
-      id_perusahaan:
-        type: string
-      jabatan:
-        type: string
-      responden:
-        type: string
-      tanggal:
-        type: string
-      target_nilai:
-        type: number
-      telepon:
-        type: string
-    type: object
-  ikas_internal_dto.UpdateJawabanDeteksiRequest:
-    properties:
-      evidence:
-        type: string
-      jawaban_deteksi:
-        type: number
-      keterangan:
-        type: string
-      validasi:
-        type: string
-    type: object
-  ikas_internal_dto.UpdateJawabanGulihRequest:
-    properties:
-      evidence:
-        type: string
-      jawaban_gulih:
-        type: number
-      keterangan:
-        type: string
-      validasi:
-        type: string
-    type: object
-  ikas_internal_dto.UpdateJawabanIdentifikasiRequest:
-    properties:
-      evidence:
-        type: string
-      jawaban_identifikasi:
-        type: number
-      keterangan:
-        type: string
-      validasi:
-        type: string
-    type: object
-  ikas_internal_dto.UpdateJawabanProteksiRequest:
-    properties:
-      evidence:
-        type: string
-      jawaban_proteksi:
-        type: number
-      keterangan:
-        type: string
-      validasi:
-        type: string
-    type: object
-  ikas_internal_dto.UpdateKategoriRequest:
-    properties:
-      domain_id:
-        type: integer
-      nama_kategori:
-        type: string
-    type: object
-  ikas_internal_dto.UpdatePertanyaanDeteksiRequest:
-    properties:
-      index0:
-        type: string
-      index1:
-        type: string
-      index2:
-        type: string
-      index3:
-        type: string
-      index4:
-        type: string
-      index5:
-        type: string
-      pertanyaan_deteksi:
-        type: string
-      ruang_lingkup_id:
-        type: integer
-      sub_kategori_id:
-        type: integer
-    type: object
-  ikas_internal_dto.UpdatePertanyaanGulihRequest:
-    properties:
-      index0:
-        type: string
-      index1:
-        type: string
-      index2:
-        type: string
-      index3:
-        type: string
-      index4:
-        type: string
-      index5:
-        type: string
-      pertanyaan_gulih:
-        type: string
-      ruang_lingkup_id:
-        type: integer
-      sub_kategori_id:
-        type: integer
-    type: object
-  ikas_internal_dto.UpdatePertanyaanIdentifikasiRequest:
-    properties:
-      index0:
-        type: string
-      index1:
-        type: string
-      index2:
-        type: string
-      index3:
-        type: string
-      index4:
-        type: string
-      index5:
-        type: string
-      pertanyaan_identifikasi:
-        type: string
-      ruang_lingkup_id:
-        type: integer
-      sub_kategori_id:
-        type: integer
-    type: object
-  ikas_internal_dto.UpdatePertanyaanProteksiRequest:
-    properties:
-      index0:
-        type: string
-      index1:
-        type: string
-      index2:
-        type: string
-      index3:
-        type: string
-      index4:
-        type: string
-      index5:
-        type: string
-      pertanyaan_proteksi:
-        type: string
-      ruang_lingkup_id:
-        type: integer
-      sub_kategori_id:
-        type: integer
-    type: object
-  ikas_internal_dto.UpdateRuangLingkupRequest:
-    properties:
-      nama_ruang_lingkup:
-        type: string
-    type: object
-  ikas_internal_dto.UpdateSubKategoriRequest:
-    properties:
-      kategori_id:
-        type: integer
-      nama_sub_kategori:
-        type: string
-    type: object
-  ikas_internal_dto.ValidasiIkasRequest:
-    properties:
-      status:
-        type: boolean
     type: object
   ikas_internal_utils.JSONResponse:
     properties:
@@ -3349,6 +3353,39 @@ paths:
       summary: Remove Casbin policy
       tags:
       - Casbin
+  /api/challenge/verify:
+    post:
+      consumes:
+      - application/json
+      description: Validasi token Cloudflare Turnstile untuk mendapatkan akses ke
+        aplikasi. Memberikan cookie gate_verified.
+      parameters:
+      - description: Turnstile Token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.ChallengeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: message
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      summary: Verifikasi Challenge Gate
+      tags:
+      - Challenge
   /api/chat:
     post:
       consumes:
@@ -5429,7 +5466,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/ikas_internal_dto.DeteksiResponse'
+              $ref: '#/definitions/dto.DeteksiResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -5452,7 +5489,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.DeteksiResponse'
+            $ref: '#/definitions/dto.DeteksiResponse'
         "404":
           description: Not Found
           schema:
@@ -5470,7 +5507,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/ikas_internal_dto.DomainResponse'
+              $ref: '#/definitions/dto.DomainResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -5489,14 +5526,14 @@ paths:
         name: domain
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.CreateDomainRequest'
+          $ref: '#/definitions/dto.CreateDomainRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/ikas_internal_dto.DomainResponse'
+            $ref: '#/definitions/dto.DomainResponse'
         "400":
           description: Bad Request
           schema:
@@ -5549,7 +5586,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.DomainResponse'
+            $ref: '#/definitions/dto.DomainResponse'
         "404":
           description: Not Found
           schema:
@@ -5572,14 +5609,14 @@ paths:
         name: domain
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.UpdateDomainRequest'
+          $ref: '#/definitions/dto.UpdateDomainRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.DomainResponse'
+            $ref: '#/definitions/dto.DomainResponse'
         "400":
           description: Bad Request
           schema:
@@ -5605,7 +5642,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/ikas_internal_dto.GulihResponse'
+              $ref: '#/definitions/dto.GulihResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -5628,7 +5665,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.GulihResponse'
+            $ref: '#/definitions/dto.GulihResponse'
         "404":
           description: Not Found
           schema:
@@ -5661,7 +5698,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/ikas_internal_dto.IdentifikasiResponse'
+              $ref: '#/definitions/dto.IdentifikasiResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -5685,7 +5722,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.IdentifikasiResponse'
+            $ref: '#/definitions/dto.IdentifikasiResponse'
         "404":
           description: Not Found
           schema:
@@ -5703,7 +5740,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/ikas_internal_dto.IkasResponse'
+              $ref: '#/definitions/dto.IkasResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -5722,14 +5759,14 @@ paths:
         name: ikas
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.CreateIkasRequest'
+          $ref: '#/definitions/dto.CreateIkasRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/ikas_internal_dto.IkasResponse'
+            $ref: '#/definitions/dto.IkasResponse'
         "400":
           description: Bad Request
           schema:
@@ -5809,7 +5846,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.IkasResponse'
+            $ref: '#/definitions/dto.IkasResponse'
         "404":
           description: Not Found
           schema:
@@ -5832,14 +5869,14 @@ paths:
         name: ikas
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.UpdateIkasRequest'
+          $ref: '#/definitions/dto.UpdateIkasRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.IkasResponse'
+            $ref: '#/definitions/dto.IkasResponse'
         "400":
           description: Bad Request
           schema:
@@ -5920,7 +5957,7 @@ paths:
         name: req
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.RejectEditRequest'
+          $ref: '#/definitions/dto.RejectEditRequest'
       produces:
       - application/json
       responses:
@@ -5957,7 +5994,7 @@ paths:
         name: req
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.RequestEditRequest'
+          $ref: '#/definitions/dto.RequestEditRequest'
       produces:
       - application/json
       responses:
@@ -5994,7 +6031,7 @@ paths:
         name: req
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.ValidasiIkasRequest'
+          $ref: '#/definitions/dto.ValidasiIkasRequest'
       produces:
       - application/json
       responses:
@@ -6056,7 +6093,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/ikas_internal_dto.ImportIkasResponse'
+            $ref: '#/definitions/dto.ImportIkasResponse'
         "400":
           description: Bad Request
           schema:
@@ -6083,7 +6120,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.UnifiedJawabanDeteksiResponse'
+            $ref: '#/definitions/dto.UnifiedJawabanDeteksiResponse'
       summary: Get All Jawaban Deteksi
       tags:
       - Jawaban Deteksi
@@ -6097,7 +6134,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.CreateJawabanDeteksiRequest'
+          $ref: '#/definitions/dto.CreateJawabanDeteksiRequest'
       produces:
       - application/json
       responses:
@@ -6141,7 +6178,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.JawabanDeteksiResponse'
+            $ref: '#/definitions/dto.JawabanDeteksiResponse'
       summary: Get Jawaban Deteksi by ID
       tags:
       - Jawaban Deteksi
@@ -6160,7 +6197,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.UpdateJawabanDeteksiRequest'
+          $ref: '#/definitions/dto.UpdateJawabanDeteksiRequest'
       produces:
       - application/json
       responses:
@@ -6194,7 +6231,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.UnifiedJawabanGulihResponse'
+            $ref: '#/definitions/dto.UnifiedJawabanGulihResponse'
       summary: Get All Jawaban Gulih
       tags:
       - Jawaban Gulih
@@ -6208,7 +6245,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.CreateJawabanGulihRequest'
+          $ref: '#/definitions/dto.CreateJawabanGulihRequest'
       produces:
       - application/json
       responses:
@@ -6272,7 +6309,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.UpdateJawabanGulihRequest'
+          $ref: '#/definitions/dto.UpdateJawabanGulihRequest'
       produces:
       - application/json
       responses:
@@ -6306,7 +6343,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.UnifiedJawabanIdentifikasiResponse'
+            $ref: '#/definitions/dto.UnifiedJawabanIdentifikasiResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -6324,7 +6361,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.CreateJawabanIdentifikasiRequest'
+          $ref: '#/definitions/dto.CreateJawabanIdentifikasiRequest'
       produces:
       - application/json
       responses:
@@ -6388,7 +6425,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.JawabanIdentifikasiResponse'
+            $ref: '#/definitions/dto.JawabanIdentifikasiResponse'
         "404":
           description: Not Found
           schema:
@@ -6411,7 +6448,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.UpdateJawabanIdentifikasiRequest'
+          $ref: '#/definitions/dto.UpdateJawabanIdentifikasiRequest'
       produces:
       - application/json
       responses:
@@ -6453,7 +6490,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.UnifiedJawabanProteksiResponse'
+            $ref: '#/definitions/dto.UnifiedJawabanProteksiResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -6471,7 +6508,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.CreateJawabanProteksiRequest'
+          $ref: '#/definitions/dto.CreateJawabanProteksiRequest'
       produces:
       - application/json
       responses:
@@ -6535,7 +6572,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.JawabanProteksiResponse'
+            $ref: '#/definitions/dto.JawabanProteksiResponse'
         "404":
           description: Not Found
           schema:
@@ -6558,7 +6595,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.UpdateJawabanProteksiRequest'
+          $ref: '#/definitions/dto.UpdateJawabanProteksiRequest'
       produces:
       - application/json
       responses:
@@ -6587,7 +6624,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/ikas_internal_dto.KategoriResponse'
+              $ref: '#/definitions/dto.KategoriResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -6606,14 +6643,14 @@ paths:
         name: kategori
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.CreateKategoriRequest'
+          $ref: '#/definitions/dto.CreateKategoriRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/ikas_internal_dto.KategoriResponse'
+            $ref: '#/definitions/dto.KategoriResponse'
         "400":
           description: Bad Request
           schema:
@@ -6640,7 +6677,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.KategoriMessageResponse'
+            $ref: '#/definitions/dto.KategoriMessageResponse'
         "404":
           description: Not Found
           schema:
@@ -6666,7 +6703,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.KategoriResponse'
+            $ref: '#/definitions/dto.KategoriResponse'
         "404":
           description: Not Found
           schema:
@@ -6689,14 +6726,14 @@ paths:
         name: kategori
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.UpdateKategoriRequest'
+          $ref: '#/definitions/dto.UpdateKategoriRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.KategoriResponse'
+            $ref: '#/definitions/dto.KategoriResponse'
         "400":
           description: Bad Request
           schema:
@@ -6722,7 +6759,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse'
+              $ref: '#/definitions/dto.PertanyaanDeteksiResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -6741,14 +6778,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.CreatePertanyaanDeteksiRequest'
+          $ref: '#/definitions/dto.CreatePertanyaanDeteksiRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse'
+            $ref: '#/definitions/dto.PertanyaanDeteksiResponse'
         "400":
           description: Bad Request
           schema:
@@ -6775,7 +6812,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanDeteksiMessageResponse'
+            $ref: '#/definitions/dto.PertanyaanDeteksiMessageResponse'
         "404":
           description: Not Found
           schema:
@@ -6801,7 +6838,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse'
+            $ref: '#/definitions/dto.PertanyaanDeteksiResponse'
         "404":
           description: Not Found
           schema:
@@ -6824,14 +6861,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.UpdatePertanyaanDeteksiRequest'
+          $ref: '#/definitions/dto.UpdatePertanyaanDeteksiRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanDeteksiResponse'
+            $ref: '#/definitions/dto.PertanyaanDeteksiResponse'
         "400":
           description: Bad Request
           schema:
@@ -6853,7 +6890,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/ikas_internal_dto.PertanyaanGulihResponse'
+              $ref: '#/definitions/dto.PertanyaanGulihResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -6872,14 +6909,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.CreatePertanyaanGulihRequest'
+          $ref: '#/definitions/dto.CreatePertanyaanGulihRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanGulihResponse'
+            $ref: '#/definitions/dto.PertanyaanGulihResponse'
         "400":
           description: Bad Request
           schema:
@@ -6906,7 +6943,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanGulihMessageResponse'
+            $ref: '#/definitions/dto.PertanyaanGulihMessageResponse'
         "404":
           description: Not Found
           schema:
@@ -6932,7 +6969,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanGulihResponse'
+            $ref: '#/definitions/dto.PertanyaanGulihResponse'
         "404":
           description: Not Found
           schema:
@@ -6955,14 +6992,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.UpdatePertanyaanGulihRequest'
+          $ref: '#/definitions/dto.UpdatePertanyaanGulihRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanGulihResponse'
+            $ref: '#/definitions/dto.PertanyaanGulihResponse'
         "400":
           description: Bad Request
           schema:
@@ -6984,7 +7021,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse'
+              $ref: '#/definitions/dto.PertanyaanIdentifikasiResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -7003,14 +7040,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.CreatePertanyaanIdentifikasiRequest'
+          $ref: '#/definitions/dto.CreatePertanyaanIdentifikasiRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse'
+            $ref: '#/definitions/dto.PertanyaanIdentifikasiResponse'
         "400":
           description: Bad Request
           schema:
@@ -7037,7 +7074,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanIdentifikasiMessageResponse'
+            $ref: '#/definitions/dto.PertanyaanIdentifikasiMessageResponse'
         "404":
           description: Not Found
           schema:
@@ -7063,7 +7100,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse'
+            $ref: '#/definitions/dto.PertanyaanIdentifikasiResponse'
         "404":
           description: Not Found
           schema:
@@ -7086,14 +7123,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.UpdatePertanyaanIdentifikasiRequest'
+          $ref: '#/definitions/dto.UpdatePertanyaanIdentifikasiRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanIdentifikasiResponse'
+            $ref: '#/definitions/dto.PertanyaanIdentifikasiResponse'
         "400":
           description: Bad Request
           schema:
@@ -7115,7 +7152,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/ikas_internal_dto.PertanyaanProteksiResponse'
+              $ref: '#/definitions/dto.PertanyaanProteksiResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -7134,14 +7171,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.CreatePertanyaanProteksiRequest'
+          $ref: '#/definitions/dto.CreatePertanyaanProteksiRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanProteksiResponse'
+            $ref: '#/definitions/dto.PertanyaanProteksiResponse'
         "400":
           description: Bad Request
           schema:
@@ -7168,7 +7205,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanProteksiMessageResponse'
+            $ref: '#/definitions/dto.PertanyaanProteksiMessageResponse'
         "404":
           description: Not Found
           schema:
@@ -7194,7 +7231,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanProteksiResponse'
+            $ref: '#/definitions/dto.PertanyaanProteksiResponse'
         "404":
           description: Not Found
           schema:
@@ -7217,14 +7254,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.UpdatePertanyaanProteksiRequest'
+          $ref: '#/definitions/dto.UpdatePertanyaanProteksiRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.PertanyaanProteksiResponse'
+            $ref: '#/definitions/dto.PertanyaanProteksiResponse'
         "400":
           description: Bad Request
           schema:
@@ -7246,7 +7283,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/ikas_internal_dto.ProteksiResponse'
+              $ref: '#/definitions/dto.ProteksiResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -7270,7 +7307,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.ProteksiResponse'
+            $ref: '#/definitions/dto.ProteksiResponse'
         "404":
           description: Not Found
           schema:
@@ -7288,7 +7325,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/ikas_internal_dto.RuangLingkupResponse'
+              $ref: '#/definitions/dto.RuangLingkupResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -7307,14 +7344,14 @@ paths:
         name: ruangLingkup
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.CreateRuangLingkupRequest'
+          $ref: '#/definitions/dto.CreateRuangLingkupRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/ikas_internal_dto.RuangLingkupResponse'
+            $ref: '#/definitions/dto.RuangLingkupResponse'
         "400":
           description: Bad Request
           schema:
@@ -7367,7 +7404,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.RuangLingkupResponse'
+            $ref: '#/definitions/dto.RuangLingkupResponse'
         "404":
           description: Not Found
           schema:
@@ -7390,14 +7427,14 @@ paths:
         name: ruangLingkup
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.UpdateRuangLingkupRequest'
+          $ref: '#/definitions/dto.UpdateRuangLingkupRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.RuangLingkupResponse'
+            $ref: '#/definitions/dto.RuangLingkupResponse'
         "400":
           description: Bad Request
           schema:
@@ -7423,7 +7460,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/ikas_internal_dto.SubKategoriResponse'
+              $ref: '#/definitions/dto.SubKategoriResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -7442,14 +7479,14 @@ paths:
         name: subKategori
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.CreateSubKategoriRequest'
+          $ref: '#/definitions/dto.CreateSubKategoriRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/ikas_internal_dto.SubKategoriResponse'
+            $ref: '#/definitions/dto.SubKategoriResponse'
         "400":
           description: Bad Request
           schema:
@@ -7476,7 +7513,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.SubKategoriMessageResponse'
+            $ref: '#/definitions/dto.SubKategoriMessageResponse'
         "404":
           description: Not Found
           schema:
@@ -7502,7 +7539,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.SubKategoriResponse'
+            $ref: '#/definitions/dto.SubKategoriResponse'
         "404":
           description: Not Found
           schema:
@@ -7525,14 +7562,14 @@ paths:
         name: subKategori
         required: true
         schema:
-          $ref: '#/definitions/ikas_internal_dto.UpdateSubKategoriRequest'
+          $ref: '#/definitions/dto.UpdateSubKategoriRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ikas_internal_dto.SubKategoriResponse'
+            $ref: '#/definitions/dto.SubKategoriResponse'
         "400":
           description: Bad Request
           schema:
