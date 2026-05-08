@@ -172,6 +172,7 @@ jobs:
       image-tag: ${{ steps.meta.outputs.tags }}
       image-sha: ${{ steps.sha.outputs.sha_tag }}
       ikas-sha: ${{ steps.sha.outputs.ikas_sha_tag }}
+      survey-sha: ${{ steps.sha.outputs.survey_sha_tag }}
 
     steps:
       - name: Checkout code
@@ -205,11 +206,18 @@ jobs:
           SHA_TAG="${{ env.REGISTRY }}/${REPO_LOWER}:${SHA_SHORT}"
           echo "sha_tag=${SHA_TAG}" >> "$GITHUB_OUTPUT"
           echo "SHA tag: ${SHA_TAG}"
+
           # IKAS image tag (different repo name)
           IKAS_REPO=$(echo "${{ github.repository_owner }}/fortyfour-ikas" | tr '[:upper:]' '[:lower:]')
           IKAS_SHA_TAG="${{ env.REGISTRY }}/${IKAS_REPO}:${SHA_SHORT}"
           echo "ikas_sha_tag=${IKAS_SHA_TAG}" >> "$GITHUB_OUTPUT"
           echo "IKAS SHA tag: ${IKAS_SHA_TAG}"
+          
+          # Survey image tag
+          SURVEY_REPO=$(echo "${{ github.repository_owner }}/fortyfour-survey" | tr '[:upper:]' '[:lower:]')
+          SURVEY_SHA_TAG="${{ env.REGISTRY }}/${SURVEY_REPO}:${SHA_SHORT}"
+          echo "survey_sha_tag=${SURVEY_SHA_TAG}" >> "$GITHUB_OUTPUT"
+          echo "SURVEY SHA tag: ${SURVEY_SHA_TAG}"
 
       # Generate IKAS metadata
       - name: Extract IKAS metadata
@@ -217,6 +225,16 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/fortyfour-ikas
+          tags: |
+            type=sha,prefix=,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # Generate Survey metadata
+      - name: Extract SURVEY metadata
+        id: survey-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ github.repository_owner }}/fortyfour-survey
           tags: |
             type=sha,prefix=,format=short
             type=raw,value=latest,enable={{is_default_branch}}
@@ -337,6 +355,19 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      # Build and push Survey image
+      - name: Build and push SURVEY Docker image
+        if: success()
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./survey/Dockerfile
+          push: true
+          tags: ${{ steps.survey-meta.outputs.tags }}
+          labels: ${{ steps.survey-meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
   # ============================================================
   # Job 4: Deploy to VPS
   # ============================================================
@@ -404,6 +435,7 @@ jobs:
         env:
           IMAGE_TAG: ${{ needs.build.outputs.image-sha }}
           IKAS_TAG: ${{ needs.build.outputs.ikas-sha }}
+          SURVEY_TAG: ${{ needs.build.outputs.survey-sha }}
           G_TOKEN: ${{ secrets.G_TOKEN }}
           ACTOR: ${{ github.actor }}
           REGISTRY: ${{ env.REGISTRY }}
@@ -412,13 +444,14 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.VPS_SSH_KEY }}
           port: ${{ secrets.VPS_PORT }}
-          envs: IMAGE_TAG,IKAS_TAG,G_TOKEN,ACTOR,REGISTRY
+          envs: IMAGE_TAG,IKAS_TAG,SURVEY_TAG,G_TOKEN,ACTOR,REGISTRY
           script: |
             cd ~/fortyfour-backend
             
             echo "=== Deployment Info ==="
             echo "Main image: ${IMAGE_TAG}"
             echo "IKAS image: ${IKAS_TAG}"
+            echo "SURVEY image: ${SURVEY_TAG}"
             echo "Registry: ${REGISTRY}"
             echo "Actor: ${ACTOR}"
             
@@ -509,11 +542,26 @@ jobs:
                 exit 1
               fi
             done
+            # Pull SURVEY image
+            echo "Pulling SURVEY image: ${SURVEY_TAG}"
+            for i in $(seq 1 3); do
+              if docker pull "${SURVEY_TAG}"; then
+                echo "✅ Successfully pulled SURVEY: ${SURVEY_TAG}"
+                break
+              fi
+              echo "Retry $i/3 for SURVEY image..."
+              sleep 10
+              if [ $i -eq 3 ]; then
+                echo "❌ Failed to pull SURVEY image"
+                exit 1
+              fi
+            done
 
             # Update docker-compose.yml to use the specific image tags
             echo "Updating docker-compose.yml with images"
             sed -i "s|image:.*ghcr.io.*/fortyfour-backend.*|image: ${IMAGE_TAG}|g" docker-compose.yml
             sed -i "s|image:.*ghcr.io.*/fortyfour-ikas.*|image: ${IKAS_TAG}|g" docker-compose.yml
+            sed -i "s|image:.*ghcr.io.*/fortyfour-survey.*|image: ${SURVEY_TAG}|g" docker-compose.yml
             
             # Stop and remove old containers
             echo "Stopping old containers..."
@@ -579,10 +627,27 @@ jobs:
               fi
             done
             
+            # Wait for health check - SURVEY
+            echo "Waiting for SURVEY service to start..."
+            for i in {1..30}; do
+              sleep 2
+              if curl -f http://localhost:8082/api/health 2>/dev/null; then
+                echo "✅ SURVEY health check passed!"
+                break
+              fi
+              echo "Attempt $i/30: SURVEY not ready yet..."
+              if [ $i -eq 30 ]; then
+                echo "❌ SURVEY health check failed!"
+                docker compose logs SURVEY --tail=50
+                exit 1
+              fi
+            done
+            
             echo ""
             echo "✅ Deployment successful!"
             echo "Main app: ${IMAGE_TAG}"
             echo "IKAS:     ${IKAS_TAG}"
+            echo "SURVEY:     ${SURVEY_TAG}"
 
       - name: Disconnect from Tailscale
         if: always()
