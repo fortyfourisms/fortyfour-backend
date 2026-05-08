@@ -200,7 +200,7 @@ func TestFeedbackRepository_FindByMateri_Empty(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if result != nil && len(result) > 0 {
+	if result != nil {
 		t.Errorf("expected nil or empty slice, got %d items", len(result))
 	}
 }
