@@ -53,6 +53,7 @@ func InitRouter(
 	dashboardH *handlers.DashboardHandler,
 	notificationH *handlers.NotificationHandler,
 	ikasProxyH *handlers.ProxyHandler,
+	surveyProxyH *handlers.ProxyHandler,
 	lmsH *handlers.LMSHandler,
 	beritaH *handlers.BeritaHandler,
 	eventH *handlers.EventHandler,
@@ -113,6 +114,10 @@ func InitRouter(
 	// Route IKAS (Proxy to Microservice)
 	mux.Handle("/api/maturity/", authM.Authenticate(casbinM.Authorize(lenientLimiter.LimitByUser(ikasProxyH.ServeHTTP))))
 	mux.Handle("/api/maturity", authM.Authenticate(casbinM.Authorize(lenientLimiter.LimitByUser(ikasProxyH.ServeHTTP))))
+
+	// Route Survey (Proxy to Microservice)
+	mux.Handle("/api/survey/", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(surveyProxyH.ServeHTTP))))
+	mux.Handle("/api/survey", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(surveyProxyH.ServeHTTP))))
 
 	// Route Role
 	mux.HandleFunc("/api/role", authM.Authenticate(casbinM.Authorize(moderateLimiter.LimitByUser(utils.AdaptHandler(roleH)))))

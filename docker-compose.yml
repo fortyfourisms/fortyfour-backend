@@ -116,6 +116,50 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  # Survey Service (survey/)
+  survey:
+    image: ghcr.io/fortyfourisms/fortyfour-survey:latest
+    container_name: fortyfour-survey
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      PORT: ":8082"
+      JWT_SECRET: ${JWT_SECRET}
+
+      # Same database
+      DB_HOST: 154.26.136.33
+      DB_PORT: 3306
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+
+      # Redis container
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+      INTERNAL_GATEWAY_KEY: ${INTERNAL_GATEWAY_KEY}
+
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+    networks:
+      - app-network
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8082/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+    ports:
+      - 8082:8082
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   # Redis Cache (shared between both services)
   redis:
     image: redis:8.4-alpine
