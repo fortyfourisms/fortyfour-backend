@@ -8,8 +8,8 @@ import (
 	"syscall"
 	"time"
 
-	_ "survey/docs"
 	"github.com/redis/go-redis/v9"
+	_ "survey/docs"
 	"survey/internal/cache"
 	"survey/internal/config"
 	"survey/internal/handlers"

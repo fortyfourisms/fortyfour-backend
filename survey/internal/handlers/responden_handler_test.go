@@ -12,8 +12,8 @@ import (
 
 // MOCK SERVICE
 type mockService struct {
-	GetAllFunc  func() ([]dto.RespondenResponse, error)
-	GetByIDFunc func(int) (*dto.RespondenResponse, error)
+	GetAllFunc         func() ([]dto.RespondenResponse, error)
+	GetByIDFunc        func(int) (*dto.RespondenResponse, error)
 	GetByUserIDFunc    func(string) (*dto.RespondenResponse, error)
 	UpsertByUserIDFunc func(string, dto.CreateRespondenRequest) (*dto.RespondenResponse, error)
 }
@@ -90,7 +90,6 @@ func TestGetByID_InvalidID(t *testing.T) {
 		t.Errorf("expected 400, got %d", w.Code)
 	}
 }
-
 
 // GET ME SUCCESS
 func TestGetMe_Success(t *testing.T) {

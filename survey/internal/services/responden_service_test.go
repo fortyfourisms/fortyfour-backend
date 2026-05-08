@@ -12,7 +12,7 @@ import (
 
 type mockRepo struct {
 	createFn        func(m models.Responden) (int64, error)
-	getAllFn         func() ([]models.RespondenDetail, error)
+	getAllFn        func() ([]models.RespondenDetail, error)
 	getDetailByIDFn func(id int64) (*models.RespondenDetail, error)
 	getByUserIDFn   func(userID string) (*models.RespondenDetail, error)
 	upsertByUserFn  func(userID string, m models.Responden) error
