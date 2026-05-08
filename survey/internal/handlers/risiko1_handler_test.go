@@ -14,53 +14,53 @@ import (
 
 // MOCK SERVICE
 type mockRisikoService struct {
-	ProcessEligibilityFunc  func(dto.EligibilityRequest) (map[string]interface{}, error)
-	ProcessAlasanFunc       func(dto.AlasanRequest) (map[string]interface{}, error)
-	ProcessDampakFunc       func(dto.DampakRequest) (map[string]interface{}, error)
-	ProcessPengendalianFunc func(dto.PengendalianRequest) (map[string]interface{}, error)
-	GetByRespondentIDFunc   func(int) (map[string]interface{}, error)
-	GetProgressFunc         func(int) (dto.ProgressResponse, error)
-	NavigateFunc            func(dto.NavigateRequest) (dto.ProgressResponse, error)
-	SaveProgressFunc        func(dto.NavigateRequest) (dto.ProgressResponse, error)
-	CreateCustomRisikoFunc  func(dto.CustomRisikoRequest) (int, error)
-	FinishSurveyFunc        func(int) error
+	ProcessEligibilityFunc  func(string, dto.EligibilityRequest) (map[string]interface{}, error)
+	ProcessAlasanFunc       func(string, dto.AlasanRequest) (map[string]interface{}, error)
+	ProcessDampakFunc       func(string, dto.DampakRequest) (map[string]interface{}, error)
+	ProcessPengendalianFunc func(string, dto.PengendalianRequest) (map[string]interface{}, error)
+	GetByUserIDFunc         func(string) (map[string]interface{}, error)
+	GetByRespondentIDFunc   func(int64) (map[string]interface{}, error)
+	GetProgressFunc         func(string) (dto.ProgressResponse, error)
+	NavigateFunc            func(string, dto.NavigateRequest) (dto.ProgressResponse, error)
+	SaveProgressFunc        func(string, dto.NavigateRequest) (dto.ProgressResponse, error)
+	FinishSurveyFunc        func(string) error
 }
 
-func (m *mockRisikoService) ProcessEligibility(r dto.EligibilityRequest) (map[string]interface{}, error) {
-	return m.ProcessEligibilityFunc(r)
+func (m *mockRisikoService) ProcessEligibility(userID string, r dto.EligibilityRequest) (map[string]interface{}, error) {
+	return m.ProcessEligibilityFunc(userID, r)
 }
-func (m *mockRisikoService) ProcessAlasan(r dto.AlasanRequest) (map[string]interface{}, error) {
-	return m.ProcessAlasanFunc(r)
+func (m *mockRisikoService) ProcessAlasan(userID string, r dto.AlasanRequest) (map[string]interface{}, error) {
+	return m.ProcessAlasanFunc(userID, r)
 }
-func (m *mockRisikoService) ProcessDampak(r dto.DampakRequest) (map[string]interface{}, error) {
-	return m.ProcessDampakFunc(r)
+func (m *mockRisikoService) ProcessDampak(userID string, r dto.DampakRequest) (map[string]interface{}, error) {
+	return m.ProcessDampakFunc(userID, r)
 }
-func (m *mockRisikoService) ProcessPengendalian(r dto.PengendalianRequest) (map[string]interface{}, error) {
-	return m.ProcessPengendalianFunc(r)
+func (m *mockRisikoService) ProcessPengendalian(userID string, r dto.PengendalianRequest) (map[string]interface{}, error) {
+	return m.ProcessPengendalianFunc(userID, r)
 }
-func (m *mockRisikoService) GetByRespondentID(id int) (map[string]interface{}, error) {
+func (m *mockRisikoService) GetByUserID(userID string) (map[string]interface{}, error) {
+	return m.GetByUserIDFunc(userID)
+}
+func (m *mockRisikoService) GetByRespondentID(id int64) (map[string]interface{}, error) {
 	return m.GetByRespondentIDFunc(id)
 }
-func (m *mockRisikoService) GetProgress(id int) (dto.ProgressResponse, error) {
-	return m.GetProgressFunc(id)
+func (m *mockRisikoService) GetProgress(userID string) (dto.ProgressResponse, error) {
+	return m.GetProgressFunc(userID)
 }
-func (m *mockRisikoService) Navigate(r dto.NavigateRequest) (dto.ProgressResponse, error) {
-	return m.NavigateFunc(r)
+func (m *mockRisikoService) Navigate(userID string, r dto.NavigateRequest) (dto.ProgressResponse, error) {
+	return m.NavigateFunc(userID, r)
 }
-func (m *mockRisikoService) SaveProgress(r dto.NavigateRequest) (dto.ProgressResponse, error) {
-	return m.SaveProgressFunc(r)
+func (m *mockRisikoService) SaveProgress(userID string, r dto.NavigateRequest) (dto.ProgressResponse, error) {
+	return m.SaveProgressFunc(userID, r)
 }
-func (m *mockRisikoService) CreateCustomRisiko(r dto.CustomRisikoRequest) (int, error) {
-	return m.CreateCustomRisikoFunc(r)
-}
-func (m *mockRisikoService) FinishSurvey(id int) error {
-	return m.FinishSurveyFunc(id)
+func (m *mockRisikoService) FinishSurvey(userID string) error {
+	return m.FinishSurveyFunc(userID)
 }
 
 // ELIGIBILITY
 func TestSubmitEligibility_Success(t *testing.T) {
 	mock := &mockRisikoService{
-		ProcessEligibilityFunc: func(dto.EligibilityRequest) (map[string]interface{}, error) {
+		ProcessEligibilityFunc: func(string, dto.EligibilityRequest) (map[string]interface{}, error) {
 			return map[string]interface{}{"message": "ok"}, nil
 		},
 	}
@@ -69,6 +69,7 @@ func TestSubmitEligibility_Success(t *testing.T) {
 
 	body, _ := json.Marshal(dto.EligibilityRequest{})
 	req := httptest.NewRequest(http.MethodPost, "/eligibility", bytes.NewBuffer(body))
+	req.Header.Set("X-User-ID", "user1")
 	w := httptest.NewRecorder()
 
 	h.SubmitEligibility(w, req)
@@ -94,7 +95,7 @@ func TestSubmitEligibility_InvalidBody(t *testing.T) {
 // GET BY RESPONDENT
 func TestGetByRespondentID_Success(t *testing.T) {
 	mock := &mockRisikoService{
-		GetByRespondentIDFunc: func(int) (map[string]interface{}, error) {
+		GetByRespondentIDFunc: func(int64) (map[string]interface{}, error) {
 			return map[string]interface{}{"data": "ok"}, nil
 		},
 	}
@@ -102,6 +103,7 @@ func TestGetByRespondentID_Success(t *testing.T) {
 	h := NewRisikoHandler(mock)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/survey/risiko/1", nil)
+	req.Header.Set("X-User-Role", "admin")
 	w := httptest.NewRecorder()
 
 	h.GetByRespondentID(w, req)
@@ -113,7 +115,7 @@ func TestGetByRespondentID_Success(t *testing.T) {
 
 func TestGetByRespondentID_NotFound(t *testing.T) {
 	mock := &mockRisikoService{
-		GetByRespondentIDFunc: func(int) (map[string]interface{}, error) {
+		GetByRespondentIDFunc: func(int64) (map[string]interface{}, error) {
 			return nil, repository.ErrNotFound
 		},
 	}
@@ -121,6 +123,7 @@ func TestGetByRespondentID_NotFound(t *testing.T) {
 	h := NewRisikoHandler(mock)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/survey/risiko/1", nil)
+	req.Header.Set("X-User-Role", "admin")
 	w := httptest.NewRecorder()
 
 	h.GetByRespondentID(w, req)
@@ -134,6 +137,7 @@ func TestGetByRespondentID_InvalidID(t *testing.T) {
 	h := NewRisikoHandler(&mockRisikoService{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/survey/risiko/abc", nil)
+	req.Header.Set("X-User-Role", "admin")
 	w := httptest.NewRecorder()
 
 	h.GetByRespondentID(w, req)
@@ -146,15 +150,15 @@ func TestGetByRespondentID_InvalidID(t *testing.T) {
 // FINISH SURVEY
 func TestFinishSurvey_Success(t *testing.T) {
 	mock := &mockRisikoService{
-		FinishSurveyFunc: func(int) error {
+		FinishSurveyFunc: func(string) error {
 			return nil
 		},
 	}
 
 	h := NewRisikoHandler(mock)
 
-	body := `{"responden_id":1}`
-	req := httptest.NewRequest(http.MethodPost, "/finish", bytes.NewBuffer([]byte(body)))
+	req := httptest.NewRequest(http.MethodPost, "/finish", nil)
+	req.Header.Set("X-User-ID", "user1")
 	w := httptest.NewRecorder()
 
 	h.FinishSurvey(w, req)
@@ -166,15 +170,15 @@ func TestFinishSurvey_Success(t *testing.T) {
 
 func TestFinishSurvey_Error(t *testing.T) {
 	mock := &mockRisikoService{
-		FinishSurveyFunc: func(int) error {
+		FinishSurveyFunc: func(string) error {
 			return errors.New("fail")
 		},
 	}
 
 	h := NewRisikoHandler(mock)
 
-	body := `{"responden_id":1}`
-	req := httptest.NewRequest(http.MethodPost, "/finish", bytes.NewBuffer([]byte(body)))
+	req := httptest.NewRequest(http.MethodPost, "/finish", nil)
+	req.Header.Set("X-User-ID", "user1")
 	w := httptest.NewRecorder()
 
 	h.FinishSurvey(w, req)
