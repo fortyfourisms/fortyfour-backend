@@ -3,36 +3,65 @@
 # =========================
 FROM golang:1.26.3-alpine3.23 AS builder
 
-WORKDIR /app
+RUN apk add --no-cache git ca-certificates tzdata
 
-# Install git (dibutuhkan untuk dependency)
-RUN apk add --no-cache git
+RUN adduser -D -g '' appuser
 
-# Copy go mod & download dependency
+WORKDIR /build
+
+# Copy the root module first
 COPY go.mod go.sum ./
-RUN go mod download
+COPY pkg/ ./pkg/
+COPY internal/ ./internal/
+COPY cmd/ ./cmd/
+COPY casbin/ ./casbin/
+COPY docs/ ./docs/
 
-# Copy seluruh source code
-COPY . .
+# Copy the survey module
+COPY survey/go.mod survey/go.sum ./survey/
 
-# Build binary
-RUN go build -o survey-app ./cmd/main.go
+# Download dependencies for both modules
+RUN cd /build && go mod download
+RUN cd /build/survey && go mod download
+
+# Copy survey source code
+COPY survey/ ./survey/
+
+# Build the survey binary
+RUN cd /build/survey && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
+    -ldflags="-w -s" \
+    -a -installsuffix cgo \
+    -o /build/survey-app \
+    ./cmd/main.go
 
 # =========================
 # 2. Run Stage
 # =========================
 FROM alpine:latest
 
+RUN apk --no-cache add ca-certificates tzdata curl
+
+RUN addgroup -g 1000 appgroup && \
+    adduser -D -u 1000 -G appgroup appuser
+
 WORKDIR /app
 
-# Copy binary dari builder
-COPY --from=builder /app/survey-app .
+# Copy the binary
+COPY --from=builder /build/survey-app .
 
-# # Copy file tambahan jika ada (contoh casbin)
-# COPY casbin ./casbin
+# Copy the casbin model config
+# COPY --from=builder /build/casbin/ ./casbin/
 
-# Expose port (default dari config: 8080)
-EXPOSE 8080
+# Copy the timezone
+COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 
-# Jalankan aplikasi
+RUN chown -R appuser:appgroup /app
+
+USER appuser
+
+EXPOSE 8082
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8082/api/health || exit 1
+
 CMD ["./survey-app"]
