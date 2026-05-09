@@ -445,6 +445,7 @@ func InitRouter(
 
 	// Routes Aktivitas
 	mux.HandleFunc("/api/aktivitas", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(aktivitasH))))
+	mux.HandleFunc("/api/aktivitas/", authM.Authenticate(moderateLimiter.LimitByUser(utils.AdaptHandler(aktivitasH))))
 	mux.HandleFunc("/api/aktivitas/jenis", aktivitasH.HandleGetJenis)
 
 	// Konversi routes
