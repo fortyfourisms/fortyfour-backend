@@ -1,4 +1,4 @@
-FROM golang:1.26.2-alpine3.23 AS builder
+FROM golang:1.26.3-alpine3.23 AS builder
 
 RUN apk add --no-cache git ca-certificates tzdata
 
@@ -59,6 +59,6 @@ USER appuser
 EXPOSE 8081
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8081/api/health || exit 1
+    CMD curl -f http://localhost:8081/api/maturity/health || exit 1
 
 CMD ["./ikas-app"]
