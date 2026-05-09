@@ -79,7 +79,7 @@ func TestEventHandler_GetAll(t *testing.T) {
 			return []dto.EventResponse{{ID: 1, Judul: "Test Event"}}, nil
 		},
 	}
-	handler := handlers.NewEventHandler(mockSvc)
+	handler := handlers.NewEventHandler(mockSvc, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/kegiatan", nil)
 	rec := httptest.NewRecorder()
@@ -96,7 +96,7 @@ func TestEventHandler_GetAll_Error(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	handler := handlers.NewEventHandler(mockSvc)
+	handler := handlers.NewEventHandler(mockSvc, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/kegiatan", nil)
 	rec := httptest.NewRecorder()
@@ -113,7 +113,7 @@ func TestEventHandler_GetByID(t *testing.T) {
 			return &dto.EventResponse{ID: 1, Judul: "Test Event"}, nil
 		},
 	}
-	handler := handlers.NewEventHandler(mockSvc)
+	handler := handlers.NewEventHandler(mockSvc, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/kegiatan/1", nil)
 	rec := httptest.NewRecorder()
@@ -125,7 +125,7 @@ func TestEventHandler_GetByID(t *testing.T) {
 }
 
 func TestEventHandler_GetByID_InvalidID(t *testing.T) {
-	handler := handlers.NewEventHandler(&MockEventService{})
+	handler := handlers.NewEventHandler(&MockEventService{}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/kegiatan/abc", nil)
 	rec := httptest.NewRecorder()
@@ -142,7 +142,7 @@ func TestEventHandler_GetByID_Error(t *testing.T) {
 			return nil, errors.New("not found")
 		},
 	}
-	handler := handlers.NewEventHandler(mockSvc)
+	handler := handlers.NewEventHandler(mockSvc, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/kegiatan/1", nil)
 	rec := httptest.NewRecorder()
@@ -159,7 +159,7 @@ func TestEventHandler_Create(t *testing.T) {
 			return nil
 		},
 	}
-	handler := handlers.NewEventHandler(mockSvc)
+	handler := handlers.NewEventHandler(mockSvc, nil)
 
 	body := dto.CreateEventRequest{
 		Judul:     "Test Event",
@@ -179,7 +179,7 @@ func TestEventHandler_Create(t *testing.T) {
 }
 
 func TestEventHandler_Create_InvalidBody(t *testing.T) {
-	handler := handlers.NewEventHandler(&MockEventService{})
+	handler := handlers.NewEventHandler(&MockEventService{}, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/kegiatan", bytes.NewReader([]byte("{invalid-json}")))
 	rec := httptest.NewRecorder()
@@ -191,7 +191,7 @@ func TestEventHandler_Create_InvalidBody(t *testing.T) {
 }
 
 func TestEventHandler_Create_ValidationError(t *testing.T) {
-	handler := handlers.NewEventHandler(&MockEventService{})
+	handler := handlers.NewEventHandler(&MockEventService{}, nil)
 
 	body := dto.CreateEventRequest{Judul: "T"} // Judul terlalu pendek
 	bodyBytes, _ := json.Marshal(body)
@@ -211,7 +211,7 @@ func TestEventHandler_Create_ServiceError(t *testing.T) {
 			return errors.New("service error")
 		},
 	}
-	handler := handlers.NewEventHandler(mockSvc)
+	handler := handlers.NewEventHandler(mockSvc, nil)
 
 	body := dto.CreateEventRequest{
 		Judul:     "Test Event",
@@ -236,7 +236,7 @@ func TestEventHandler_Update(t *testing.T) {
 			return nil
 		},
 	}
-	handler := handlers.NewEventHandler(mockSvc)
+	handler := handlers.NewEventHandler(mockSvc, nil)
 
 	judul := "Updated Event"
 	deskripsi := "<script>alert('xss')</script>Deskripsi"
@@ -253,7 +253,7 @@ func TestEventHandler_Update(t *testing.T) {
 }
 
 func TestEventHandler_Update_InvalidID(t *testing.T) {
-	handler := handlers.NewEventHandler(&MockEventService{})
+	handler := handlers.NewEventHandler(&MockEventService{}, nil)
 
 	req := httptest.NewRequest(http.MethodPut, "/api/kegiatan/abc", nil)
 	rec := httptest.NewRecorder()
@@ -265,7 +265,7 @@ func TestEventHandler_Update_InvalidID(t *testing.T) {
 }
 
 func TestEventHandler_Update_InvalidBody(t *testing.T) {
-	handler := handlers.NewEventHandler(&MockEventService{})
+	handler := handlers.NewEventHandler(&MockEventService{}, nil)
 
 	req := httptest.NewRequest(http.MethodPut, "/api/kegiatan/1", bytes.NewReader([]byte("{invalid}")))
 	rec := httptest.NewRecorder()
@@ -277,7 +277,7 @@ func TestEventHandler_Update_InvalidBody(t *testing.T) {
 }
 
 func TestEventHandler_Update_ValidationError(t *testing.T) {
-	handler := handlers.NewEventHandler(&MockEventService{})
+	handler := handlers.NewEventHandler(&MockEventService{}, nil)
 
 	judul := "T" // Terlalu pendek
 	body := dto.UpdateEventRequest{Judul: &judul}
@@ -298,7 +298,7 @@ func TestEventHandler_Update_ServiceError(t *testing.T) {
 			return errors.New("service error")
 		},
 	}
-	handler := handlers.NewEventHandler(mockSvc)
+	handler := handlers.NewEventHandler(mockSvc, nil)
 
 	judul := "Updated Event"
 	body := dto.UpdateEventRequest{Judul: &judul}
@@ -319,7 +319,7 @@ func TestEventHandler_Delete(t *testing.T) {
 			return nil
 		},
 	}
-	handler := handlers.NewEventHandler(mockSvc)
+	handler := handlers.NewEventHandler(mockSvc, nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/kegiatan/1", nil)
 	rec := httptest.NewRecorder()
@@ -331,7 +331,7 @@ func TestEventHandler_Delete(t *testing.T) {
 }
 
 func TestEventHandler_Delete_InvalidID(t *testing.T) {
-	handler := handlers.NewEventHandler(&MockEventService{})
+	handler := handlers.NewEventHandler(&MockEventService{}, nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/kegiatan/abc", nil)
 	rec := httptest.NewRecorder()
@@ -348,7 +348,7 @@ func TestEventHandler_Delete_ServiceError(t *testing.T) {
 			return errors.New("service error")
 		},
 	}
-	handler := handlers.NewEventHandler(mockSvc)
+	handler := handlers.NewEventHandler(mockSvc, nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/api/kegiatan/1", nil)
 	rec := httptest.NewRecorder()
@@ -360,7 +360,7 @@ func TestEventHandler_Delete_ServiceError(t *testing.T) {
 }
 
 func TestEventHandler_ServeHTTP_MethodNotAllowed(t *testing.T) {
-	handler := handlers.NewEventHandler(&MockEventService{})
+	handler := handlers.NewEventHandler(&MockEventService{}, nil)
 
 	req := httptest.NewRequest(http.MethodPatch, "/api/kegiatan/1", nil)
 	rec := httptest.NewRecorder()
@@ -389,15 +389,16 @@ func TestEventHandler_Register(t *testing.T) {
 				DownloadURL:  "/api/kegiatan/registrasi/10/download",
 			}, nil
 		},
-	})
+	}, nil)
 
 	body, _ := json.Marshal(dto.CreateEventRegistrationRequest{
-		Nama:       "Budi Santoso",
-		Email:      "budi@example.com",
-		Perusahaan: "PT ABC",
-		Jabatan:    "IT Manager",
-		NoHP:       "08123456789",
-		Sektor:     "Energi",
+		Nama:           "Budi Santoso",
+		Email:          "budi@example.com",
+		Perusahaan:     "PT ABC",
+		Jabatan:        "IT Manager",
+		NoHP:           "08123456789",
+		Sektor:         "Energi",
+		TurnstileToken: "dummy-token",
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/kegiatan/9/registrasi", bytes.NewReader(body))
@@ -415,7 +416,7 @@ func TestEventHandler_DownloadRegistrationPDF(t *testing.T) {
 		PDFFunc: func(registrationID int64) ([]byte, string, error) {
 			return []byte("%PDF-1.4 fake"), "registrasi-event-9-10.pdf", nil
 		},
-	})
+	}, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/kegiatan/registrasi/10/download", nil)
 	w := httptest.NewRecorder()

@@ -226,7 +226,7 @@ func main() {
 	notificationHandler := handlers.NewNotificationHandler(notificationService)
 	lmsHandler := handlers.NewLMSHandler(kelasSvc, materiSvc, soalSvc, kuisSvc, fpSvc, feedbackSvc, sertifikatSvc, sseService)
 	beritaHandler := handlers.NewBeritaHandler(beritaSvc)
-	eventHandler := handlers.NewEventHandler(eventSvc)
+	eventHandler := handlers.NewEventHandler(eventSvc, turnstileValidator)
 	aktivitasHandler := handlers.NewAktivitasHandler(aktivitasSvc)
 	konversiHandler := handlers.NewKonversiHandler(konversiSvc)
 
