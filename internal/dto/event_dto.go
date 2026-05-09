@@ -26,12 +26,13 @@ type EventResponse struct {
 }
 
 type CreateEventRegistrationRequest struct {
-	Nama       string `json:"nama" validate:"required,min=3,max=255"`
-	Email      string `json:"email" validate:"required,email,max=255"`
-	Perusahaan string `json:"perusahaan" validate:"required,min=2,max=255"`
-	Jabatan    string `json:"jabatan" validate:"required,min=2,max=255"`
-	NoHP       string `json:"no_hp" validate:"required,min=8,max=50"`
-	Sektor     string `json:"sektor" validate:"required,min=2,max=255"`
+	Nama           string `json:"nama" validate:"required,min=3,max=255"`
+	Email          string `json:"email" validate:"required,email,max=255"`
+	Perusahaan     string `json:"perusahaan" validate:"required,min=2,max=255"`
+	Jabatan        string `json:"jabatan" validate:"required,min=2,max=255"`
+	NoHP           string `json:"no_hp" validate:"required,min=8,max=50"`
+	Sektor         string `json:"sektor" validate:"required,min=2,max=255"`
+	TurnstileToken string `json:"cf-turnstile-response" validate:"required"`
 }
 
 type EventRegistrationResponse struct {

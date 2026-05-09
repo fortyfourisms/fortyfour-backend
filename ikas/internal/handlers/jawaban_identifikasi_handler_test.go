@@ -119,16 +119,23 @@ func (m *mockJawabanIdentifikasiRepository) GetByPerusahaanID(perusahaanID strin
 	args := m.Called(perusahaanID)
 	return args.Get(0).([]dto.JawabanIdentifikasiResponse), args.Error(1)
 }
+func (m *mockJawabanIdentifikasiRepository) GetByIkasIDFromBuffer(ikasID string) ([]dto.JawabanIdentifikasiResponse, error) {
+	args := m.Called(ikasID)
+	return args.Get(0).([]dto.JawabanIdentifikasiResponse), args.Error(1)
+}
 
 func (m *mockJawabanIdentifikasiRepository) CloneByIkasID(oldIkasID string, newIkasID string) error {
 	return nil
 }
 
 // Ensure mock compatibility
+
+// Ensure mock compatibility
 var _ repository.JawabanIdentifikasiRepositoryInterface = (*mockJawabanIdentifikasiRepository)(nil)
+var _ repository.PertanyaanIdentifikasiRepositoryInterface = (*mockPertanyaanIdentifikasiRepository)(nil)
 var _ services.JawabanIdentifikasiProducerInterface = (*mockJawabanIdentifikasiProducer)(nil)
 
-func setupJawabanIdentifikasiHandler(repo *mockJawabanIdentifikasiRepository, ikasRepo *mockIkasRepository, producer *mockJawabanIdentifikasiProducer) *JawabanIdentifikasiHandler {
+func setupJawabanIdentifikasiHandler(repo *mockJawabanIdentifikasiRepository, ikasRepo *mockIkasRepository, pertanyaanRepo *mockPertanyaanIdentifikasiRepository, producer *mockJawabanIdentifikasiProducer) *JawabanIdentifikasiHandler {
 	if ikasRepo != nil {
 		ikasRepo.On("IsLocked", mock.Anything).Return(false, nil).Maybe()
 		ikasRepo.On("GetByID", mock.Anything).Return(&dto.IkasResponse{
@@ -137,14 +144,21 @@ func setupJawabanIdentifikasiHandler(repo *mockJawabanIdentifikasiRepository, ik
 		}, nil).Maybe()
 		ikasRepo.On("CheckOwnership", mock.Anything, mock.Anything).Return(true, nil).Maybe()
 	}
-	service := services.NewJawabanIdentifikasiService(repo, ikasRepo, producer, nil, nil)
+	if pertanyaanRepo == nil {
+		pertanyaanRepo = new(mockPertanyaanIdentifikasiRepository)
+		pertanyaanRepo.On("GetTotalCount").Return(10, nil).Maybe()
+	}
+	if repo != nil {
+		repo.On("GetByIkasIDFromBuffer", mock.Anything).Return([]dto.JawabanIdentifikasiResponse{}, nil).Maybe()
+	}
+	service := services.NewJawabanIdentifikasiService(repo, ikasRepo, pertanyaanRepo, producer, nil, nil)
 	return NewJawabanIdentifikasiHandler(service)
 }
 
 func TestJawabanIdentifikasiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	repo := new(mockJawabanIdentifikasiRepository)
 	ikasRepo := new(mockIkasRepository)
-	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil)
+	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil, nil)
 
 	repo.On("GetAll").Return([]dto.JawabanIdentifikasiResponse{{ID: 1}}, nil)
 
@@ -162,7 +176,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 func TestJawabanIdentifikasiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 	repo := new(mockJawabanIdentifikasiRepository)
 	ikasRepo := new(mockIkasRepository)
-	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil)
+	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil, nil)
 
 	repo.On("GetAll").Return([]dto.JawabanIdentifikasiResponse{}, errors.New("db error"))
 
@@ -180,7 +194,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_GetAll_Error(t *testing.T) {
 func TestJawabanIdentifikasiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 	repo := new(mockJawabanIdentifikasiRepository)
 	ikasRepo := new(mockIkasRepository)
-	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil)
+	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil, nil)
 
 	repo.On("GetByID", 1).Return(&dto.JawabanIdentifikasiResponse{ID: 1, IkasID: "ikas1"}, nil)
 	ikasRepo.On("GetByID", "ikas1").Return(&dto.IkasResponse{ID: "ikas1", Perusahaan: &dto.PerusahaanInIkas{ID: "p1"}}, nil)
@@ -199,7 +213,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_GetByID_Success(t *testing.T) {
 func TestJawabanIdentifikasiHandler_ServeHTTP_GetByID_NotFound(t *testing.T) {
 	repo := new(mockJawabanIdentifikasiRepository)
 	ikasRepo := new(mockIkasRepository)
-	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil)
+	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.JawabanIdentifikasiResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -216,7 +230,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_GetByID_NotFound(t *testing.T) {
 func TestJawabanIdentifikasiHandler_ServeHTTP_GetByID_Error(t *testing.T) {
 	repo := new(mockJawabanIdentifikasiRepository)
 	ikasRepo := new(mockIkasRepository)
-	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil)
+	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.JawabanIdentifikasiResponse)(nil), errors.New("db error"))
 
@@ -234,7 +248,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Create_Success(t *testing.T) {
 	repo := new(mockJawabanIdentifikasiRepository)
 	ikasRepo := new(mockIkasRepository)
 	producer := new(mockJawabanIdentifikasiProducer)
-	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, producer)
+	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil, producer)
 
 	createReq := dto.CreateJawabanIdentifikasiRequest{
 		PertanyaanIdentifikasiID: 1,
@@ -260,7 +274,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Create_Success(t *testing.T) {
 }
 
 func TestJawabanIdentifikasiHandler_ServeHTTP_Create_InvalidJSON(t *testing.T) {
-	handler := setupJawabanIdentifikasiHandler(nil, nil, nil)
+	handler := setupJawabanIdentifikasiHandler(nil, nil, nil, nil)
 	req := httptest.NewRequest(http.MethodPost, "/api/maturity/jawaban-identifikasi", bytes.NewReader([]byte("{invalid-json}")))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
@@ -270,7 +284,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Create_InvalidJSON(t *testing.T) {
 func TestJawabanIdentifikasiHandler_ServeHTTP_Create_ValidationError(t *testing.T) {
 	repo := new(mockJawabanIdentifikasiRepository)
 	ikasRepo := new(mockIkasRepository)
-	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil)
+	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil, nil)
 
 	createReq := dto.CreateJawabanIdentifikasiRequest{
 		PertanyaanIdentifikasiID: 1,
@@ -287,7 +301,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Update_Success(t *testing.T) {
 	repo := new(mockJawabanIdentifikasiRepository)
 	ikasRepo := new(mockIkasRepository)
 	producer := new(mockJawabanIdentifikasiProducer)
-	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, producer)
+	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil, producer)
 
 	updateReq := dto.UpdateJawabanIdentifikasiRequest{
 		JawabanIdentifikasi: jidFloat64Ptr(4.0),
@@ -313,7 +327,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Update_Success(t *testing.T) {
 
 func TestJawabanIdentifikasiHandler_ServeHTTP_Update_NotFound(t *testing.T) {
 	repo := new(mockJawabanIdentifikasiRepository)
-	handler := setupJawabanIdentifikasiHandler(repo, nil, nil)
+	handler := setupJawabanIdentifikasiHandler(repo, nil, nil, nil)
 
 	updateReq := dto.UpdateJawabanIdentifikasiRequest{
 		JawabanIdentifikasi: jidFloat64Ptr(4.0),
@@ -332,7 +346,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Update_NotFound(t *testing.T) {
 }
 
 func TestJawabanIdentifikasiHandler_ServeHTTP_Update_InvalidJSON(t *testing.T) {
-	handler := setupJawabanIdentifikasiHandler(nil, nil, nil)
+	handler := setupJawabanIdentifikasiHandler(nil, nil, nil, nil)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/jawaban-identifikasi/1", bytes.NewReader([]byte("{invalid-json}")))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
@@ -343,7 +357,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Delete_Success(t *testing.T) {
 	repo := new(mockJawabanIdentifikasiRepository)
 	ikasRepo := new(mockIkasRepository)
 	producer := new(mockJawabanIdentifikasiProducer)
-	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, producer)
+	handler := setupJawabanIdentifikasiHandler(repo, ikasRepo, nil, producer)
 
 	repo.On("GetByID", 1).Return(&dto.JawabanIdentifikasiResponse{ID: 1, IkasID: "uuid1"}, nil)
 	ikasRepo.On("GetByID", "uuid1").Return(&dto.IkasResponse{ID: "uuid1", Perusahaan: &dto.PerusahaanInIkas{ID: "ikas1"}}, nil)
@@ -362,7 +376,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Delete_Success(t *testing.T) {
 
 func TestJawabanIdentifikasiHandler_ServeHTTP_Delete_NotFound(t *testing.T) {
 	repo := new(mockJawabanIdentifikasiRepository)
-	handler := setupJawabanIdentifikasiHandler(repo, nil, nil)
+	handler := setupJawabanIdentifikasiHandler(repo, nil, nil, nil)
 
 	repo.On("GetByID", 1).Return((*dto.JawabanIdentifikasiResponse)(nil), errors.New("data tidak ditemukan"))
 
@@ -377,7 +391,7 @@ func TestJawabanIdentifikasiHandler_ServeHTTP_Delete_NotFound(t *testing.T) {
 }
 
 func TestJawabanIdentifikasiHandler_ServeHTTP_MethodValidation(t *testing.T) {
-	handler := setupJawabanIdentifikasiHandler(nil, nil, nil)
+	handler := setupJawabanIdentifikasiHandler(nil, nil, nil, nil)
 
 	t.Run("POST with ID", func(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/maturity/jawaban-identifikasi/1", nil)

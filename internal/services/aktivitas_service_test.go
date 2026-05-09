@@ -282,6 +282,46 @@ func TestAktivitasService_Create_ValidationInvalidJenis(t *testing.T) {
 	}
 }
 
+func TestAktivitasService_Create_ValidationInvalidDateFormat(t *testing.T) {
+	svc := services.NewAktivitasService(
+		&MockAktivitasRepository{},
+		&MockPerusahaanRepoForAktivitas{},
+		nil, nil,
+	)
+
+	req := dto.CreateAktivitasRequest{
+		PerusahaanID:   "uuid-123",
+		Judul:          "Test",
+		TanggalMulai:   "invalid-date",
+		TanggalSelesai: "2024-01-02",
+		JenisAktivitas: []string{"dinas"},
+	}
+	_, err := svc.Create(req)
+	if err == nil {
+		t.Error("expected validation error for invalid date format")
+	}
+}
+
+func TestAktivitasService_Create_ValidationChronologicalOrder(t *testing.T) {
+	svc := services.NewAktivitasService(
+		&MockAktivitasRepository{},
+		&MockPerusahaanRepoForAktivitas{},
+		nil, nil,
+	)
+
+	req := dto.CreateAktivitasRequest{
+		PerusahaanID:   "uuid-123",
+		Judul:          "Test",
+		TanggalMulai:   "2024-01-02",
+		TanggalSelesai: "2024-01-01",
+		JenisAktivitas: []string{"dinas"},
+	}
+	_, err := svc.Create(req)
+	if err == nil {
+		t.Error("expected validation error for chronological order")
+	}
+}
+
 func TestAktivitasService_Create_PerusahaanNotFound(t *testing.T) {
 	perusahaanRepo := &MockPerusahaanRepoForAktivitas{
 		GetByIDFunc: func(id string) (*dto.PerusahaanResponse, error) {

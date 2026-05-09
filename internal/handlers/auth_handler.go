@@ -50,14 +50,13 @@ func NewAuthHandler(
 }
 
 // @Summary		Register user baru
-// @Description	Mendaftarkan user baru. Token dikirim via HTTP-only cookies, BUKAN di response body.
+// @Description	Mendaftarkan user baru dengan dukungan Cloudflare Turnstile. Untuk registrasi perusahaan baru, isi nama_perusahaan. Untuk bergabung ke perusahaan yang sudah ada, isi id_perusahaan.
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
-// @Param			request	body		dto.RegisterRequest		true	"Register data"
-// @Success		201		{object}	map[string]interface{}	"message dan user info (tanpa token)"
+// @Param			request	body		dto.RegisterRequest	true	"Data registrasi (termasuk cf-turnstile-response)"
+// @Success		201		{object}	map[string]interface{}
 // @Failure		400		{object}	dto.ErrorResponse
-// @Failure		401		{object}	dto.ErrorResponse
 // @Failure		500		{object}	dto.ErrorResponse
 // @Router			/api/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -74,6 +73,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	// Validasi menggunakan validator
 	if err := validator.Validate(req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	// Validasi Turnstile
+	if err := h.validateTurnstile(r, req.TurnstileToken); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -112,7 +116,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 //	@Summary		Login user
-//	@Description	Autentikasi user dengan dukungan Cloudflare Turnstile. Token dikirim via HTTP-only cookies, BUKAN di response body.
+//	@Description	Autentikasi user dengan dukungan Cloudflare Turnstile. Token akses dikirim via HTTP-only cookies.
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
@@ -142,32 +146,9 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validasi Turnstile
-	if h.turnstileValidator != nil {
-		remoteIP := r.Header.Get("CF-Connecting-IP")
-		if remoteIP == "" {
-			remoteIP = r.Header.Get("X-Forwarded-For")
-		}
-		if remoteIP != "" {
-			// Get the first IP if it's a comma-separated list
-			remoteIP = strings.TrimSpace(strings.Split(remoteIP, ",")[0])
-		} else {
-			remoteIP = r.RemoteAddr
-			// Clean up port from RemoteAddr properly (works for IPv4 and IPv6)
-			if host, _, err := net.SplitHostPort(remoteIP); err == nil {
-				remoteIP = host
-			}
-		}
-
-		turnstileResp, err := h.turnstileValidator.Validate(req.TurnstileToken, remoteIP)
-		if err != nil {
-			utils.RespondError(w, http.StatusInternalServerError, "Gagal memvalidasi Turnstile")
-			return
-		}
-
-		if !turnstileResp.Success {
-			utils.RespondError(w, http.StatusBadRequest, "Verifikasi Turnstile gagal: "+strings.Join(turnstileResp.ErrorCodes, ", "))
-			return
-		}
+	if err := h.validateTurnstile(r, req.TurnstileToken); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		return
 	}
 
 	user, tokens, err := h.authService.Login(req.Identifier, req.Password)
@@ -776,4 +757,37 @@ func (h *AuthHandler) VerifyMFA(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.RespondJSON(w, http.StatusOK, response)
+}
+
+// validateTurnstile is a helper to verify Cloudflare Turnstile token
+func (h *AuthHandler) validateTurnstile(r *http.Request, token string) error {
+	if h.turnstileValidator == nil {
+		return fmt.Errorf("sistem keamanan Turnstile tidak terkonfigurasi")
+	}
+
+	remoteIP := r.Header.Get("CF-Connecting-IP")
+	if remoteIP == "" {
+		remoteIP = r.Header.Get("X-Forwarded-For")
+	}
+	if remoteIP != "" {
+		// Get the first IP if it's a comma-separated list
+		remoteIP = strings.TrimSpace(strings.Split(remoteIP, ",")[0])
+	} else {
+		remoteIP = r.RemoteAddr
+		// Clean up port from RemoteAddr properly
+		if host, _, err := net.SplitHostPort(remoteIP); err == nil {
+			remoteIP = host
+		}
+	}
+
+	turnstileResp, err := h.turnstileValidator.Validate(token, remoteIP)
+	if err != nil {
+		return fmt.Errorf("gagal memvalidasi Turnstile")
+	}
+
+	if !turnstileResp.Success {
+		return fmt.Errorf("verifikasi Turnstile gagal: %s", strings.Join(turnstileResp.ErrorCodes, ", "))
+	}
+
+	return nil
 }

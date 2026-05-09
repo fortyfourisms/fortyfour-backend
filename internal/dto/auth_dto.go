@@ -11,6 +11,7 @@ type RegisterRequest struct {
 	// Added company fields for registration
 	NamaPerusahaan *string `json:"nama_perusahaan,omitempty"` // For creating new company
 	IDPerusahaan   *string `json:"id_perusahaan,omitempty"`   // For selecting existing company
+	TurnstileToken string  `json:"cf-turnstile-response" validate:"required"`
 }
 
 // LoginRequest sekarang menerima username ATAU email via field "identifier"

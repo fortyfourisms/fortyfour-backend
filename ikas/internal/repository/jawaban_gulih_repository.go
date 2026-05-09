@@ -14,6 +14,7 @@ type JawabanGulihRepositoryInterface interface {
 	GetAll() ([]dto.JawabanGulihResponse, error)
 	GetByID(id int) (*dto.JawabanGulihResponse, error)
 	GetByIkasID(ikasID string) ([]dto.JawabanGulihResponse, error)
+	GetByIkasIDFromBuffer(ikasID string) ([]dto.JawabanGulihResponse, error)
 	GetByPerusahaanID(perusahaanID string) ([]dto.JawabanGulihResponse, error)
 	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanGulihResponse, error)
 	Update(id int, req dto.UpdateJawabanGulihRequest) error
@@ -53,6 +54,27 @@ const jawabanGulihSelectQuery = `
 		k.id, k.nama_kategori,
 		d.id, d.nama_domain
 	FROM jawaban_gulih jg
+	JOIN pertanyaan_gulih pg ON jg.pertanyaan_gulih_id = pg.id
+	JOIN sub_kategori sk ON pg.sub_kategori_id = sk.id
+	JOIN kategori k ON sk.kategori_id = k.id
+	JOIN domain d ON k.domain_id = d.id`
+
+const jawabanGulihBufferSelectQuery = `
+	SELECT 
+		jg.id, 
+		jg.ikas_id, 
+		jg.jawaban_gulih, 
+		jg.evidence, 
+		jg.validasi, 
+		jg.keterangan, 
+		jg.created_at, 
+		jg.updated_at,
+		pg.id, 
+		pg.pertanyaan_gulih, 
+		sk.id, sk.nama_sub_kategori,
+		k.id, k.nama_kategori,
+		d.id, d.nama_domain
+	FROM jawaban_gulih_buffer jg
 	JOIN pertanyaan_gulih pg ON jg.pertanyaan_gulih_id = pg.id
 	JOIN sub_kategori sk ON pg.sub_kategori_id = sk.id
 	JOIN kategori k ON sk.kategori_id = k.id
@@ -142,6 +164,29 @@ func (r *JawabanGulihRepository) GetByID(id int) (*dto.JawabanGulihResponse, err
 
 func (r *JawabanGulihRepository) GetByIkasID(ikasID string) ([]dto.JawabanGulihResponse, error) {
 	query := jawabanGulihSelectQuery + ` WHERE jg.ikas_id = ? ORDER BY jg.created_at ASC`
+
+	rows, err := r.db.Query(query, ikasID)
+	if err != nil {
+		rollbar.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []dto.JawabanGulihResponse
+	for rows.Next() {
+		item, err := scanJawabanGulih(rows)
+		if err != nil {
+			rollbar.Error(err)
+			continue
+		}
+		results = append(results, item)
+	}
+
+	return results, nil
+}
+
+func (r *JawabanGulihRepository) GetByIkasIDFromBuffer(ikasID string) ([]dto.JawabanGulihResponse, error) {
+	query := jawabanGulihBufferSelectQuery + ` WHERE jg.ikas_id = ? ORDER BY jg.created_at ASC`
 
 	rows, err := r.db.Query(query, ikasID)
 	if err != nil {
