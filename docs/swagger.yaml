@@ -1147,13 +1147,6 @@ definitions:
     - policies
     - role
     type: object
-  fortyfour-backend_internal_dto.ChallengeRequest:
-    properties:
-      cf-turnstile-response:
-        type: string
-    required:
-    - cf-turnstile-response
-    type: object
   fortyfour-backend_internal_dto.ChatRequest:
     properties:
       message:
@@ -1196,6 +1189,8 @@ definitions:
     type: object
   fortyfour-backend_internal_dto.CreateEventRegistrationRequest:
     properties:
+      cf-turnstile-response:
+        type: string
       email:
         maxLength: 255
         type: string
@@ -1220,6 +1215,7 @@ definitions:
         minLength: 2
         type: string
     required:
+    - cf-turnstile-response
     - email
     - jabatan
     - nama
@@ -1899,11 +1895,14 @@ definitions:
     type: object
   fortyfour-backend_internal_dto.LoginRequest:
     properties:
+      cf-turnstile-response:
+        type: string
       identifier:
         type: string
       password:
         type: string
     required:
+    - cf-turnstile-response
     - identifier
     - password
     type: object
@@ -2099,6 +2098,8 @@ definitions:
     type: object
   fortyfour-backend_internal_dto.RegisterRequest:
     properties:
+      cf-turnstile-response:
+        type: string
       email:
         type: string
       id_perusahaan:
@@ -2117,6 +2118,7 @@ definitions:
         minLength: 3
         type: string
     required:
+    - cf-turnstile-response
     - email
     - password
     - username
@@ -3353,39 +3355,6 @@ paths:
       summary: Remove Casbin policy
       tags:
       - Casbin
-  /api/challenge/verify:
-    post:
-      consumes:
-      - application/json
-      description: Validasi token Cloudflare Turnstile untuk mendapatkan akses ke
-        aplikasi. Memberikan cookie gate_verified.
-      parameters:
-      - description: Turnstile Token
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.ChallengeRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: message
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      summary: Verifikasi Challenge Gate
-      tags:
-      - Challenge
   /api/chat:
     post:
       consumes:
@@ -4176,14 +4145,15 @@ paths:
     post:
       consumes:
       - application/json
-      description: Mendaftarkan peserta ke sebuah event
+      description: Mendaftarkan peserta ke sebuah event dengan perlindungan Cloudflare
+        Turnstile
       parameters:
       - description: Event ID
         in: path
         name: id
         required: true
         type: string
-      - description: Data registrasi
+      - description: Data registrasi (termasuk cf-turnstile-response)
         in: body
         name: registration
         required: true
@@ -4209,7 +4179,7 @@ paths:
           description: Conflict
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-      summary: Registrasi event
+      summary: Registrasi event (RSVP)
       tags:
       - Event
   /api/kegiatan/registrasi/{id}/download:
@@ -4847,8 +4817,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Autentikasi user dengan dukungan Cloudflare Turnstile. Token dikirim
-        via HTTP-only cookies, BUKAN di response body.
+      description: Autentikasi user dengan dukungan Cloudflare Turnstile. Token akses
+        dikirim via HTTP-only cookies.
       parameters:
       - description: Login credentials (termasuk cf-turnstile-response)
         in: body
@@ -8294,10 +8264,11 @@ paths:
     post:
       consumes:
       - application/json
-      description: Mendaftarkan user baru. Token dikirim via HTTP-only cookies, BUKAN
-        di response body.
+      description: Mendaftarkan user baru dengan dukungan Cloudflare Turnstile. Untuk
+        registrasi perusahaan baru, isi nama_perusahaan. Untuk bergabung ke perusahaan
+        yang sudah ada, isi id_perusahaan.
       parameters:
-      - description: Register data
+      - description: Data registrasi (termasuk cf-turnstile-response)
         in: body
         name: request
         required: true
@@ -8307,16 +8278,12 @@ paths:
       - application/json
       responses:
         "201":
-          description: message dan user info (tanpa token)
+          description: Created
           schema:
             additionalProperties: true
             type: object
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
-        "401":
-          description: Unauthorized
           schema:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
         "500":

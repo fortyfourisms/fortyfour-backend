@@ -771,55 +771,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/challenge/verify": {
-            "post": {
-                "description": "Validasi token Cloudflare Turnstile untuk mendapatkan akses ke aplikasi. Memberikan cookie gate_verified.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Challenge"
-                ],
-                "summary": "Verifikasi Challenge Gate",
-                "parameters": [
-                    {
-                        "description": "Turnstile Token",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ChallengeRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "message",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/api/chat": {
             "post": {
                 "security": [
@@ -2086,7 +2037,7 @@ const docTemplate = `{
         },
         "/api/kegiatan/{id}/registrasi": {
             "post": {
-                "description": "Mendaftarkan peserta ke sebuah event",
+                "description": "Mendaftarkan peserta ke sebuah event dengan perlindungan Cloudflare Turnstile",
                 "consumes": [
                     "application/json"
                 ],
@@ -2096,7 +2047,7 @@ const docTemplate = `{
                 "tags": [
                     "Event"
                 ],
-                "summary": "Registrasi event",
+                "summary": "Registrasi event (RSVP)",
                 "parameters": [
                     {
                         "type": "string",
@@ -2106,7 +2057,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Data registrasi",
+                        "description": "Data registrasi (termasuk cf-turnstile-response)",
                         "name": "registration",
                         "in": "body",
                         "required": true,
@@ -3103,7 +3054,7 @@ const docTemplate = `{
         },
         "/api/login": {
             "post": {
-                "description": "Autentikasi user dengan dukungan Cloudflare Turnstile. Token dikirim via HTTP-only cookies, BUKAN di response body.",
+                "description": "Autentikasi user dengan dukungan Cloudflare Turnstile. Token akses dikirim via HTTP-only cookies.",
                 "consumes": [
                     "application/json"
                 ],
@@ -8322,7 +8273,7 @@ const docTemplate = `{
         },
         "/api/register": {
             "post": {
-                "description": "Mendaftarkan user baru. Token dikirim via HTTP-only cookies, BUKAN di response body.",
+                "description": "Mendaftarkan user baru dengan dukungan Cloudflare Turnstile. Untuk registrasi perusahaan baru, isi nama_perusahaan. Untuk bergabung ke perusahaan yang sudah ada, isi id_perusahaan.",
                 "consumes": [
                     "application/json"
                 ],
@@ -8335,7 +8286,7 @@ const docTemplate = `{
                 "summary": "Register user baru",
                 "parameters": [
                     {
-                        "description": "Register data",
+                        "description": "Data registrasi (termasuk cf-turnstile-response)",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -8346,7 +8297,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "message dan user info (tanpa token)",
+                        "description": "Created",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -8354,12 +8305,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
@@ -12498,17 +12443,6 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.ChallengeRequest": {
-            "type": "object",
-            "required": [
-                "cf-turnstile-response"
-            ],
-            "properties": {
-                "cf-turnstile-response": {
-                    "type": "string"
-                }
-            }
-        },
         "fortyfour-backend_internal_dto.ChatRequest": {
             "type": "object",
             "properties": {
@@ -12572,6 +12506,7 @@ const docTemplate = `{
         "fortyfour-backend_internal_dto.CreateEventRegistrationRequest": {
             "type": "object",
             "required": [
+                "cf-turnstile-response",
                 "email",
                 "jabatan",
                 "nama",
@@ -12580,6 +12515,9 @@ const docTemplate = `{
                 "sektor"
             ],
             "properties": {
+                "cf-turnstile-response": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string",
                     "maxLength": 255
@@ -13593,10 +13531,14 @@ const docTemplate = `{
         "fortyfour-backend_internal_dto.LoginRequest": {
             "type": "object",
             "required": [
+                "cf-turnstile-response",
                 "identifier",
                 "password"
             ],
             "properties": {
+                "cf-turnstile-response": {
+                    "type": "string"
+                },
                 "identifier": {
                     "type": "string"
                 },
@@ -13900,11 +13842,15 @@ const docTemplate = `{
         "fortyfour-backend_internal_dto.RegisterRequest": {
             "type": "object",
             "required": [
+                "cf-turnstile-response",
                 "email",
                 "password",
                 "username"
             ],
             "properties": {
+                "cf-turnstile-response": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },

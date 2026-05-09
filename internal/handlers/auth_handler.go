@@ -50,14 +50,13 @@ func NewAuthHandler(
 }
 
 // @Summary		Register user baru
-// @Description	Mendaftarkan user baru. Token dikirim via HTTP-only cookies, BUKAN di response body.
+// @Description	Mendaftarkan user baru dengan dukungan Cloudflare Turnstile. Untuk registrasi perusahaan baru, isi nama_perusahaan. Untuk bergabung ke perusahaan yang sudah ada, isi id_perusahaan.
 // @Tags			Auth
 // @Accept			json
 // @Produce		json
-// @Param			request	body		dto.RegisterRequest		true	"Register data"
-// @Success		201		{object}	map[string]interface{}	"message dan user info (tanpa token)"
+// @Param			request	body		dto.RegisterRequest	true	"Data registrasi (termasuk cf-turnstile-response)"
+// @Success		201		{object}	map[string]interface{}
 // @Failure		400		{object}	dto.ErrorResponse
-// @Failure		401		{object}	dto.ErrorResponse
 // @Failure		500		{object}	dto.ErrorResponse
 // @Router			/api/register [post]
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -117,7 +116,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 //	@Summary		Login user
-//	@Description	Autentikasi user dengan dukungan Cloudflare Turnstile. Token dikirim via HTTP-only cookies, BUKAN di response body.
+//	@Description	Autentikasi user dengan dukungan Cloudflare Turnstile. Token akses dikirim via HTTP-only cookies.
 //	@Tags			Auth
 //	@Accept			json
 //	@Produce		json
