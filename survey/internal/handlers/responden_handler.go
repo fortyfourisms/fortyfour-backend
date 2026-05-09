@@ -44,7 +44,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// USER: /me
 		if path == "me" {
-			if role != "user" && role != "pic" {
+			if role != "user" && role != "user_pic" {
 				utils.RespondError(w, http.StatusForbidden, "forbidden")
 				return
 			}
@@ -77,7 +77,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if role != "user" && role != "pic" {
+		if role != "user" && role != "user_pic" {
 			utils.RespondError(w, http.StatusForbidden, "forbidden")
 			return
 		}

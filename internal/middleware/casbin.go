@@ -30,6 +30,9 @@ func (m *CasbinMiddleware) Authorize(next http.HandlerFunc) http.HandlerFunc {
 
 		// Get resource and action
 		resource := r.URL.Path
+		if len(resource) > 1 && resource[len(resource)-1] == '/' {
+			resource = resource[:len(resource)-1]
+		}
 		action := r.Method
 
 		// Check permission with Casbin
