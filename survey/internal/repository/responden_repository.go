@@ -75,6 +75,36 @@ func (r *RespondenRepository) UpsertByUserID(userID string, m models.Responden) 
 	return err
 }
 
+func (r *RespondenRepository) CanEditByUserID(userID string) (bool, string, error) {
+	row := r.db.QueryRow(`
+		SELECT
+			COALESCE(sp.selesai, false),
+			COALESCE(sp.status, 'draft')
+		FROM responden r
+		LEFT JOIN survey_progress sp ON sp.responden_id = r.id
+		WHERE r.user_id = ?
+	`, userID)
+
+	var selesai bool
+	var status string
+	if err := row.Scan(&selesai, &status); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return true, "draft", nil
+		}
+		return false, "", err
+	}
+
+	if status == "" {
+		status = "draft"
+	}
+
+	if !selesai || status == "draft" || status == "edit_approved" {
+		return true, status, nil
+	}
+
+	return false, status, nil
+}
+
 // BASE QUERY
 const baseDetailQuery = `
 SELECT 

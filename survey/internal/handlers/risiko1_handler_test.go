@@ -25,6 +25,8 @@ type mockRisikoService struct {
 	NavigateFunc            func(string, dto.NavigateRequest) (dto.ProgressResponse, error)
 	SaveProgressFunc        func(string, dto.NavigateRequest) (dto.ProgressResponse, error)
 	FinishSurveyFunc        func(string) error
+	RequestEditFunc         func(string, dto.RequestEditRequest) (dto.ProgressResponse, error)
+	ReviewEditRequestFunc   func(string, int64, dto.ReviewEditRequest) (dto.ProgressResponse, error)
 }
 
 func (m *mockRisikoService) ProcessEligibility(userID string, r dto.EligibilityRequest) (map[string]interface{}, error) {
@@ -56,6 +58,12 @@ func (m *mockRisikoService) SaveProgress(userID string, r dto.NavigateRequest) (
 }
 func (m *mockRisikoService) FinishSurvey(userID string) error {
 	return m.FinishSurveyFunc(userID)
+}
+func (m *mockRisikoService) RequestEdit(userID string, r dto.RequestEditRequest) (dto.ProgressResponse, error) {
+	return m.RequestEditFunc(userID, r)
+}
+func (m *mockRisikoService) ReviewEditRequest(adminID string, respondenID int64, r dto.ReviewEditRequest) (dto.ProgressResponse, error) {
+	return m.ReviewEditRequestFunc(adminID, respondenID, r)
 }
 
 // helper: inject role and userID into request context

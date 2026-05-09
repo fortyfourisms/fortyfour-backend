@@ -16,6 +16,7 @@ type mockRepo struct {
 	getDetailByIDFn func(id int64) (*models.RespondenDetail, error)
 	getByUserIDFn   func(userID string) (*models.RespondenDetail, error)
 	upsertByUserFn  func(userID string, m models.Responden) error
+	canEditByUserFn func(userID string) (bool, string, error)
 }
 
 func (m *mockRepo) Create(r models.Responden) (int64, error) {
@@ -32,6 +33,12 @@ func (m *mockRepo) GetByUserID(userID string) (*models.RespondenDetail, error) {
 }
 func (m *mockRepo) UpsertByUserID(userID string, r models.Responden) error {
 	return m.upsertByUserFn(userID, r)
+}
+func (m *mockRepo) CanEditByUserID(userID string) (bool, string, error) {
+	if m.canEditByUserFn != nil {
+		return m.canEditByUserFn(userID)
+	}
+	return true, "draft", nil
 }
 
 type mockValidator struct{}
@@ -96,6 +103,10 @@ func TestUpsertByUserID_Success(t *testing.T) {
 
 	if res.IdPerusahaan != "perusahaan1" {
 		t.Error("invalid response")
+	}
+
+	if res.UserID != "user1" {
+		t.Errorf("expected user_id user1, got %s", res.UserID)
 	}
 }
 

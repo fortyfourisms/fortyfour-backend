@@ -44,7 +44,9 @@ func InitRouter(
 	protected := func(h http.Handler) http.Handler {
 		return middleware.Logger(
 			middleware.Recovery(
-				authMiddleware(h),
+				middleware.CORS(
+					authMiddleware(h),
+				),
 			),
 		)
 	}
@@ -66,6 +68,8 @@ func InitRouter(
 	mux.Handle("/api/survey/navigate", protected(http.HandlerFunc(risikoH.Navigate)))
 	mux.Handle("/api/survey/save-progress", protected(http.HandlerFunc(risikoH.SaveProgress)))
 	mux.Handle("/api/survey/finish", protected(http.HandlerFunc(risikoH.FinishSurvey)))
+	mux.Handle("/api/survey/request-edit", protected(http.HandlerFunc(risikoH.RequestEdit)))
+	mux.Handle("/api/survey/edit-requests/", protected(http.HandlerFunc(risikoH.ReviewEditRequest)))
 
 	// Swagger UI
 	mux.HandleFunc("/swagger/survey/", httpSwagger.WrapHandler)

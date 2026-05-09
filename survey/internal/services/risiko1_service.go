@@ -18,6 +18,14 @@ import (
 // CONFIG
 const risikoCacheTTL = 300 * time.Second
 
+const (
+	SurveyStatusDraft         = "draft"
+	SurveyStatusSubmitted     = "submitted"
+	SurveyStatusEditRequested = "edit_requested"
+	SurveyStatusEditApproved  = "edit_approved"
+	SurveyStatusEditRejected  = "edit_rejected"
+)
+
 // REPOSITORY
 type RisikoRepositoryInterface interface {
 	ExistsResponden(int64) (bool, error)
@@ -74,11 +82,42 @@ func (s *RisikoService) invalidate(id int64) {
 
 // HELPER
 func (s *RisikoService) getRespondenID(userID string) (int64, error) {
+	if strings.TrimSpace(userID) == "" {
+		return 0, errors.New("user_id wajib diisi")
+	}
 	id, err := s.repo.GetRespondentIDByUserID(userID)
 	if err != nil {
 		return 0, errors.New("responden tidak ditemukan")
 	}
 	return id, nil
+}
+
+func canEditProgress(progress *models.SurveyProgress) bool {
+	status := progress.Status
+	if status == "" {
+		status = SurveyStatusDraft
+	}
+	return !progress.Selesai || status == SurveyStatusDraft || status == SurveyStatusEditApproved
+}
+
+func (s *RisikoService) ensureEditable(respondenID int64) (*models.SurveyProgress, error) {
+	progress, err := s.ensureEditable(respondenID)
+	if err != nil {
+		return nil, err
+	}
+	if !canEditProgress(progress) {
+		return nil, errors.New("survey sudah selesai, ajukan request edit ke admin")
+	}
+	return progress, nil
+}
+
+func markDraft(progress *models.SurveyProgress, step string, risikoID int) {
+	progress.Selesai = false
+	progress.Status = SurveyStatusDraft
+	progress.LangkahSaatIni = sql.NullString{String: step, Valid: true}
+	if risikoID > 0 {
+		progress.RisikoID = sqlInt64(risikoID)
+	}
 }
 
 func toInt(ptr *int) (int, error) {
@@ -114,6 +153,11 @@ func (s *RisikoService) ProcessEligibility(userID string, req dto.EligibilityReq
 		return nil, err
 	}
 
+	progress, err := s.ensureEditable(respondenID)
+	if err != nil {
+		return nil, err
+	}
+
 	data := models.RisikoEligibility{
 		RespondenID:   int64(respondenID),
 		RisikoID:      toInt64Ptr(risikoID),
@@ -121,6 +165,10 @@ func (s *RisikoService) ProcessEligibility(userID string, req dto.EligibilityReq
 	}
 
 	if err := s.repo.UpsertEligibility(data); err != nil {
+		return nil, err
+	}
+	markDraft(progress, "eligibility", risikoID)
+	if err := s.repo.UpsertProgress(*progress); err != nil {
 		return nil, err
 	}
 
@@ -154,6 +202,11 @@ func (s *RisikoService) ProcessAlasan(userID string, req dto.AlasanRequest) (map
 		return nil, err
 	}
 
+	progress, err := s.ensureEditable(respondenID)
+	if err != nil {
+		return nil, err
+	}
+
 	data := models.RisikoAlasan{
 		RespondenID: int64(respondenID),
 		RisikoID:    toInt64Ptr(risikoID),
@@ -161,6 +214,10 @@ func (s *RisikoService) ProcessAlasan(userID string, req dto.AlasanRequest) (map
 	}
 
 	if err := s.repo.UpsertAlasan(data); err != nil {
+		return nil, err
+	}
+	markDraft(progress, "reason", risikoID)
+	if err := s.repo.UpsertProgress(*progress); err != nil {
 		return nil, err
 	}
 
@@ -189,6 +246,11 @@ func (s *RisikoService) ProcessDampak(userID string, req dto.DampakRequest) (map
 		return nil, err
 	}
 
+	progress, err := s.ensureEditable(respondenID)
+	if err != nil {
+		return nil, err
+	}
+
 	data := models.RisikoDampak{
 		RespondenID:       int64(respondenID),
 		RisikoID:          toInt64Ptr(risikoID),
@@ -200,6 +262,10 @@ func (s *RisikoService) ProcessDampak(userID string, req dto.DampakRequest) (map
 	}
 
 	if err := s.repo.UpsertDampak(data); err != nil {
+		return nil, err
+	}
+	markDraft(progress, "dampak", risikoID)
+	if err := s.repo.UpsertProgress(*progress); err != nil {
 		return nil, err
 	}
 
@@ -228,6 +294,11 @@ func (s *RisikoService) ProcessPengendalian(userID string, req dto.PengendalianR
 		return nil, err
 	}
 
+	progress, err := s.ensureEditable(respondenID)
+	if err != nil {
+		return nil, err
+	}
+
 	data := models.RisikoPengendalian{
 		RespondenID:           int64(respondenID),
 		RisikoID:              toInt64Ptr(risikoID),
@@ -236,6 +307,10 @@ func (s *RisikoService) ProcessPengendalian(userID string, req dto.PengendalianR
 	}
 
 	if err := s.repo.UpsertPengendalian(data); err != nil {
+		return nil, err
+	}
+	markDraft(progress, "pengendalian", risikoID)
+	if err := s.repo.UpsertProgress(*progress); err != nil {
 		return nil, err
 	}
 
@@ -270,6 +345,10 @@ func (s *RisikoService) GetProgress(userID string) (dto.ProgressResponse, error)
 		return dto.ProgressResponse{}, err
 	}
 
+	return progressToResponse(progress), nil
+}
+
+func progressToResponse(progress *models.SurveyProgress) dto.ProgressResponse {
 	var risikoID *int
 	if progress.RisikoID.Valid {
 		val := int(progress.RisikoID.Int64)
@@ -281,12 +360,30 @@ func (s *RisikoService) GetProgress(userID string) (dto.ProgressResponse, error)
 		langkahSaatIni = &progress.LangkahSaatIni.String
 	}
 
+	var editReason *string
+	if progress.EditReason.Valid {
+		editReason = &progress.EditReason.String
+	}
+
+	var editResponse *string
+	if progress.EditResponse.Valid {
+		editResponse = &progress.EditResponse.String
+	}
+
+	status := progress.Status
+	if status == "" {
+		status = SurveyStatusDraft
+	}
+
 	return dto.ProgressResponse{
 		RespondenID:    progress.RespondenID,
 		RisikoID:       risikoID,
 		LangkahSaatIni: langkahSaatIni,
 		Selesai:        progress.Selesai,
-	}, nil
+		Status:         status,
+		EditReason:     editReason,
+		EditResponse:   editResponse,
+	}
 }
 
 // HELPER SQL
@@ -297,17 +394,13 @@ func sqlInt64(v int) sql.NullInt64 {
 	}
 }
 
-func intPtr(v int) *int {
-	return &v
-}
-
 func (s *RisikoService) Navigate(userID string, req dto.NavigateRequest) (dto.ProgressResponse, error) {
 	respondenID, err := s.getRespondenID(userID)
 	if err != nil {
 		return dto.ProgressResponse{}, err
 	}
 
-	progress, err := s.repo.GetProgress(respondenID)
+	progress, err := s.ensureEditable(respondenID)
 	if err != nil {
 		return dto.ProgressResponse{}, err
 	}
@@ -334,22 +427,13 @@ func (s *RisikoService) Navigate(userID string, req dto.NavigateRequest) (dto.Pr
 		progress.RisikoID = sql.NullInt64{Valid: false}
 	}
 	progress.LangkahSaatIni = sql.NullString{String: "navigate", Valid: true}
+	progress.Status = SurveyStatusDraft
+	progress.Selesai = false
 
 	if err := s.repo.UpsertProgress(*progress); err != nil {
 		return dto.ProgressResponse{}, err
 	}
-
-	var risikoID *int
-	if currentRisk > 0 {
-		risikoID = intPtr(currentRisk)
-	}
-
-	return dto.ProgressResponse{
-		RespondenID:    int64(respondenID),
-		RisikoID:       risikoID,
-		LangkahSaatIni: toStringPtr("navigate"),
-		Selesai:        progress.Selesai,
-	}, nil
+	return progressToResponse(progress), nil
 }
 
 func (s *RisikoService) SaveProgress(userID string, req dto.NavigateRequest) (dto.ProgressResponse, error) {
@@ -358,23 +442,21 @@ func (s *RisikoService) SaveProgress(userID string, req dto.NavigateRequest) (dt
 		return dto.ProgressResponse{}, err
 	}
 
-	progress := models.SurveyProgress{
-		RespondenID:    int64(respondenID),
-		RisikoID:       sqlInt64(req.CurrentRisk),
-		LangkahSaatIni: sql.NullString{String: "save-progress", Valid: true},
-		Selesai:        false,
+	progress, err := s.ensureEditable(respondenID)
+	if err != nil {
+		return dto.ProgressResponse{}, err
 	}
+	progress.RespondenID = int64(respondenID)
+	progress.RisikoID = sqlInt64(req.CurrentRisk)
+	progress.LangkahSaatIni = sql.NullString{String: "save-progress", Valid: true}
+	progress.Selesai = false
+	progress.Status = SurveyStatusDraft
 
-	if err := s.repo.UpsertProgress(progress); err != nil {
+	if err := s.repo.UpsertProgress(*progress); err != nil {
 		return dto.ProgressResponse{}, err
 	}
 
-	return dto.ProgressResponse{
-		RespondenID:    int64(respondenID),
-		RisikoID:       intPtr(req.CurrentRisk),
-		LangkahSaatIni: toStringPtr("save-progress"),
-		Selesai:        false,
-	}, nil
+	return progressToResponse(progress), nil
 }
 
 func (s *RisikoService) CreateCustomRisiko(req dto.CustomRisikoRequest) (int, error) {
@@ -398,7 +480,88 @@ func (s *RisikoService) FinishSurvey(userID string) error {
 	}
 
 	progress.Selesai = true
+	progress.Status = SurveyStatusSubmitted
 	progress.LangkahSaatIni = sql.NullString{String: "finish", Valid: true}
+	progress.SubmittedAt = sql.NullTime{Time: time.Now(), Valid: true}
 
 	return s.repo.UpsertProgress(*progress)
+}
+
+func (s *RisikoService) RequestEdit(userID string, req dto.RequestEditRequest) (dto.ProgressResponse, error) {
+	respondenID, err := s.getRespondenID(userID)
+	if err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	reason := strings.TrimSpace(req.Reason)
+	if reason == "" {
+		return dto.ProgressResponse{}, errors.New("alasan request edit wajib diisi")
+	}
+
+	progress, err := s.repo.GetProgress(respondenID)
+	if err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	status := progress.Status
+	if status == "" {
+		status = SurveyStatusDraft
+	}
+	if !progress.Selesai || status == SurveyStatusDraft || status == SurveyStatusEditApproved {
+		return dto.ProgressResponse{}, errors.New("survey masih dapat diedit")
+	}
+	if status == SurveyStatusEditRequested {
+		return dto.ProgressResponse{}, errors.New("request edit masih menunggu persetujuan admin")
+	}
+
+	progress.Status = SurveyStatusEditRequested
+	progress.EditReason = sql.NullString{String: reason, Valid: true}
+	progress.EditResponse = sql.NullString{Valid: false}
+	progress.EditRequestedAt = sql.NullTime{Time: time.Now(), Valid: true}
+	progress.EditReviewedAt = sql.NullTime{Valid: false}
+	progress.EditReviewedBy = sql.NullString{Valid: false}
+
+	if err := s.repo.UpsertProgress(*progress); err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	return progressToResponse(progress), nil
+}
+
+func (s *RisikoService) ReviewEditRequest(adminID string, respondenID int64, req dto.ReviewEditRequest) (dto.ProgressResponse, error) {
+	if strings.TrimSpace(adminID) == "" {
+		return dto.ProgressResponse{}, errors.New("admin_id wajib diisi")
+	}
+	if respondenID <= 0 {
+		return dto.ProgressResponse{}, errors.New("responden_id tidak valid")
+	}
+
+	progress, err := s.repo.GetProgress(respondenID)
+	if err != nil {
+		return dto.ProgressResponse{}, err
+	}
+	if progress.Status != SurveyStatusEditRequested {
+		return dto.ProgressResponse{}, errors.New("tidak ada request edit yang menunggu persetujuan")
+	}
+
+	response := strings.TrimSpace(req.Response)
+	progress.EditResponse = sql.NullString{String: response, Valid: response != ""}
+	progress.EditReviewedAt = sql.NullTime{Time: time.Now(), Valid: true}
+	progress.EditReviewedBy = sql.NullString{String: adminID, Valid: true}
+
+	if req.Approved {
+		progress.Status = SurveyStatusEditApproved
+		progress.Selesai = false
+		progress.LangkahSaatIni = sql.NullString{String: "edit-approved", Valid: true}
+	} else {
+		progress.Status = SurveyStatusEditRejected
+		progress.Selesai = true
+		progress.LangkahSaatIni = sql.NullString{String: "edit-rejected", Valid: true}
+	}
+
+	if err := s.repo.UpsertProgress(*progress); err != nil {
+		return dto.ProgressResponse{}, err
+	}
+
+	return progressToResponse(progress), nil
 }

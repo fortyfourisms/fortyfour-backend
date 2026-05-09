@@ -88,6 +88,19 @@ func newService(mock *mockRisikoRepo) *RisikoService {
 			return 1, nil
 		}
 	}
+	if mock.getProgressFn == nil {
+		mock.getProgressFn = func(id int64) (*models.SurveyProgress, error) {
+			return &models.SurveyProgress{
+				RespondenID: id,
+				Status:      SurveyStatusDraft,
+			}, nil
+		}
+	}
+	if mock.upsertProgressFn == nil {
+		mock.upsertProgressFn = func(p models.SurveyProgress) error {
+			return nil
+		}
+	}
 	return NewRisikoService(mock, &mockCache{})
 }
 

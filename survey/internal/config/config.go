@@ -54,7 +54,7 @@ func Load() *Config {
 	absPath, _ := filepath.Abs("casbin/casbin_model.conf")
 
 	return &Config{
-		Port:      getEnv("PORT", "8080"),
+		Port:      getEnv("PORT", "8082"),
 		JWTSecret: getEnv("JWT_SECRET", "secret"),
 
 		Database: DatabaseConfig{

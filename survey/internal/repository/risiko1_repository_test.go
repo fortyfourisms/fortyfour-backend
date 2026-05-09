@@ -159,8 +159,11 @@ func TestGetProgress_InsertDefault(t *testing.T) {
 	// second query (after insert)
 	rows := sqlmock.NewRows([]string{
 		"id", "responden_id", "risiko_id",
-		"langkah_saat_ini", "selesai", "terakhir_update",
-	}).AddRow(1, 1, nil, "eligibility", false, time.Now())
+		"langkah_saat_ini", "selesai", "status",
+		"edit_request_reason", "edit_request_response",
+		"submitted_at", "edit_requested_at", "edit_reviewed_at", "edit_reviewed_by",
+		"terakhir_update",
+	}).AddRow(1, 1, nil, "eligibility", false, "draft", nil, nil, nil, nil, nil, nil, time.Now())
 
 	mock.ExpectQuery("SELECT id, responden_id").
 		WithArgs(int64(1)).
