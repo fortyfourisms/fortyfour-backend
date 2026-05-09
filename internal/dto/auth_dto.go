@@ -15,11 +15,8 @@ type RegisterRequest struct {
 
 // LoginRequest sekarang menerima username ATAU email via field "identifier"
 type LoginRequest struct {
-	Identifier string `json:"identifier" validate:"required"`
-	Password   string `json:"password" validate:"required"`
-}
-
-type ChallengeRequest struct {
+	Identifier     string `json:"identifier" validate:"required"`
+	Password       string `json:"password" validate:"required"`
 	TurnstileToken string `json:"cf-turnstile-response" validate:"required"`
 }
 

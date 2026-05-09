@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -22,11 +23,12 @@ import (
 
 // AuthHandler handles authentication-related HTTP endpoints.
 type AuthHandler struct {
-	authService       *services.AuthService
-	tokenService      *services.TokenService
-	perusahaanService services.PerusahaanServiceInterface
-	userService       *services.UserService
-	uploadPath        string
+	authService        *services.AuthService
+	tokenService       *services.TokenService
+	perusahaanService  services.PerusahaanServiceInterface
+	userService        *services.UserService
+	turnstileValidator *utils.TurnstileValidator
+	uploadPath         string
 }
 
 func NewAuthHandler(
@@ -34,14 +36,16 @@ func NewAuthHandler(
 	tokenService *services.TokenService,
 	perusahaanService services.PerusahaanServiceInterface,
 	userService *services.UserService,
+	turnstileValidator *utils.TurnstileValidator,
 	uploadPath string,
 ) *AuthHandler {
 	return &AuthHandler{
-		authService:       authService,
-		tokenService:      tokenService,
-		perusahaanService: perusahaanService,
-		userService:       userService,
-		uploadPath:        uploadPath,
+		authService:        authService,
+		tokenService:       tokenService,
+		perusahaanService:  perusahaanService,
+		userService:        userService,
+		turnstileValidator: turnstileValidator,
+		uploadPath:         uploadPath,
 	}
 }
 
@@ -135,6 +139,35 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if err := validator.Validate(req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
+	}
+
+	// Validasi Turnstile
+	if h.turnstileValidator != nil {
+		remoteIP := r.Header.Get("CF-Connecting-IP")
+		if remoteIP == "" {
+			remoteIP = r.Header.Get("X-Forwarded-For")
+		}
+		if remoteIP != "" {
+			// Get the first IP if it's a comma-separated list
+			remoteIP = strings.TrimSpace(strings.Split(remoteIP, ",")[0])
+		} else {
+			remoteIP = r.RemoteAddr
+			// Clean up port from RemoteAddr properly (works for IPv4 and IPv6)
+			if host, _, err := net.SplitHostPort(remoteIP); err == nil {
+				remoteIP = host
+			}
+		}
+
+		turnstileResp, err := h.turnstileValidator.Validate(req.TurnstileToken, remoteIP)
+		if err != nil {
+			utils.RespondError(w, http.StatusInternalServerError, "Gagal memvalidasi Turnstile")
+			return
+		}
+
+		if !turnstileResp.Success {
+			utils.RespondError(w, http.StatusBadRequest, "Verifikasi Turnstile gagal: "+strings.Join(turnstileResp.ErrorCodes, ", "))
+			return
+		}
 	}
 
 	user, tokens, err := h.authService.Login(req.Identifier, req.Password)

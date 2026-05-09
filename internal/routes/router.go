@@ -59,16 +59,11 @@ func InitRouter(
 	eventH *handlers.EventHandler,
 	aktivitasH *handlers.AktivitasHandler,
 	konversiH *handlers.KonversiHandler,
-	challengeH *handlers.ChallengeHandler,
-	challengeM *middleware.ChallengeMiddleware,
 ) http.Handler {
 	mux := http.NewServeMux()
 
 	// Health check
 	mux.HandleFunc("/api/health", healthHandler)
-
-	// Challenge verify
-	mux.HandleFunc("/api/challenge/verify", challengeH.Verify)
 
 	// Routes Auth
 	mux.HandleFunc("/api/register", strictLimiter.LimitByIP(authH.Register))
@@ -455,6 +450,5 @@ func InitRouter(
 	// Swagger UI
 	mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
-	// Wrap the entire router with ChallengeMiddleware
-	return challengeM.VerifyChallenge(mux)
+	return mux
 }

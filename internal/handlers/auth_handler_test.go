@@ -25,7 +25,7 @@ func setupAuthHandler() (*AuthHandler, *testhelpers.MockRedisClient) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	perusahaanService := testhelpers.NewMockPerusahaanService()
-	handler := NewAuthHandler(authService, tokenService, perusahaanService, nil, "")
+	handler := NewAuthHandler(authService, tokenService, perusahaanService, nil, nil, "")
 
 	return handler, redis
 }
@@ -106,8 +106,9 @@ func TestAuthHandler_Login_Success_WithMFASetupRequired(t *testing.T) {
 
 	// Now login (user baru harus setup MFA dulu)
 	loginBody := dto.LoginRequest{
-		Identifier: "testuser",
-		Password:   "P@ssj0rd121",
+		Identifier:     "testuser",
+		Password:       "P@ssj0rd121",
+		TurnstileToken: "dummy-token",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -311,8 +312,9 @@ func TestAuthHandler_SetupMFA_WithSetupToken(t *testing.T) {
 
 	// Login to get setup token
 	loginBody := dto.LoginRequest{
-		Identifier: "testuser",
-		Password:   "P@ssj0rd121",
+		Identifier:     "testuser",
+		Password:       "P@ssj0rd121",
+		TurnstileToken: "dummy-token",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -371,8 +373,9 @@ func TestAuthHandler_EnableMFA_Success(t *testing.T) {
 
 	// 2. Login to get setup_token
 	loginBody := dto.LoginRequest{
-		Identifier: "testuser",
-		Password:   "P@ssj0rd121",
+		Identifier:     "testuser",
+		Password:       "P@ssj0rd121",
+		TurnstileToken: "dummy-token",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -466,8 +469,9 @@ func TestAuthHandler_VerifyMFA_Success(t *testing.T) {
 
 	// 2. Login to get setup_token
 	loginBody := dto.LoginRequest{
-		Identifier: "testuser",
-		Password:   "P@ssj0rd121",
+		Identifier:     "testuser",
+		Password:       "P@ssj0rd121",
+		TurnstileToken: "dummy-token",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -585,8 +589,9 @@ func TestAuthHandler_EnableMFA_InvalidCode(t *testing.T) {
 	handler.Register(w, req)
 
 	loginBody := dto.LoginRequest{
-		Identifier: "testuser",
-		Password:   "P@ssj0rd121",
+		Identifier:     "testuser",
+		Password:       "P@ssj0rd121",
+		TurnstileToken: "dummy-token",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -640,8 +645,9 @@ func TestAuthHandler_EnableMFA_ExpiredSetupToken(t *testing.T) {
 	handler.Register(w, req)
 
 	loginBody := dto.LoginRequest{
-		Identifier: "testuser",
-		Password:   "P@ssj0rd121",
+		Identifier:     "testuser",
+		Password:       "P@ssj0rd121",
+		TurnstileToken: "dummy-token",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -856,7 +862,7 @@ func TestAuthHandler_GetMe_Success(t *testing.T) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
 	_ = userRepo.Create(user)
@@ -898,7 +904,7 @@ func TestAuthHandler_GetMe_UserNotFound(t *testing.T) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/me", nil)
 	req = withMeUserContext(req, "nonexistent-id")
@@ -924,7 +930,7 @@ func TestAuthHandler_UpdateMe_Success(t *testing.T) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	user := testhelpers.CreateTestUser("user-1", "oldname", "old@test.com")
 	_ = userRepo.Create(user)
@@ -955,7 +961,7 @@ func TestAuthHandler_UpdateMe_WithJabatan(t *testing.T) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
 	_ = userRepo.Create(user)
@@ -1012,7 +1018,7 @@ func TestAuthHandler_UpdateMe_RoleIDNotUpdatable(t *testing.T) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	roleUser := "role-user"
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
@@ -1051,7 +1057,7 @@ func TestAuthHandler_UpdateMePassword_Success(t *testing.T) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	// Register supaya password di-hash dengan benar
 	reqBody := dto.RegisterRequest{
@@ -1143,7 +1149,7 @@ func TestAuthHandler_UpdateMePassword_WrongOldPassword(t *testing.T) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	reqBody := dto.RegisterRequest{Username: "pwdtestuser", Password: "Xk9#mP2$qL7!", Email: "t@t.com", NamaPerusahaan: func() *string { s := "PT Test Company 20"; return &s }()}
 	body, _ := json.Marshal(reqBody)
@@ -1211,7 +1217,7 @@ func TestAuthHandler_UpdateMeMedia_NoFileProvided(t *testing.T) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
 	_ = userRepo.Create(user)
@@ -1243,7 +1249,7 @@ func TestAuthHandler_UpdateMeMedia_InvalidPhotoFormat(t *testing.T) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
 	_ = userRepo.Create(user)
@@ -1278,7 +1284,7 @@ func TestAuthHandler_UpdateMeMedia_UploadProfilePhoto_Success(t *testing.T) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
 	_ = userRepo.Create(user)
@@ -1308,7 +1314,7 @@ func TestAuthHandler_UpdateMeMedia_UploadBanner_Success(t *testing.T) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
 	_ = userRepo.Create(user)
@@ -1421,7 +1427,7 @@ func TestAuthHandler_Login_MFAEnabled_ReturnsMFAToken(t *testing.T) {
 	handler.Register(w, req)
 
 	// 2. Login → dapat setup_token
-	loginBody := dto.LoginRequest{Identifier: "testuser", Password: "P@ssj0rd121"}
+	loginBody := dto.LoginRequest{Identifier: "testuser", Password: "P@ssj0rd121", TurnstileToken: "dummy-token"}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -1496,7 +1502,7 @@ func TestAuthHandler_Login_MFAEnabled_ReturnsMFAToken(t *testing.T) {
 // 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 // 	authService := services.NewAuthService(userRepo, tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 // 	userService := services.NewUserService(userRepo, uploadPath, nil)
-// 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+// 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 // 	return handler, redis
 // }
 
@@ -1626,7 +1632,7 @@ func TestAuthHandler_MeRouter_GET_RoutesToGetMe(t *testing.T) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
 	_ = userRepo.Create(user)
@@ -1654,7 +1660,7 @@ func TestAuthHandler_MeRouter_PUT_RoutesToUpdateMe(t *testing.T) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	user := testhelpers.CreateTestUser("user-1", "oldname", "old@test.com")
 	_ = userRepo.Create(user)
@@ -1685,7 +1691,7 @@ func TestAuthHandler_MeRouter_PUT_password_RoutesToUpdateMePassword(t *testing.T
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	// Register untuk mendapat user dengan password yang di-hash dengan benar
 	reqBody := dto.RegisterRequest{Username: "meuser", Password: "Xk9#mP2$qL7!", Email: "me@test.com", NamaPerusahaan: func() *string { s := "PT Test Company 21"; return &s }()}
@@ -1723,7 +1729,7 @@ func TestAuthHandler_MeRouter_POST_media_RoutesToUpdateMeMedia(t *testing.T) {
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	user := testhelpers.CreateTestUser("user-1", "testuser", "test@test.com")
 	_ = userRepo.Create(user)
