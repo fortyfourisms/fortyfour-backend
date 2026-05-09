@@ -145,7 +145,7 @@ func TestKonversiRepository_GetAllKonversi_Empty(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected no error, got %v", err)
 	}
-	if results != nil && len(results) != 0 {
+	if results != nil {
 		t.Errorf("expected nil or empty slice, got %d items", len(results))
 	}
 }

@@ -8,7 +8,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/redis/go-redis/v9"
 	_ "survey/docs"
 	"survey/internal/cache"
 	"survey/internal/config"
@@ -18,6 +17,8 @@ import (
 	"survey/internal/routes"
 	"survey/internal/services"
 	"survey/pkg/database"
+
+	"github.com/redis/go-redis/v9"
 )
 
 // @title						Survey API
@@ -82,13 +83,13 @@ func main() {
 
 	// SERVER
 	server := &http.Server{
-		Addr:    ":" + cfg.Port,
+		Addr:    cfg.Port,
 		Handler: mux,
 	}
 
 	go func() {
 		println("=======================================")
-		println("Survey API running on port :", cfg.Port)
+		println("Survey API running on port", cfg.Port)
 		println("=======================================")
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {

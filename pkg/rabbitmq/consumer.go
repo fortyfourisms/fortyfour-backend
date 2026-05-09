@@ -292,7 +292,14 @@ func (c *Consumer) runBatchConsume(ctx context.Context, queueName string, cfg Ba
 
 		// Adaptive logic: Adjust parameters based on current queue depth.
 		if cfg.UseAdaptive {
-			q, err := ch.QueueInspect(queueName)
+			q, err := ch.QueueDeclare(
+				queueName,
+				false, // durable (ignored when passive is true)
+				false, // delete when unused (ignored when passive is true)
+				false, // exclusive (ignored when passive is true)
+				false, // no-wait (ignored when passive is true)
+				amqp.Table{"passive": true},
+			)
 			if err == nil {
 				if q.Messages > 5000 {
 					// Emergency Mode
