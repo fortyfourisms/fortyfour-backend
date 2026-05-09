@@ -76,9 +76,17 @@ type IkasEditRequestedEvent struct {
 	RequestedAt    time.Time `json:"requested_at"`
 }
 
+type IkasValidatedEvent struct {
+	IkasID         string    `json:"ikas_id"`
+	IDPerusahaan   string    `json:"id_perusahaan"`
+	NamaPerusahaan string    `json:"nama_perusahaan"`
+	ValidatedAt    time.Time `json:"validated_at"`
+}
+
 // IkasEditActionedEvent
 type IkasEditActionedEvent struct {
 	IkasID         string    `json:"ikas_id"`
+	IDPerusahaan   string    `json:"id_perusahaan"`
 	NamaPerusahaan string    `json:"nama_perusahaan"`
 	Status         string    `json:"status"` // approved/rejected
 	AdminReason    string    `json:"admin_reason,omitempty"`

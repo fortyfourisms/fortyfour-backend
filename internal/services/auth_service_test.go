@@ -89,6 +89,10 @@ type mockUserRepo struct {
 	failCreate bool
 }
 
+func (m *mockUserRepo) FindUsersByPerusahaan(id string) ([]models.User, error) {
+	return nil, nil
+}
+
 func newMockUserRepo() *mockUserRepo {
 	return &mockUserRepo{
 		users: make(map[string]*models.User),

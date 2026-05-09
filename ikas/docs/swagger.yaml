@@ -618,9 +618,15 @@ definitions:
     type: object
   ikas_internal_dto.PerusahaanInIkas:
     properties:
+      alamat:
+        type: string
+      email:
+        type: string
       id:
         type: string
       nama_perusahaan:
+        type: string
+      sektor:
         type: string
     type: object
   ikas_internal_dto.ProteksiInIkas:
@@ -903,7 +909,7 @@ info:
   title: IKAS API
   version: "1.0"
 paths:
-  /api/deteksi:
+  /api/maturity/deteksi:
     get:
       description: Mengambil seluruh data deteksi
       produces:
@@ -922,7 +928,7 @@ paths:
       summary: List semua deteksi
       tags:
       - Deteksi
-  /api/deteksi/{id}:
+  /api/maturity/deteksi/{id}:
     get:
       parameters:
       - description: Deteksi ID
@@ -944,104 +950,6 @@ paths:
       summary: Ambil deteksi berdasarkan ID
       tags:
       - Deteksi
-  /api/gulih:
-    get:
-      description: Mengambil seluruh data gulih
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/ikas_internal_dto.GulihResponse'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
-      summary: List semua gulih
-      tags:
-      - Gulih
-  /api/gulih/{id}:
-    get:
-      parameters:
-      - description: Gulih ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ikas_internal_dto.GulihResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
-      summary: Ambil gulih berdasarkan ID
-      tags:
-      - Gulih
-  /api/health:
-    get:
-      description: Check if the API is running and healthy
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-      summary: Health check
-      tags:
-      - Health
-  /api/identifikasi:
-    get:
-      description: Mengambil seluruh data identifikasi
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/ikas_internal_dto.IdentifikasiResponse'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
-      summary: List semua identifikasi
-      tags:
-      - Identifikasi
-  /api/identifikasi/{id}:
-    get:
-      description: Mengambil satu data identifikasi
-      parameters:
-      - description: Identifikasi ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ikas_internal_dto.IdentifikasiResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
-      summary: Ambil identifikasi berdasarkan ID
-      tags:
-      - Identifikasi
   /api/maturity/domain:
     get:
       description: Mengambil seluruh data domain
@@ -1177,6 +1085,104 @@ paths:
       summary: Update domain
       tags:
       - Domain
+  /api/maturity/gulih:
+    get:
+      description: Mengambil seluruh data gulih
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ikas_internal_dto.GulihResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua gulih
+      tags:
+      - Gulih
+  /api/maturity/gulih/{id}:
+    get:
+      parameters:
+      - description: Gulih ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.GulihResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ambil gulih berdasarkan ID
+      tags:
+      - Gulih
+  /api/maturity/health:
+    get:
+      description: Check if the API is running and healthy
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - Health
+  /api/maturity/identifikasi:
+    get:
+      description: Mengambil seluruh data identifikasi
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ikas_internal_dto.IdentifikasiResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua identifikasi
+      tags:
+      - Identifikasi
+  /api/maturity/identifikasi/{id}:
+    get:
+      description: Mengambil satu data identifikasi
+      parameters:
+      - description: Identifikasi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.IdentifikasiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ambil identifikasi berdasarkan ID
+      tags:
+      - Identifikasi
   /api/maturity/ikas:
     get:
       description: Mengambil seluruh data ikas
@@ -1221,6 +1227,41 @@ paths:
       summary: Tambah ikas baru
       tags:
       - Ikas
+  /api/maturity/ikas-audit-logs:
+    get:
+      description: Mengambil seluruh riwayat perubahan IKAS dengan pagination. Opsional
+        filter berdasarkan ikas_id.
+      parameters:
+      - description: Filter berdasarkan IKAS ID
+        in: query
+        name: ikas_id
+        type: string
+      - description: 'Halaman (default: 1)'
+        example: 1
+        in: query
+        name: page
+        type: integer
+      - description: 'Jumlah data per halaman, maks 100 (default: 20)'
+        example: 10
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List semua audit logs IKAS (paginated)
+      tags:
+      - Audit Logs
   /api/maturity/ikas/{id}:
     delete:
       description: Menghapus data ikas berdasarkan ID
@@ -2684,6 +2725,48 @@ paths:
       summary: Update pertanyaan proteksi
       tags:
       - PertanyaanProteksi
+  /api/maturity/proteksi:
+    get:
+      description: Mengambil seluruh data proteksi
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ikas_internal_dto.ProteksiResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: List semua proteksi
+      tags:
+      - Proteksi
+  /api/maturity/proteksi/{id}:
+    get:
+      description: Mengambil satu data proteksi
+      parameters:
+      - description: Proteksi ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ProteksiResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
+      summary: Ambil proteksi berdasarkan ID
+      tags:
+      - Proteksi
   /api/maturity/ruang-lingkup:
     get:
       description: Mengambil seluruh data ruang lingkup
@@ -2954,48 +3037,6 @@ paths:
       summary: Update sub kategori
       tags:
       - SubKategori
-  /api/proteksi:
-    get:
-      description: Mengambil seluruh data proteksi
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/ikas_internal_dto.ProteksiResponse'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
-      summary: List semua proteksi
-      tags:
-      - Proteksi
-  /api/proteksi/{id}:
-    get:
-      description: Mengambil satu data proteksi
-      parameters:
-      - description: Proteksi ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ikas_internal_dto.ProteksiResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
-      summary: Ambil proteksi berdasarkan ID
-      tags:
-      - Proteksi
 securityDefinitions:
   BearerAuth:
     in: header

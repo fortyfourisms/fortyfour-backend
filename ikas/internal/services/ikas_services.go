@@ -27,6 +27,7 @@ type IkasProducerInterface interface {
 	PublishJawabanGulihCreated(ctx context.Context, event interface{}) error
 	PublishIkasEditRequested(ctx context.Context, event interface{}) error
 	PublishIkasEditActioned(ctx context.Context, event interface{}) error
+	PublishIkasValidated(ctx context.Context, event interface{}) error
 }
 
 type IkasService struct {
@@ -688,6 +689,17 @@ func (s *IkasService) ValidateIkas(ctx context.Context, id string, status bool, 
 	}
 	if s.producer != nil {
 		_ = s.producer.PublishIkasAuditLog(ctx, auditEvent)
+
+		// Publish IkasValidatedEvent for DB Notification & SSE
+		if status {
+			valEvent := dto_event.IkasValidatedEvent{
+				IkasID:         existing.ID,
+				IDPerusahaan:   existing.Perusahaan.ID,
+				NamaPerusahaan: existing.Perusahaan.NamaPerusahaan,
+				ValidatedAt:    time.Now(),
+			}
+			_ = s.producer.PublishIkasValidated(ctx, valEvent)
+		}
 	}
 
 	// Invalidate Cache
@@ -799,6 +811,7 @@ func (s *IkasService) ApproveEdit(ctx context.Context, id string, userID string)
 	if s.producer != nil {
 		event := dto_event.IkasEditActionedEvent{
 			IkasID:         ikas.ID,
+			IDPerusahaan:   ikas.Perusahaan.ID,
 			NamaPerusahaan: ikas.Perusahaan.NamaPerusahaan,
 			Status:         "approved",
 			ActionedAt:     time.Now(),
@@ -851,6 +864,7 @@ func (s *IkasService) RejectEdit(ctx context.Context, id string, adminReason str
 	if s.producer != nil {
 		event := dto_event.IkasEditActionedEvent{
 			IkasID:         ikas.ID,
+			IDPerusahaan:   ikas.Perusahaan.ID,
 			NamaPerusahaan: ikas.Perusahaan.NamaPerusahaan,
 			Status:         "rejected",
 			AdminReason:    adminReason,

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/redis/go-redis/v9"
+	_ "survey/docs"
 	"survey/internal/cache"
 	"survey/internal/config"
 	"survey/internal/handlers"
@@ -19,6 +20,14 @@ import (
 	"survey/pkg/database"
 )
 
+// @title						Survey API
+// @version					1.0
+// @description				API documentation for Survey service.
+// @host						localhost:8082
+// @BasePath					/
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
 func main() {
 	// Load config
 	cfg := config.Load()

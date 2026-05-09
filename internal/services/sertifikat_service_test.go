@@ -105,6 +105,10 @@ type mockUserRepoSert struct {
 	FindByIDFn func(id string) (*models.User, error)
 }
 
+func (m *mockUserRepoSert) FindUsersByPerusahaan(id string) ([]models.User, error) {
+	return nil, nil
+}
+
 func (m *mockUserRepoSert) Create(user *models.User) error { return nil }
 func (m *mockUserRepoSert) FindByUsername(username string) (*models.User, error) {
 	return nil, errors.New("not found")

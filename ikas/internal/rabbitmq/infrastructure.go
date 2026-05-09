@@ -3,8 +3,26 @@ package rabbitmq
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"fortyfour-backend/pkg/rabbitmq"
+)
+
+// Batch consumer configuration for jawaban queues.
+// Adjust these values to tune throughput vs. rate-limit protection.
+const (
+	// JawabanBatchSize is the maximum number of "jawaban.xxx.created" messages
+	// processed in a single batch before pausing.
+	JawabanBatchSize = 50
+
+	// JawabanBatchTimeout is the maximum duration the consumer waits to fill a
+	// batch. If the queue has fewer than JawabanBatchSize messages, the batch is
+	// processed after this timeout to avoid indefinite starvation.
+	JawabanBatchTimeout = 5 * time.Second
+
+	// JawabanBatchDelay is the pause inserted between consecutive batches.
+	// This is the primary mechanism that prevents downstream rate-limit violations.
+	JawabanBatchDelay = 200 * time.Millisecond
 )
 
 // SetupInfrastructure

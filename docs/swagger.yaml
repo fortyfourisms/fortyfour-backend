@@ -38,13 +38,6 @@ definitions:
       sertifikat_training:
         type: string
     type: object
-  dto.CustomRisikoRequest:
-    properties:
-      nama_risiko:
-        type: string
-      responden_id:
-        type: integer
-    type: object
   dto.DampakRequest:
     properties:
       dampak_finansial:
@@ -122,21 +115,6 @@ definitions:
         type: string
       user_id:
         description: dari backend (JWT)
-        type: string
-    type: object
-  dto.UpdateRespondenRequest:
-    properties:
-      email:
-        type: string
-      id_perusahaan:
-        type: string
-      jabatan:
-        type: string
-      nama_lengkap:
-        type: string
-      no_telepon:
-        type: string
-      sertifikat_training:
         type: string
     type: object
   fortyfour-backend_internal_dto.AddPolicyRequest:
@@ -321,31 +299,6 @@ definitions:
     - judul
     - lokasi
     - tanggal
-    type: object
-  fortyfour-backend_internal_dto.CreateKelasRequest:
-    properties:
-      deskripsi:
-        type: string
-      durasi_jp:
-        type: integer
-      informasi_umum:
-        type: string
-      judul:
-        maxLength: 255
-        minLength: 3
-        type: string
-      kategori:
-        type: string
-      penyelenggara:
-        type: string
-      syarat_pendaftaran:
-        type: string
-      target_peserta:
-        type: string
-      thumbnail:
-        type: string
-    required:
-    - judul
     type: object
   fortyfour-backend_internal_dto.CreateKuisRequest:
     properties:
@@ -1561,34 +1514,6 @@ definitions:
       tanggal:
         type: string
     type: object
-  fortyfour-backend_internal_dto.UpdateKelasRequest:
-    properties:
-      deskripsi:
-        type: string
-      durasi_jp:
-        type: integer
-      informasi_umum:
-        type: string
-      judul:
-        maxLength: 255
-        minLength: 3
-        type: string
-      kategori:
-        type: string
-      penyelenggara:
-        type: string
-      status:
-        enum:
-        - draft
-        - published
-        type: string
-      syarat_pendaftaran:
-        type: string
-      target_peserta:
-        type: string
-      thumbnail:
-        type: string
-    type: object
   fortyfour-backend_internal_dto.UpdateKuisRequest:
     properties:
       deskripsi:
@@ -1987,27 +1912,6 @@ definitions:
       selesai:
         type: boolean
     type: object
-  utils.PaginatedJSONResponse:
-    properties:
-      data: {}
-      message:
-        type: string
-      pagination:
-        $ref: '#/definitions/utils.PaginationMeta'
-      status:
-        type: string
-    type: object
-  utils.PaginationMeta:
-    properties:
-      limit:
-        type: integer
-      page:
-        type: integer
-      total:
-        type: integer
-      total_pages:
-        type: integer
-    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -2018,12 +1922,12 @@ info:
 paths:
   /api/aktivitas:
     get:
-      description: Mengambil data aktivitas per perusahaan
+      description: Mengambil seluruh data aktivitas. Jika query `perusahaan_id` dikirim,
+        hasil akan difilter berdasarkan perusahaan.
       parameters:
-      - description: Perusahaan ID
+      - description: Perusahaan ID untuk filter aktivitas
         in: query
         name: perusahaan_id
-        required: true
         type: string
       produces:
       - application/json
@@ -2045,7 +1949,7 @@ paths:
             $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: List aktivitas berdasarkan Perusahaan ID
+      summary: List semua aktivitas
       tags:
       - Aktivitas
     post:
@@ -3357,15 +3261,52 @@ paths:
       - LMS - Kelas
     post:
       consumes:
-      - application/json
-      description: Admin membuat kelas baru.
+      - multipart/form-data
+      description: Admin membuat kelas baru. Thumbnail bisa diupload sebagai file
+        (thumbnail_file) atau diisi sebagai URL (thumbnail_url). Jika keduanya diisi,
+        file yang digunakan.
       parameters:
-      - description: Data kelas
-        in: body
-        name: request
+      - description: Judul kelas
+        in: formData
+        name: judul
         required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.CreateKelasRequest'
+        type: string
+      - description: Deskripsi kelas
+        in: formData
+        name: deskripsi
+        type: string
+      - description: Upload gambar thumbnail
+        in: formData
+        name: thumbnail_file
+        type: file
+      - description: URL thumbnail (digunakan jika file tidak diupload)
+        in: formData
+        name: thumbnail_url
+        type: string
+      - description: Kategori kelas
+        in: formData
+        name: kategori
+        type: string
+      - description: Durasi jam pelajaran
+        in: formData
+        name: durasi_jp
+        type: integer
+      - description: Penyelenggara
+        in: formData
+        name: penyelenggara
+        type: string
+      - description: Target peserta
+        in: formData
+        name: target_peserta
+        type: string
+      - description: Syarat pendaftaran
+        in: formData
+        name: syarat_pendaftaran
+        type: string
+      - description: Informasi umum
+        in: formData
+        name: informasi_umum
+        type: string
       produces:
       - application/json
       responses:
@@ -3435,20 +3376,59 @@ paths:
       - LMS - Kelas
     put:
       consumes:
-      - application/json
-      description: Admin mengupdate kelas.
+      - multipart/form-data
+      description: Admin mengupdate kelas. Thumbnail bisa diupload sebagai file (thumbnail_file)
+        atau diisi sebagai URL (thumbnail_url). Jika keduanya diisi, file yang digunakan.
       parameters:
       - description: ID Kelas
         in: path
         name: id
         required: true
         type: string
-      - description: Data update
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/fortyfour-backend_internal_dto.UpdateKelasRequest'
+      - description: Judul kelas
+        in: formData
+        name: judul
+        type: string
+      - description: Deskripsi kelas
+        in: formData
+        name: deskripsi
+        type: string
+      - description: Upload gambar thumbnail
+        in: formData
+        name: thumbnail_file
+        type: file
+      - description: URL thumbnail (digunakan jika file tidak diupload)
+        in: formData
+        name: thumbnail_url
+        type: string
+      - description: Kategori kelas
+        in: formData
+        name: kategori
+        type: string
+      - description: Durasi jam pelajaran
+        in: formData
+        name: durasi_jp
+        type: integer
+      - description: Penyelenggara
+        in: formData
+        name: penyelenggara
+        type: string
+      - description: Target peserta
+        in: formData
+        name: target_peserta
+        type: string
+      - description: Syarat pendaftaran
+        in: formData
+        name: syarat_pendaftaran
+        type: string
+      - description: Informasi umum
+        in: formData
+        name: informasi_umum
+        type: string
+      - description: Status kelas (draft / published)
+        in: formData
+        name: status
+        type: string
       produces:
       - application/json
       responses:
@@ -4173,6 +4153,312 @@ paths:
       summary: Update progress materi
       tags:
       - LMS - Materi
+  /api/maturity:
+    delete:
+      description: |-
+        Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.
+        Meneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Proxy request ke layanan IKAS subpath
+      tags:
+      - IKAS Proxy
+      - IKAS Proxy
+    get:
+      description: |-
+        Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.
+        Meneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Proxy request ke layanan IKAS subpath
+      tags:
+      - IKAS Proxy
+      - IKAS Proxy
+    post:
+      description: |-
+        Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.
+        Meneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Proxy request ke layanan IKAS subpath
+      tags:
+      - IKAS Proxy
+      - IKAS Proxy
+    put:
+      description: |-
+        Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.
+        Meneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Proxy request ke layanan IKAS subpath
+      tags:
+      - IKAS Proxy
+      - IKAS Proxy
+  /api/maturity/{path}:
+    delete:
+      description: |-
+        Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.
+        Meneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.
+      parameters:
+      - description: Subpath endpoint IKAS
+        in: path
+        name: path
+        required: true
+        type: string
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Proxy request ke layanan IKAS subpath
+      tags:
+      - IKAS Proxy
+      - IKAS Proxy
+    get:
+      description: |-
+        Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.
+        Meneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.
+      parameters:
+      - description: Subpath endpoint IKAS
+        in: path
+        name: path
+        required: true
+        type: string
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Proxy request ke layanan IKAS subpath
+      tags:
+      - IKAS Proxy
+      - IKAS Proxy
+    post:
+      description: |-
+        Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.
+        Meneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.
+      parameters:
+      - description: Subpath endpoint IKAS
+        in: path
+        name: path
+        required: true
+        type: string
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Proxy request ke layanan IKAS subpath
+      tags:
+      - IKAS Proxy
+      - IKAS Proxy
+    put:
+      description: |-
+        Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.
+        Meneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.
+      parameters:
+      - description: Subpath endpoint IKAS
+        in: path
+        name: path
+        required: true
+        type: string
+      produces:
+      - application/json
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      - BearerAuth: []
+      summary: Proxy request ke layanan IKAS subpath
+      tags:
+      - IKAS Proxy
+      - IKAS Proxy
   /api/me:
     get:
       description: Mengambil data lengkap user yang sedang login (profil diri sendiri).

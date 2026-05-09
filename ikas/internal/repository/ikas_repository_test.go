@@ -63,30 +63,30 @@ func TestIkasRepository_GetQueries(t *testing.T) {
 
 	columns := []string{
 		"id", "tanggal", "responden", "telepon", "jabatan", "nilai_kematangan", "target_nilai",
-		"p_id", "p_nama",
+		"p_id", "p_nama", "p_alamat", "p_email", "p_sektor",
 		"iden_id", "iden_nilai", "iden_s1", "iden_s2", "iden_s3", "iden_s4", "iden_s5",
 		"prot_id", "prot_nilai", "prot_s1", "prot_s2", "prot_s3", "prot_s4", "prot_s5", "prot_s6",
 		"det_id", "det_nilai", "det_s1", "det_s2", "det_s3",
 		"g_id", "g_nilai", "g_s1", "g_s2", "g_s3", "g_s4",
-		"is_validated", "created_at", "updated_at",
+		"is_validated", "edit_status", "edit_reason", "created_at", "updated_at",
 	}
 
 	t.Run("GetAll_Success", func(t *testing.T) {
 		rows := sqlmock.NewRows(columns).
 			AddRow("ikas-1", "2023-01-01", "John", "123", "Manager", 0.0, 4.0,
-				"comp-1", "Comp One",
+				"comp-1", "Comp One", "Alamat 1", "email@c.com", "Sektor A",
 				1, 4.0, 4, 4, 4, 4, 4,
 				2, 4.0, 4, 4, 4, 4, 4, 4,
 				3, 4.0, 4, 4, 4,
 				4, 4.0, 4, 4, 4, 4,
-				true, "2023-01-01", "2023-01-01").
+				true, "none", "", "2023-01-01", "2023-01-01").
 			AddRow("ikas-2", nil, "Jane", "456", "Staff", 0.0, nil,
-				nil, nil,
+				nil, nil, nil, nil, nil,
 				nil, nil, nil, nil, nil, nil, nil,
 				nil, nil, nil, nil, nil, nil, nil, nil,
 				nil, nil, nil, nil, nil,
 				nil, nil, nil, nil, nil, nil,
-				false, "2023-01-02", nil)
+				false, "none", "", "2023-01-02", nil)
 
 		mock.ExpectQuery("SELECT (.+) FROM ikas i").WillReturnRows(rows)
 
@@ -106,12 +106,12 @@ func TestIkasRepository_GetQueries(t *testing.T) {
 	t.Run("GetByPerusahaan_Success", func(t *testing.T) {
 		rows := sqlmock.NewRows(columns).
 			AddRow("ikas-1", "2023-01-01", "John", "123", "Manager", 0, 4.0,
-				"comp-1", "Comp One",
+				"comp-1", "Comp One", "Alamat 1", "email@c.com", "Sektor A",
 				1, 4.0, 4, 4, 4, 4, 4,
 				2, 4.0, 4, 4, 4, 4, 4, 4,
 				3, 4.0, 4, 4, 4,
 				4, 4.0, 4, 4, 4, 4,
-				true, "2023-01-01", "2023-01-01")
+				true, "none", "", "2023-01-01", "2023-01-01")
 
 		mock.ExpectQuery("SELECT (.+) FROM ikas i (.+) WHERE i.id_perusahaan = ?").
 			WithArgs("comp-1").
@@ -125,12 +125,12 @@ func TestIkasRepository_GetQueries(t *testing.T) {
 	t.Run("GetByID_Success", func(t *testing.T) {
 		rows := sqlmock.NewRows(columns).
 			AddRow("ikas-1", "2023-01-01", "John", "123", "Manager", 0, 4.0,
-				"comp-1", "Comp One",
+				"comp-1", "Comp One", "Alamat 1", "email@c.com", "Sektor A",
 				1, 4.0, 4, 4, 4, 4, 4,
 				2, 4.0, 4, 4, 4, 4, 4, 4,
 				3, 4.0, 4, 4, 4,
 				4, 4.0, 4, 4, 4, 4,
-				true, "2023-01-01", "2023-01-01")
+				true, "none", "", "2023-01-01", "2023-01-01")
 
 		mock.ExpectQuery("SELECT (.+) FROM ikas i (.+) WHERE i.id = ?").
 			WithArgs("ikas-1").

@@ -214,3 +214,7 @@ func (p *Producer) PublishIkasEditRequested(ctx context.Context, event interface
 func (p *Producer) PublishIkasEditActioned(ctx context.Context, event interface{}) error {
 	return p.Publish(ctx, "ikas.events", "ikas.edit_actioned", event)
 }
+
+func (p *Producer) PublishIkasValidated(ctx context.Context, event interface{}) error {
+	return p.Publish(ctx, "ikas.events", "ikas.validated", event)
+}

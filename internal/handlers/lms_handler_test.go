@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -352,9 +353,12 @@ func TestLMSHandler_KelasGetDetail_NotFound(t *testing.T) {
 
 func TestLMSHandler_KelasCreate(t *testing.T) {
 	handler := setupLMSHandler()
-	body, _ := json.Marshal(dto.CreateKelasRequest{Judul: "New Class"})
-	req := httptest.NewRequest(http.MethodPost, "/api/kelas", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
+	var b bytes.Buffer
+	writer := multipart.NewWriter(&b)
+	_ = writer.WriteField("judul", "New Class")
+	writer.Close()
+	req := httptest.NewRequest(http.MethodPost, "/api/kelas", &b)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req = withUserCtx(req, "admin-1", "admin")
 	w := httptest.NewRecorder()
 	handler.ServeKelas(w, req)
@@ -382,10 +386,12 @@ func TestLMSHandler_KelasCreate_WithID(t *testing.T) {
 
 func TestLMSHandler_KelasUpdate(t *testing.T) {
 	handler := setupLMSHandler()
-	judul := "Updated"
-	body, _ := json.Marshal(dto.UpdateKelasRequest{Judul: &judul})
-	req := httptest.NewRequest(http.MethodPut, "/api/kelas/k-1", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
+	var b bytes.Buffer
+	writer := multipart.NewWriter(&b)
+	_ = writer.WriteField("judul", "Updated")
+	writer.Close()
+	req := httptest.NewRequest(http.MethodPut, "/api/kelas/k-1", &b)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req = withUserCtx(req, "admin-1", "admin")
 	w := httptest.NewRecorder()
 	handler.ServeKelas(w, req)

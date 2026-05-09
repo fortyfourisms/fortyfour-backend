@@ -17,6 +17,7 @@ const (
 	NotifResourceDeleted    NotificationType = "resource_deleted"
 	NotifIkasEditRequested  NotificationType = "ikas_edit_requested"
 	NotifIkasEditActioned   NotificationType = "ikas_edit_actioned"
+	NotifIkasValidated      NotificationType = "ikas_validated"
 	NotifSEEditRequested    NotificationType = "se_edit_requested"
 )
 

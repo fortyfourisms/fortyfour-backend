@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/mock"
 )
 
 // ============================================================
@@ -111,8 +112,14 @@ func (m *MockRedisClient) Clear() {
 // ============================================================
 
 type MockUserRepository struct {
+	mock.Mock
 	users map[string]*models.User
 	mu    sync.RWMutex
+}
+
+func (m *MockUserRepository) FindUsersByPerusahaan(idPerusahaan string) ([]models.User, error) {
+	args := m.Called(idPerusahaan)
+	return args.Get(0).([]models.User), args.Error(1)
 }
 
 func NewMockUserRepository() *MockUserRepository {

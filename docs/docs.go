@@ -22,21 +22,20 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Mengambil data aktivitas per perusahaan",
+                "description": "Mengambil seluruh data aktivitas. Jika query ` + "`" + `perusahaan_id` + "`" + ` dikirim, hasil akan difilter berdasarkan perusahaan.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Aktivitas"
                 ],
-                "summary": "List aktivitas berdasarkan Perusahaan ID",
+                "summary": "List semua aktivitas",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Perusahaan ID",
+                        "description": "Perusahaan ID untuk filter aktivitas",
                         "name": "perusahaan_id",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -2140,9 +2139,9 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Admin membuat kelas baru.",
+                "description": "Admin membuat kelas baru. Thumbnail bisa diupload sebagai file (thumbnail_file) atau diisi sebagai URL (thumbnail_url). Jika keduanya diisi, file yang digunakan.",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -2153,13 +2152,65 @@ const docTemplate = `{
                 "summary": "Buat kelas baru",
                 "parameters": [
                     {
-                        "description": "Data kelas",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.CreateKelasRequest"
-                        }
+                        "type": "string",
+                        "description": "Judul kelas",
+                        "name": "judul",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Deskripsi kelas",
+                        "name": "deskripsi",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Upload gambar thumbnail",
+                        "name": "thumbnail_file",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "URL thumbnail (digunakan jika file tidak diupload)",
+                        "name": "thumbnail_url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Kategori kelas",
+                        "name": "kategori",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Durasi jam pelajaran",
+                        "name": "durasi_jp",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Penyelenggara",
+                        "name": "penyelenggara",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Target peserta",
+                        "name": "target_peserta",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Syarat pendaftaran",
+                        "name": "syarat_pendaftaran",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Informasi umum",
+                        "name": "informasi_umum",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -2223,9 +2274,9 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Admin mengupdate kelas.",
+                "description": "Admin mengupdate kelas. Thumbnail bisa diupload sebagai file (thumbnail_file) atau diisi sebagai URL (thumbnail_url). Jika keduanya diisi, file yang digunakan.",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -2243,13 +2294,70 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Data update",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/fortyfour-backend_internal_dto.UpdateKelasRequest"
-                        }
+                        "type": "string",
+                        "description": "Judul kelas",
+                        "name": "judul",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Deskripsi kelas",
+                        "name": "deskripsi",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Upload gambar thumbnail",
+                        "name": "thumbnail_file",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "URL thumbnail (digunakan jika file tidak diupload)",
+                        "name": "thumbnail_url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Kategori kelas",
+                        "name": "kategori",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Durasi jam pelajaran",
+                        "name": "durasi_jp",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Penyelenggara",
+                        "name": "penyelenggara",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Target peserta",
+                        "name": "target_peserta",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Syarat pendaftaran",
+                        "name": "syarat_pendaftaran",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Informasi umum",
+                        "name": "informasi_umum",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Status kelas (draft / published)",
+                        "name": "status",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -3418,6 +3526,446 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
+                "produces": [
+                    "application/json",
+                    "application/json"
+                ],
+                "tags": [
+                    "IKAS Proxy",
+                    "IKAS Proxy"
+                ],
+                "summary": "Proxy request ke layanan IKAS subpath",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
+                "produces": [
+                    "application/json",
+                    "application/json"
+                ],
+                "tags": [
+                    "IKAS Proxy",
+                    "IKAS Proxy"
+                ],
+                "summary": "Proxy request ke layanan IKAS subpath",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
+                "produces": [
+                    "application/json",
+                    "application/json"
+                ],
+                "tags": [
+                    "IKAS Proxy",
+                    "IKAS Proxy"
+                ],
+                "summary": "Proxy request ke layanan IKAS subpath",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
+                "produces": [
+                    "application/json",
+                    "application/json"
+                ],
+                "tags": [
+                    "IKAS Proxy",
+                    "IKAS Proxy"
+                ],
+                "summary": "Proxy request ke layanan IKAS subpath",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/maturity/{path}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
+                "produces": [
+                    "application/json",
+                    "application/json"
+                ],
+                "tags": [
+                    "IKAS Proxy",
+                    "IKAS Proxy"
+                ],
+                "summary": "Proxy request ke layanan IKAS subpath",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Subpath endpoint IKAS",
+                        "name": "path",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
+                "produces": [
+                    "application/json",
+                    "application/json"
+                ],
+                "tags": [
+                    "IKAS Proxy",
+                    "IKAS Proxy"
+                ],
+                "summary": "Proxy request ke layanan IKAS subpath",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Subpath endpoint IKAS",
+                        "name": "path",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
+                "produces": [
+                    "application/json",
+                    "application/json"
+                ],
+                "tags": [
+                    "IKAS Proxy",
+                    "IKAS Proxy"
+                ],
+                "summary": "Proxy request ke layanan IKAS subpath",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Subpath endpoint IKAS",
+                        "name": "path",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Meneruskan request ke layanan IKAS melalui gateway internal untuk endpoint root maturity.\nMeneruskan request ke layanan IKAS untuk seluruh subpath di bawah endpoint maturity.",
+                "produces": [
+                    "application/json",
+                    "application/json"
+                ],
+                "tags": [
+                    "IKAS Proxy",
+                    "IKAS Proxy"
+                ],
+                "summary": "Proxy request ke layanan IKAS subpath",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Subpath endpoint IKAS",
+                        "name": "path",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -6915,17 +7463,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CustomRisikoRequest": {
-            "type": "object",
-            "properties": {
-                "nama_risiko": {
-                    "type": "string"
-                },
-                "responden_id": {
-                    "type": "integer"
-                }
-            }
-        },
         "dto.DampakRequest": {
             "type": "object",
             "properties": {
@@ -7041,29 +7578,6 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "description": "dari backend (JWT)",
-                    "type": "string"
-                }
-            }
-        },
-        "dto.UpdateRespondenRequest": {
-            "type": "object",
-            "properties": {
-                "email": {
-                    "type": "string"
-                },
-                "id_perusahaan": {
-                    "type": "string"
-                },
-                "jabatan": {
-                    "type": "string"
-                },
-                "nama_lengkap": {
-                    "type": "string"
-                },
-                "no_telepon": {
-                    "type": "string"
-                },
-                "sertifikat_training": {
                     "type": "string"
                 }
             }
@@ -7331,43 +7845,6 @@ const docTemplate = `{
                 "tanggal": {
                     "type": "string",
                     "example": "2024-12-31T15:00:00Z"
-                }
-            }
-        },
-        "fortyfour-backend_internal_dto.CreateKelasRequest": {
-            "type": "object",
-            "required": [
-                "judul"
-            ],
-            "properties": {
-                "deskripsi": {
-                    "type": "string"
-                },
-                "durasi_jp": {
-                    "type": "integer"
-                },
-                "informasi_umum": {
-                    "type": "string"
-                },
-                "judul": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
-                },
-                "kategori": {
-                    "type": "string"
-                },
-                "penyelenggara": {
-                    "type": "string"
-                },
-                "syarat_pendaftaran": {
-                    "type": "string"
-                },
-                "target_peserta": {
-                    "type": "string"
-                },
-                "thumbnail": {
-                    "type": "string"
                 }
             }
         },
@@ -9179,47 +9656,6 @@ const docTemplate = `{
                 }
             }
         },
-        "fortyfour-backend_internal_dto.UpdateKelasRequest": {
-            "type": "object",
-            "properties": {
-                "deskripsi": {
-                    "type": "string"
-                },
-                "durasi_jp": {
-                    "type": "integer"
-                },
-                "informasi_umum": {
-                    "type": "string"
-                },
-                "judul": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
-                },
-                "kategori": {
-                    "type": "string"
-                },
-                "penyelenggara": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "draft",
-                        "published"
-                    ]
-                },
-                "syarat_pendaftaran": {
-                    "type": "string"
-                },
-                "target_peserta": {
-                    "type": "string"
-                },
-                "thumbnail": {
-                    "type": "string"
-                }
-            }
-        },
         "fortyfour-backend_internal_dto.UpdateKuisRequest": {
             "type": "object",
             "properties": {
@@ -9789,38 +10225,6 @@ const docTemplate = `{
                 },
                 "selesai": {
                     "type": "boolean"
-                }
-            }
-        },
-        "utils.PaginatedJSONResponse": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "message": {
-                    "type": "string"
-                },
-                "pagination": {
-                    "$ref": "#/definitions/utils.PaginationMeta"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "utils.PaginationMeta": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "total_pages": {
-                    "type": "integer"
                 }
             }
         }

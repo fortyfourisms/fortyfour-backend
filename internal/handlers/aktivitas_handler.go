@@ -66,10 +66,11 @@ func (h *AktivitasHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // GetAllAktivitas godoc
 //
 //	@Summary		List semua aktivitas
-//	@Description	Mengambil seluruh data aktivitas
+//	@Description	Mengambil seluruh data aktivitas. Jika query `perusahaan_id` dikirim, hasil akan difilter berdasarkan perusahaan.
 //	@Tags			Aktivitas
 //	@Produce		json
 //	@Security		BearerAuth
+//	@Param			perusahaan_id	query		string	false	"Perusahaan ID untuk filter aktivitas"
 //	@Success		200	{object}	utils.JSONResponse{data=[]dto.AktivitasResponse}
 //	@Failure		500	{object}	dto.ErrorResponse
 //	@Router			/api/aktivitas [get]
@@ -119,15 +120,8 @@ func (h *AktivitasHandler) handleGetByID(w http.ResponseWriter, _ *http.Request,
 
 // GetAktivitasByPerusahaanID godoc
 //
-//	@Summary		List aktivitas berdasarkan Perusahaan ID
-//	@Description	Mengambil data aktivitas per perusahaan
-//	@Tags			Aktivitas
-//	@Produce		json
-//	@Security		BearerAuth
-//	@Param			perusahaan_id	query		string	true	"Perusahaan ID"
-//	@Success		200				{object}	utils.JSONResponse{data=[]dto.AktivitasResponse}
-//	@Failure		500				{object}	dto.ErrorResponse
-//	@Router			/api/aktivitas [get]
+// Handler internal untuk GET /api/aktivitas dengan query perusahaan_id.
+// Dokumentasi Swagger endpoint ini digabung pada handleGetAll agar tidak terjadi duplikasi route GET /api/aktivitas.
 func (h *AktivitasHandler) handleGetByPerusahaanID(w http.ResponseWriter, _ *http.Request, perusahaanID string) {
 	data, err := h.service.GetByPerusahaanID(perusahaanID)
 	if err != nil {

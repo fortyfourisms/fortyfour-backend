@@ -40,8 +40,8 @@ func (h *AuditLogHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 //	@Param			ikas_id	query		string	false	"Filter berdasarkan IKAS ID"
 //	@Param			page	query		int		false	"Halaman (default: 1)"					example(1)
 //	@Param			limit	query		int		false	"Jumlah data per halaman, maks 100 (default: 20)"	example(10)
-//	@Success		200		{object}	utils.PaginatedJSONResponse
-//	@Failure		500		{object}	utils.JSONResponse
+//	@Success		200		{object}	map[string]interface{}
+//	@Failure		500		{object}	map[string]interface{}
 //	@Router			/api/maturity/ikas-audit-logs [get]
 func (h *AuditLogHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()

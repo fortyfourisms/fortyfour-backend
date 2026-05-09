@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"fortyfour-backend/internal/dto"
@@ -270,22 +271,72 @@ func (h *LMSHandler) kelasGetDetail(w http.ResponseWriter, r *http.Request, id s
 }
 
 // @Summary		Buat kelas baru
-// @Description	Admin membuat kelas baru.
+// @Description	Admin membuat kelas baru. Thumbnail bisa diupload sebagai file (thumbnail_file) atau diisi sebagai URL (thumbnail_url). Jika keduanya diisi, file yang digunakan.
 // @Tags			LMS - Kelas
-// @Accept			json
+// @Accept			multipart/form-data
 // @Produce		json
 // @Security		BearerAuth
-// @Param			request	body		dto.CreateKelasRequest	true	"Data kelas"
-// @Success		201		{object}	dto.KelasResponse
-// @Failure		400		{object}	dto.ErrorResponse
+// @Param			judul				formData	string	true	"Judul kelas"
+// @Param			deskripsi			formData	string	false	"Deskripsi kelas"
+// @Param			thumbnail_file		formData	file	false	"Upload gambar thumbnail"
+// @Param			thumbnail_url		formData	string	false	"URL thumbnail (digunakan jika file tidak diupload)"
+// @Param			kategori			formData	string	false	"Kategori kelas"
+// @Param			durasi_jp			formData	int		false	"Durasi jam pelajaran"
+// @Param			penyelenggara		formData	string	false	"Penyelenggara"
+// @Param			target_peserta		formData	string	false	"Target peserta"
+// @Param			syarat_pendaftaran	formData	string	false	"Syarat pendaftaran"
+// @Param			informasi_umum		formData	string	false	"Informasi umum"
+// @Success		201					{object}	dto.KelasResponse
+// @Failure		400					{object}	dto.ErrorResponse
 // @Router			/api/kelas [post]
 func (h *LMSHandler) kelasCreate(w http.ResponseWriter, r *http.Request) {
 	userID := getUserID(r)
-	var req dto.CreateKelasRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.RespondError(w, 400, "Invalid request body")
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		utils.RespondError(w, 400, "Gagal membaca form-data")
 		return
 	}
+
+	req := dto.CreateKelasRequest{
+		Judul: r.FormValue("judul"),
+	}
+
+	if v := r.FormValue("deskripsi"); v != "" {
+		req.Deskripsi = &v
+	}
+	if v := r.FormValue("kategori"); v != "" {
+		req.Kategori = &v
+	}
+	if v := r.FormValue("durasi_jp"); v != "" {
+		if dj, err := strconv.Atoi(v); err == nil {
+			req.DurasiJP = &dj
+		}
+	}
+	if v := r.FormValue("penyelenggara"); v != "" {
+		req.Penyelenggara = &v
+	}
+	if v := r.FormValue("target_peserta"); v != "" {
+		req.TargetPeserta = &v
+	}
+	if v := r.FormValue("syarat_pendaftaran"); v != "" {
+		req.SyaratPendaftaran = &v
+	}
+	if v := r.FormValue("informasi_umum"); v != "" {
+		req.InformasiUmum = &v
+	}
+
+	// Thumbnail: prioritas file > URL
+	thumbnailPath, err := saveUploadedFile(r, "thumbnail_file", "uploads/kelas_thumbnail", "")
+	if err != nil {
+		logger.Error(err, "kelasCreate: thumbnail upload failed")
+		utils.RespondError(w, 400, "Gagal mengupload thumbnail: "+err.Error())
+		return
+	}
+	if thumbnailPath != "" {
+		req.Thumbnail = &thumbnailPath
+	} else if v := r.FormValue("thumbnail_url"); v != "" {
+		req.Thumbnail = &v
+	}
+
 	resp, err := h.kelasSvc.Create(req, userID)
 	if err != nil {
 		logger.Error(err, "kelasCreate failed")
@@ -297,22 +348,77 @@ func (h *LMSHandler) kelasCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary		Update kelas
-// @Description	Admin mengupdate kelas.
+// @Description	Admin mengupdate kelas. Thumbnail bisa diupload sebagai file (thumbnail_file) atau diisi sebagai URL (thumbnail_url). Jika keduanya diisi, file yang digunakan.
 // @Tags			LMS - Kelas
-// @Accept			json
+// @Accept			multipart/form-data
 // @Produce		json
 // @Security		BearerAuth
-// @Param			id		path		string					true	"ID Kelas"
-// @Param			request	body		dto.UpdateKelasRequest	true	"Data update"
-// @Success		200		{object}	dto.KelasResponse
-// @Failure		400		{object}	dto.ErrorResponse
+// @Param			id					path		string	true	"ID Kelas"
+// @Param			judul				formData	string	false	"Judul kelas"
+// @Param			deskripsi			formData	string	false	"Deskripsi kelas"
+// @Param			thumbnail_file		formData	file	false	"Upload gambar thumbnail"
+// @Param			thumbnail_url		formData	string	false	"URL thumbnail (digunakan jika file tidak diupload)"
+// @Param			kategori			formData	string	false	"Kategori kelas"
+// @Param			durasi_jp			formData	int		false	"Durasi jam pelajaran"
+// @Param			penyelenggara		formData	string	false	"Penyelenggara"
+// @Param			target_peserta		formData	string	false	"Target peserta"
+// @Param			syarat_pendaftaran	formData	string	false	"Syarat pendaftaran"
+// @Param			informasi_umum		formData	string	false	"Informasi umum"
+// @Param			status				formData	string	false	"Status kelas (draft / published)"
+// @Success		200					{object}	dto.KelasResponse
+// @Failure		400					{object}	dto.ErrorResponse
 // @Router			/api/kelas/{id} [put]
 func (h *LMSHandler) kelasUpdate(w http.ResponseWriter, r *http.Request, id string) {
-	var req dto.UpdateKelasRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.RespondError(w, 400, "Invalid request body")
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		utils.RespondError(w, 400, "Gagal membaca form-data")
 		return
 	}
+
+	var req dto.UpdateKelasRequest
+
+	if v := r.FormValue("judul"); v != "" {
+		req.Judul = &v
+	}
+	if v := r.FormValue("deskripsi"); v != "" {
+		req.Deskripsi = &v
+	}
+	if v := r.FormValue("kategori"); v != "" {
+		req.Kategori = &v
+	}
+	if v := r.FormValue("durasi_jp"); v != "" {
+		if dj, err := strconv.Atoi(v); err == nil {
+			req.DurasiJP = &dj
+		}
+	}
+	if v := r.FormValue("penyelenggara"); v != "" {
+		req.Penyelenggara = &v
+	}
+	if v := r.FormValue("target_peserta"); v != "" {
+		req.TargetPeserta = &v
+	}
+	if v := r.FormValue("syarat_pendaftaran"); v != "" {
+		req.SyaratPendaftaran = &v
+	}
+	if v := r.FormValue("informasi_umum"); v != "" {
+		req.InformasiUmum = &v
+	}
+	if v := r.FormValue("status"); v != "" {
+		req.Status = &v
+	}
+
+	// Thumbnail: prioritas file > URL
+	thumbnailPath, err := saveUploadedFile(r, "thumbnail_file", "uploads/kelas_thumbnail", "")
+	if err != nil {
+		logger.Error(err, "kelasUpdate: thumbnail upload failed")
+		utils.RespondError(w, 400, "Gagal mengupload thumbnail: "+err.Error())
+		return
+	}
+	if thumbnailPath != "" {
+		req.Thumbnail = &thumbnailPath
+	} else if v := r.FormValue("thumbnail_url"); v != "" {
+		req.Thumbnail = &v
+	}
+
 	resp, err := h.kelasSvc.Update(id, req)
 	if err != nil {
 		logger.Error(err, "kelasUpdate failed")
