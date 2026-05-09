@@ -39,6 +39,7 @@ func TestAuthHandler_Register_Success(t *testing.T) {
 		Password:       "P@sJord121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 1"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(reqBody)
 
@@ -97,6 +98,7 @@ func TestAuthHandler_Login_Success_WithMFASetupRequired(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 2"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(registerBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
@@ -150,6 +152,7 @@ func TestAuthHandler_RefreshToken_Success(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 3"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(registerBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
@@ -233,6 +236,7 @@ func TestAuthHandler_Logout_Success(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 4"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(registerBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
@@ -303,6 +307,7 @@ func TestAuthHandler_SetupMFA_WithSetupToken(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 5"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(registerBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
@@ -364,6 +369,7 @@ func TestAuthHandler_EnableMFA_Success(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 6"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(registerBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
@@ -460,6 +466,7 @@ func TestAuthHandler_VerifyMFA_Success(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 7"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(registerBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
@@ -581,6 +588,7 @@ func TestAuthHandler_EnableMFA_InvalidCode(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 8"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(registerBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
@@ -637,6 +645,7 @@ func TestAuthHandler_EnableMFA_ExpiredSetupToken(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 9"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(registerBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
@@ -796,6 +805,7 @@ func TestAuthHandler_VerifyMFA_MFANotConfigured(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 10"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(registerBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
@@ -1065,6 +1075,7 @@ func TestAuthHandler_UpdateMePassword_Success(t *testing.T) {
 		Password:       "Xk9#mP2$qL7!",
 		Email:          "test@test.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 11"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(reqBody)
 	regReq := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
@@ -1151,7 +1162,7 @@ func TestAuthHandler_UpdateMePassword_WrongOldPassword(t *testing.T) {
 	userService := services.NewUserService(userRepo, uploadPath, nil)
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
-	reqBody := dto.RegisterRequest{Username: "pwdtestuser", Password: "Xk9#mP2$qL7!", Email: "t@t.com", NamaPerusahaan: func() *string { s := "PT Test Company 20"; return &s }()}
+	reqBody := dto.RegisterRequest{Username: "pwdtestuser", Password: "Xk9#mP2$qL7!", Email: "t@t.com", NamaPerusahaan: func() *string { s := "PT Test Company 20"; return &s }(), TurnstileToken: "dummy-token"}
 	body, _ := json.Marshal(reqBody)
 	regReq := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
 	regReq.Header.Set("Content-Type", "application/json")
@@ -1386,6 +1397,7 @@ func TestAuthHandler_Login_WrongCredentials(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 12"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(registerBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
@@ -1419,6 +1431,7 @@ func TestAuthHandler_Login_MFAEnabled_ReturnsMFAToken(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 13"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(registerBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
@@ -1515,6 +1528,7 @@ func TestAuthHandler_LogoutAll_Success(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 14"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(registerBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
@@ -1574,6 +1588,7 @@ func TestAuthHandler_LogoutAll_RevokesAllTokens(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 15"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(registerBody)
 
@@ -1694,7 +1709,7 @@ func TestAuthHandler_MeRouter_PUT_password_RoutesToUpdateMePassword(t *testing.T
 	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
 
 	// Register untuk mendapat user dengan password yang di-hash dengan benar
-	reqBody := dto.RegisterRequest{Username: "meuser", Password: "Xk9#mP2$qL7!", Email: "me@test.com", NamaPerusahaan: func() *string { s := "PT Test Company 21"; return &s }()}
+	reqBody := dto.RegisterRequest{Username: "meuser", Password: "Xk9#mP2$qL7!", Email: "me@test.com", NamaPerusahaan: func() *string { s := "PT Test Company 21"; return &s }(), TurnstileToken: "dummy-token"}
 	body, _ := json.Marshal(reqBody)
 	regReq := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
 	regReq.Header.Set("Content-Type", "application/json")
@@ -1805,7 +1820,7 @@ func TestAuthHandler_Register_ValidationFails_EmptyFields(t *testing.T) {
 	handler, _ := setupAuthHandler()
 
 	// Semua field kosong
-	reqBody := dto.RegisterRequest{}
+	reqBody := dto.RegisterRequest{TurnstileToken: "dummy-token"}
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -1831,6 +1846,7 @@ func TestAuthHandler_Register_ValidationFails_InvalidEmail(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "bukan-email-valid",
 		NamaPerusahaan: func() *string { s := "PT Test Company 16"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(reqBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))
@@ -1852,6 +1868,7 @@ func TestAuthHandler_Register_DuplicateUsername(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "first@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 17"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body, _ := json.Marshal(reqBody)
 
@@ -1870,6 +1887,7 @@ func TestAuthHandler_Register_DuplicateUsername(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "second@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 18"; return &s }(),
+		TurnstileToken: "dummy-token",
 	}
 	body2, _ := json.Marshal(reqBody2)
 	req2 := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body2))

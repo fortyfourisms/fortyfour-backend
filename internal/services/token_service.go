@@ -96,27 +96,6 @@ func (s *TokenService) SetAuthCookies(w http.ResponseWriter, tokens *models.Toke
 	http.SetCookie(w, refreshTokenCookie)
 }
 
-// SetGateCookie sets a cookie indicating the user has passed the challenge gate
-func (s *TokenService) SetGateCookie(w http.ResponseWriter) {
-	gateCookie := &http.Cookie{
-		Name:     "gate_verified",
-		Value:    "true",
-		Path:     "/",
-		Domain:   s.domain,
-		MaxAge:   24 * 60 * 60, // 24 hours
-		HttpOnly: true,
-		Secure:   s.isProduction,
-		SameSite: http.SameSiteLaxMode,
-	}
-	http.SetCookie(w, gateCookie)
-}
-
-// GetGateCookie check if gate_verified cookie exists and is true
-func (s *TokenService) GetGateCookie(r *http.Request) bool {
-	cookie, err := r.Cookie("gate_verified")
-	return err == nil && cookie.Value == "true"
-}
-
 // GetAccessTokenFromCookie extracts access token from cookie
 func (s *TokenService) GetAccessTokenFromCookie(r *http.Request) (string, error) {
 	cookie, err := r.Cookie("access_token")

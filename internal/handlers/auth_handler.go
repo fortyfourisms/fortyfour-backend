@@ -77,6 +77,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
+	// Validasi Turnstile
+	if err := h.validateTurnstile(r, req.TurnstileToken); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
 
 	user, tokens, err := h.authService.Register(req, h.perusahaanService)
 	if err != nil {
@@ -142,34 +147,8 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validasi Turnstile
-	if h.turnstileValidator == nil {
-		utils.RespondError(w, http.StatusInternalServerError, "Sistem keamanan Turnstile tidak terkonfigurasi")
-		return
-	}
-
-	remoteIP := r.Header.Get("CF-Connecting-IP")
-	if remoteIP == "" {
-		remoteIP = r.Header.Get("X-Forwarded-For")
-	}
-	if remoteIP != "" {
-		// Get the first IP if it's a comma-separated list
-		remoteIP = strings.TrimSpace(strings.Split(remoteIP, ",")[0])
-	} else {
-		remoteIP = r.RemoteAddr
-		// Clean up port from RemoteAddr properly (works for IPv4 and IPv6)
-		if host, _, err := net.SplitHostPort(remoteIP); err == nil {
-			remoteIP = host
-		}
-	}
-
-	turnstileResp, err := h.turnstileValidator.Validate(req.TurnstileToken, remoteIP)
-	if err != nil {
-		utils.RespondError(w, http.StatusInternalServerError, "Gagal memvalidasi Turnstile")
-		return
-	}
-
-	if !turnstileResp.Success {
-		utils.RespondError(w, http.StatusBadRequest, "Verifikasi Turnstile gagal: "+strings.Join(turnstileResp.ErrorCodes, ", "))
+	if err := h.validateTurnstile(r, req.TurnstileToken); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -779,4 +758,37 @@ func (h *AuthHandler) VerifyMFA(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.RespondJSON(w, http.StatusOK, response)
+}
+
+// validateTurnstile is a helper to verify Cloudflare Turnstile token
+func (h *AuthHandler) validateTurnstile(r *http.Request, token string) error {
+	if h.turnstileValidator == nil {
+		return fmt.Errorf("sistem keamanan Turnstile tidak terkonfigurasi")
+	}
+
+	remoteIP := r.Header.Get("CF-Connecting-IP")
+	if remoteIP == "" {
+		remoteIP = r.Header.Get("X-Forwarded-For")
+	}
+	if remoteIP != "" {
+		// Get the first IP if it's a comma-separated list
+		remoteIP = strings.TrimSpace(strings.Split(remoteIP, ",")[0])
+	} else {
+		remoteIP = r.RemoteAddr
+		// Clean up port from RemoteAddr properly
+		if host, _, err := net.SplitHostPort(remoteIP); err == nil {
+			remoteIP = host
+		}
+	}
+
+	turnstileResp, err := h.turnstileValidator.Validate(token, remoteIP)
+	if err != nil {
+		return fmt.Errorf("gagal memvalidasi Turnstile")
+	}
+
+	if !turnstileResp.Success {
+		return fmt.Errorf("verifikasi Turnstile gagal: %s", strings.Join(turnstileResp.ErrorCodes, ", "))
+	}
+
+	return nil
 }
