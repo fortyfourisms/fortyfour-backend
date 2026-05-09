@@ -219,16 +219,16 @@ func (h *EventHandler) handleDelete(w http.ResponseWriter, r *http.Request, idSt
 	})
 }
 
-//	@Summary		Registrasi event (RSVP)
-//	@Description	Mendaftarkan peserta ke sebuah event dengan perlindungan Cloudflare Turnstile
-//	@Tags			Event
-//	@Accept			json
-//	@Produce		json
-//	@Param			id				path		string								true	"Event ID"
-//	@Param			registration	body		dto.CreateEventRegistrationRequest	true	"Data registrasi (termasuk cf-turnstile-response)"
-//	@Success		201				{object}	utils.JSONResponse{data=dto.EventRegistrationResponse}
-//	@Failure		400,409			{object}	dto.ErrorResponse
-//	@Router			/api/kegiatan/{id}/registrasi [post]
+// @Summary		Registrasi event (RSVP)
+// @Description	Mendaftarkan peserta ke sebuah event dengan perlindungan Cloudflare Turnstile
+// @Tags			Event
+// @Accept			json
+// @Produce		json
+// @Param			id				path		string								true	"Event ID"
+// @Param			registration	body		dto.CreateEventRegistrationRequest	true	"Data registrasi (termasuk cf-turnstile-response)"
+// @Success		201				{object}	utils.JSONResponse{data=dto.EventRegistrationResponse}
+// @Failure		400,409			{object}	dto.ErrorResponse
+// @Router			/api/kegiatan/{id}/registrasi [post]
 func (h *EventHandler) handleRegister(w http.ResponseWriter, r *http.Request, eventIDStr string) {
 	eventID, err := strconv.ParseInt(eventIDStr, 10, 64)
 	if err != nil {
