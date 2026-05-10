@@ -14,6 +14,7 @@ type JawabanIdentifikasiRepositoryInterface interface {
 	GetAll() ([]dto.JawabanIdentifikasiResponse, error)
 	GetByID(id int) (*dto.JawabanIdentifikasiResponse, error)
 	GetByIkasID(ikasID string) ([]dto.JawabanIdentifikasiResponse, error)
+	GetByIkasIDFromBuffer(ikasID string) ([]dto.JawabanIdentifikasiResponse, error)
 	GetByPerusahaanID(perusahaanID string) ([]dto.JawabanIdentifikasiResponse, error)
 	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanIdentifikasiResponse, error)
 	Update(id int, req dto.UpdateJawabanIdentifikasiRequest) error
@@ -53,6 +54,27 @@ const jawabanIdentifikasiSelectQuery = `
 		k.id, k.nama_kategori,
 		d.id, d.nama_domain
 	FROM jawaban_identifikasi ji
+	JOIN pertanyaan_identifikasi pi ON ji.pertanyaan_identifikasi_id = pi.id
+	JOIN sub_kategori sk ON pi.sub_kategori_id = sk.id
+	JOIN kategori k ON sk.kategori_id = k.id
+	JOIN domain d ON k.domain_id = d.id`
+
+const jawabanIdentifikasiBufferSelectQuery = `
+	SELECT
+		ji.id,
+		ji.ikas_id,
+		ji.jawaban_identifikasi,
+		ji.evidence,
+		ji.validasi,
+		ji.keterangan,
+		ji.created_at,
+		ji.updated_at,
+		pi.id,
+		pi.pertanyaan_identifikasi,
+		sk.id, sk.nama_sub_kategori,
+		k.id, k.nama_kategori,
+		d.id, d.nama_domain
+	FROM jawaban_identifikasi_buffer ji
 	JOIN pertanyaan_identifikasi pi ON ji.pertanyaan_identifikasi_id = pi.id
 	JOIN sub_kategori sk ON pi.sub_kategori_id = sk.id
 	JOIN kategori k ON sk.kategori_id = k.id
@@ -140,6 +162,29 @@ func (r *JawabanIdentifikasiRepository) GetByID(id int) (*dto.JawabanIdentifikas
 
 func (r *JawabanIdentifikasiRepository) GetByIkasID(ikasID string) ([]dto.JawabanIdentifikasiResponse, error) {
 	query := jawabanIdentifikasiSelectQuery + ` WHERE ji.ikas_id = ? ORDER BY ji.created_at ASC`
+
+	rows, err := r.db.Query(query, ikasID)
+	if err != nil {
+		rollbar.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []dto.JawabanIdentifikasiResponse
+	for rows.Next() {
+		item, err := scanJawaban(rows)
+		if err != nil {
+			rollbar.Error(err)
+			continue
+		}
+		result = append(result, item)
+	}
+
+	return result, nil
+}
+
+func (r *JawabanIdentifikasiRepository) GetByIkasIDFromBuffer(ikasID string) ([]dto.JawabanIdentifikasiResponse, error) {
+	query := jawabanIdentifikasiBufferSelectQuery + ` WHERE ji.ikas_id = ? ORDER BY ji.created_at ASC`
 
 	rows, err := r.db.Query(query, ikasID)
 	if err != nil {

@@ -42,12 +42,12 @@ func (h *JawabanDeteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 }
 
 // @Summary		Create Jawaban Deteksi
-// @Description	Create a new answer for detection question
+// @Description	Membuat record jawaban deteksi baru (dikirim ke buffer RabbitMQ)
 // @Tags			Jawaban Deteksi
 // @Accept			json
 // @Produce		json
 // @Param			request	body		dto.CreateJawabanDeteksiRequest	true	"Jawaban Deteksi Request"
-// @Success		201		{object}	dto.JawabanDeteksiResponse
+// @Success		201		{object}	utils.JSONResponse
 // @Router			/api/maturity/jawaban-deteksi [post]
 func (h *JawabanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	var req dto.CreateJawabanDeteksiRequest
@@ -80,18 +80,16 @@ func (h *JawabanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	utils.RespondJSON(w, 201, map[string]interface{}{
-		"message": msg,
-	})
+	utils.RespondSuccess(w, 201, msg, nil)
 }
 
 // @Summary		Get All Jawaban Deteksi
-// @Description	Get all answers for detection questions, optionally filtered by ikas_id or pertanyaan_deteksi_id
+// @Description	Mengambil seluruh data jawaban deteksi. Jika ikas_id diberikan, mengembalikan Unified Response (Main + Buffer) dengan metrik penyelesaian.
 // @Tags			Jawaban Deteksi
 // @Produce		json
-// @Param			ikas_id					query	string	false	"Filter by Ikas ID"
+// @Param			ikas_id					query	string	false	"Filter by IKAS ID (Unified API)"
 // @Param			pertanyaan_deteksi_id	query	int		false	"Filter by Pertanyaan Deteksi ID"
-// @Success		200						{array}	dto.JawabanDeteksiResponse
+// @Success		200						{object}	dto.UnifiedJawabanDeteksiResponse
 // @Router			/api/maturity/jawaban-deteksi [get]
 func (h *JawabanDeteksiHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 	ikasID := r.URL.Query().Get("ikas_id")
@@ -147,7 +145,8 @@ func (h *JawabanDeteksiHandler) handleGetByIkasID(w http.ResponseWriter, r *http
 		}
 		return
 	}
-	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban deteksi", data, len(data))
+
+	utils.RespondSuccess(w, 200, "Berhasil mengambil data jawaban deteksi", data)
 }
 
 // @Summary		Get Jawaban Deteksi by ID
@@ -181,13 +180,13 @@ func (h *JawabanDeteksiHandler) handleGetByID(w http.ResponseWriter, r *http.Req
 }
 
 // @Summary		Update Jawaban Deteksi
-// @Description	Update an existing detection answer
+// @Description	Mengubah data jawaban deteksi berdasarkan ID
 // @Tags			Jawaban Deteksi
 // @Accept			json
 // @Produce		json
 // @Param			id		path		int								true	"Jawaban Deteksi ID"
 // @Param			request	body		dto.UpdateJawabanDeteksiRequest	true	"Update Request"
-// @Success		200		{object}	dto.JawabanDeteksiResponse
+// @Success		200		{object}	utils.JSONResponse
 // @Router			/api/maturity/jawaban-deteksi/{id} [put]
 func (h *JawabanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.ExtractIntID(r.URL.Path, "jawaban-deteksi")
@@ -240,11 +239,11 @@ func (h *JawabanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Requ
 }
 
 // @Summary		Delete Jawaban Deteksi
-// @Description	Delete a specific detection answer
+// @Description	Menghapus data jawaban deteksi berdasarkan ID
 // @Tags			Jawaban Deteksi
 // @Produce		json
 // @Param			id	path		int	true	"Jawaban Deteksi ID"
-// @Success		200	{object}	map[string]interface{}
+// @Success		200	{object}	utils.JSONResponse
 // @Router			/api/maturity/jawaban-deteksi/{id} [delete]
 func (h *JawabanDeteksiHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
 	id, err := utils.ExtractIntID(r.URL.Path, "jawaban-deteksi")

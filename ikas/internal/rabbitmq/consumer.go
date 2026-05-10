@@ -9,6 +9,7 @@ import (
 	"ikas/pkg/cache"
 	"log"
 	"strings"
+	"sync"
 
 	pkgRabbitmq "fortyfour-backend/pkg/rabbitmq"
 )
@@ -199,13 +200,19 @@ func (c *Consumer) ConsumeJawabanIdentifikasiCreated(ctx context.Context) error 
 	}
 
 	return c.ConsumeBatch(ctx, "jawaban.identifikasi.created", cfg, func(ctx context.Context, msgs []pkgRabbitmq.Delivery) {
+		var wg sync.WaitGroup
 		for _, msg := range msgs {
-			if err := c.processJawabanIdentifikasiCreated(ctx, msg.Body); err != nil {
-				pkgRabbitmq.DropOrRequeue(msg, "jawaban.identifikasi.created", err)
-			} else {
-				msg.Ack(false)
-			}
+			wg.Add(1)
+			go func(m pkgRabbitmq.Delivery) {
+				defer wg.Done()
+				if err := c.processJawabanIdentifikasiCreated(ctx, m.Body); err != nil {
+					pkgRabbitmq.DropOrRequeue(m, "jawaban.identifikasi.created", err)
+				} else {
+					m.Ack(false)
+				}
+			}(msg)
 		}
+		wg.Wait()
 	})
 }
 
@@ -318,13 +325,19 @@ func (c *Consumer) ConsumeJawabanProteksiCreated(ctx context.Context) error {
 	}
 
 	return c.ConsumeBatch(ctx, "jawaban.proteksi.created", cfg, func(ctx context.Context, msgs []pkgRabbitmq.Delivery) {
+		var wg sync.WaitGroup
 		for _, msg := range msgs {
-			if err := c.processJawabanProteksiCreated(ctx, msg.Body); err != nil {
-				pkgRabbitmq.DropOrRequeue(msg, "jawaban.proteksi.created", err)
-			} else {
-				msg.Ack(false)
-			}
+			wg.Add(1)
+			go func(m pkgRabbitmq.Delivery) {
+				defer wg.Done()
+				if err := c.processJawabanProteksiCreated(ctx, m.Body); err != nil {
+					pkgRabbitmq.DropOrRequeue(m, "jawaban.proteksi.created", err)
+				} else {
+					m.Ack(false)
+				}
+			}(msg)
 		}
+		wg.Wait()
 	})
 }
 
@@ -436,13 +449,19 @@ func (c *Consumer) ConsumeJawabanDeteksiCreated(ctx context.Context) error {
 	}
 
 	return c.ConsumeBatch(ctx, "jawaban.deteksi.created", cfg, func(ctx context.Context, msgs []pkgRabbitmq.Delivery) {
+		var wg sync.WaitGroup
 		for _, msg := range msgs {
-			if err := c.processJawabanDeteksiCreated(ctx, msg.Body); err != nil {
-				pkgRabbitmq.DropOrRequeue(msg, "jawaban.deteksi.created", err)
-			} else {
-				msg.Ack(false)
-			}
+			wg.Add(1)
+			go func(m pkgRabbitmq.Delivery) {
+				defer wg.Done()
+				if err := c.processJawabanDeteksiCreated(ctx, m.Body); err != nil {
+					pkgRabbitmq.DropOrRequeue(m, "jawaban.deteksi.created", err)
+				} else {
+					m.Ack(false)
+				}
+			}(msg)
 		}
+		wg.Wait()
 	})
 }
 
@@ -554,13 +573,19 @@ func (c *Consumer) ConsumeJawabanGulihCreated(ctx context.Context) error {
 	}
 
 	return c.ConsumeBatch(ctx, "jawaban.gulih.created", cfg, func(ctx context.Context, msgs []pkgRabbitmq.Delivery) {
+		var wg sync.WaitGroup
 		for _, msg := range msgs {
-			if err := c.processJawabanGulihCreated(ctx, msg.Body); err != nil {
-				pkgRabbitmq.DropOrRequeue(msg, "jawaban.gulih.created", err)
-			} else {
-				msg.Ack(false)
-			}
+			wg.Add(1)
+			go func(m pkgRabbitmq.Delivery) {
+				defer wg.Done()
+				if err := c.processJawabanGulihCreated(ctx, m.Body); err != nil {
+					pkgRabbitmq.DropOrRequeue(m, "jawaban.gulih.created", err)
+				} else {
+					m.Ack(false)
+				}
+			}(msg)
 		}
+		wg.Wait()
 	})
 }
 

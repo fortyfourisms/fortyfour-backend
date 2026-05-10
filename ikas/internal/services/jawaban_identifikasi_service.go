@@ -24,26 +24,29 @@ type JawabanIdentifikasiProducerInterface interface {
 }
 
 type JawabanIdentifikasiService struct {
-	repo     repository.JawabanIdentifikasiRepositoryInterface
-	ikasRepo repository.IkasRepositoryInterface
-	producer JawabanIdentifikasiProducerInterface
-	ikasSvc  *IkasService
-	cache    cache.RedisInterface
+	repo           repository.JawabanIdentifikasiRepositoryInterface
+	ikasRepo       repository.IkasRepositoryInterface
+	pertanyaanRepo repository.PertanyaanIdentifikasiRepositoryInterface
+	producer       JawabanIdentifikasiProducerInterface
+	ikasSvc        *IkasService
+	cache          cache.RedisInterface
 }
 
 func NewJawabanIdentifikasiService(
 	repo repository.JawabanIdentifikasiRepositoryInterface,
 	ikasRepo repository.IkasRepositoryInterface,
+	pertanyaanRepo repository.PertanyaanIdentifikasiRepositoryInterface,
 	producer JawabanIdentifikasiProducerInterface,
 	ikasSvc *IkasService,
 	cache cache.RedisInterface,
 ) *JawabanIdentifikasiService {
 	return &JawabanIdentifikasiService{
-		repo:     repo,
-		ikasRepo: ikasRepo,
-		producer: producer,
-		ikasSvc:  ikasSvc,
-		cache:    cache,
+		repo:           repo,
+		ikasRepo:       ikasRepo,
+		pertanyaanRepo: pertanyaanRepo,
+		producer:       producer,
+		ikasSvc:        ikasSvc,
+		cache:          cache,
 	}
 }
 
@@ -226,7 +229,7 @@ func (s *JawabanIdentifikasiService) GetByID(id int, userRole string, userPerusa
 	return data, nil
 }
 
-func (s *JawabanIdentifikasiService) GetByIkasID(ikasID string, userRole string, userPerusahaanID string) ([]dto.JawabanIdentifikasiResponse, error) {
+func (s *JawabanIdentifikasiService) GetByIkasID(ikasID string, userRole string, userPerusahaanID string) (*dto.UnifiedJawabanIdentifikasiResponse, error) {
 	if !utils.IsValidUUID(ikasID) {
 		return nil, errors.New("format ikas_id tidak valid")
 	}
@@ -245,28 +248,67 @@ func (s *JawabanIdentifikasiService) GetByIkasID(ikasID string, userRole string,
 	if s.cache != nil {
 		cachedData, err := s.cache.Get(cacheKey)
 		if err == nil && cachedData != "" {
-			var data []dto.JawabanIdentifikasiResponse
+			var data dto.UnifiedJawabanIdentifikasiResponse
 			if err := json.Unmarshal([]byte(cachedData), &data); err == nil {
-				return data, nil
+				return &data, nil
 			}
 		}
 	}
 
+	// 1. Get total questions
+	totalPertanyaan, err := s.pertanyaanRepo.GetTotalCount()
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Get from main table
 	data, err := s.repo.GetByIkasID(ikasID)
 	if err != nil {
 		return nil, err
 	}
 
+	isDraft := false
+	if len(data) < totalPertanyaan {
+		// 3. If incomplete, check buffer
+		bufferData, err := s.repo.GetByIkasIDFromBuffer(ikasID)
+		if err == nil && len(bufferData) > 0 {
+			// Combine data (prefer main table if duplicate, though shouldn't happen)
+			exists := make(map[int]bool)
+			for _, d := range data {
+				exists[d.PertanyaanIdentifikasi.ID] = true
+			}
+			for _, b := range bufferData {
+				if !exists[b.PertanyaanIdentifikasi.ID] {
+					data = append(data, b)
+				}
+			}
+			isDraft = true
+		}
+	}
+
+	// Calculate completion percentage
+	completionPercentage := 0.0
+	if totalPertanyaan > 0 {
+		completionPercentage = utils.RoundToTwo((float64(len(data)) / float64(totalPertanyaan)) * 100.0)
+	}
+
+	response := &dto.UnifiedJawabanIdentifikasiResponse{
+		Data:                 data,
+		Count:                len(data),
+		IsDraft:              isDraft,
+		CompletionPercentage: completionPercentage,
+	}
+
 	if s.cache != nil {
-		go func(key string, dataToCache []dto.JawabanIdentifikasiResponse) {
+		go func(key string, dataToCache *dto.UnifiedJawabanIdentifikasiResponse) {
 			jsonData, err := json.Marshal(dataToCache)
 			if err == nil {
 				_ = s.cache.Set(key, string(jsonData), cache.DefaultCacheExpiration)
 			}
-		}(cacheKey, data)
+		}(cacheKey, response)
 	}
 
-	return data, nil
+	return response, nil
 }
 
 func (s *JawabanIdentifikasiService) GetByPerusahaanID(perusahaanID string, userRole string, userPerusahaanID string) ([]dto.JawabanIdentifikasiResponse, error) {

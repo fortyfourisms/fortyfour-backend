@@ -41,6 +41,20 @@ func (s *AktivitasService) GetAllowedJenis() []string {
 	return AllowedJenisAktivitas
 }
 
+func parseDate(dateStr string) (time.Time, error) {
+	// Coba format YYYY-MM-DD
+	t, err := time.Parse("2006-01-02", dateStr)
+	if err == nil {
+		return t, nil
+	}
+	// Coba format RFC3339 (ISO8601)
+	t, err = time.Parse(time.RFC3339, dateStr)
+	if err == nil {
+		return t, nil
+	}
+	return time.Time{}, errors.New("format tanggal tidak valid. Gunakan YYYY-MM-DD atau format ISO8601")
+}
+
 func (s *AktivitasService) validateCreate(req *dto.CreateAktivitasRequest) error {
 	if req.PerusahaanID == "" {
 		return errors.New("perusahaan_id tidak boleh kosong")
@@ -54,6 +68,20 @@ func (s *AktivitasService) validateCreate(req *dto.CreateAktivitasRequest) error
 	if req.TanggalSelesai == "" {
 		return errors.New("tanggal_selesai tidak boleh kosong")
 	}
+
+	start, err := parseDate(req.TanggalMulai)
+	if err != nil {
+		return fmt.Errorf("tanggal_mulai: %v", err)
+	}
+	end, err := parseDate(req.TanggalSelesai)
+	if err != nil {
+		return fmt.Errorf("tanggal_selesai: %v", err)
+	}
+
+	if start.After(end) {
+		return errors.New("tanggal_mulai tidak boleh melebihi tanggal_selesai")
+	}
+
 	if len(req.JenisAktivitas) == 0 {
 		return errors.New("jenis_aktivitas tidak boleh kosong")
 	}
@@ -80,7 +108,7 @@ func (s *AktivitasService) validateCreate(req *dto.CreateAktivitasRequest) error
 	return nil
 }
 
-func (s *AktivitasService) validateUpdate(req *dto.UpdateAktivitasRequest) error {
+func (s *AktivitasService) validateUpdate(id int, req *dto.UpdateAktivitasRequest) error {
 	if req.JenisAktivitas != nil {
 		validJenis := make(map[string]bool)
 		for _, v := range AllowedJenisAktivitas {
@@ -91,6 +119,37 @@ func (s *AktivitasService) validateUpdate(req *dto.UpdateAktivitasRequest) error
 			if !validJenis[j] {
 				return errors.New("jenis_aktivitas '" + j + "' tidak valid. Harus salah satu dari: " + strings.Join(AllowedJenisAktivitas, ", "))
 			}
+		}
+	}
+
+	// Validasi Urutan Tanggal jika ada yang diupdate
+	if req.TanggalMulai != nil || req.TanggalSelesai != nil {
+		existing, err := s.repo.GetByID(id)
+		if err != nil {
+			return err
+		}
+
+		startStr := existing.TanggalMulai
+		if req.TanggalMulai != nil {
+			startStr = *req.TanggalMulai
+		}
+
+		endStr := existing.TanggalSelesai
+		if req.TanggalSelesai != nil {
+			endStr = *req.TanggalSelesai
+		}
+
+		start, err := parseDate(startStr)
+		if err != nil {
+			return fmt.Errorf("tanggal_mulai: %v", err)
+		}
+		end, err := parseDate(endStr)
+		if err != nil {
+			return fmt.Errorf("tanggal_selesai: %v", err)
+		}
+
+		if start.After(end) {
+			return errors.New("tanggal_mulai tidak boleh melebihi tanggal_selesai")
 		}
 	}
 
@@ -187,7 +246,7 @@ func (s *AktivitasService) Update(id int, req dto.UpdateAktivitasRequest) (*dto.
 		return nil, err
 	}
 
-	if err := s.validateUpdate(&req); err != nil {
+	if err := s.validateUpdate(id, &req); err != nil {
 		return nil, err
 	}
 
