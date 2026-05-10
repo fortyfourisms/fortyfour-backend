@@ -1081,10 +1081,11 @@ func TestAuthHandler_UpdateMePassword_Success(t *testing.T) {
 	uploadPath := t.TempDir()
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
+	turnstileValidator := utils.NewTurnstileValidator("1x0000000000000000000000000000000AA")
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, turnstileValidator, uploadPath)
 
 	// Register supaya password di-hash dengan benar
 	reqBody := dto.RegisterRequest{
@@ -1174,10 +1175,11 @@ func TestAuthHandler_UpdateMePassword_WrongOldPassword(t *testing.T) {
 	uploadPath := t.TempDir()
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
+	turnstileValidator := utils.NewTurnstileValidator("1x0000000000000000000000000000000AA")
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, turnstileValidator, uploadPath)
 
 	reqBody := dto.RegisterRequest{Username: "pwdtestuser", Password: "Xk9#mP2$qL7!", Email: "t@t.com", NamaPerusahaan: func() *string { s := "PT Test Company 20"; return &s }(), TurnstileToken: "dummy-token"}
 	body, _ := json.Marshal(reqBody)
@@ -1424,8 +1426,9 @@ func TestAuthHandler_Login_WrongCredentials(t *testing.T) {
 
 	// Login dengan password salah
 	loginBody := dto.LoginRequest{
-		Identifier: "testuser",
-		Password:   "Wr0ng#Password!",
+		Identifier:     "testuser",
+		Password:       "Wr0ng#Password!",
+		TurnstileToken: "dummy-token",
 	}
 	body, _ = json.Marshal(loginBody)
 	req = httptest.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(body))
@@ -1723,7 +1726,8 @@ func TestAuthHandler_MeRouter_PUT_password_RoutesToUpdateMePassword(t *testing.T
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	userService := services.NewUserService(userRepo, uploadPath, nil)
-	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, nil, uploadPath)
+	turnStileValidator := utils.NewTurnstileValidator("1x0000000000000000000000000000000AA")
+	handler := NewAuthHandler(authService, tokenService, testhelpers.NewMockPerusahaanService(), userService, turnStileValidator, uploadPath)
 
 	// Register untuk mendapat user dengan password yang di-hash dengan benar
 	reqBody := dto.RegisterRequest{Username: "meuser", Password: "Xk9#mP2$qL7!", Email: "me@test.com", NamaPerusahaan: func() *string { s := "PT Test Company 21"; return &s }(), TurnstileToken: "dummy-token"}
