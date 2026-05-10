@@ -8,6 +8,7 @@ import (
 	"fortyfour-backend/internal/middleware"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/testhelpers"
+	"fortyfour-backend/internal/utils"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -22,12 +23,28 @@ import (
 func setupAuthHandler() (*AuthHandler, *testhelpers.MockRedisClient) {
 	userRepo := testhelpers.NewMockUserRepository()
 	redis := testhelpers.NewMockRedisClient()
+	turnstileValidator := utils.NewTurnstileValidator("1x0000000000000000000000000000000AA")
 	tokenService := services.NewTokenService(redis, "test-secret", false, "localhost")
 	authService := services.NewAuthService(userRepo, testhelpers.NewMockRoleRepositoryWithDefaults(), tokenService, services.NewNotificationService(testhelpers.NewMockNotificationRepository()), nil)
 	perusahaanService := testhelpers.NewMockPerusahaanService()
-	handler := NewAuthHandler(authService, tokenService, perusahaanService, nil, nil, "")
+	handler := NewAuthHandler(authService, tokenService, perusahaanService, nil, turnstileValidator, "")
 
 	return handler, redis
+}
+
+func TestValidateTurnstile(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+
+		validator := utils.NewTurnstileValidator("1x0000000000000000000000000000000AA")
+
+		result, err := validator.Validate("dummy-token", "[IP_ADDRESS]")
+		if err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if !result.Success {
+			t.Errorf("expected success, got %v", result.Success)
+		}
+	})
 }
 
 func TestAuthHandler_Register_Success(t *testing.T) {
@@ -466,7 +483,7 @@ func TestAuthHandler_VerifyMFA_Success(t *testing.T) {
 		Password:       "P@ssj0rd121",
 		Email:          "test@example.com",
 		NamaPerusahaan: func() *string { s := "PT Test Company 7"; return &s }(),
-		TurnstileToken: "dummy-token",
+		TurnstileToken: "XXXX.DUMMY.TOKEN.XXXX",
 	}
 	body, _ := json.Marshal(registerBody)
 	req := httptest.NewRequest(http.MethodPost, "/api/register", bytes.NewBuffer(body))

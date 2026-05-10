@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/handlers"
+	"fortyfour-backend/internal/utils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 // MockEventService implements services.EventServiceInterface for tests
@@ -389,7 +391,12 @@ func TestEventHandler_Register(t *testing.T) {
 				DownloadURL:  "/api/kegiatan/registrasi/10/download",
 			}, nil
 		},
-	}, nil)
+	}, &utils.TurnstileValidator{
+		SecretKey: "1x0000000000000000000000000000000AA",
+		Client: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+	})
 
 	body, _ := json.Marshal(dto.CreateEventRegistrationRequest{
 		Nama:           "Budi Santoso",
