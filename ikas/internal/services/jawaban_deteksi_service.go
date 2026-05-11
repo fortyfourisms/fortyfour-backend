@@ -312,9 +312,15 @@ func (s *JawabanDeteksiService) GetByPerusahaanID(perusahaanID string, userRole 
 	return s.repo.GetByPerusahaanID(perusahaanID)
 }
 
-func (s *JawabanDeteksiService) GetByPertanyaan(pertanyaanID int) ([]dto.JawabanDeteksiResponse, error) {
+// GetByPertanyaan retrieves answers for a given question.
+// For admin/staff, returns all answers across companies.
+// For regular users, enforces company-scoped filtering.
+func (s *JawabanDeteksiService) GetByPertanyaan(pertanyaanID int, userRole string, userPerusahaanID string) ([]dto.JawabanDeteksiResponse, error) {
 	if pertanyaanID <= 0 {
 		return nil, errors.New("pertanyaan_deteksi_id tidak valid")
+	}
+	if userRole != "admin" && userRole != "staff" {
+		return s.repo.GetByPertanyaanAndPerusahaan(pertanyaanID, userPerusahaanID)
 	}
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }
