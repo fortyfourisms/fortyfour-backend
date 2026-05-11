@@ -76,6 +76,14 @@ func (m *mockSubSektorRepository) GetBySektorID(sektorID string) ([]dto.SubSekto
 	return m.GetBySektorIDFn(sektorID)
 }
 
+func (m *mockSubSektorRepository) Create(_ dto.SubSektorRequest) (*dto.SubSektorResponse, error) {
+	return nil, nil
+}
+
+func (m *mockSubSektorRepository) Update(_ string, _ dto.SubSektorRequest) (*dto.SubSektorResponse, error) {
+	return nil, nil
+}
+
 /*
 =====================================
  TEST CREATE PERUSAHAAN

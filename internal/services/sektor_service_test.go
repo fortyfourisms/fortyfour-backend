@@ -19,6 +19,8 @@ import (
 type mockSektorRepository struct {
 	GetAllFn  func() ([]dto.SektorResponse, error)
 	GetByIDFn func(id string) (*dto.SektorResponse, error)
+	CreateFn  func(req dto.SektorRequest) (*dto.SektorResponse, error)
+	UpdateFn  func(id string, req dto.SektorRequest) (*dto.SektorResponse, error)
 }
 
 func (m *mockSektorRepository) GetAll() ([]dto.SektorResponse, error) {
@@ -27,6 +29,20 @@ func (m *mockSektorRepository) GetAll() ([]dto.SektorResponse, error) {
 
 func (m *mockSektorRepository) GetByID(id string) (*dto.SektorResponse, error) {
 	return m.GetByIDFn(id)
+}
+
+func (m *mockSektorRepository) Create(req dto.SektorRequest) (*dto.SektorResponse, error) {
+	if m.CreateFn != nil {
+		return m.CreateFn(req)
+	}
+	return nil, nil
+}
+
+func (m *mockSektorRepository) Update(id string, req dto.SektorRequest) (*dto.SektorResponse, error) {
+	if m.UpdateFn != nil {
+		return m.UpdateFn(id, req)
+	}
+	return nil, nil
 }
 
 /*

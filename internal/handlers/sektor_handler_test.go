@@ -38,6 +38,22 @@ func (m *mockSektorService) GetByID(id string) (*dto.SektorResponse, error) {
 	return args.Get(0).(*dto.SektorResponse), args.Error(1)
 }
 
+func (m *mockSektorService) Create(req dto.SektorRequest) (*dto.SektorResponse, error) {
+	args := m.Called(req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.SektorResponse), args.Error(1)
+}
+
+func (m *mockSektorService) Update(id string, req dto.SektorRequest) (*dto.SektorResponse, error) {
+	args := m.Called(id, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.SektorResponse), args.Error(1)
+}
+
 /* =========================
    SETUP HELPERS
 ========================= */
@@ -276,9 +292,8 @@ func TestSektorHandler_GetByID_VerifyContentType(t *testing.T) {
 func TestSektorHandler_MethodNotAllowed(t *testing.T) {
 	handler, mockSvc := setupSektorHandler()
 
+	// POST and PUT are now allowed, only these should be rejected
 	methods := []string{
-		http.MethodPost,
-		http.MethodPut,
 		http.MethodDelete,
 		http.MethodPatch,
 		http.MethodOptions,
@@ -338,20 +353,6 @@ func TestSektorHandler_Routing(t *testing.T) {
 				ms.On("GetByID", "999").Return(nil, errors.New("not found"))
 			},
 			expectedStatus: http.StatusNotFound,
-		},
-		{
-			name:           "POST - not allowed",
-			method:         http.MethodPost,
-			path:           "/api/sektor",
-			setupMock:      func(ms *mockSektorService) {},
-			expectedStatus: http.StatusMethodNotAllowed,
-		},
-		{
-			name:           "PUT - not allowed",
-			method:         http.MethodPut,
-			path:           "/api/sektor/123",
-			setupMock:      func(ms *mockSektorService) {},
-			expectedStatus: http.StatusMethodNotAllowed,
 		},
 		{
 			name:           "DELETE - not allowed",
