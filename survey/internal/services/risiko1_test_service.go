@@ -284,6 +284,60 @@ func TestSaveProgress_Success(t *testing.T) {
 	}
 }
 
+func TestNavigate_SubmittedSurveyRejected(t *testing.T) {
+	mock := &mockRisikoRepo{
+		getProgressFn: func(id int64) (*models.SurveyProgress, error) {
+			return &models.SurveyProgress{
+				RespondenID: int64(id),
+				Selesai:     true,
+				Status:      SurveyStatusSubmitted,
+			}, nil
+		},
+	}
+
+	svc := newService(mock)
+
+	_, err := svc.Navigate("user-1", dto.NavigateRequest{
+		RespondenID: 1,
+		Direction:   "next",
+	})
+
+	if err == nil {
+		t.Fatal("expected error for submitted survey")
+	}
+}
+
+func TestNavigate_EditApprovedSurveyAllowed(t *testing.T) {
+	mock := &mockRisikoRepo{
+		getProgressFn: func(id int64) (*models.SurveyProgress, error) {
+			return &models.SurveyProgress{
+				RespondenID: int64(id),
+				RisikoID:    sql.NullInt64{Int64: 2, Valid: true},
+				Selesai:     true,
+				Status:      SurveyStatusEditApproved,
+			}, nil
+		},
+		upsertProgressFn: func(p models.SurveyProgress) error {
+			return nil
+		},
+	}
+
+	svc := newService(mock)
+
+	res, err := svc.Navigate("user-1", dto.NavigateRequest{
+		RespondenID: 1,
+		Direction:   "next",
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if *res.RisikoID != 3 {
+		t.Error("expected next risk for edit-approved survey")
+	}
+}
+
 // TEST CREATE CUSTOM RISIKO
 func TestCreateCustomRisiko_Success(t *testing.T) {
 	mock := &mockRisikoRepo{

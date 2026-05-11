@@ -101,7 +101,7 @@ func canEditProgress(progress *models.SurveyProgress) bool {
 }
 
 func (s *RisikoService) ensureEditable(respondenID int64) (*models.SurveyProgress, error) {
-	progress, err := s.ensureEditable(respondenID)
+	progress, err := s.repo.GetProgress(respondenID)
 	if err != nil {
 		return nil, err
 	}
