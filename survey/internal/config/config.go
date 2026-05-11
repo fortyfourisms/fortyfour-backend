@@ -13,11 +13,11 @@ import (
 var sqlOpen = sql.Open
 
 type Config struct {
-	Port            string
-	JWTSecret       string
-	Database        DatabaseConfig
-	Redis           RedisConfig
-	RabbitMQ        RabbitMQConfig
+	Port               string
+	JWTSecret          string
+	Database           DatabaseConfig
+	Redis              RedisConfig
+	RabbitMQ           RabbitMQConfig
 	InternalGatewayKey string
 	CasbinModelPath    string
 	LogLevel           string
