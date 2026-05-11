@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strconv"
 	"strings"
 	"time"
@@ -23,6 +24,7 @@ type RespondenRepositoryInterface interface {
 
 	Create(m models.Responden) (int64, error)
 	UpsertByUserID(userID string, m models.Responden) error
+	CanEditByUserID(userID string) (bool, string, error)
 }
 
 // VALIDATOR
@@ -89,6 +91,13 @@ func (s *RespondenService) GetMe(userID string) (*dto.RespondenResponse, error) 
 
 // UPSERT ME
 func (s *RespondenService) UpsertByUserID(userID string, req dto.CreateRespondenRequest) (*dto.RespondenResponse, error) {
+	canEdit, status, err := s.repo.CanEditByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	if !canEdit {
+		return nil, errors.New("survey sudah selesai dengan status " + status + ", ajukan request edit ke admin")
+	}
 
 	if err := s.validator.ValidateCreate(req); err != nil {
 		return nil, err
@@ -109,7 +118,7 @@ func (s *RespondenService) UpsertByUserID(userID string, req dto.CreateResponden
 		model.SertifikatTraining = &val
 	}
 
-	err := s.repo.UpsertByUserID(userID, model)
+	err = s.repo.UpsertByUserID(userID, model)
 	if err != nil {
 		return nil, err
 	}
@@ -206,6 +215,7 @@ func (s *RespondenService) toResponse(m *models.RespondenDetail) dto.RespondenRe
 
 	return dto.RespondenResponse{
 		ID:                 m.ID,
+		UserID:             m.UserID,
 		IdPerusahaan:       m.IdPerusahaan,
 		NamaLengkap:        m.NamaLengkap,
 		Jabatan:            m.Jabatan,

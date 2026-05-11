@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -82,8 +83,13 @@ func main() {
 	)
 
 	// SERVER
+	addr := cfg.Port
+	if !strings.Contains(addr, ":") {
+		addr = ":" + addr
+	}
+
 	server := &http.Server{
-		Addr:    cfg.Port,
+		Addr:    addr,
 		Handler: mux,
 	}
 

@@ -48,6 +48,9 @@ type ProgressResponse struct {
 	RisikoID       *int    `json:"risiko_id"`
 	LangkahSaatIni *string `json:"langkah_saat_ini"`
 	Selesai        bool    `json:"selesai"`
+	Status         string  `json:"status"`
+	EditReason     *string `json:"edit_request_reason,omitempty"`
+	EditResponse   *string `json:"edit_request_response,omitempty"`
 }
 
 // CUSTOM RISIKO
@@ -55,4 +58,13 @@ type ProgressResponse struct {
 type CustomRisikoRequest struct {
 	RespondenID int64  `json:"responden_id"`
 	NamaRisiko  string `json:"nama_risiko"`
+}
+
+type RequestEditRequest struct {
+	Reason string `json:"reason"`
+}
+
+type ReviewEditRequest struct {
+	Approved bool   `json:"approved"`
+	Response string `json:"response,omitempty"`
 }

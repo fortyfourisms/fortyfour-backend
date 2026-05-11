@@ -15,8 +15,8 @@ func TestLoad_DefaultValues(t *testing.T) {
 
 	cfg := Load()
 
-	if cfg.Port != "8080" {
-		t.Errorf("expected default port 8080, got %s", cfg.Port)
+	if cfg.Port != "8082" {
+		t.Errorf("expected default port 8082, got %s", cfg.Port)
 	}
 
 	if cfg.Database.Host != "localhost" {

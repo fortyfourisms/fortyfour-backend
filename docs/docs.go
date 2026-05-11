@@ -9658,7 +9658,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
                         }
                     },
                     "500": {
@@ -9690,7 +9690,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.NavigateRequest"
+                            "$ref": "#/definitions/survey_internal_dto.NavigateRequest"
                         }
                     }
                 ],
@@ -9700,7 +9700,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.APIResponse"
+                                    "$ref": "#/definitions/survey_internal_dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -9871,7 +9871,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateRespondenRequest"
+                            "$ref": "#/definitions/survey_internal_dto.CreateRespondenRequest"
                         }
                     }
                 ],
@@ -9965,7 +9965,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.DampakRequest"
+                            "$ref": "#/definitions/survey_internal_dto.DampakRequest"
                         }
                     }
                 ],
@@ -9973,7 +9973,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10005,7 +10005,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.EligibilityRequest"
+                            "$ref": "#/definitions/survey_internal_dto.EligibilityRequest"
                         }
                     }
                 ],
@@ -10013,7 +10013,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10074,7 +10074,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.PengendalianRequest"
+                            "$ref": "#/definitions/survey_internal_dto.PengendalianRequest"
                         }
                     }
                 ],
@@ -10082,7 +10082,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10114,7 +10114,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.AlasanRequest"
+                            "$ref": "#/definitions/survey_internal_dto.AlasanRequest"
                         }
                     }
                 ],
@@ -10122,7 +10122,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10160,7 +10160,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
                         }
                     },
                     "403": {
@@ -10198,7 +10198,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.NavigateRequest"
+                            "$ref": "#/definitions/survey_internal_dto.NavigateRequest"
                         }
                     }
                 ],
@@ -10208,7 +10208,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.APIResponse"
+                                    "$ref": "#/definitions/survey_internal_dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -14789,9 +14789,13 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "draft",
+                "published",
+                "draft",
                 "published"
             ],
             "x-enum-varnames": [
+                "KelasStatusDraft",
+                "KelasStatusPublished",
                 "KelasStatusDraft",
                 "KelasStatusPublished"
             ]
@@ -14800,9 +14804,13 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "video",
+                "teks",
+                "video",
                 "teks"
             ],
             "x-enum-varnames": [
+                "MateriTipeVideo",
+                "MateriTipeTeks",
                 "MateriTipeVideo",
                 "MateriTipeTeks"
             ]
@@ -14812,9 +14820,15 @@ const docTemplate = `{
             "enum": [
                 "pending",
                 "approved",
+                "rejected",
+                "pending",
+                "approved",
                 "rejected"
             ],
             "x-enum-varnames": [
+                "SEEditRequestPending",
+                "SEEditRequestApproved",
+                "SEEditRequestRejected",
                 "SEEditRequestPending",
                 "SEEditRequestApproved",
                 "SEEditRequestRejected"
@@ -14880,9 +14894,15 @@ const docTemplate = `{
             "enum": [
                 "Aktif",
                 "Suspend",
+                "Nonaktif",
+                "Aktif",
+                "Suspend",
                 "Nonaktif"
             ],
             "x-enum-varnames": [
+                "UserStatusAktif",
+                "UserStatusSuspend",
+                "UserStatusNonaktif",
                 "UserStatusAktif",
                 "UserStatusSuspend",
                 "UserStatusNonaktif"
@@ -14948,7 +14968,7 @@ const docTemplate = `{
                 "FrequencyVeryLarge"
             ]
         },
-        "models.ImpactLevel": {
+        "survey_internal_models.ImpactLevel": {
             "type": "integer",
             "enum": [
                 1,
@@ -14962,34 +14982,6 @@ const docTemplate = `{
                 "ImpactSignificant",
                 "ImpactVerySignificant"
             ]
-        },
-        "survey_internal_dto.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "survey_internal_dto.ProgressResponse": {
-            "type": "object",
-            "properties": {
-                "langkah_saat_ini": {
-                    "type": "string"
-                },
-                "responden_id": {
-                    "type": "integer"
-                },
-                "risiko_id": {
-                    "type": "integer"
-                },
-                "selesai": {
-                    "type": "boolean"
-                }
-            }
         }
     },
     "securityDefinitions": {

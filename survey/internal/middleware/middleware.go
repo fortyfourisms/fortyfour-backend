@@ -5,8 +5,11 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // BASIC MIDDLEWARE
@@ -41,7 +44,7 @@ func CORS(next http.Handler) http.Handler {
 
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-User-ID, X-User-Role, X-Internal-Key")
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
@@ -98,7 +101,32 @@ func validateToken(token string) (userID string, role string, err error) {
 		return strings.TrimPrefix(token, "user-"), "user", nil
 	}
 
-	return "", "", errors.New("invalid token")
+	claims := jwt.MapClaims{}
+	parsedToken, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("unexpected signing method")
+		}
+
+		secret := os.Getenv("JWT_SECRET")
+		if secret == "" {
+			secret = "secret"
+		}
+
+		return []byte(secret), nil
+	})
+
+	if err != nil || !parsedToken.Valid {
+		return "", "", errors.New("invalid token")
+	}
+
+	userID, _ = claims["user_id"].(string)
+	role, _ = claims["role"].(string)
+
+	if userID == "" {
+		return "", "", errors.New("missing user_id claim")
+	}
+
+	return userID, role, nil
 }
 
 // AUTH MIDDLEWARE
@@ -109,8 +137,12 @@ func Auth(next http.Handler) http.Handler {
 
 		var userID, role string
 
-		// JWT PRIORITY
-		if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+		// Gateway sudah melakukan auth + casbin, lalu meneruskan identitas lewat header ini.
+		userID = r.Header.Get("X-User-ID")
+		role = r.Header.Get("X-User-Role")
+
+		// Bearer token hanya fallback agar service tetap mudah diuji langsung.
+		if userID == "" && authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
 
 			token := strings.TrimPrefix(authHeader, "Bearer ")
 
@@ -124,26 +156,18 @@ func Auth(next http.Handler) http.Handler {
 			role = rle
 		}
 
-		// FALLBACK HEADER
-		if userID == "" {
-			userID = r.Header.Get("X-User-ID")
-			role = r.Header.Get("X-User-Role")
-		}
-
-		// VALIDATION
-		if userID == "" {
-			http.Error(w, "Unauthorized: user_id required", http.StatusUnauthorized)
-			return
-		}
-
-		if role == "" {
+		if userID != "" && role == "" {
 			role = "user"
 		}
 
 		// CONTEXT
 		ctx := r.Context()
-		ctx = SetUserID(ctx, userID)
-		ctx = SetRole(ctx, role)
+		if userID != "" {
+			ctx = SetUserID(ctx, userID)
+		}
+		if role != "" {
+			ctx = SetRole(ctx, role)
+		}
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

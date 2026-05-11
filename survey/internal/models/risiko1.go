@@ -95,12 +95,19 @@ type RisikoPengendalian struct {
 
 // PROGRESS SURVEY
 type SurveyProgress struct {
-	ID             int64          `db:"id"`
-	RespondenID    int64          `db:"responden_id"`
-	RisikoID       sql.NullInt64  `db:"risiko_id"`
-	LangkahSaatIni sql.NullString `db:"langkah_saat_ini"`
-	Selesai        bool           `db:"selesai"`
-	TerakhirUpdate time.Time      `db:"terakhir_update"`
+	ID              int64          `db:"id"`
+	RespondenID     int64          `db:"responden_id"`
+	RisikoID        sql.NullInt64  `db:"risiko_id"`
+	LangkahSaatIni  sql.NullString `db:"langkah_saat_ini"`
+	Selesai         bool           `db:"selesai"`
+	Status          string         `db:"status"`
+	EditReason      sql.NullString `db:"edit_request_reason"`
+	EditResponse    sql.NullString `db:"edit_request_response"`
+	SubmittedAt     sql.NullTime   `db:"submitted_at"`
+	EditRequestedAt sql.NullTime   `db:"edit_requested_at"`
+	EditReviewedAt  sql.NullTime   `db:"edit_reviewed_at"`
+	EditReviewedBy  sql.NullString `db:"edit_reviewed_by"`
+	TerakhirUpdate  time.Time      `db:"terakhir_update"`
 }
 
 // RESPONSE

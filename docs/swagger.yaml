@@ -2739,16 +2739,24 @@ definitions:
     enum:
     - draft
     - published
+    - draft
+    - published
     type: string
     x-enum-varnames:
+    - KelasStatusDraft
+    - KelasStatusPublished
     - KelasStatusDraft
     - KelasStatusPublished
   fortyfour-backend_internal_models.MateriTipe:
     enum:
     - video
     - teks
+    - video
+    - teks
     type: string
     x-enum-varnames:
+    - MateriTipeVideo
+    - MateriTipeTeks
     - MateriTipeVideo
     - MateriTipeTeks
   fortyfour-backend_internal_models.SEEditRequestStatus:
@@ -2756,8 +2764,14 @@ definitions:
     - pending
     - approved
     - rejected
+    - pending
+    - approved
+    - rejected
     type: string
     x-enum-varnames:
+    - SEEditRequestPending
+    - SEEditRequestApproved
+    - SEEditRequestRejected
     - SEEditRequestPending
     - SEEditRequestApproved
     - SEEditRequestRejected
@@ -2801,8 +2815,14 @@ definitions:
     - Aktif
     - Suspend
     - Nonaktif
+    - Aktif
+    - Suspend
+    - Nonaktif
     type: string
     x-enum-varnames:
+    - UserStatusAktif
+    - UserStatusSuspend
+    - UserStatusNonaktif
     - UserStatusAktif
     - UserStatusSuspend
     - UserStatusNonaktif
@@ -2848,7 +2868,7 @@ definitions:
     - FrequencyMedium
     - FrequencyLarge
     - FrequencyVeryLarge
-  models.ImpactLevel:
+  survey_internal_models.ImpactLevel:
     enum:
     - 1
     - 2
@@ -2860,24 +2880,6 @@ definitions:
     - ImpactFairlySignificant
     - ImpactSignificant
     - ImpactVerySignificant
-  survey_internal_dto.ErrorResponse:
-    properties:
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  survey_internal_dto.ProgressResponse:
-    properties:
-      langkah_saat_ini:
-        type: string
-      responden_id:
-        type: integer
-      risiko_id:
-        type: integer
-      selesai:
-        type: boolean
-    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -9145,7 +9147,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/survey_internal_dto.APIResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -9164,7 +9166,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.NavigateRequest'
+          $ref: '#/definitions/survey_internal_dto.NavigateRequest'
       produces:
       - application/json
       responses:
@@ -9172,7 +9174,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/dto.APIResponse'
+            - $ref: '#/definitions/survey_internal_dto.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/survey_internal_dto.ProgressResponse'
@@ -9302,7 +9304,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateRespondenRequest'
+          $ref: '#/definitions/survey_internal_dto.CreateRespondenRequest'
       produces:
       - application/json
       responses:
@@ -9341,7 +9343,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/survey_internal_dto.APIResponse'
         "403":
           description: Forbidden
           schema:
@@ -9364,14 +9366,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.DampakRequest'
+          $ref: '#/definitions/survey_internal_dto.DampakRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/survey_internal_dto.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -9390,14 +9392,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.EligibilityRequest'
+          $ref: '#/definitions/survey_internal_dto.EligibilityRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/survey_internal_dto.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -9435,14 +9437,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.PengendalianRequest'
+          $ref: '#/definitions/survey_internal_dto.PengendalianRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/survey_internal_dto.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -9461,14 +9463,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.AlasanRequest'
+          $ref: '#/definitions/survey_internal_dto.AlasanRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dto.APIResponse'
+            $ref: '#/definitions/survey_internal_dto.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -9487,7 +9489,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.NavigateRequest'
+          $ref: '#/definitions/survey_internal_dto.NavigateRequest'
       produces:
       - application/json
       responses:
@@ -9495,7 +9497,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/dto.APIResponse'
+            - $ref: '#/definitions/survey_internal_dto.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/survey_internal_dto.ProgressResponse'

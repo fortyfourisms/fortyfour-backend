@@ -137,14 +137,25 @@ var defaultPolicies = []Policy{
 	{"user_pic", "/api/maturity/jawaban-gulih/:id", "PUT"},
 
 	// ── SURVEY ───────────────────────────────────────────────────────────────
+	// user_pic mengisi survey miliknya sendiri: create, simpan sementara, request edit, dan submit.
 	{"user_pic", "/api/survey/responden/me", "GET"},
 	{"user_pic", "/api/survey/responden/me", "POST"},
 	{"user_pic", "/api/survey/risiko/me", "GET"},
-	{"user_pic", "/api/survey/risiko/*", "POST"},
+	{"user_pic", "/api/survey/risiko/eligibility", "POST"},
+	{"user_pic", "/api/survey/risiko/reason", "POST"},
+	{"user_pic", "/api/survey/risiko/dampak", "POST"},
+	{"user_pic", "/api/survey/risiko/pengendalian", "POST"},
 	{"user_pic", "/api/survey/progress", "GET"},
 	{"user_pic", "/api/survey/navigate", "POST"},
 	{"user_pic", "/api/survey/save-progress", "POST"},
 	{"user_pic", "/api/survey/finish", "POST"},
+	{"user_pic", "/api/survey/request-edit", "POST"},
+
+	// Admin hanya membaca data survey dan memproses request edit.
+	{"admin", "/api/survey/responden", "GET"},
+	{"admin", "/api/survey/responden/:id", "GET"},
+	{"admin", "/api/survey/risiko/:id", "GET"},
+	{"admin", "/api/survey/edit-requests/:id", "POST"},
 
 	// ── LMS (user_pic juga bisa akses LMS) ──────────────────────────────────
 

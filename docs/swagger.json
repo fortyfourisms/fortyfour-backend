@@ -9652,7 +9652,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
                         }
                     },
                     "500": {
@@ -9684,7 +9684,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.NavigateRequest"
+                            "$ref": "#/definitions/survey_internal_dto.NavigateRequest"
                         }
                     }
                 ],
@@ -9694,7 +9694,7 @@
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.APIResponse"
+                                    "$ref": "#/definitions/survey_internal_dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -9865,7 +9865,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.CreateRespondenRequest"
+                            "$ref": "#/definitions/survey_internal_dto.CreateRespondenRequest"
                         }
                     }
                 ],
@@ -9959,7 +9959,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.DampakRequest"
+                            "$ref": "#/definitions/survey_internal_dto.DampakRequest"
                         }
                     }
                 ],
@@ -9967,7 +9967,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
                         }
                     },
                     "400": {
@@ -9999,7 +9999,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.EligibilityRequest"
+                            "$ref": "#/definitions/survey_internal_dto.EligibilityRequest"
                         }
                     }
                 ],
@@ -10007,7 +10007,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10068,7 +10068,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.PengendalianRequest"
+                            "$ref": "#/definitions/survey_internal_dto.PengendalianRequest"
                         }
                     }
                 ],
@@ -10076,7 +10076,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10108,7 +10108,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.AlasanRequest"
+                            "$ref": "#/definitions/survey_internal_dto.AlasanRequest"
                         }
                     }
                 ],
@@ -10116,7 +10116,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10154,7 +10154,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
                         }
                     },
                     "403": {
@@ -10192,7 +10192,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.NavigateRequest"
+                            "$ref": "#/definitions/survey_internal_dto.NavigateRequest"
                         }
                     }
                 ],
@@ -10202,7 +10202,7 @@
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/dto.APIResponse"
+                                    "$ref": "#/definitions/survey_internal_dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -14783,9 +14783,13 @@
             "type": "string",
             "enum": [
                 "draft",
+                "published",
+                "draft",
                 "published"
             ],
             "x-enum-varnames": [
+                "KelasStatusDraft",
+                "KelasStatusPublished",
                 "KelasStatusDraft",
                 "KelasStatusPublished"
             ]
@@ -14794,9 +14798,13 @@
             "type": "string",
             "enum": [
                 "video",
+                "teks",
+                "video",
                 "teks"
             ],
             "x-enum-varnames": [
+                "MateriTipeVideo",
+                "MateriTipeTeks",
                 "MateriTipeVideo",
                 "MateriTipeTeks"
             ]
@@ -14806,9 +14814,15 @@
             "enum": [
                 "pending",
                 "approved",
+                "rejected",
+                "pending",
+                "approved",
                 "rejected"
             ],
             "x-enum-varnames": [
+                "SEEditRequestPending",
+                "SEEditRequestApproved",
+                "SEEditRequestRejected",
                 "SEEditRequestPending",
                 "SEEditRequestApproved",
                 "SEEditRequestRejected"
@@ -14874,9 +14888,15 @@
             "enum": [
                 "Aktif",
                 "Suspend",
+                "Nonaktif",
+                "Aktif",
+                "Suspend",
                 "Nonaktif"
             ],
             "x-enum-varnames": [
+                "UserStatusAktif",
+                "UserStatusSuspend",
+                "UserStatusNonaktif",
                 "UserStatusAktif",
                 "UserStatusSuspend",
                 "UserStatusNonaktif"
@@ -14942,7 +14962,7 @@
                 "FrequencyVeryLarge"
             ]
         },
-        "models.ImpactLevel": {
+        "survey_internal_models.ImpactLevel": {
             "type": "integer",
             "enum": [
                 1,
@@ -14956,34 +14976,6 @@
                 "ImpactSignificant",
                 "ImpactVerySignificant"
             ]
-        },
-        "survey_internal_dto.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "survey_internal_dto.ProgressResponse": {
-            "type": "object",
-            "properties": {
-                "langkah_saat_ini": {
-                    "type": "string"
-                },
-                "responden_id": {
-                    "type": "integer"
-                },
-                "risiko_id": {
-                    "type": "integer"
-                },
-                "selesai": {
-                    "type": "boolean"
-                }
-            }
         }
     },
     "securityDefinitions": {

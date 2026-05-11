@@ -268,12 +268,19 @@ func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 
 	query := `
 	INSERT INTO survey_progress
-	(responden_id, risiko_id, langkah_saat_ini, selesai)
-	VALUES (?, ?, ?, ?)
+	(responden_id, risiko_id, langkah_saat_ini, selesai, status, edit_request_reason, edit_request_response, submitted_at, edit_requested_at, edit_reviewed_at, edit_reviewed_by)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	ON DUPLICATE KEY UPDATE
 	risiko_id = VALUES(risiko_id),
 	langkah_saat_ini = VALUES(langkah_saat_ini),
-	selesai = VALUES(selesai)
+	selesai = VALUES(selesai),
+	status = VALUES(status),
+	edit_request_reason = VALUES(edit_request_reason),
+	edit_request_response = VALUES(edit_request_response),
+	submitted_at = VALUES(submitted_at),
+	edit_requested_at = VALUES(edit_requested_at),
+	edit_reviewed_at = VALUES(edit_reviewed_at),
+	edit_reviewed_by = VALUES(edit_reviewed_by)
 	`
 
 	var risikoID interface{}
@@ -286,11 +293,53 @@ func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 		langkah = p.LangkahSaatIni.String
 	}
 
+	status := p.Status
+	if status == "" {
+		status = "draft"
+	}
+
+	var editReason interface{}
+	if p.EditReason.Valid {
+		editReason = p.EditReason.String
+	}
+
+	var editResponse interface{}
+	if p.EditResponse.Valid {
+		editResponse = p.EditResponse.String
+	}
+
+	var submittedAt interface{}
+	if p.SubmittedAt.Valid {
+		submittedAt = p.SubmittedAt.Time
+	}
+
+	var editRequestedAt interface{}
+	if p.EditRequestedAt.Valid {
+		editRequestedAt = p.EditRequestedAt.Time
+	}
+
+	var editReviewedAt interface{}
+	if p.EditReviewedAt.Valid {
+		editReviewedAt = p.EditReviewedAt.Time
+	}
+
+	var editReviewedBy interface{}
+	if p.EditReviewedBy.Valid {
+		editReviewedBy = p.EditReviewedBy.String
+	}
+
 	_, err := r.db.Exec(query,
 		p.RespondenID,
 		risikoID,
 		langkah,
 		p.Selesai,
+		status,
+		editReason,
+		editResponse,
+		submittedAt,
+		editRequestedAt,
+		editReviewedAt,
+		editReviewedBy,
 	)
 
 	return err
@@ -299,7 +348,15 @@ func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 func (r *RisikoRepository) GetProgress(respondenID int64) (*models.SurveyProgress, error) {
 
 	row := r.db.QueryRow(`
-		SELECT id, responden_id, risiko_id, langkah_saat_ini, selesai, terakhir_update
+		SELECT id, responden_id, risiko_id, langkah_saat_ini, selesai,
+			COALESCE(status, 'draft'),
+			edit_request_reason,
+			edit_request_response,
+			submitted_at,
+			edit_requested_at,
+			edit_reviewed_at,
+			edit_reviewed_by,
+			terakhir_update
 		FROM survey_progress
 		WHERE responden_id = ?
 	`, respondenID)
@@ -312,14 +369,21 @@ func (r *RisikoRepository) GetProgress(respondenID int64) (*models.SurveyProgres
 		&p.RisikoID,
 		&p.LangkahSaatIni,
 		&p.Selesai,
+		&p.Status,
+		&p.EditReason,
+		&p.EditResponse,
+		&p.SubmittedAt,
+		&p.EditRequestedAt,
+		&p.EditReviewedAt,
+		&p.EditReviewedBy,
 		&p.TerakhirUpdate,
 	)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			_, err := r.db.Exec(`
-				INSERT INTO survey_progress (responden_id, langkah_saat_ini, selesai)
-				VALUES (?, 'eligibility', false)
+				INSERT INTO survey_progress (responden_id, langkah_saat_ini, selesai, status)
+				VALUES (?, 'eligibility', false, 'draft')
 			`, respondenID)
 			if err != nil {
 				return nil, err

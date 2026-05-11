@@ -28,6 +28,8 @@ type RisikoServiceInterface interface {
 	SaveProgress(userID string, req dto.NavigateRequest) (dto.ProgressResponse, error)
 
 	FinishSurvey(userID string) error
+	RequestEdit(userID string, req dto.RequestEditRequest) (dto.ProgressResponse, error)
+	ReviewEditRequest(adminID string, respondenID int64, req dto.ReviewEditRequest) (dto.ProgressResponse, error)
 }
 
 // HANDLER STRUCT
@@ -258,6 +260,44 @@ func (h *RisikoHandler) FinishSurvey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeSuccess(w, "survey selesai")
+}
+
+func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+
+	var req dto.RequestEditRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, 400, "invalid body")
+		return
+	}
+
+	res, err := h.svc.RequestEdit(userID, req)
+	handleResult(w, res, err)
+}
+
+func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request) {
+	role := middleware.GetRole(r.Context())
+	if role != "admin" && role != "staff" {
+		writeError(w, 403, "forbidden")
+		return
+	}
+
+	adminID := middleware.GetUserID(r.Context())
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/survey/edit-requests/")
+	respondenID, err := strconv.ParseInt(strings.Trim(idStr, "/"), 10, 64)
+	if err != nil {
+		writeError(w, 400, "invalid responden_id")
+		return
+	}
+
+	var req dto.ReviewEditRequest
+	if err := decodeJSON(r, &req); err != nil {
+		writeError(w, 400, "invalid body")
+		return
+	}
+
+	res, err := h.svc.ReviewEditRequest(adminID, respondenID, req)
+	handleResult(w, res, err)
 }
 
 // HELPERS
