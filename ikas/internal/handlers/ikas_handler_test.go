@@ -132,7 +132,7 @@ func TestIkasHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var response map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &response)
-	assert.Equal(t, "Berhasil mengambil data", response["message"])
+	assert.Equal(t, "Berhasil mengambil data IKAS", response["message"])
 }
 
 func TestIkasHandler_ServeHTTP_GetAll_Error(t *testing.T) {

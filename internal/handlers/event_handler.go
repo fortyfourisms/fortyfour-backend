@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/internal/validator"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,11 +16,15 @@ import (
 )
 
 type EventHandler struct {
-	service services.EventServiceInterface
+	service            services.EventServiceInterface
+	turnstileValidator *utils.TurnstileValidator
 }
 
-func NewEventHandler(service services.EventServiceInterface) *EventHandler {
-	return &EventHandler{service: service}
+func NewEventHandler(service services.EventServiceInterface, turnstileValidator *utils.TurnstileValidator) *EventHandler {
+	return &EventHandler{
+		service:            service,
+		turnstileValidator: turnstileValidator,
+	}
 }
 
 func (h *EventHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -213,18 +219,16 @@ func (h *EventHandler) handleDelete(w http.ResponseWriter, r *http.Request, idSt
 	})
 }
 
-// RegisterEvent godoc
-//
-//	@Summary		Registrasi event
-//	@Description	Mendaftarkan peserta ke sebuah event
-//	@Tags			Event
-//	@Accept			json
-//	@Produce		json
-//	@Param			id				path		string								true	"Event ID"
-//	@Param			registration	body		dto.CreateEventRegistrationRequest	true	"Data registrasi"
-//	@Success		201				{object}	utils.JSONResponse{data=dto.EventRegistrationResponse}
-//	@Failure		400,409			{object}	dto.ErrorResponse
-//	@Router			/api/kegiatan/{id}/registrasi [post]
+// @Summary		Registrasi event (RSVP)
+// @Description	Mendaftarkan peserta ke sebuah event dengan perlindungan Cloudflare Turnstile
+// @Tags			Event
+// @Accept			json
+// @Produce		json
+// @Param			id				path		string								true	"Event ID"
+// @Param			registration	body		dto.CreateEventRegistrationRequest	true	"Data registrasi (termasuk cf-turnstile-response)"
+// @Success		201				{object}	utils.JSONResponse{data=dto.EventRegistrationResponse}
+// @Failure		400,409			{object}	dto.ErrorResponse
+// @Router			/api/kegiatan/{id}/registrasi [post]
 func (h *EventHandler) handleRegister(w http.ResponseWriter, r *http.Request, eventIDStr string) {
 	eventID, err := strconv.ParseInt(eventIDStr, 10, 64)
 	if err != nil {
@@ -235,6 +239,12 @@ func (h *EventHandler) handleRegister(w http.ResponseWriter, r *http.Request, ev
 	var req dto.CreateEventRegistrationRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	// Validasi Turnstile
+	if err := h.validateTurnstile(r, req.TurnstileToken); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -309,4 +319,37 @@ func (h *EventHandler) handleDownloadRegistrationPDF(w http.ResponseWriter, r *h
 	w.Header().Set("Content-Length", strconv.Itoa(len(pdfBytes)))
 	w.WriteHeader(http.StatusOK)
 	_, _ = w.Write(pdfBytes)
+}
+
+// validateTurnstile is a helper to verify Cloudflare Turnstile token
+func (h *EventHandler) validateTurnstile(r *http.Request, token string) error {
+	if h.turnstileValidator == nil {
+		return fmt.Errorf("sistem keamanan Turnstile tidak terkonfigurasi")
+	}
+
+	remoteIP := r.Header.Get("CF-Connecting-IP")
+	if remoteIP == "" {
+		remoteIP = r.Header.Get("X-Forwarded-For")
+	}
+	if remoteIP != "" {
+		// Get the first IP if it's a comma-separated list
+		remoteIP = strings.TrimSpace(strings.Split(remoteIP, ",")[0])
+	} else {
+		remoteIP = r.RemoteAddr
+		// Clean up port from RemoteAddr properly
+		if host, _, err := net.SplitHostPort(remoteIP); err == nil {
+			remoteIP = host
+		}
+	}
+
+	turnstileResp, err := h.turnstileValidator.Validate(token, remoteIP)
+	if err != nil {
+		return fmt.Errorf("gagal memvalidasi Turnstile")
+	}
+
+	if !turnstileResp.Success {
+		return fmt.Errorf("verifikasi Turnstile gagal: %s", strings.Join(turnstileResp.ErrorCodes, ", "))
+	}
+
+	return nil
 }

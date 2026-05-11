@@ -14,6 +14,7 @@ type JawabanDeteksiRepositoryInterface interface {
 	GetAll() ([]dto.JawabanDeteksiResponse, error)
 	GetByID(id int) (*dto.JawabanDeteksiResponse, error)
 	GetByIkasID(ikasID string) ([]dto.JawabanDeteksiResponse, error)
+	GetByIkasIDFromBuffer(ikasID string) ([]dto.JawabanDeteksiResponse, error)
 	GetByPerusahaanID(perusahaanID string) ([]dto.JawabanDeteksiResponse, error)
 	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanDeteksiResponse, error)
 	Update(id int, req dto.UpdateJawabanDeteksiRequest) error
@@ -53,6 +54,27 @@ const jawabanDeteksiSelectQuery = `
 		k.id, k.nama_kategori,
 		d.id, d.nama_domain
 	FROM jawaban_deteksi jd
+	JOIN pertanyaan_deteksi pd ON jd.pertanyaan_deteksi_id = pd.id
+	JOIN sub_kategori sk ON pd.sub_kategori_id = sk.id
+	JOIN kategori k ON sk.kategori_id = k.id
+	JOIN domain d ON k.domain_id = d.id`
+
+const jawabanDeteksiBufferSelectQuery = `
+	SELECT 
+		jd.id, 
+		jd.ikas_id, 
+		jd.jawaban_deteksi, 
+		jd.evidence, 
+		jd.validasi, 
+		jd.keterangan, 
+		jd.created_at, 
+		jd.updated_at,
+		pd.id, 
+		pd.pertanyaan_deteksi, 
+		sk.id, sk.nama_sub_kategori,
+		k.id, k.nama_kategori,
+		d.id, d.nama_domain
+	FROM jawaban_deteksi_buffer jd
 	JOIN pertanyaan_deteksi pd ON jd.pertanyaan_deteksi_id = pd.id
 	JOIN sub_kategori sk ON pd.sub_kategori_id = sk.id
 	JOIN kategori k ON sk.kategori_id = k.id
@@ -142,6 +164,29 @@ func (r *JawabanDeteksiRepository) GetByID(id int) (*dto.JawabanDeteksiResponse,
 
 func (r *JawabanDeteksiRepository) GetByIkasID(ikasID string) ([]dto.JawabanDeteksiResponse, error) {
 	query := jawabanDeteksiSelectQuery + ` WHERE jd.ikas_id = ? ORDER BY jd.created_at ASC`
+
+	rows, err := r.db.Query(query, ikasID)
+	if err != nil {
+		rollbar.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []dto.JawabanDeteksiResponse
+	for rows.Next() {
+		item, err := scanJawabanDeteksi(rows)
+		if err != nil {
+			rollbar.Error(err)
+			continue
+		}
+		results = append(results, item)
+	}
+
+	return results, nil
+}
+
+func (r *JawabanDeteksiRepository) GetByIkasIDFromBuffer(ikasID string) ([]dto.JawabanDeteksiResponse, error) {
+	query := jawabanDeteksiBufferSelectQuery + ` WHERE jd.ikas_id = ? ORDER BY jd.created_at ASC`
 
 	rows, err := r.db.Query(query, ikasID)
 	if err != nil {

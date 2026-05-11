@@ -110,7 +110,7 @@ func TestKategoriHandler_ServeHTTP_GetAll_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	var response map[string]interface{}
 	json.Unmarshal(w.Body.Bytes(), &response)
-	assert.Equal(t, "Berhasil mengambil data kategori", response["message"])
+	assert.Equal(t, "Berhasil mengambil data kategori IKAS", response["message"])
 }
 
 func TestKategoriHandler_ServeHTTP_GetAll_Error(t *testing.T) {
