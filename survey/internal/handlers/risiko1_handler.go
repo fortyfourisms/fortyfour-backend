@@ -192,7 +192,7 @@ func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request
 	}
 
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/survey/risiko/")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := strconv.ParseInt(strings.Trim(idStr, "/"), 10, 64)
 	if err != nil {
 		writeError(w, 400, "invalid id")
 		return
@@ -352,6 +352,12 @@ func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request
 // @Failure 403 {object} dto.ErrorResponse
 // @Router /api/survey/edit-requests [get]
 func (h *RisikoHandler) GetEditRequests(w http.ResponseWriter, r *http.Request) {
+	role := middleware.GetRole(r.Context())
+	if role != "admin" && role != "staff" {
+		writeError(w, 403, "forbidden")
+		return
+	}
+
 	res, err := h.svc.GetAllEditRequests()
 	handleResult(w, res, err)
 }
