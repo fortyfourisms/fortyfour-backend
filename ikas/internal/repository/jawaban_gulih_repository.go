@@ -465,6 +465,22 @@ func (r *JawabanGulihRepository) RecalculateGulih(ikasID string) error {
 }
 
 func (r *JawabanGulihRepository) UpsertToBuffer(req dto.CreateJawabanGulihRequest) error {
+	// 1. Cek dulu apakah data ini SUDAH ADA di tabel utama
+	var exists bool
+	checkQuery := `SELECT EXISTS(SELECT 1 FROM jawaban_gulih WHERE ikas_id = ? AND pertanyaan_gulih_id = ?)`
+	err := r.db.QueryRow(checkQuery, req.IkasID, req.PertanyaanGulihID).Scan(&exists)
+	if err != nil {
+		return err
+	}
+
+	// 2. Jika sudah ada di utama, jangan masukkan ke buffer.
+	// Sebaliknya, pastikan di buffer bersih (cleanup sampah)
+	if exists {
+		_, _ = r.db.Exec(`DELETE FROM jawaban_gulih_buffer WHERE ikas_id = ? AND pertanyaan_gulih_id = ?`, req.IkasID, req.PertanyaanGulihID)
+		return nil
+	}
+
+	// 3. Jika belum ada di utama, baru masukkan ke buffer seperti biasa
 	query := `INSERT INTO jawaban_gulih_buffer 
 		(pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan)
 		VALUES (?, ?, ?, ?, ?, ?)
@@ -474,7 +490,7 @@ func (r *JawabanGulihRepository) UpsertToBuffer(req dto.CreateJawabanGulihReques
 		validasi = VALUES(validasi),
 		keterangan = VALUES(keterangan)`
 
-	_, err := r.db.Exec(query,
+	_, err = r.db.Exec(query,
 		req.PertanyaanGulihID,
 		req.IkasID,
 		req.JawabanGulih,

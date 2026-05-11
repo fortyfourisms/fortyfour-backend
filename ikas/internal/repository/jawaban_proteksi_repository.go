@@ -472,6 +472,22 @@ func (r *JawabanProteksiRepository) RecalculateProteksi(ikasID string) error {
 }
 
 func (r *JawabanProteksiRepository) UpsertToBuffer(req dto.CreateJawabanProteksiRequest) error {
+	// 1. Cek dulu apakah data ini SUDAH ADA di tabel utama
+	var exists bool
+	checkQuery := `SELECT EXISTS(SELECT 1 FROM jawaban_proteksi WHERE ikas_id = ? AND pertanyaan_proteksi_id = ?)`
+	err := r.db.QueryRow(checkQuery, req.IkasID, req.PertanyaanProteksiID).Scan(&exists)
+	if err != nil {
+		return err
+	}
+
+	// 2. Jika sudah ada di utama, jangan masukkan ke buffer.
+	// Sebaliknya, pastikan di buffer bersih (cleanup sampah)
+	if exists {
+		_, _ = r.db.Exec(`DELETE FROM jawaban_proteksi_buffer WHERE ikas_id = ? AND pertanyaan_proteksi_id = ?`, req.IkasID, req.PertanyaanProteksiID)
+		return nil
+	}
+
+	// 3. Jika belum ada di utama, baru masukkan ke buffer seperti biasa
 	query := `INSERT INTO jawaban_proteksi_buffer 
 		(pertanyaan_proteksi_id, ikas_id, jawaban_proteksi, evidence, validasi, keterangan)
 		VALUES (?, ?, ?, ?, ?, ?)
@@ -481,7 +497,7 @@ func (r *JawabanProteksiRepository) UpsertToBuffer(req dto.CreateJawabanProteksi
 		validasi = VALUES(validasi),
 		keterangan = VALUES(keterangan)`
 
-	_, err := r.db.Exec(query,
+	_, err = r.db.Exec(query,
 		req.PertanyaanProteksiID,
 		req.IkasID,
 		req.JawabanProteksi,
@@ -520,6 +536,8 @@ func (r *JawabanProteksiRepository) FlushBuffer(ikasID string) error {
 		return err
 	}
 
+	// JAMINAN: Hapus SEMUA data di buffer untuk IkasID ini.
+	// Kita gunakan query yang sama tapi tanpa filter tambahan agar benar-benar bersih.
 	if _, err := tx.Exec(`DELETE FROM jawaban_proteksi_buffer WHERE ikas_id = ?`, ikasID); err != nil {
 		return err
 	}

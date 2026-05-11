@@ -473,6 +473,22 @@ func (r *JawabanIdentifikasiRepository) RecalculateIdentifikasi(ikasID string) e
 }
 
 func (r *JawabanIdentifikasiRepository) UpsertToBuffer(req dto.CreateJawabanIdentifikasiRequest) error {
+	// 1. Cek dulu apakah data ini SUDAH ADA di tabel utama
+	var exists bool
+	checkQuery := `SELECT EXISTS(SELECT 1 FROM jawaban_identifikasi WHERE ikas_id = ? AND pertanyaan_identifikasi_id = ?)`
+	err := r.db.QueryRow(checkQuery, req.IkasID, req.PertanyaanIdentifikasiID).Scan(&exists)
+	if err != nil {
+		return err
+	}
+
+	// 2. Jika sudah ada di utama, jangan masukkan ke buffer.
+	// Sebaliknya, pastikan di buffer bersih (cleanup sampah)
+	if exists {
+		_, _ = r.db.Exec(`DELETE FROM jawaban_identifikasi_buffer WHERE ikas_id = ? AND pertanyaan_identifikasi_id = ?`, req.IkasID, req.PertanyaanIdentifikasiID)
+		return nil
+	}
+
+	// 3. Jika belum ada di utama, baru masukkan ke buffer seperti biasa
 	query := `INSERT INTO jawaban_identifikasi_buffer 
 		(pertanyaan_identifikasi_id, ikas_id, jawaban_identifikasi, evidence, validasi, keterangan)
 		VALUES (?, ?, ?, ?, ?, ?)
@@ -482,7 +498,7 @@ func (r *JawabanIdentifikasiRepository) UpsertToBuffer(req dto.CreateJawabanIden
 		validasi = VALUES(validasi),
 		keterangan = VALUES(keterangan)`
 
-	_, err := r.db.Exec(query,
+	_, err = r.db.Exec(query,
 		req.PertanyaanIdentifikasiID,
 		req.IkasID,
 		req.JawabanIdentifikasi,
