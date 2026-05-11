@@ -48,9 +48,16 @@ type ProgressResponse struct {
 	RisikoID       *int    `json:"risiko_id"`
 	LangkahSaatIni *string `json:"langkah_saat_ini"`
 	Selesai        bool    `json:"selesai"`
-	Status         string  `json:"status"`
-	EditReason     *string `json:"edit_request_reason,omitempty"`
-	EditResponse   *string `json:"edit_request_response,omitempty"`
+	Status          string  `json:"status"`
+	IsRejected      bool    `json:"is_rejected"`
+	EditReason      *string `json:"edit_request_reason,omitempty"`
+	EditResponse    *string `json:"edit_request_response,omitempty"`
+	SubmittedAt     *string `json:"submitted_at,omitempty"`
+	EditRequestedAt *string `json:"edit_requested_at,omitempty"`
+	EditApprovedAt  *string `json:"edit_approved_at,omitempty"`
+	EditApprovedBy  *string `json:"edit_approved_by,omitempty"`
+	EditRejectedAt  *string `json:"edit_rejected_at,omitempty"`
+	EditRejectedBy  *string `json:"edit_rejected_by,omitempty"`
 }
 
 // CUSTOM RISIKO
@@ -65,6 +72,6 @@ type RequestEditRequest struct {
 }
 
 type ReviewEditRequest struct {
-	Approved bool   `json:"approved"`
-	Response string `json:"response,omitempty"`
+	Action   string `json:"action" example:"approve"` // "approve" or "reject"
+	Response string `json:"response,omitempty" example:"Alasan persetujuan atau penolakan"`
 }

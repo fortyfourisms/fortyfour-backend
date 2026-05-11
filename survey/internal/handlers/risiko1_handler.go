@@ -262,6 +262,15 @@ func (h *RisikoHandler) FinishSurvey(w http.ResponseWriter, r *http.Request) {
 	writeSuccess(w, "survey selesai")
 }
 
+// @Summary Request Edit
+// @Description Request to edit survey data
+// @Tags Risiko
+// @Accept json
+// @Produce json
+// @Param request body dto.RequestEditRequest true "Edit request reason"
+// @Success 200 {object} dto.APIResponse{data=dto.ProgressResponse}
+// @Failure 400 {object} dto.ErrorResponse
+// @Router /api/survey/request-edit [post]
 func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
@@ -275,6 +284,17 @@ func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
 	handleResult(w, res, err)
 }
 
+// @Summary Review Edit Request
+// @Description Approve or reject a request to edit survey data. Admin specifies action ("approve" or "reject").
+// @Tags Risiko
+// @Accept json
+// @Produce json
+// @Param id path int true "Respondent ID"
+// @Param request body dto.ReviewEditRequest true "Provide 'action' (approve/reject) and optional 'response' string"
+// @Success 200 {object} dto.APIResponse{data=dto.ProgressResponse}
+// @Failure 400 {object} dto.ErrorResponse "Invalid body or respondent ID"
+// @Failure 403 {object} dto.ErrorResponse "Forbidden - Admin or Staff only"
+// @Router /api/survey/edit-requests/{id} [post]
 func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 	if role != "admin" && role != "staff" {

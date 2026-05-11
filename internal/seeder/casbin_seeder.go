@@ -369,6 +369,7 @@ var defaultPolicies = []Policy{
 	{"staff", "/api/survey/responden", "GET"},
 	{"staff", "/api/survey/responden/:id", "GET"},
 	{"staff", "/api/survey/risiko/:id", "GET"},
+	{"staff", "/api/survey/edit-requests/:id", "POST"},
 
 	// LMS — staff bisa manage kelas, materi, kuis, soal (GET, POST, PUT)
 	{"staff", "/api/kelas", "GET"},

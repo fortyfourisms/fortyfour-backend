@@ -4617,7 +4617,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.RequestEditRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.RequestEditRequest"
                         }
                     }
                 ],
@@ -9641,6 +9641,71 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/survey/edit-requests/{id}": {
+            "post": {
+                "description": "Approve or reject a request to edit survey data. Admin specifies action (\"approve\" or \"reject\").",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Review Edit Request",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Respondent ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Provide 'action' (approve/reject) and optional 'response' string",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ReviewEditRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/survey_internal_dto.ProgressResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid body or respondent ID",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin or Staff only",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/survey/finish": {
             "post": {
                 "description": "Complete the survey",
@@ -9658,7 +9723,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "500": {
@@ -9690,7 +9755,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.NavigateRequest"
+                            "$ref": "#/definitions/dto.NavigateRequest"
                         }
                     }
                 ],
@@ -9700,7 +9765,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                                    "$ref": "#/definitions/dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -9762,6 +9827,58 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/survey/request-edit": {
+            "post": {
+                "description": "Request to edit survey data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Request Edit",
+                "parameters": [
+                    {
+                        "description": "Edit request reason",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.RequestEditRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/survey_internal_dto.ProgressResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
                         }
@@ -9871,7 +9988,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.CreateRespondenRequest"
+                            "$ref": "#/definitions/dto.CreateRespondenRequest"
                         }
                     }
                 ],
@@ -9965,7 +10082,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.DampakRequest"
+                            "$ref": "#/definitions/dto.DampakRequest"
                         }
                     }
                 ],
@@ -9973,7 +10090,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10005,7 +10122,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.EligibilityRequest"
+                            "$ref": "#/definitions/dto.EligibilityRequest"
                         }
                     }
                 ],
@@ -10013,7 +10130,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10074,7 +10191,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.PengendalianRequest"
+                            "$ref": "#/definitions/dto.PengendalianRequest"
                         }
                     }
                 ],
@@ -10082,7 +10199,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10114,7 +10231,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.AlasanRequest"
+                            "$ref": "#/definitions/dto.AlasanRequest"
                         }
                     }
                 ],
@@ -10122,7 +10239,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10160,7 +10277,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "403": {
@@ -10198,7 +10315,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.NavigateRequest"
+                            "$ref": "#/definitions/dto.NavigateRequest"
                         }
                     }
                 ],
@@ -10208,7 +10325,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                                    "$ref": "#/definitions/dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -11876,14 +11993,17 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.RequestEditRequest": {
+        "dto.ReviewEditRequest": {
             "type": "object",
-            "required": [
-                "reason"
-            ],
             "properties": {
-                "reason": {
-                    "type": "string"
+                "action": {
+                    "description": "\"approve\" or \"reject\"",
+                    "type": "string",
+                    "example": "approve"
+                },
+                "response": {
+                    "type": "string",
+                    "example": "Alasan persetujuan atau penolakan"
                 }
             }
         },
@@ -14789,13 +14909,9 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "draft",
-                "published",
-                "draft",
                 "published"
             ],
             "x-enum-varnames": [
-                "KelasStatusDraft",
-                "KelasStatusPublished",
                 "KelasStatusDraft",
                 "KelasStatusPublished"
             ]
@@ -14804,13 +14920,9 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "video",
-                "teks",
-                "video",
                 "teks"
             ],
             "x-enum-varnames": [
-                "MateriTipeVideo",
-                "MateriTipeTeks",
                 "MateriTipeVideo",
                 "MateriTipeTeks"
             ]
@@ -14820,15 +14932,9 @@ const docTemplate = `{
             "enum": [
                 "pending",
                 "approved",
-                "rejected",
-                "pending",
-                "approved",
                 "rejected"
             ],
             "x-enum-varnames": [
-                "SEEditRequestPending",
-                "SEEditRequestApproved",
-                "SEEditRequestRejected",
                 "SEEditRequestPending",
                 "SEEditRequestApproved",
                 "SEEditRequestRejected"
@@ -14894,15 +15000,9 @@ const docTemplate = `{
             "enum": [
                 "Aktif",
                 "Suspend",
-                "Nonaktif",
-                "Aktif",
-                "Suspend",
                 "Nonaktif"
             ],
             "x-enum-varnames": [
-                "UserStatusAktif",
-                "UserStatusSuspend",
-                "UserStatusNonaktif",
                 "UserStatusAktif",
                 "UserStatusSuspend",
                 "UserStatusNonaktif"
@@ -14940,6 +15040,17 @@ const docTemplate = `{
                 }
             }
         },
+        "ikas_internal_dto.RequestEditRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
         "ikas_internal_utils.JSONResponse": {
             "type": "object",
             "properties": {
@@ -14968,7 +15079,7 @@ const docTemplate = `{
                 "FrequencyVeryLarge"
             ]
         },
-        "survey_internal_models.ImpactLevel": {
+        "models.ImpactLevel": {
             "type": "integer",
             "enum": [
                 1,
@@ -14982,6 +15093,72 @@ const docTemplate = `{
                 "ImpactSignificant",
                 "ImpactVerySignificant"
             ]
+        },
+        "survey_internal_dto.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "survey_internal_dto.ProgressResponse": {
+            "type": "object",
+            "properties": {
+                "edit_approved_at": {
+                    "type": "string"
+                },
+                "edit_approved_by": {
+                    "type": "string"
+                },
+                "edit_rejected_at": {
+                    "type": "string"
+                },
+                "edit_rejected_by": {
+                    "type": "string"
+                },
+                "edit_request_reason": {
+                    "type": "string"
+                },
+                "edit_request_response": {
+                    "type": "string"
+                },
+                "edit_requested_at": {
+                    "type": "string"
+                },
+                "is_rejected": {
+                    "type": "boolean"
+                },
+                "langkah_saat_ini": {
+                    "type": "string"
+                },
+                "responden_id": {
+                    "type": "integer"
+                },
+                "risiko_id": {
+                    "type": "integer"
+                },
+                "selesai": {
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "submitted_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "survey_internal_dto.RequestEditRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
         }
     },
     "securityDefinitions": {

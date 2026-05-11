@@ -105,8 +105,10 @@ type SurveyProgress struct {
 	EditResponse    sql.NullString `db:"edit_request_response"`
 	SubmittedAt     sql.NullTime   `db:"submitted_at"`
 	EditRequestedAt sql.NullTime   `db:"edit_requested_at"`
-	EditReviewedAt  sql.NullTime   `db:"edit_reviewed_at"`
-	EditReviewedBy  sql.NullString `db:"edit_reviewed_by"`
+	EditApprovedAt  sql.NullTime   `db:"edit_approved_at"`
+	EditApprovedBy  sql.NullString `db:"edit_approved_by"`
+	EditRejectedAt  sql.NullTime   `db:"edit_rejected_at"`
+	EditRejectedBy  sql.NullString `db:"edit_rejected_by"`
 	TerakhirUpdate  time.Time      `db:"terakhir_update"`
 }
 

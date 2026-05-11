@@ -38,6 +38,71 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/survey/edit-requests/{id}": {
+            "post": {
+                "description": "Approve or reject a request to edit survey data. Admin specifies action (\"approve\" or \"reject\").",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Review Edit Request",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Respondent ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Provide 'action' (approve/reject) and optional 'response' string",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ReviewEditRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ProgressResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid body or respondent ID",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Admin or Staff only",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/survey/finish": {
             "post": {
                 "description": "Complete the survey",
@@ -55,13 +120,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -87,7 +152,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.NavigateRequest"
+                            "$ref": "#/definitions/dto.NavigateRequest"
                         }
                     }
                 ],
@@ -97,13 +162,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                                    "$ref": "#/definitions/dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/survey_internal_dto.ProgressResponse"
+                                            "$ref": "#/definitions/dto.ProgressResponse"
                                         }
                                     }
                                 }
@@ -113,7 +178,106 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/survey/progress": {
+            "get": {
+                "description": "Get current user's survey progress and current step",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Get Survey Progress",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ProgressResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/survey/request-edit": {
+            "post": {
+                "description": "Request to edit survey data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Request Edit",
+                "parameters": [
+                    {
+                        "description": "Edit request reason",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RequestEditRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.ProgressResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -148,13 +312,13 @@ const docTemplate = `{
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -186,13 +350,13 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -221,7 +385,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.CreateRespondenRequest"
+                            "$ref": "#/definitions/dto.CreateRespondenRequest"
                         }
                     }
                 ],
@@ -236,13 +400,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -283,13 +447,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -315,7 +479,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.DampakRequest"
+                            "$ref": "#/definitions/dto.DampakRequest"
                         }
                     }
                 ],
@@ -323,13 +487,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -355,7 +519,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.EligibilityRequest"
+                            "$ref": "#/definitions/dto.EligibilityRequest"
                         }
                     }
                 ],
@@ -363,13 +527,42 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/survey/risiko/me": {
+            "get": {
+                "description": "Get current user's risk data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Get My Risiko Data",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -395,7 +588,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.PengendalianRequest"
+                            "$ref": "#/definitions/dto.PengendalianRequest"
                         }
                     }
                 ],
@@ -403,13 +596,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -435,7 +628,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.AlasanRequest"
+                            "$ref": "#/definitions/dto.AlasanRequest"
                         }
                     }
                 ],
@@ -443,13 +636,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -481,19 +674,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -519,7 +712,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.NavigateRequest"
+                            "$ref": "#/definitions/dto.NavigateRequest"
                         }
                     }
                 ],
@@ -529,13 +722,13 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                                    "$ref": "#/definitions/dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/survey_internal_dto.ProgressResponse"
+                                            "$ref": "#/definitions/dto.ProgressResponse"
                                         }
                                     }
                                 }
@@ -545,7 +738,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     }
                 }
@@ -553,7 +746,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "survey_internal_dto.APIResponse": {
+        "dto.APIResponse": {
             "type": "object",
             "properties": {
                 "data": {},
@@ -574,7 +767,7 @@ const docTemplate = `{
                 }
             }
         },
-        "survey_internal_dto.AlasanRequest": {
+        "dto.AlasanRequest": {
             "type": "object",
             "properties": {
                 "alasan": {
@@ -588,7 +781,7 @@ const docTemplate = `{
                 }
             }
         },
-        "survey_internal_dto.CreateRespondenRequest": {
+        "dto.CreateRespondenRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -611,23 +804,23 @@ const docTemplate = `{
                 }
             }
         },
-        "survey_internal_dto.DampakRequest": {
+        "dto.DampakRequest": {
             "type": "object",
             "properties": {
                 "dampak_finansial": {
-                    "$ref": "#/definitions/survey_internal_models.ImpactLevel"
+                    "$ref": "#/definitions/models.ImpactLevel"
                 },
                 "dampak_hukum": {
-                    "$ref": "#/definitions/survey_internal_models.ImpactLevel"
+                    "$ref": "#/definitions/models.ImpactLevel"
                 },
                 "dampak_operasional": {
-                    "$ref": "#/definitions/survey_internal_models.ImpactLevel"
+                    "$ref": "#/definitions/models.ImpactLevel"
                 },
                 "dampak_reputasi": {
-                    "$ref": "#/definitions/survey_internal_models.ImpactLevel"
+                    "$ref": "#/definitions/models.ImpactLevel"
                 },
                 "frekuensi": {
-                    "$ref": "#/definitions/survey_internal_models.FrequencyLevel"
+                    "$ref": "#/definitions/models.FrequencyLevel"
                 },
                 "responden_id": {
                     "type": "integer"
@@ -637,7 +830,7 @@ const docTemplate = `{
                 }
             }
         },
-        "survey_internal_dto.EligibilityRequest": {
+        "dto.EligibilityRequest": {
             "type": "object",
             "properties": {
                 "pernah_terjadi": {
@@ -651,7 +844,7 @@ const docTemplate = `{
                 }
             }
         },
-        "survey_internal_dto.ErrorResponse": {
+        "dto.ErrorResponse": {
             "type": "object",
             "properties": {
                 "message": {
@@ -662,7 +855,7 @@ const docTemplate = `{
                 }
             }
         },
-        "survey_internal_dto.NavigateRequest": {
+        "dto.NavigateRequest": {
             "type": "object",
             "properties": {
                 "current_risk": {
@@ -676,7 +869,7 @@ const docTemplate = `{
                 }
             }
         },
-        "survey_internal_dto.PengendalianRequest": {
+        "dto.PengendalianRequest": {
             "type": "object",
             "properties": {
                 "ada_pengendalian": {
@@ -693,9 +886,33 @@ const docTemplate = `{
                 }
             }
         },
-        "survey_internal_dto.ProgressResponse": {
+        "dto.ProgressResponse": {
             "type": "object",
             "properties": {
+                "edit_approved_at": {
+                    "type": "string"
+                },
+                "edit_approved_by": {
+                    "type": "string"
+                },
+                "edit_rejected_at": {
+                    "type": "string"
+                },
+                "edit_rejected_by": {
+                    "type": "string"
+                },
+                "edit_request_reason": {
+                    "type": "string"
+                },
+                "edit_request_response": {
+                    "type": "string"
+                },
+                "edit_requested_at": {
+                    "type": "string"
+                },
+                "is_rejected": {
+                    "type": "boolean"
+                },
                 "langkah_saat_ini": {
                     "type": "string"
                 },
@@ -707,10 +924,38 @@ const docTemplate = `{
                 },
                 "selesai": {
                     "type": "boolean"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "submitted_at": {
+                    "type": "string"
                 }
             }
         },
-        "survey_internal_models.FrequencyLevel": {
+        "dto.RequestEditRequest": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ReviewEditRequest": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "description": "\"approve\" or \"reject\"",
+                    "type": "string",
+                    "example": "approve"
+                },
+                "response": {
+                    "type": "string",
+                    "example": "Alasan persetujuan atau penolakan"
+                }
+            }
+        },
+        "models.FrequencyLevel": {
             "type": "integer",
             "enum": [
                 1,
@@ -725,7 +970,7 @@ const docTemplate = `{
                 "FrequencyVeryLarge"
             ]
         },
-        "survey_internal_models.ImpactLevel": {
+        "models.ImpactLevel": {
             "type": "integer",
             "enum": [
                 1,

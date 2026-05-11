@@ -268,8 +268,8 @@ func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 
 	query := `
 	INSERT INTO survey_progress
-	(responden_id, risiko_id, langkah_saat_ini, selesai, status, edit_request_reason, edit_request_response, submitted_at, edit_requested_at, edit_reviewed_at, edit_reviewed_by)
-	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	(responden_id, risiko_id, langkah_saat_ini, selesai, status, edit_request_reason, edit_request_response, submitted_at, edit_requested_at, edit_approved_at, edit_approved_by, edit_rejected_at, edit_rejected_by)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	ON DUPLICATE KEY UPDATE
 	risiko_id = VALUES(risiko_id),
 	langkah_saat_ini = VALUES(langkah_saat_ini),
@@ -279,8 +279,10 @@ func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 	edit_request_response = VALUES(edit_request_response),
 	submitted_at = VALUES(submitted_at),
 	edit_requested_at = VALUES(edit_requested_at),
-	edit_reviewed_at = VALUES(edit_reviewed_at),
-	edit_reviewed_by = VALUES(edit_reviewed_by)
+	edit_approved_at = VALUES(edit_approved_at),
+	edit_approved_by = VALUES(edit_approved_by),
+	edit_rejected_at = VALUES(edit_rejected_at),
+	edit_rejected_by = VALUES(edit_rejected_by)
 	`
 
 	var risikoID interface{}
@@ -318,14 +320,24 @@ func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 		editRequestedAt = p.EditRequestedAt.Time
 	}
 
-	var editReviewedAt interface{}
-	if p.EditReviewedAt.Valid {
-		editReviewedAt = p.EditReviewedAt.Time
+	var editApprovedAt interface{}
+	if p.EditApprovedAt.Valid {
+		editApprovedAt = p.EditApprovedAt.Time
 	}
 
-	var editReviewedBy interface{}
-	if p.EditReviewedBy.Valid {
-		editReviewedBy = p.EditReviewedBy.String
+	var editApprovedBy interface{}
+	if p.EditApprovedBy.Valid {
+		editApprovedBy = p.EditApprovedBy.String
+	}
+
+	var editRejectedAt interface{}
+	if p.EditRejectedAt.Valid {
+		editRejectedAt = p.EditRejectedAt.Time
+	}
+
+	var editRejectedBy interface{}
+	if p.EditRejectedBy.Valid {
+		editRejectedBy = p.EditRejectedBy.String
 	}
 
 	_, err := r.db.Exec(query,
@@ -338,8 +350,10 @@ func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 		editResponse,
 		submittedAt,
 		editRequestedAt,
-		editReviewedAt,
-		editReviewedBy,
+		editApprovedAt,
+		editApprovedBy,
+		editRejectedAt,
+		editRejectedBy,
 	)
 
 	return err
@@ -354,8 +368,10 @@ func (r *RisikoRepository) GetProgress(respondenID int64) (*models.SurveyProgres
 			edit_request_response,
 			submitted_at,
 			edit_requested_at,
-			edit_reviewed_at,
-			edit_reviewed_by,
+			edit_approved_at,
+			edit_approved_by,
+			edit_rejected_at,
+			edit_rejected_by,
 			terakhir_update
 		FROM survey_progress
 		WHERE responden_id = ?
@@ -374,8 +390,10 @@ func (r *RisikoRepository) GetProgress(respondenID int64) (*models.SurveyProgres
 		&p.EditResponse,
 		&p.SubmittedAt,
 		&p.EditRequestedAt,
-		&p.EditReviewedAt,
-		&p.EditReviewedBy,
+		&p.EditApprovedAt,
+		&p.EditApprovedBy,
+		&p.EditRejectedAt,
+		&p.EditRejectedBy,
 		&p.TerakhirUpdate,
 	)
 

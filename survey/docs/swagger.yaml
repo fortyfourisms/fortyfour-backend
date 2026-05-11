@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  survey_internal_dto.APIResponse:
+  dto.APIResponse:
     properties:
       data: {}
       error:
@@ -14,7 +14,7 @@ definitions:
       success:
         type: boolean
     type: object
-  survey_internal_dto.AlasanRequest:
+  dto.AlasanRequest:
     properties:
       alasan:
         type: string
@@ -23,7 +23,7 @@ definitions:
       risiko_id:
         type: integer
     type: object
-  survey_internal_dto.CreateRespondenRequest:
+  dto.CreateRespondenRequest:
     properties:
       email:
         type: string
@@ -38,24 +38,24 @@ definitions:
       sertifikat_training:
         type: string
     type: object
-  survey_internal_dto.DampakRequest:
+  dto.DampakRequest:
     properties:
       dampak_finansial:
-        $ref: '#/definitions/survey_internal_models.ImpactLevel'
+        $ref: '#/definitions/models.ImpactLevel'
       dampak_hukum:
-        $ref: '#/definitions/survey_internal_models.ImpactLevel'
+        $ref: '#/definitions/models.ImpactLevel'
       dampak_operasional:
-        $ref: '#/definitions/survey_internal_models.ImpactLevel'
+        $ref: '#/definitions/models.ImpactLevel'
       dampak_reputasi:
-        $ref: '#/definitions/survey_internal_models.ImpactLevel'
+        $ref: '#/definitions/models.ImpactLevel'
       frekuensi:
-        $ref: '#/definitions/survey_internal_models.FrequencyLevel'
+        $ref: '#/definitions/models.FrequencyLevel'
       responden_id:
         type: integer
       risiko_id:
         type: integer
     type: object
-  survey_internal_dto.EligibilityRequest:
+  dto.EligibilityRequest:
     properties:
       pernah_terjadi:
         type: boolean
@@ -64,14 +64,14 @@ definitions:
       risiko_id:
         type: integer
     type: object
-  survey_internal_dto.ErrorResponse:
+  dto.ErrorResponse:
     properties:
       message:
         type: string
       success:
         type: boolean
     type: object
-  survey_internal_dto.NavigateRequest:
+  dto.NavigateRequest:
     properties:
       current_risk:
         type: integer
@@ -80,7 +80,7 @@ definitions:
       responden_id:
         type: integer
     type: object
-  survey_internal_dto.PengendalianRequest:
+  dto.PengendalianRequest:
     properties:
       ada_pengendalian:
         type: boolean
@@ -91,8 +91,24 @@ definitions:
       risiko_id:
         type: integer
     type: object
-  survey_internal_dto.ProgressResponse:
+  dto.ProgressResponse:
     properties:
+      edit_approved_at:
+        type: string
+      edit_approved_by:
+        type: string
+      edit_rejected_at:
+        type: string
+      edit_rejected_by:
+        type: string
+      edit_request_reason:
+        type: string
+      edit_request_response:
+        type: string
+      edit_requested_at:
+        type: string
+      is_rejected:
+        type: boolean
       langkah_saat_ini:
         type: string
       responden_id:
@@ -101,8 +117,27 @@ definitions:
         type: integer
       selesai:
         type: boolean
+      status:
+        type: string
+      submitted_at:
+        type: string
     type: object
-  survey_internal_models.FrequencyLevel:
+  dto.RequestEditRequest:
+    properties:
+      reason:
+        type: string
+    type: object
+  dto.ReviewEditRequest:
+    properties:
+      action:
+        description: '"approve" or "reject"'
+        example: approve
+        type: string
+      response:
+        example: Alasan persetujuan atau penolakan
+        type: string
+    type: object
+  models.FrequencyLevel:
     enum:
     - 1
     - 2
@@ -114,7 +149,7 @@ definitions:
     - FrequencyMedium
     - FrequencyLarge
     - FrequencyVeryLarge
-  survey_internal_models.ImpactLevel:
+  models.ImpactLevel:
     enum:
     - 1
     - 2
@@ -148,6 +183,47 @@ paths:
       summary: Health check
       tags:
       - Health
+  /api/survey/edit-requests/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Approve or reject a request to edit survey data. Admin specifies
+        action ("approve" or "reject").
+      parameters:
+      - description: Respondent ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Provide 'action' (approve/reject) and optional 'response' string
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ReviewEditRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProgressResponse'
+              type: object
+        "400":
+          description: Invalid body or respondent ID
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Forbidden - Admin or Staff only
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Review Edit Request
+      tags:
+      - Risiko
   /api/survey/finish:
     post:
       consumes:
@@ -159,11 +235,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Finish Survey
       tags:
       - Risiko
@@ -178,7 +254,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.NavigateRequest'
+          $ref: '#/definitions/dto.NavigateRequest'
       produces:
       - application/json
       responses:
@@ -186,16 +262,75 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/survey_internal_dto.APIResponse'
+            - $ref: '#/definitions/dto.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/survey_internal_dto.ProgressResponse'
+                  $ref: '#/definitions/dto.ProgressResponse'
               type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Navigate Survey
+      tags:
+      - Risiko
+  /api/survey/progress:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's survey progress and current step
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProgressResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Get Survey Progress
+      tags:
+      - Risiko
+  /api/survey/request-edit:
+    post:
+      consumes:
+      - application/json
+      description: Request to edit survey data
+      parameters:
+      - description: Edit request reason
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RequestEditRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.ProgressResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Request Edit
       tags:
       - Risiko
   /api/survey/responden:
@@ -214,11 +349,11 @@ paths:
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Ambil semua responden
@@ -244,11 +379,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Ambil responden berdasarkan ID
@@ -268,11 +403,11 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Ambil data responden milik user login
@@ -288,7 +423,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.CreateRespondenRequest'
+          $ref: '#/definitions/dto.CreateRespondenRequest'
       produces:
       - application/json
       responses:
@@ -300,11 +435,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Create / Update responden milik user login
@@ -327,15 +462,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Get Risiko by Respondent ID
       tags:
       - Risiko
@@ -350,18 +485,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.DampakRequest'
+          $ref: '#/definitions/dto.DampakRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Submit Dampak
       tags:
       - Risiko
@@ -376,19 +511,38 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.EligibilityRequest'
+          $ref: '#/definitions/dto.EligibilityRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Submit Eligibility
+      tags:
+      - Risiko
+  /api/survey/risiko/me:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's risk data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Get My Risiko Data
       tags:
       - Risiko
   /api/survey/risiko/pengendalian:
@@ -402,18 +556,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.PengendalianRequest'
+          $ref: '#/definitions/dto.PengendalianRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Submit Pengendalian
       tags:
       - Risiko
@@ -428,18 +582,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.AlasanRequest'
+          $ref: '#/definitions/dto.AlasanRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Submit Alasan
       tags:
       - Risiko
@@ -454,7 +608,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.NavigateRequest'
+          $ref: '#/definitions/dto.NavigateRequest'
       produces:
       - application/json
       responses:
@@ -462,15 +616,15 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/survey_internal_dto.APIResponse'
+            - $ref: '#/definitions/dto.APIResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/survey_internal_dto.ProgressResponse'
+                  $ref: '#/definitions/dto.ProgressResponse'
               type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            $ref: '#/definitions/dto.ErrorResponse'
       summary: Save Progress
       tags:
       - Risiko

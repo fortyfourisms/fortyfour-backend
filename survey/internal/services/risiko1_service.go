@@ -375,14 +375,55 @@ func progressToResponse(progress *models.SurveyProgress) dto.ProgressResponse {
 		status = SurveyStatusDraft
 	}
 
+	var submittedAt *string
+	if progress.SubmittedAt.Valid {
+		s := progress.SubmittedAt.Time.Format(time.RFC3339)
+		submittedAt = &s
+	}
+
+	var editRequestedAt *string
+	if progress.EditRequestedAt.Valid {
+		s := progress.EditRequestedAt.Time.Format(time.RFC3339)
+		editRequestedAt = &s
+	}
+
+	var editApprovedAt *string
+	if progress.EditApprovedAt.Valid {
+		s := progress.EditApprovedAt.Time.Format(time.RFC3339)
+		editApprovedAt = &s
+	}
+
+	var editApprovedBy *string
+	if progress.EditApprovedBy.Valid {
+		editApprovedBy = &progress.EditApprovedBy.String
+	}
+
+	var editRejectedAt *string
+	if progress.EditRejectedAt.Valid {
+		s := progress.EditRejectedAt.Time.Format(time.RFC3339)
+		editRejectedAt = &s
+	}
+
+	var editRejectedBy *string
+	if progress.EditRejectedBy.Valid {
+		editRejectedBy = &progress.EditRejectedBy.String
+	}
+
 	return dto.ProgressResponse{
-		RespondenID:    progress.RespondenID,
-		RisikoID:       risikoID,
-		LangkahSaatIni: langkahSaatIni,
-		Selesai:        progress.Selesai,
-		Status:         status,
-		EditReason:     editReason,
-		EditResponse:   editResponse,
+		RespondenID:     progress.RespondenID,
+		RisikoID:        risikoID,
+		LangkahSaatIni:  langkahSaatIni,
+		Selesai:         progress.Selesai,
+		Status:          status,
+		IsRejected:      status == SurveyStatusEditRejected,
+		EditReason:      editReason,
+		EditResponse:    editResponse,
+		SubmittedAt:     submittedAt,
+		EditRequestedAt: editRequestedAt,
+		EditApprovedAt:  editApprovedAt,
+		EditApprovedBy:  editApprovedBy,
+		EditRejectedAt:  editRejectedAt,
+		EditRejectedBy:  editRejectedBy,
 	}
 }
 
@@ -518,8 +559,10 @@ func (s *RisikoService) RequestEdit(userID string, req dto.RequestEditRequest) (
 	progress.EditReason = sql.NullString{String: reason, Valid: true}
 	progress.EditResponse = sql.NullString{Valid: false}
 	progress.EditRequestedAt = sql.NullTime{Time: time.Now(), Valid: true}
-	progress.EditReviewedAt = sql.NullTime{Valid: false}
-	progress.EditReviewedBy = sql.NullString{Valid: false}
+	progress.EditApprovedAt = sql.NullTime{Valid: false}
+	progress.EditApprovedBy = sql.NullString{Valid: false}
+	progress.EditRejectedAt = sql.NullTime{Valid: false}
+	progress.EditRejectedBy = sql.NullString{Valid: false}
 
 	if err := s.repo.UpsertProgress(*progress); err != nil {
 		return dto.ProgressResponse{}, err
@@ -546,17 +589,22 @@ func (s *RisikoService) ReviewEditRequest(adminID string, respondenID int64, req
 
 	response := strings.TrimSpace(req.Response)
 	progress.EditResponse = sql.NullString{String: response, Valid: response != ""}
-	progress.EditReviewedAt = sql.NullTime{Time: time.Now(), Valid: true}
-	progress.EditReviewedBy = sql.NullString{String: adminID, Valid: true}
 
-	if req.Approved {
+	switch req.Action {
+	case "approve":
 		progress.Status = SurveyStatusEditApproved
 		progress.Selesai = false
 		progress.LangkahSaatIni = sql.NullString{String: "edit-approved", Valid: true}
-	} else {
+		progress.EditApprovedAt = sql.NullTime{Time: time.Now(), Valid: true}
+		progress.EditApprovedBy = sql.NullString{String: adminID, Valid: true}
+	case "reject":
 		progress.Status = SurveyStatusEditRejected
 		progress.Selesai = true
 		progress.LangkahSaatIni = sql.NullString{String: "edit-rejected", Valid: true}
+		progress.EditRejectedAt = sql.NullTime{Time: time.Now(), Valid: true}
+		progress.EditRejectedBy = sql.NullString{String: adminID, Valid: true}
+	default:
+		return dto.ProgressResponse{}, errors.New("action tidak valid, gunakan 'approve' atau 'reject'")
 	}
 
 	if err := s.repo.UpsertProgress(*progress); err != nil {

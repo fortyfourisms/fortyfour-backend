@@ -778,12 +778,15 @@ definitions:
     required:
     - reason
     type: object
-  dto.RequestEditRequest:
+  dto.ReviewEditRequest:
     properties:
-      reason:
+      action:
+        description: '"approve" or "reject"'
+        example: approve
         type: string
-    required:
-    - reason
+      response:
+        example: Alasan persetujuan atau penolakan
+        type: string
     type: object
   dto.RuangLingkupInfo:
     properties:
@@ -2739,24 +2742,16 @@ definitions:
     enum:
     - draft
     - published
-    - draft
-    - published
     type: string
     x-enum-varnames:
-    - KelasStatusDraft
-    - KelasStatusPublished
     - KelasStatusDraft
     - KelasStatusPublished
   fortyfour-backend_internal_models.MateriTipe:
     enum:
     - video
     - teks
-    - video
-    - teks
     type: string
     x-enum-varnames:
-    - MateriTipeVideo
-    - MateriTipeTeks
     - MateriTipeVideo
     - MateriTipeTeks
   fortyfour-backend_internal_models.SEEditRequestStatus:
@@ -2764,14 +2759,8 @@ definitions:
     - pending
     - approved
     - rejected
-    - pending
-    - approved
-    - rejected
     type: string
     x-enum-varnames:
-    - SEEditRequestPending
-    - SEEditRequestApproved
-    - SEEditRequestRejected
     - SEEditRequestPending
     - SEEditRequestApproved
     - SEEditRequestRejected
@@ -2815,14 +2804,8 @@ definitions:
     - Aktif
     - Suspend
     - Nonaktif
-    - Aktif
-    - Suspend
-    - Nonaktif
     type: string
     x-enum-varnames:
-    - UserStatusAktif
-    - UserStatusSuspend
-    - UserStatusNonaktif
     - UserStatusAktif
     - UserStatusSuspend
     - UserStatusNonaktif
@@ -2847,6 +2830,13 @@ definitions:
       message:
         type: string
     type: object
+  ikas_internal_dto.RequestEditRequest:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
   ikas_internal_utils.JSONResponse:
     properties:
       data: {}
@@ -2868,7 +2858,7 @@ definitions:
     - FrequencyMedium
     - FrequencyLarge
     - FrequencyVeryLarge
-  survey_internal_models.ImpactLevel:
+  models.ImpactLevel:
     enum:
     - 1
     - 2
@@ -2880,6 +2870,49 @@ definitions:
     - ImpactFairlySignificant
     - ImpactSignificant
     - ImpactVerySignificant
+  survey_internal_dto.ErrorResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  survey_internal_dto.ProgressResponse:
+    properties:
+      edit_approved_at:
+        type: string
+      edit_approved_by:
+        type: string
+      edit_rejected_at:
+        type: string
+      edit_rejected_by:
+        type: string
+      edit_request_reason:
+        type: string
+      edit_request_response:
+        type: string
+      edit_requested_at:
+        type: string
+      is_rejected:
+        type: boolean
+      langkah_saat_ini:
+        type: string
+      responden_id:
+        type: integer
+      risiko_id:
+        type: integer
+      selesai:
+        type: boolean
+      status:
+        type: string
+      submitted_at:
+        type: string
+    type: object
+  survey_internal_dto.RequestEditRequest:
+    properties:
+      reason:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -5966,7 +5999,7 @@ paths:
         name: req
         required: true
         schema:
-          $ref: '#/definitions/dto.RequestEditRequest'
+          $ref: '#/definitions/ikas_internal_dto.RequestEditRequest'
       produces:
       - application/json
       responses:
@@ -9136,6 +9169,47 @@ paths:
       summary: Ambil sub sektor berdasarkan Sektor ID
       tags:
       - SubSektor
+  /api/survey/edit-requests/{id}:
+    post:
+      consumes:
+      - application/json
+      description: Approve or reject a request to edit survey data. Admin specifies
+        action ("approve" or "reject").
+      parameters:
+      - description: Respondent ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Provide 'action' (approve/reject) and optional 'response' string
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ReviewEditRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/survey_internal_dto.ProgressResponse'
+              type: object
+        "400":
+          description: Invalid body or respondent ID
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+        "403":
+          description: Forbidden - Admin or Staff only
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      summary: Review Edit Request
+      tags:
+      - Risiko
   /api/survey/finish:
     post:
       consumes:
@@ -9147,7 +9221,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -9166,7 +9240,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.NavigateRequest'
+          $ref: '#/definitions/dto.NavigateRequest'
       produces:
       - application/json
       responses:
@@ -9174,7 +9248,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/survey_internal_dto.APIResponse'
+            - $ref: '#/definitions/dto.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/survey_internal_dto.ProgressResponse'
@@ -9212,6 +9286,37 @@ paths:
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
       summary: Get Survey Progress
+      tags:
+      - Risiko
+  /api/survey/request-edit:
+    post:
+      consumes:
+      - application/json
+      description: Request to edit survey data
+      parameters:
+      - description: Edit request reason
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/survey_internal_dto.RequestEditRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/survey_internal_dto.ProgressResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      summary: Request Edit
       tags:
       - Risiko
   /api/survey/responden:
@@ -9304,7 +9409,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.CreateRespondenRequest'
+          $ref: '#/definitions/dto.CreateRespondenRequest'
       produces:
       - application/json
       responses:
@@ -9343,7 +9448,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "403":
           description: Forbidden
           schema:
@@ -9366,14 +9471,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.DampakRequest'
+          $ref: '#/definitions/dto.DampakRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -9392,14 +9497,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.EligibilityRequest'
+          $ref: '#/definitions/dto.EligibilityRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -9437,14 +9542,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.PengendalianRequest'
+          $ref: '#/definitions/dto.PengendalianRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -9463,14 +9568,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.AlasanRequest'
+          $ref: '#/definitions/dto.AlasanRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -9489,7 +9594,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.NavigateRequest'
+          $ref: '#/definitions/dto.NavigateRequest'
       produces:
       - application/json
       responses:
@@ -9497,7 +9602,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/survey_internal_dto.APIResponse'
+            - $ref: '#/definitions/dto.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/survey_internal_dto.ProgressResponse'
