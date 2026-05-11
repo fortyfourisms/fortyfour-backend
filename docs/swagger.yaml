@@ -778,13 +778,6 @@ definitions:
     required:
     - reason
     type: object
-  dto.RequestEditRequest:
-    properties:
-      reason:
-        type: string
-    required:
-    - reason
-    type: object
   dto.RuangLingkupInfo:
     properties:
       id:
@@ -2306,6 +2299,13 @@ definitions:
       total:
         type: integer
     type: object
+  fortyfour-backend_internal_dto.SektorRequest:
+    properties:
+      nama_sektor:
+        type: string
+    required:
+    - nama_sektor
+    type: object
   fortyfour-backend_internal_dto.SektorResponse:
     properties:
       created_at:
@@ -2391,6 +2391,16 @@ definitions:
         type: string
       nama_sub_sektor:
         type: string
+    type: object
+  fortyfour-backend_internal_dto.SubSektorRequest:
+    properties:
+      id_sektor:
+        type: string
+      nama_sub_sektor:
+        type: string
+    required:
+    - id_sektor
+    - nama_sub_sektor
     type: object
   fortyfour-backend_internal_dto.SubSektorResponse:
     properties:
@@ -2739,24 +2749,16 @@ definitions:
     enum:
     - draft
     - published
-    - draft
-    - published
     type: string
     x-enum-varnames:
-    - KelasStatusDraft
-    - KelasStatusPublished
     - KelasStatusDraft
     - KelasStatusPublished
   fortyfour-backend_internal_models.MateriTipe:
     enum:
     - video
     - teks
-    - video
-    - teks
     type: string
     x-enum-varnames:
-    - MateriTipeVideo
-    - MateriTipeTeks
     - MateriTipeVideo
     - MateriTipeTeks
   fortyfour-backend_internal_models.SEEditRequestStatus:
@@ -2764,14 +2766,8 @@ definitions:
     - pending
     - approved
     - rejected
-    - pending
-    - approved
-    - rejected
     type: string
     x-enum-varnames:
-    - SEEditRequestPending
-    - SEEditRequestApproved
-    - SEEditRequestRejected
     - SEEditRequestPending
     - SEEditRequestApproved
     - SEEditRequestRejected
@@ -2815,14 +2811,8 @@ definitions:
     - Aktif
     - Suspend
     - Nonaktif
-    - Aktif
-    - Suspend
-    - Nonaktif
     type: string
     x-enum-varnames:
-    - UserStatusAktif
-    - UserStatusSuspend
-    - UserStatusNonaktif
     - UserStatusAktif
     - UserStatusSuspend
     - UserStatusNonaktif
@@ -2847,6 +2837,13 @@ definitions:
       message:
         type: string
     type: object
+  ikas_internal_dto.RequestEditRequest:
+    properties:
+      reason:
+        type: string
+    required:
+    - reason
+    type: object
   ikas_internal_utils.JSONResponse:
     properties:
       data: {}
@@ -2868,7 +2865,7 @@ definitions:
     - FrequencyMedium
     - FrequencyLarge
     - FrequencyVeryLarge
-  survey_internal_models.ImpactLevel:
+  models.ImpactLevel:
     enum:
     - 1
     - 2
@@ -2880,6 +2877,30 @@ definitions:
     - ImpactFairlySignificant
     - ImpactSignificant
     - ImpactVerySignificant
+  survey_internal_dto.ErrorResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  survey_internal_dto.ProgressResponse:
+    properties:
+      edit_request_reason:
+        type: string
+      edit_request_response:
+        type: string
+      langkah_saat_ini:
+        type: string
+      responden_id:
+        type: integer
+      risiko_id:
+        type: integer
+      selesai:
+        type: boolean
+      status:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
@@ -5966,7 +5987,7 @@ paths:
         name: req
         required: true
         schema:
-          $ref: '#/definitions/dto.RequestEditRequest'
+          $ref: '#/definitions/ikas_internal_dto.RequestEditRequest'
       produces:
       - application/json
       responses:
@@ -8908,6 +8929,37 @@ paths:
       summary: List semua sektor
       tags:
       - Sektor
+    post:
+      consumes:
+      - application/json
+      description: Menambahkan data sektor baru
+      parameters:
+      - description: Data sektor
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.SektorRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.SektorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Buat sektor baru
+      tags:
+      - Sektor
   /api/sektor/{id}:
     get:
       description: Mengambil satu data sektor beserta sub sektor
@@ -8931,6 +8983,42 @@ paths:
       security:
       - BearerAuth: []
       summary: Ambil sektor berdasarkan ID
+      tags:
+      - Sektor
+    put:
+      consumes:
+      - application/json
+      description: Memperbarui data sektor berdasarkan ID
+      parameters:
+      - description: Sektor ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data sektor
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.SektorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.SektorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update sektor
       tags:
       - Sektor
   /api/sertifikat/{id}:
@@ -9084,6 +9172,37 @@ paths:
       summary: List semua sub sektor
       tags:
       - SubSektor
+    post:
+      consumes:
+      - application/json
+      description: Menambahkan data sub sektor baru
+      parameters:
+      - description: Data sub sektor
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.SubSektorRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.SubSektorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Buat sub sektor baru
+      tags:
+      - SubSektor
   /api/sub_sektor/{id}:
     get:
       description: Mengambil satu data sub sektor
@@ -9107,6 +9226,42 @@ paths:
       security:
       - BearerAuth: []
       summary: Ambil sub sektor berdasarkan ID
+      tags:
+      - SubSektor
+    put:
+      consumes:
+      - application/json
+      description: Memperbarui data sub sektor berdasarkan ID
+      parameters:
+      - description: SubSektor ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data sub sektor
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.SubSektorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.SubSektorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update sub sektor
       tags:
       - SubSektor
   /api/sub_sektor/by_sektor/{id}:
@@ -9147,7 +9302,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "500":
           description: Internal Server Error
           schema:
@@ -9166,7 +9321,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.NavigateRequest'
+          $ref: '#/definitions/dto.NavigateRequest'
       produces:
       - application/json
       responses:
@@ -9174,7 +9329,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/survey_internal_dto.APIResponse'
+            - $ref: '#/definitions/dto.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/survey_internal_dto.ProgressResponse'
@@ -9304,7 +9459,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.CreateRespondenRequest'
+          $ref: '#/definitions/dto.CreateRespondenRequest'
       produces:
       - application/json
       responses:
@@ -9343,7 +9498,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "403":
           description: Forbidden
           schema:
@@ -9366,14 +9521,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.DampakRequest'
+          $ref: '#/definitions/dto.DampakRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -9392,14 +9547,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.EligibilityRequest'
+          $ref: '#/definitions/dto.EligibilityRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -9437,14 +9592,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.PengendalianRequest'
+          $ref: '#/definitions/dto.PengendalianRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -9463,14 +9618,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.AlasanRequest'
+          $ref: '#/definitions/dto.AlasanRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            $ref: '#/definitions/dto.APIResponse'
         "400":
           description: Bad Request
           schema:
@@ -9489,7 +9644,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.NavigateRequest'
+          $ref: '#/definitions/dto.NavigateRequest'
       produces:
       - application/json
       responses:
@@ -9497,7 +9652,7 @@ paths:
           description: OK
           schema:
             allOf:
-            - $ref: '#/definitions/survey_internal_dto.APIResponse'
+            - $ref: '#/definitions/dto.APIResponse'
             - properties:
                 data:
                   $ref: '#/definitions/survey_internal_dto.ProgressResponse'

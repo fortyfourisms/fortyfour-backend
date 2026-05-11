@@ -4617,7 +4617,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.RequestEditRequest"
+                            "$ref": "#/definitions/ikas_internal_dto.RequestEditRequest"
                         }
                     }
                 ],
@@ -9275,6 +9275,55 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menambahkan data sektor baru",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sektor"
+                ],
+                "summary": "Buat sektor baru",
+                "parameters": [
+                    {
+                        "description": "Data sektor",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SektorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SektorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/api/sektor/{id}": {
@@ -9310,6 +9359,62 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Memperbarui data sektor berdasarkan ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sektor"
+                ],
+                "summary": "Update sektor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sektor ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data sektor",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SektorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SektorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
@@ -9556,6 +9661,55 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menambahkan data sub sektor baru",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SubSektor"
+                ],
+                "summary": "Buat sub sektor baru",
+                "parameters": [
+                    {
+                        "description": "Data sub sektor",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SubSektorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SubSektorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/api/sub_sektor/by_sektor/{id}": {
@@ -9639,6 +9793,62 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Memperbarui data sub sektor berdasarkan ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SubSektor"
+                ],
+                "summary": "Update sub sektor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SubSektor ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data sub sektor",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SubSektorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SubSektorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/api/survey/finish": {
@@ -9658,7 +9868,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "500": {
@@ -9690,7 +9900,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.NavigateRequest"
+                            "$ref": "#/definitions/dto.NavigateRequest"
                         }
                     }
                 ],
@@ -9700,7 +9910,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                                    "$ref": "#/definitions/dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -9871,7 +10081,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.CreateRespondenRequest"
+                            "$ref": "#/definitions/dto.CreateRespondenRequest"
                         }
                     }
                 ],
@@ -9965,7 +10175,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.DampakRequest"
+                            "$ref": "#/definitions/dto.DampakRequest"
                         }
                     }
                 ],
@@ -9973,7 +10183,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10005,7 +10215,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.EligibilityRequest"
+                            "$ref": "#/definitions/dto.EligibilityRequest"
                         }
                     }
                 ],
@@ -10013,7 +10223,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10074,7 +10284,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.PengendalianRequest"
+                            "$ref": "#/definitions/dto.PengendalianRequest"
                         }
                     }
                 ],
@@ -10082,7 +10292,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10114,7 +10324,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.AlasanRequest"
+                            "$ref": "#/definitions/dto.AlasanRequest"
                         }
                     }
                 ],
@@ -10122,7 +10332,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "400": {
@@ -10160,7 +10370,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                            "$ref": "#/definitions/dto.APIResponse"
                         }
                     },
                     "403": {
@@ -10198,7 +10408,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/survey_internal_dto.NavigateRequest"
+                            "$ref": "#/definitions/dto.NavigateRequest"
                         }
                     }
                 ],
@@ -10208,7 +10418,7 @@ const docTemplate = `{
                         "schema": {
                             "allOf": [
                                 {
-                                    "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                                    "$ref": "#/definitions/dto.APIResponse"
                                 },
                                 {
                                     "type": "object",
@@ -11866,17 +12076,6 @@ const docTemplate = `{
             }
         },
         "dto.RejectEditRequest": {
-            "type": "object",
-            "required": [
-                "reason"
-            ],
-            "properties": {
-                "reason": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.RequestEditRequest": {
             "type": "object",
             "required": [
                 "reason"
@@ -14154,6 +14353,17 @@ const docTemplate = `{
                 }
             }
         },
+        "fortyfour-backend_internal_dto.SektorRequest": {
+            "type": "object",
+            "required": [
+                "nama_sektor"
+            ],
+            "properties": {
+                "nama_sektor": {
+                    "type": "string"
+                }
+            }
+        },
         "fortyfour-backend_internal_dto.SektorResponse": {
             "type": "object",
             "properties": {
@@ -14279,6 +14489,21 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "nama_sektor": {
+                    "type": "string"
+                },
+                "nama_sub_sektor": {
+                    "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.SubSektorRequest": {
+            "type": "object",
+            "required": [
+                "id_sektor",
+                "nama_sub_sektor"
+            ],
+            "properties": {
+                "id_sektor": {
                     "type": "string"
                 },
                 "nama_sub_sektor": {
@@ -14789,13 +15014,9 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "draft",
-                "published",
-                "draft",
                 "published"
             ],
             "x-enum-varnames": [
-                "KelasStatusDraft",
-                "KelasStatusPublished",
                 "KelasStatusDraft",
                 "KelasStatusPublished"
             ]
@@ -14804,13 +15025,9 @@ const docTemplate = `{
             "type": "string",
             "enum": [
                 "video",
-                "teks",
-                "video",
                 "teks"
             ],
             "x-enum-varnames": [
-                "MateriTipeVideo",
-                "MateriTipeTeks",
                 "MateriTipeVideo",
                 "MateriTipeTeks"
             ]
@@ -14820,15 +15037,9 @@ const docTemplate = `{
             "enum": [
                 "pending",
                 "approved",
-                "rejected",
-                "pending",
-                "approved",
                 "rejected"
             ],
             "x-enum-varnames": [
-                "SEEditRequestPending",
-                "SEEditRequestApproved",
-                "SEEditRequestRejected",
                 "SEEditRequestPending",
                 "SEEditRequestApproved",
                 "SEEditRequestRejected"
@@ -14894,15 +15105,9 @@ const docTemplate = `{
             "enum": [
                 "Aktif",
                 "Suspend",
-                "Nonaktif",
-                "Aktif",
-                "Suspend",
                 "Nonaktif"
             ],
             "x-enum-varnames": [
-                "UserStatusAktif",
-                "UserStatusSuspend",
-                "UserStatusNonaktif",
                 "UserStatusAktif",
                 "UserStatusSuspend",
                 "UserStatusNonaktif"
@@ -14940,6 +15145,17 @@ const docTemplate = `{
                 }
             }
         },
+        "ikas_internal_dto.RequestEditRequest": {
+            "type": "object",
+            "required": [
+                "reason"
+            ],
+            "properties": {
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
         "ikas_internal_utils.JSONResponse": {
             "type": "object",
             "properties": {
@@ -14968,7 +15184,7 @@ const docTemplate = `{
                 "FrequencyVeryLarge"
             ]
         },
-        "survey_internal_models.ImpactLevel": {
+        "models.ImpactLevel": {
             "type": "integer",
             "enum": [
                 1,
@@ -14982,6 +15198,43 @@ const docTemplate = `{
                 "ImpactSignificant",
                 "ImpactVerySignificant"
             ]
+        },
+        "survey_internal_dto.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "survey_internal_dto.ProgressResponse": {
+            "type": "object",
+            "properties": {
+                "edit_request_reason": {
+                    "type": "string"
+                },
+                "edit_request_response": {
+                    "type": "string"
+                },
+                "langkah_saat_ini": {
+                    "type": "string"
+                },
+                "responden_id": {
+                    "type": "integer"
+                },
+                "risiko_id": {
+                    "type": "integer"
+                },
+                "selesai": {
+                    "type": "boolean"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
         }
     },
     "securityDefinitions": {
