@@ -9641,6 +9641,107 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/survey/edit-requests": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all pending survey edit requests (Admin/Staff only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Survey Edit Request"
+                ],
+                "summary": "Get All Edit Requests (Admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.EditRequestItemResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/survey/edit-requests/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get current user's edit request",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Survey Edit Request"
+                ],
+                "summary": "Get My Edit Request (User)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.EditRequestItemResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/survey/edit-requests/{id}": {
             "post": {
                 "description": "Approve or reject a request to edit survey data. Admin specifies action (\"approve\" or \"reject\").",
@@ -9651,7 +9752,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Edit Request"
                 ],
                 "summary": "Review Edit Request",
                 "parameters": [
@@ -9844,7 +9945,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Edit Request"
                 ],
                 "summary": "Request Edit",
                 "parameters": [
@@ -10055,6 +10156,32 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/survey/risiko": {
+            "get": {
+                "description": "Get all active risks for survey",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Get All Risiko Aktif",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
                         }
@@ -11232,6 +11359,47 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.EditRequestItemResponse": {
+            "type": "object",
+            "properties": {
+                "edit_approved_at": {
+                    "type": "string"
+                },
+                "edit_approved_by": {
+                    "type": "string"
+                },
+                "edit_rejected_at": {
+                    "type": "string"
+                },
+                "edit_rejected_by": {
+                    "type": "string"
+                },
+                "edit_request_reason": {
+                    "type": "string"
+                },
+                "edit_request_response": {
+                    "type": "string"
+                },
+                "edit_requested_at": {
+                    "type": "string"
+                },
+                "nama_lengkap": {
+                    "type": "string"
+                },
+                "nama_perusahaan": {
+                    "type": "string"
+                },
+                "responden_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }

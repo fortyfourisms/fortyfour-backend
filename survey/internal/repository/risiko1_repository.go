@@ -458,3 +458,71 @@ func (r *RisikoRepository) ExistsResponden(id int64) (bool, error) {
 	err := r.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM responden WHERE id = ?)`, id).Scan(&exists)
 	return exists, err
 }
+
+// EDIT REQUESTS
+
+const editRequestSelectQuery = `
+	SELECT sp.responden_id, resp.user_id, resp.nama_lengkap,
+		p.nama,
+		sp.status, sp.edit_request_reason, sp.edit_request_response,
+		sp.edit_requested_at, sp.edit_approved_at, sp.edit_approved_by,
+		sp.edit_rejected_at, sp.edit_rejected_by
+	FROM survey_progress sp
+	JOIN responden resp ON sp.responden_id = resp.id
+	LEFT JOIN perusahaan p ON resp.id_perusahaan = p.id
+`
+
+func scanEditRequestItem(scanner interface{ Scan(...interface{}) error }) (*models.EditRequestItem, error) {
+	var item models.EditRequestItem
+	err := scanner.Scan(
+		&item.RespondenID, &item.UserID, &item.NamaLengkap,
+		&item.NamaPerusahaan,
+		&item.Status, &item.EditReason, &item.EditResponse,
+		&item.EditRequestedAt, &item.EditApprovedAt, &item.EditApprovedBy,
+		&item.EditRejectedAt, &item.EditRejectedBy,
+	)
+	return &item, err
+}
+
+// GetAllEditRequests returns all survey edit requests with status 'edit_requested' (pending).
+func (r *RisikoRepository) GetAllEditRequests() ([]models.EditRequestItem, error) {
+	query := editRequestSelectQuery + `
+		WHERE sp.status = 'edit_requested'
+		ORDER BY sp.edit_requested_at DESC
+	`
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []models.EditRequestItem
+	for rows.Next() {
+		item, err := scanEditRequestItem(rows)
+		if err != nil {
+			return nil, err
+		}
+		items = append(items, *item)
+	}
+
+	return items, nil
+}
+
+// GetEditRequestByUserID returns the edit request for a specific user.
+func (r *RisikoRepository) GetEditRequestByUserID(userID string) (*models.EditRequestItem, error) {
+	query := editRequestSelectQuery + `
+		WHERE resp.user_id = ?
+		AND sp.status IN ('edit_requested', 'edit_approved', 'edit_rejected')
+	`
+
+	item, err := scanEditRequestItem(r.db.QueryRow(query, userID))
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	return item, nil
+}

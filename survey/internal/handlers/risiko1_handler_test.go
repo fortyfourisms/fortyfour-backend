@@ -10,11 +10,13 @@ import (
 
 	"survey/internal/dto"
 	"survey/internal/middleware"
+	"survey/internal/models"
 	"survey/internal/repository"
 )
 
 // MOCK SERVICE
 type mockRisikoService struct {
+	GetAllRisikoFunc        func() ([]models.RisikoResponse, error)
 	ProcessEligibilityFunc  func(string, dto.EligibilityRequest) (map[string]interface{}, error)
 	ProcessAlasanFunc       func(string, dto.AlasanRequest) (map[string]interface{}, error)
 	ProcessDampakFunc       func(string, dto.DampakRequest) (map[string]interface{}, error)
@@ -27,8 +29,16 @@ type mockRisikoService struct {
 	FinishSurveyFunc        func(string) error
 	RequestEditFunc         func(string, dto.RequestEditRequest) (dto.ProgressResponse, error)
 	ReviewEditRequestFunc   func(string, int64, dto.ReviewEditRequest) (dto.ProgressResponse, error)
+	GetAllEditRequestsFunc  func() ([]dto.EditRequestItemResponse, error)
+	GetMyEditRequestFunc    func(string) (*dto.EditRequestItemResponse, error)
 }
 
+func (m *mockRisikoService) GetAllRisiko() ([]models.RisikoResponse, error) {
+	if m.GetAllRisikoFunc != nil {
+		return m.GetAllRisikoFunc()
+	}
+	return nil, nil
+}
 func (m *mockRisikoService) ProcessEligibility(userID string, r dto.EligibilityRequest) (map[string]interface{}, error) {
 	return m.ProcessEligibilityFunc(userID, r)
 }
@@ -64,6 +74,18 @@ func (m *mockRisikoService) RequestEdit(userID string, r dto.RequestEditRequest)
 }
 func (m *mockRisikoService) ReviewEditRequest(adminID string, respondenID int64, r dto.ReviewEditRequest) (dto.ProgressResponse, error) {
 	return m.ReviewEditRequestFunc(adminID, respondenID, r)
+}
+func (m *mockRisikoService) GetAllEditRequests() ([]dto.EditRequestItemResponse, error) {
+	if m.GetAllEditRequestsFunc != nil {
+		return m.GetAllEditRequestsFunc()
+	}
+	return nil, nil
+}
+func (m *mockRisikoService) GetMyEditRequest(userID string) (*dto.EditRequestItemResponse, error) {
+	if m.GetMyEditRequestFunc != nil {
+		return m.GetMyEditRequestFunc(userID)
+	}
+	return nil, nil
 }
 
 // helper: inject role and userID into request context

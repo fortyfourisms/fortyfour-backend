@@ -140,6 +140,7 @@ var defaultPolicies = []Policy{
 	// user_pic mengisi survey miliknya sendiri: create, simpan sementara, request edit, dan submit.
 	{"user_pic", "/api/survey/responden/me", "GET"},
 	{"user_pic", "/api/survey/responden/me", "POST"},
+	{"user_pic", "/api/survey/risiko", "GET"},
 	{"user_pic", "/api/survey/risiko/me", "GET"},
 	{"user_pic", "/api/survey/risiko/eligibility", "POST"},
 	{"user_pic", "/api/survey/risiko/reason", "POST"},
@@ -150,12 +151,14 @@ var defaultPolicies = []Policy{
 	{"user_pic", "/api/survey/save-progress", "POST"},
 	{"user_pic", "/api/survey/finish", "POST"},
 	{"user_pic", "/api/survey/request-edit", "POST"},
+	{"user_pic", "/api/survey/edit-requests/me", "GET"},
 
 	// Admin hanya membaca data survey dan memproses request edit.
 	{"admin", "/api/survey/responden", "GET"},
 	{"admin", "/api/survey/responden/:id", "GET"},
 	{"admin", "/api/survey/risiko/:id", "GET"},
 	{"admin", "/api/survey/edit-requests/:id", "POST"},
+	{"admin", "/api/survey/edit-requests", "GET"},
 
 	// ── LMS (user_pic juga bisa akses LMS) ──────────────────────────────────
 
@@ -368,8 +371,9 @@ var defaultPolicies = []Policy{
 	// Survey
 	{"staff", "/api/survey/responden", "GET"},
 	{"staff", "/api/survey/responden/:id", "GET"},
+	{"staff", "/api/survey/risiko", "GET"},
 	{"staff", "/api/survey/risiko/:id", "GET"},
-	{"staff", "/api/survey/edit-requests/:id", "POST"},
+	{"staff", "/api/survey/edit-requests", "GET"},
 
 	// LMS — staff bisa manage kelas, materi, kuis, soal (GET, POST, PUT)
 	{"staff", "/api/kelas", "GET"},

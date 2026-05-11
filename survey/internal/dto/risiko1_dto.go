@@ -75,3 +75,19 @@ type ReviewEditRequest struct {
 	Action   string `json:"action" example:"approve"` // "approve" or "reject"
 	Response string `json:"response,omitempty" example:"Alasan persetujuan atau penolakan"`
 }
+
+// EDIT REQUEST LIST RESPONSE
+type EditRequestItemResponse struct {
+	RespondenID     int64   `json:"responden_id"`
+	UserID          string  `json:"user_id"`
+	NamaLengkap     string  `json:"nama_lengkap"`
+	NamaPerusahaan  *string `json:"nama_perusahaan,omitempty"`
+	Status          string  `json:"status"`
+	EditReason      *string `json:"edit_request_reason,omitempty"`
+	EditResponse    *string `json:"edit_request_response,omitempty"`
+	EditRequestedAt *string `json:"edit_requested_at,omitempty"`
+	EditApprovedAt  *string `json:"edit_approved_at,omitempty"`
+	EditApprovedBy  *string `json:"edit_approved_by,omitempty"`
+	EditRejectedAt  *string `json:"edit_rejected_at,omitempty"`
+	EditRejectedBy  *string `json:"edit_rejected_by,omitempty"`
+}

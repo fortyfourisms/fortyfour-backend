@@ -284,6 +284,33 @@ definitions:
       updated_at:
         type: string
     type: object
+  dto.EditRequestItemResponse:
+    properties:
+      edit_approved_at:
+        type: string
+      edit_approved_by:
+        type: string
+      edit_rejected_at:
+        type: string
+      edit_rejected_by:
+        type: string
+      edit_request_reason:
+        type: string
+      edit_request_response:
+        type: string
+      edit_requested_at:
+        type: string
+      nama_lengkap:
+        type: string
+      nama_perusahaan:
+        type: string
+      responden_id:
+        type: integer
+      status:
+        type: string
+      user_id:
+        type: string
+    type: object
   dto.EligibilityRequest:
     properties:
       pernah_terjadi:
@@ -9169,6 +9196,36 @@ paths:
       summary: Ambil sub sektor berdasarkan Sektor ID
       tags:
       - SubSektor
+  /api/survey/edit-requests:
+    get:
+      description: Get all pending survey edit requests (Admin/Staff only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.EditRequestItemResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get All Edit Requests (Admin)
+      tags:
+      - Survey Edit Request
   /api/survey/edit-requests/{id}:
     post:
       consumes:
@@ -9209,7 +9266,35 @@ paths:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
       summary: Review Edit Request
       tags:
-      - Risiko
+      - Survey Edit Request
+  /api/survey/edit-requests/me:
+    get:
+      description: Get current user's edit request
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.EditRequestItemResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get My Edit Request (User)
+      tags:
+      - Survey Edit Request
   /api/survey/finish:
     post:
       consumes:
@@ -9318,7 +9403,7 @@ paths:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
       summary: Request Edit
       tags:
-      - Risiko
+      - Survey Edit Request
   /api/survey/responden:
     get:
       description: Hanya admin yang dapat melihat semua data responden
@@ -9431,6 +9516,23 @@ paths:
       summary: Create / Update responden milik user login
       tags:
       - Responden
+  /api/survey/risiko:
+    get:
+      description: Get all active risks for survey
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      summary: Get All Risiko Aktif
+      tags:
+      - Risiko
   /api/survey/risiko/{id}:
     get:
       consumes:

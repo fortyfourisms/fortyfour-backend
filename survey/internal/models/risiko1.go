@@ -112,6 +112,22 @@ type SurveyProgress struct {
 	TerakhirUpdate  time.Time      `db:"terakhir_update"`
 }
 
+// EDIT REQUEST ITEM (joined: survey_progress + responden + perusahaan)
+type EditRequestItem struct {
+	RespondenID     int64          `db:"responden_id"`
+	UserID          string         `db:"user_id"`
+	NamaLengkap     string         `db:"nama_lengkap"`
+	NamaPerusahaan  sql.NullString `db:"nama_perusahaan"`
+	Status          string         `db:"status"`
+	EditReason      sql.NullString `db:"edit_request_reason"`
+	EditResponse    sql.NullString `db:"edit_request_response"`
+	EditRequestedAt sql.NullTime   `db:"edit_requested_at"`
+	EditApprovedAt  sql.NullTime   `db:"edit_approved_at"`
+	EditApprovedBy  sql.NullString `db:"edit_approved_by"`
+	EditRejectedAt  sql.NullTime   `db:"edit_rejected_at"`
+	EditRejectedBy  sql.NullString `db:"edit_rejected_by"`
+}
+
 // RESPONSE
 type RisikoResponse struct {
 	ID         int64  `json:"id"`

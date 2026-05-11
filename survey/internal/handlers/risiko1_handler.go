@@ -9,11 +9,13 @@ import (
 
 	"survey/internal/dto"
 	"survey/internal/middleware"
+	"survey/internal/models"
 	"survey/internal/repository"
 )
 
 // SERVICE INTERFACE
 type RisikoServiceInterface interface {
+	GetAllRisiko() ([]models.RisikoResponse, error)
 	ProcessEligibility(userID string, req dto.EligibilityRequest) (map[string]interface{}, error)
 	ProcessAlasan(userID string, req dto.AlasanRequest) (map[string]interface{}, error)
 	ProcessDampak(userID string, req dto.DampakRequest) (map[string]interface{}, error)
@@ -30,6 +32,9 @@ type RisikoServiceInterface interface {
 	FinishSurvey(userID string) error
 	RequestEdit(userID string, req dto.RequestEditRequest) (dto.ProgressResponse, error)
 	ReviewEditRequest(adminID string, respondenID int64, req dto.ReviewEditRequest) (dto.ProgressResponse, error)
+
+	GetAllEditRequests() ([]dto.EditRequestItemResponse, error)
+	GetMyEditRequest(userID string) (*dto.EditRequestItemResponse, error)
 }
 
 // HANDLER STRUCT
@@ -42,6 +47,23 @@ func NewRisikoHandler(svc RisikoServiceInterface) *RisikoHandler {
 }
 
 // HANDLER METHODS
+
+// @Summary Get All Risiko Aktif
+// @Description Get all active risks for survey
+// @Tags Risiko
+// @Produce json
+// @Success 200 {object} dto.APIResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /api/survey/risiko [get]
+func (h *RisikoHandler) GetAllRisiko(w http.ResponseWriter, r *http.Request) {
+	data, err := h.svc.GetAllRisiko()
+	if err != nil {
+		writeError(w, 500, err.Error())
+		return
+	}
+
+	writeSuccess(w, data)
+}
 
 // @Summary Submit Eligibility
 // @Description Submit eligibility for risk assessment
@@ -264,7 +286,7 @@ func (h *RisikoHandler) FinishSurvey(w http.ResponseWriter, r *http.Request) {
 
 // @Summary Request Edit
 // @Description Request to edit survey data
-// @Tags Risiko
+// @Tags Survey Edit Request
 // @Accept json
 // @Produce json
 // @Param request body dto.RequestEditRequest true "Edit request reason"
@@ -286,7 +308,7 @@ func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
 
 // @Summary Review Edit Request
 // @Description Approve or reject a request to edit survey data. Admin specifies action ("approve" or "reject").
-// @Tags Risiko
+// @Tags Survey Edit Request
 // @Accept json
 // @Produce json
 // @Param id path int true "Respondent ID"
@@ -317,6 +339,35 @@ func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request
 	}
 
 	res, err := h.svc.ReviewEditRequest(adminID, respondenID, req)
+	handleResult(w, res, err)
+}
+
+// @Summary Get All Edit Requests (Admin)
+// @Description Get all pending survey edit requests (Admin/Staff only)
+// @Tags Survey Edit Request
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.APIResponse{data=[]dto.EditRequestItemResponse}
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 403 {object} dto.ErrorResponse
+// @Router /api/survey/edit-requests [get]
+func (h *RisikoHandler) GetEditRequests(w http.ResponseWriter, r *http.Request) {
+	res, err := h.svc.GetAllEditRequests()
+	handleResult(w, res, err)
+}
+
+// @Summary Get My Edit Request (User)
+// @Description Get current user's edit request
+// @Tags Survey Edit Request
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} dto.APIResponse{data=dto.EditRequestItemResponse}
+// @Failure 401 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Router /api/survey/edit-requests/me [get]
+func (h *RisikoHandler) GetMyEditRequest(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetUserID(r.Context())
+	res, err := h.svc.GetMyEditRequest(userID)
 	handleResult(w, res, err)
 }
 

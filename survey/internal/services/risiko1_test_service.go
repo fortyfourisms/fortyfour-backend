@@ -29,6 +29,7 @@ type mockRisikoRepo struct {
 	existsRespondenFn         func(id int64) (bool, error)
 	existsRisikoFn            func(id int64) (bool, error)
 	existsCustomFn            func(id int64) (bool, error)
+	getAllRisikoFn             func() ([]models.RisikoResponse, error)
 	upsertEligibilityFn       func(m models.RisikoEligibility) error
 	upsertAlasanFn            func(m models.RisikoAlasan) error
 	upsertDampakFn            func(m models.RisikoDampak) error
@@ -38,6 +39,8 @@ type mockRisikoRepo struct {
 	upsertProgressFn          func(p models.SurveyProgress) error
 	getRespondentIDByUserIDFn func(userID string) (int64, error)
 	insertCustomFn            func(id int64, nama string) (int, error)
+	getAllEditRequestsFn      func() ([]models.EditRequestItem, error)
+	getEditRequestByUserIDFn  func(userID string) (*models.EditRequestItem, error)
 }
 
 func (m *mockRisikoRepo) ExistsResponden(id int64) (bool, error) {
@@ -48,6 +51,12 @@ func (m *mockRisikoRepo) ExistsRisiko(id int64) (bool, error) {
 }
 func (m *mockRisikoRepo) ExistsCustomRisiko(id int64) (bool, error) {
 	return m.existsCustomFn(id)
+}
+func (m *mockRisikoRepo) GetAllRisiko() ([]models.RisikoResponse, error) {
+	if m.getAllRisikoFn != nil {
+		return m.getAllRisikoFn()
+	}
+	return nil, nil
 }
 func (m *mockRisikoRepo) UpsertEligibility(r models.RisikoEligibility) error {
 	return m.upsertEligibilityFn(r)
@@ -75,6 +84,18 @@ func (m *mockRisikoRepo) GetRespondentIDByUserID(userID string) (int64, error) {
 }
 func (m *mockRisikoRepo) InsertCustomRisiko(id int64, nama string) (int, error) {
 	return m.insertCustomFn(id, nama)
+}
+func (m *mockRisikoRepo) GetAllEditRequests() ([]models.EditRequestItem, error) {
+	if m.getAllEditRequestsFn != nil {
+		return m.getAllEditRequestsFn()
+	}
+	return nil, nil
+}
+func (m *mockRisikoRepo) GetEditRequestByUserID(userID string) (*models.EditRequestItem, error) {
+	if m.getEditRequestByUserIDFn != nil {
+		return m.getEditRequestByUserIDFn(userID)
+	}
+	return nil, nil
 }
 
 // HELPER

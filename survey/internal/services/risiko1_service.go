@@ -31,6 +31,8 @@ type RisikoRepositoryInterface interface {
 	ExistsResponden(int64) (bool, error)
 	ExistsRisiko(int64) (bool, error)
 
+	GetAllRisiko() ([]models.RisikoResponse, error)
+
 	UpsertEligibility(models.RisikoEligibility) error
 	UpsertAlasan(models.RisikoAlasan) error
 	UpsertDampak(models.RisikoDampak) error
@@ -43,6 +45,9 @@ type RisikoRepositoryInterface interface {
 	InsertCustomRisiko(int64, string) (int, error)
 
 	GetRespondentIDByUserID(userID string) (int64, error)
+
+	GetAllEditRequests() ([]models.EditRequestItem, error)
+	GetEditRequestByUserID(userID string) (*models.EditRequestItem, error)
 }
 
 // SERVICE
@@ -320,6 +325,10 @@ func (s *RisikoService) ProcessPengendalian(userID string, req dto.PengendalianR
 		"message":   "pengendalian tersimpan",
 		"next_step": "finish",
 	}, nil
+}
+
+func (s *RisikoService) GetAllRisiko() ([]models.RisikoResponse, error) {
+	return s.repo.GetAllRisiko()
 }
 
 func (s *RisikoService) GetByUserID(userID string) (map[string]interface{}, error) {
@@ -612,4 +621,71 @@ func (s *RisikoService) ReviewEditRequest(adminID string, respondenID int64, req
 	}
 
 	return progressToResponse(progress), nil
+}
+
+// EDIT REQUEST LIST
+
+func editRequestItemToResponse(item models.EditRequestItem) dto.EditRequestItemResponse {
+	resp := dto.EditRequestItemResponse{
+		RespondenID: item.RespondenID,
+		UserID:      item.UserID,
+		NamaLengkap: item.NamaLengkap,
+		Status:      item.Status,
+	}
+	if item.NamaPerusahaan.Valid {
+		resp.NamaPerusahaan = &item.NamaPerusahaan.String
+	}
+	if item.EditReason.Valid {
+		resp.EditReason = &item.EditReason.String
+	}
+	if item.EditResponse.Valid {
+		resp.EditResponse = &item.EditResponse.String
+	}
+	if item.EditRequestedAt.Valid {
+		s := item.EditRequestedAt.Time.Format(time.RFC3339)
+		resp.EditRequestedAt = &s
+	}
+	if item.EditApprovedAt.Valid {
+		s := item.EditApprovedAt.Time.Format(time.RFC3339)
+		resp.EditApprovedAt = &s
+	}
+	if item.EditApprovedBy.Valid {
+		resp.EditApprovedBy = &item.EditApprovedBy.String
+	}
+	if item.EditRejectedAt.Valid {
+		s := item.EditRejectedAt.Time.Format(time.RFC3339)
+		resp.EditRejectedAt = &s
+	}
+	if item.EditRejectedBy.Valid {
+		resp.EditRejectedBy = &item.EditRejectedBy.String
+	}
+	return resp
+}
+
+func (s *RisikoService) GetAllEditRequests() ([]dto.EditRequestItemResponse, error) {
+	items, err := s.repo.GetAllEditRequests()
+	if err != nil {
+		return nil, err
+	}
+
+	var result []dto.EditRequestItemResponse
+	for _, item := range items {
+		result = append(result, editRequestItemToResponse(item))
+	}
+
+	return result, nil
+}
+
+func (s *RisikoService) GetMyEditRequest(userID string) (*dto.EditRequestItemResponse, error) {
+	if strings.TrimSpace(userID) == "" {
+		return nil, errors.New("user_id wajib diisi")
+	}
+
+	item, err := s.repo.GetEditRequestByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := editRequestItemToResponse(*item)
+	return &resp, nil
 }
