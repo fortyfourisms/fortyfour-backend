@@ -30,6 +30,8 @@ const (
 type RisikoRepositoryInterface interface {
 	ExistsResponden(int64) (bool, error)
 	ExistsRisiko(int64) (bool, error)
+	GetRisikoIDByUrutan(int) (int64, error)
+	GetUrutanByRisikoID(int64) (int, error)
 
 	UpsertEligibility(models.RisikoEligibility) error
 	UpsertAlasan(models.RisikoAlasan) error
@@ -134,6 +136,33 @@ func toInt64Ptr(v int) *int64 {
 
 func toStringPtr(s string) *string {
 	return &s
+}
+
+func (s *RisikoService) resolveRisikoIDByUrutan(currentRisk int) sql.NullInt64 {
+	if currentRisk <= 0 {
+		return sql.NullInt64{Valid: false}
+	}
+
+	risikoID, err := s.repo.GetRisikoIDByUrutan(currentRisk)
+	if err != nil || risikoID <= 0 {
+		return sql.NullInt64{Valid: false}
+	}
+
+	return sqlInt64(int(risikoID))
+}
+
+func (s *RisikoService) resolveCurrentUrutan(progress *models.SurveyProgress, fallback int) int {
+	if progress != nil && progress.RisikoID.Valid {
+		if urutan, err := s.repo.GetUrutanByRisikoID(progress.RisikoID.Int64); err == nil && urutan > 0 {
+			return urutan
+		}
+	}
+
+	if fallback > 0 {
+		return fallback
+	}
+
+	return 0
 }
 
 // STEP 1
@@ -405,10 +434,7 @@ func (s *RisikoService) Navigate(userID string, req dto.NavigateRequest) (dto.Pr
 		return dto.ProgressResponse{}, err
 	}
 
-	currentRisk := 0
-	if progress.RisikoID.Valid {
-		currentRisk = int(progress.RisikoID.Int64)
-	}
+	currentRisk := s.resolveCurrentUrutan(progress, req.CurrentRisk)
 
 	switch strings.ToLower(req.Direction) {
 	case "next":
@@ -421,11 +447,7 @@ func (s *RisikoService) Navigate(userID string, req dto.NavigateRequest) (dto.Pr
 		return dto.ProgressResponse{}, errors.New("invalid direction")
 	}
 
-	if currentRisk > 0 {
-		progress.RisikoID = sqlInt64(currentRisk)
-	} else {
-		progress.RisikoID = sql.NullInt64{Valid: false}
-	}
+	progress.RisikoID = s.resolveRisikoIDByUrutan(currentRisk)
 	progress.LangkahSaatIni = sql.NullString{String: "navigate", Valid: true}
 	progress.Status = SurveyStatusDraft
 	progress.Selesai = false
@@ -447,7 +469,7 @@ func (s *RisikoService) SaveProgress(userID string, req dto.NavigateRequest) (dt
 		return dto.ProgressResponse{}, err
 	}
 	progress.RespondenID = int64(respondenID)
-	progress.RisikoID = sqlInt64(req.CurrentRisk)
+	progress.RisikoID = s.resolveRisikoIDByUrutan(req.CurrentRisk)
 	progress.LangkahSaatIni = sql.NullString{String: "save-progress", Valid: true}
 	progress.Selesai = false
 	progress.Status = SurveyStatusDraft

@@ -29,6 +29,8 @@ type mockRisikoRepo struct {
 	existsRespondenFn         func(id int64) (bool, error)
 	existsRisikoFn            func(id int64) (bool, error)
 	existsCustomFn            func(id int64) (bool, error)
+	getRisikoIDByUrutanFn     func(urutan int) (int64, error)
+	getUrutanByRisikoIDFn     func(id int64) (int, error)
 	upsertEligibilityFn       func(m models.RisikoEligibility) error
 	upsertAlasanFn            func(m models.RisikoAlasan) error
 	upsertDampakFn            func(m models.RisikoDampak) error
@@ -45,6 +47,12 @@ func (m *mockRisikoRepo) ExistsResponden(id int64) (bool, error) {
 }
 func (m *mockRisikoRepo) ExistsRisiko(id int64) (bool, error) {
 	return m.existsRisikoFn(id)
+}
+func (m *mockRisikoRepo) GetRisikoIDByUrutan(urutan int) (int64, error) {
+	return m.getRisikoIDByUrutanFn(urutan)
+}
+func (m *mockRisikoRepo) GetUrutanByRisikoID(id int64) (int, error) {
+	return m.getUrutanByRisikoIDFn(id)
 }
 func (m *mockRisikoRepo) ExistsCustomRisiko(id int64) (bool, error) {
 	return m.existsCustomFn(id)
@@ -94,6 +102,16 @@ func newService(mock *mockRisikoRepo) *RisikoService {
 				RespondenID: id,
 				Status:      SurveyStatusDraft,
 			}, nil
+		}
+	}
+	if mock.getRisikoIDByUrutanFn == nil {
+		mock.getRisikoIDByUrutanFn = func(urutan int) (int64, error) {
+			return int64(urutan), nil
+		}
+	}
+	if mock.getUrutanByRisikoIDFn == nil {
+		mock.getUrutanByRisikoIDFn = func(id int64) (int, error) {
+			return int(id), nil
 		}
 	}
 	if mock.upsertProgressFn == nil {
@@ -257,13 +275,21 @@ func TestNavigate_Next(t *testing.T) {
 
 // TEST SAVE PROGRESS
 func TestSaveProgress_Success(t *testing.T) {
+	var savedProgress models.SurveyProgress
 	mock := &mockRisikoRepo{
+		getRisikoIDByUrutanFn: func(urutan int) (int64, error) {
+			if urutan == 5 {
+				return 42, nil
+			}
+			return 0, sql.ErrNoRows
+		},
 		getProgressFn: func(id int64) (*models.SurveyProgress, error) {
 			return &models.SurveyProgress{
 				RespondenID: int64(id),
 			}, nil
 		},
 		upsertProgressFn: func(p models.SurveyProgress) error {
+			savedProgress = p
 			return nil
 		},
 	}
@@ -279,8 +305,49 @@ func TestSaveProgress_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if *res.RisikoID != 5 {
-		t.Error("expected saved risk")
+	if savedProgress.RisikoID.Int64 != 42 {
+		t.Errorf("expected persisted risiko_id 42, got %d", savedProgress.RisikoID.Int64)
+	}
+
+	if *res.RisikoID != 42 {
+		t.Error("expected response risk to use mapped risiko_id")
+	}
+}
+
+func TestSaveProgress_UnknownRiskStoresNull(t *testing.T) {
+	var savedProgress models.SurveyProgress
+	mock := &mockRisikoRepo{
+		getRisikoIDByUrutanFn: func(urutan int) (int64, error) {
+			return 0, sql.ErrNoRows
+		},
+		getProgressFn: func(id int64) (*models.SurveyProgress, error) {
+			return &models.SurveyProgress{
+				RespondenID: int64(id),
+			}, nil
+		},
+		upsertProgressFn: func(p models.SurveyProgress) error {
+			savedProgress = p
+			return nil
+		},
+	}
+
+	svc := newService(mock)
+
+	res, err := svc.SaveProgress("user-1", dto.NavigateRequest{
+		RespondenID: 1,
+		CurrentRisk: 999,
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if savedProgress.RisikoID.Valid {
+		t.Fatal("expected persisted risiko_id to be NULL for unknown current_risk")
+	}
+
+	if res.RisikoID != nil {
+		t.Fatal("expected response risiko_id to be nil for unknown current_risk")
 	}
 }
 
