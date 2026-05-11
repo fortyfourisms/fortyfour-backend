@@ -28,11 +28,10 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// INIT ROUTER
 func InitRouter(
 	respondenH *handlers.RespondenHandler,
 	risikoH *handlers.RisikoHandler,
-	authMiddleware func(http.Handler) http.Handler,
+	authM *middleware.AuthMiddleware,
 ) *http.ServeMux {
 
 	mux := http.NewServeMux()
@@ -45,10 +44,36 @@ func InitRouter(
 		return middleware.Logger(
 			middleware.Recovery(
 				middleware.CORS(
-					authMiddleware(h),
+					authM.Authenticate(h),
 				),
 			),
 		)
+	}
+	getOnly := func(h http.HandlerFunc) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodGet {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			h(w, r)
+		})
+	}
+	getRisikoByRespondentID := func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/survey/risiko/" {
+			risikoH.GetAllRisiko(w, r)
+			return
+		}
+		risikoH.GetByRespondentID(w, r)
+	}
+	pengendalian := func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			risikoH.GetMe(w, r)
+		case http.MethodPost:
+			risikoH.SubmitPengendalian(w, r)
+		default:
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
 	}
 
 	// RESPONDEN
@@ -58,10 +83,11 @@ func InitRouter(
 	// RISIKO
 	mux.Handle("/api/survey/risiko/eligibility", protected(http.HandlerFunc(risikoH.SubmitEligibility)))
 	mux.Handle("/api/survey/risiko/dampak", protected(http.HandlerFunc(risikoH.SubmitDampak)))
-	mux.Handle("/api/survey/risiko/pengendalian", protected(http.HandlerFunc(risikoH.SubmitPengendalian)))
+	mux.Handle("/api/survey/risiko/pengendalian", protected(http.HandlerFunc(pengendalian)))
 	mux.Handle("/api/survey/risiko/reason", protected(http.HandlerFunc(risikoH.SubmitAlasan)))
-	mux.Handle("/api/survey/risiko/me", protected(http.HandlerFunc(risikoH.GetMe)))
-	mux.Handle("/api/survey/risiko/", protected(http.HandlerFunc(risikoH.GetByRespondentID)))
+	mux.Handle("/api/survey/risiko", protected(getOnly(risikoH.GetAllRisiko)))
+	mux.Handle("/api/survey/risiko/me", protected(getOnly(risikoH.GetMe)))
+	mux.Handle("/api/survey/risiko/", protected(getOnly(getRisikoByRespondentID)))
 
 	// PROGRESS & NAVIGATION
 	mux.Handle("/api/survey/progress", protected(http.HandlerFunc(risikoH.GetProgress)))

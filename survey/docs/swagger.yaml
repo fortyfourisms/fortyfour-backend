@@ -310,6 +310,21 @@ paths:
       summary: Create / Update responden milik user login
       tags:
       - Responden
+  /api/survey/risiko:
+    get:
+      consumes:
+      - application/json
+      description: Get all active master risk data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/survey_internal_dto.APIResponse'
+      summary: Get All Risiko
+      tags:
+      - Risiko
   /api/survey/risiko/{id}:
     get:
       consumes:
@@ -337,6 +352,25 @@ paths:
           schema:
             $ref: '#/definitions/survey_internal_dto.ErrorResponse'
       summary: Get Risiko by Respondent ID
+      tags:
+      - Risiko
+  /api/survey/risiko/me:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's risk answer data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/survey_internal_dto.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      summary: Get My Risiko Data
       tags:
       - Risiko
   /api/survey/risiko/dampak:
@@ -392,6 +426,24 @@ paths:
       tags:
       - Risiko
   /api/survey/risiko/pengendalian:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's risk answer data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/survey_internal_dto.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      summary: Get My Pengendalian Risiko Data
+      tags:
+      - Risiko
     post:
       consumes:
       - application/json

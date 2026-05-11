@@ -10155,6 +10155,29 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/survey/risiko": {
+            "get": {
+                "description": "Get all active master risk data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Get All Risiko",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/survey/risiko/dampak": {
             "post": {
                 "description": "Submit impact assessment for risk",
@@ -10265,6 +10288,33 @@ const docTemplate = `{
             }
         },
         "/api/survey/risiko/pengendalian": {
+            "get": {
+                "description": "Get current user's risk answer data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Get My Pengendalian Risiko Data",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Submit control measures for risk",
                 "consumes": [

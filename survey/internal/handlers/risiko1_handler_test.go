@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 
 	"survey/internal/dto"
 	"survey/internal/middleware"
+	"survey/internal/models"
 	"survey/internal/repository"
 )
 
@@ -19,6 +21,7 @@ type mockRisikoService struct {
 	ProcessAlasanFunc       func(string, dto.AlasanRequest) (map[string]interface{}, error)
 	ProcessDampakFunc       func(string, dto.DampakRequest) (map[string]interface{}, error)
 	ProcessPengendalianFunc func(string, dto.PengendalianRequest) (map[string]interface{}, error)
+	GetAllRisikoFunc        func() ([]models.RisikoResponse, error)
 	GetByUserIDFunc         func(string) (map[string]interface{}, error)
 	GetByRespondentIDFunc   func(int64) (map[string]interface{}, error)
 	GetProgressFunc         func(string) (dto.ProgressResponse, error)
@@ -40,6 +43,9 @@ func (m *mockRisikoService) ProcessDampak(userID string, r dto.DampakRequest) (m
 }
 func (m *mockRisikoService) ProcessPengendalian(userID string, r dto.PengendalianRequest) (map[string]interface{}, error) {
 	return m.ProcessPengendalianFunc(userID, r)
+}
+func (m *mockRisikoService) GetAllRisiko() ([]models.RisikoResponse, error) {
+	return m.GetAllRisikoFunc()
 }
 func (m *mockRisikoService) GetByUserID(userID string) (map[string]interface{}, error) {
 	return m.GetByUserIDFunc(userID)
@@ -69,8 +75,8 @@ func (m *mockRisikoService) ReviewEditRequest(adminID string, respondenID int64,
 // helper: inject role and userID into request context
 func withRisikoCtx(req *http.Request, userID, role string) *http.Request {
 	ctx := req.Context()
-	ctx = middleware.SetUserID(ctx, userID)
-	ctx = middleware.SetRole(ctx, role)
+	ctx = context.WithValue(ctx, middleware.UserIDKey, userID)
+	ctx = context.WithValue(ctx, middleware.RoleKey, role)
 	return req.WithContext(ctx)
 }
 
