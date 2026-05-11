@@ -70,6 +70,38 @@ func (r *RisikoRepository) GetByID(id int64) (*models.Risiko, error) {
 	return &m, nil
 }
 
+func (r *RisikoRepository) GetRisikoIDByUrutan(urutan int) (int64, error) {
+	row := r.db.QueryRow(`
+		SELECT id
+		FROM risiko
+		WHERE urutan = ? AND aktif = TRUE
+		LIMIT 1
+	`, urutan)
+
+	var id int64
+	if err := row.Scan(&id); err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+func (r *RisikoRepository) GetUrutanByRisikoID(id int64) (int, error) {
+	row := r.db.QueryRow(`
+		SELECT urutan
+		FROM risiko
+		WHERE id = ? AND aktif = TRUE
+		LIMIT 1
+	`, id)
+
+	var urutan int
+	if err := row.Scan(&urutan); err != nil {
+		return 0, err
+	}
+
+	return urutan, nil
+}
+
 // STEP 1 - ELIGIBILITY
 func (r *RisikoRepository) UpsertEligibility(m models.RisikoEligibility) error {
 
