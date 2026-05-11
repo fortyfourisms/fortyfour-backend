@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -38,8 +39,8 @@ func (m *mockService) UpsertByUserID(userID string, req dto.CreateRespondenReque
 // helper: inject role and userID into context (simulates Auth middleware)
 func withContext(req *http.Request, userID, role string) *http.Request {
 	ctx := req.Context()
-	ctx = middleware.SetUserID(ctx, userID)
-	ctx = middleware.SetRole(ctx, role)
+	ctx = context.WithValue(ctx, middleware.UserIDKey, userID)
+	ctx = context.WithValue(ctx, middleware.RoleKey, role)
 	return req.WithContext(ctx)
 }
 

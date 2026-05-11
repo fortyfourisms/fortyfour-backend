@@ -9,11 +9,15 @@ import (
 
 	"survey/internal/dto"
 	"survey/internal/middleware"
+	"survey/internal/models"
 	"survey/internal/repository"
+	"survey/internal/utils"
 )
 
 // SERVICE INTERFACE
 type RisikoServiceInterface interface {
+	GetAllRisiko() ([]models.RisikoResponse, error)
+
 	ProcessEligibility(userID string, req dto.EligibilityRequest) (map[string]interface{}, error)
 	ProcessAlasan(userID string, req dto.AlasanRequest) (map[string]interface{}, error)
 	ProcessDampak(userID string, req dto.DampakRequest) (map[string]interface{}, error)
@@ -41,23 +45,24 @@ func NewRisikoHandler(svc RisikoServiceInterface) *RisikoHandler {
 	return &RisikoHandler{svc: svc}
 }
 
-// HANDLER METHODS
+// GetAllRisiko handles GET /api/survey/risiko
+func (h *RisikoHandler) GetAllRisiko(w http.ResponseWriter, r *http.Request) {
+	data, err := h.svc.GetAllRisiko()
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
-// @Summary Submit Eligibility
-// @Description Submit eligibility for risk assessment
-// @Tags Risiko
-// @Accept json
-// @Produce json
-// @Param request body dto.EligibilityRequest true "Eligibility request"
-// @Success 200 {object} dto.APIResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/survey/risiko/eligibility [post]
+	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil data risiko", data)
+}
+
+// SubmitEligibility handles POST /api/survey/risiko/eligibility
 func (h *RisikoHandler) SubmitEligibility(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.EligibilityRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, 400, "invalid body")
+		utils.RespondError(w, http.StatusBadRequest, "Invalid body")
 		return
 	}
 
@@ -65,21 +70,13 @@ func (h *RisikoHandler) SubmitEligibility(w http.ResponseWriter, r *http.Request
 	handleResult(w, res, err)
 }
 
-// @Summary Submit Alasan
-// @Description Submit reason for risk
-// @Tags Risiko
-// @Accept json
-// @Produce json
-// @Param request body dto.AlasanRequest true "Alasan request"
-// @Success 200 {object} dto.APIResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/survey/risiko/reason [post]
+// SubmitAlasan handles POST /api/survey/risiko/reason
 func (h *RisikoHandler) SubmitAlasan(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.AlasanRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, 400, "invalid body")
+		utils.RespondError(w, http.StatusBadRequest, "Invalid body")
 		return
 	}
 
@@ -87,21 +84,13 @@ func (h *RisikoHandler) SubmitAlasan(w http.ResponseWriter, r *http.Request) {
 	handleResult(w, res, err)
 }
 
-// @Summary Submit Dampak
-// @Description Submit impact assessment for risk
-// @Tags Risiko
-// @Accept json
-// @Produce json
-// @Param request body dto.DampakRequest true "Dampak request"
-// @Success 200 {object} dto.APIResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/survey/risiko/dampak [post]
+// SubmitDampak handles POST /api/survey/risiko/dampak
 func (h *RisikoHandler) SubmitDampak(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.DampakRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, 400, "invalid body")
+		utils.RespondError(w, http.StatusBadRequest, "Invalid body")
 		return
 	}
 
@@ -109,21 +98,13 @@ func (h *RisikoHandler) SubmitDampak(w http.ResponseWriter, r *http.Request) {
 	handleResult(w, res, err)
 }
 
-// @Summary Submit Pengendalian
-// @Description Submit control measures for risk
-// @Tags Risiko
-// @Accept json
-// @Produce json
-// @Param request body dto.PengendalianRequest true "Pengendalian request"
-// @Success 200 {object} dto.APIResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/survey/risiko/pengendalian [post]
+// SubmitPengendalian handles POST /api/survey/risiko/pengendalian
 func (h *RisikoHandler) SubmitPengendalian(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.PengendalianRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, 400, "invalid body")
+		utils.RespondError(w, http.StatusBadRequest, "Invalid body")
 		return
 	}
 
@@ -131,73 +112,53 @@ func (h *RisikoHandler) SubmitPengendalian(w http.ResponseWriter, r *http.Reques
 	handleResult(w, res, err)
 }
 
-// @Summary Get My Risiko Data
-// @Description Get current user's risk data
-// @Tags Risiko
-// @Accept json
-// @Produce json
-// @Success 200 {object} dto.APIResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Router /api/survey/risiko/me [get]
+// GetMe handles GET /api/survey/risiko/me
 func (h *RisikoHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
 	data, err := h.svc.GetByUserID(userID)
 	if err != nil {
-		writeError(w, 404, err.Error())
+		if errors.Is(err, repository.ErrNotFound) {
+			utils.RespondError(w, http.StatusNotFound, "Data risiko belum ditemukan")
+			return
+		}
+		utils.RespondError(w, http.StatusNotFound, err.Error())
 		return
 	}
 
-	writeSuccess(w, data)
+	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil data risiko", data)
 }
 
-// @Summary Get Risiko by Respondent ID
-// @Description Get risk data by respondent ID (admin only)
-// @Tags Risiko
-// @Accept json
-// @Produce json
-// @Param id path int true "Respondent ID"
-// @Success 200 {object} dto.APIResponse
-// @Failure 403 {object} dto.ErrorResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Router /api/survey/risiko/{id} [get]
+// GetByRespondentID handles GET /api/survey/risiko/{id}
 func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 
 	if role != "admin" && role != "staff" {
-		writeError(w, 403, "forbidden")
+		utils.RespondError(w, http.StatusForbidden, "Forbidden")
 		return
 	}
 
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/survey/risiko/")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := strconv.ParseInt(strings.Trim(idStr, "/"), 10, 64)
 	if err != nil {
-		writeError(w, 400, "invalid id")
+		utils.RespondError(w, http.StatusBadRequest, "ID tidak valid")
 		return
 	}
 
 	data, err := h.svc.GetByRespondentID(id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			writeError(w, 404, "data tidak ditemukan")
+			utils.RespondError(w, http.StatusNotFound, "Data tidak ditemukan")
 			return
 		}
-		writeError(w, 500, err.Error())
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	writeSuccess(w, data)
+	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil data risiko responden", data)
 }
 
-// @Summary Get Survey Progress
-// @Description Get current user's survey progress and current step
-// @Tags Risiko
-// @Accept json
-// @Produce json
-// @Success 200 {object} dto.APIResponse{data=dto.ProgressResponse}
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Router /api/survey/progress [get]
+// GetProgress handles GET /api/survey/progress
 func (h *RisikoHandler) GetProgress(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
@@ -205,15 +166,7 @@ func (h *RisikoHandler) GetProgress(w http.ResponseWriter, r *http.Request) {
 	handleResult(w, res, err)
 }
 
-// @Summary Navigate Survey
-// @Description Navigate through survey steps
-// @Tags Risiko
-// @Accept json
-// @Produce json
-// @Param request body dto.NavigateRequest true "Navigate request"
-// @Success 200 {object} dto.APIResponse{data=dto.ProgressResponse}
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/survey/navigate [post]
+// Navigate handles POST /api/survey/navigate
 func (h *RisikoHandler) Navigate(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
@@ -224,15 +177,7 @@ func (h *RisikoHandler) Navigate(w http.ResponseWriter, r *http.Request) {
 	handleResult(w, res, err)
 }
 
-// @Summary Save Progress
-// @Description Save current survey progress
-// @Tags Risiko
-// @Accept json
-// @Produce json
-// @Param request body dto.NavigateRequest true "Save progress request"
-// @Success 200 {object} dto.APIResponse{data=dto.ProgressResponse}
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/survey/save-progress [post]
+// SaveProgress handles POST /api/survey/save-progress
 func (h *RisikoHandler) SaveProgress(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
@@ -243,23 +188,16 @@ func (h *RisikoHandler) SaveProgress(w http.ResponseWriter, r *http.Request) {
 	handleResult(w, res, err)
 }
 
-// @Summary Finish Survey
-// @Description Complete the survey
-// @Tags Risiko
-// @Accept json
-// @Produce json
-// @Success 200 {object} dto.APIResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /api/survey/finish [post]
+// FinishSurvey handles POST /api/survey/finish
 func (h *RisikoHandler) FinishSurvey(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
 	if err := h.svc.FinishSurvey(userID); err != nil {
-		writeError(w, 500, err.Error())
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	writeSuccess(w, "survey selesai")
+	utils.RespondSuccess(w, http.StatusOK, "Survey berhasil diselesaikan", nil)
 }
 
 func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
@@ -267,7 +205,7 @@ func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
 
 	var req dto.RequestEditRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, 400, "invalid body")
+		utils.RespondError(w, http.StatusBadRequest, "Invalid body")
 		return
 	}
 
@@ -278,7 +216,7 @@ func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
 func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request) {
 	role := middleware.GetRole(r.Context())
 	if role != "admin" && role != "staff" {
-		writeError(w, 403, "forbidden")
+		utils.RespondError(w, http.StatusForbidden, "Forbidden")
 		return
 	}
 
@@ -286,13 +224,13 @@ func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/survey/edit-requests/")
 	respondenID, err := strconv.ParseInt(strings.Trim(idStr, "/"), 10, 64)
 	if err != nil {
-		writeError(w, 400, "invalid responden_id")
+		utils.RespondError(w, http.StatusBadRequest, "ID responden tidak valid")
 		return
 	}
 
 	var req dto.ReviewEditRequest
 	if err := decodeJSON(r, &req); err != nil {
-		writeError(w, 400, "invalid body")
+		utils.RespondError(w, http.StatusBadRequest, "Invalid body")
 		return
 	}
 
@@ -309,31 +247,11 @@ func decodeJSON(r *http.Request, dst interface{}) error {
 func handleResult(w http.ResponseWriter, data interface{}, err error) {
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
-			writeError(w, 404, err.Error())
+			utils.RespondError(w, http.StatusNotFound, err.Error())
 			return
 		}
-		writeError(w, 400, err.Error())
+		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	writeSuccess(w, data)
-}
-
-func writeSuccess(w http.ResponseWriter, data interface{}) {
-	writeJSON(w, 200, map[string]interface{}{
-		"success": true,
-		"data":    data,
-	})
-}
-
-func writeError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, map[string]interface{}{
-		"success": false,
-		"message": message,
-	})
-}
-
-func writeJSON(w http.ResponseWriter, status int, body interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(body)
+	utils.RespondSuccess(w, http.StatusOK, "Success", data)
 }

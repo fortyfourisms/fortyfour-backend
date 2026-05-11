@@ -295,7 +295,86 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/survey/risiko": {
+            "get": {
+                "description": "Get all active master risk data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Get All Risiko",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/survey/risiko/me": {
+            "get": {
+                "description": "Get current user's risk answer data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Get My Risiko Data",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/survey/risiko/dampak": {
+            "get": {
+                "description": "Get current user's risk answer data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Get My Dampak Risiko Data",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Submit impact assessment for risk",
                 "consumes": [
@@ -336,6 +415,33 @@ const docTemplate = `{
             }
         },
         "/api/survey/risiko/eligibility": {
+            "get": {
+                "description": "Get current user's risk answer data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Get My Eligibility Risiko Data",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Submit eligibility for risk assessment",
                 "consumes": [
@@ -376,6 +482,33 @@ const docTemplate = `{
             }
         },
         "/api/survey/risiko/pengendalian": {
+            "get": {
+                "description": "Get current user's risk answer data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Get My Pengendalian Risiko Data",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Submit control measures for risk",
                 "consumes": [
@@ -416,6 +549,33 @@ const docTemplate = `{
             }
         },
         "/api/survey/risiko/reason": {
+            "get": {
+                "description": "Get current user's risk answer data",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Get My Alasan Risiko Data",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Submit reason for risk",
                 "consumes": [

@@ -28,6 +28,7 @@ const (
 
 // REPOSITORY
 type RisikoRepositoryInterface interface {
+	GetAllRisiko() ([]models.RisikoResponse, error)
 	ExistsResponden(int64) (bool, error)
 	ExistsRisiko(int64) (bool, error)
 	GetRisikoIDByUrutan(int) (int64, error)
@@ -55,6 +56,10 @@ type RisikoService struct {
 
 func NewRisikoService(repo RisikoRepositoryInterface, cache CacheRepository) *RisikoService {
 	return &RisikoService{repo: repo, cache: cache}
+}
+
+func (s *RisikoService) GetAllRisiko() ([]models.RisikoResponse, error) {
+	return s.repo.GetAllRisiko()
 }
 
 // CACHE

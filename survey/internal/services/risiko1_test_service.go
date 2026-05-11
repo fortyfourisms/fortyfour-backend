@@ -26,6 +26,7 @@ func (m *mockCache) Del(ctx context.Context, key string) error {
 
 // MOCK REPOSITORY
 type mockRisikoRepo struct {
+	getAllRisikoFn            func() ([]models.RisikoResponse, error)
 	existsRespondenFn         func(id int64) (bool, error)
 	existsRisikoFn            func(id int64) (bool, error)
 	existsCustomFn            func(id int64) (bool, error)
@@ -42,6 +43,9 @@ type mockRisikoRepo struct {
 	insertCustomFn            func(id int64, nama string) (int, error)
 }
 
+func (m *mockRisikoRepo) GetAllRisiko() ([]models.RisikoResponse, error) {
+	return m.getAllRisikoFn()
+}
 func (m *mockRisikoRepo) ExistsResponden(id int64) (bool, error) {
 	return m.existsRespondenFn(id)
 }
@@ -91,6 +95,11 @@ func ptrInt(v int) *int {
 }
 
 func newService(mock *mockRisikoRepo) *RisikoService {
+	if mock.getAllRisikoFn == nil {
+		mock.getAllRisikoFn = func() ([]models.RisikoResponse, error) {
+			return nil, nil
+		}
+	}
 	if mock.getRespondentIDByUserIDFn == nil {
 		mock.getRespondentIDByUserIDFn = func(userID string) (int64, error) {
 			return 1, nil

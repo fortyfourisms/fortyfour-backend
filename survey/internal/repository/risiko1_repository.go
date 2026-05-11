@@ -219,6 +219,8 @@ func (r *RisikoRepository) FindByRespondentID(respondenID int64) (map[string]int
 
 	query := `
 	SELECT 
+		e.responden_id,
+		e.risiko_id,
 		e.pernah_terjadi,
 		a.alasan,
 		d.dampak_reputasi, d.dampak_operasional, d.dampak_finansial, d.dampak_hukum,
@@ -237,6 +239,8 @@ func (r *RisikoRepository) FindByRespondentID(respondenID int64) (map[string]int
 	row := r.db.QueryRow(query, respondenID)
 
 	var (
+		respondentID  int64
+		risikoID      sql.NullInt64
 		pernahTerjadi bool
 		alasan        sql.NullString
 
@@ -251,6 +255,8 @@ func (r *RisikoRepository) FindByRespondentID(respondenID int64) (map[string]int
 	)
 
 	err := row.Scan(
+		&respondentID,
+		&risikoID,
 		&pernahTerjadi,
 		&alasan,
 		&dampakReputasi,
@@ -270,12 +276,16 @@ func (r *RisikoRepository) FindByRespondentID(respondenID int64) (map[string]int
 	}
 
 	result := map[string]interface{}{
+		"responden_id":           respondentID,
 		"pernah_terjadi":         pernahTerjadi,
 		"alasan":                 alasan.String,
 		"ada_pengendalian":       adaPengendalian.Bool,
 		"deskripsi_pengendalian": deskripsiPengendalian.String,
 	}
 
+	if risikoID.Valid {
+		result["risiko_id"] = risikoID.Int64
+	}
 	if dampakReputasi.Valid {
 		result["dampak_reputasi"] = dampakReputasi.String
 	}

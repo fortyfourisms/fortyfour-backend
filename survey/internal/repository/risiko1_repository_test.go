@@ -94,12 +94,14 @@ func TestFindByRespondentID_Success(t *testing.T) {
 	repo := NewRisikoRepository(db)
 
 	rows := sqlmock.NewRows([]string{
+		"responden_id", "risiko_id",
 		"pernah_terjadi", "alasan",
 		"dampak_reputasi", "dampak_operasional",
 		"dampak_finansial", "dampak_hukum",
 		"frekuensi",
 		"ada_pengendalian", "deskripsi_pengendalian",
 	}).AddRow(
+		int64(1), int64(2),
 		true, "alasan",
 		"tinggi", "sedang", "rendah", "tinggi",
 		"sering",
@@ -118,6 +120,12 @@ func TestFindByRespondentID_Success(t *testing.T) {
 
 	if result["pernah_terjadi"] != true {
 		t.Error("invalid mapping")
+	}
+	if result["responden_id"] != int64(1) {
+		t.Error("invalid responden_id mapping")
+	}
+	if result["risiko_id"] != int64(2) {
+		t.Error("invalid risiko_id mapping")
 	}
 }
 

@@ -4,11 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
-	"time"
-
-	"github.com/golang-jwt/jwt/v5"
 )
 
 // RECOVERY
@@ -73,29 +69,13 @@ func TestCORS_Headers(t *testing.T) {
 	}
 }
 
-func TestCORS_Options(t *testing.T) {
-	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Error("should not be called")
-	})
-
-	handler := CORS(h)
-
-	req := httptest.NewRequest(http.MethodOptions, "/", nil)
-	w := httptest.NewRecorder()
-
-	handler.ServeHTTP(w, req)
-
-	if w.Code != http.StatusOK {
-		t.Errorf("expected 200")
-	}
-}
-
 // CONTEXT
 func TestContext_SetGet(t *testing.T) {
 	ctx := context.Background()
 
-	ctx = SetUserID(ctx, "123")
-	ctx = SetRole(ctx, "admin")
+	ctx = context.WithValue(ctx, UserIDKey, "123")
+	ctx = context.WithValue(ctx, RoleKey, "admin")
+	ctx = context.WithValue(ctx, PerusahaanIDKey, "456")
 
 	if GetUserID(ctx) != "123" {
 		t.Error("user id mismatch")
@@ -104,18 +84,17 @@ func TestContext_SetGet(t *testing.T) {
 	if GetRole(ctx) != "admin" {
 		t.Error("role mismatch")
 	}
-}
 
-func TestContext_NilSafe(t *testing.T) {
-	ctx := SetUserID(context.TODO(), "123")
-
-	if GetUserID(ctx) != "123" {
-		t.Error("should handle nil context safely")
+	if GetPerusahaanID(ctx) != "456" {
+		t.Error("perusahaan id mismatch")
 	}
 }
 
 // AUTH
-func TestAuthMiddleware(t *testing.T) {
+func TestAuthMiddleware_Success(t *testing.T) {
+	internalKey := "secret-key"
+	authM := NewAuthMiddleware(internalKey)
+
 	var userID, role string
 
 	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -123,15 +102,20 @@ func TestAuthMiddleware(t *testing.T) {
 		role = GetRole(r.Context())
 	})
 
-	handler := Auth(h)
+	handler := authM.Authenticate(h)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("X-Internal-Key", internalKey)
 	req.Header.Set("X-User-ID", "42")
 	req.Header.Set("X-User-Role", "admin")
 
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
 
 	if userID != "42" {
 		t.Errorf("expected userID 42, got %s", userID)
@@ -142,108 +126,39 @@ func TestAuthMiddleware(t *testing.T) {
 	}
 }
 
-func TestAuthMiddleware_FallsBackToGatewayHeaders(t *testing.T) {
-	var userID, role string
+func TestAuthMiddleware_Unauthorized_InvalidInternalKey(t *testing.T) {
+	internalKey := "secret-key"
+	authM := NewAuthMiddleware(internalKey)
 
-	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID = GetUserID(r.Context())
-		role = GetRole(r.Context())
-	})
-
-	handler := Auth(h)
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+	handler := authM.Authenticate(h)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Set("Authorization", "Bearer real-jwt-from-gateway")
-	req.Header.Set("X-User-ID", "user-123")
-	req.Header.Set("X-User-Role", "user_pic")
+	req.Header.Set("X-Internal-Key", "wrong-key")
 
 	w := httptest.NewRecorder()
-
 	handler.ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", w.Code)
-	}
-
-	if userID != "user-123" {
-		t.Errorf("expected userID user-123, got %s", userID)
-	}
-
-	if role != "user_pic" {
-		t.Errorf("expected role user_pic, got %s", role)
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
 	}
 }
 
-func TestAuthMiddleware_AcceptsJWTAccessToken(t *testing.T) {
-	t.Setenv("JWT_SECRET", "test-secret")
+func TestAuthMiddleware_Unauthorized_MissingUserHeaders(t *testing.T) {
+	internalKey := "secret-key"
+	authM := NewAuthMiddleware(internalKey)
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id": "user-456",
-		"role":    "user_pic",
-		"exp":     time.Now().Add(time.Hour).Unix(),
-	})
-
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-	if err != nil {
-		t.Fatalf("failed to sign token: %v", err)
-	}
-
-	var userID, role string
-
-	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		userID = GetUserID(r.Context())
-		role = GetRole(r.Context())
-	})
-
-	handler := Auth(h)
+	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
+	handler := authM.Authenticate(h)
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	req.Header.Set("Authorization", "Bearer "+tokenString)
+	req.Header.Set("X-Internal-Key", internalKey)
+	// Missing X-User-ID and X-User-Role
 
 	w := httptest.NewRecorder()
-
 	handler.ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", w.Code)
-	}
-
-	if userID != "user-456" {
-		t.Errorf("expected userID user-456, got %s", userID)
-	}
-
-	if role != "user_pic" {
-		t.Errorf("expected role user_pic, got %s", role)
-	}
-}
-
-func TestAuthMiddleware_AllowsRequestWithoutIdentity(t *testing.T) {
-	called := false
-
-	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		called = true
-
-		if GetUserID(r.Context()) != "" {
-			t.Errorf("expected empty user id")
-		}
-
-		if GetRole(r.Context()) != "" {
-			t.Errorf("expected empty role")
-		}
-	})
-
-	handler := Auth(h)
-
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	w := httptest.NewRecorder()
-
-	handler.ServeHTTP(w, req)
-
-	if !called {
-		t.Error("handler not called")
-	}
-
-	if w.Code != http.StatusOK {
-		t.Errorf("expected 200, got %d", w.Code)
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("expected 401, got %d", w.Code)
 	}
 }

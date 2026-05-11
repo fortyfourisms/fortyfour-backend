@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"fortyfour-backend/pkg/logger"
 	_ "survey/docs"
 	"survey/internal/cache"
 	"survey/internal/config"
@@ -19,6 +20,7 @@ import (
 	"survey/internal/services"
 	"survey/pkg/database"
 
+	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -31,8 +33,16 @@ import (
 // @in							header
 // @name						Authorization
 func main() {
-	// Load config
+	// Load env
+	if err := godotenv.Load(); err != nil {
+		os.Stdout.WriteString("Warning: .env file not found\n")
+	}
+
 	cfg := config.Load()
+
+	// Initialize structured logger
+	logger.Init(cfg.LogLevel, cfg.Environment)
+	logger.Info("Logger initialized successfully")
 
 	// Init DB
 	db, err := database.NewMySQLConnection(database.Config{
@@ -43,7 +53,7 @@ func main() {
 		DBName:   cfg.Database.DBName,
 	})
 	if err != nil {
-		panic(err)
+		logger.FatalErr(err, "Failed to connect to database")
 	}
 	defer db.Close()
 
@@ -54,32 +64,36 @@ func main() {
 		DB:       cfg.Redis.DB,
 	})
 
-	// test connection (optional tapi bagus)
+	// test connection
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	if err := rdb.Ping(ctx).Err(); err != nil {
-		panic("Redis connection failed: " + err.Error())
+		logger.FatalErr(err, "Redis connection failed")
 	}
+	logger.Info("Redis initialized successfully")
 
 	// REPOSITORY
 	respondenRepo := repository.NewRespondenRepository(db)
 	risikoRepo := repository.NewRisikoRepository(db)
 
 	// SERVICE
-	cache := cache.NewRedisCache(rdb)
-	respondenService := services.NewRespondenService(respondenRepo, services.DefaultValidator{}, cache)
-	risikoService := services.NewRisikoService(risikoRepo, cache)
+	redisCache := cache.NewRedisCache(rdb)
+	respondenService := services.NewRespondenService(respondenRepo, services.DefaultValidator{}, redisCache)
+	risikoService := services.NewRisikoService(risikoRepo, redisCache)
 
 	// HANDLER
 	respondenHandler := handlers.NewRespondenHandler(respondenService)
 	risikoHandler := handlers.NewRisikoHandler(risikoService)
 
+	// MIDDLEWARE
+	authMiddleware := middleware.NewAuthMiddleware(cfg.InternalGatewayKey)
+
 	// ROUTER
 	mux := routes.InitRouter(
 		respondenHandler,
 		risikoHandler,
-		middleware.Auth,
+		authMiddleware,
 	)
 
 	// SERVER
@@ -94,12 +108,10 @@ func main() {
 	}
 
 	go func() {
-		println("=======================================")
-		println("Survey API running on port", cfg.Port)
-		println("=======================================")
+		logger.Infof("Survey API running on port %s", cfg.Port)
 
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			panic(err)
+			logger.FatalErr(err, "Server failed")
 		}
 	}()
 
@@ -108,14 +120,14 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	println("Shutting down server...")
+	logger.Info("Shutting down server...")
 
 	ctxShutdown, cancelShutdown := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancelShutdown()
 
 	if err := server.Shutdown(ctxShutdown); err != nil {
-		panic(err)
+		logger.FatalErr(err, "Server forced to shutdown")
 	}
 
-	println("Server exited properly")
+	logger.Info("Server exited properly")
 }
