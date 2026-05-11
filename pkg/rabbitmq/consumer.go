@@ -292,7 +292,7 @@ func (c *Consumer) runBatchConsume(ctx context.Context, queueName string, cfg Ba
 
 		// Adaptive logic: Adjust parameters based on current queue depth.
 		if cfg.UseAdaptive {
-			q, err := ch.QueueInspect(queueName)
+			q, err := ch.QueueDeclarePassive(queueName, false, false, false, false, nil)
 			if err == nil {
 				if q.Messages > 5000 {
 					// Emergency Mode
