@@ -65,14 +65,16 @@ func InitRouter(
 		}
 		risikoH.GetByRespondentID(w, r)
 	}
-	pengendalian := func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodGet:
-			risikoH.GetMe(w, r)
-		case http.MethodPost:
-			risikoH.SubmitPengendalian(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	stepWithOwnedRead := func(post http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			switch r.Method {
+			case http.MethodGet:
+				risikoH.GetMe(w, r)
+			case http.MethodPost:
+				post(w, r)
+			default:
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
 		}
 	}
 
@@ -81,10 +83,10 @@ func InitRouter(
 	mux.Handle("/api/survey/responden/", protected(respondenH))
 
 	// RISIKO
-	mux.Handle("/api/survey/risiko/eligibility", protected(http.HandlerFunc(risikoH.SubmitEligibility)))
-	mux.Handle("/api/survey/risiko/dampak", protected(http.HandlerFunc(risikoH.SubmitDampak)))
-	mux.Handle("/api/survey/risiko/pengendalian", protected(http.HandlerFunc(pengendalian)))
-	mux.Handle("/api/survey/risiko/reason", protected(http.HandlerFunc(risikoH.SubmitAlasan)))
+	mux.Handle("/api/survey/risiko/eligibility", protected(http.HandlerFunc(stepWithOwnedRead(risikoH.SubmitEligibility))))
+	mux.Handle("/api/survey/risiko/dampak", protected(http.HandlerFunc(stepWithOwnedRead(risikoH.SubmitDampak))))
+	mux.Handle("/api/survey/risiko/pengendalian", protected(http.HandlerFunc(stepWithOwnedRead(risikoH.SubmitPengendalian))))
+	mux.Handle("/api/survey/risiko/reason", protected(http.HandlerFunc(stepWithOwnedRead(risikoH.SubmitAlasan))))
 	mux.Handle("/api/survey/risiko", protected(getOnly(risikoH.GetAllRisiko)))
 	mux.Handle("/api/survey/risiko/me", protected(getOnly(risikoH.GetMe)))
 	mux.Handle("/api/survey/risiko/", protected(getOnly(getRisikoByRespondentID)))

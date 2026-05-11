@@ -374,6 +374,24 @@ paths:
       tags:
       - Risiko
   /api/survey/risiko/dampak:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's risk answer data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/survey_internal_dto.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      summary: Get My Dampak Risiko Data
+      tags:
+      - Risiko
     post:
       consumes:
       - application/json
@@ -400,6 +418,24 @@ paths:
       tags:
       - Risiko
   /api/survey/risiko/eligibility:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's risk answer data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/survey_internal_dto.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      summary: Get My Eligibility Risiko Data
+      tags:
+      - Risiko
     post:
       consumes:
       - application/json
@@ -470,6 +506,24 @@ paths:
       tags:
       - Risiko
   /api/survey/risiko/reason:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's risk answer data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/survey_internal_dto.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      summary: Get My Alasan Risiko Data
+      tags:
+      - Risiko
     post:
       consumes:
       - application/json
