@@ -312,9 +312,15 @@ func (s *JawabanGulihService) GetByPerusahaanID(perusahaanID string, userRole st
 	return s.repo.GetByPerusahaanID(perusahaanID)
 }
 
-func (s *JawabanGulihService) GetByPertanyaan(pertanyaanID int) ([]dto.JawabanGulihResponse, error) {
+// GetByPertanyaan retrieves answers for a given question.
+// For admin/staff, returns all answers across companies.
+// For regular users, enforces company-scoped filtering.
+func (s *JawabanGulihService) GetByPertanyaan(pertanyaanID int, userRole string, userPerusahaanID string) ([]dto.JawabanGulihResponse, error) {
 	if pertanyaanID <= 0 {
 		return nil, errors.New("pertanyaan_gulih_id tidak valid")
+	}
+	if userRole != "admin" && userRole != "staff" {
+		return s.repo.GetByPertanyaanAndPerusahaan(pertanyaanID, userPerusahaanID)
 	}
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }

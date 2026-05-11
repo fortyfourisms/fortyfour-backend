@@ -17,6 +17,7 @@ type JawabanDeteksiRepositoryInterface interface {
 	GetByIkasIDFromBuffer(ikasID string) ([]dto.JawabanDeteksiResponse, error)
 	GetByPerusahaanID(perusahaanID string) ([]dto.JawabanDeteksiResponse, error)
 	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanDeteksiResponse, error)
+	GetByPertanyaanAndPerusahaan(pertanyaanID int, perusahaanID string) ([]dto.JawabanDeteksiResponse, error)
 	Update(id int, req dto.UpdateJawabanDeteksiRequest) error
 	Delete(id int) error
 	CheckPertanyaanExists(pertanyaanID int) (bool, error)
@@ -256,6 +257,33 @@ func (r *JawabanDeteksiRepository) GetByPertanyaan(pertanyaanID int) ([]dto.Jawa
 	return results, nil
 }
 
+// GetByPertanyaanAndPerusahaan returns answers filtered by both question ID and company ID.
+// This enforces multi-tenancy at the database level for non-admin users.
+func (r *JawabanDeteksiRepository) GetByPertanyaanAndPerusahaan(pertanyaanID int, perusahaanID string) ([]dto.JawabanDeteksiResponse, error) {
+	query := jawabanDeteksiSelectQuery + `
+		JOIN ikas i ON jd.ikas_id = i.id
+		WHERE jd.pertanyaan_deteksi_id = ? AND i.id_perusahaan = ?
+		ORDER BY jd.created_at ASC`
+
+	rows, err := r.db.Query(query, pertanyaanID, perusahaanID)
+	if err != nil {
+		rollbar.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []dto.JawabanDeteksiResponse
+	for rows.Next() {
+		item, err := scanJawabanDeteksi(rows)
+		if err != nil {
+			rollbar.Error(err)
+			continue
+		}
+		results = append(results, item)
+	}
+	return results, nil
+}
+
 func (r *JawabanDeteksiRepository) Update(id int, req dto.UpdateJawabanDeteksiRequest) error {
 	var updates []string
 	var args []interface{}
@@ -436,6 +464,22 @@ func (r *JawabanDeteksiRepository) RecalculateDeteksi(ikasID string) error {
 }
 
 func (r *JawabanDeteksiRepository) UpsertToBuffer(req dto.CreateJawabanDeteksiRequest) error {
+	// 1. Cek dulu apakah data ini SUDAH ADA di tabel utama
+	var exists bool
+	checkQuery := `SELECT EXISTS(SELECT 1 FROM jawaban_deteksi WHERE ikas_id = ? AND pertanyaan_deteksi_id = ?)`
+	err := r.db.QueryRow(checkQuery, req.IkasID, req.PertanyaanDeteksiID).Scan(&exists)
+	if err != nil {
+		return err
+	}
+
+	// 2. Jika sudah ada di utama, jangan masukkan ke buffer.
+	// Sebaliknya, pastikan di buffer bersih (cleanup sampah)
+	if exists {
+		_, _ = r.db.Exec(`DELETE FROM jawaban_deteksi_buffer WHERE ikas_id = ? AND pertanyaan_deteksi_id = ?`, req.IkasID, req.PertanyaanDeteksiID)
+		return nil
+	}
+
+	// 3. Jika belum ada di utama, baru masukkan ke buffer seperti biasa
 	query := `INSERT INTO jawaban_deteksi_buffer 
 		(pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan)
 		VALUES (?, ?, ?, ?, ?, ?)
@@ -445,7 +489,7 @@ func (r *JawabanDeteksiRepository) UpsertToBuffer(req dto.CreateJawabanDeteksiRe
 		validasi = VALUES(validasi),
 		keterangan = VALUES(keterangan)`
 
-	_, err := r.db.Exec(query,
+	_, err = r.db.Exec(query,
 		req.PertanyaanDeteksiID,
 		req.IkasID,
 		req.JawabanDeteksi,

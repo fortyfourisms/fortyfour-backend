@@ -104,7 +104,7 @@ func TestAuthenticate(t *testing.T) {
 				var resp map[string]string
 				err := json.NewDecoder(rr.Body).Decode(&resp)
 				assert.NoError(t, err)
-				assert.Equal(t, tt.expectedBody, resp["error"])
+				assert.Equal(t, tt.expectedBody, resp["message"])
 			}
 		})
 	}
