@@ -15,7 +15,6 @@ import (
 type RespondenServiceInterface interface {
 	GetAll() ([]dto.RespondenResponse, error)
 	GetByID(id int) (*dto.RespondenResponse, error)
-
 	GetByUserID(userID string) (*dto.RespondenResponse, error)
 	UpsertByUserID(userID string, req dto.CreateRespondenRequest) (*dto.RespondenResponse, error)
 }
@@ -31,103 +30,70 @@ func NewRespondenHandler(service RespondenServiceInterface) *RespondenHandler {
 
 // ROUTER
 func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
 	role := middleware.GetRole(r.Context())
-
 	path := strings.TrimPrefix(r.URL.Path, "/api/survey/responden")
 	path = strings.Trim(path, "/")
 
 	switch r.Method {
-
-	// GET
 	case http.MethodGet:
-
-		// USER: /me
 		if path == "me" {
 			if role != "user" && role != "user_pic" {
-				utils.RespondError(w, http.StatusForbidden, "forbidden")
+				utils.RespondError(w, http.StatusForbidden, "Forbidden")
 				return
 			}
 			h.GetMe(w, r)
 			return
 		}
 
-		// ADMIN: GET ALL
 		if path == "" {
 			if role != "admin" && role != "staff" {
-				utils.RespondError(w, http.StatusForbidden, "forbidden")
+				utils.RespondError(w, http.StatusForbidden, "Forbidden")
 				return
 			}
 			h.handleGetAll(w)
 			return
 		}
 
-		// ADMIN: GET BY ID
 		if role != "admin" && role != "staff" {
-			utils.RespondError(w, http.StatusForbidden, "forbidden")
+			utils.RespondError(w, http.StatusForbidden, "Forbidden")
 			return
 		}
 		h.handleGetByID(w, path)
 
-	// POST
 	case http.MethodPost:
-
 		if path != "me" {
-			utils.RespondError(w, http.StatusForbidden, "only /me allowed")
+			utils.RespondError(w, http.StatusForbidden, "Only /me allowed")
 			return
 		}
 
 		if role != "user" && role != "user_pic" {
-			utils.RespondError(w, http.StatusForbidden, "forbidden")
+			utils.RespondError(w, http.StatusForbidden, "Forbidden")
 			return
 		}
 
 		h.UpsertMe(w, r)
 
 	default:
-		utils.RespondError(w, http.StatusMethodNotAllowed, "method not allowed")
+		utils.RespondError(w, http.StatusMethodNotAllowed, "Method not allowed")
 	}
 }
 
-// ADMIN
-
-// GetAllResponden godoc
-// @Summary      Ambil semua responden
-// @Description  Hanya admin yang dapat melihat semua data responden
-// @Tags         Responden
-// @Produce      json
-// @Security     BearerAuth
-// @Success      200 {array} map[string]interface{}
-// @Failure      403 {object} dto.ErrorResponse
-// @Failure      500 {object} dto.ErrorResponse
-// @Router       /api/survey/responden [get]
+// handleGetAll handles GET /api/survey/responden
 func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
-
 	data, err := h.service.GetAll()
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, data)
+	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil data responden", data)
 }
 
-// GetRespondenByID godoc
-// @Summary      Ambil responden berdasarkan ID
-// @Description  Hanya admin yang dapat melihat detail responden
-// @Tags         Responden
-// @Produce      json
-// @Security     BearerAuth
-// @Param        id path int true "Responden ID"
-// @Success      200 {object} map[string]interface{}
-// @Failure      400 {object} dto.ErrorResponse
-// @Failure      404 {object} dto.ErrorResponse
-// @Router       /api/survey/responden/{id} [get]
+// handleGetByID handles GET /api/survey/responden/{id}
 func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
-
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "id harus angka")
+		utils.RespondError(w, http.StatusBadRequest, "ID harus angka")
 		return
 	}
 
@@ -137,27 +103,14 @@ func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, data)
+	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil detail responden", data)
 }
 
-// USER
-
-// GetMyResponden godoc
-// @Summary      Ambil data responden milik user login
-// @Description  User hanya dapat melihat data dirinya sendiri
-// @Tags         Responden
-// @Produce      json
-// @Security     BearerAuth
-// @Success      200 {object} map[string]interface{}
-// @Failure      401 {object} dto.ErrorResponse
-// @Failure      404 {object} dto.ErrorResponse
-// @Router       /api/survey/responden/me [get]
+// GetMe handles GET /api/survey/responden/me
 func (h *RespondenHandler) GetMe(w http.ResponseWriter, r *http.Request) {
-
 	userID := middleware.GetUserID(r.Context())
-
 	if userID == "" {
-		utils.RespondError(w, http.StatusUnauthorized, "unauthorized")
+		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
@@ -167,32 +120,20 @@ func (h *RespondenHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, data)
+	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil data profil survey", data)
 }
 
-// UpsertMyResponden godoc
-// @Summary      Create / Update responden milik user login
-// @Description  Jika belum ada maka create, jika sudah ada maka update (upsert)
-// @Tags         Responden
-// @Accept       json
-// @Produce      json
-// @Security     BearerAuth
-// @Param        request body dto.CreateRespondenRequest true "Data Responden"
-// @Success      200 {object} map[string]interface{}
-// @Failure      400 {object} dto.ErrorResponse
-// @Failure      401 {object} dto.ErrorResponse
-// @Router       /api/survey/responden/me [post]
+// UpsertMe handles POST /api/survey/responden/me
 func (h *RespondenHandler) UpsertMe(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
-
 	if userID == "" {
-		utils.RespondError(w, http.StatusUnauthorized, "unauthorized")
+		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
 
 	var req dto.CreateRespondenRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "invalid body")
+		utils.RespondError(w, http.StatusBadRequest, "Invalid body")
 		return
 	}
 
@@ -202,5 +143,5 @@ func (h *RespondenHandler) UpsertMe(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.RespondJSON(w, http.StatusOK, resp)
+	utils.RespondSuccess(w, http.StatusOK, "Berhasil memperbarui data profil survey", resp)
 }
