@@ -17,6 +17,7 @@ type JawabanGulihRepositoryInterface interface {
 	GetByIkasIDFromBuffer(ikasID string) ([]dto.JawabanGulihResponse, error)
 	GetByPerusahaanID(perusahaanID string) ([]dto.JawabanGulihResponse, error)
 	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanGulihResponse, error)
+	GetByPertanyaanAndPerusahaan(pertanyaanID int, perusahaanID string) ([]dto.JawabanGulihResponse, error)
 	Update(id int, req dto.UpdateJawabanGulihRequest) error
 	Delete(id int) error
 	CheckPertanyaanExists(pertanyaanID int) (bool, error)
@@ -253,6 +254,33 @@ func (r *JawabanGulihRepository) GetByPertanyaan(pertanyaanID int) ([]dto.Jawaba
 		results = append(results, item)
 	}
 
+	return results, nil
+}
+
+// GetByPertanyaanAndPerusahaan returns answers filtered by both question ID and company ID.
+// This enforces multi-tenancy at the database level for non-admin users.
+func (r *JawabanGulihRepository) GetByPertanyaanAndPerusahaan(pertanyaanID int, perusahaanID string) ([]dto.JawabanGulihResponse, error) {
+	query := jawabanGulihSelectQuery + `
+		JOIN ikas i ON jg.ikas_id = i.id
+		WHERE jg.pertanyaan_gulih_id = ? AND i.id_perusahaan = ?
+		ORDER BY jg.created_at ASC`
+
+	rows, err := r.db.Query(query, pertanyaanID, perusahaanID)
+	if err != nil {
+		rollbar.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []dto.JawabanGulihResponse
+	for rows.Next() {
+		item, err := scanJawabanGulih(rows)
+		if err != nil {
+			rollbar.Error(err)
+			continue
+		}
+		results = append(results, item)
+	}
 	return results, nil
 }
 

@@ -103,7 +103,8 @@ func (h *JawabanIdentifikasiHandler) handleGetAll(w http.ResponseWriter, r *http
 		return
 	} else if pertanyaanIDStr != "" {
 		pID, _ := strconv.Atoi(pertanyaanIDStr)
-		data, err = h.service.GetByPertanyaan(pID)
+		h.handleGetByPertanyaan(w, r, pID)
+		return
 	} else {
 		if userRole != "admin" && userRole != "staff" {
 			data, err = h.service.GetByPerusahaanID(userPerusahaanID, userRole, userPerusahaanID)
@@ -140,11 +141,14 @@ func (h *JawabanIdentifikasiHandler) handleGetByIkasID(w http.ResponseWriter, r 
 	utils.RespondSuccess(w, 200, "Berhasil mengambil data jawaban identifikasi", data)
 }
 
-func (h *JawabanIdentifikasiHandler) handleGetByPertanyaan(w http.ResponseWriter, _ *http.Request, pertanyaanID int) {
-	data, err := h.service.GetByPertanyaan(pertanyaanID)
+func (h *JawabanIdentifikasiHandler) handleGetByPertanyaan(w http.ResponseWriter, r *http.Request, pertanyaanID int) {
+	userRole, _ := r.Context().Value(middleware.Role).(string)
+	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
+
+	data, err := h.service.GetByPertanyaan(pertanyaanID, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
-		if err.Error() == "format pertanyaan_identifikasi_id tidak valid" {
+		if err.Error() == "pertanyaan_identifikasi_id tidak valid" {
 			utils.RespondError(w, 400, err.Error())
 		} else {
 			utils.RespondError(w, 500, err.Error())

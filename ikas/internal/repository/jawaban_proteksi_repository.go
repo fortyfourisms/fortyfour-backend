@@ -17,6 +17,7 @@ type JawabanProteksiRepositoryInterface interface {
 	GetByIkasIDFromBuffer(ikasID string) ([]dto.JawabanProteksiResponse, error)
 	GetByPerusahaanID(perusahaanID string) ([]dto.JawabanProteksiResponse, error)
 	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanProteksiResponse, error)
+	GetByPertanyaanAndPerusahaan(pertanyaanID int, perusahaanID string) ([]dto.JawabanProteksiResponse, error)
 	Update(id int, req dto.UpdateJawabanProteksiRequest) error
 	Delete(id int) error
 	CheckPertanyaanExists(pertanyaanID int) (bool, error)
@@ -252,6 +253,33 @@ func (r *JawabanProteksiRepository) GetByPertanyaan(pertanyaanID int) ([]dto.Jaw
 		result = append(result, item)
 	}
 
+	return result, nil
+}
+
+// GetByPertanyaanAndPerusahaan returns answers filtered by both question ID and company ID.
+// This enforces multi-tenancy at the database level for non-admin users.
+func (r *JawabanProteksiRepository) GetByPertanyaanAndPerusahaan(pertanyaanID int, perusahaanID string) ([]dto.JawabanProteksiResponse, error) {
+	query := jawabanProteksiSelectQuery + `
+		JOIN ikas i ON jp.ikas_id = i.id
+		WHERE jp.pertanyaan_proteksi_id = ? AND i.id_perusahaan = ?
+		ORDER BY jp.created_at ASC`
+
+	rows, err := r.db.Query(query, pertanyaanID, perusahaanID)
+	if err != nil {
+		rollbar.Error(err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []dto.JawabanProteksiResponse
+	for rows.Next() {
+		item, err := scanJawabanProteksi(rows)
+		if err != nil {
+			rollbar.Error(err)
+			continue
+		}
+		result = append(result, item)
+	}
 	return result, nil
 }
 
