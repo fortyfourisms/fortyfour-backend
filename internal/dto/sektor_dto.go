@@ -16,3 +16,12 @@ type SubSektorResponse struct {
 	CreatedAt     string `json:"created_at"`
 	UpdatedAt     string `json:"updated_at"`
 }
+
+type SektorRequest struct {
+	NamaSektor string `json:"nama_sektor" validate:"required"`
+}
+
+type SubSektorRequest struct {
+	NamaSubSektor string `json:"nama_sub_sektor" validate:"required"`
+	IDSektor      string `json:"id_sektor" validate:"required"`
+}

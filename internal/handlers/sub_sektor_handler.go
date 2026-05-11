@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
@@ -22,13 +23,15 @@ func NewSubSektorHandler(service services.SubSektorServiceInterface) *SubSektorH
 func (h *SubSektorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/api/sub_sektor")
 
-	// Check for /by-sektor/:id route
+	// Check for /by_sektor/:id route
 	if strings.HasPrefix(path, "/by_sektor/") {
 		sektorID := strings.TrimPrefix(path, "/by_sektor/")
 		if r.Method == http.MethodGet {
 			h.handleGetBySektorID(w, r, sektorID)
 			return
 		}
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
 
 	id := strings.TrimPrefix(path, "/")
@@ -40,6 +43,10 @@ func (h *SubSektorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			h.handleGetByID(w, r, id)
 		}
+	case http.MethodPost:
+		h.handleCreate(w, r)
+	case http.MethodPut:
+		h.handleUpdate(w, r, id)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -102,4 +109,81 @@ func (h *SubSektorHandler) handleGetBySektorID(w http.ResponseWriter, _ *http.Re
 		return
 	}
 	utils.RespondJSON(w, 200, data)
+}
+
+// CreateSubSektor godoc
+//
+//	@Summary		Buat sub sektor baru
+//	@Description	Menambahkan data sub sektor baru
+//	@Tags			SubSektor
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		dto.SubSektorRequest	true	"Data sub sektor"
+//	@Success		201		{object}	dto.SubSektorResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		500		{object}	dto.ErrorResponse
+//	@Router			/api/sub_sektor [post]
+func (h *SubSektorHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
+	var req dto.SubSektorRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if strings.TrimSpace(req.NamaSubSektor) == "" {
+		utils.RespondError(w, http.StatusBadRequest, "nama_sub_sektor tidak boleh kosong")
+		return
+	}
+	if strings.TrimSpace(req.IDSektor) == "" {
+		utils.RespondError(w, http.StatusBadRequest, "id_sektor tidak boleh kosong")
+		return
+	}
+
+	data, err := h.service.Create(req)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.RespondJSON(w, http.StatusCreated, data)
+}
+
+// UpdateSubSektor godoc
+//
+//	@Summary		Update sub sektor
+//	@Description	Memperbarui data sub sektor berdasarkan ID
+//	@Tags			SubSektor
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		string					true	"SubSektor ID"
+//	@Param			body	body		dto.SubSektorRequest	true	"Data sub sektor"
+//	@Success		200		{object}	dto.SubSektorResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		500		{object}	dto.ErrorResponse
+//	@Router			/api/sub_sektor/{id} [put]
+func (h *SubSektorHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
+	if id == "" {
+		utils.RespondError(w, http.StatusBadRequest, "ID tidak boleh kosong")
+		return
+	}
+	var req dto.SubSektorRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if strings.TrimSpace(req.NamaSubSektor) == "" {
+		utils.RespondError(w, http.StatusBadRequest, "nama_sub_sektor tidak boleh kosong")
+		return
+	}
+	if strings.TrimSpace(req.IDSektor) == "" {
+		utils.RespondError(w, http.StatusBadRequest, "id_sektor tidak boleh kosong")
+		return
+	}
+
+	data, err := h.service.Update(id, req)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.RespondJSON(w, http.StatusOK, data)
 }

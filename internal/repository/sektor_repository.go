@@ -3,6 +3,9 @@ package repository
 import (
 	"database/sql"
 	"fortyfour-backend/internal/dto"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type SektorRepository struct {
@@ -95,4 +98,30 @@ func (r *SektorRepository) GetByID(id string) (*dto.SektorResponse, error) {
 	}
 
 	return &sektor, nil
+}
+
+func (r *SektorRepository) Create(req dto.SektorRequest) (*dto.SektorResponse, error) {
+	id := uuid.New().String()
+	now := time.Now()
+
+	_, err := r.db.Exec(`INSERT INTO sektor (id, nama_sektor, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+		id, req.NamaSektor, now, now)
+	if err != nil {
+		return nil, err
+	}
+	return r.GetByID(id)
+}
+
+func (r *SektorRepository) Update(id string, req dto.SektorRequest) (*dto.SektorResponse, error) {
+	now := time.Now()
+	result, err := r.db.Exec(`UPDATE sektor SET nama_sektor = ?, updated_at = ? WHERE id = ?`,
+		req.NamaSektor, now, id)
+	if err != nil {
+		return nil, err
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return nil, sql.ErrNoRows
+	}
+	return r.GetByID(id)
 }

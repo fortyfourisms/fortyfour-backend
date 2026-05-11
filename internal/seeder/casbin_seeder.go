@@ -278,9 +278,13 @@ var defaultPolicies = []Policy{
 
 	// Sektor & Sub Sektor
 	{"staff", "/api/sektor", "GET"},
+	{"staff", "/api/sektor", "POST"},
 	{"staff", "/api/sektor/:id", "GET"},
+	{"staff", "/api/sektor/:id", "PUT"},
 	{"staff", "/api/sub_sektor", "GET"},
+	{"staff", "/api/sub_sektor", "POST"},
 	{"staff", "/api/sub_sektor/:id", "GET"},
+	{"staff", "/api/sub_sektor/:id", "PUT"},
 
 	// Maturity — master data
 	{"staff", "/api/maturity/ruang-lingkup", "GET"},
