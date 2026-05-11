@@ -22,7 +22,7 @@ func MapImpactStringToInt(s string) ImpactLevel {
 	switch s {
 	case "Tidak Signifikan":
 		return ImpactNotSignificant
-	case "Sukup Signifikan":
+	case "Cukup Signifikan":
 		return ImpactFairlySignificant
 	case "Signifikan":
 		return ImpactSignificant
