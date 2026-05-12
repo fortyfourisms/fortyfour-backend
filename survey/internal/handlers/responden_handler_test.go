@@ -38,9 +38,14 @@ func (m *mockService) UpsertByUserID(userID string, req dto.CreateRespondenReque
 
 // helper: inject role and userID into context (simulates Auth middleware)
 func withContext(req *http.Request, userID, role string) *http.Request {
+	return withContextAndPerusahaan(req, userID, role, "")
+}
+
+func withContextAndPerusahaan(req *http.Request, userID, role, perusahaanID string) *http.Request {
 	ctx := req.Context()
 	ctx = context.WithValue(ctx, middleware.UserIDKey, userID)
 	ctx = context.WithValue(ctx, middleware.RoleKey, role)
+	ctx = context.WithValue(ctx, middleware.PerusahaanIDKey, perusahaanID)
 	return req.WithContext(ctx)
 }
 
@@ -135,6 +140,35 @@ func TestUpsertMe_Success(t *testing.T) {
 	body, _ := json.Marshal(dto.CreateRespondenRequest{})
 	req := httptest.NewRequest(http.MethodPost, "/api/survey/responden/me", bytes.NewBuffer(body))
 	req = withContext(req, "user1", "user")
+	w := httptest.NewRecorder()
+
+	handler.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("expected 200, got %d", w.Code)
+	}
+}
+
+func TestUpsertMe_UsesPerusahaanIDFromContextWhenBodyMissingIt(t *testing.T) {
+	mock := &mockService{
+		UpsertByUserIDFunc: func(userID string, req dto.CreateRespondenRequest) (*dto.RespondenResponse, error) {
+			if req.IdPerusahaan != "perusahaan-ctx" {
+				t.Fatalf("expected id_perusahaan from context, got %q", req.IdPerusahaan)
+			}
+			return &dto.RespondenResponse{}, nil
+		},
+	}
+
+	handler := NewRespondenHandler(mock)
+
+	body, _ := json.Marshal(dto.CreateRespondenRequest{
+		NamaLengkap: "Nama Lengkap",
+		Jabatan:     "Manager",
+		Email:       "email@mail.com",
+		NoTelepon:   "08123456789",
+	})
+	req := httptest.NewRequest(http.MethodPost, "/api/survey/responden/me", bytes.NewBuffer(body))
+	req = withContextAndPerusahaan(req, "user1", "user_pic", "perusahaan-ctx")
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
