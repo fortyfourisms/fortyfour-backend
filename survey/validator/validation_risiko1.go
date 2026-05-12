@@ -24,9 +24,6 @@ func isInvalidIntPtr(v *int) bool {
 
 // STEP 1 — ELIGIBILITY
 func ValidateEligibilityRequest(req dto.EligibilityRequest) error {
-	if req.RespondenID <= 0 {
-		return ErrMissingRespondentID
-	}
 	if isInvalidIntPtr(req.RisikoID) {
 		return ErrMissingRisikoID
 	}
@@ -35,9 +32,6 @@ func ValidateEligibilityRequest(req dto.EligibilityRequest) error {
 
 // STEP 2A — ALASAN
 func ValidateAlasanRequest(req dto.AlasanRequest) error {
-	if req.RespondenID <= 0 {
-		return ErrMissingRespondentID
-	}
 	if isInvalidIntPtr(req.RisikoID) {
 		return ErrMissingRisikoID
 	}
@@ -49,9 +43,6 @@ func ValidateAlasanRequest(req dto.AlasanRequest) error {
 
 // STEP 2B — DAMPAK
 func ValidateDampakRequest(req dto.DampakRequest) error {
-	if req.RespondenID <= 0 {
-		return ErrMissingRespondentID
-	}
 	if isInvalidIntPtr(req.RisikoID) {
 		return ErrMissingRisikoID
 	}
@@ -79,9 +70,6 @@ func ValidateDampakRequest(req dto.DampakRequest) error {
 
 // STEP 2C — PENGENDALIAN
 func ValidatePengendalianRequest(req dto.PengendalianRequest) error {
-	if req.RespondenID <= 0 {
-		return ErrMissingRespondentID
-	}
 	if isInvalidIntPtr(req.RisikoID) {
 		return ErrMissingRisikoID
 	}

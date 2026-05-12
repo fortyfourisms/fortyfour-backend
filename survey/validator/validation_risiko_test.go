@@ -17,18 +17,17 @@ func TestValidateEligibilityRequest(t *testing.T) {
 		{
 			name: "valid request",
 			req: dto.EligibilityRequest{
-				RespondenID: 1,
-				RisikoID:    intPtr(1),
+				RisikoID: intPtr(1),
 			},
 			wantErr: nil,
 		},
 		{
-			name: "missing responden_id",
+			name: "missing responden_id is allowed for owned endpoint",
 			req: dto.EligibilityRequest{
 				RespondenID: 0,
 				RisikoID:    intPtr(1),
 			},
-			wantErr: ErrMissingRespondentID,
+			wantErr: nil,
 		},
 		{
 			name: "missing risiko_id",
@@ -60,18 +59,16 @@ func TestValidateAlasanRequest(t *testing.T) {
 		{
 			name: "valid request",
 			req: dto.AlasanRequest{
-				RespondenID: 1,
-				RisikoID:    intPtr(1),
-				Alasan:      "Valid alasan",
+				RisikoID: intPtr(1),
+				Alasan:   "Valid alasan",
 			},
 			wantErr: nil,
 		},
 		{
 			name: "missing alasan",
 			req: dto.AlasanRequest{
-				RespondenID: 1,
-				RisikoID:    intPtr(1),
-				Alasan:      "",
+				RisikoID: intPtr(1),
+				Alasan:   "",
 			},
 			wantErr: ErrMissingReason,
 		},
@@ -90,7 +87,6 @@ func TestValidateAlasanRequest(t *testing.T) {
 // STEP 2B — DAMPAK
 func TestValidateDampakRequest(t *testing.T) {
 	validReq := dto.DampakRequest{
-		RespondenID:       1,
 		RisikoID:          intPtr(1),
 		DampakReputasi:    2,
 		DampakOperasional: 2,
@@ -149,7 +145,6 @@ func TestValidatePengendalianRequest(t *testing.T) {
 		{
 			name: "valid tanpa pengendalian",
 			req: dto.PengendalianRequest{
-				RespondenID:     1,
 				RisikoID:        intPtr(1),
 				AdaPengendalian: false,
 			},
@@ -158,7 +153,6 @@ func TestValidatePengendalianRequest(t *testing.T) {
 		{
 			name: "valid dengan pengendalian",
 			req: dto.PengendalianRequest{
-				RespondenID:           1,
 				RisikoID:              intPtr(1),
 				AdaPengendalian:       true,
 				DeskripsiPengendalian: "Kontrol tersedia",
@@ -168,7 +162,6 @@ func TestValidatePengendalianRequest(t *testing.T) {
 		{
 			name: "missing deskripsi saat ada pengendalian",
 			req: dto.PengendalianRequest{
-				RespondenID:           1,
 				RisikoID:              intPtr(1),
 				AdaPengendalian:       true,
 				DeskripsiPengendalian: "",
