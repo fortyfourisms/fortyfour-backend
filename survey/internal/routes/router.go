@@ -58,6 +58,15 @@ func InitRouter(
 			h(w, r)
 		})
 	}
+	postOnly := func(h http.HandlerFunc) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodPost {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			h(w, r)
+		})
+	}
 	getRisikoByRespondentID := func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/survey/risiko/" {
 			risikoH.GetAllRisiko(w, r)
@@ -92,12 +101,12 @@ func InitRouter(
 	mux.Handle("/api/survey/risiko/", protected(getOnly(getRisikoByRespondentID)))
 
 	// PROGRESS & NAVIGATION
-	mux.Handle("/api/survey/progress", protected(http.HandlerFunc(risikoH.GetProgress)))
-	mux.Handle("/api/survey/navigate", protected(http.HandlerFunc(risikoH.Navigate)))
-	mux.Handle("/api/survey/save-progress", protected(http.HandlerFunc(risikoH.SaveProgress)))
-	mux.Handle("/api/survey/finish", protected(http.HandlerFunc(risikoH.FinishSurvey)))
-	mux.Handle("/api/survey/request-edit", protected(http.HandlerFunc(risikoH.RequestEdit)))
-	mux.Handle("/api/survey/edit-requests/", protected(http.HandlerFunc(risikoH.ReviewEditRequest)))
+	mux.Handle("/api/survey/progress", protected(getOnly(risikoH.GetProgress)))
+	mux.Handle("/api/survey/navigate", protected(postOnly(risikoH.Navigate)))
+	mux.Handle("/api/survey/save-progress", protected(postOnly(risikoH.SaveProgress)))
+	mux.Handle("/api/survey/finish", protected(postOnly(risikoH.FinishSurvey)))
+	mux.Handle("/api/survey/request-edit", protected(postOnly(risikoH.RequestEdit)))
+	mux.Handle("/api/survey/edit-requests/", protected(postOnly(risikoH.ReviewEditRequest)))
 
 	// Swagger UI
 	mux.HandleFunc("/swagger/survey/", httpSwagger.WrapHandler)

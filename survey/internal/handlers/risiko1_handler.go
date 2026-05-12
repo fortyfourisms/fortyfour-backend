@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -131,7 +132,7 @@ func (h *RisikoHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 
 // GetByRespondentID handles GET /api/survey/risiko/{id}
 func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request) {
-	role := middleware.GetRole(r.Context())
+	role := strings.ToLower(strings.TrimSpace(middleware.GetRole(r.Context())))
 
 	if role != "admin" && role != "staff" {
 		utils.RespondError(w, http.StatusForbidden, "Forbidden")
@@ -171,7 +172,10 @@ func (h *RisikoHandler) Navigate(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.NavigateRequest
-	_ = decodeJSON(r, &req)
+	if err := decodeOptionalJSON(r, &req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid body")
+		return
+	}
 
 	res, err := h.svc.Navigate(userID, req)
 	handleResult(w, res, err)
@@ -182,7 +186,10 @@ func (h *RisikoHandler) SaveProgress(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.NavigateRequest
-	_ = decodeJSON(r, &req)
+	if err := decodeOptionalJSON(r, &req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid body")
+		return
+	}
 
 	res, err := h.svc.SaveProgress(userID, req)
 	handleResult(w, res, err)
@@ -214,7 +221,7 @@ func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request) {
-	role := middleware.GetRole(r.Context())
+	role := strings.ToLower(strings.TrimSpace(middleware.GetRole(r.Context())))
 	if role != "admin" && role != "staff" {
 		utils.RespondError(w, http.StatusForbidden, "Forbidden")
 		return
@@ -242,6 +249,24 @@ func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request
 func decodeJSON(r *http.Request, dst interface{}) error {
 	defer r.Body.Close()
 	return json.NewDecoder(r.Body).Decode(dst)
+}
+
+func decodeOptionalJSON(r *http.Request, dst interface{}) error {
+	if r.Body == nil {
+		return nil
+	}
+	defer r.Body.Close()
+	dec := json.NewDecoder(r.Body)
+	if err := dec.Decode(dst); err != nil {
+		if errors.Is(err, http.ErrBodyReadAfterClose) {
+			return err
+		}
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
+		return err
+	}
+	return nil
 }
 
 func handleResult(w http.ResponseWriter, data interface{}, err error) {

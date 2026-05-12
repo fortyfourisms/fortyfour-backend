@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"strings"
 	"survey/internal/utils"
 	"time"
 )
@@ -38,9 +39,9 @@ func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 		}
 
 		// Extract user info from headers injected by Gateway
-		userID := r.Header.Get("X-User-ID")
-		role := r.Header.Get("X-User-Role")
-		perusahaanID := r.Header.Get("X-Perusahaan-ID")
+		userID := strings.TrimSpace(r.Header.Get("X-User-ID"))
+		role := strings.ToLower(strings.TrimSpace(r.Header.Get("X-User-Role")))
+		perusahaanID := strings.TrimSpace(r.Header.Get("X-Perusahaan-ID"))
 
 		if userID == "" || role == "" {
 			utils.RespondError(w, http.StatusUnauthorized, "Unauthorized: User identification missing in gateway headers")

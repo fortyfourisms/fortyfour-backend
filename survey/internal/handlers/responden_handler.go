@@ -30,7 +30,7 @@ func NewRespondenHandler(service RespondenServiceInterface) *RespondenHandler {
 
 // ROUTER
 func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	role := middleware.GetRole(r.Context())
+	role := strings.ToLower(strings.TrimSpace(middleware.GetRole(r.Context())))
 	path := strings.TrimPrefix(r.URL.Path, "/api/survey/responden")
 	path = strings.Trim(path, "/")
 
