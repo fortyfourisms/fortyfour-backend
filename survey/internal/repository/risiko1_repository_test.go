@@ -106,6 +106,12 @@ func TestFindByRespondentID_Success(t *testing.T) {
 		"tinggi", "sedang", "rendah", "tinggi",
 		"sering",
 		true, "kontrol",
+	).AddRow(
+		int64(1), int64(3),
+		false, "",
+		nil, nil, nil, nil,
+		nil,
+		false, nil,
 	)
 
 	mock.ExpectQuery("SELECT").
@@ -127,6 +133,13 @@ func TestFindByRespondentID_Success(t *testing.T) {
 	if result["risiko_id"] != int64(2) {
 		t.Error("invalid risiko_id mapping")
 	}
+	items, ok := result["items"].([]map[string]interface{})
+	if !ok {
+		t.Fatal("expected items slice in result")
+	}
+	if len(items) != 2 {
+		t.Fatalf("expected 2 items, got %d", len(items))
+	}
 }
 
 // FIND NOT FOUND
@@ -138,7 +151,14 @@ func TestFindByRespondentID_NotFound(t *testing.T) {
 
 	mock.ExpectQuery("SELECT").
 		WithArgs(int64(1)).
-		WillReturnError(sql.ErrNoRows)
+		WillReturnRows(sqlmock.NewRows([]string{
+			"responden_id", "risiko_id",
+			"pernah_terjadi", "alasan",
+			"dampak_reputasi", "dampak_operasional",
+			"dampak_finansial", "dampak_hukum",
+			"frekuensi",
+			"ada_pengendalian", "deskripsi_pengendalian",
+		}))
 
 	_, err := repo.FindByRespondentID(1)
 

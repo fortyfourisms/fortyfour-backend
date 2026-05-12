@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -139,8 +138,12 @@ func toInt64Ptr(v int) *int64 {
 	return &val
 }
 
-func toStringPtr(s string) *string {
-	return &s
+func toNullableTrimmedString(s string) *string {
+	trimmed := strings.TrimSpace(s)
+	if trimmed == "" {
+		return nil
+	}
+	return &trimmed
 }
 
 func (s *RisikoService) resolveRisikoIDByUrutan(currentRisk int) sql.NullInt64 {
@@ -244,7 +247,7 @@ func (s *RisikoService) ProcessAlasan(userID string, req dto.AlasanRequest) (map
 	data := models.RisikoAlasan{
 		RespondenID: int64(respondenID),
 		RisikoID:    toInt64Ptr(risikoID),
-		Alasan:      req.Alasan,
+		Alasan:      strings.TrimSpace(req.Alasan),
 	}
 
 	if err := s.repo.UpsertAlasan(data); err != nil {
@@ -288,11 +291,11 @@ func (s *RisikoService) ProcessDampak(userID string, req dto.DampakRequest) (map
 	data := models.RisikoDampak{
 		RespondenID:       int64(respondenID),
 		RisikoID:          toInt64Ptr(risikoID),
-		DampakReputasi:    strconv.Itoa(int(req.DampakReputasi)),
-		DampakOperasional: strconv.Itoa(int(req.DampakOperasional)),
-		DampakFinansial:   strconv.Itoa(int(req.DampakFinansial)),
-		DampakHukum:       strconv.Itoa(int(req.DampakHukum)),
-		Frekuensi:         strconv.Itoa(int(req.Frekuensi)),
+		DampakReputasi:    models.MapImpactIntToString(req.DampakReputasi),
+		DampakOperasional: models.MapImpactIntToString(req.DampakOperasional),
+		DampakFinansial:   models.MapImpactIntToString(req.DampakFinansial),
+		DampakHukum:       models.MapImpactIntToString(req.DampakHukum),
+		Frekuensi:         models.MapFrequencyIntToString(req.Frekuensi),
 	}
 
 	if err := s.repo.UpsertDampak(data); err != nil {
@@ -337,7 +340,7 @@ func (s *RisikoService) ProcessPengendalian(userID string, req dto.PengendalianR
 		RespondenID:           int64(respondenID),
 		RisikoID:              toInt64Ptr(risikoID),
 		AdaPengendalian:       req.AdaPengendalian,
-		DeskripsiPengendalian: toStringPtr(req.DeskripsiPengendalian),
+		DeskripsiPengendalian: toNullableTrimmedString(req.DeskripsiPengendalian),
 	}
 
 	if err := s.repo.UpsertPengendalian(data); err != nil {

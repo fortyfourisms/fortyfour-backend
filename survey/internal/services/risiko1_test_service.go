@@ -144,7 +144,6 @@ func TestProcessEligibility_Success(t *testing.T) {
 	svc := newService(mock)
 
 	res, err := svc.ProcessEligibility("user-1", dto.EligibilityRequest{
-		RespondenID:   1,
 		RisikoID:      ptrInt(1),
 		PernahTerjadi: true,
 	})
@@ -169,8 +168,7 @@ func TestProcessEligibility_InvalidResponden(t *testing.T) {
 	svc := newService(mock)
 
 	_, err := svc.ProcessEligibility("user-1", dto.EligibilityRequest{
-		RespondenID: 1,
-		RisikoID:    ptrInt(1),
+		RisikoID: ptrInt(1),
 	})
 
 	if err == nil {
@@ -191,9 +189,8 @@ func TestProcessAlasan_Success(t *testing.T) {
 	svc := newService(mock)
 
 	res, err := svc.ProcessAlasan("user-1", dto.AlasanRequest{
-		RespondenID: 1,
-		RisikoID:    ptrInt(1),
-		Alasan:      "test",
+		RisikoID: ptrInt(1),
+		Alasan:   "test",
 	})
 
 	if err != nil {
@@ -215,8 +212,7 @@ func TestProcessDampak_InvalidImpact(t *testing.T) {
 	svc := newService(mock)
 
 	_, err := svc.ProcessDampak("user-1", dto.DampakRequest{
-		RespondenID: 1,
-		RisikoID:    ptrInt(1),
+		RisikoID: ptrInt(1),
 	})
 
 	if err == nil {
@@ -237,7 +233,6 @@ func TestProcessPengendalian_Success(t *testing.T) {
 	svc := newService(mock)
 
 	res, err := svc.ProcessPengendalian("user-1", dto.PengendalianRequest{
-		RespondenID:           1,
 		RisikoID:              ptrInt(1),
 		AdaPengendalian:       false,
 		DeskripsiPengendalian: "",
@@ -249,6 +244,37 @@ func TestProcessPengendalian_Success(t *testing.T) {
 
 	if res["next_step"] != "finish" {
 		t.Error("expected finish")
+	}
+}
+
+func TestProcessDampak_MapsEnumValuesForDatabase(t *testing.T) {
+	var saved models.RisikoDampak
+	mock := &mockRisikoRepo{
+		upsertDampakFn: func(m models.RisikoDampak) error {
+			saved = m
+			return nil
+		},
+	}
+
+	svc := newService(mock)
+
+	_, err := svc.ProcessDampak("user-1", dto.DampakRequest{
+		RisikoID:          ptrInt(7),
+		DampakReputasi:    models.ImpactVerySignificant,
+		DampakOperasional: models.ImpactSignificant,
+		DampakFinansial:   models.ImpactFairlySignificant,
+		DampakHukum:       models.ImpactNotSignificant,
+		Frekuensi:         models.FrequencyLarge,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if saved.DampakReputasi != "Sangat Signifikan" {
+		t.Fatalf("expected mapped reputasi, got %q", saved.DampakReputasi)
+	}
+	if saved.Frekuensi != "Besar" {
+		t.Fatalf("expected mapped frekuensi, got %q", saved.Frekuensi)
 	}
 }
 
@@ -269,8 +295,7 @@ func TestNavigate_Next(t *testing.T) {
 	svc := newService(mock)
 
 	res, err := svc.Navigate("user-1", dto.NavigateRequest{
-		RespondenID: 1,
-		Direction:   "next",
+		Direction: "next",
 	})
 
 	if err != nil {
@@ -306,7 +331,6 @@ func TestSaveProgress_Success(t *testing.T) {
 	svc := newService(mock)
 
 	res, err := svc.SaveProgress("user-1", dto.NavigateRequest{
-		RespondenID: 1,
 		CurrentRisk: 5,
 	})
 
@@ -343,7 +367,6 @@ func TestSaveProgress_UnknownRiskStoresNull(t *testing.T) {
 	svc := newService(mock)
 
 	res, err := svc.SaveProgress("user-1", dto.NavigateRequest{
-		RespondenID: 1,
 		CurrentRisk: 999,
 	})
 
@@ -374,8 +397,7 @@ func TestNavigate_SubmittedSurveyRejected(t *testing.T) {
 	svc := newService(mock)
 
 	_, err := svc.Navigate("user-1", dto.NavigateRequest{
-		RespondenID: 1,
-		Direction:   "next",
+		Direction: "next",
 	})
 
 	if err == nil {
@@ -401,8 +423,7 @@ func TestNavigate_EditApprovedSurveyAllowed(t *testing.T) {
 	svc := newService(mock)
 
 	res, err := svc.Navigate("user-1", dto.NavigateRequest{
-		RespondenID: 1,
-		Direction:   "next",
+		Direction: "next",
 	})
 
 	if err != nil {

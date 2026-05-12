@@ -234,72 +234,98 @@ func (r *RisikoRepository) FindByRespondentID(respondenID int64) (map[string]int
 	LEFT JOIN risiko_pengendalian p 
 		ON e.responden_id = p.responden_id AND e.risiko_id = p.risiko_id
 	WHERE e.responden_id = ?
+	ORDER BY e.risiko_id ASC
 	`
 
-	row := r.db.QueryRow(query, respondenID)
-
-	var (
-		respondentID  int64
-		risikoID      sql.NullInt64
-		pernahTerjadi bool
-		alasan        sql.NullString
-
-		dampakReputasi    sql.NullString
-		dampakOperasional sql.NullString
-		dampakFinansial   sql.NullString
-		dampakHukum       sql.NullString
-		frekuensi         sql.NullString
-
-		adaPengendalian       sql.NullBool
-		deskripsiPengendalian sql.NullString
-	)
-
-	err := row.Scan(
-		&respondentID,
-		&risikoID,
-		&pernahTerjadi,
-		&alasan,
-		&dampakReputasi,
-		&dampakOperasional,
-		&dampakFinansial,
-		&dampakHukum,
-		&frekuensi,
-		&adaPengendalian,
-		&deskripsiPengendalian,
-	)
-
+	rows, err := r.db.Query(query, respondenID)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrNotFound
-		}
 		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]map[string]interface{}, 0)
+
+	for rows.Next() {
+		var (
+			respondentID  int64
+			risikoID      sql.NullInt64
+			pernahTerjadi bool
+			alasan        sql.NullString
+
+			dampakReputasi    sql.NullString
+			dampakOperasional sql.NullString
+			dampakFinansial   sql.NullString
+			dampakHukum       sql.NullString
+			frekuensi         sql.NullString
+
+			adaPengendalian       sql.NullBool
+			deskripsiPengendalian sql.NullString
+		)
+
+		if err := rows.Scan(
+			&respondentID,
+			&risikoID,
+			&pernahTerjadi,
+			&alasan,
+			&dampakReputasi,
+			&dampakOperasional,
+			&dampakFinansial,
+			&dampakHukum,
+			&frekuensi,
+			&adaPengendalian,
+			&deskripsiPengendalian,
+		); err != nil {
+			return nil, err
+		}
+
+		item := map[string]interface{}{
+			"responden_id":           respondentID,
+			"pernah_terjadi":         pernahTerjadi,
+			"alasan":                 alasan.String,
+			"ada_pengendalian":       adaPengendalian.Bool,
+			"deskripsi_pengendalian": deskripsiPengendalian.String,
+		}
+
+		if risikoID.Valid {
+			item["risiko_id"] = risikoID.Int64
+		}
+		if dampakReputasi.Valid {
+			item["dampak_reputasi"] = dampakReputasi.String
+		}
+		if dampakOperasional.Valid {
+			item["dampak_operasional"] = dampakOperasional.String
+		}
+		if dampakFinansial.Valid {
+			item["dampak_finansial"] = dampakFinansial.String
+		}
+		if dampakHukum.Valid {
+			item["dampak_hukum"] = dampakHukum.String
+		}
+		if frekuensi.Valid {
+			item["frekuensi"] = frekuensi.String
+		}
+
+		items = append(items, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	if len(items) == 0 {
+		return nil, ErrNotFound
 	}
 
 	result := map[string]interface{}{
-		"responden_id":           respondentID,
-		"pernah_terjadi":         pernahTerjadi,
-		"alasan":                 alasan.String,
-		"ada_pengendalian":       adaPengendalian.Bool,
-		"deskripsi_pengendalian": deskripsiPengendalian.String,
+		"responden_id": respondenID,
+		"items":        items,
 	}
 
-	if risikoID.Valid {
-		result["risiko_id"] = risikoID.Int64
-	}
-	if dampakReputasi.Valid {
-		result["dampak_reputasi"] = dampakReputasi.String
-	}
-	if dampakOperasional.Valid {
-		result["dampak_operasional"] = dampakOperasional.String
-	}
-	if dampakFinansial.Valid {
-		result["dampak_finansial"] = dampakFinansial.String
-	}
-	if dampakHukum.Valid {
-		result["dampak_hukum"] = dampakHukum.String
-	}
-	if frekuensi.Valid {
-		result["frekuensi"] = frekuensi.String
+	// Keep the first item at the top level for backward compatibility.
+	for key, value := range items[0] {
+		if key == "responden_id" {
+			continue
+		}
+		result[key] = value
 	}
 
 	return result, nil
