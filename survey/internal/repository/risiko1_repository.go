@@ -3,8 +3,8 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"survey/internal/models"
 	"github.com/google/uuid"
+	"survey/internal/models"
 )
 
 var ErrNotFound = sql.ErrNoRows

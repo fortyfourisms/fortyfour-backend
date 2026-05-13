@@ -400,7 +400,7 @@ func (h *RisikoHandler) GetEditRequests(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// Wrap single item in array for consistency if needed, 
+	// Wrap single item in array for consistency if needed,
 	// but the DTO return for MyEditRequest is a single object.
 	// Let's keep it as is or wrap it.
 	utils.RespondSuccess(w, http.StatusOK, "Success", []interface{}{res})

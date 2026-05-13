@@ -66,8 +66,8 @@ type RisikoAlasan struct {
 
 // STEP 2B — DAMPAK
 type RisikoDampak struct {
-	ID          string `db:"id"`
-	RespondenID string `db:"responden_id"`
+	ID          string  `db:"id"`
+	RespondenID string  `db:"responden_id"`
 	RisikoID    *string `db:"risiko_id"`
 
 	DampakReputasi    string `db:"dampak_reputasi"` // ENUM DB (string)
@@ -82,8 +82,8 @@ type RisikoDampak struct {
 
 // STEP 2C — PENGENDALIAN
 type RisikoPengendalian struct {
-	ID          string `db:"id"`
-	RespondenID string `db:"responden_id"`
+	ID          string  `db:"id"`
+	RespondenID string  `db:"responden_id"`
 	RisikoID    *string `db:"risiko_id"`
 
 	AdaPengendalian       bool    `db:"ada_pengendalian"`

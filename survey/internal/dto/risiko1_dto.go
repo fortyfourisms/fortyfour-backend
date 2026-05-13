@@ -29,10 +29,10 @@ type DampakRequest struct {
 
 // STEP 2C: PENGENDALIAN
 type PengendalianRequest struct {
-	RespondenID           string `json:"responden_id"`
+	RespondenID           string  `json:"responden_id"`
 	RisikoID              *string `json:"risiko_id,omitempty"`
-	AdaPengendalian       bool   `json:"ada_pengendalian"`
-	DeskripsiPengendalian string `json:"deskripsi_pengendalian,omitempty"`
+	AdaPengendalian       bool    `json:"ada_pengendalian"`
+	DeskripsiPengendalian string  `json:"deskripsi_pengendalian,omitempty"`
 }
 
 // NAVIGATION
