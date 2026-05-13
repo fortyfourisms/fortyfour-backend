@@ -12,6 +12,7 @@ type SubSektorServiceInterface interface {
 	GetBySektorID(sektorID string) ([]dto.SubSektorResponse, error)
 	Create(req dto.SubSektorRequest) (*dto.SubSektorResponse, error)
 	Update(id string, req dto.SubSektorRequest) (*dto.SubSektorResponse, error)
+	Delete(id string) error
 }
 
 type SubSektorService struct {
@@ -90,4 +91,15 @@ func (s *SubSektorService) Update(id string, req dto.SubSektorRequest) (*dto.Sub
 	cacheDelete(s.rc, keyDetail("sub_sektor", id))
 	cacheDeletePattern(s.rc, "sub_sektor:sektor:*")
 	return data, nil
+}
+
+func (s *SubSektorService) Delete(id string) error {
+	err := s.repo.Delete(id)
+	if err != nil {
+		return err
+	}
+	cacheDelete(s.rc, keyList("sub_sektor"))
+	cacheDelete(s.rc, keyDetail("sub_sektor", id))
+	cacheDeletePattern(s.rc, "sub_sektor:sektor:*")
+	return nil
 }

@@ -34,6 +34,8 @@ func (h *SektorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.handleCreate(w, r)
 	case http.MethodPut:
 		h.handleUpdate(w, r, id)
+	case http.MethodDelete:
+		h.handleDelete(w, r, id)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -145,4 +147,30 @@ func (h *SektorHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id 
 		return
 	}
 	utils.RespondJSON(w, http.StatusOK, data)
+}
+
+// DeleteSektor godoc
+//
+//	@Summary		Hapus sektor
+//	@Description	Menghapus data sektor berdasarkan ID (admin only)
+//	@Tags			Sektor
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Sektor ID"
+//	@Success		200	{object}	map[string]string
+//	@Failure		400	{object}	dto.ErrorResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/sektor/{id} [delete]
+func (h *SektorHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
+	if id == "" {
+		utils.RespondError(w, http.StatusBadRequest, "ID tidak boleh kosong")
+		return
+	}
+	err := h.service.Delete(id)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": "Sektor berhasil dihapus"})
 }

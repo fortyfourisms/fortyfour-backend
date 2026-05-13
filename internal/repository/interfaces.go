@@ -95,6 +95,7 @@ type SektorRepositoryInterface interface {
 	GetByID(id string) (*dto.SektorResponse, error)
 	Create(req dto.SektorRequest) (*dto.SektorResponse, error)
 	Update(id string, req dto.SektorRequest) (*dto.SektorResponse, error)
+	Delete(id string) error
 }
 
 // SubSektorRepositoryInterface
@@ -104,6 +105,7 @@ type SubSektorRepositoryInterface interface {
 	GetBySektorID(sektorID string) ([]dto.SubSektorResponse, error)
 	Create(req dto.SubSektorRequest) (*dto.SubSektorResponse, error)
 	Update(id string, req dto.SubSektorRequest) (*dto.SubSektorResponse, error)
+	Delete(id string) error
 }
 
 // SERepositoryInterface

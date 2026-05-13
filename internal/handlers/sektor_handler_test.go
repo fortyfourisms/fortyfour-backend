@@ -54,6 +54,11 @@ func (m *mockSektorService) Update(id string, req dto.SektorRequest) (*dto.Sekto
 	return args.Get(0).(*dto.SektorResponse), args.Error(1)
 }
 
+func (m *mockSektorService) Delete(id string) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
 /* =========================
    SETUP HELPERS
 ========================= */
@@ -292,9 +297,8 @@ func TestSektorHandler_GetByID_VerifyContentType(t *testing.T) {
 func TestSektorHandler_MethodNotAllowed(t *testing.T) {
 	handler, mockSvc := setupSektorHandler()
 
-	// POST and PUT are now allowed, only these should be rejected
+	// POST, PUT, and DELETE are now allowed, only these should be rejected
 	methods := []string{
-		http.MethodDelete,
 		http.MethodPatch,
 		http.MethodOptions,
 		http.MethodHead,
@@ -355,11 +359,13 @@ func TestSektorHandler_Routing(t *testing.T) {
 			expectedStatus: http.StatusNotFound,
 		},
 		{
-			name:           "DELETE - not allowed",
-			method:         http.MethodDelete,
-			path:           "/api/sektor/123",
-			setupMock:      func(ms *mockSektorService) {},
-			expectedStatus: http.StatusMethodNotAllowed,
+			name:   "DELETE - success",
+			method: http.MethodDelete,
+			path:   "/api/sektor/123",
+			setupMock: func(ms *mockSektorService) {
+				ms.On("Delete", "123").Return(nil)
+			},
+			expectedStatus: http.StatusOK,
 		},
 	}
 
