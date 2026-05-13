@@ -187,9 +187,7 @@ func (h *RisikoHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 // @Failure 404 {object} dto.ErrorResponse
 // @Router /api/survey/risiko/{id} [get]
 func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request) {
-	role := strings.ToLower(strings.TrimSpace(middleware.GetRole(r.Context())))
-
-	if role != "admin" && role != "staff" {
+	if !middleware.HasRole(r.Context(), "admin", "staff") {
 		utils.RespondError(w, http.StatusForbidden, "Forbidden")
 		return
 	}
@@ -324,8 +322,7 @@ func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
 // @Failure 403 {object} dto.ErrorResponse "Forbidden - Admin or Staff only"
 // @Router /api/survey/edit-requests/{id} [post]
 func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request) {
-	role := strings.ToLower(strings.TrimSpace(middleware.GetRole(r.Context())))
-	if role != "admin" && role != "staff" {
+	if !middleware.HasRole(r.Context(), "admin", "staff") {
 		utils.RespondError(w, http.StatusForbidden, "Forbidden")
 		return
 	}
@@ -358,8 +355,7 @@ func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request
 // @Failure 403 {object} dto.ErrorResponse
 // @Router /api/survey/edit-requests [get]
 func (h *RisikoHandler) GetEditRequests(w http.ResponseWriter, r *http.Request) {
-	role := middleware.GetRole(r.Context())
-	if role != "admin" && role != "staff" {
+	if !middleware.HasRole(r.Context(), "admin", "staff") {
 		utils.RespondError(w, http.StatusForbidden, "Forbidden")
 		return
 	}

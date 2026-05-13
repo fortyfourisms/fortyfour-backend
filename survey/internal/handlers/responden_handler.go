@@ -30,14 +30,13 @@ func NewRespondenHandler(service RespondenServiceInterface) *RespondenHandler {
 
 // ROUTER
 func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	role := strings.ToLower(strings.TrimSpace(middleware.GetRole(r.Context())))
 	path := strings.TrimPrefix(r.URL.Path, "/api/survey/responden")
 	path = strings.Trim(path, "/")
 
 	switch r.Method {
 	case http.MethodGet:
 		if path == "me" {
-			if role != "user" && role != "user_pic" {
+			if !middleware.HasRole(r.Context(), "user", "user_pic", "admin", "staff") {
 				utils.RespondError(w, http.StatusForbidden, "Forbidden")
 				return
 			}
@@ -46,7 +45,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if path == "" {
-			if role != "admin" && role != "staff" {
+			if !middleware.HasRole(r.Context(), "admin", "staff") {
 				utils.RespondError(w, http.StatusForbidden, "Forbidden")
 				return
 			}
@@ -54,7 +53,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if role != "admin" && role != "staff" {
+		if !middleware.HasRole(r.Context(), "admin", "staff") {
 			utils.RespondError(w, http.StatusForbidden, "Forbidden")
 			return
 		}
@@ -66,7 +65,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if role != "user" && role != "user_pic" {
+		if !middleware.HasRole(r.Context(), "user", "user_pic", "admin", "staff") {
 			utils.RespondError(w, http.StatusForbidden, "Forbidden")
 			return
 		}

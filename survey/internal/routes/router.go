@@ -32,22 +32,16 @@ func InitRouter(
 	respondenH *handlers.RespondenHandler,
 	risikoH *handlers.RisikoHandler,
 	authM *middleware.AuthMiddleware,
-) *http.ServeMux {
+) http.Handler {
 
 	mux := http.NewServeMux()
 
 	// PUBLIC
 	mux.HandleFunc("/api/health", healthHandler)
 
-	// MIDDLEWARE WRAPPER
+	// WRAPPERS
 	protected := func(h http.Handler) http.Handler {
-		return middleware.Logger(
-			middleware.Recovery(
-				middleware.CORS(
-					authM.Authenticate(h),
-				),
-			),
-		)
+		return authM.Authenticate(h)
 	}
 	getOnly := func(h http.HandlerFunc) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +86,6 @@ func InitRouter(
 	mux.Handle("/api/survey/responden/", protected(respondenH))
 
 	// RISIKO
-	// RISIKO
 	mux.Handle("/api/survey/risiko/eligibility", protected(http.HandlerFunc(stepWithOwnedRead(risikoH.SubmitEligibility))))
 	mux.Handle("/api/survey/risiko/dampak", protected(http.HandlerFunc(stepWithOwnedRead(risikoH.SubmitDampak))))
 	mux.Handle("/api/survey/risiko/pengendalian", protected(http.HandlerFunc(stepWithOwnedRead(risikoH.SubmitPengendalian))))
@@ -114,5 +107,12 @@ func InitRouter(
 	// Swagger UI
 	mux.HandleFunc("/swagger/survey/", httpSwagger.WrapHandler)
 
-	return mux
+	// GLOBAL MIDDLEWARE
+	return middleware.Logger(
+		middleware.Recovery(
+			middleware.CORS(
+				mux,
+			),
+		),
+	)
 }

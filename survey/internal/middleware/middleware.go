@@ -80,6 +80,27 @@ func GetPerusahaanID(ctx context.Context) string {
 	return ""
 }
 
+// HasRole checks if the user has at least one of the required roles.
+// It handles comma-separated roles from the gateway.
+func HasRole(ctx context.Context, requiredRoles ...string) bool {
+	userRole := GetRole(ctx)
+	if userRole == "" {
+		return false
+	}
+
+	// Split by comma in case multiple roles are passed
+	roles := strings.Split(userRole, ",")
+	for _, r := range roles {
+		r = strings.TrimSpace(strings.ToLower(r))
+		for _, req := range requiredRoles {
+			if r == strings.ToLower(req) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 // BASIC MIDDLEWARE
 func Recovery(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -107,10 +128,13 @@ func Logger(next http.Handler) http.Handler {
 
 func CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set headers
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-User-ID, X-User-Role, X-Perusahaan-ID, X-Internal-Key")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-User-ID, X-User-Role, X-Perusahaan-ID, X-Internal-Key, X-Requested-With")
+		w.Header().Set("Access-Control-Max-Age", "3600")
 
+		// Handle preflight
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusOK)
 			return
