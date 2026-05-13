@@ -280,7 +280,7 @@ func (r *RespondenRepository) GetByID(id int64) (*models.Responden, error) {
 	`, id)
 
 	var (
-		m models.Responden
+		m                  models.Responden
 		sertifikatTraining sql.NullString
 	)
 
