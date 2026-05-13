@@ -19,9 +19,9 @@ definitions:
       alasan:
         type: string
       responden_id:
-        type: integer
+        type: string
       risiko_id:
-        type: integer
+        type: string
     type: object
   dto.CreateRespondenRequest:
     properties:
@@ -51,9 +51,9 @@ definitions:
       frekuensi:
         $ref: '#/definitions/models.FrequencyLevel'
       responden_id:
-        type: integer
+        type: string
       risiko_id:
-        type: integer
+        type: string
     type: object
   dto.EditRequestItemResponse:
     properties:
@@ -76,7 +76,7 @@ definitions:
       nama_perusahaan:
         type: string
       responden_id:
-        type: integer
+        type: string
       status:
         type: string
       user_id:
@@ -87,9 +87,9 @@ definitions:
       pernah_terjadi:
         type: boolean
       responden_id:
-        type: integer
+        type: string
       risiko_id:
-        type: integer
+        type: string
     type: object
   dto.ErrorResponse:
     properties:
@@ -105,7 +105,7 @@ definitions:
       direction:
         type: string
       responden_id:
-        type: integer
+        type: string
     type: object
   dto.PengendalianRequest:
     properties:
@@ -114,9 +114,9 @@ definitions:
       deskripsi_pengendalian:
         type: string
       responden_id:
-        type: integer
+        type: string
       risiko_id:
-        type: integer
+        type: string
     type: object
   dto.ProgressResponse:
     properties:
@@ -139,9 +139,9 @@ definitions:
       langkah_saat_ini:
         type: string
       responden_id:
-        type: integer
+        type: string
       risiko_id:
-        type: integer
+        type: string
       selesai:
         type: boolean
       status:
@@ -161,7 +161,7 @@ definitions:
       email:
         type: string
       id:
-        type: integer
+        type: string
       id_perusahaan:
         description: dari PERUSAHAAN
         type: string
@@ -245,7 +245,8 @@ paths:
       - Health
   /api/survey/edit-requests:
     get:
-      description: Get all pending survey edit requests (Admin/Staff only)
+      description: Get survey edit requests. Admin/Staff see all, User sees their
+        own.
       produces:
       - application/json
       responses:
@@ -264,13 +265,9 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
       security:
       - BearerAuth: []
-      summary: Get All Edit Requests (Admin)
+      summary: Get Edit Requests
       tags:
       - Survey Edit Request
   /api/survey/edit-requests/{id}:
@@ -284,7 +281,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: Provide 'action' (approve/reject) and optional 'response' string
         in: body
         name: request
@@ -312,34 +309,6 @@ paths:
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Review Edit Request
-      tags:
-      - Survey Edit Request
-  /api/survey/edit-requests/me:
-    get:
-      description: Get current user's edit request
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/dto.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/dto.EditRequestItemResponse'
-              type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Get My Edit Request (User)
       tags:
       - Survey Edit Request
   /api/survey/finish:
@@ -479,7 +448,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -589,7 +558,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:

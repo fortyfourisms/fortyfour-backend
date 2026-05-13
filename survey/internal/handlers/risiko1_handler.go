@@ -376,38 +376,34 @@ func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request
 	handleResult(w, res, err)
 }
 
-// @Summary Get All Edit Requests (Admin)
-// @Description Get all pending survey edit requests (Admin/Staff only)
+// @Summary Get Edit Requests
+// @Description Get survey edit requests. Admin/Staff see all, User sees their own.
 // @Tags Survey Edit Request
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {object} dto.APIResponse{data=[]dto.EditRequestItemResponse}
 // @Failure 401 {object} dto.ErrorResponse
-// @Failure 403 {object} dto.ErrorResponse
 // @Router /api/survey/edit-requests [get]
 func (h *RisikoHandler) GetEditRequests(w http.ResponseWriter, r *http.Request) {
-	if !middleware.HasRole(r.Context(), "admin", "staff") {
-		utils.RespondError(w, http.StatusForbidden, "Forbidden")
+	userID := middleware.GetUserID(r.Context())
+
+	if middleware.HasRole(r.Context(), "admin", "staff") {
+		res, err := h.svc.GetAllEditRequests()
+		handleResult(w, res, err)
 		return
 	}
 
-	res, err := h.svc.GetAllEditRequests()
-	handleResult(w, res, err)
-}
-
-// @Summary Get My Edit Request (User)
-// @Description Get current user's edit request
-// @Tags Survey Edit Request
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} dto.APIResponse{data=dto.EditRequestItemResponse}
-// @Failure 401 {object} dto.ErrorResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Router /api/survey/edit-requests/me [get]
-func (h *RisikoHandler) GetMyEditRequest(w http.ResponseWriter, r *http.Request) {
-	userID := middleware.GetUserID(r.Context())
+	// For User/UserPIC, get only their own
 	res, err := h.svc.GetMyEditRequest(userID)
-	handleResult(w, res, err)
+	if err != nil {
+		handleResult(w, nil, err)
+		return
+	}
+
+	// Wrap single item in array for consistency if needed, 
+	// but the DTO return for MyEditRequest is a single object.
+	// Let's keep it as is or wrap it.
+	utils.RespondSuccess(w, http.StatusOK, "Success", []interface{}{res})
 }
 
 // HELPERS

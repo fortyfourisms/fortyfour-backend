@@ -83,6 +83,7 @@ func InitRouter(
 
 	// RESPONDEN
 	mux.Handle("/api/survey/responden", protected(respondenH))
+	mux.Handle("/api/survey/responden/me", protected(respondenH))
 	mux.Handle("/api/survey/responden/", protected(respondenH))
 
 	// RISIKO
@@ -101,7 +102,6 @@ func InitRouter(
 	mux.Handle("/api/survey/finish", protected(postOnly(risikoH.FinishSurvey)))
 	mux.Handle("/api/survey/request-edit", protected(postOnly(risikoH.RequestEdit)))
 	mux.Handle("/api/survey/edit-requests", protected(getOnly(risikoH.GetEditRequests)))
-	mux.Handle("/api/survey/edit-requests/me", protected(getOnly(risikoH.GetMyEditRequest)))
 	mux.Handle("/api/survey/edit-requests/", protected(postOnly(risikoH.ReviewEditRequest)))
 
 	// Swagger UI

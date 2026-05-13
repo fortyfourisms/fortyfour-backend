@@ -45,14 +45,14 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get all pending survey edit requests (Admin/Staff only)",
+                "description": "Get survey edit requests. Admin/Staff see all, User sees their own.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Survey Edit Request"
                 ],
-                "summary": "Get All Edit Requests (Admin)",
+                "summary": "Get Edit Requests",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -80,61 +80,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/dto.ErrorResponse"
                         }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/survey/edit-requests/me": {
-            "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get current user's edit request",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Survey Edit Request"
-                ],
-                "summary": "Get My Edit Request (User)",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/dto.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.EditRequestItemResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
                     }
                 }
             }
@@ -154,7 +99,7 @@ const docTemplate = `{
                 "summary": "Review Edit Request",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Respondent ID",
                         "name": "id",
                         "in": "path",
@@ -531,7 +476,7 @@ const docTemplate = `{
                 "summary": "Get Responden by ID",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Responden ID",
                         "name": "id",
                         "in": "path",
@@ -796,7 +741,7 @@ const docTemplate = `{
                 "summary": "Get Risiko Data by Respondent ID",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Respondent ID",
                         "name": "id",
                         "in": "path",
@@ -913,10 +858,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "responden_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "risiko_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -962,10 +907,10 @@ const docTemplate = `{
                     "$ref": "#/definitions/models.FrequencyLevel"
                 },
                 "responden_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "risiko_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -1000,7 +945,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "responden_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "status": {
                     "type": "string"
@@ -1017,10 +962,10 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "responden_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "risiko_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -1045,7 +990,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "responden_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -1059,10 +1004,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "responden_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "risiko_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
@@ -1097,10 +1042,10 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "responden_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "risiko_id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "selesai": {
                     "type": "boolean"
@@ -1131,7 +1076,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "id_perusahaan": {
                     "description": "dari PERUSAHAAN",

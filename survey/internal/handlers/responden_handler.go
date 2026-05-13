@@ -59,8 +59,8 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.handleGetByID(w, path)
 
 	case http.MethodPost:
-		if path != "me" {
-			utils.RespondError(w, http.StatusForbidden, "Only /me allowed")
+		if path != "me" && path != "" {
+			utils.RespondError(w, http.StatusForbidden, "Hanya /me atau base path yang diizinkan")
 			return
 		}
 
