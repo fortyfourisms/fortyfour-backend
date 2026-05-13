@@ -99,7 +99,11 @@ func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 
 	data, err := h.service.GetByID(idInt)
 	if err != nil {
-		utils.RespondError(w, http.StatusNotFound, err.Error())
+		if strings.Contains(err.Error(), "tidak ditemukan") {
+			utils.RespondError(w, http.StatusNotFound, err.Error())
+			return
+		}
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -116,7 +120,11 @@ func (h *RespondenHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 
 	data, err := h.service.GetByUserID(userID)
 	if err != nil {
-		utils.RespondError(w, http.StatusNotFound, err.Error())
+		if strings.Contains(err.Error(), "tidak ditemukan") {
+			utils.RespondError(w, http.StatusNotFound, "Data responden belum tersedia, silakan lengkapi profil")
+			return
+		}
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
