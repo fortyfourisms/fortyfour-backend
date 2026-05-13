@@ -19,6 +19,7 @@ type contextKey struct {
 
 var (
 	UserIDKey       = &contextKey{"user-id"}
+	UsernameKey     = &contextKey{"username"}
 	RoleKey         = &contextKey{"role"}
 	PerusahaanIDKey = &contextKey{"perusahaan-id"}
 )
@@ -40,6 +41,7 @@ func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 
 		// Extract user info from headers injected by Gateway
 		userID := strings.TrimSpace(r.Header.Get("X-User-ID"))
+		username := strings.TrimSpace(r.Header.Get("X-Username"))
 		role := strings.ToLower(strings.TrimSpace(r.Header.Get("X-User-Role")))
 		perusahaanID := strings.TrimSpace(r.Header.Get("X-Perusahaan-ID"))
 
@@ -51,6 +53,7 @@ func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 		// Inject into context for downstream handlers/services
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, UserIDKey, userID)
+		ctx = context.WithValue(ctx, UsernameKey, username)
 		ctx = context.WithValue(ctx, RoleKey, role)
 		ctx = context.WithValue(ctx, PerusahaanIDKey, perusahaanID)
 
@@ -61,6 +64,13 @@ func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 // GETTERS
 func GetUserID(ctx context.Context) string {
 	if val, ok := ctx.Value(UserIDKey).(string); ok {
+		return val
+	}
+	return ""
+}
+
+func GetUsername(ctx context.Context) string {
+	if val, ok := ctx.Value(UsernameKey).(string); ok {
 		return val
 	}
 	return ""

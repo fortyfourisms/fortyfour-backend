@@ -75,6 +75,10 @@ func (h *RisikoHandler) GetAllRisiko(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} dto.ErrorResponse
 // @Router /api/survey/risiko/eligibility [post]
 func (h *RisikoHandler) SubmitEligibility(w http.ResponseWriter, r *http.Request) {
+	if !middleware.HasRole(r.Context(), "user_pic") {
+		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi survey")
+		return
+	}
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.EligibilityRequest
@@ -97,6 +101,10 @@ func (h *RisikoHandler) SubmitEligibility(w http.ResponseWriter, r *http.Request
 // @Failure 400 {object} dto.ErrorResponse
 // @Router /api/survey/risiko/reason [post]
 func (h *RisikoHandler) SubmitAlasan(w http.ResponseWriter, r *http.Request) {
+	if !middleware.HasRole(r.Context(), "user_pic") {
+		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi survey")
+		return
+	}
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.AlasanRequest
@@ -119,6 +127,10 @@ func (h *RisikoHandler) SubmitAlasan(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} dto.ErrorResponse
 // @Router /api/survey/risiko/dampak [post]
 func (h *RisikoHandler) SubmitDampak(w http.ResponseWriter, r *http.Request) {
+	if !middleware.HasRole(r.Context(), "user_pic") {
+		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi survey")
+		return
+	}
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.DampakRequest
@@ -141,6 +153,10 @@ func (h *RisikoHandler) SubmitDampak(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} dto.ErrorResponse
 // @Router /api/survey/risiko/pengendalian [post]
 func (h *RisikoHandler) SubmitPengendalian(w http.ResponseWriter, r *http.Request) {
+	if !middleware.HasRole(r.Context(), "user_pic") {
+		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi survey")
+		return
+	}
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.PengendalianRequest
@@ -236,6 +252,10 @@ func (h *RisikoHandler) GetProgress(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} dto.ErrorResponse
 // @Router /api/survey/navigate [post]
 func (h *RisikoHandler) Navigate(w http.ResponseWriter, r *http.Request) {
+	if !middleware.HasRole(r.Context(), "user_pic") {
+		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi survey")
+		return
+	}
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.NavigateRequest
@@ -258,6 +278,10 @@ func (h *RisikoHandler) Navigate(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} dto.ErrorResponse
 // @Router /api/survey/save-progress [post]
 func (h *RisikoHandler) SaveProgress(w http.ResponseWriter, r *http.Request) {
+	if !middleware.HasRole(r.Context(), "user_pic") {
+		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi survey")
+		return
+	}
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.NavigateRequest
@@ -278,6 +302,10 @@ func (h *RisikoHandler) SaveProgress(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /api/survey/finish [post]
 func (h *RisikoHandler) FinishSurvey(w http.ResponseWriter, r *http.Request) {
+	if !middleware.HasRole(r.Context(), "user_pic") {
+		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi survey")
+		return
+	}
 	userID := middleware.GetUserID(r.Context())
 
 	if err := h.svc.FinishSurvey(userID); err != nil {
@@ -298,6 +326,10 @@ func (h *RisikoHandler) FinishSurvey(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} dto.ErrorResponse
 // @Router /api/survey/request-edit [post]
 func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
+	if !middleware.HasRole(r.Context(), "user_pic") {
+		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengajukan edit request")
+		return
+	}
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.RequestEditRequest
@@ -322,8 +354,8 @@ func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
 // @Failure 403 {object} dto.ErrorResponse "Forbidden - Admin or Staff only"
 // @Router /api/survey/edit-requests/{id} [post]
 func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request) {
-	if !middleware.HasRole(r.Context(), "admin", "staff") {
-		utils.RespondError(w, http.StatusForbidden, "Forbidden")
+	if !middleware.HasRole(r.Context(), "admin") {
+		utils.RespondError(w, http.StatusForbidden, "Hanya Admin yang dapat memproses edit request")
 		return
 	}
 

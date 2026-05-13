@@ -160,6 +160,7 @@ var defaultPolicies = []Policy{
 	// Admin hanya membaca data survey dan memproses request edit.
 	{"admin", "/api/survey/responden", "GET"},
 	{"admin", "/api/survey/responden/:id", "GET"},
+	{"admin", "/api/survey/risiko", "GET"},
 	{"admin", "/api/survey/risiko/:id", "GET"},
 	{"admin", "/api/survey/edit-requests/:id", "POST"},
 	{"admin", "/api/survey/edit-requests", "GET"},

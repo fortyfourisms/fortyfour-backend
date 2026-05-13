@@ -109,7 +109,7 @@ func TestSubmitEligibility_Success(t *testing.T) {
 
 	body, _ := json.Marshal(dto.EligibilityRequest{})
 	req := httptest.NewRequest(http.MethodPost, "/eligibility", bytes.NewBuffer(body))
-	req = withRisikoCtx(req, "user1", "user")
+	req = withRisikoCtx(req, "user1", "user_pic")
 	w := httptest.NewRecorder()
 
 	h.SubmitEligibility(w, req)
@@ -123,6 +123,7 @@ func TestSubmitEligibility_InvalidBody(t *testing.T) {
 	h := NewRisikoHandler(&mockRisikoService{})
 
 	req := httptest.NewRequest(http.MethodPost, "/eligibility", bytes.NewBuffer([]byte("invalid")))
+	req = withRisikoCtx(req, "user1", "user_pic")
 	w := httptest.NewRecorder()
 
 	h.SubmitEligibility(w, req)
@@ -198,7 +199,7 @@ func TestFinishSurvey_Success(t *testing.T) {
 	h := NewRisikoHandler(mock)
 
 	req := httptest.NewRequest(http.MethodPost, "/finish", nil)
-	req = withRisikoCtx(req, "user1", "user")
+	req = withRisikoCtx(req, "user1", "user_pic")
 	w := httptest.NewRecorder()
 
 	h.FinishSurvey(w, req)
@@ -218,7 +219,7 @@ func TestFinishSurvey_Error(t *testing.T) {
 	h := NewRisikoHandler(mock)
 
 	req := httptest.NewRequest(http.MethodPost, "/finish", nil)
-	req = withRisikoCtx(req, "user1", "user")
+	req = withRisikoCtx(req, "user1", "user_pic")
 	w := httptest.NewRecorder()
 
 	h.FinishSurvey(w, req)

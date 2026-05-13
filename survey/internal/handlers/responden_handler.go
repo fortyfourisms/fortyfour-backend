@@ -65,8 +65,8 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if !middleware.HasRole(r.Context(), "user", "user_pic", "admin", "staff") {
-			utils.RespondError(w, http.StatusForbidden, "Forbidden")
+		if !middleware.HasRole(r.Context(), "user_pic") {
+			utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi data responden")
 			return
 		}
 

@@ -139,7 +139,7 @@ func TestUpsertMe_Success(t *testing.T) {
 
 	body, _ := json.Marshal(dto.CreateRespondenRequest{})
 	req := httptest.NewRequest(http.MethodPost, "/api/survey/responden/me", bytes.NewBuffer(body))
-	req = withContext(req, "user1", "user")
+	req = withContext(req, "user1", "user_pic")
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
