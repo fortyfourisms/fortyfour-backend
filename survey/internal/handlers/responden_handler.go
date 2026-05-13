@@ -136,6 +136,9 @@ func (h *RespondenHandler) UpsertMe(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid body")
 		return
 	}
+	if strings.TrimSpace(req.IdPerusahaan) == "" {
+		req.IdPerusahaan = middleware.GetPerusahaanID(r.Context())
+	}
 
 	resp, err := h.service.UpsertByUserID(userID, req)
 	if err != nil {
