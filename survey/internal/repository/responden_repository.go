@@ -149,9 +149,10 @@ func (r *RespondenRepository) GetAllDetail() ([]models.RespondenDetail, error) {
 		var (
 			m models.RespondenDetail
 
-			namaPerusahaan sql.NullString
-			subSektor      sql.NullString
-			sektor         sql.NullString
+			sertifikatTraining sql.NullString
+			namaPerusahaan     sql.NullString
+			subSektor          sql.NullString
+			sektor             sql.NullString
 		)
 
 		err := rows.Scan(
@@ -162,7 +163,7 @@ func (r *RespondenRepository) GetAllDetail() ([]models.RespondenDetail, error) {
 			&m.Jabatan,
 			&m.Email,
 			&m.NoTelepon,
-			&m.SertifikatTraining,
+			&sertifikatTraining,
 			&namaPerusahaan,
 			&subSektor,
 			&sektor,
@@ -174,6 +175,7 @@ func (r *RespondenRepository) GetAllDetail() ([]models.RespondenDetail, error) {
 			return nil, err
 		}
 
+		m.SertifikatTraining = nullToString(sertifikatTraining)
 		m.NamaPerusahaan = nullToString(namaPerusahaan)
 		m.NamaSubSektor = nullToString(subSektor)
 		m.NamaSektor = nullToString(sektor)
@@ -192,9 +194,10 @@ func (r *RespondenRepository) GetDetailByID(id string) (*models.RespondenDetail,
 	var (
 		m models.RespondenDetail
 
-		namaPerusahaan sql.NullString
-		subSektor      sql.NullString
-		sektor         sql.NullString
+		sertifikatTraining sql.NullString
+		namaPerusahaan     sql.NullString
+		subSektor          sql.NullString
+		sektor             sql.NullString
 	)
 
 	err := row.Scan(
@@ -205,7 +208,7 @@ func (r *RespondenRepository) GetDetailByID(id string) (*models.RespondenDetail,
 		&m.Jabatan,
 		&m.Email,
 		&m.NoTelepon,
-		&m.SertifikatTraining,
+		&sertifikatTraining,
 		&namaPerusahaan,
 		&subSektor,
 		&sektor,
@@ -220,6 +223,7 @@ func (r *RespondenRepository) GetDetailByID(id string) (*models.RespondenDetail,
 		return nil, err
 	}
 
+	m.SertifikatTraining = nullToString(sertifikatTraining)
 	m.NamaPerusahaan = nullToString(namaPerusahaan)
 	m.NamaSubSektor = nullToString(subSektor)
 	m.NamaSektor = nullToString(sektor)
@@ -235,9 +239,10 @@ func (r *RespondenRepository) GetByUserID(userID string) (*models.RespondenDetai
 	var (
 		m models.RespondenDetail
 
-		namaPerusahaan sql.NullString
-		subSektor      sql.NullString
-		sektor         sql.NullString
+		sertifikatTraining sql.NullString
+		namaPerusahaan     sql.NullString
+		subSektor          sql.NullString
+		sektor             sql.NullString
 	)
 
 	err := row.Scan(
@@ -248,7 +253,7 @@ func (r *RespondenRepository) GetByUserID(userID string) (*models.RespondenDetai
 		&m.Jabatan,
 		&m.Email,
 		&m.NoTelepon,
-		&m.SertifikatTraining,
+		&sertifikatTraining,
 		&namaPerusahaan,
 		&subSektor,
 		&sektor,
@@ -263,6 +268,7 @@ func (r *RespondenRepository) GetByUserID(userID string) (*models.RespondenDetai
 		return nil, err
 	}
 
+	m.SertifikatTraining = nullToString(sertifikatTraining)
 	m.NamaPerusahaan = nullToString(namaPerusahaan)
 	m.NamaSubSektor = nullToString(subSektor)
 	m.NamaSektor = nullToString(sektor)
@@ -279,7 +285,10 @@ func (r *RespondenRepository) GetByID(id string) (*models.Responden, error) {
 		WHERE id = ?
 	`, id)
 
-	var m models.Responden
+	var (
+		m models.Responden
+		sertifikatTraining sql.NullString
+	)
 
 	err := row.Scan(
 		&m.ID,
@@ -289,7 +298,7 @@ func (r *RespondenRepository) GetByID(id string) (*models.Responden, error) {
 		&m.Jabatan,
 		&m.Email,
 		&m.NoTelepon,
-		&m.SertifikatTraining,
+		&sertifikatTraining,
 		&m.CreatedAt,
 		&m.UpdatedAt,
 	)
@@ -300,6 +309,8 @@ func (r *RespondenRepository) GetByID(id string) (*models.Responden, error) {
 		}
 		return nil, err
 	}
+
+	m.SertifikatTraining = nullToString(sertifikatTraining)
 
 	return &m, nil
 }

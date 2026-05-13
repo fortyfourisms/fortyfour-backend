@@ -61,6 +61,11 @@ func TestGetAllDetail_Success(t *testing.T) {
 		"08123", "yes",
 		"PT A", "Sub Sektor 1", "Sektor 1",
 		time.Now(), time.Now(),
+	).AddRow(
+		2, "user2", "perusahaan2", "Nama 2", "Manager 2", "email2@mail.com",
+		"081234", nil, // test scanning null string
+		nil, nil, nil, // test other null fields
+		time.Now(), time.Now(),
 	)
 
 	mock.ExpectQuery(regexp.QuoteMeta(baseDetailQuery)).
@@ -72,8 +77,12 @@ func TestGetAllDetail_Success(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 
-	if len(result) != 1 {
-		t.Errorf("expected 1 result, got %d", len(result))
+	if len(result) != 2 {
+		t.Errorf("expected 2 results, got %d", len(result))
+	}
+	
+	if result[1].SertifikatTraining != nil {
+		t.Errorf("expected SertifikatTraining to be nil, got %v", *result[1].SertifikatTraining)
 	}
 }
 
