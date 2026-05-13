@@ -80,7 +80,7 @@ func TestGetAllDetail_Success(t *testing.T) {
 	if len(result) != 2 {
 		t.Errorf("expected 2 results, got %d", len(result))
 	}
-	
+
 	if result[1].SertifikatTraining != nil {
 		t.Errorf("expected SertifikatTraining to be nil, got %v", *result[1].SertifikatTraining)
 	}
