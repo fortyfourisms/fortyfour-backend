@@ -22,8 +22,8 @@ func TestCreate_Success(t *testing.T) {
 	repo := NewRespondenRepository(db)
 
 	mock.ExpectExec("INSERT INTO responden").
-		WithArgs("user1", "perusahaan1", "Nama Lengkap", "Manager", "email@mail.com", "08123", strPtr("yes")).
-		WillReturnResult(sqlmock.NewResult(1, 1))
+		WithArgs(sqlmock.AnyArg(), "user1", "perusahaan1", "Nama Lengkap", "Manager", "email@mail.com", "08123", strPtr("yes")).
+		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	id, err := repo.Create(models.Responden{
 		UserID:             "user1",
@@ -39,8 +39,8 @@ func TestCreate_Success(t *testing.T) {
 		t.Errorf("unexpected error: %v", err)
 	}
 
-	if id != 1 {
-		t.Errorf("expected insert ID 1, got %d", id)
+	if id == "" {
+		t.Errorf("expected insert ID, got empty string")
 	}
 }
 
@@ -57,7 +57,7 @@ func TestGetAllDetail_Success(t *testing.T) {
 		"nama_perusahaan", "nama_sub_sektor", "nama_sektor",
 		"created_at", "updated_at",
 	}).AddRow(
-		1, "user1", "perusahaan1", "Nama", "Manager", "email@mail.com",
+		"uuid-1", "user1", "perusahaan1", "Nama", "Manager", "email@mail.com",
 		"08123", "yes",
 		"PT A", "Sub Sektor 1", "Sektor 1",
 		time.Now(), time.Now(),
@@ -85,10 +85,10 @@ func TestGetDetailByID_NotFound(t *testing.T) {
 	repo := NewRespondenRepository(db)
 
 	mock.ExpectQuery(regexp.QuoteMeta(baseDetailQuery + " WHERE r.id = ?")).
-		WithArgs(1).
+		WithArgs("uuid-1").
 		WillReturnError(sql.ErrNoRows)
 
-	_, err := repo.GetDetailByID(1)
+	_, err := repo.GetDetailByID("uuid-1")
 
 	if err == nil || err.Error() != "data tidak ditemukan" {
 		t.Errorf("expected not found error")

@@ -34,7 +34,7 @@ func (f FrequencyLevel) Valid() bool {
 
 // MASTER RISIKO
 type Risiko struct {
-	ID        int64     `db:"id"`
+	ID        string    `db:"id"`
 	Kode      string    `db:"kode"`
 	Nama      string    `db:"nama"`
 	Deskripsi *string   `db:"deskripsi"`
@@ -46,9 +46,9 @@ type Risiko struct {
 
 // STEP 1 — ELIGIBILITY
 type RisikoEligibility struct {
-	ID            int64     `db:"id"`
-	RespondenID   int64     `db:"responden_id"`
-	RisikoID      *int64    `db:"risiko_id"`
+	ID            string    `db:"id"`
+	RespondenID   string    `db:"responden_id"`
+	RisikoID      *string   `db:"risiko_id"`
 	PernahTerjadi bool      `db:"pernah_terjadi"`
 	CreatedAt     time.Time `db:"created_at"`
 	UpdatedAt     time.Time `db:"updated_at"`
@@ -56,9 +56,9 @@ type RisikoEligibility struct {
 
 // STEP 2A — ALASAN
 type RisikoAlasan struct {
-	ID          int64     `db:"id"`
-	RespondenID int64     `db:"responden_id"`
-	RisikoID    *int64    `db:"risiko_id"`
+	ID          string    `db:"id"`
+	RespondenID string    `db:"responden_id"`
+	RisikoID    *string   `db:"risiko_id"`
 	Alasan      string    `db:"alasan"`
 	CreatedAt   time.Time `db:"created_at"`
 	UpdatedAt   time.Time `db:"updated_at"`
@@ -66,9 +66,9 @@ type RisikoAlasan struct {
 
 // STEP 2B — DAMPAK
 type RisikoDampak struct {
-	ID          int64  `db:"id"`
-	RespondenID int64  `db:"responden_id"`
-	RisikoID    *int64 `db:"risiko_id"`
+	ID          string `db:"id"`
+	RespondenID string `db:"responden_id"`
+	RisikoID    *string `db:"risiko_id"`
 
 	DampakReputasi    string `db:"dampak_reputasi"` // ENUM DB (string)
 	DampakOperasional string `db:"dampak_operasional"`
@@ -82,9 +82,9 @@ type RisikoDampak struct {
 
 // STEP 2C — PENGENDALIAN
 type RisikoPengendalian struct {
-	ID          int64  `db:"id"`
-	RespondenID int64  `db:"responden_id"`
-	RisikoID    *int64 `db:"risiko_id"`
+	ID          string `db:"id"`
+	RespondenID string `db:"responden_id"`
+	RisikoID    *string `db:"risiko_id"`
 
 	AdaPengendalian       bool    `db:"ada_pengendalian"`
 	DeskripsiPengendalian *string `db:"deskripsi_pengendalian"` // nullable
@@ -95,9 +95,9 @@ type RisikoPengendalian struct {
 
 // PROGRESS SURVEY
 type SurveyProgress struct {
-	ID              int64          `db:"id"`
-	RespondenID     int64          `db:"responden_id"`
-	RisikoID        sql.NullInt64  `db:"risiko_id"`
+	ID              string         `db:"id"`
+	RespondenID     string         `db:"responden_id"`
+	RisikoID        sql.NullString `db:"risiko_id"`
 	LangkahSaatIni  sql.NullString `db:"langkah_saat_ini"`
 	Selesai         bool           `db:"selesai"`
 	Status          string         `db:"status"`
@@ -114,7 +114,7 @@ type SurveyProgress struct {
 
 // EDIT REQUEST ITEM (joined: survey_progress + responden + perusahaan)
 type EditRequestItem struct {
-	RespondenID     int64          `db:"responden_id"`
+	RespondenID     string         `db:"responden_id"`
 	UserID          string         `db:"user_id"`
 	NamaLengkap     string         `db:"nama_lengkap"`
 	NamaPerusahaan  sql.NullString `db:"nama_perusahaan"`
@@ -130,7 +130,7 @@ type EditRequestItem struct {
 
 // RESPONSE
 type RisikoResponse struct {
-	ID         int64  `json:"id"`
+	ID         string `json:"id"`
 	NamaRisiko string `json:"nama_risiko"`
 	Deskripsi  string `json:"deskripsi"`
 }

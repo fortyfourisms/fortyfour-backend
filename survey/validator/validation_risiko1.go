@@ -17,14 +17,14 @@ var (
 	ErrMissingControl = errors.New("deskripsi pengendalian wajib diisi jika ada_pengendalian = true")
 )
 
-// helper untuk pointer int
-func isInvalidIntPtr(v *int) bool {
-	return v == nil || *v <= 0
+// helper untuk pointer string
+func isInvalidStringPtr(v *string) bool {
+	return v == nil || *v == ""
 }
 
 // STEP 1 — ELIGIBILITY
 func ValidateEligibilityRequest(req dto.EligibilityRequest) error {
-	if isInvalidIntPtr(req.RisikoID) {
+	if isInvalidStringPtr(req.RisikoID) {
 		return ErrMissingRisikoID
 	}
 	return nil
@@ -32,7 +32,7 @@ func ValidateEligibilityRequest(req dto.EligibilityRequest) error {
 
 // STEP 2A — ALASAN
 func ValidateAlasanRequest(req dto.AlasanRequest) error {
-	if isInvalidIntPtr(req.RisikoID) {
+	if isInvalidStringPtr(req.RisikoID) {
 		return ErrMissingRisikoID
 	}
 	if req.Alasan == "" {
@@ -43,7 +43,7 @@ func ValidateAlasanRequest(req dto.AlasanRequest) error {
 
 // STEP 2B — DAMPAK
 func ValidateDampakRequest(req dto.DampakRequest) error {
-	if isInvalidIntPtr(req.RisikoID) {
+	if isInvalidStringPtr(req.RisikoID) {
 		return ErrMissingRisikoID
 	}
 
@@ -70,7 +70,7 @@ func ValidateDampakRequest(req dto.DampakRequest) error {
 
 // STEP 2C — PENGENDALIAN
 func ValidatePengendalianRequest(req dto.PengendalianRequest) error {
-	if isInvalidIntPtr(req.RisikoID) {
+	if isInvalidStringPtr(req.RisikoID) {
 		return ErrMissingRisikoID
 	}
 

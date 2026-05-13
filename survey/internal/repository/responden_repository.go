@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"survey/internal/models"
+	"github.com/google/uuid"
 )
 
 type RespondenRepository struct {
@@ -24,13 +25,17 @@ func nullToString(ns sql.NullString) *string {
 }
 
 // CREATE
-func (r *RespondenRepository) Create(m models.Responden) (int64, error) {
+func (r *RespondenRepository) Create(m models.Responden) (string, error) {
+	if m.ID == "" {
+		m.ID = uuid.New().String()
+	}
 
-	res, err := r.db.Exec(`
+	_, err := r.db.Exec(`
 		INSERT INTO responden
-		(user_id, id_perusahaan, nama_lengkap, jabatan, email, no_telepon, sertifikat_training)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		(id, user_id, id_perusahaan, nama_lengkap, jabatan, email, no_telepon, sertifikat_training)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 	`,
+		m.ID,
 		m.UserID,
 		m.IdPerusahaan,
 		m.NamaLengkap,
@@ -41,19 +46,19 @@ func (r *RespondenRepository) Create(m models.Responden) (int64, error) {
 	)
 
 	if err != nil {
-		return 0, err
+		return "", err
 	}
 
-	return res.LastInsertId()
+	return m.ID, nil
 }
 
 // UPSERT BY USER ID
 func (r *RespondenRepository) UpsertByUserID(userID string, m models.Responden) error {
-
+	newID := uuid.New().String()
 	_, err := r.db.Exec(`
 		INSERT INTO responden
-		(user_id, id_perusahaan, nama_lengkap, jabatan, email, no_telepon, sertifikat_training)
-		VALUES (?, ?, ?, ?, ?, ?, ?)
+		(id, user_id, id_perusahaan, nama_lengkap, jabatan, email, no_telepon, sertifikat_training)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE
 			id_perusahaan = VALUES(id_perusahaan),
 			nama_lengkap = VALUES(nama_lengkap),
@@ -63,6 +68,7 @@ func (r *RespondenRepository) UpsertByUserID(userID string, m models.Responden) 
 			sertifikat_training = VALUES(sertifikat_training),
 			updated_at = NOW()
 	`,
+		newID,
 		userID,
 		m.IdPerusahaan,
 		m.NamaLengkap,
@@ -179,7 +185,7 @@ func (r *RespondenRepository) GetAllDetail() ([]models.RespondenDetail, error) {
 }
 
 // GET BY ID (ADMIN)
-func (r *RespondenRepository) GetDetailByID(id int64) (*models.RespondenDetail, error) {
+func (r *RespondenRepository) GetDetailByID(id string) (*models.RespondenDetail, error) {
 
 	row := r.db.QueryRow(baseDetailQuery+" WHERE r.id = ?", id)
 
@@ -265,7 +271,7 @@ func (r *RespondenRepository) GetByUserID(userID string) (*models.RespondenDetai
 }
 
 // BASIC GET
-func (r *RespondenRepository) GetByID(id int64) (*models.Responden, error) {
+func (r *RespondenRepository) GetByID(id string) (*models.Responden, error) {
 
 	row := r.db.QueryRow(`
 		SELECT id, user_id, id_perusahaan, nama_lengkap, jabatan, email, no_telepon, sertifikat_training, created_at, updated_at

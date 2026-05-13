@@ -4,22 +4,22 @@ import "survey/internal/models"
 
 // STEP 1: ELIGIBILITY
 type EligibilityRequest struct {
-	RespondenID   int64 `json:"responden_id"`
-	RisikoID      *int  `json:"risiko_id,omitempty"`
-	PernahTerjadi bool  `json:"pernah_terjadi"`
+	RespondenID   string  `json:"responden_id"`
+	RisikoID      *string `json:"risiko_id,omitempty"`
+	PernahTerjadi bool    `json:"pernah_terjadi"`
 }
 
 // STEP 2A: ALASAN
 type AlasanRequest struct {
-	RespondenID int64  `json:"responden_id"`
-	RisikoID    *int   `json:"risiko_id,omitempty"`
-	Alasan      string `json:"alasan"`
+	RespondenID string  `json:"responden_id"`
+	RisikoID    *string `json:"risiko_id,omitempty"`
+	Alasan      string  `json:"alasan"`
 }
 
 // STEP 2B: DAMPAK
 type DampakRequest struct {
-	RespondenID       int64                 `json:"responden_id"`
-	RisikoID          *int                  `json:"risiko_id,omitempty"`
+	RespondenID       string                `json:"responden_id"`
+	RisikoID          *string               `json:"risiko_id,omitempty"`
 	DampakReputasi    models.ImpactLevel    `json:"dampak_reputasi"`
 	DampakOperasional models.ImpactLevel    `json:"dampak_operasional"`
 	DampakFinansial   models.ImpactLevel    `json:"dampak_finansial"`
@@ -29,23 +29,23 @@ type DampakRequest struct {
 
 // STEP 2C: PENGENDALIAN
 type PengendalianRequest struct {
-	RespondenID           int64  `json:"responden_id"`
-	RisikoID              *int   `json:"risiko_id,omitempty"`
+	RespondenID           string `json:"responden_id"`
+	RisikoID              *string `json:"risiko_id,omitempty"`
 	AdaPengendalian       bool   `json:"ada_pengendalian"`
 	DeskripsiPengendalian string `json:"deskripsi_pengendalian,omitempty"`
 }
 
 // NAVIGATION
 type NavigateRequest struct {
-	RespondenID int64  `json:"responden_id"`
+	RespondenID string `json:"responden_id"`
 	Direction   string `json:"direction"`
 	CurrentRisk int    `json:"current_risk"`
 }
 
 // PROGRESS RESPONSE
 type ProgressResponse struct {
-	RespondenID     int64   `json:"responden_id"`
-	RisikoID        *int    `json:"risiko_id"`
+	RespondenID     string  `json:"responden_id"`
+	RisikoID        *string `json:"risiko_id"`
 	LangkahSaatIni  *string `json:"langkah_saat_ini"`
 	Selesai         bool    `json:"selesai"`
 	Status          string  `json:"status"`
@@ -63,7 +63,7 @@ type ProgressResponse struct {
 // CUSTOM RISIKO
 // TODO: used by services and handlers for custom risk creation.
 type CustomRisikoRequest struct {
-	RespondenID int64  `json:"responden_id"`
+	RespondenID string `json:"responden_id"`
 	NamaRisiko  string `json:"nama_risiko"`
 }
 
@@ -78,7 +78,7 @@ type ReviewEditRequest struct {
 
 // EDIT REQUEST LIST RESPONSE
 type EditRequestItemResponse struct {
-	RespondenID     int64   `json:"responden_id"`
+	RespondenID     string  `json:"responden_id"`
 	UserID          string  `json:"user_id"`
 	NamaLengkap     string  `json:"nama_lengkap"`
 	NamaPerusahaan  *string `json:"nama_perusahaan,omitempty"`

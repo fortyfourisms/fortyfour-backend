@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,11 +17,11 @@ const cacheTTL = 10 * time.Minute
 // REPOSITORY
 type RespondenRepositoryInterface interface {
 	GetAllDetail() ([]models.RespondenDetail, error)
-	GetDetailByID(id int64) (*models.RespondenDetail, error)
+	GetDetailByID(id string) (*models.RespondenDetail, error)
 
 	GetByUserID(userID string) (*models.RespondenDetail, error)
 
-	Create(m models.Responden) (int64, error)
+	Create(m models.Responden) (string, error)
 	UpsertByUserID(userID string, m models.Responden) error
 	CanEditByUserID(userID string) (bool, string, error)
 }
@@ -164,10 +163,10 @@ func (s *RespondenService) GetAll() ([]dto.RespondenResponse, error) {
 }
 
 // GET BY ID
-func (s *RespondenService) GetByID(id int) (*dto.RespondenResponse, error) {
+func (s *RespondenService) GetByID(id string) (*dto.RespondenResponse, error) {
 
 	ctx := context.Background()
-	cacheKey := "responden:id:" + strconv.Itoa(id)
+	cacheKey := "responden:id:" + id
 
 	if val, ok, _ := s.cache.Get(ctx, cacheKey); ok {
 		var cached dto.RespondenResponse
@@ -176,7 +175,7 @@ func (s *RespondenService) GetByID(id int) (*dto.RespondenResponse, error) {
 		}
 	}
 
-	data, err := s.repo.GetDetailByID(int64(id))
+	data, err := s.repo.GetDetailByID(id)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +196,7 @@ func (s *RespondenService) setCache(ctx context.Context, key string, data any) {
 	_ = s.cache.Set(ctx, key, string(b), int(cacheTTL.Seconds()))
 }
 
-func (s *RespondenService) invalidateUserCache(userID string, id int64) {
+func (s *RespondenService) invalidateUserCache(userID string, id string) {
 	ctx := context.Background()
 
 	_ = s.cache.Del(ctx, "responden:all")
@@ -206,7 +205,7 @@ func (s *RespondenService) invalidateUserCache(userID string, id int64) {
 		_ = s.cache.Del(ctx, "responden:user:"+userID)
 	}
 
-	_ = s.cache.Del(ctx, "responden:id:"+strconv.FormatInt(id, 10))
+	_ = s.cache.Del(ctx, "responden:id:"+id)
 }
 
 // MAPPER

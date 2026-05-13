@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"survey/internal/dto"
@@ -24,7 +23,7 @@ type RisikoServiceInterface interface {
 	ProcessPengendalian(userID string, req dto.PengendalianRequest) (map[string]interface{}, error)
 
 	GetByUserID(userID string) (map[string]interface{}, error)
-	GetByRespondentID(id int64) (map[string]interface{}, error)
+	GetByRespondentID(id string) (map[string]interface{}, error)
 
 	GetProgress(userID string) (dto.ProgressResponse, error)
 
@@ -33,7 +32,7 @@ type RisikoServiceInterface interface {
 
 	FinishSurvey(userID string) error
 	RequestEdit(userID string, req dto.RequestEditRequest) (dto.ProgressResponse, error)
-	ReviewEditRequest(adminID string, respondenID int64, req dto.ReviewEditRequest) (dto.ProgressResponse, error)
+	ReviewEditRequest(adminID string, respondenID string, req dto.ReviewEditRequest) (dto.ProgressResponse, error)
 
 	GetAllEditRequests() ([]dto.EditRequestItemResponse, error)
 	GetMyEditRequest(userID string) (*dto.EditRequestItemResponse, error)
@@ -196,7 +195,7 @@ func (h *RisikoHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 // @Description Get risk assessment data for a specific respondent (Admin/Staff only)
 // @Tags Risiko
 // @Produce json
-// @Param id path int true "Respondent ID"
+// @Param id path string true "Respondent ID"
 // @Success 200 {object} dto.APIResponse
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 403 {object} dto.ErrorResponse
@@ -209,8 +208,8 @@ func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request
 	}
 
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/survey/risiko/")
-	id, err := strconv.ParseInt(strings.Trim(idStr, "/"), 10, 64)
-	if err != nil {
+	id := strings.Trim(idStr, "/")
+	if id == "" {
 		utils.RespondError(w, http.StatusBadRequest, "ID tidak valid")
 		return
 	}
@@ -347,7 +346,7 @@ func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
 // @Tags Survey Edit Request
 // @Accept json
 // @Produce json
-// @Param id path int true "Respondent ID"
+// @Param id path string true "Respondent ID"
 // @Param request body dto.ReviewEditRequest true "Provide 'action' (approve/reject) and optional 'response' string"
 // @Success 200 {object} dto.APIResponse{data=dto.ProgressResponse}
 // @Failure 400 {object} dto.ErrorResponse "Invalid body or respondent ID"
@@ -361,8 +360,8 @@ func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request
 
 	adminID := middleware.GetUserID(r.Context())
 	idStr := strings.TrimPrefix(r.URL.Path, "/api/survey/edit-requests/")
-	respondenID, err := strconv.ParseInt(strings.Trim(idStr, "/"), 10, 64)
-	if err != nil {
+	respondenID := strings.Trim(idStr, "/")
+	if respondenID == "" {
 		utils.RespondError(w, http.StatusBadRequest, "ID responden tidak valid")
 		return
 	}

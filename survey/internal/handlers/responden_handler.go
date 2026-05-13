@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"survey/internal/dto"
@@ -14,7 +13,7 @@ import (
 // SERVICE
 type RespondenServiceInterface interface {
 	GetAll() ([]dto.RespondenResponse, error)
-	GetByID(id int) (*dto.RespondenResponse, error)
+	GetByID(id string) (*dto.RespondenResponse, error)
 	GetByUserID(userID string) (*dto.RespondenResponse, error)
 	UpsertByUserID(userID string, req dto.CreateRespondenRequest) (*dto.RespondenResponse, error)
 }
@@ -99,19 +98,13 @@ func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
 // @Description Get details of a specific respondent (Admin/Staff only)
 // @Tags Responden
 // @Produce json
-// @Param id path int true "Responden ID"
+// @Param id path string true "Responden ID"
 // @Success 200 {object} dto.APIResponse{data=dto.RespondenResponse}
 // @Failure 400 {object} dto.ErrorResponse
 // @Failure 404 {object} dto.ErrorResponse
 // @Router /api/survey/responden/{id} [get]
 func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
-	idInt, err := strconv.Atoi(id)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "ID harus angka")
-		return
-	}
-
-	data, err := h.service.GetByID(idInt)
+	data, err := h.service.GetByID(id)
 	if err != nil {
 		utils.RespondError(w, http.StatusNotFound, err.Error())
 		return
