@@ -320,9 +320,15 @@ func (s *JawabanIdentifikasiService) GetByPerusahaanID(perusahaanID string, user
 	return s.repo.GetByPerusahaanID(perusahaanID)
 }
 
-func (s *JawabanIdentifikasiService) GetByPertanyaan(pertanyaanID int) ([]dto.JawabanIdentifikasiResponse, error) {
+// GetByPertanyaan retrieves answers for a given question.
+// For admin/staff, returns all answers across companies.
+// For regular users, enforces company-scoped filtering.
+func (s *JawabanIdentifikasiService) GetByPertanyaan(pertanyaanID int, userRole string, userPerusahaanID string) ([]dto.JawabanIdentifikasiResponse, error) {
 	if pertanyaanID <= 0 {
 		return nil, errors.New("pertanyaan_identifikasi_id tidak valid")
+	}
+	if userRole != "admin" && userRole != "staff" {
+		return s.repo.GetByPertanyaanAndPerusahaan(pertanyaanID, userPerusahaanID)
 	}
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }

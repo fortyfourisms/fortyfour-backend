@@ -18,6 +18,8 @@ type mockSubSektorService struct {
 	GetAllFn        func() ([]dto.SubSektorResponse, error)
 	GetByIDFn       func(string) (*dto.SubSektorResponse, error)
 	GetBySektorIDFn func(string) ([]dto.SubSektorResponse, error)
+	CreateFn        func(dto.SubSektorRequest) (*dto.SubSektorResponse, error)
+	UpdateFn        func(string, dto.SubSektorRequest) (*dto.SubSektorResponse, error)
 }
 
 func (m *mockSubSektorService) GetAll() ([]dto.SubSektorResponse, error) {
@@ -30,6 +32,20 @@ func (m *mockSubSektorService) GetByID(id string) (*dto.SubSektorResponse, error
 
 func (m *mockSubSektorService) GetBySektorID(sektorID string) ([]dto.SubSektorResponse, error) {
 	return m.GetBySektorIDFn(sektorID)
+}
+
+func (m *mockSubSektorService) Create(req dto.SubSektorRequest) (*dto.SubSektorResponse, error) {
+	if m.CreateFn != nil {
+		return m.CreateFn(req)
+	}
+	return nil, nil
+}
+
+func (m *mockSubSektorService) Update(id string, req dto.SubSektorRequest) (*dto.SubSektorResponse, error) {
+	if m.UpdateFn != nil {
+		return m.UpdateFn(id, req)
+	}
+	return nil, nil
 }
 
 //
@@ -160,7 +176,8 @@ func TestSubSektorHandler_MethodNotAllowed(t *testing.T) {
 
 	handler := NewSubSektorHandler(mockSvc)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/sub_sektor", nil)
+	// POST and PUT are now allowed, DELETE should be rejected
+	req := httptest.NewRequest(http.MethodDelete, "/api/sub_sektor", nil)
 	rr := httptest.NewRecorder()
 
 	handler.ServeHTTP(rr, req)

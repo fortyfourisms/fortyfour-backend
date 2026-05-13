@@ -74,6 +74,10 @@ func (m *mockJawabanIdentifikasiRepository) GetByPertanyaan(pertanyaanID int) ([
 	args := m.Called(pertanyaanID)
 	return args.Get(0).([]dto.JawabanIdentifikasiResponse), args.Error(1)
 }
+func (m *mockJawabanIdentifikasiRepository) GetByPertanyaanAndPerusahaan(pertanyaanID int, perusahaanID string) ([]dto.JawabanIdentifikasiResponse, error) {
+	args := m.Called(pertanyaanID, perusahaanID)
+	return args.Get(0).([]dto.JawabanIdentifikasiResponse), args.Error(1)
+}
 func (m *mockJawabanIdentifikasiRepository) Update(id int, req dto.UpdateJawabanIdentifikasiRequest) error {
 	args := m.Called(id, req)
 	return args.Error(0)

@@ -20,6 +20,8 @@ type mockSubSektorRepositoryStandalone struct {
 	GetAllFn        func() ([]dto.SubSektorResponse, error)
 	GetByIDFn       func(id string) (*dto.SubSektorResponse, error)
 	GetBySektorIDFn func(sektorID string) ([]dto.SubSektorResponse, error)
+	CreateFn        func(req dto.SubSektorRequest) (*dto.SubSektorResponse, error)
+	UpdateFn        func(id string, req dto.SubSektorRequest) (*dto.SubSektorResponse, error)
 }
 
 func (m *mockSubSektorRepositoryStandalone) GetAll() ([]dto.SubSektorResponse, error) {
@@ -32,6 +34,20 @@ func (m *mockSubSektorRepositoryStandalone) GetByID(id string) (*dto.SubSektorRe
 
 func (m *mockSubSektorRepositoryStandalone) GetBySektorID(sektorID string) ([]dto.SubSektorResponse, error) {
 	return m.GetBySektorIDFn(sektorID)
+}
+
+func (m *mockSubSektorRepositoryStandalone) Create(req dto.SubSektorRequest) (*dto.SubSektorResponse, error) {
+	if m.CreateFn != nil {
+		return m.CreateFn(req)
+	}
+	return nil, nil
+}
+
+func (m *mockSubSektorRepositoryStandalone) Update(id string, req dto.SubSektorRequest) (*dto.SubSektorResponse, error) {
+	if m.UpdateFn != nil {
+		return m.UpdateFn(id, req)
+	}
+	return nil, nil
 }
 
 /*

@@ -805,16 +805,6 @@ definitions:
     required:
     - reason
     type: object
-  dto.ReviewEditRequest:
-    properties:
-      action:
-        description: '"approve" or "reject"'
-        example: approve
-        type: string
-      response:
-        example: Alasan persetujuan atau penolakan
-        type: string
-    type: object
   dto.RuangLingkupInfo:
     properties:
       id:
@@ -2336,6 +2326,13 @@ definitions:
       total:
         type: integer
     type: object
+  fortyfour-backend_internal_dto.SektorRequest:
+    properties:
+      nama_sektor:
+        type: string
+    required:
+    - nama_sektor
+    type: object
   fortyfour-backend_internal_dto.SektorResponse:
     properties:
       created_at:
@@ -2421,6 +2418,16 @@ definitions:
         type: string
       nama_sub_sektor:
         type: string
+    type: object
+  fortyfour-backend_internal_dto.SubSektorRequest:
+    properties:
+      id_sektor:
+        type: string
+      nama_sub_sektor:
+        type: string
+    required:
+    - id_sektor
+    - nama_sub_sektor
     type: object
   fortyfour-backend_internal_dto.SubSektorResponse:
     properties:
@@ -2906,22 +2913,10 @@ definitions:
     type: object
   survey_internal_dto.ProgressResponse:
     properties:
-      edit_approved_at:
-        type: string
-      edit_approved_by:
-        type: string
-      edit_rejected_at:
-        type: string
-      edit_rejected_by:
-        type: string
       edit_request_reason:
         type: string
       edit_request_response:
         type: string
-      edit_requested_at:
-        type: string
-      is_rejected:
-        type: boolean
       langkah_saat_ini:
         type: string
       responden_id:
@@ -2931,13 +2926,6 @@ definitions:
       selesai:
         type: boolean
       status:
-        type: string
-      submitted_at:
-        type: string
-    type: object
-  survey_internal_dto.RequestEditRequest:
-    properties:
-      reason:
         type: string
     type: object
 host: localhost:8080
@@ -8968,6 +8956,37 @@ paths:
       summary: List semua sektor
       tags:
       - Sektor
+    post:
+      consumes:
+      - application/json
+      description: Menambahkan data sektor baru
+      parameters:
+      - description: Data sektor
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.SektorRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.SektorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Buat sektor baru
+      tags:
+      - Sektor
   /api/sektor/{id}:
     get:
       description: Mengambil satu data sektor beserta sub sektor
@@ -8991,6 +9010,42 @@ paths:
       security:
       - BearerAuth: []
       summary: Ambil sektor berdasarkan ID
+      tags:
+      - Sektor
+    put:
+      consumes:
+      - application/json
+      description: Memperbarui data sektor berdasarkan ID
+      parameters:
+      - description: Sektor ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data sektor
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.SektorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.SektorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update sektor
       tags:
       - Sektor
   /api/sertifikat/{id}:
@@ -9144,6 +9199,37 @@ paths:
       summary: List semua sub sektor
       tags:
       - SubSektor
+    post:
+      consumes:
+      - application/json
+      description: Menambahkan data sub sektor baru
+      parameters:
+      - description: Data sub sektor
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.SubSektorRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.SubSektorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Buat sub sektor baru
+      tags:
+      - SubSektor
   /api/sub_sektor/{id}:
     get:
       description: Mengambil satu data sub sektor
@@ -9167,6 +9253,42 @@ paths:
       security:
       - BearerAuth: []
       summary: Ambil sub sektor berdasarkan ID
+      tags:
+      - SubSektor
+    put:
+      consumes:
+      - application/json
+      description: Memperbarui data sub sektor berdasarkan ID
+      parameters:
+      - description: SubSektor ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data sub sektor
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/fortyfour-backend_internal_dto.SubSektorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.SubSektorResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update sub sektor
       tags:
       - SubSektor
   /api/sub_sektor/by_sektor/{id}:

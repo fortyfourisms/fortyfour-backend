@@ -9,6 +9,8 @@ import (
 type SektorServiceInterface interface {
 	GetAll() ([]dto.SektorResponse, error)
 	GetByID(id string) (*dto.SektorResponse, error)
+	Create(req dto.SektorRequest) (*dto.SektorResponse, error)
+	Update(id string, req dto.SektorRequest) (*dto.SektorResponse, error)
 }
 
 type SektorService struct {
@@ -49,5 +51,24 @@ func (s *SektorService) GetByID(id string) (*dto.SektorResponse, error) {
 	}
 
 	cacheSet(s.rc, key, data, TTLDetail)
+	return data, nil
+}
+
+func (s *SektorService) Create(req dto.SektorRequest) (*dto.SektorResponse, error) {
+	data, err := s.repo.Create(req)
+	if err != nil {
+		return nil, err
+	}
+	cacheDelete(s.rc, keyList("sektor"))
+	return data, nil
+}
+
+func (s *SektorService) Update(id string, req dto.SektorRequest) (*dto.SektorResponse, error) {
+	data, err := s.repo.Update(id, req)
+	if err != nil {
+		return nil, err
+	}
+	cacheDelete(s.rc, keyList("sektor"))
+	cacheDelete(s.rc, keyDetail("sektor", id))
 	return data, nil
 }

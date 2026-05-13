@@ -9275,6 +9275,55 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menambahkan data sektor baru",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sektor"
+                ],
+                "summary": "Buat sektor baru",
+                "parameters": [
+                    {
+                        "description": "Data sektor",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SektorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SektorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/api/sektor/{id}": {
@@ -9310,6 +9359,62 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Memperbarui data sektor berdasarkan ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sektor"
+                ],
+                "summary": "Update sektor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Sektor ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data sektor",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SektorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SektorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
@@ -9556,6 +9661,55 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Menambahkan data sub sektor baru",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SubSektor"
+                ],
+                "summary": "Buat sub sektor baru",
+                "parameters": [
+                    {
+                        "description": "Data sub sektor",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SubSektorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SubSektorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/api/sub_sektor/by_sektor/{id}": {
@@ -9634,6 +9788,62 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Memperbarui data sub sektor berdasarkan ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "SubSektor"
+                ],
+                "summary": "Update sub sektor",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "SubSektor ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data sub sektor",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SubSektorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.SubSektorResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/fortyfour-backend_internal_dto.ErrorResponse"
                         }
@@ -12161,20 +12371,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ReviewEditRequest": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "description": "\"approve\" or \"reject\"",
-                    "type": "string",
-                    "example": "approve"
-                },
-                "response": {
-                    "type": "string",
-                    "example": "Alasan persetujuan atau penolakan"
-                }
-            }
-        },
         "dto.RuangLingkupInfo": {
             "type": "object",
             "properties": {
@@ -14442,6 +14638,17 @@ const docTemplate = `{
                 }
             }
         },
+        "fortyfour-backend_internal_dto.SektorRequest": {
+            "type": "object",
+            "required": [
+                "nama_sektor"
+            ],
+            "properties": {
+                "nama_sektor": {
+                    "type": "string"
+                }
+            }
+        },
         "fortyfour-backend_internal_dto.SektorResponse": {
             "type": "object",
             "properties": {
@@ -14567,6 +14774,21 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "nama_sektor": {
+                    "type": "string"
+                },
+                "nama_sub_sektor": {
+                    "type": "string"
+                }
+            }
+        },
+        "fortyfour-backend_internal_dto.SubSektorRequest": {
+            "type": "object",
+            "required": [
+                "id_sektor",
+                "nama_sub_sektor"
+            ],
+            "properties": {
+                "id_sektor": {
                     "type": "string"
                 },
                 "nama_sub_sektor": {
@@ -15276,29 +15498,11 @@ const docTemplate = `{
         "survey_internal_dto.ProgressResponse": {
             "type": "object",
             "properties": {
-                "edit_approved_at": {
-                    "type": "string"
-                },
-                "edit_approved_by": {
-                    "type": "string"
-                },
-                "edit_rejected_at": {
-                    "type": "string"
-                },
-                "edit_rejected_by": {
-                    "type": "string"
-                },
                 "edit_request_reason": {
                     "type": "string"
                 },
                 "edit_request_response": {
                     "type": "string"
-                },
-                "edit_requested_at": {
-                    "type": "string"
-                },
-                "is_rejected": {
-                    "type": "boolean"
                 },
                 "langkah_saat_ini": {
                     "type": "string"
@@ -15313,17 +15517,6 @@ const docTemplate = `{
                     "type": "boolean"
                 },
                 "status": {
-                    "type": "string"
-                },
-                "submitted_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "survey_internal_dto.RequestEditRequest": {
-            "type": "object",
-            "properties": {
-                "reason": {
                     "type": "string"
                 }
             }

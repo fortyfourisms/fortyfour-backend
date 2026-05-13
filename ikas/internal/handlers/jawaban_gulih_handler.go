@@ -121,7 +121,7 @@ func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 		return
 	} else if pertanyaanIDStr != "" {
 		pID, _ := strconv.Atoi(pertanyaanIDStr)
-		data, err = h.service.GetByPertanyaan(pID)
+		data, err = h.service.GetByPertanyaan(pID, userRole, userPerusahaanID)
 	} else {
 		if userRole != "admin" && userRole != "staff" {
 			data, err = h.service.GetByPerusahaanID(userPerusahaanID, userRole, userPerusahaanID)

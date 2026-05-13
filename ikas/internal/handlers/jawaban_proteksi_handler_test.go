@@ -73,6 +73,10 @@ func (m *mockJawabanProteksiRepository) GetByPertanyaan(pertanyaanID int) ([]dto
 	args := m.Called(pertanyaanID)
 	return args.Get(0).([]dto.JawabanProteksiResponse), args.Error(1)
 }
+func (m *mockJawabanProteksiRepository) GetByPertanyaanAndPerusahaan(pertanyaanID int, perusahaanID string) ([]dto.JawabanProteksiResponse, error) {
+	args := m.Called(pertanyaanID, perusahaanID)
+	return args.Get(0).([]dto.JawabanProteksiResponse), args.Error(1)
+}
 func (m *mockJawabanProteksiRepository) Update(id int, req dto.UpdateJawabanProteksiRequest) error {
 	args := m.Called(id, req)
 	return args.Error(0)
@@ -303,7 +307,7 @@ func TestJawabanProteksiHandler_GetByPertanyaan_InvalidID_Zero(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 // ─── GET BY ID ───────────────────────────────────────────────────────────────

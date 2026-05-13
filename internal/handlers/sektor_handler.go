@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fortyfour-backend/internal/dto"
 	"fortyfour-backend/internal/services"
 	"fortyfour-backend/internal/utils"
@@ -29,6 +30,10 @@ func (h *SektorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		} else {
 			h.handleGetByID(w, r, id)
 		}
+	case http.MethodPost:
+		h.handleCreate(w, r)
+	case http.MethodPut:
+		h.handleUpdate(w, r, id)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -71,4 +76,73 @@ func (h *SektorHandler) handleGetByID(w http.ResponseWriter, _ *http.Request, id
 		return
 	}
 	utils.RespondJSON(w, 200, data)
+}
+
+// CreateSektor godoc
+//
+//	@Summary		Buat sektor baru
+//	@Description	Menambahkan data sektor baru
+//	@Tags			Sektor
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			body	body		dto.SektorRequest	true	"Data sektor"
+//	@Success		201		{object}	dto.SektorResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		500		{object}	dto.ErrorResponse
+//	@Router			/api/sektor [post]
+func (h *SektorHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
+	var req dto.SektorRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if strings.TrimSpace(req.NamaSektor) == "" {
+		utils.RespondError(w, http.StatusBadRequest, "nama_sektor tidak boleh kosong")
+		return
+	}
+
+	data, err := h.service.Create(req)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.RespondJSON(w, http.StatusCreated, data)
+}
+
+// UpdateSektor godoc
+//
+//	@Summary		Update sektor
+//	@Description	Memperbarui data sektor berdasarkan ID
+//	@Tags			Sektor
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		string				true	"Sektor ID"
+//	@Param			body	body		dto.SektorRequest	true	"Data sektor"
+//	@Success		200		{object}	dto.SektorResponse
+//	@Failure		400		{object}	dto.ErrorResponse
+//	@Failure		500		{object}	dto.ErrorResponse
+//	@Router			/api/sektor/{id} [put]
+func (h *SektorHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
+	if id == "" {
+		utils.RespondError(w, http.StatusBadRequest, "ID tidak boleh kosong")
+		return
+	}
+	var req dto.SektorRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if strings.TrimSpace(req.NamaSektor) == "" {
+		utils.RespondError(w, http.StatusBadRequest, "nama_sektor tidak boleh kosong")
+		return
+	}
+
+	data, err := h.service.Update(id, req)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.RespondJSON(w, http.StatusOK, data)
 }

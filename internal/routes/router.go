@@ -141,12 +141,38 @@ func InitRouter(
 	mux.HandleFunc("/api/sdm_csirt/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
 
 	// Route Sektor
-	mux.HandleFunc("/api/sektor", authM.Authenticate(utils.AdaptHandler(sektorH)))
-	mux.HandleFunc("/api/sektor/", authM.Authenticate(utils.AdaptHandler(sektorH)))
+	// GET → semua user authenticated, POST/PUT → admin/staff (casbin)
+	mux.HandleFunc("/api/sektor", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			utils.AdaptHandler(sektorH)(w, r)
+		} else {
+			casbinM.Authorize(utils.AdaptHandler(sektorH))(w, r)
+		}
+	}))
+	mux.HandleFunc("/api/sektor/", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			utils.AdaptHandler(sektorH)(w, r)
+		} else {
+			casbinM.Authorize(utils.AdaptHandler(sektorH))(w, r)
+		}
+	}))
 
 	// Route SubSektor
-	mux.HandleFunc("/api/sub_sektor", authM.Authenticate(utils.AdaptHandler(subsectorH)))
-	mux.HandleFunc("/api/sub_sektor/", authM.Authenticate(utils.AdaptHandler(subsectorH)))
+	// GET → semua user authenticated, POST/PUT → admin/staff (casbin)
+	mux.HandleFunc("/api/sub_sektor", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			utils.AdaptHandler(subsectorH)(w, r)
+		} else {
+			casbinM.Authorize(utils.AdaptHandler(subsectorH))(w, r)
+		}
+	}))
+	mux.HandleFunc("/api/sub_sektor/", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			utils.AdaptHandler(subsectorH)(w, r)
+		} else {
+			casbinM.Authorize(utils.AdaptHandler(subsectorH))(w, r)
+		}
+	}))
 
 	// Route SE
 	// "/api/se/" menangkap semua sub-path termasuk {id}/export-pdf, {id}/request-edit, edit-requests.
