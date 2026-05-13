@@ -11,9 +11,9 @@ import (
 
 func TestEventRegistrationQRPayload_JSON(t *testing.T) {
 	payload := EventRegistrationQRPayload{
-		EventID:        1,
+		EventID:        "1",
 		EventTitle:     "Workshop Keamanan Siber",
-		RegistrationID: 42,
+		RegistrationID: "42",
 		Nama:           "John Doe",
 		Email:          "john@example.com",
 		Perusahaan:     "PT Test",
@@ -34,8 +34,8 @@ func TestEventRegistrationQRPayload_JSON(t *testing.T) {
 		t.Fatalf("result is not valid JSON: %v", err)
 	}
 
-	if parsed.EventID != 1 {
-		t.Errorf("expected EventID 1, got %d", parsed.EventID)
+	if parsed.EventID != "1" {
+		t.Errorf("expected EventID 1, got %s", parsed.EventID)
 	}
 	if parsed.Nama != "John Doe" {
 		t.Errorf("expected Nama 'John Doe', got '%s'", parsed.Nama)
@@ -113,7 +113,7 @@ func TestGenerateQRCodePNG_NegativeSize(t *testing.T) {
 }
 
 func TestGenerateQRCodePNG_LongPayload(t *testing.T) {
-	longPayload := `{"event_id":12345,"event_title":"Workshop Keamanan Siber Nasional 2024","registration_id":999,"nama":"John Doe","email":"john.doe@example.com","perusahaan":"PT Teknologi Indonesia","jabatan":"Chief Information Security Officer","no_hp":"081234567890","sektor":"Keuangan","qr_token":"very-long-token-abc-def-123-456-789"}`
+	longPayload := `{"event_id":"12345","event_title":"Workshop Keamanan Siber Nasional 2024","registration_id":"999","nama":"John Doe","email":"john.doe@example.com","perusahaan":"PT Teknologi Indonesia","jabatan":"Chief Information Security Officer","no_hp":"081234567890","sektor":"Keuangan","qr_token":"very-long-token-abc-def-123-456-789"}`
 
 	data, err := GenerateQRCodePNG(longPayload, 512)
 	if err != nil {
@@ -126,8 +126,8 @@ func TestGenerateQRCodePNG_LongPayload(t *testing.T) {
 
 func TestGenerateQRCodePNG_JSONPayload(t *testing.T) {
 	payload := EventRegistrationQRPayload{
-		EventID:        1,
-		RegistrationID: 42,
+		EventID:        "1",
+		RegistrationID: "42",
 		Nama:           "Test User",
 		QRToken:        "token-123",
 	}

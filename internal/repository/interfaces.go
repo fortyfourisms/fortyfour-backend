@@ -258,13 +258,14 @@ type BeritaRepositoryInterface interface {
 type EventRepositoryInterface interface {
 	Create(event *models.Event) error
 	FindAll() ([]models.Event, error)
-	FindByID(id int64) (*models.Event, error)
+	FindByID(id string) (*models.Event, error)
+	FindBySlug(slug string) (*models.Event, error)
 	Update(event *models.Event) error
-	Delete(id int64) error
+	Delete(id string) error
 	CreateRegistration(reg *models.EventRegistration) error
-	FindRegistrationByID(id int64) (*models.EventRegistration, error)
-	ExistsRegistrationByEventAndEmail(eventID int64, email string) (bool, error)
-	UpdateRegistrationPayload(id int64, payload string) error
+	FindRegistrationByID(id string) (*models.EventRegistration, error)
+	ExistsRegistrationByEventAndEmail(eventID string, email string) (bool, error)
+	UpdateRegistrationPayload(id string, payload string) error
 }
 
 type AktivitasRepositoryInterface interface {
