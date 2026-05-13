@@ -125,3 +125,15 @@ func (r *SektorRepository) Update(id string, req dto.SektorRequest) (*dto.Sektor
 	}
 	return r.GetByID(id)
 }
+
+func (r *SektorRepository) Delete(id string) error {
+	result, err := r.db.Exec(`DELETE FROM sektor WHERE id = ?`, id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
