@@ -27,7 +27,7 @@ type EventServiceInterface interface {
 	Update(id string, req dto.UpdateEventRequest) error
 	Delete(id string) error
 	Register(eventID string, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error)
-	DownloadRegistrationPDF(registrationID int64) ([]byte, string, error)
+	DownloadRegistrationPDF(registrationID string) ([]byte, string, error)
 }
 
 type EventService struct {
@@ -311,12 +311,12 @@ func (s *EventService) Register(eventID string, req dto.CreateEventRegistrationR
 		QRToken:      reg.QRToken,
 		QRPayload:    rawPayload,
 		QRCodeBase64: base64.StdEncoding.EncodeToString(qrPNG),
-		DownloadURL:  fmt.Sprintf("/api/kegiatan/registrasi/%d/download", reg.ID),
+		DownloadURL:  fmt.Sprintf("/api/kegiatan/registrasi/%s/download", reg.ID),
 		CreatedAt:    reg.CreatedAt.Format(time.RFC3339),
 	}, nil
 }
 
-func (s *EventService) DownloadRegistrationPDF(registrationID int64) ([]byte, string, error) {
+func (s *EventService) DownloadRegistrationPDF(registrationID string) ([]byte, string, error) {
 	reg, err := s.repo.FindRegistrationByID(registrationID)
 	if err != nil {
 		return nil, "", err
@@ -343,7 +343,7 @@ func (s *EventService) DownloadRegistrationPDF(registrationID int64) ([]byte, st
 		return nil, "", err
 	}
 
-	filename := fmt.Sprintf("registrasi-event-%s-%d.pdf", reg.EventID, reg.ID)
+	filename := fmt.Sprintf("registrasi-event-%s-%s.pdf", reg.EventID, reg.ID)
 	return pdf, filename, nil
 }
 
@@ -367,4 +367,3 @@ func mapEventToResponse(e *models.Event) *dto.EventResponse {
 
 	return res
 }
-

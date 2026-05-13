@@ -19,9 +19,9 @@ type MockEventRepository struct {
 	UpdateFunc                    func(event *models.Event) error
 	DeleteFunc                    func(id string) error
 	CreateRegistrationFunc        func(reg *models.EventRegistration) error
-	FindRegistrationByIDFunc      func(id int64) (*models.EventRegistration, error)
+	FindRegistrationByIDFunc      func(id string) (*models.EventRegistration, error)
 	ExistsRegistrationFunc        func(eventID string, email string) (bool, error)
-	UpdateRegistrationPayloadFunc func(id int64, payload string) error
+	UpdateRegistrationPayloadFunc func(id string, payload string) error
 
 	// Helper fields for assertions
 	updatedPayload string
@@ -94,13 +94,13 @@ func (m *MockEventRepository) CreateRegistration(reg *models.EventRegistration) 
 	if m.CreateRegistrationFunc != nil {
 		return m.CreateRegistrationFunc(reg)
 	}
-	reg.ID = 101
+	reg.ID = "101"
 	reg.CreatedAt = time.Date(2026, 4, 27, 10, 0, 0, 0, time.UTC)
 	reg.UpdatedAt = reg.CreatedAt
 	return nil
 }
 
-func (m *MockEventRepository) FindRegistrationByID(id int64) (*models.EventRegistration, error) {
+func (m *MockEventRepository) FindRegistrationByID(id string) (*models.EventRegistration, error) {
 	if m.FindRegistrationByIDFunc != nil {
 		return m.FindRegistrationByIDFunc(id)
 	}
@@ -114,7 +114,7 @@ func (m *MockEventRepository) ExistsRegistrationByEventAndEmail(eventID string, 
 	return false, nil
 }
 
-func (m *MockEventRepository) UpdateRegistrationPayload(id int64, payload string) error {
+func (m *MockEventRepository) UpdateRegistrationPayload(id string, payload string) error {
 	if m.UpdateRegistrationPayloadFunc != nil {
 		return m.UpdateRegistrationPayloadFunc(id, payload)
 	}

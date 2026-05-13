@@ -14,7 +14,7 @@ import (
 type EventRegistrationQRPayload struct {
 	EventID        string `json:"event_id"`
 	EventTitle     string `json:"event_title"`
-	RegistrationID int64  `json:"registration_id"`
+	RegistrationID string `json:"registration_id"`
 	Nama           string `json:"nama"`
 	Email          string `json:"email"`
 	Perusahaan     string `json:"perusahaan"`

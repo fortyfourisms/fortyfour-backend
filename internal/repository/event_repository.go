@@ -3,6 +3,8 @@ package repository
 import (
 	"database/sql"
 	"fortyfour-backend/internal/models"
+
+	"github.com/google/uuid"
 )
 
 type EventRepository struct {
@@ -100,13 +102,18 @@ func (r *EventRepository) Delete(id string) error {
 }
 
 func (r *EventRepository) CreateRegistration(reg *models.EventRegistration) error {
+	if reg.ID == "" {
+		reg.ID = uuid.New().String()
+	}
+
 	query := `
 		INSERT INTO event_registrations
-			(event_id, nama, email, perusahaan, jabatan, no_hp, sektor, qr_payload, qr_token)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+			(id, event_id, nama, email, perusahaan, jabatan, no_hp, sektor, qr_payload, qr_token)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	res, err := r.db.Exec(query,
+	_, err := r.db.Exec(query,
+		reg.ID,
 		reg.EventID,
 		reg.Nama,
 		reg.Email,
@@ -121,14 +128,7 @@ func (r *EventRepository) CreateRegistration(reg *models.EventRegistration) erro
 		return err
 	}
 
-	id, err := res.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	reg.ID = id
-
-	saved, err := r.FindRegistrationByID(id)
+	saved, err := r.FindRegistrationByID(reg.ID)
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func (r *EventRepository) CreateRegistration(reg *models.EventRegistration) erro
 	return nil
 }
 
-func (r *EventRepository) FindRegistrationByID(id int64) (*models.EventRegistration, error) {
+func (r *EventRepository) FindRegistrationByID(id string) (*models.EventRegistration, error) {
 	query := `
 		SELECT id, event_id, nama, email, perusahaan, jabatan, no_hp, sektor, qr_payload, qr_token, created_at, updated_at
 		FROM event_registrations
@@ -185,7 +185,7 @@ func (r *EventRepository) ExistsRegistrationByEventAndEmail(eventID string, emai
 	return exists, nil
 }
 
-func (r *EventRepository) UpdateRegistrationPayload(id int64, payload string) error {
+func (r *EventRepository) UpdateRegistrationPayload(id string, payload string) error {
 	query := `UPDATE event_registrations SET qr_payload = ? WHERE id = ?`
 	_, err := r.db.Exec(query, payload, id)
 	return err

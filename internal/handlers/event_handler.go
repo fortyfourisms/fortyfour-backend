@@ -279,13 +279,7 @@ func (h *EventHandler) handleRegister(w http.ResponseWriter, r *http.Request, ev
 //	@Success		200	{file}	binary
 //	@Failure		404	{object}	dto.ErrorResponse
 //	@Router			/api/kegiatan/registrasi/{id}/download [get]
-func (h *EventHandler) handleDownloadRegistrationPDF(w http.ResponseWriter, r *http.Request, registrationIDStr string) {
-	registrationID, err := strconv.ParseInt(registrationIDStr, 10, 64)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "ID registrasi tidak valid")
-		return
-	}
-
+func (h *EventHandler) handleDownloadRegistrationPDF(w http.ResponseWriter, r *http.Request, registrationID string) {
 	pdfBytes, filename, err := h.service.DownloadRegistrationPDF(registrationID)
 	if err != nil {
 		if err.Error() == "registrasi event tidak ditemukan" {

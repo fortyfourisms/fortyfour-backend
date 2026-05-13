@@ -261,9 +261,9 @@ type EventRepositoryInterface interface {
 	Update(event *models.Event) error
 	Delete(id string) error
 	CreateRegistration(reg *models.EventRegistration) error
-	FindRegistrationByID(id int64) (*models.EventRegistration, error)
+	FindRegistrationByID(id string) (*models.EventRegistration, error)
 	ExistsRegistrationByEventAndEmail(eventID string, email string) (bool, error)
-	UpdateRegistrationPayload(id int64, payload string) error
+	UpdateRegistrationPayload(id string, payload string) error
 }
 
 type AktivitasRepositoryInterface interface {

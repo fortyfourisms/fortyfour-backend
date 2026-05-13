@@ -22,7 +22,7 @@ type MockEventService struct {
 	UpdateFunc    func(id string, req dto.UpdateEventRequest) error
 	DeleteFunc    func(id string) error
 	RegisterFunc  func(eventID string, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error)
-	PDFFunc       func(registrationID int64) ([]byte, string, error)
+	PDFFunc       func(registrationID string) ([]byte, string, error)
 }
 
 func (m *MockEventService) Create(req dto.CreateEventRequest) error {
@@ -74,7 +74,7 @@ func (m *MockEventService) Register(eventID string, req dto.CreateEventRegistrat
 	return nil, nil
 }
 
-func (m *MockEventService) DownloadRegistrationPDF(registrationID int64) ([]byte, string, error) {
+func (m *MockEventService) DownloadRegistrationPDF(registrationID string) ([]byte, string, error) {
 	if m.PDFFunc != nil {
 		return m.PDFFunc(registrationID)
 	}
@@ -351,7 +351,7 @@ func TestEventHandler_Register(t *testing.T) {
 	handler := handlers.NewEventHandler(&MockEventService{
 		RegisterFunc: func(eventID string, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error) {
 			return &dto.EventRegistrationResponse{
-				ID:           10,
+				ID:           "10",
 				EventID:      eventID,
 				Nama:         req.Nama,
 				Email:        req.Email,
@@ -392,7 +392,7 @@ func TestEventHandler_Register(t *testing.T) {
 
 func TestEventHandler_DownloadRegistrationPDF(t *testing.T) {
 	handler := handlers.NewEventHandler(&MockEventService{
-		PDFFunc: func(registrationID int64) ([]byte, string, error) {
+		PDFFunc: func(registrationID string) ([]byte, string, error) {
 			return []byte("%PDF-1.4 fake"), "registrasi-event-9-10.pdf", nil
 		},
 	}, nil)

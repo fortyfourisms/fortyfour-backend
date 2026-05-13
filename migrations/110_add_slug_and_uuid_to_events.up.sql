@@ -11,9 +11,6 @@ ALTER TABLE events
 MODIFY id CHAR(36) NOT NULL;
 
 -- Generate UUID baru
--- Note: Ini akan mengubah ID. Jika ada data, relasi akan terputus 
--- kecuali kita sinkronkan. Kita asumsikan data dibersihkan atau 
--- ini environment dev sesuai permintaan snippet yang 'simple'.
 UPDATE events
 SET id = UUID();
 

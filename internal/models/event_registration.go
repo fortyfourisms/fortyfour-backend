@@ -3,7 +3,7 @@ package models
 import "time"
 
 type EventRegistration struct {
-	ID         int64     `json:"id"`
+	ID         string    `json:"id"`
 	EventID    string    `json:"event_id"`
 	Nama       string    `json:"nama"`
 	Email      string    `json:"email"`
