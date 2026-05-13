@@ -15,13 +15,14 @@ import (
 
 // MockEventService implements services.EventServiceInterface for tests
 type MockEventService struct {
-	CreateFunc   func(req dto.CreateEventRequest) error
-	GetAllFunc   func() ([]dto.EventResponse, error)
-	GetByIDFunc  func(id int64) (*dto.EventResponse, error)
-	UpdateFunc   func(id int64, req dto.UpdateEventRequest) error
-	DeleteFunc   func(id int64) error
-	RegisterFunc func(eventID int64, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error)
-	PDFFunc      func(registrationID int64) ([]byte, string, error)
+	CreateFunc    func(req dto.CreateEventRequest) error
+	GetAllFunc    func() ([]dto.EventResponse, error)
+	GetByIDFunc   func(id string) (*dto.EventResponse, error)
+	GetBySlugFunc func(slug string) (*dto.EventResponse, error)
+	UpdateFunc    func(id string, req dto.UpdateEventRequest) error
+	DeleteFunc    func(id string) error
+	RegisterFunc  func(eventID string, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error)
+	PDFFunc       func(registrationID int64) ([]byte, string, error)
 }
 
 func (m *MockEventService) Create(req dto.CreateEventRequest) error {
@@ -38,28 +39,35 @@ func (m *MockEventService) GetAll() ([]dto.EventResponse, error) {
 	return nil, nil
 }
 
-func (m *MockEventService) GetByID(id int64) (*dto.EventResponse, error) {
+func (m *MockEventService) GetByID(id string) (*dto.EventResponse, error) {
 	if m.GetByIDFunc != nil {
 		return m.GetByIDFunc(id)
 	}
 	return nil, nil
 }
 
-func (m *MockEventService) Update(id int64, req dto.UpdateEventRequest) error {
+func (m *MockEventService) GetBySlug(slug string) (*dto.EventResponse, error) {
+	if m.GetBySlugFunc != nil {
+		return m.GetBySlugFunc(slug)
+	}
+	return nil, nil
+}
+
+func (m *MockEventService) Update(id string, req dto.UpdateEventRequest) error {
 	if m.UpdateFunc != nil {
 		return m.UpdateFunc(id, req)
 	}
 	return nil
 }
 
-func (m *MockEventService) Delete(id int64) error {
+func (m *MockEventService) Delete(id string) error {
 	if m.DeleteFunc != nil {
 		return m.DeleteFunc(id)
 	}
 	return nil
 }
 
-func (m *MockEventService) Register(eventID int64, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error) {
+func (m *MockEventService) Register(eventID string, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error) {
 	if m.RegisterFunc != nil {
 		return m.RegisterFunc(eventID, req)
 	}
@@ -78,7 +86,7 @@ func (m *MockEventService) DownloadRegistrationPDF(registrationID int64) ([]byte
 func TestEventHandler_GetAll(t *testing.T) {
 	mockSvc := &MockEventService{
 		GetAllFunc: func() ([]dto.EventResponse, error) {
-			return []dto.EventResponse{{ID: 1, Judul: "Test Event"}}, nil
+			return []dto.EventResponse{{ID: "1", Judul: "Test Event"}}, nil
 		},
 	}
 	handler := handlers.NewEventHandler(mockSvc, nil)
@@ -111,8 +119,8 @@ func TestEventHandler_GetAll_Error(t *testing.T) {
 
 func TestEventHandler_GetByID(t *testing.T) {
 	mockSvc := &MockEventService{
-		GetByIDFunc: func(id int64) (*dto.EventResponse, error) {
-			return &dto.EventResponse{ID: 1, Judul: "Test Event"}, nil
+		GetByIDFunc: func(id string) (*dto.EventResponse, error) {
+			return &dto.EventResponse{ID: "1", Judul: "Test Event"}, nil
 		},
 	}
 	handler := handlers.NewEventHandler(mockSvc, nil)
@@ -126,21 +134,9 @@ func TestEventHandler_GetByID(t *testing.T) {
 	}
 }
 
-func TestEventHandler_GetByID_InvalidID(t *testing.T) {
-	handler := handlers.NewEventHandler(&MockEventService{}, nil)
-
-	req := httptest.NewRequest(http.MethodGet, "/api/kegiatan/abc", nil)
-	rec := httptest.NewRecorder()
-	handler.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusBadRequest {
-		t.Errorf("expected status BadRequest, got %v", rec.Code)
-	}
-}
-
 func TestEventHandler_GetByID_Error(t *testing.T) {
 	mockSvc := &MockEventService{
-		GetByIDFunc: func(id int64) (*dto.EventResponse, error) {
+		GetByIDFunc: func(id string) (*dto.EventResponse, error) {
 			return nil, errors.New("not found")
 		},
 	}
@@ -234,7 +230,7 @@ func TestEventHandler_Create_ServiceError(t *testing.T) {
 
 func TestEventHandler_Update(t *testing.T) {
 	mockSvc := &MockEventService{
-		UpdateFunc: func(id int64, req dto.UpdateEventRequest) error {
+		UpdateFunc: func(id string, req dto.UpdateEventRequest) error {
 			return nil
 		},
 	}
@@ -251,18 +247,6 @@ func TestEventHandler_Update(t *testing.T) {
 
 	if rec.Code != http.StatusOK {
 		t.Errorf("expected status OK, got %v", rec.Code)
-	}
-}
-
-func TestEventHandler_Update_InvalidID(t *testing.T) {
-	handler := handlers.NewEventHandler(&MockEventService{}, nil)
-
-	req := httptest.NewRequest(http.MethodPut, "/api/kegiatan/abc", nil)
-	rec := httptest.NewRecorder()
-	handler.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusBadRequest {
-		t.Errorf("expected status BadRequest, got %v", rec.Code)
 	}
 }
 
@@ -296,7 +280,7 @@ func TestEventHandler_Update_ValidationError(t *testing.T) {
 
 func TestEventHandler_Update_ServiceError(t *testing.T) {
 	mockSvc := &MockEventService{
-		UpdateFunc: func(id int64, req dto.UpdateEventRequest) error {
+		UpdateFunc: func(id string, req dto.UpdateEventRequest) error {
 			return errors.New("service error")
 		},
 	}
@@ -317,7 +301,7 @@ func TestEventHandler_Update_ServiceError(t *testing.T) {
 
 func TestEventHandler_Delete(t *testing.T) {
 	mockSvc := &MockEventService{
-		DeleteFunc: func(id int64) error {
+		DeleteFunc: func(id string) error {
 			return nil
 		},
 	}
@@ -332,21 +316,9 @@ func TestEventHandler_Delete(t *testing.T) {
 	}
 }
 
-func TestEventHandler_Delete_InvalidID(t *testing.T) {
-	handler := handlers.NewEventHandler(&MockEventService{}, nil)
-
-	req := httptest.NewRequest(http.MethodDelete, "/api/kegiatan/abc", nil)
-	rec := httptest.NewRecorder()
-	handler.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusBadRequest {
-		t.Errorf("expected status BadRequest, got %v", rec.Code)
-	}
-}
-
 func TestEventHandler_Delete_ServiceError(t *testing.T) {
 	mockSvc := &MockEventService{
-		DeleteFunc: func(id int64) error {
+		DeleteFunc: func(id string) error {
 			return errors.New("service error")
 		},
 	}
@@ -377,7 +349,7 @@ func TestEventHandler_ServeHTTP_MethodNotAllowed(t *testing.T) {
 
 func TestEventHandler_Register(t *testing.T) {
 	handler := handlers.NewEventHandler(&MockEventService{
-		RegisterFunc: func(eventID int64, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error) {
+		RegisterFunc: func(eventID string, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error) {
 			return &dto.EventRegistrationResponse{
 				ID:           10,
 				EventID:      eventID,

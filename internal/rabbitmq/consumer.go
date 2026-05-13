@@ -8,8 +8,12 @@ import (
 	"fortyfour-backend/internal/dto/dto_event"
 	"fortyfour-backend/internal/models"
 	"fortyfour-backend/internal/repository"
+	"fortyfour-backend/internal/utils"
 	"fortyfour-backend/pkg/rabbitmq"
+	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // SSEBroadcaster defines the interface for SSE notifications to avoid import cycles
@@ -625,6 +629,8 @@ func (c *Consumer) ConsumeEventCreated(ctx context.Context) error {
 
 		t, _ := time.Parse(time.RFC3339, event.Request.Tanggal)
 		model := &models.Event{
+			ID:        uuid.New().String(),
+			Slug:      utils.Slugify(event.Request.Judul),
 			Judul:     event.Request.Judul,
 			Deskripsi: event.Request.Deskripsi,
 			Lokasi:    event.Request.Lokasi,
@@ -633,6 +639,9 @@ func (c *Consumer) ConsumeEventCreated(ctx context.Context) error {
 
 		if err := c.eventRepo.Create(model); err != nil {
 			log.Printf("Error creating event from RabbitMQ: %v", err)
+			if strings.Contains(err.Error(), "1062") || strings.Contains(err.Error(), "Duplicate entry") {
+				return nil // Acknowledge and drop duplicate message
+			}
 			return err
 		}
 
@@ -656,12 +665,13 @@ func (c *Consumer) ConsumeEventUpdated(ctx context.Context) error {
 			return err
 		}
 		if existing == nil {
-			log.Printf("Event with ID %d not found for update, skipping", event.ID)
+			log.Printf("Event with ID %s not found for update, skipping", event.ID)
 			return nil
 		}
 
 		if event.Request.Judul != nil {
 			existing.Judul = *event.Request.Judul
+			existing.Slug = utils.Slugify(*event.Request.Judul)
 		}
 		if event.Request.Deskripsi != nil {
 			existing.Deskripsi = *event.Request.Deskripsi
@@ -675,6 +685,10 @@ func (c *Consumer) ConsumeEventUpdated(ctx context.Context) error {
 		}
 
 		if err := c.eventRepo.Update(existing); err != nil {
+			log.Printf("Error updating event from RabbitMQ: %v", err)
+			if strings.Contains(err.Error(), "1062") || strings.Contains(err.Error(), "Duplicate entry") {
+				return nil // Acknowledge and drop duplicate message
+			}
 			return err
 		}
 

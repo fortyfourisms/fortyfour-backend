@@ -87,13 +87,7 @@ func (h *EventHandler) handleGetAll(w http.ResponseWriter, r *http.Request) {
 //	@Success		200	{object}	utils.JSONResponse{data=dto.EventResponse}
 //	@Failure		404	{object}	dto.ErrorResponse
 //	@Router			/api/kegiatan/{id} [get]
-func (h *EventHandler) handleGetByID(w http.ResponseWriter, r *http.Request, idStr string) {
-	id, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "ID tidak valid")
-		return
-	}
-
+func (h *EventHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
 		utils.RespondError(w, http.StatusNotFound, err.Error())
@@ -134,8 +128,12 @@ func (h *EventHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 	req.Deskripsi = validator.SanitizeHTML(req.Deskripsi)
 
 	if err := h.service.Create(req); err != nil {
-		logger.Error(err, "failed to create event")
-		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		code := http.StatusInternalServerError
+		if strings.Contains(err.Error(), "sudah ada") || strings.Contains(err.Error(), "format") {
+			code = http.StatusBadRequest
+		}
+		logger.Error(err, "event creation failed")
+		utils.RespondError(w, code, err.Error())
 		return
 	}
 
@@ -157,13 +155,7 @@ func (h *EventHandler) handleCreate(w http.ResponseWriter, r *http.Request) {
 //	@Success		200		{object}	utils.JSONResponse
 //	@Failure		400		{object}	dto.ErrorResponse
 //	@Router			/api/kegiatan/{id} [put]
-func (h *EventHandler) handleUpdate(w http.ResponseWriter, r *http.Request, idStr string) {
-	id, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "ID tidak valid")
-		return
-	}
-
+func (h *EventHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id string) {
 	var req dto.UpdateEventRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
@@ -181,6 +173,7 @@ func (h *EventHandler) handleUpdate(w http.ResponseWriter, r *http.Request, idSt
 	}
 
 	if err := h.service.Update(id, req); err != nil {
+		logger.Error(err, "event update failed")
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -201,13 +194,7 @@ func (h *EventHandler) handleUpdate(w http.ResponseWriter, r *http.Request, idSt
 //	@Success		200	{object}	utils.JSONResponse
 //	@Failure		400	{object}	dto.ErrorResponse
 //	@Router			/api/kegiatan/{id} [delete]
-func (h *EventHandler) handleDelete(w http.ResponseWriter, r *http.Request, idStr string) {
-	id, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "ID tidak valid")
-		return
-	}
-
+func (h *EventHandler) handleDelete(w http.ResponseWriter, r *http.Request, id string) {
 	if err := h.service.Delete(id); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, err.Error())
 		return
@@ -229,12 +216,7 @@ func (h *EventHandler) handleDelete(w http.ResponseWriter, r *http.Request, idSt
 // @Success		201				{object}	utils.JSONResponse{data=dto.EventRegistrationResponse}
 // @Failure		400,409			{object}	dto.ErrorResponse
 // @Router			/api/kegiatan/{id}/registrasi [post]
-func (h *EventHandler) handleRegister(w http.ResponseWriter, r *http.Request, eventIDStr string) {
-	eventID, err := strconv.ParseInt(eventIDStr, 10, 64)
-	if err != nil {
-		utils.RespondError(w, http.StatusBadRequest, "ID event tidak valid")
-		return
-	}
+func (h *EventHandler) handleRegister(w http.ResponseWriter, r *http.Request, eventID string) {
 
 	var req dto.CreateEventRegistrationRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {

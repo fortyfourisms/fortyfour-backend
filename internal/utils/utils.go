@@ -1,6 +1,24 @@
 package utils
 
-import "net/http"
+import (
+	"net/http"
+	"regexp"
+	"strings"
+)
+
+func Slugify(s string) string {
+	s = strings.ToLower(s)
+	s = strings.ReplaceAll(s, " ", "-")
+	// Remove other special characters for safety
+	reg := regexp.MustCompile("[^a-z0-9-]+")
+	s = reg.ReplaceAllString(s, "")
+	// Remove multiple consecutive hyphens
+	reg = regexp.MustCompile("-+")
+	s = reg.ReplaceAllString(s, "-")
+	// Trim hyphens from ends
+	s = strings.Trim(s, "-")
+	return s
+}
 
 func ValueOrNull(s *string) interface{} {
 	if s != nil {

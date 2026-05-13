@@ -11,12 +11,12 @@ type EventCreatedEvent struct {
 }
 
 type EventUpdatedEvent struct {
-	ID        int64                  `json:"id"`
+	ID        string                 `json:"id"`
 	Request   dto.UpdateEventRequest `json:"request"`
 	UpdatedAt time.Time              `json:"updated_at"`
 }
 
 type EventDeletedEvent struct {
-	ID        int64     `json:"id"`
+	ID        string    `json:"id"`
 	DeletedAt time.Time `json:"deleted_at"`
 }

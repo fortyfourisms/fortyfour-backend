@@ -22,10 +22,11 @@ import (
 type EventServiceInterface interface {
 	Create(req dto.CreateEventRequest) error
 	GetAll() ([]dto.EventResponse, error)
-	GetByID(id int64) (*dto.EventResponse, error)
-	Update(id int64, req dto.UpdateEventRequest) error
-	Delete(id int64) error
-	Register(eventID int64, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error)
+	GetByID(id string) (*dto.EventResponse, error)
+	GetBySlug(slug string) (*dto.EventResponse, error)
+	Update(id string, req dto.UpdateEventRequest) error
+	Delete(id string) error
+	Register(eventID string, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error)
 	DownloadRegistrationPDF(registrationID int64) ([]byte, string, error)
 }
 
@@ -52,6 +53,16 @@ var _ EventServiceInterface = (*EventService)(nil)
 func (s *EventService) Create(req dto.CreateEventRequest) error {
 	if _, err := time.Parse(time.RFC3339, req.Tanggal); err != nil {
 		return errors.New("format tanggal tidak valid (gunakan RFC3339, contoh: 2024-12-31T15:00:00Z)")
+	}
+
+	// Check slug uniqueness
+	slug := utils.Slugify(req.Judul)
+	existing, err := s.repo.FindBySlug(slug)
+	if err != nil {
+		return err
+	}
+	if existing != nil {
+		return errors.New("event dengan judul tersebut sudah ada")
 	}
 
 	event := dto_event.EventCreatedEvent{
@@ -92,8 +103,8 @@ func (s *EventService) GetAll() ([]dto.EventResponse, error) {
 	return res, nil
 }
 
-func (s *EventService) GetByID(id int64) (*dto.EventResponse, error) {
-	key := keyDetail("event", fmt.Sprintf("%d", id))
+func (s *EventService) GetByID(id string) (*dto.EventResponse, error) {
+	key := keyDetail("event", id)
 	var res dto.EventResponse
 
 	if cacheGet(s.rc, key, &res) {
@@ -113,7 +124,28 @@ func (s *EventService) GetByID(id int64) (*dto.EventResponse, error) {
 	return resp, nil
 }
 
-func (s *EventService) Update(id int64, req dto.UpdateEventRequest) error {
+func (s *EventService) GetBySlug(slug string) (*dto.EventResponse, error) {
+	key := keyDetail("event", "slug:"+slug)
+	var res dto.EventResponse
+
+	if cacheGet(s.rc, key, &res) {
+		return &res, nil
+	}
+
+	e, err := s.repo.FindBySlug(slug)
+	if err != nil {
+		return nil, err
+	}
+	if e == nil {
+		return nil, errors.New("event tidak ditemukan")
+	}
+
+	resp := mapEventToResponse(e)
+	cacheSet(s.rc, key, resp, TTLDetail)
+	return resp, nil
+}
+
+func (s *EventService) Update(id string, req dto.UpdateEventRequest) error {
 	existing, err := s.repo.FindByID(id)
 	if err != nil {
 		return err
@@ -125,6 +157,18 @@ func (s *EventService) Update(id int64, req dto.UpdateEventRequest) error {
 	if req.Tanggal != nil {
 		if _, err := time.Parse(time.RFC3339, *req.Tanggal); err != nil {
 			return errors.New("format tanggal tidak valid")
+		}
+	}
+
+	// Check slug uniqueness if title is being updated
+	if req.Judul != nil {
+		slug := utils.Slugify(*req.Judul)
+		existingWithSlug, err := s.repo.FindBySlug(slug)
+		if err != nil {
+			return err
+		}
+		if existingWithSlug != nil && existingWithSlug.ID != id {
+			return errors.New("event dengan judul tersebut sudah ada")
 		}
 	}
 
@@ -143,11 +187,14 @@ func (s *EventService) Update(id int64, req dto.UpdateEventRequest) error {
 
 	// Invalidate caches
 	cacheDelete(s.rc, keyList("event"))
-	cacheDelete(s.rc, keyDetail("event", fmt.Sprintf("%d", id)))
+	cacheDelete(s.rc, keyDetail("event", id))
+	if existing.Slug != "" {
+		cacheDelete(s.rc, keyDetail("event", "slug:"+existing.Slug))
+	}
 	return nil
 }
 
-func (s *EventService) Delete(id int64) error {
+func (s *EventService) Delete(id string) error {
 	existing, err := s.repo.FindByID(id)
 	if err != nil {
 		return err
@@ -170,11 +217,14 @@ func (s *EventService) Delete(id int64) error {
 
 	// Invalidate caches
 	cacheDelete(s.rc, keyList("event"))
-	cacheDelete(s.rc, keyDetail("event", fmt.Sprintf("%d", id)))
+	cacheDelete(s.rc, keyDetail("event", id))
+	if existing.Slug != "" {
+		cacheDelete(s.rc, keyDetail("event", "slug:"+existing.Slug))
+	}
 	return nil
 }
 
-func (s *EventService) Register(eventID int64, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error) {
+func (s *EventService) Register(eventID string, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error) {
 	event, err := s.repo.FindByID(eventID)
 	if err != nil {
 		return nil, err
@@ -242,7 +292,7 @@ func (s *EventService) Register(eventID int64, req dto.CreateEventRegistrationRe
 
 	// Invalidate caches
 	cacheDelete(s.rc, keyList("event"))
-	cacheDelete(s.rc, keyDetail("event", fmt.Sprintf("%d", eventID)))
+	cacheDelete(s.rc, keyDetail("event", eventID))
 
 	qrPNG, err := utils.GenerateQRCodePNG(rawPayload, 256)
 	if err != nil {
@@ -293,7 +343,7 @@ func (s *EventService) DownloadRegistrationPDF(registrationID int64) ([]byte, st
 		return nil, "", err
 	}
 
-	filename := fmt.Sprintf("registrasi-event-%d-%d.pdf", reg.EventID, reg.ID)
+	filename := fmt.Sprintf("registrasi-event-%s-%d.pdf", reg.EventID, reg.ID)
 	return pdf, filename, nil
 }
 
@@ -305,6 +355,7 @@ func mapEventToResponse(e *models.Event) *dto.EventResponse {
 
 	res := &dto.EventResponse{
 		ID:        e.ID,
+		Slug:      e.Slug,
 		Judul:     e.Judul,
 		Deskripsi: e.Deskripsi,
 		Lokasi:    e.Lokasi,
@@ -316,3 +367,4 @@ func mapEventToResponse(e *models.Event) *dto.EventResponse {
 
 	return res
 }
+

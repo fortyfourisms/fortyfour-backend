@@ -15,7 +15,8 @@ type UpdateEventRequest struct {
 }
 
 type EventResponse struct {
-	ID        int64  `json:"id"`
+	ID        string `json:"id"`
+	Slug      string `json:"slug"`
 	Judul     string `json:"judul"`
 	Deskripsi string `json:"deskripsi"`
 	Lokasi    string `json:"lokasi"`
@@ -37,7 +38,7 @@ type CreateEventRegistrationRequest struct {
 
 type EventRegistrationResponse struct {
 	ID           int64  `json:"id"`
-	EventID      int64  `json:"event_id"`
+	EventID      string `json:"event_id"`
 	Nama         string `json:"nama"`
 	Email        string `json:"email"`
 	Perusahaan   string `json:"perusahaan"`

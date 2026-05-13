@@ -16,22 +16,14 @@ func NewEventRepository(db *sql.DB) *EventRepository {
 var _ EventRepositoryInterface = (*EventRepository)(nil)
 
 func (r *EventRepository) Create(event *models.Event) error {
-	query := `INSERT INTO events (judul, deskripsi, lokasi, tanggal) VALUES (?, ?, ?, ?)`
-	res, err := r.db.Exec(query, event.Judul, event.Deskripsi, event.Lokasi, event.Tanggal)
-	if err != nil {
-		return err
-	}
-	id, err := res.LastInsertId()
-	if err != nil {
-		return err
-	}
-	event.ID = id
-	return nil
+	query := `INSERT INTO events (id, slug, judul, deskripsi, lokasi, tanggal) VALUES (?, ?, ?, ?, ?, ?)`
+	_, err := r.db.Exec(query, event.ID, event.Slug, event.Judul, event.Deskripsi, event.Lokasi, event.Tanggal)
+	return err
 }
 
 func (r *EventRepository) FindAll() ([]models.Event, error) {
 	query := `
-		SELECT id, judul, deskripsi, lokasi, tanggal, created_at, updated_at
+		SELECT id, slug, judul, deskripsi, lokasi, tanggal, created_at, updated_at
 		FROM events
 		ORDER BY created_at DESC`
 
@@ -45,7 +37,7 @@ func (r *EventRepository) FindAll() ([]models.Event, error) {
 	for rows.Next() {
 		var e models.Event
 		err := rows.Scan(
-			&e.ID, &e.Judul, &e.Deskripsi, &e.Lokasi, &e.Tanggal, &e.CreatedAt, &e.UpdatedAt,
+			&e.ID, &e.Slug, &e.Judul, &e.Deskripsi, &e.Lokasi, &e.Tanggal, &e.CreatedAt, &e.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -55,15 +47,35 @@ func (r *EventRepository) FindAll() ([]models.Event, error) {
 	return events, nil
 }
 
-func (r *EventRepository) FindByID(id int64) (*models.Event, error) {
+func (r *EventRepository) FindByID(id string) (*models.Event, error) {
 	query := `
-		SELECT id, judul, deskripsi, lokasi, tanggal, created_at, updated_at
+		SELECT id, slug, judul, deskripsi, lokasi, tanggal, created_at, updated_at
 		FROM events
 		WHERE id = ?`
 
 	var e models.Event
 	err := r.db.QueryRow(query, id).Scan(
-		&e.ID, &e.Judul, &e.Deskripsi, &e.Lokasi, &e.Tanggal, &e.CreatedAt, &e.UpdatedAt,
+		&e.ID, &e.Slug, &e.Judul, &e.Deskripsi, &e.Lokasi, &e.Tanggal, &e.CreatedAt, &e.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &e, nil
+}
+
+func (r *EventRepository) FindBySlug(slug string) (*models.Event, error) {
+	query := `
+		SELECT id, slug, judul, deskripsi, lokasi, tanggal, created_at, updated_at
+		FROM events
+		WHERE slug = ?`
+
+	var e models.Event
+	err := r.db.QueryRow(query, slug).Scan(
+		&e.ID, &e.Slug, &e.Judul, &e.Deskripsi, &e.Lokasi, &e.Tanggal, &e.CreatedAt, &e.UpdatedAt,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -76,12 +88,12 @@ func (r *EventRepository) FindByID(id int64) (*models.Event, error) {
 }
 
 func (r *EventRepository) Update(event *models.Event) error {
-	query := `UPDATE events SET judul = ?, deskripsi = ?, lokasi = ?, tanggal = ? WHERE id = ?`
-	_, err := r.db.Exec(query, event.Judul, event.Deskripsi, event.Lokasi, event.Tanggal, event.ID)
+	query := `UPDATE events SET slug = ?, judul = ?, deskripsi = ?, lokasi = ?, tanggal = ? WHERE id = ?`
+	_, err := r.db.Exec(query, event.Slug, event.Judul, event.Deskripsi, event.Lokasi, event.Tanggal, event.ID)
 	return err
 }
 
-func (r *EventRepository) Delete(id int64) error {
+func (r *EventRepository) Delete(id string) error {
 	query := `DELETE FROM events WHERE id = ?`
 	_, err := r.db.Exec(query, id)
 	return err
@@ -162,7 +174,7 @@ func (r *EventRepository) FindRegistrationByID(id int64) (*models.EventRegistrat
 	return &reg, nil
 }
 
-func (r *EventRepository) ExistsRegistrationByEventAndEmail(eventID int64, email string) (bool, error) {
+func (r *EventRepository) ExistsRegistrationByEventAndEmail(eventID string, email string) (bool, error) {
 	query := `SELECT EXISTS(SELECT 1 FROM event_registrations WHERE event_id = ? AND email = ?)`
 
 	var exists bool
