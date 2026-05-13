@@ -184,3 +184,30 @@ func TestEventService_Create_InvalidDate(t *testing.T) {
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "format tanggal tidak valid")
 }
+func TestEventService_Register(t *testing.T) {
+	mockRepo := &MockEventRepository{
+		FindByIDFunc: func(id string) (*models.Event, error) {
+			return &models.Event{ID: id, Judul: "Workshop Security"}, nil
+		},
+		ExistsRegistrationFunc: func(eventID string, email string) (bool, error) {
+			return false, nil // Not registered yet
+		},
+	}
+	svc := services.NewEventService(mockRepo, nil, &MockRedis{})
+
+	req := dto.CreateEventRegistrationRequest{
+		Nama:       "John Doe",
+		Email:      "john@example.com",
+		Perusahaan: "PT Test",
+		Jabatan:    "Developer",
+		NoHP:       "08123456789",
+		Sektor:     "Teknologi",
+	}
+
+	resp, err := svc.Register("event-uuid", req)
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, "John Doe", resp.Nama)
+	assert.NotEmpty(t, resp.QRCodeBase64)
+	assert.Contains(t, resp.DownloadURL, "/download")
+}

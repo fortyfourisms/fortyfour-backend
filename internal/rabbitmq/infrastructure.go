@@ -217,6 +217,7 @@ func SetupInfrastructure(rmq *rabbitmq.RabbitMQ) error {
 		"event.created",
 		"event.updated",
 		"event.deleted",
+		"event.registration_created",
 	}
 
 	for _, q := range queueEvent {

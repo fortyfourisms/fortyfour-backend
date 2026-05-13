@@ -431,6 +431,7 @@ func (c *Consumer) StartAllConsumers(ctx context.Context) error {
 		c.ConsumeEventCreated,
 		c.ConsumeEventUpdated,
 		c.ConsumeEventDeleted,
+		c.ConsumeEventRegistrationCreated,
 		c.ConsumeBeritaCreated,
 		c.ConsumeBeritaUpdated,
 		c.ConsumeBeritaDeleted,
@@ -647,6 +648,38 @@ func (c *Consumer) ConsumeEventCreated(ctx context.Context) error {
 
 		if c.sseService != nil {
 			c.sseService.NotifyCreate("event", model, "system")
+		}
+
+		return nil
+	})
+}
+
+func (c *Consumer) ConsumeEventRegistrationCreated(ctx context.Context) error {
+	return c.Consume(ctx, "event.registration_created", func(ctx context.Context, body []byte) error {
+		var event dto_event.EventRegistrationCreatedEvent
+		if err := json.Unmarshal(body, &event); err != nil {
+			return err
+		}
+
+		model := &models.EventRegistration{
+			ID:         event.ID,
+			EventID:    event.EventID,
+			Nama:       event.Request.Nama,
+			Email:      event.Request.Email,
+			Perusahaan: event.Request.Perusahaan,
+			Jabatan:    event.Request.Jabatan,
+			NoHP:       event.Request.NoHP,
+			Sektor:     event.Request.Sektor,
+			QRPayload:  event.QRPayload,
+			QRToken:    event.QRToken,
+		}
+
+		if err := c.eventRepo.CreateRegistration(model); err != nil {
+			log.Printf("Error creating event registration from RabbitMQ: %v", err)
+			if strings.Contains(err.Error(), "1062") || strings.Contains(err.Error(), "Duplicate entry") {
+				return nil // Acknowledge and drop duplicate registration
+			}
+			return err
 		}
 
 		return nil

@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	mysqlDriver "github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 )
 
@@ -225,6 +224,7 @@ func (s *EventService) Delete(id string) error {
 }
 
 func (s *EventService) Register(eventID string, req dto.CreateEventRegistrationRequest) (*dto.EventRegistrationResponse, error) {
+	// 1. Sinkron: Cek apakah event ada
 	event, err := s.repo.FindByID(eventID)
 	if err != nil {
 		return nil, err
@@ -233,6 +233,7 @@ func (s *EventService) Register(eventID string, req dto.CreateEventRegistrationR
 		return nil, errors.New("event tidak ditemukan")
 	}
 
+	// 2. Sinkron: Cek apakah email sudah terdaftar
 	exists, err := s.repo.ExistsRegistrationByEventAndEmail(eventID, strings.TrimSpace(req.Email))
 	if err != nil {
 		return nil, err
@@ -241,78 +242,66 @@ func (s *EventService) Register(eventID string, req dto.CreateEventRegistrationR
 		return nil, errors.New("email sudah terdaftar pada event ini")
 	}
 
-	payload := utils.EventRegistrationQRPayload{
-		EventID:    event.ID,
-		EventTitle: event.Judul,
-		Nama:       req.Nama,
-		Email:      req.Email,
-		Perusahaan: req.Perusahaan,
-		Jabatan:    req.Jabatan,
-		NoHP:       req.NoHP,
-		Sektor:     req.Sektor,
-		QRToken:    uuid.NewString(),
-	}
+	// 3. Persiapkan data registrasi
+	registrationID := uuid.New().String()
+	qrToken := uuid.New().String()
 
-	reg := &models.EventRegistration{
-		EventID:    eventID,
-		Nama:       strings.TrimSpace(req.Nama),
-		Email:      strings.TrimSpace(req.Email),
-		Perusahaan: strings.TrimSpace(req.Perusahaan),
-		Jabatan:    strings.TrimSpace(req.Jabatan),
-		NoHP:       strings.TrimSpace(req.NoHP),
-		Sektor:     strings.TrimSpace(req.Sektor),
-		QRToken:    payload.QRToken,
+	payload := utils.EventRegistrationQRPayload{
+		EventID:        eventID,
+		EventTitle:     event.Judul,
+		RegistrationID: registrationID,
+		Nama:           strings.TrimSpace(req.Nama),
+		Email:          strings.TrimSpace(req.Email),
+		Perusahaan:     strings.TrimSpace(req.Perusahaan),
+		Jabatan:        strings.TrimSpace(req.Jabatan),
+		NoHP:           strings.TrimSpace(req.NoHP),
+		Sektor:         strings.TrimSpace(req.Sektor),
+		QRToken:        qrToken,
 	}
 
 	rawPayload, err := payload.JSON()
 	if err != nil {
 		return nil, err
 	}
-	reg.QRPayload = rawPayload
-
-	if err := s.repo.CreateRegistration(reg); err != nil {
-		// Handle concurrent duplicate registration (MySQL UNIQUE constraint violation)
-		var mysqlErr *mysqlDriver.MySQLError
-		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
-			return nil, errors.New("email sudah terdaftar pada event ini")
-		}
-		return nil, err
-	}
-
-	payload.RegistrationID = reg.ID
-	rawPayload, err = payload.JSON()
-	if err != nil {
-		return nil, err
-	}
-	reg.QRPayload = rawPayload
-
-	if err := s.repo.UpdateRegistrationPayload(reg.ID, rawPayload); err != nil {
-		return nil, err
-	}
-
-	// Invalidate caches
-	cacheDelete(s.rc, keyList("event"))
-	cacheDelete(s.rc, keyDetail("event", eventID))
 
 	qrPNG, err := utils.GenerateQRCodePNG(rawPayload, 256)
 	if err != nil {
 		return nil, err
 	}
 
+	// 4. Publish ke RabbitMQ untuk penyimpanan asinkron
+	if s.producer != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		err = s.producer.PublishEventRegistrationCreated(ctx, dto_event.EventRegistrationCreatedEvent{
+			EventID:   eventID,
+			Request:   req,
+			ID:        registrationID,
+			QRToken:   qrToken,
+			QRPayload: rawPayload,
+			CreatedAt: time.Now(),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("gagal mengirim permintaan registrasi: %v", err)
+		}
+	}
+
+	// 5. Kembalikan respon segera (User mendapatkan QR code langsung)
 	return &dto.EventRegistrationResponse{
-		ID:           reg.ID,
-		EventID:      reg.EventID,
-		Nama:         reg.Nama,
-		Email:        reg.Email,
-		Perusahaan:   reg.Perusahaan,
-		Jabatan:      reg.Jabatan,
-		NoHP:         reg.NoHP,
-		Sektor:       reg.Sektor,
-		QRToken:      reg.QRToken,
+		ID:           registrationID,
+		EventID:      eventID,
+		Nama:         req.Nama,
+		Email:        req.Email,
+		Perusahaan:   req.Perusahaan,
+		Jabatan:      req.Jabatan,
+		NoHP:         req.NoHP,
+		Sektor:       req.Sektor,
+		QRToken:      qrToken,
 		QRPayload:    rawPayload,
 		QRCodeBase64: base64.StdEncoding.EncodeToString(qrPNG),
-		DownloadURL:  fmt.Sprintf("/api/kegiatan/registrasi/%s/download", reg.ID),
-		CreatedAt:    reg.CreatedAt.Format(time.RFC3339),
+		DownloadURL:  fmt.Sprintf("/api/kegiatan/registrasi/%s/download", registrationID),
+		CreatedAt:    time.Now().Format(time.RFC3339),
 	}, nil
 }
 
