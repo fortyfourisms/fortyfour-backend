@@ -84,6 +84,10 @@ func (m *mockSubSektorRepository) Update(_ string, _ dto.SubSektorRequest) (*dto
 	return nil, nil
 }
 
+func (m *mockSubSektorRepository) Delete(_ string) error {
+	return nil
+}
+
 /*
 =====================================
  TEST CREATE PERUSAHAAN

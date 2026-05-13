@@ -47,6 +47,8 @@ func (h *SubSektorHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.handleCreate(w, r)
 	case http.MethodPut:
 		h.handleUpdate(w, r, id)
+	case http.MethodDelete:
+		h.handleDelete(w, r, id)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -186,4 +188,30 @@ func (h *SubSektorHandler) handleUpdate(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	utils.RespondJSON(w, http.StatusOK, data)
+}
+
+// DeleteSubSektor godoc
+//
+//	@Summary		Hapus sub sektor
+//	@Description	Menghapus data sub sektor berdasarkan ID (admin only)
+//	@Tags			SubSektor
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"SubSektor ID"
+//	@Success		200	{object}	map[string]string
+//	@Failure		400	{object}	dto.ErrorResponse
+//	@Failure		404	{object}	dto.ErrorResponse
+//	@Failure		500	{object}	dto.ErrorResponse
+//	@Router			/api/sub_sektor/{id} [delete]
+func (h *SubSektorHandler) handleDelete(w http.ResponseWriter, _ *http.Request, id string) {
+	if id == "" {
+		utils.RespondError(w, http.StatusBadRequest, "ID tidak boleh kosong")
+		return
+	}
+	err := h.service.Delete(id)
+	if err != nil {
+		utils.RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": "Sub sektor berhasil dihapus"})
 }

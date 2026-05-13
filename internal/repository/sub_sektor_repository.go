@@ -100,3 +100,15 @@ func (r *SubSektorRepository) Update(id string, req dto.SubSektorRequest) (*dto.
 	}
 	return r.GetByID(id)
 }
+
+func (r *SubSektorRepository) Delete(id string) error {
+	result, err := r.db.Exec(`DELETE FROM sub_sektor WHERE id = ?`, id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return sql.ErrNoRows
+	}
+	return nil
+}
