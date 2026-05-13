@@ -44,10 +44,10 @@ type NavigateRequest struct {
 
 // PROGRESS RESPONSE
 type ProgressResponse struct {
-	RespondenID    int64   `json:"responden_id"`
-	RisikoID       *int    `json:"risiko_id"`
-	LangkahSaatIni *string `json:"langkah_saat_ini"`
-	Selesai        bool    `json:"selesai"`
+	RespondenID     int64   `json:"responden_id"`
+	RisikoID        *int    `json:"risiko_id"`
+	LangkahSaatIni  *string `json:"langkah_saat_ini"`
+	Selesai         bool    `json:"selesai"`
 	Status          string  `json:"status"`
 	IsRejected      bool    `json:"is_rejected"`
 	EditReason      *string `json:"edit_request_reason,omitempty"`
