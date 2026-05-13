@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -91,8 +92,8 @@ func (m *mockRisikoService) GetMyEditRequest(userID string) (*dto.EditRequestIte
 // helper: inject role and userID into request context
 func withRisikoCtx(req *http.Request, userID, role string) *http.Request {
 	ctx := req.Context()
-	ctx = middleware.SetUserID(ctx, userID)
-	ctx = middleware.SetRole(ctx, role)
+	ctx = context.WithValue(ctx, middleware.UserIDKey, userID)
+	ctx = context.WithValue(ctx, middleware.RoleKey, role)
 	return req.WithContext(ctx)
 }
 

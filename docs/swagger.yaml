@@ -9684,7 +9684,40 @@ paths:
       summary: Get Risiko by Respondent ID
       tags:
       - Risiko
+  /api/survey/risiko:
+    get:
+      consumes:
+      - application/json
+      description: Get all active master risk data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+      summary: Get All Risiko
+      tags:
+      - Risiko
   /api/survey/risiko/dampak:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's risk answer data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      summary: Get My Dampak Risiko Data
+      tags:
+      - Risiko
     post:
       consumes:
       - application/json
@@ -9711,6 +9744,24 @@ paths:
       tags:
       - Risiko
   /api/survey/risiko/eligibility:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's risk answer data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      summary: Get My Eligibility Risiko Data
+      tags:
+      - Risiko
     post:
       consumes:
       - application/json
@@ -9756,6 +9807,24 @@ paths:
       tags:
       - Risiko
   /api/survey/risiko/pengendalian:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's risk answer data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      summary: Get My Pengendalian Risiko Data
+      tags:
+      - Risiko
     post:
       consumes:
       - application/json
@@ -9782,6 +9851,24 @@ paths:
       tags:
       - Risiko
   /api/survey/risiko/reason:
+    get:
+      consumes:
+      - application/json
+      description: Get current user's risk answer data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+      summary: Get My Alasan Risiko Data
+      tags:
+      - Risiko
     post:
       consumes:
       - application/json

@@ -33,13 +33,32 @@ func TestRespondJSON(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if body["success"] != true {
-		t.Error("expected success to be true")
+	if body["message"] != "success" {
+		t.Error("expected message to be success")
 	}
+}
 
-	respData, ok := body["data"].(map[string]interface{})
-	if !ok || respData["message"] != "success" {
-		t.Error("invalid response data")
+// TEST RESPOND SUCCESS
+func TestRespondSuccess(t *testing.T) {
+	w := httptest.NewRecorder()
+	data := "some-data"
+
+	RespondSuccess(w, http.StatusOK, "OK", data)
+
+	res := w.Result()
+	defer res.Body.Close()
+
+	var body JSONResponse
+	json.NewDecoder(res.Body).Decode(&body)
+
+	if body.Status != "success" {
+		t.Error("expected status success")
+	}
+	if body.Message != "OK" {
+		t.Error("expected message OK")
+	}
+	if body.Data != data {
+		t.Error("data mismatch")
 	}
 }
 
@@ -56,16 +75,16 @@ func TestRespondError(t *testing.T) {
 		t.Errorf("expected 400, got %d", res.StatusCode)
 	}
 
-	var body map[string]interface{}
+	var body JSONResponse
 	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
 		t.Fatal(err)
 	}
 
-	if body["success"] != false {
-		t.Error("expected success to be false")
+	if body.Status != "error" {
+		t.Error("expected status error")
 	}
 
-	if body["message"] != "bad request" {
+	if body.Message != "bad request" {
 		t.Error("expected error message")
 	}
 }

@@ -26,10 +26,12 @@ func (m *mockCache) Del(ctx context.Context, key string) error {
 
 // MOCK REPOSITORY
 type mockRisikoRepo struct {
+	getAllRisikoFn            func() ([]models.RisikoResponse, error)
 	existsRespondenFn         func(id int64) (bool, error)
 	existsRisikoFn            func(id int64) (bool, error)
 	existsCustomFn            func(id int64) (bool, error)
-	getAllRisikoFn             func() ([]models.RisikoResponse, error)
+	getRisikoIDByUrutanFn     func(urutan int) (int64, error)
+	getUrutanByRisikoIDFn     func(id int64) (int, error)
 	upsertEligibilityFn       func(m models.RisikoEligibility) error
 	upsertAlasanFn            func(m models.RisikoAlasan) error
 	upsertDampakFn            func(m models.RisikoDampak) error
@@ -43,20 +45,23 @@ type mockRisikoRepo struct {
 	getEditRequestByUserIDFn  func(userID string) (*models.EditRequestItem, error)
 }
 
+func (m *mockRisikoRepo) GetAllRisiko() ([]models.RisikoResponse, error) {
+	return m.getAllRisikoFn()
+}
 func (m *mockRisikoRepo) ExistsResponden(id int64) (bool, error) {
 	return m.existsRespondenFn(id)
 }
 func (m *mockRisikoRepo) ExistsRisiko(id int64) (bool, error) {
 	return m.existsRisikoFn(id)
 }
+func (m *mockRisikoRepo) GetRisikoIDByUrutan(urutan int) (int64, error) {
+	return m.getRisikoIDByUrutanFn(urutan)
+}
+func (m *mockRisikoRepo) GetUrutanByRisikoID(id int64) (int, error) {
+	return m.getUrutanByRisikoIDFn(id)
+}
 func (m *mockRisikoRepo) ExistsCustomRisiko(id int64) (bool, error) {
 	return m.existsCustomFn(id)
-}
-func (m *mockRisikoRepo) GetAllRisiko() ([]models.RisikoResponse, error) {
-	if m.getAllRisikoFn != nil {
-		return m.getAllRisikoFn()
-	}
-	return nil, nil
 }
 func (m *mockRisikoRepo) UpsertEligibility(r models.RisikoEligibility) error {
 	return m.upsertEligibilityFn(r)
@@ -104,6 +109,11 @@ func ptrInt(v int) *int {
 }
 
 func newService(mock *mockRisikoRepo) *RisikoService {
+	if mock.getAllRisikoFn == nil {
+		mock.getAllRisikoFn = func() ([]models.RisikoResponse, error) {
+			return nil, nil
+		}
+	}
 	if mock.getRespondentIDByUserIDFn == nil {
 		mock.getRespondentIDByUserIDFn = func(userID string) (int64, error) {
 			return 1, nil
@@ -115,6 +125,16 @@ func newService(mock *mockRisikoRepo) *RisikoService {
 				RespondenID: id,
 				Status:      SurveyStatusDraft,
 			}, nil
+		}
+	}
+	if mock.getRisikoIDByUrutanFn == nil {
+		mock.getRisikoIDByUrutanFn = func(urutan int) (int64, error) {
+			return int64(urutan), nil
+		}
+	}
+	if mock.getUrutanByRisikoIDFn == nil {
+		mock.getUrutanByRisikoIDFn = func(id int64) (int, error) {
+			return int(id), nil
 		}
 	}
 	if mock.upsertProgressFn == nil {
@@ -138,7 +158,6 @@ func TestProcessEligibility_Success(t *testing.T) {
 	svc := newService(mock)
 
 	res, err := svc.ProcessEligibility("user-1", dto.EligibilityRequest{
-		RespondenID:   1,
 		RisikoID:      ptrInt(1),
 		PernahTerjadi: true,
 	})
@@ -163,8 +182,7 @@ func TestProcessEligibility_InvalidResponden(t *testing.T) {
 	svc := newService(mock)
 
 	_, err := svc.ProcessEligibility("user-1", dto.EligibilityRequest{
-		RespondenID: 1,
-		RisikoID:    ptrInt(1),
+		RisikoID: ptrInt(1),
 	})
 
 	if err == nil {
@@ -185,9 +203,8 @@ func TestProcessAlasan_Success(t *testing.T) {
 	svc := newService(mock)
 
 	res, err := svc.ProcessAlasan("user-1", dto.AlasanRequest{
-		RespondenID: 1,
-		RisikoID:    ptrInt(1),
-		Alasan:      "test",
+		RisikoID: ptrInt(1),
+		Alasan:   "test",
 	})
 
 	if err != nil {
@@ -209,8 +226,7 @@ func TestProcessDampak_InvalidImpact(t *testing.T) {
 	svc := newService(mock)
 
 	_, err := svc.ProcessDampak("user-1", dto.DampakRequest{
-		RespondenID: 1,
-		RisikoID:    ptrInt(1),
+		RisikoID: ptrInt(1),
 	})
 
 	if err == nil {
@@ -231,7 +247,6 @@ func TestProcessPengendalian_Success(t *testing.T) {
 	svc := newService(mock)
 
 	res, err := svc.ProcessPengendalian("user-1", dto.PengendalianRequest{
-		RespondenID:           1,
 		RisikoID:              ptrInt(1),
 		AdaPengendalian:       false,
 		DeskripsiPengendalian: "",
@@ -243,6 +258,37 @@ func TestProcessPengendalian_Success(t *testing.T) {
 
 	if res["next_step"] != "finish" {
 		t.Error("expected finish")
+	}
+}
+
+func TestProcessDampak_MapsEnumValuesForDatabase(t *testing.T) {
+	var saved models.RisikoDampak
+	mock := &mockRisikoRepo{
+		upsertDampakFn: func(m models.RisikoDampak) error {
+			saved = m
+			return nil
+		},
+	}
+
+	svc := newService(mock)
+
+	_, err := svc.ProcessDampak("user-1", dto.DampakRequest{
+		RisikoID:          ptrInt(7),
+		DampakReputasi:    models.ImpactVerySignificant,
+		DampakOperasional: models.ImpactSignificant,
+		DampakFinansial:   models.ImpactFairlySignificant,
+		DampakHukum:       models.ImpactNotSignificant,
+		Frekuensi:         models.FrequencyLarge,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if saved.DampakReputasi != "Sangat Signifikan" {
+		t.Fatalf("expected mapped reputasi, got %q", saved.DampakReputasi)
+	}
+	if saved.Frekuensi != "Besar" {
+		t.Fatalf("expected mapped frekuensi, got %q", saved.Frekuensi)
 	}
 }
 
@@ -263,8 +309,7 @@ func TestNavigate_Next(t *testing.T) {
 	svc := newService(mock)
 
 	res, err := svc.Navigate("user-1", dto.NavigateRequest{
-		RespondenID: 1,
-		Direction:   "next",
+		Direction: "next",
 	})
 
 	if err != nil {
@@ -278,13 +323,21 @@ func TestNavigate_Next(t *testing.T) {
 
 // TEST SAVE PROGRESS
 func TestSaveProgress_Success(t *testing.T) {
+	var savedProgress models.SurveyProgress
 	mock := &mockRisikoRepo{
+		getRisikoIDByUrutanFn: func(urutan int) (int64, error) {
+			if urutan == 5 {
+				return 42, nil
+			}
+			return 0, sql.ErrNoRows
+		},
 		getProgressFn: func(id int64) (*models.SurveyProgress, error) {
 			return &models.SurveyProgress{
 				RespondenID: int64(id),
 			}, nil
 		},
 		upsertProgressFn: func(p models.SurveyProgress) error {
+			savedProgress = p
 			return nil
 		},
 	}
@@ -292,7 +345,6 @@ func TestSaveProgress_Success(t *testing.T) {
 	svc := newService(mock)
 
 	res, err := svc.SaveProgress("user-1", dto.NavigateRequest{
-		RespondenID: 1,
 		CurrentRisk: 5,
 	})
 
@@ -300,8 +352,48 @@ func TestSaveProgress_Success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if *res.RisikoID != 5 {
-		t.Error("expected saved risk")
+	if savedProgress.RisikoID.Int64 != 42 {
+		t.Errorf("expected persisted risiko_id 42, got %d", savedProgress.RisikoID.Int64)
+	}
+
+	if *res.RisikoID != 42 {
+		t.Error("expected response risk to use mapped risiko_id")
+	}
+}
+
+func TestSaveProgress_UnknownRiskStoresNull(t *testing.T) {
+	var savedProgress models.SurveyProgress
+	mock := &mockRisikoRepo{
+		getRisikoIDByUrutanFn: func(urutan int) (int64, error) {
+			return 0, sql.ErrNoRows
+		},
+		getProgressFn: func(id int64) (*models.SurveyProgress, error) {
+			return &models.SurveyProgress{
+				RespondenID: int64(id),
+			}, nil
+		},
+		upsertProgressFn: func(p models.SurveyProgress) error {
+			savedProgress = p
+			return nil
+		},
+	}
+
+	svc := newService(mock)
+
+	res, err := svc.SaveProgress("user-1", dto.NavigateRequest{
+		CurrentRisk: 999,
+	})
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if savedProgress.RisikoID.Valid {
+		t.Fatal("expected persisted risiko_id to be NULL for unknown current_risk")
+	}
+
+	if res.RisikoID != nil {
+		t.Fatal("expected response risiko_id to be nil for unknown current_risk")
 	}
 }
 
@@ -319,8 +411,7 @@ func TestNavigate_SubmittedSurveyRejected(t *testing.T) {
 	svc := newService(mock)
 
 	_, err := svc.Navigate("user-1", dto.NavigateRequest{
-		RespondenID: 1,
-		Direction:   "next",
+		Direction: "next",
 	})
 
 	if err == nil {
@@ -346,8 +437,7 @@ func TestNavigate_EditApprovedSurveyAllowed(t *testing.T) {
 	svc := newService(mock)
 
 	res, err := svc.Navigate("user-1", dto.NavigateRequest{
-		RespondenID: 1,
-		Direction:   "next",
+		Direction: "next",
 	})
 
 	if err != nil {

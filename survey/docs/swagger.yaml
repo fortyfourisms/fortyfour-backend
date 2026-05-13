@@ -55,6 +55,33 @@ definitions:
       risiko_id:
         type: integer
     type: object
+  dto.EditRequestItemResponse:
+    properties:
+      edit_approved_at:
+        type: string
+      edit_approved_by:
+        type: string
+      edit_rejected_at:
+        type: string
+      edit_rejected_by:
+        type: string
+      edit_request_reason:
+        type: string
+      edit_request_response:
+        type: string
+      edit_requested_at:
+        type: string
+      nama_lengkap:
+        type: string
+      nama_perusahaan:
+        type: string
+      responden_id:
+        type: integer
+      status:
+        type: string
+      user_id:
+        type: string
+    type: object
   dto.EligibilityRequest:
     properties:
       pernah_terjadi:
@@ -127,6 +154,39 @@ definitions:
       reason:
         type: string
     type: object
+  dto.RespondenResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      id_perusahaan:
+        description: dari PERUSAHAAN
+        type: string
+      jabatan:
+        type: string
+      nama_lengkap:
+        description: dari RESPONDEN
+        type: string
+      nama_perusahaan:
+        type: string
+      nama_sektor:
+        type: string
+      nama_sub_sektor:
+        description: dari JOIN (opsional)
+        type: string
+      no_telepon:
+        type: string
+      sertifikat_training:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        description: dari backend (JWT)
+        type: string
+    type: object
   dto.ReviewEditRequest:
     properties:
       action:
@@ -183,6 +243,36 @@ paths:
       summary: Health check
       tags:
       - Health
+  /api/survey/edit-requests:
+    get:
+      description: Get all pending survey edit requests (Admin/Staff only)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.EditRequestItemResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get All Edit Requests (Admin)
+      tags:
+      - Survey Edit Request
   /api/survey/edit-requests/{id}:
     post:
       consumes:
@@ -223,12 +313,38 @@ paths:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Review Edit Request
       tags:
-      - Risiko
+      - Survey Edit Request
+  /api/survey/edit-requests/me:
+    get:
+      description: Get current user's edit request
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.EditRequestItemResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get My Edit Request (User)
+      tags:
+      - Survey Edit Request
   /api/survey/finish:
     post:
-      consumes:
-      - application/json
-      description: Complete the survey
+      description: Mark survey as completed
       produces:
       - application/json
       responses:
@@ -242,14 +358,14 @@ paths:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Finish Survey
       tags:
-      - Risiko
+      - Survey Progress
   /api/survey/navigate:
     post:
       consumes:
       - application/json
-      description: Navigate through survey steps
+      description: Navigate to next or previous risk
       parameters:
-      - description: Navigate request
+      - description: Navigation request
         in: body
         name: request
         required: true
@@ -273,12 +389,10 @@ paths:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Navigate Survey
       tags:
-      - Risiko
+      - Survey Progress
   /api/survey/progress:
     get:
-      consumes:
-      - application/json
-      description: Get current user's survey progress and current step
+      description: Get current survey progress for the user
       produces:
       - application/json
       responses:
@@ -291,17 +405,13 @@ paths:
                 data:
                   $ref: '#/definitions/dto.ProgressResponse'
               type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/dto.ErrorResponse'
         "404":
           description: Not Found
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Get Survey Progress
       tags:
-      - Risiko
+      - Survey Progress
   /api/survey/request-edit:
     post:
       consumes:
@@ -332,20 +442,24 @@ paths:
             $ref: '#/definitions/dto.ErrorResponse'
       summary: Request Edit
       tags:
-      - Risiko
+      - Survey Edit Request
   /api/survey/responden:
     get:
-      description: Hanya admin yang dapat melihat semua data responden
+      description: Get all survey respondents (Admin/Staff only)
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              additionalProperties: true
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.RespondenResponse'
+                  type: array
               type: object
-            type: array
         "403":
           description: Forbidden
           schema:
@@ -354,14 +468,12 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Ambil semua responden
+      summary: Get All Responden
       tags:
       - Responden
   /api/survey/responden/{id}:
     get:
-      description: Hanya admin yang dapat melihat detail responden
+      description: Get details of a specific respondent (Admin/Staff only)
       parameters:
       - description: Responden ID
         in: path
@@ -374,8 +486,12 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.RespondenResponse'
+              type: object
         "400":
           description: Bad Request
           schema:
@@ -384,22 +500,24 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Ambil responden berdasarkan ID
+      summary: Get Responden by ID
       tags:
       - Responden
   /api/survey/responden/me:
     get:
-      description: User hanya dapat melihat data dirinya sendiri
+      description: Get current user's respondent profile
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.RespondenResponse'
+              type: object
         "401":
           description: Unauthorized
           schema:
@@ -408,17 +526,15 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Ambil data responden milik user login
+      summary: Get My Responden Profile
       tags:
       - Responden
     post:
       consumes:
       - application/json
-      description: Jika belum ada maka create, jika sudah ada maka update (upsert)
+      description: Create or update current user's respondent profile
       parameters:
-      - description: Data Responden
+      - description: Respondent data
         in: body
         name: request
         required: true
@@ -430,8 +546,12 @@ paths:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            allOf:
+            - $ref: '#/definitions/dto.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/dto.RespondenResponse'
+              type: object
         "400":
           description: Bad Request
           schema:
@@ -440,16 +560,30 @@ paths:
           description: Unauthorized
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Create / Update responden milik user login
+      summary: Upsert My Responden Profile
       tags:
       - Responden
+  /api/survey/risiko:
+    get:
+      description: Get all active risks for survey
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Get All Risiko Aktif
+      tags:
+      - Risiko
   /api/survey/risiko/{id}:
     get:
-      consumes:
-      - application/json
-      description: Get risk data by respondent ID (admin only)
+      description: Get risk assessment data for a specific respondent (Admin/Staff
+        only)
       parameters:
       - description: Respondent ID
         in: path
@@ -463,6 +597,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dto.APIResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
         "403":
           description: Forbidden
           schema:
@@ -471,14 +609,14 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: Get Risiko by Respondent ID
+      summary: Get Risiko Data by Respondent ID
       tags:
       - Risiko
   /api/survey/risiko/dampak:
     post:
       consumes:
       - application/json
-      description: Submit impact assessment for risk
+      description: Submit impact of risk
       parameters:
       - description: Dampak request
         in: body
@@ -528,9 +666,7 @@ paths:
       - Risiko
   /api/survey/risiko/me:
     get:
-      consumes:
-      - application/json
-      description: Get current user's risk data
+      description: Get current user's risk assessment data
       produces:
       - application/json
       responses:
@@ -549,7 +685,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Submit control measures for risk
+      description: Submit mitigation/control for risk
       parameters:
       - description: Pengendalian request
         in: body
@@ -575,7 +711,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Submit reason for risk
+      description: Submit reason for not having risk
       parameters:
       - description: Alasan request
         in: body
@@ -601,7 +737,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Save current survey progress
+      description: Save current risk progress
       parameters:
       - description: Save progress request
         in: body
@@ -625,9 +761,9 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/dto.ErrorResponse'
-      summary: Save Progress
+      summary: Save Survey Progress
       tags:
-      - Risiko
+      - Survey Progress
 securityDefinitions:
   BearerAuth:
     in: header

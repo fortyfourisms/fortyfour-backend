@@ -28,11 +28,10 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// INIT ROUTER
 func InitRouter(
 	respondenH *handlers.RespondenHandler,
 	risikoH *handlers.RisikoHandler,
-	authMiddleware func(http.Handler) http.Handler,
+	authM *middleware.AuthMiddleware,
 ) *http.ServeMux {
 
 	mux := http.NewServeMux()
@@ -45,10 +44,47 @@ func InitRouter(
 		return middleware.Logger(
 			middleware.Recovery(
 				middleware.CORS(
-					authMiddleware(h),
+					authM.Authenticate(h),
 				),
 			),
 		)
+	}
+	getOnly := func(h http.HandlerFunc) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodGet {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			h(w, r)
+		})
+	}
+	postOnly := func(h http.HandlerFunc) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.Method != http.MethodPost {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			h(w, r)
+		})
+	}
+	getRisikoByRespondentID := func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/survey/risiko/" {
+			risikoH.GetAllRisiko(w, r)
+			return
+		}
+		risikoH.GetByRespondentID(w, r)
+	}
+	stepWithOwnedRead := func(post http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			switch r.Method {
+			case http.MethodGet:
+				risikoH.GetMe(w, r)
+			case http.MethodPost:
+				post(w, r)
+			default:
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+		}
 	}
 
 	// RESPONDEN
@@ -56,23 +92,24 @@ func InitRouter(
 	mux.Handle("/api/survey/responden/", protected(respondenH))
 
 	// RISIKO
-	mux.Handle("/api/survey/risiko", protected(http.HandlerFunc(risikoH.GetAllRisiko)))
-	mux.Handle("/api/survey/risiko/eligibility", protected(http.HandlerFunc(risikoH.SubmitEligibility)))
-	mux.Handle("/api/survey/risiko/dampak", protected(http.HandlerFunc(risikoH.SubmitDampak)))
-	mux.Handle("/api/survey/risiko/pengendalian", protected(http.HandlerFunc(risikoH.SubmitPengendalian)))
-	mux.Handle("/api/survey/risiko/reason", protected(http.HandlerFunc(risikoH.SubmitAlasan)))
-	mux.Handle("/api/survey/risiko/me", protected(http.HandlerFunc(risikoH.GetMe)))
-	mux.Handle("/api/survey/risiko/", protected(http.HandlerFunc(risikoH.GetByRespondentID)))
+	// RISIKO
+	mux.Handle("/api/survey/risiko/eligibility", protected(http.HandlerFunc(stepWithOwnedRead(risikoH.SubmitEligibility))))
+	mux.Handle("/api/survey/risiko/dampak", protected(http.HandlerFunc(stepWithOwnedRead(risikoH.SubmitDampak))))
+	mux.Handle("/api/survey/risiko/pengendalian", protected(http.HandlerFunc(stepWithOwnedRead(risikoH.SubmitPengendalian))))
+	mux.Handle("/api/survey/risiko/reason", protected(http.HandlerFunc(stepWithOwnedRead(risikoH.SubmitAlasan))))
+	mux.Handle("/api/survey/risiko", protected(getOnly(risikoH.GetAllRisiko)))
+	mux.Handle("/api/survey/risiko/me", protected(getOnly(risikoH.GetMe)))
+	mux.Handle("/api/survey/risiko/", protected(getOnly(getRisikoByRespondentID)))
 
 	// PROGRESS & NAVIGATION
-	mux.Handle("/api/survey/progress", protected(http.HandlerFunc(risikoH.GetProgress)))
-	mux.Handle("/api/survey/navigate", protected(http.HandlerFunc(risikoH.Navigate)))
-	mux.Handle("/api/survey/save-progress", protected(http.HandlerFunc(risikoH.SaveProgress)))
-	mux.Handle("/api/survey/finish", protected(http.HandlerFunc(risikoH.FinishSurvey)))
-	mux.Handle("/api/survey/request-edit", protected(http.HandlerFunc(risikoH.RequestEdit)))
-	mux.Handle("/api/survey/edit-requests", protected(http.HandlerFunc(risikoH.GetEditRequests)))
-	mux.Handle("/api/survey/edit-requests/me", protected(http.HandlerFunc(risikoH.GetMyEditRequest)))
-	mux.Handle("/api/survey/edit-requests/", protected(http.HandlerFunc(risikoH.ReviewEditRequest)))
+	mux.Handle("/api/survey/progress", protected(getOnly(risikoH.GetProgress)))
+	mux.Handle("/api/survey/navigate", protected(postOnly(risikoH.Navigate)))
+	mux.Handle("/api/survey/save-progress", protected(postOnly(risikoH.SaveProgress)))
+	mux.Handle("/api/survey/finish", protected(postOnly(risikoH.FinishSurvey)))
+	mux.Handle("/api/survey/request-edit", protected(postOnly(risikoH.RequestEdit)))
+	mux.Handle("/api/survey/edit-requests", protected(getOnly(risikoH.GetEditRequests)))
+	mux.Handle("/api/survey/edit-requests/me", protected(getOnly(risikoH.GetMyEditRequest)))
+	mux.Handle("/api/survey/edit-requests/", protected(postOnly(risikoH.ReviewEditRequest)))
 
 	// Swagger UI
 	mux.HandleFunc("/swagger/survey/", httpSwagger.WrapHandler)

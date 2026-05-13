@@ -38,6 +38,107 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/survey/edit-requests": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get all pending survey edit requests (Admin/Staff only)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Survey Edit Request"
+                ],
+                "summary": "Get All Edit Requests (Admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.EditRequestItemResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/survey/edit-requests/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get current user's edit request",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Survey Edit Request"
+                ],
+                "summary": "Get My Edit Request (User)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.EditRequestItemResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/survey/edit-requests/{id}": {
             "post": {
                 "description": "Approve or reject a request to edit survey data. Admin specifies action (\"approve\" or \"reject\").",
@@ -48,7 +149,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Edit Request"
                 ],
                 "summary": "Review Edit Request",
                 "parameters": [
@@ -105,15 +206,12 @@ const docTemplate = `{
         },
         "/api/survey/finish": {
             "post": {
-                "description": "Complete the survey",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Mark survey as completed",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Progress"
                 ],
                 "summary": "Finish Survey",
                 "responses": {
@@ -134,7 +232,7 @@ const docTemplate = `{
         },
         "/api/survey/navigate": {
             "post": {
-                "description": "Navigate through survey steps",
+                "description": "Navigate to next or previous risk",
                 "consumes": [
                     "application/json"
                 ],
@@ -142,12 +240,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Progress"
                 ],
                 "summary": "Navigate Survey",
                 "parameters": [
                     {
-                        "description": "Navigate request",
+                        "description": "Navigation request",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -186,15 +284,12 @@ const docTemplate = `{
         },
         "/api/survey/progress": {
             "get": {
-                "description": "Get current user's survey progress and current step",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Get current survey progress for the user",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Progress"
                 ],
                 "summary": "Get Survey Progress",
                 "responses": {
@@ -216,12 +311,6 @@ const docTemplate = `{
                             ]
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -241,7 +330,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Edit Request"
                 ],
                 "summary": "Request Edit",
                 "parameters": [
@@ -285,28 +374,34 @@ const docTemplate = `{
         },
         "/api/survey/responden": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Hanya admin yang dapat melihat semua data responden",
+                "description": "Get all survey respondents (Admin/Staff only)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Responden"
                 ],
-                "summary": "Ambil semua responden",
+                "summary": "Get All Responden",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "additionalProperties": true
-                            }
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.RespondenResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "403": {
@@ -326,25 +421,31 @@ const docTemplate = `{
         },
         "/api/survey/responden/me": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "User hanya dapat melihat data dirinya sendiri",
+                "description": "Get current user's respondent profile",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Responden"
                 ],
-                "summary": "Ambil data responden milik user login",
+                "summary": "Get My Responden Profile",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.RespondenResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "401": {
@@ -362,12 +463,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Jika belum ada maka create, jika sudah ada maka update (upsert)",
+                "description": "Create or update current user's respondent profile",
                 "consumes": [
                     "application/json"
                 ],
@@ -377,10 +473,10 @@ const docTemplate = `{
                 "tags": [
                     "Responden"
                 ],
-                "summary": "Create / Update responden milik user login",
+                "summary": "Upsert My Responden Profile",
                 "parameters": [
                     {
-                        "description": "Data Responden",
+                        "description": "Respondent data",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -393,8 +489,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.RespondenResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -414,19 +521,14 @@ const docTemplate = `{
         },
         "/api/survey/responden/{id}": {
             "get": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Hanya admin yang dapat melihat detail responden",
+                "description": "Get details of a specific respondent (Admin/Staff only)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Responden"
                 ],
-                "summary": "Ambil responden berdasarkan ID",
+                "summary": "Get Responden by ID",
                 "parameters": [
                     {
                         "type": "integer",
@@ -440,8 +542,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/dto.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/dto.RespondenResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -459,9 +572,35 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/survey/risiko": {
+            "get": {
+                "description": "Get all active risks for survey",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Risiko"
+                ],
+                "summary": "Get All Risiko Aktif",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/survey/risiko/dampak": {
             "post": {
-                "description": "Submit impact assessment for risk",
+                "description": "Submit impact of risk",
                 "consumes": [
                     "application/json"
                 ],
@@ -541,10 +680,7 @@ const docTemplate = `{
         },
         "/api/survey/risiko/me": {
             "get": {
-                "description": "Get current user's risk data",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Get current user's risk assessment data",
                 "produces": [
                     "application/json"
                 ],
@@ -570,7 +706,7 @@ const docTemplate = `{
         },
         "/api/survey/risiko/pengendalian": {
             "post": {
-                "description": "Submit control measures for risk",
+                "description": "Submit mitigation/control for risk",
                 "consumes": [
                     "application/json"
                 ],
@@ -610,7 +746,7 @@ const docTemplate = `{
         },
         "/api/survey/risiko/reason": {
             "post": {
-                "description": "Submit reason for risk",
+                "description": "Submit reason for not having risk",
                 "consumes": [
                     "application/json"
                 ],
@@ -650,17 +786,14 @@ const docTemplate = `{
         },
         "/api/survey/risiko/{id}": {
             "get": {
-                "description": "Get risk data by respondent ID (admin only)",
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "Get risk assessment data for a specific respondent (Admin/Staff only)",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Risiko"
                 ],
-                "summary": "Get Risiko by Respondent ID",
+                "summary": "Get Risiko Data by Respondent ID",
                 "parameters": [
                     {
                         "type": "integer",
@@ -675,6 +808,12 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ErrorResponse"
                         }
                     },
                     "403": {
@@ -694,7 +833,7 @@ const docTemplate = `{
         },
         "/api/survey/save-progress": {
             "post": {
-                "description": "Save current survey progress",
+                "description": "Save current risk progress",
                 "consumes": [
                     "application/json"
                 ],
@@ -702,9 +841,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Progress"
                 ],
-                "summary": "Save Progress",
+                "summary": "Save Survey Progress",
                 "parameters": [
                     {
                         "description": "Save progress request",
@@ -830,6 +969,47 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.EditRequestItemResponse": {
+            "type": "object",
+            "properties": {
+                "edit_approved_at": {
+                    "type": "string"
+                },
+                "edit_approved_by": {
+                    "type": "string"
+                },
+                "edit_rejected_at": {
+                    "type": "string"
+                },
+                "edit_rejected_by": {
+                    "type": "string"
+                },
+                "edit_request_reason": {
+                    "type": "string"
+                },
+                "edit_request_response": {
+                    "type": "string"
+                },
+                "edit_requested_at": {
+                    "type": "string"
+                },
+                "nama_lengkap": {
+                    "type": "string"
+                },
+                "nama_perusahaan": {
+                    "type": "string"
+                },
+                "responden_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.EligibilityRequest": {
             "type": "object",
             "properties": {
@@ -937,6 +1117,54 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.RespondenResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "id_perusahaan": {
+                    "description": "dari PERUSAHAAN",
+                    "type": "string"
+                },
+                "jabatan": {
+                    "type": "string"
+                },
+                "nama_lengkap": {
+                    "description": "dari RESPONDEN",
+                    "type": "string"
+                },
+                "nama_perusahaan": {
+                    "type": "string"
+                },
+                "nama_sektor": {
+                    "type": "string"
+                },
+                "nama_sub_sektor": {
+                    "description": "dari JOIN (opsional)",
+                    "type": "string"
+                },
+                "no_telepon": {
+                    "type": "string"
+                },
+                "sertifikat_training": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "description": "dari backend (JWT)",
                     "type": "string"
                 }
             }
