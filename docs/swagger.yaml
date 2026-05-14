@@ -1,28 +1,5 @@
 basePath: /
 definitions:
-  dto.APIResponse:
-    properties:
-      data: {}
-      error:
-        type: string
-      errors:
-        additionalProperties:
-          type: string
-        type: object
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  dto.AlasanRequest:
-    properties:
-      alasan:
-        type: string
-      responden_id:
-        type: integer
-      risiko_id:
-        type: integer
-    type: object
   dto.CreateDomainRequest:
     properties:
       nama_domain:
@@ -194,21 +171,6 @@ definitions:
       sub_kategori_id:
         type: integer
     type: object
-  dto.CreateRespondenRequest:
-    properties:
-      email:
-        type: string
-      id_perusahaan:
-        type: string
-      jabatan:
-        type: string
-      nama_lengkap:
-        type: string
-      no_telepon:
-        type: string
-      sertifikat_training:
-        type: string
-    type: object
   dto.CreateRuangLingkupRequest:
     properties:
       nama_ruang_lingkup:
@@ -220,23 +182,6 @@ definitions:
         type: integer
       nama_sub_kategori:
         type: string
-    type: object
-  dto.DampakRequest:
-    properties:
-      dampak_finansial:
-        $ref: '#/definitions/models.ImpactLevel'
-      dampak_hukum:
-        $ref: '#/definitions/models.ImpactLevel'
-      dampak_operasional:
-        $ref: '#/definitions/models.ImpactLevel'
-      dampak_reputasi:
-        $ref: '#/definitions/models.ImpactLevel'
-      frekuensi:
-        $ref: '#/definitions/models.FrequencyLevel'
-      responden_id:
-        type: integer
-      risiko_id:
-        type: integer
     type: object
   dto.DeteksiInIkas:
     properties:
@@ -283,15 +228,6 @@ definitions:
         type: string
       updated_at:
         type: string
-    type: object
-  dto.EligibilityRequest:
-    properties:
-      pernah_terjadi:
-        type: boolean
-      responden_id:
-        type: integer
-      risiko_id:
-        type: integer
     type: object
   dto.GulihInIkas:
     properties:
@@ -420,7 +356,7 @@ definitions:
       evidence:
         type: string
       id:
-        type: integer
+        type: string
       ikas_id:
         type: string
       jawaban_deteksi:
@@ -441,7 +377,7 @@ definitions:
       evidence:
         type: string
       id:
-        type: integer
+        type: string
       ikas_id:
         type: string
       jawaban_gulih:
@@ -462,7 +398,7 @@ definitions:
       evidence:
         type: string
       id:
-        type: integer
+        type: string
       ikas_id:
         type: string
       jawaban_identifikasi:
@@ -483,7 +419,7 @@ definitions:
       evidence:
         type: string
       id:
-        type: integer
+        type: string
       ikas_id:
         type: string
       jawaban_proteksi:
@@ -525,26 +461,6 @@ definitions:
         type: string
       updated_at:
         type: string
-    type: object
-  dto.NavigateRequest:
-    properties:
-      current_risk:
-        type: integer
-      direction:
-        type: string
-      responden_id:
-        type: integer
-    type: object
-  dto.PengendalianRequest:
-    properties:
-      ada_pengendalian:
-        type: boolean
-      deskripsi_pengendalian:
-        type: string
-      responden_id:
-        type: integer
-      risiko_id:
-        type: integer
     type: object
   dto.PertanyaanDeteksiInfo:
     properties:
@@ -1607,9 +1523,9 @@ definitions:
       email:
         type: string
       event_id:
-        type: integer
+        type: string
       id:
-        type: integer
+        type: string
       jabatan:
         type: string
       nama:
@@ -1634,10 +1550,12 @@ definitions:
       deskripsi:
         type: string
       id:
-        type: integer
+        type: string
       judul:
         type: string
       lokasi:
+        type: string
+      slug:
         type: string
       status:
         description: upcoming atau past
@@ -2852,54 +2770,6 @@ definitions:
       status:
         type: string
       total: {}
-    type: object
-  models.FrequencyLevel:
-    enum:
-    - 1
-    - 2
-    - 3
-    - 4
-    type: integer
-    x-enum-varnames:
-    - FrequencySmall
-    - FrequencyMedium
-    - FrequencyLarge
-    - FrequencyVeryLarge
-  models.ImpactLevel:
-    enum:
-    - 1
-    - 2
-    - 3
-    - 4
-    type: integer
-    x-enum-varnames:
-    - ImpactNotSignificant
-    - ImpactFairlySignificant
-    - ImpactSignificant
-    - ImpactVerySignificant
-  survey_internal_dto.ErrorResponse:
-    properties:
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  survey_internal_dto.ProgressResponse:
-    properties:
-      edit_request_reason:
-        type: string
-      edit_request_response:
-        type: string
-      langkah_saat_ini:
-        type: string
-      responden_id:
-        type: integer
-      risiko_id:
-        type: integer
-      selesai:
-        type: boolean
-      status:
-        type: string
     type: object
 host: localhost:8080
 info:
@@ -6116,7 +5986,7 @@ paths:
             $ref: '#/definitions/dto.UnifiedJawabanDeteksiResponse'
       summary: Get All Jawaban Deteksi
       tags:
-      - Jawaban Deteksi
+      - JawabanDeteksi
     post:
       consumes:
       - application/json
@@ -6137,16 +6007,16 @@ paths:
             $ref: '#/definitions/ikas_internal_utils.JSONResponse'
       summary: Create Jawaban Deteksi
       tags:
-      - Jawaban Deteksi
+      - JawabanDeteksi
   /api/maturity/jawaban-deteksi/{id}:
     delete:
-      description: Menghapus data jawaban deteksi berdasarkan ID
+      description: Menghapus data jawaban deteksi berdasarkan UUID
       parameters:
-      - description: Jawaban Deteksi ID
+      - description: Jawaban Deteksi UUID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -6156,15 +6026,15 @@ paths:
             $ref: '#/definitions/ikas_internal_utils.JSONResponse'
       summary: Delete Jawaban Deteksi
       tags:
-      - Jawaban Deteksi
+      - JawabanDeteksi
     get:
-      description: Get a specific detection answer by its ID
+      description: Get a specific detection answer by its UUID
       parameters:
-      - description: Jawaban Deteksi ID
+      - description: Jawaban Deteksi UUID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -6172,19 +6042,19 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/dto.JawabanDeteksiResponse'
-      summary: Get Jawaban Deteksi by ID
+      summary: Get Jawaban Deteksi by UUID
       tags:
-      - Jawaban Deteksi
+      - JawabanDeteksi
     put:
       consumes:
       - application/json
-      description: Mengubah data jawaban deteksi berdasarkan ID
+      description: Mengubah data jawaban deteksi berdasarkan UUID
       parameters:
-      - description: Jawaban Deteksi ID
+      - description: Jawaban Deteksi UUID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: Update Request
         in: body
         name: request
@@ -6200,7 +6070,7 @@ paths:
             $ref: '#/definitions/ikas_internal_utils.JSONResponse'
       summary: Update Jawaban Deteksi
       tags:
-      - Jawaban Deteksi
+      - JawabanDeteksi
   /api/maturity/jawaban-gulih:
     get:
       description: Mengambil seluruh data jawaban gulih. Jika ikas_id diberikan, mengembalikan
@@ -6227,7 +6097,7 @@ paths:
             $ref: '#/definitions/dto.UnifiedJawabanGulihResponse'
       summary: Get All Jawaban Gulih
       tags:
-      - Jawaban Gulih
+      - JawabanGulih
     post:
       consumes:
       - application/json
@@ -6248,16 +6118,16 @@ paths:
             $ref: '#/definitions/ikas_internal_utils.JSONResponse'
       summary: Create Jawaban Gulih
       tags:
-      - Jawaban Gulih
+      - JawabanGulih
   /api/maturity/jawaban-gulih/{id}:
     delete:
-      description: Menghapus data jawaban gulih berdasarkan ID
+      description: Menghapus data jawaban gulih berdasarkan UUID
       parameters:
-      - description: Jawaban Gulih ID
+      - description: Jawaban Gulih UUID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -6267,36 +6137,35 @@ paths:
             $ref: '#/definitions/ikas_internal_utils.JSONResponse'
       summary: Delete Jawaban Gulih
       tags:
-      - Jawaban Gulih
+      - JawabanGulih
     get:
-      description: Get a specific gulih answer by its ID
+      description: Get a specific gulih answer by its UUID
       parameters:
-      - description: Jawaban Gulih ID
+      - description: Jawaban Gulih UUID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
-      summary: Get Jawaban Gulih by ID
+            $ref: '#/definitions/dto.JawabanGulihResponse'
+      summary: Get Jawaban Gulih by UUID
       tags:
-      - Jawaban Gulih
+      - JawabanGulih
     put:
       consumes:
       - application/json
-      description: Mengubah data jawaban gulih berdasarkan ID
+      description: Mengubah data jawaban gulih berdasarkan UUID
       parameters:
-      - description: Jawaban Gulih ID
+      - description: Jawaban Gulih UUID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: Update Request
         in: body
         name: request
@@ -6312,7 +6181,7 @@ paths:
             $ref: '#/definitions/ikas_internal_utils.JSONResponse'
       summary: Update Jawaban Gulih
       tags:
-      - Jawaban Gulih
+      - JawabanGulih
   /api/maturity/jawaban-identifikasi:
     get:
       description: Mengambil seluruh data jawaban identifikasi. Jika ikas_id diberikan,
@@ -6379,13 +6248,13 @@ paths:
       - JawabanIdentifikasi
   /api/maturity/jawaban-identifikasi/{id}:
     delete:
-      description: Menghapus data jawaban identifikasi berdasarkan ID
+      description: Menghapus data jawaban identifikasi berdasarkan UUID
       parameters:
-      - description: JawabanIdentifikasi ID
+      - description: JawabanIdentifikasi UUID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -6407,11 +6276,11 @@ paths:
     get:
       description: Mengambil satu data jawaban identifikasi
       parameters:
-      - description: JawabanIdentifikasi ID
+      - description: JawabanIdentifikasi UUID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -6423,19 +6292,19 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
-      summary: Ambil jawaban identifikasi berdasarkan ID
+      summary: Ambil jawaban identifikasi berdasarkan UUID
       tags:
       - JawabanIdentifikasi
     put:
       consumes:
       - application/json
-      description: Mengubah data jawaban identifikasi berdasarkan ID
+      description: Mengubah data jawaban identifikasi berdasarkan UUID
       parameters:
-      - description: JawabanIdentifikasi ID
+      - description: JawabanIdentifikasi UUID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: Data update
         in: body
         name: body
@@ -6526,13 +6395,13 @@ paths:
       - JawabanProteksi
   /api/maturity/jawaban-proteksi/{id}:
     delete:
-      description: Menghapus data jawaban proteksi berdasarkan ID
+      description: Menghapus data jawaban proteksi berdasarkan UUID
       parameters:
-      - description: JawabanProteksi ID
+      - description: JawabanProteksi UUID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -6554,11 +6423,11 @@ paths:
     get:
       description: Mengambil satu data jawaban proteksi
       parameters:
-      - description: JawabanProteksi ID
+      - description: JawabanProteksi UUID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -6570,19 +6439,19 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ikas_internal_dto.ErrorResponse'
-      summary: Ambil jawaban proteksi berdasarkan ID
+      summary: Ambil jawaban proteksi berdasarkan UUID
       tags:
       - JawabanProteksi
     put:
       consumes:
       - application/json
-      description: Mengubah data jawaban proteksi berdasarkan ID
+      description: Mengubah data jawaban proteksi berdasarkan UUID
       parameters:
-      - description: JawabanProteksi ID
+      - description: JawabanProteksi UUID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: Data update
         in: body
         name: body
@@ -8961,6 +8830,40 @@ paths:
       tags:
       - Sektor
   /api/sektor/{id}:
+    delete:
+      description: Menghapus data sektor berdasarkan ID (admin only)
+      parameters:
+      - description: Sektor ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Hapus sektor
+      tags:
+      - Sektor
     get:
       description: Mengambil satu data sektor beserta sub sektor
       parameters:
@@ -9204,6 +9107,40 @@ paths:
       tags:
       - SubSektor
   /api/sub_sektor/{id}:
+    delete:
+      description: Menghapus data sub sektor berdasarkan ID (admin only)
+      parameters:
+      - description: SubSektor ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/fortyfour-backend_internal_dto.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Hapus sub sektor
+      tags:
+      - SubSektor
     get:
       description: Mengambil satu data sub sektor
       parameters:
@@ -9291,466 +9228,6 @@ paths:
       summary: Ambil sub sektor berdasarkan Sektor ID
       tags:
       - SubSektor
-  /api/survey/finish:
-    post:
-      consumes:
-      - application/json
-      description: Complete the survey
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Finish Survey
-      tags:
-      - Risiko
-  /api/survey/navigate:
-    post:
-      consumes:
-      - application/json
-      description: Navigate through survey steps
-      parameters:
-      - description: Navigate request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.NavigateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/dto.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/survey_internal_dto.ProgressResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Navigate Survey
-      tags:
-      - Risiko
-  /api/survey/progress:
-    get:
-      consumes:
-      - application/json
-      description: Get current user's survey progress and current step
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/dto.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/survey_internal_dto.ProgressResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get Survey Progress
-      tags:
-      - Risiko
-  /api/survey/responden:
-    get:
-      description: Hanya admin yang dapat melihat semua data responden
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              additionalProperties: true
-              type: object
-            type: array
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Ambil semua responden
-      tags:
-      - Responden
-  /api/survey/responden/{id}:
-    get:
-      description: Hanya admin yang dapat melihat detail responden
-      parameters:
-      - description: Responden ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Ambil responden berdasarkan ID
-      tags:
-      - Responden
-  /api/survey/responden/me:
-    get:
-      description: User hanya dapat melihat data dirinya sendiri
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Ambil data responden milik user login
-      tags:
-      - Responden
-    post:
-      consumes:
-      - application/json
-      description: Jika belum ada maka create, jika sudah ada maka update (upsert)
-      parameters:
-      - description: Data Responden
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.CreateRespondenRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Create / Update responden milik user login
-      tags:
-      - Responden
-  /api/survey/risiko/{id}:
-    get:
-      consumes:
-      - application/json
-      description: Get risk data by respondent ID (admin only)
-      parameters:
-      - description: Respondent ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.APIResponse'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get Risiko by Respondent ID
-      tags:
-      - Risiko
-  /api/survey/risiko:
-    get:
-      consumes:
-      - application/json
-      description: Get all active master risk data
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.APIResponse'
-      summary: Get All Risiko
-      tags:
-      - Risiko
-  /api/survey/risiko/dampak:
-    get:
-      consumes:
-      - application/json
-      description: Get current user's risk answer data
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get My Dampak Risiko Data
-      tags:
-      - Risiko
-    post:
-      consumes:
-      - application/json
-      description: Submit impact assessment for risk
-      parameters:
-      - description: Dampak request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.DampakRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Submit Dampak
-      tags:
-      - Risiko
-  /api/survey/risiko/eligibility:
-    get:
-      consumes:
-      - application/json
-      description: Get current user's risk answer data
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get My Eligibility Risiko Data
-      tags:
-      - Risiko
-    post:
-      consumes:
-      - application/json
-      description: Submit eligibility for risk assessment
-      parameters:
-      - description: Eligibility request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.EligibilityRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Submit Eligibility
-      tags:
-      - Risiko
-  /api/survey/risiko/me:
-    get:
-      consumes:
-      - application/json
-      description: Get current user's risk data
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get My Risiko Data
-      tags:
-      - Risiko
-  /api/survey/risiko/pengendalian:
-    get:
-      consumes:
-      - application/json
-      description: Get current user's risk answer data
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get My Pengendalian Risiko Data
-      tags:
-      - Risiko
-    post:
-      consumes:
-      - application/json
-      description: Submit control measures for risk
-      parameters:
-      - description: Pengendalian request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.PengendalianRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Submit Pengendalian
-      tags:
-      - Risiko
-  /api/survey/risiko/reason:
-    get:
-      consumes:
-      - application/json
-      description: Get current user's risk answer data
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get My Alasan Risiko Data
-      tags:
-      - Risiko
-    post:
-      consumes:
-      - application/json
-      description: Submit reason for risk
-      parameters:
-      - description: Alasan request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.AlasanRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Submit Alasan
-      tags:
-      - Risiko
-  /api/survey/save-progress:
-    post:
-      consumes:
-      - application/json
-      description: Save current survey progress
-      parameters:
-      - description: Save progress request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.NavigateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/dto.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/survey_internal_dto.ProgressResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Save Progress
-      tags:
-      - Risiko
   /api/users:
     get:
       description: Mengambil seluruh data user

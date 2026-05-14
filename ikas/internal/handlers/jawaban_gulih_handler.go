@@ -43,7 +43,7 @@ func (h *JawabanGulihHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 // @Summary		Create Jawaban Gulih
 // @Description	Membuat record jawaban gulih baru (dikirim ke buffer RabbitMQ)
-// @Tags			Jawaban Gulih
+// @Tags			JawabanGulih
 // @Accept			json
 // @Produce		json
 // @Param			request	body		dto.CreateJawabanGulihRequest	true	"Jawaban Gulih Request"
@@ -85,7 +85,7 @@ func (h *JawabanGulihHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 
 // @Summary		Get All Jawaban Gulih
 // @Description	Mengambil seluruh data jawaban gulih. Jika ikas_id diberikan, mengembalikan Unified Response (Main + Buffer) dengan metrik penyelesaian.
-// @Tags			Jawaban Gulih
+// @Tags			JawabanGulih
 // @Produce		json
 // @Param			ikas_id				query		string	false	"Filter by IKAS ID (Unified API)"
 // @Param			perusahaan_id		query		string	false	"Filter by Perusahaan ID"
@@ -140,10 +140,10 @@ func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 
 // @Summary		Get Jawaban Gulih by UUID
 // @Description	Get a specific gulih answer by its UUID
-// @Tags			Jawaban Gulih
+// @Tags			JawabanGulih
 // @Produce		json
 // @Param			id	path		string	true	"Jawaban Gulih UUID"
-// @Success		200	{object}	map[string]interface{}
+// @Success		200	{object}	dto.JawabanGulihResponse
 // @Router			/api/maturity/jawaban-gulih/{id} [get]
 func (h *JawabanGulihHandler) handleGetByUUID(w http.ResponseWriter, r *http.Request) {
 	uuid := utils.ExtractID(r.URL.Path, "jawaban-gulih")
@@ -170,7 +170,7 @@ func (h *JawabanGulihHandler) handleGetByUUID(w http.ResponseWriter, r *http.Req
 
 // @Summary		Update Jawaban Gulih
 // @Description	Mengubah data jawaban gulih berdasarkan UUID
-// @Tags			Jawaban Gulih
+// @Tags			JawabanGulih
 // @Accept			json
 // @Produce		json
 // @Param			id		path		string							true	"Jawaban Gulih UUID"
@@ -229,7 +229,7 @@ func (h *JawabanGulihHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 
 // @Summary		Delete Jawaban Gulih
 // @Description	Menghapus data jawaban gulih berdasarkan UUID
-// @Tags			Jawaban Gulih
+// @Tags			JawabanGulih
 // @Produce		json
 // @Param			id	path		string	true	"Jawaban Gulih UUID"
 // @Success		200	{object}	utils.JSONResponse

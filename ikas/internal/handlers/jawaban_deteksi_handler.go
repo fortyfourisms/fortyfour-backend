@@ -43,7 +43,7 @@ func (h *JawabanDeteksiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 
 // @Summary		Create Jawaban Deteksi
 // @Description	Membuat record jawaban deteksi baru (dikirim ke buffer RabbitMQ)
-// @Tags			Jawaban Deteksi
+// @Tags			JawabanDeteksi
 // @Accept			json
 // @Produce		json
 // @Param			request	body		dto.CreateJawabanDeteksiRequest	true	"Jawaban Deteksi Request"
@@ -85,7 +85,7 @@ func (h *JawabanDeteksiHandler) handleCreate(w http.ResponseWriter, r *http.Requ
 
 // @Summary		Get All Jawaban Deteksi
 // @Description	Mengambil seluruh data jawaban deteksi. Jika ikas_id diberikan, mengembalikan Unified Response (Main + Buffer) dengan metrik penyelesaian.
-// @Tags			Jawaban Deteksi
+// @Tags			JawabanDeteksi
 // @Produce		json
 // @Param			ikas_id					query	string	false	"Filter by IKAS ID (Unified API)"
 // @Param			pertanyaan_deteksi_id	query	int		false	"Filter by Pertanyaan Deteksi ID"
@@ -151,7 +151,7 @@ func (h *JawabanDeteksiHandler) handleGetByIkasID(w http.ResponseWriter, r *http
 
 // @Summary		Get Jawaban Deteksi by UUID
 // @Description	Get a specific detection answer by its UUID
-// @Tags			Jawaban Deteksi
+// @Tags			JawabanDeteksi
 // @Produce		json
 // @Param			id	path		string	true	"Jawaban Deteksi UUID"
 // @Success		200	{object}	dto.JawabanDeteksiResponse
@@ -181,7 +181,7 @@ func (h *JawabanDeteksiHandler) handleGetByUUID(w http.ResponseWriter, r *http.R
 
 // @Summary		Update Jawaban Deteksi
 // @Description	Mengubah data jawaban deteksi berdasarkan UUID
-// @Tags			Jawaban Deteksi
+// @Tags			JawabanDeteksi
 // @Accept			json
 // @Produce		json
 // @Param			id		path		string							true	"Jawaban Deteksi UUID"
@@ -240,7 +240,7 @@ func (h *JawabanDeteksiHandler) handleUpdate(w http.ResponseWriter, r *http.Requ
 
 // @Summary		Delete Jawaban Deteksi
 // @Description	Menghapus data jawaban deteksi berdasarkan UUID
-// @Tags			Jawaban Deteksi
+// @Tags			JawabanDeteksi
 // @Produce		json
 // @Param			id	path		string	true	"Jawaban Deteksi UUID"
 // @Success		200	{object}	utils.JSONResponse
