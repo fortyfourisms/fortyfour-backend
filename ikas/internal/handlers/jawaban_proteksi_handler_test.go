@@ -58,8 +58,8 @@ func (m *mockJawabanProteksiRepository) GetAll() ([]dto.JawabanProteksiResponse,
 	args := m.Called()
 	return args.Get(0).([]dto.JawabanProteksiResponse), args.Error(1)
 }
-func (m *mockJawabanProteksiRepository) GetByID(id int) (*dto.JawabanProteksiResponse, error) {
-	args := m.Called(id)
+func (m *mockJawabanProteksiRepository) GetByUUID(uuid string) (*dto.JawabanProteksiResponse, error) {
+	args := m.Called(uuid)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -77,12 +77,12 @@ func (m *mockJawabanProteksiRepository) GetByPertanyaanAndPerusahaan(pertanyaanI
 	args := m.Called(pertanyaanID, perusahaanID)
 	return args.Get(0).([]dto.JawabanProteksiResponse), args.Error(1)
 }
-func (m *mockJawabanProteksiRepository) Update(id int, req dto.UpdateJawabanProteksiRequest) error {
-	args := m.Called(id, req)
+func (m *mockJawabanProteksiRepository) Update(uuid string, req dto.UpdateJawabanProteksiRequest) error {
+	args := m.Called(uuid, req)
 	return args.Error(0)
 }
-func (m *mockJawabanProteksiRepository) Delete(id int) error {
-	args := m.Called(id)
+func (m *mockJawabanProteksiRepository) Delete(uuid string) error {
+	args := m.Called(uuid)
 	return args.Error(0)
 }
 func (m *mockJawabanProteksiRepository) GetIDByIkasAndPertanyaan(ikasID string, pertanyaanID int) (int, error) {
@@ -312,15 +312,15 @@ func TestJawabanProteksiHandler_GetByPertanyaan_InvalidID_Zero(t *testing.T) {
 
 // ─── GET BY ID ───────────────────────────────────────────────────────────────
 
-func TestJawabanProteksiHandler_GetByID_Success(t *testing.T) {
+func TestJawabanProteksiHandler_GetByUUID_Success(t *testing.T) {
 	repo := new(mockJawabanProteksiRepository)
 	ikasRepo := new(mockIkasRepository)
 	handler := setupJawabanProteksiHandler(repo, ikasRepo, nil, nil)
 
-	repo.On("GetByID", 1).Return(&dto.JawabanProteksiResponse{ID: 1, IkasID: "ikas1"}, nil)
+	repo.On("GetByUUID", "uuid1").Return(&dto.JawabanProteksiResponse{UUID: "uuid1", IkasID: "ikas1"}, nil)
 	ikasRepo.On("GetByID", "ikas1").Return(&dto.IkasResponse{ID: "ikas1", Perusahaan: &dto.PerusahaanInIkas{ID: "p1"}}, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-proteksi/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-proteksi/uuid1", nil)
 	// Inject admin role
 	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
 	req = req.WithContext(ctx)
@@ -330,14 +330,14 @@ func TestJawabanProteksiHandler_GetByID_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
-func TestJawabanProteksiHandler_GetByID_NotFound(t *testing.T) {
+func TestJawabanProteksiHandler_GetByUUID_NotFound(t *testing.T) {
 	repo := new(mockJawabanProteksiRepository)
 	ikasRepo := new(mockIkasRepository)
 	handler := setupJawabanProteksiHandler(repo, ikasRepo, nil, nil)
 
-	repo.On("GetByID", 1).Return((*dto.JawabanProteksiResponse)(nil), errors.New("data tidak ditemukan"))
+	repo.On("GetByUUID", "uuid1").Return((*dto.JawabanProteksiResponse)(nil), errors.New("data tidak ditemukan"))
 
-	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-proteksi/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-proteksi/uuid1", nil)
 	// Inject admin role
 	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
 	req = req.WithContext(ctx)
@@ -347,14 +347,14 @@ func TestJawabanProteksiHandler_GetByID_NotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
-func TestJawabanProteksiHandler_GetByID_Error(t *testing.T) {
+func TestJawabanProteksiHandler_GetByUUID_Error(t *testing.T) {
 	repo := new(mockJawabanProteksiRepository)
 	ikasRepo := new(mockIkasRepository)
 	handler := setupJawabanProteksiHandler(repo, ikasRepo, nil, nil)
 
-	repo.On("GetByID", 1).Return((*dto.JawabanProteksiResponse)(nil), errors.New("db error"))
+	repo.On("GetByUUID", "uuid1").Return((*dto.JawabanProteksiResponse)(nil), errors.New("db error"))
 
-	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-proteksi/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-proteksi/uuid1", nil)
 	// Inject admin role
 	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
 	req = req.WithContext(ctx)
@@ -539,8 +539,8 @@ func TestJawabanProteksiHandler_Update_Success(t *testing.T) {
 		JawabanProteksi: jpFloat64Ptr(4.0),
 	}
 
-	existing := &dto.JawabanProteksiResponse{ID: 1, IkasID: "uuid1", JawabanProteksi: jpFloat64Ptr(3.0)}
-	repo.On("GetByID", 1).Return(existing, nil)
+	existing := &dto.JawabanProteksiResponse{UUID: "uuid1", IkasID: "uuid1", JawabanProteksi: jpFloat64Ptr(3.0)}
+	repo.On("GetByUUID", "uuid1").Return(existing, nil)
 	ikasRepo.On("GetByID", "uuid1").Return(&dto.IkasResponse{ID: "uuid1", Perusahaan: &dto.PerusahaanInIkas{ID: "ikas1"}}, nil)
 	producer.On("PublishJawabanProteksiUpdated", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
@@ -564,7 +564,7 @@ func TestJawabanProteksiHandler_Update_NotFound(t *testing.T) {
 	updateReq := dto.UpdateJawabanProteksiRequest{
 		JawabanProteksi: jpFloat64Ptr(4.0),
 	}
-	repo.On("GetByID", 1).Return((*dto.JawabanProteksiResponse)(nil), errors.New("data tidak ditemukan"))
+	repo.On("GetByUUID", "uuid1").Return((*dto.JawabanProteksiResponse)(nil), errors.New("data tidak ditemukan"))
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/jawaban-proteksi/1", bytes.NewReader(body))
@@ -579,7 +579,7 @@ func TestJawabanProteksiHandler_Update_NotFound(t *testing.T) {
 
 func TestJawabanProteksiHandler_Update_InvalidJSON(t *testing.T) {
 	handler := setupJawabanProteksiHandler(nil, nil, nil, nil)
-	req := httptest.NewRequest(http.MethodPut, "/api/maturity/jawaban-proteksi/1", bytes.NewReader([]byte("{invalid-json}")))
+	req := httptest.NewRequest(http.MethodPut, "/api/maturity/jawaban-proteksi/uuid1", bytes.NewReader([]byte("{invalid-json}")))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -591,8 +591,8 @@ func TestJawabanProteksiHandler_Update_ValidationError(t *testing.T) {
 	producer := new(mockJawabanProteksiProducer)
 	handler := setupJawabanProteksiHandler(repo, ikasRepo, nil, producer)
 
-	existing := &dto.JawabanProteksiResponse{ID: 1, IkasID: "uuid1"}
-	repo.On("GetByID", 1).Return(existing, nil)
+	existing := &dto.JawabanProteksiResponse{UUID: "uuid1", IkasID: "uuid1"}
+	repo.On("GetByUUID", "uuid1").Return(existing, nil)
 
 	// Validasi only without evidence
 	updateReq := dto.UpdateJawabanProteksiRequest{
@@ -625,8 +625,8 @@ func TestJawabanProteksiHandler_Update_ServerError(t *testing.T) {
 	producer := new(mockJawabanProteksiProducer)
 	handler := setupJawabanProteksiHandler(repo, ikasRepo, nil, producer)
 
-	existing := &dto.JawabanProteksiResponse{ID: 1, IkasID: "uuid1", JawabanProteksi: jpFloat64Ptr(3.0)}
-	repo.On("GetByID", 1).Return(existing, nil)
+	existing := &dto.JawabanProteksiResponse{UUID: "uuid1", IkasID: "uuid1", JawabanProteksi: jpFloat64Ptr(3.0)}
+	repo.On("GetByUUID", "uuid1").Return(existing, nil)
 	ikasRepo.On("GetByID", "uuid1").Return(&dto.IkasResponse{ID: "uuid1", Perusahaan: &dto.PerusahaanInIkas{ID: "ikas1"}}, nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishJawabanProteksiUpdated", mock.Anything, mock.Anything).Return(errors.New("publish error"))
@@ -653,12 +653,12 @@ func TestJawabanProteksiHandler_Delete_Success(t *testing.T) {
 	producer := new(mockJawabanProteksiProducer)
 	handler := setupJawabanProteksiHandler(repo, ikasRepo, nil, producer)
 
-	repo.On("GetByID", 1).Return(&dto.JawabanProteksiResponse{ID: 1, IkasID: "uuid1"}, nil)
+	repo.On("GetByUUID", "uuid1").Return(&dto.JawabanProteksiResponse{UUID: "uuid1", IkasID: "uuid1"}, nil)
 	ikasRepo.On("GetByID", "uuid1").Return(&dto.IkasResponse{ID: "uuid1", Perusahaan: &dto.PerusahaanInIkas{ID: "ikas1"}}, nil)
 	producer.On("PublishJawabanProteksiDeleted", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-proteksi/1", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-proteksi/uuid1", nil)
 	// Inject admin role
 	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
 	req = req.WithContext(context.WithValue(ctx, middleware.UserIDKey, "user1"))
@@ -672,9 +672,9 @@ func TestJawabanProteksiHandler_Delete_NotFound(t *testing.T) {
 	repo := new(mockJawabanProteksiRepository)
 	handler := setupJawabanProteksiHandler(repo, nil, nil, nil)
 
-	repo.On("GetByID", 1).Return((*dto.JawabanProteksiResponse)(nil), errors.New("data tidak ditemukan"))
+	repo.On("GetByUUID", "uuid1").Return((*dto.JawabanProteksiResponse)(nil), errors.New("data tidak ditemukan"))
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-proteksi/1", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-proteksi/uuid1", nil)
 	// Inject admin role
 	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
 	req = req.WithContext(ctx)
@@ -690,12 +690,12 @@ func TestJawabanProteksiHandler_Delete_ServerError(t *testing.T) {
 	producer := new(mockJawabanProteksiProducer)
 	handler := setupJawabanProteksiHandler(repo, ikasRepo, nil, producer)
 
-	repo.On("GetByID", 1).Return(&dto.JawabanProteksiResponse{ID: 1, IkasID: "uuid1"}, nil)
+	repo.On("GetByUUID", "uuid1").Return(&dto.JawabanProteksiResponse{UUID: "uuid1", IkasID: "uuid1"}, nil)
 	ikasRepo.On("GetIDByPerusahaanID", "uuid1").Return("ikas1", nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishJawabanProteksiDeleted", mock.Anything, mock.Anything).Return(errors.New("publish error"))
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-proteksi/1", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-proteksi/uuid1", nil)
 	// Inject admin role
 	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
 	req = req.WithContext(ctx)

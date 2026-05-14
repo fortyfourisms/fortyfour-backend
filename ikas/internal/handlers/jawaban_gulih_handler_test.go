@@ -58,8 +58,8 @@ func (m *mockJawabanGulihRepository) GetAll() ([]dto.JawabanGulihResponse, error
 	args := m.Called()
 	return args.Get(0).([]dto.JawabanGulihResponse), args.Error(1)
 }
-func (m *mockJawabanGulihRepository) GetByID(id int) (*dto.JawabanGulihResponse, error) {
-	args := m.Called(id)
+func (m *mockJawabanGulihRepository) GetByUUID(uuid string) (*dto.JawabanGulihResponse, error) {
+	args := m.Called(uuid)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -77,12 +77,12 @@ func (m *mockJawabanGulihRepository) GetByPertanyaanAndPerusahaan(pertanyaanID i
 	args := m.Called(pertanyaanID, perusahaanID)
 	return args.Get(0).([]dto.JawabanGulihResponse), args.Error(1)
 }
-func (m *mockJawabanGulihRepository) Update(id int, req dto.UpdateJawabanGulihRequest) error {
-	args := m.Called(id, req)
+func (m *mockJawabanGulihRepository) Update(uuid string, req dto.UpdateJawabanGulihRequest) error {
+	args := m.Called(uuid, req)
 	return args.Error(0)
 }
-func (m *mockJawabanGulihRepository) Delete(id int) error {
-	args := m.Called(id)
+func (m *mockJawabanGulihRepository) Delete(uuid string) error {
+	args := m.Called(uuid)
 	return args.Error(0)
 }
 func (m *mockJawabanGulihRepository) GetIDByIkasAndPertanyaan(ikasID string, pertanyaanID int) (int, error) {
@@ -286,15 +286,15 @@ func TestJawabanGulihHandler_GetByPertanyaan_Error(t *testing.T) {
 
 // ─── GET BY ID ───────────────────────────────────────────────────────────────
 
-func TestJawabanGulihHandler_GetByID_Success(t *testing.T) {
+func TestJawabanGulihHandler_GetByUUID_Success(t *testing.T) {
 	repo := new(mockJawabanGulihRepository)
 	ikasRepo := new(mockIkasRepository)
 	handler := setupJawabanGulihHandler(repo, ikasRepo, nil, nil)
 
-	repo.On("GetByID", 1).Return(&dto.JawabanGulihResponse{ID: 1, IkasID: "ikas1"}, nil)
+	repo.On("GetByUUID", "uuid1").Return(&dto.JawabanGulihResponse{UUID: "uuid1", IkasID: "ikas1"}, nil)
 	ikasRepo.On("GetByID", "ikas1").Return(&dto.IkasResponse{ID: "ikas1", Perusahaan: &dto.PerusahaanInIkas{ID: "p1"}}, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-gulih/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-gulih/uuid1", nil)
 	// Inject admin role
 	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
 	req = req.WithContext(ctx)
@@ -305,14 +305,14 @@ func TestJawabanGulihHandler_GetByID_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
-func TestJawabanGulihHandler_GetByID_NotFound(t *testing.T) {
+func TestJawabanGulihHandler_GetByUUID_NotFound(t *testing.T) {
 	repo := new(mockJawabanGulihRepository)
 	ikasRepo := new(mockIkasRepository)
 	handler := setupJawabanGulihHandler(repo, ikasRepo, nil, nil)
 
-	repo.On("GetByID", 1).Return((*dto.JawabanGulihResponse)(nil), errors.New("data tidak ditemukan"))
+	repo.On("GetByUUID", "uuid1").Return((*dto.JawabanGulihResponse)(nil), errors.New("data tidak ditemukan"))
 
-	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-gulih/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-gulih/uuid1", nil)
 	// Inject admin role
 	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
 	req = req.WithContext(ctx)
@@ -322,14 +322,14 @@ func TestJawabanGulihHandler_GetByID_NotFound(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
-func TestJawabanGulihHandler_GetByID_Error(t *testing.T) {
+func TestJawabanGulihHandler_GetByUUID_Error(t *testing.T) {
 	repo := new(mockJawabanGulihRepository)
 	ikasRepo := new(mockIkasRepository)
 	handler := setupJawabanGulihHandler(repo, ikasRepo, nil, nil)
 
-	repo.On("GetByID", 1).Return((*dto.JawabanGulihResponse)(nil), errors.New("db error"))
+	repo.On("GetByUUID", "uuid1").Return((*dto.JawabanGulihResponse)(nil), errors.New("db error"))
 
-	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-gulih/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-gulih/uuid1", nil)
 	// Inject admin role
 	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
 	req = req.WithContext(ctx)
@@ -339,10 +339,10 @@ func TestJawabanGulihHandler_GetByID_Error(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 }
 
-func TestJawabanGulihHandler_GetByID_InvalidID(t *testing.T) {
+func TestJawabanGulihHandler_GetByUUID_InvalidID(t *testing.T) {
 	handler := setupJawabanGulihHandler(nil, nil, nil, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-gulih/abc", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/maturity/jawaban-gulih/invalid-uuid", nil)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -497,8 +497,8 @@ func TestJawabanGulihHandler_Update_Success(t *testing.T) {
 		JawabanGulih: jgFloat64Ptr(4.0),
 	}
 
-	existing := &dto.JawabanGulihResponse{ID: 1, IkasID: "uuid1", JawabanGulih: jgFloat64Ptr(3.0)}
-	repo.On("GetByID", 1).Return(existing, nil)
+	existing := &dto.JawabanGulihResponse{UUID: "uuid1", IkasID: "uuid1", JawabanGulih: jgFloat64Ptr(3.0)}
+	repo.On("GetByUUID", "uuid1").Return(existing, nil)
 	ikasRepo.On("GetByID", "uuid1").Return(&dto.IkasResponse{ID: "uuid1", Perusahaan: &dto.PerusahaanInIkas{ID: "ikas1"}}, nil)
 	producer.On("PublishJawabanGulihUpdated", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
@@ -522,7 +522,7 @@ func TestJawabanGulihHandler_Update_NotFound(t *testing.T) {
 	updateReq := dto.UpdateJawabanGulihRequest{
 		JawabanGulih: jgFloat64Ptr(4.0),
 	}
-	repo.On("GetByID", 1).Return((*dto.JawabanGulihResponse)(nil), errors.New("data tidak ditemukan"))
+	repo.On("GetByUUID", "uuid1").Return((*dto.JawabanGulihResponse)(nil), errors.New("data tidak ditemukan"))
 
 	body, _ := json.Marshal(updateReq)
 	req := httptest.NewRequest(http.MethodPut, "/api/maturity/jawaban-gulih/1", bytes.NewReader(body))
@@ -537,7 +537,7 @@ func TestJawabanGulihHandler_Update_NotFound(t *testing.T) {
 
 func TestJawabanGulihHandler_Update_InvalidJSON(t *testing.T) {
 	handler := setupJawabanGulihHandler(nil, nil, nil, nil)
-	req := httptest.NewRequest(http.MethodPut, "/api/maturity/jawaban-gulih/1", bytes.NewReader([]byte("{invalid-json}")))
+	req := httptest.NewRequest(http.MethodPut, "/api/maturity/jawaban-gulih/uuid1", bytes.NewReader([]byte("{invalid-json}")))
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -545,7 +545,7 @@ func TestJawabanGulihHandler_Update_InvalidJSON(t *testing.T) {
 
 func TestJawabanGulihHandler_Update_InvalidID(t *testing.T) {
 	handler := setupJawabanGulihHandler(nil, nil, nil, nil)
-	req := httptest.NewRequest(http.MethodPut, "/api/maturity/jawaban-gulih/abc", nil)
+	req := httptest.NewRequest(http.MethodPut, "/api/maturity/jawaban-gulih/invalid-uuid", nil)
 	w := httptest.NewRecorder()
 	handler.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
@@ -557,8 +557,8 @@ func TestJawabanGulihHandler_Update_ValidationError(t *testing.T) {
 	producer := new(mockJawabanGulihProducer)
 	handler := setupJawabanGulihHandler(repo, ikasRepo, nil, producer)
 
-	existing := &dto.JawabanGulihResponse{ID: 1, IkasID: "uuid1"}
-	repo.On("GetByID", 1).Return(existing, nil)
+	existing := &dto.JawabanGulihResponse{UUID: "uuid1", IkasID: "uuid1"}
+	repo.On("GetByUUID", "uuid1").Return(existing, nil)
 
 	// Validasi only without evidence
 	updateReq := dto.UpdateJawabanGulihRequest{
@@ -581,8 +581,8 @@ func TestJawabanGulihHandler_Update_ServerError(t *testing.T) {
 	producer := new(mockJawabanGulihProducer)
 	handler := setupJawabanGulihHandler(repo, ikasRepo, nil, producer)
 
-	existing := &dto.JawabanGulihResponse{ID: 1, IkasID: "uuid1", JawabanGulih: jgFloat64Ptr(3.0)}
-	repo.On("GetByID", 1).Return(existing, nil)
+	existing := &dto.JawabanGulihResponse{UUID: "uuid1", IkasID: "uuid1", JawabanGulih: jgFloat64Ptr(3.0)}
+	repo.On("GetByUUID", "uuid1").Return(existing, nil)
 	ikasRepo.On("GetByID", "uuid1").Return(&dto.IkasResponse{ID: "uuid1", Perusahaan: &dto.PerusahaanInIkas{ID: "ikas1"}}, nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishJawabanGulihUpdated", mock.Anything, mock.Anything).Return(errors.New("publish error"))
@@ -609,12 +609,12 @@ func TestJawabanGulihHandler_Delete_Success(t *testing.T) {
 	producer := new(mockJawabanGulihProducer)
 	handler := setupJawabanGulihHandler(repo, ikasRepo, nil, producer)
 
-	repo.On("GetByID", 1).Return(&dto.JawabanGulihResponse{ID: 1, IkasID: "uuid1"}, nil)
+	repo.On("GetByUUID", "uuid1").Return(&dto.JawabanGulihResponse{UUID: "uuid1", IkasID: "uuid1"}, nil)
 	ikasRepo.On("GetByID", "uuid1").Return(&dto.IkasResponse{ID: "uuid1", Perusahaan: &dto.PerusahaanInIkas{ID: "ikas1"}}, nil)
 	producer.On("PublishJawabanGulihDeleted", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-gulih/1", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-gulih/uuid1", nil)
 	// Inject admin role
 	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
 	req = req.WithContext(context.WithValue(ctx, middleware.UserIDKey, "user1"))
@@ -628,9 +628,9 @@ func TestJawabanGulihHandler_Delete_NotFound(t *testing.T) {
 	repo := new(mockJawabanGulihRepository)
 	handler := setupJawabanGulihHandler(repo, nil, nil, nil)
 
-	repo.On("GetByID", 1).Return((*dto.JawabanGulihResponse)(nil), errors.New("data tidak ditemukan"))
+	repo.On("GetByUUID", "uuid1").Return((*dto.JawabanGulihResponse)(nil), errors.New("data tidak ditemukan"))
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-gulih/1", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-gulih/uuid1", nil)
 	// Inject admin role
 	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
 	req = req.WithContext(ctx)
@@ -643,7 +643,7 @@ func TestJawabanGulihHandler_Delete_NotFound(t *testing.T) {
 func TestJawabanGulihHandler_Delete_InvalidID(t *testing.T) {
 	handler := setupJawabanGulihHandler(nil, nil, nil, nil)
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-gulih/abc", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-gulih/invalid-uuid", nil)
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
@@ -656,12 +656,12 @@ func TestJawabanGulihHandler_Delete_ServerError(t *testing.T) {
 	producer := new(mockJawabanGulihProducer)
 	handler := setupJawabanGulihHandler(repo, ikasRepo, nil, producer)
 
-	repo.On("GetByID", 1).Return(&dto.JawabanGulihResponse{ID: 1, IkasID: "uuid1"}, nil)
+	repo.On("GetByUUID", "uuid1").Return(&dto.JawabanGulihResponse{UUID: "uuid1", IkasID: "uuid1"}, nil)
 	ikasRepo.On("GetIDByPerusahaanID", "uuid1").Return("ikas1", nil)
 	producer.On("PublishIkasAuditLog", mock.Anything, mock.Anything).Return(nil)
 	producer.On("PublishJawabanGulihDeleted", mock.Anything, mock.Anything).Return(errors.New("publish error"))
 
-	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-gulih/1", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/api/maturity/jawaban-gulih/uuid1", nil)
 	// Inject admin role
 	ctx := context.WithValue(req.Context(), middleware.Role, "admin")
 	req = req.WithContext(ctx)
