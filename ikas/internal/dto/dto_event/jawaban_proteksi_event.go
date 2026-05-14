@@ -7,14 +7,14 @@ import (
 
 // JawabanProteksiUpdatedEvent
 type JawabanProteksiUpdatedEvent struct {
-	ID        int                              `json:"id"`
+	UUID      string                           `json:"id"`
 	Request   dto.UpdateJawabanProteksiRequest `json:"request"`
 	UpdatedAt time.Time                        `json:"updated_at"`
 }
 
 // JawabanProteksiDeletedEvent
 type JawabanProteksiDeletedEvent struct {
-	ID        int       `json:"id"`
+	UUID      string    `json:"id"`
 	IkasID    string    `json:"ikas_id"`
 	DeletedAt time.Time `json:"deleted_at"`
 }

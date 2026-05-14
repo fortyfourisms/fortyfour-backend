@@ -198,12 +198,12 @@ func (s *JawabanIdentifikasiService) GetAll(userRole string) ([]dto.JawabanIdent
 	return s.repo.GetAll()
 }
 
-func (s *JawabanIdentifikasiService) GetByID(id int, userRole string, userPerusahaanID string) (*dto.JawabanIdentifikasiResponse, error) {
-	if id <= 0 {
+func (s *JawabanIdentifikasiService) GetByUUID(uuid string, userRole string, userPerusahaanID string) (*dto.JawabanIdentifikasiResponse, error) {
+	if uuid == "" {
 		return nil, errors.New("format ID tidak valid")
 	}
 
-	data, err := s.repo.GetByID(id)
+	data, err := s.repo.GetByUUID(uuid)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("data tidak ditemukan")
@@ -333,26 +333,26 @@ func (s *JawabanIdentifikasiService) GetByPertanyaan(pertanyaanID int, userRole 
 	return s.repo.GetByPertanyaan(pertanyaanID)
 }
 
-func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentifikasiRequest, userID string, userRole string, userPerusahaanID string) (int, string, error) {
-	if id <= 0 {
-		return 0, "", errors.New("format ID tidak valid")
+func (s *JawabanIdentifikasiService) Update(uuid string, req dto.UpdateJawabanIdentifikasiRequest, userID string, userRole string, userPerusahaanID string) (string, string, error) {
+	if uuid == "" {
+		return "", "", errors.New("format ID tidak valid")
 	}
 
-	existing, err := s.repo.GetByID(id)
+	existing, err := s.repo.GetByUUID(uuid)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return 0, "", errors.New("data tidak ditemukan")
+			return "", "", errors.New("data tidak ditemukan")
 		}
-		return 0, "", err
+		return "", "", err
 	}
 
 	ikasData, err := s.ikasRepo.GetByID(existing.IkasID)
 	if err != nil {
-		return 0, "", errors.New("gagal memverifikasi kepemilikan asesmen")
+		return "", "", errors.New("gagal memverifikasi kepemilikan asesmen")
 	}
 
 	if ikasData.IsValidated {
-		return 0, "", errors.New("data asesmen ini sudah divalidasi dan tidak dapat diubah")
+		return "", "", errors.New("data asesmen ini sudah divalidasi dan tidak dapat diubah")
 	}
 
 	msg := "Berhasil menyimpan data"
@@ -361,19 +361,25 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 	if s.ikasSvc != nil {
 		newIkasID, carryErr := s.ikasSvc.TriggerCarryOverIfNeeded(context.Background(), existing.IkasID, true)
 		if carryErr == nil && newIkasID != existing.IkasID {
-			newJawabanID, errId := s.repo.GetIDByIkasAndPertanyaan(newIkasID, existing.PertanyaanIdentifikasi.ID)
-			if errId == nil && newJawabanID > 0 {
-				id = newJawabanID
-				msg = "Data tahun lalu tidak dapat diubah. Update telah dialihkan otomatis ke record tahun berjalan (carry-over)."
+			// Find the UUID of the cloned record
+			clonedData, errCloned := s.repo.GetByIkasID(newIkasID)
+			if errCloned == nil {
+				for _, d := range clonedData {
+					if d.PertanyaanIdentifikasi.ID == existing.PertanyaanIdentifikasi.ID {
+						uuid = d.UUID
+						msg = "Data tahun lalu tidak dapat diubah. Update telah dialihkan otomatis ke record tahun berjalan (carry-over)."
 
-				existing, err = s.repo.GetByID(id)
-				if err != nil {
-					return 0, "", err
-				}
+						existing, err = s.repo.GetByUUID(uuid)
+						if err != nil {
+							return "", "", err
+						}
 
-				ikasData, err = s.ikasRepo.GetByID(existing.IkasID)
-				if err != nil {
-					return 0, "", errors.New("gagal memverifikasi kepemilikan asesmen setelah clone")
+						ikasData, err = s.ikasRepo.GetByID(existing.IkasID)
+						if err != nil {
+							return "", "", errors.New("gagal memverifikasi kepemilikan asesmen setelah clone")
+						}
+						break
+					}
 				}
 			}
 		}
@@ -381,16 +387,16 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 	// -------------------------------------------------------
 
 	if userRole != "admin" && userRole != "staff" && ikasData.Perusahaan.ID != userPerusahaanID {
-		return 0, "", errors.New("anda tidak memiliki akses untuk mengubah data ini")
+		return "", "", errors.New("anda tidak memiliki akses untuk mengubah data ini")
 	}
 
 	if err := s.validateUpdate(&req, existing.Evidence, userRole); err != nil {
-		return 0, "", err
+		return "", "", err
 	}
 
 	// Publish Update Event (Pola 2)
 	event := dto_event.JawabanIdentifikasiUpdatedEvent{
-		ID:        id,
+		UUID:      uuid,
 		Request:   req,
 		UpdatedAt: time.Now(),
 	}
@@ -450,7 +456,7 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 
 	if err := s.producer.PublishJawabanIdentifikasiUpdated(context.Background(), event); err != nil {
 		rollbar.Error(err)
-		return 0, "", err
+		return "", "", err
 	}
 
 	if s.cache != nil {
@@ -458,16 +464,16 @@ func (s *JawabanIdentifikasiService) Update(id int, req dto.UpdateJawabanIdentif
 		s.cache.Delete(fmt.Sprintf("%s%s", cache.CacheKeyPrefixIdentifikasi, existing.IkasID))
 	}
 
-	return id, msg, nil
+	return uuid, msg, nil
 }
 
-func (s *JawabanIdentifikasiService) Delete(id int, userID string, userRole string, userPerusahaanID string) error {
-	if id <= 0 {
+func (s *JawabanIdentifikasiService) Delete(uuid string, userID string, userRole string, userPerusahaanID string) error {
+	if uuid == "" {
 		return errors.New("format ID tidak valid")
 	}
 
 	// Existence Check
-	existing, err := s.repo.GetByID(id)
+	existing, err := s.repo.GetByUUID(uuid)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return errors.New("data tidak ditemukan")
@@ -491,7 +497,7 @@ func (s *JawabanIdentifikasiService) Delete(id int, userID string, userRole stri
 
 	// Publish Delete Event (Pola 2)
 	event := dto_event.JawabanIdentifikasiDeletedEvent{
-		ID:        id,
+		UUID:      uuid,
 		IkasID:    existing.IkasID,
 		DeletedAt: time.Now(),
 	}

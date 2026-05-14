@@ -6,6 +6,7 @@ import (
 
 type JawabanGulih struct {
 	ID                int       `json:"id"`
+	UUID              string    `json:"uuid"`
 	PertanyaanGulihID int       `json:"pertanyaan_gulih_id"`
 	PerusahaanID      string    `json:"perusahaan_id"`
 	JawabanGulih      *float64  `json:"jawaban_gulih"`

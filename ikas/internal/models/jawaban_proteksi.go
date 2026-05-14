@@ -2,6 +2,7 @@ package models
 
 type JawabanProteksi struct {
 	ID                   int      `json:"id"`
+	UUID                 string   `json:"uuid"`
 	PertanyaanProteksiID int      `json:"pertanyaan_proteksi_id"`
 	PerusahaanID         string   `json:"perusahaan_id"`
 	JawabanProteksi      *float64 `json:"jawaban_proteksi"`

@@ -12,14 +12,14 @@ import (
 type JawabanProteksiRepositoryInterface interface {
 	Create(req dto.CreateJawabanProteksiRequest) (int64, error)
 	GetAll() ([]dto.JawabanProteksiResponse, error)
-	GetByID(id int) (*dto.JawabanProteksiResponse, error)
+	GetByUUID(uuid string) (*dto.JawabanProteksiResponse, error)
 	GetByIkasID(ikasID string) ([]dto.JawabanProteksiResponse, error)
 	GetByIkasIDFromBuffer(ikasID string) ([]dto.JawabanProteksiResponse, error)
 	GetByPerusahaanID(perusahaanID string) ([]dto.JawabanProteksiResponse, error)
 	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanProteksiResponse, error)
 	GetByPertanyaanAndPerusahaan(pertanyaanID int, perusahaanID string) ([]dto.JawabanProteksiResponse, error)
-	Update(id int, req dto.UpdateJawabanProteksiRequest) error
-	Delete(id int) error
+	Update(uuid string, req dto.UpdateJawabanProteksiRequest) error
+	Delete(uuid string) error
 	CheckPertanyaanExists(pertanyaanID int) (bool, error)
 	CheckIkasExists(ikasID string) (bool, error)
 	CheckDuplicate(ikasID string, pertanyaanID int, excludeID int) (bool, error)
@@ -42,6 +42,7 @@ func NewJawabanProteksiRepository(db *sql.DB) *JawabanProteksiRepository {
 const jawabanProteksiSelectQuery = `
 	SELECT
 		jp.id,
+		jp.uuid,
 		jp.ikas_id,
 		jp.jawaban_proteksi,
 		jp.evidence,
@@ -63,6 +64,7 @@ const jawabanProteksiSelectQuery = `
 const jawabanProteksiBufferSelectQuery = `
 	SELECT
 		jp.id,
+		jp.uuid,
 		jp.ikas_id,
 		jp.jawaban_proteksi,
 		jp.evidence,
@@ -87,6 +89,7 @@ func scanJawabanProteksi(row interface {
 	var item dto.JawabanProteksiResponse
 	err := row.Scan(
 		&item.ID,
+		&item.UUID,
 		&item.IkasID,
 		&item.JawabanProteksi,
 		&item.Evidence,
@@ -108,10 +111,11 @@ func scanJawabanProteksi(row interface {
 
 func (r *JawabanProteksiRepository) Create(req dto.CreateJawabanProteksiRequest) (int64, error) {
 	query := `INSERT INTO jawaban_proteksi
-		(pertanyaan_proteksi_id, ikas_id, jawaban_proteksi, evidence, validasi, keterangan)
-		VALUES (?, ?, ?, ?, ?, ?)`
+		(uuid, pertanyaan_proteksi_id, ikas_id, jawaban_proteksi, evidence, validasi, keterangan)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	res, err := r.db.Exec(query,
+		utils.GenerateUUID(),
 		req.PertanyaanProteksiID,
 		req.IkasID,
 		req.JawabanProteksi,
@@ -149,10 +153,10 @@ func (r *JawabanProteksiRepository) GetAll() ([]dto.JawabanProteksiResponse, err
 	return result, nil
 }
 
-func (r *JawabanProteksiRepository) GetByID(id int) (*dto.JawabanProteksiResponse, error) {
-	query := jawabanProteksiSelectQuery + ` WHERE jp.id = ?`
+func (r *JawabanProteksiRepository) GetByUUID(uuid string) (*dto.JawabanProteksiResponse, error) {
+	query := jawabanProteksiSelectQuery + ` WHERE jp.uuid = ?`
 
-	item, err := scanJawabanProteksi(r.db.QueryRow(query, id))
+	item, err := scanJawabanProteksi(r.db.QueryRow(query, uuid))
 	if err != nil {
 		rollbar.Error(err)
 		return nil, err
@@ -283,7 +287,7 @@ func (r *JawabanProteksiRepository) GetByPertanyaanAndPerusahaan(pertanyaanID in
 	return result, nil
 }
 
-func (r *JawabanProteksiRepository) Update(id int, req dto.UpdateJawabanProteksiRequest) error {
+func (r *JawabanProteksiRepository) Update(uuid string, req dto.UpdateJawabanProteksiRequest) error {
 	query := "UPDATE jawaban_proteksi SET "
 	args := []interface{}{}
 	updates := []string{}
@@ -310,8 +314,8 @@ func (r *JawabanProteksiRepository) Update(id int, req dto.UpdateJawabanProteksi
 	}
 
 	query += strings.Join(updates, ", ")
-	query += " WHERE id=?"
-	args = append(args, id)
+	query += " WHERE uuid=?"
+	args = append(args, uuid)
 
 	_, err := r.db.Exec(query, args...)
 	if err != nil {
@@ -321,8 +325,8 @@ func (r *JawabanProteksiRepository) Update(id int, req dto.UpdateJawabanProteksi
 	return nil
 }
 
-func (r *JawabanProteksiRepository) Delete(id int) error {
-	_, err := r.db.Exec(`DELETE FROM jawaban_proteksi WHERE id=?`, id)
+func (r *JawabanProteksiRepository) Delete(uuid string) error {
+	_, err := r.db.Exec(`DELETE FROM jawaban_proteksi WHERE uuid=?`, uuid)
 	if err != nil {
 		rollbar.Error(err)
 		return err
@@ -489,8 +493,8 @@ func (r *JawabanProteksiRepository) UpsertToBuffer(req dto.CreateJawabanProteksi
 
 	// 3. Jika belum ada di utama, baru masukkan ke buffer seperti biasa
 	query := `INSERT INTO jawaban_proteksi_buffer 
-		(pertanyaan_proteksi_id, ikas_id, jawaban_proteksi, evidence, validasi, keterangan)
-		VALUES (?, ?, ?, ?, ?, ?)
+		(uuid, pertanyaan_proteksi_id, ikas_id, jawaban_proteksi, evidence, validasi, keterangan)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE 
 		jawaban_proteksi = VALUES(jawaban_proteksi),
 		evidence = VALUES(evidence),
@@ -498,6 +502,7 @@ func (r *JawabanProteksiRepository) UpsertToBuffer(req dto.CreateJawabanProteksi
 		keterangan = VALUES(keterangan)`
 
 	_, err = r.db.Exec(query,
+		utils.GenerateUUID(),
 		req.PertanyaanProteksiID,
 		req.IkasID,
 		req.JawabanProteksi,
@@ -523,8 +528,8 @@ func (r *JawabanProteksiRepository) FlushBuffer(ikasID string) error {
 	defer tx.Rollback()
 
 	moveQuery := `INSERT INTO jawaban_proteksi 
-		(pertanyaan_proteksi_id, ikas_id, jawaban_proteksi, evidence, validasi, keterangan)
-		SELECT pertanyaan_proteksi_id, ikas_id, jawaban_proteksi, evidence, validasi, keterangan
+		(uuid, pertanyaan_proteksi_id, ikas_id, jawaban_proteksi, evidence, validasi, keterangan)
+		SELECT uuid, pertanyaan_proteksi_id, ikas_id, jawaban_proteksi, evidence, validasi, keterangan
 		FROM jawaban_proteksi_buffer WHERE ikas_id = ?
 		ON DUPLICATE KEY UPDATE 
 		jawaban_proteksi = VALUES(jawaban_proteksi),
@@ -548,9 +553,9 @@ func (r *JawabanProteksiRepository) FlushBuffer(ikasID string) error {
 func (r *JawabanProteksiRepository) CloneByIkasID(sourceID, targetID string) error {
 	query := `
 		INSERT INTO jawaban_proteksi 
-			(pertanyaan_proteksi_id, ikas_id, jawaban_proteksi, evidence, validasi, keterangan)
+			(uuid, pertanyaan_proteksi_id, ikas_id, jawaban_proteksi, evidence, validasi, keterangan)
 		SELECT 
-			pertanyaan_proteksi_id, ?, jawaban_proteksi, evidence, validasi, keterangan
+			uuid, pertanyaan_proteksi_id, ?, jawaban_proteksi, evidence, validasi, keterangan
 		FROM jawaban_proteksi 
 		WHERE ikas_id = ?`
 
