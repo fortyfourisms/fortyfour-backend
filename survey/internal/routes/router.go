@@ -43,9 +43,7 @@ func InitRouter(
 	protected := func(h http.Handler) http.Handler {
 		return middleware.Logger(
 			middleware.Recovery(
-				middleware.CORS(
-					authM.Authenticate(h),
-				),
+				authM.Authenticate(h),
 			),
 		)
 	}
