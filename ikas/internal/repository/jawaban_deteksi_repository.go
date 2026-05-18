@@ -12,14 +12,14 @@ import (
 type JawabanDeteksiRepositoryInterface interface {
 	Create(req dto.CreateJawabanDeteksiRequest) (int64, error)
 	GetAll() ([]dto.JawabanDeteksiResponse, error)
-	GetByID(id int) (*dto.JawabanDeteksiResponse, error)
+	GetByUUID(uuid string) (*dto.JawabanDeteksiResponse, error)
 	GetByIkasID(ikasID string) ([]dto.JawabanDeteksiResponse, error)
 	GetByIkasIDFromBuffer(ikasID string) ([]dto.JawabanDeteksiResponse, error)
 	GetByPerusahaanID(perusahaanID string) ([]dto.JawabanDeteksiResponse, error)
 	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanDeteksiResponse, error)
 	GetByPertanyaanAndPerusahaan(pertanyaanID int, perusahaanID string) ([]dto.JawabanDeteksiResponse, error)
-	Update(id int, req dto.UpdateJawabanDeteksiRequest) error
-	Delete(id int) error
+	Update(uuid string, req dto.UpdateJawabanDeteksiRequest) error
+	Delete(uuid string) error
 	CheckPertanyaanExists(pertanyaanID int) (bool, error)
 	CheckIkasExists(ikasID string) (bool, error)
 	CheckDuplicate(ikasID string, pertanyaanID int, excludeID int) (bool, error)
@@ -42,6 +42,7 @@ func NewJawabanDeteksiRepository(db *sql.DB) *JawabanDeteksiRepository {
 const jawabanDeteksiSelectQuery = `
 	SELECT 
 		jd.id, 
+		jd.uuid,
 		jd.ikas_id, 
 		jd.jawaban_deteksi, 
 		jd.evidence, 
@@ -63,6 +64,7 @@ const jawabanDeteksiSelectQuery = `
 const jawabanDeteksiBufferSelectQuery = `
 	SELECT 
 		jd.id, 
+		jd.uuid,
 		jd.ikas_id, 
 		jd.jawaban_deteksi, 
 		jd.evidence, 
@@ -87,6 +89,7 @@ func scanJawabanDeteksi(row interface {
 	var item dto.JawabanDeteksiResponse
 	err := row.Scan(
 		&item.ID,
+		&item.UUID,
 		&item.IkasID,
 		&item.JawabanDeteksi,
 		&item.Evidence,
@@ -108,10 +111,11 @@ func scanJawabanDeteksi(row interface {
 
 func (r *JawabanDeteksiRepository) Create(req dto.CreateJawabanDeteksiRequest) (int64, error) {
 	query := `INSERT INTO jawaban_deteksi 
-		(pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan)
-		VALUES (?, ?, ?, ?, ?, ?)`
+		(uuid, pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	res, err := r.db.Exec(query,
+		utils.GenerateUUID(),
 		req.PertanyaanDeteksiID,
 		req.IkasID,
 		req.JawabanDeteksi,
@@ -149,9 +153,9 @@ func (r *JawabanDeteksiRepository) GetAll() ([]dto.JawabanDeteksiResponse, error
 	return results, nil
 }
 
-func (r *JawabanDeteksiRepository) GetByID(id int) (*dto.JawabanDeteksiResponse, error) {
-	query := jawabanDeteksiSelectQuery + ` WHERE jd.id = ?`
-	row := r.db.QueryRow(query, id)
+func (r *JawabanDeteksiRepository) GetByUUID(uuid string) (*dto.JawabanDeteksiResponse, error) {
+	query := jawabanDeteksiSelectQuery + ` WHERE jd.uuid = ?`
+	row := r.db.QueryRow(query, uuid)
 	item, err := scanJawabanDeteksi(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -284,7 +288,7 @@ func (r *JawabanDeteksiRepository) GetByPertanyaanAndPerusahaan(pertanyaanID int
 	return results, nil
 }
 
-func (r *JawabanDeteksiRepository) Update(id int, req dto.UpdateJawabanDeteksiRequest) error {
+func (r *JawabanDeteksiRepository) Update(uuid string, req dto.UpdateJawabanDeteksiRequest) error {
 	var updates []string
 	var args []interface{}
 
@@ -309,8 +313,8 @@ func (r *JawabanDeteksiRepository) Update(id int, req dto.UpdateJawabanDeteksiRe
 		return nil
 	}
 
-	query := "UPDATE jawaban_deteksi SET " + strings.Join(updates, ", ") + " WHERE id = ?"
-	args = append(args, id)
+	query := "UPDATE jawaban_deteksi SET " + strings.Join(updates, ", ") + " WHERE uuid = ?"
+	args = append(args, uuid)
 
 	_, err := r.db.Exec(query, args...)
 	if err != nil {
@@ -319,8 +323,8 @@ func (r *JawabanDeteksiRepository) Update(id int, req dto.UpdateJawabanDeteksiRe
 	return err
 }
 
-func (r *JawabanDeteksiRepository) Delete(id int) error {
-	_, err := r.db.Exec(`DELETE FROM jawaban_deteksi WHERE id = ?`, id)
+func (r *JawabanDeteksiRepository) Delete(uuid string) error {
+	_, err := r.db.Exec(`DELETE FROM jawaban_deteksi WHERE uuid = ?`, uuid)
 	if err != nil {
 		rollbar.Error(err)
 	}
@@ -481,8 +485,8 @@ func (r *JawabanDeteksiRepository) UpsertToBuffer(req dto.CreateJawabanDeteksiRe
 
 	// 3. Jika belum ada di utama, baru masukkan ke buffer seperti biasa
 	query := `INSERT INTO jawaban_deteksi_buffer 
-		(pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan)
-		VALUES (?, ?, ?, ?, ?, ?)
+		(uuid, pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE 
 		jawaban_deteksi = VALUES(jawaban_deteksi),
 		evidence = VALUES(evidence),
@@ -490,6 +494,7 @@ func (r *JawabanDeteksiRepository) UpsertToBuffer(req dto.CreateJawabanDeteksiRe
 		keterangan = VALUES(keterangan)`
 
 	_, err = r.db.Exec(query,
+		utils.GenerateUUID(),
 		req.PertanyaanDeteksiID,
 		req.IkasID,
 		req.JawabanDeteksi,
@@ -515,8 +520,8 @@ func (r *JawabanDeteksiRepository) FlushBuffer(ikasID string) error {
 	defer tx.Rollback()
 
 	moveQuery := `INSERT INTO jawaban_deteksi 
-		(pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan)
-		SELECT pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan
+		(uuid, pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan)
+		SELECT uuid, pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan
 		FROM jawaban_deteksi_buffer WHERE ikas_id = ?
 		ON DUPLICATE KEY UPDATE 
 		jawaban_deteksi = VALUES(jawaban_deteksi),
@@ -538,9 +543,9 @@ func (r *JawabanDeteksiRepository) FlushBuffer(ikasID string) error {
 func (r *JawabanDeteksiRepository) CloneByIkasID(sourceID, targetID string) error {
 	query := `
 		INSERT INTO jawaban_deteksi 
-			(pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan)
+			(uuid, pertanyaan_deteksi_id, ikas_id, jawaban_deteksi, evidence, validasi, keterangan)
 		SELECT 
-			pertanyaan_deteksi_id, ?, jawaban_deteksi, evidence, validasi, keterangan
+			uuid, pertanyaan_deteksi_id, ?, jawaban_deteksi, evidence, validasi, keterangan
 		FROM jawaban_deteksi 
 		WHERE ikas_id = ?`
 

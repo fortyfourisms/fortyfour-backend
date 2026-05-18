@@ -7,14 +7,14 @@ import (
 
 // JawabanGulihUpdatedEvent
 type JawabanGulihUpdatedEvent struct {
-	ID        int                           `json:"id"`
+	UUID      string                        `json:"id"`
 	Request   dto.UpdateJawabanGulihRequest `json:"request"`
 	UpdatedAt time.Time                     `json:"updated_at"`
 }
 
 // JawabanGulihDeletedEvent
 type JawabanGulihDeletedEvent struct {
-	ID        int       `json:"id"`
+	UUID      string    `json:"id"`
 	IkasID    string    `json:"ikas_id"`
 	DeletedAt time.Time `json:"deleted_at"`
 }

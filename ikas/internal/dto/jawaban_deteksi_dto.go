@@ -25,7 +25,8 @@ type PertanyaanDeteksiInfo struct {
 }
 
 type JawabanDeteksiResponse struct {
-	ID                int                   `json:"id"`
+	ID                int                   `json:"-"`
+	UUID              string                `json:"id"`
 	PertanyaanDeteksi PertanyaanDeteksiInfo `json:"pertanyaan_deteksi"`
 	IkasID            string                `json:"ikas_id"`
 	JawabanDeteksi    *float64              `json:"jawaban_deteksi"`

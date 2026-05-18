@@ -31,7 +31,7 @@ func (h *JawabanGulihHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	case method == http.MethodGet && path == "/api/maturity/jawaban-gulih":
 		h.handleGetAll(w, r)
 	case method == http.MethodGet && strings.HasPrefix(path, "/api/maturity/jawaban-gulih/"):
-		h.handleGetByID(w, r)
+		h.handleGetByUUID(w, r)
 	case method == http.MethodPut && strings.HasPrefix(path, "/api/maturity/jawaban-gulih/"):
 		h.handleUpdate(w, r)
 	case method == http.MethodDelete && strings.HasPrefix(path, "/api/maturity/jawaban-gulih/"):
@@ -43,7 +43,7 @@ func (h *JawabanGulihHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 
 // @Summary		Create Jawaban Gulih
 // @Description	Membuat record jawaban gulih baru (dikirim ke buffer RabbitMQ)
-// @Tags			Jawaban Gulih
+// @Tags			JawabanGulih
 // @Accept			json
 // @Produce		json
 // @Param			request	body		dto.CreateJawabanGulihRequest	true	"Jawaban Gulih Request"
@@ -85,7 +85,7 @@ func (h *JawabanGulihHandler) handleCreate(w http.ResponseWriter, r *http.Reques
 
 // @Summary		Get All Jawaban Gulih
 // @Description	Mengambil seluruh data jawaban gulih. Jika ikas_id diberikan, mengembalikan Unified Response (Main + Buffer) dengan metrik penyelesaian.
-// @Tags			Jawaban Gulih
+// @Tags			JawabanGulih
 // @Produce		json
 // @Param			ikas_id				query		string	false	"Filter by IKAS ID (Unified API)"
 // @Param			perusahaan_id		query		string	false	"Filter by Perusahaan ID"
@@ -138,16 +138,16 @@ func (h *JawabanGulihHandler) handleGetAll(w http.ResponseWriter, r *http.Reques
 	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban gulih", data, len(data))
 }
 
-// @Summary		Get Jawaban Gulih by ID
-// @Description	Get a specific gulih answer by its ID
-// @Tags			Jawaban Gulih
+// @Summary		Get Jawaban Gulih by UUID
+// @Description	Get a specific gulih answer by its UUID
+// @Tags			JawabanGulih
 // @Produce		json
-// @Param			id	path		int	true	"Jawaban Gulih ID"
-// @Success		200	{object}	map[string]interface{}
+// @Param			id	path		string	true	"Jawaban Gulih UUID"
+// @Success		200	{object}	dto.JawabanGulihResponse
 // @Router			/api/maturity/jawaban-gulih/{id} [get]
-func (h *JawabanGulihHandler) handleGetByID(w http.ResponseWriter, r *http.Request) {
-	id, err := utils.ExtractIntID(r.URL.Path, "jawaban-gulih")
-	if err != nil {
+func (h *JawabanGulihHandler) handleGetByUUID(w http.ResponseWriter, r *http.Request) {
+	uuid := utils.ExtractID(r.URL.Path, "jawaban-gulih")
+	if uuid == "" {
 		utils.RespondError(w, http.StatusBadRequest, "ID tidak valid")
 		return
 	}
@@ -155,7 +155,7 @@ func (h *JawabanGulihHandler) handleGetByID(w http.ResponseWriter, r *http.Reque
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	resp, err := h.service.GetByID(id, userRole, userPerusahaanID)
+	resp, err := h.service.GetByUUID(uuid, userRole, userPerusahaanID)
 	if err != nil {
 		status := http.StatusInternalServerError
 		if err.Error() == "data tidak ditemukan" {
@@ -169,17 +169,17 @@ func (h *JawabanGulihHandler) handleGetByID(w http.ResponseWriter, r *http.Reque
 }
 
 // @Summary		Update Jawaban Gulih
-// @Description	Mengubah data jawaban gulih berdasarkan ID
-// @Tags			Jawaban Gulih
+// @Description	Mengubah data jawaban gulih berdasarkan UUID
+// @Tags			JawabanGulih
 // @Accept			json
 // @Produce		json
-// @Param			id		path		int								true	"Jawaban Gulih ID"
+// @Param			id		path		string							true	"Jawaban Gulih UUID"
 // @Param			request	body		dto.UpdateJawabanGulihRequest	true	"Update Request"
 // @Success		200		{object}	utils.JSONResponse
 // @Router			/api/maturity/jawaban-gulih/{id} [put]
 func (h *JawabanGulihHandler) handleUpdate(w http.ResponseWriter, r *http.Request) {
-	id, err := utils.ExtractIntID(r.URL.Path, "jawaban-gulih")
-	if err != nil {
+	uuid := utils.ExtractID(r.URL.Path, "jawaban-gulih")
+	if uuid == "" {
 		utils.RespondError(w, http.StatusBadRequest, "ID tidak valid")
 		return
 	}
@@ -205,7 +205,7 @@ func (h *JawabanGulihHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 		userPerusahaanID = val.(string)
 	}
 
-	updatedID, msg, err := h.service.Update(id, req, userID, userRole, userPerusahaanID)
+	updatedUUID, msg, err := h.service.Update(uuid, req, userID, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -223,20 +223,20 @@ func (h *JawabanGulihHandler) handleUpdate(w http.ResponseWriter, r *http.Reques
 	}
 
 	utils.RespondSuccess(w, 200, msg, map[string]interface{}{
-		"id": updatedID,
+		"id": updatedUUID,
 	})
 }
 
 // @Summary		Delete Jawaban Gulih
-// @Description	Menghapus data jawaban gulih berdasarkan ID
-// @Tags			Jawaban Gulih
+// @Description	Menghapus data jawaban gulih berdasarkan UUID
+// @Tags			JawabanGulih
 // @Produce		json
-// @Param			id	path		int	true	"Jawaban Gulih ID"
+// @Param			id	path		string	true	"Jawaban Gulih UUID"
 // @Success		200	{object}	utils.JSONResponse
 // @Router			/api/maturity/jawaban-gulih/{id} [delete]
 func (h *JawabanGulihHandler) handleDelete(w http.ResponseWriter, r *http.Request) {
-	id, err := utils.ExtractIntID(r.URL.Path, "jawaban-gulih")
-	if err != nil {
+	uuid := utils.ExtractID(r.URL.Path, "jawaban-gulih")
+	if uuid == "" {
 		utils.RespondError(w, http.StatusBadRequest, "ID tidak valid")
 		return
 	}
@@ -249,7 +249,7 @@ func (h *JawabanGulihHandler) handleDelete(w http.ResponseWriter, r *http.Reques
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	if err := h.service.Delete(id, userID, userRole, userPerusahaanID); err != nil {
+	if err := h.service.Delete(uuid, userID, userRole, userPerusahaanID); err != nil {
 		rollbar.Error(err)
 		if err.Error() == "data tidak ditemukan" {
 			utils.RespondError(w, 404, err.Error())
@@ -260,6 +260,6 @@ func (h *JawabanGulihHandler) handleDelete(w http.ResponseWriter, r *http.Reques
 	}
 
 	utils.RespondSuccess(w, 200, "Berhasil menghapus data", map[string]interface{}{
-		"id": id,
+		"id": uuid,
 	})
 }

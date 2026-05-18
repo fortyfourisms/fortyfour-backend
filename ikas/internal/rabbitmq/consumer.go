@@ -277,15 +277,15 @@ func (c *Consumer) ConsumeJawabanIdentifikasiUpdated(ctx context.Context) error 
 			return err
 		}
 
-		log.Printf("Processing Jawaban Identifikasi Updated for ID: %d", event.ID)
+		log.Printf("Processing Jawaban Identifikasi Updated for UUID: %s", event.UUID)
 
 		// 1. Update database
-		if err := c.jawabanIdentifikasiRepo.Update(event.ID, event.Request); err != nil {
+		if err := c.jawabanIdentifikasiRepo.Update(event.UUID, event.Request); err != nil {
 			return err
 		}
 
 		// 2. Get PerusahaanID to recalculate
-		resp, err := c.jawabanIdentifikasiRepo.GetByID(event.ID)
+		resp, err := c.jawabanIdentifikasiRepo.GetByUUID(event.UUID)
 		if err != nil {
 			return err
 		}
@@ -303,10 +303,10 @@ func (c *Consumer) ConsumeJawabanIdentifikasiDeleted(ctx context.Context) error 
 			return err
 		}
 
-		log.Printf("Processing Jawaban Identifikasi Deleted for ID: %d", event.ID)
+		log.Printf("Processing Jawaban Identifikasi Deleted for UUID: %s", event.UUID)
 
 		// 1. Delete from database
-		if err := c.jawabanIdentifikasiRepo.Delete(event.ID); err != nil {
+		if err := c.jawabanIdentifikasiRepo.Delete(event.UUID); err != nil {
 			return err
 		}
 
@@ -401,15 +401,15 @@ func (c *Consumer) ConsumeJawabanProteksiUpdated(ctx context.Context) error {
 			return err
 		}
 
-		log.Printf("Processing Jawaban Proteksi Updated for ID: %d", event.ID)
+		log.Printf("Processing Jawaban Proteksi Updated for UUID: %s", event.UUID)
 
 		// 1. Update database
-		if err := c.jawabanProteksiRepo.Update(event.ID, event.Request); err != nil {
+		if err := c.jawabanProteksiRepo.Update(event.UUID, event.Request); err != nil {
 			return err
 		}
 
 		// 2. Get PerusahaanID to recalculate
-		resp, err := c.jawabanProteksiRepo.GetByID(event.ID)
+		resp, err := c.jawabanProteksiRepo.GetByUUID(event.UUID)
 		if err != nil {
 			return err
 		}
@@ -427,10 +427,10 @@ func (c *Consumer) ConsumeJawabanProteksiDeleted(ctx context.Context) error {
 			return err
 		}
 
-		log.Printf("Processing Jawaban Proteksi Deleted for ID: %d", event.ID)
+		log.Printf("Processing Jawaban Proteksi Deleted for UUID: %s", event.UUID)
 
 		// 1. Delete from database
-		if err := c.jawabanProteksiRepo.Delete(event.ID); err != nil {
+		if err := c.jawabanProteksiRepo.Delete(event.UUID); err != nil {
 			return err
 		}
 
@@ -525,15 +525,15 @@ func (c *Consumer) ConsumeJawabanDeteksiUpdated(ctx context.Context) error {
 			return err
 		}
 
-		log.Printf("Processing Jawaban Deteksi Updated for ID: %d", event.ID)
+		log.Printf("Processing Jawaban Deteksi Updated for UUID: %s", event.UUID)
 
 		// 1. Update database
-		if err := c.jawabanDeteksiRepo.Update(event.ID, event.Request); err != nil {
+		if err := c.jawabanDeteksiRepo.Update(event.UUID, event.Request); err != nil {
 			return err
 		}
 
 		// 2. Get PerusahaanID to recalculate
-		resp, err := c.jawabanDeteksiRepo.GetByID(event.ID)
+		resp, err := c.jawabanDeteksiRepo.GetByUUID(event.UUID)
 		if err != nil {
 			return err
 		}
@@ -551,10 +551,10 @@ func (c *Consumer) ConsumeJawabanDeteksiDeleted(ctx context.Context) error {
 			return err
 		}
 
-		log.Printf("Processing Jawaban Deteksi Deleted for ID: %d", event.ID)
+		log.Printf("Processing Jawaban Deteksi Deleted for UUID: %s", event.UUID)
 
 		// 1. Delete from database
-		if err := c.jawabanDeteksiRepo.Delete(event.ID); err != nil {
+		if err := c.jawabanDeteksiRepo.Delete(event.UUID); err != nil {
 			return err
 		}
 
@@ -649,15 +649,15 @@ func (c *Consumer) ConsumeJawabanGulihUpdated(ctx context.Context) error {
 			return err
 		}
 
-		log.Printf("Processing Jawaban Gulih Updated for ID: %d", event.ID)
+		log.Printf("Processing Jawaban Gulih Updated for UUID: %s", event.UUID)
 
 		// 1. Update database
-		if err := c.jawabanGulihRepo.Update(event.ID, event.Request); err != nil {
+		if err := c.jawabanGulihRepo.Update(event.UUID, event.Request); err != nil {
 			return err
 		}
 
 		// 2. Get PerusahaanID to recalculate
-		resp, err := c.jawabanGulihRepo.GetByID(event.ID)
+		resp, err := c.jawabanGulihRepo.GetByUUID(event.UUID)
 		if err != nil {
 			return err
 		}
@@ -675,10 +675,10 @@ func (c *Consumer) ConsumeJawabanGulihDeleted(ctx context.Context) error {
 			return err
 		}
 
-		log.Printf("Processing Jawaban Gulih Deleted for ID: %d", event.ID)
+		log.Printf("Processing Jawaban Gulih Deleted for UUID: %s", event.UUID)
 
 		// 1. Delete from database
-		if err := c.jawabanGulihRepo.Delete(event.ID); err != nil {
+		if err := c.jawabanGulihRepo.Delete(event.UUID); err != nil {
 			return err
 		}
 

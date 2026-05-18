@@ -12,14 +12,14 @@ import (
 type JawabanGulihRepositoryInterface interface {
 	Create(req dto.CreateJawabanGulihRequest) (int64, error)
 	GetAll() ([]dto.JawabanGulihResponse, error)
-	GetByID(id int) (*dto.JawabanGulihResponse, error)
+	GetByUUID(uuid string) (*dto.JawabanGulihResponse, error)
 	GetByIkasID(ikasID string) ([]dto.JawabanGulihResponse, error)
 	GetByIkasIDFromBuffer(ikasID string) ([]dto.JawabanGulihResponse, error)
 	GetByPerusahaanID(perusahaanID string) ([]dto.JawabanGulihResponse, error)
 	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanGulihResponse, error)
 	GetByPertanyaanAndPerusahaan(pertanyaanID int, perusahaanID string) ([]dto.JawabanGulihResponse, error)
-	Update(id int, req dto.UpdateJawabanGulihRequest) error
-	Delete(id int) error
+	Update(uuid string, req dto.UpdateJawabanGulihRequest) error
+	Delete(uuid string) error
 	CheckPertanyaanExists(pertanyaanID int) (bool, error)
 	CheckIkasExists(ikasID string) (bool, error)
 	CheckDuplicate(ikasID string, pertanyaanID int, excludeID int) (bool, error)
@@ -42,6 +42,7 @@ func NewJawabanGulihRepository(db *sql.DB) *JawabanGulihRepository {
 const jawabanGulihSelectQuery = `
 	SELECT 
 		jg.id, 
+		jg.uuid,
 		jg.ikas_id, 
 		jg.jawaban_gulih, 
 		jg.evidence, 
@@ -63,6 +64,7 @@ const jawabanGulihSelectQuery = `
 const jawabanGulihBufferSelectQuery = `
 	SELECT 
 		jg.id, 
+		jg.uuid,
 		jg.ikas_id, 
 		jg.jawaban_gulih, 
 		jg.evidence, 
@@ -87,6 +89,7 @@ func scanJawabanGulih(row interface {
 	var item dto.JawabanGulihResponse
 	err := row.Scan(
 		&item.ID,
+		&item.UUID,
 		&item.IkasID,
 		&item.JawabanGulih,
 		&item.Evidence,
@@ -108,10 +111,11 @@ func scanJawabanGulih(row interface {
 
 func (r *JawabanGulihRepository) Create(req dto.CreateJawabanGulihRequest) (int64, error) {
 	query := `INSERT INTO jawaban_gulih 
-		(pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan)
-		VALUES (?, ?, ?, ?, ?, ?)`
+		(uuid, pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	res, err := r.db.Exec(query,
+		utils.GenerateUUID(),
 		req.PertanyaanGulihID,
 		req.IkasID,
 		req.JawabanGulih,
@@ -149,9 +153,9 @@ func (r *JawabanGulihRepository) GetAll() ([]dto.JawabanGulihResponse, error) {
 	return results, nil
 }
 
-func (r *JawabanGulihRepository) GetByID(id int) (*dto.JawabanGulihResponse, error) {
-	query := jawabanGulihSelectQuery + ` WHERE jg.id = ?`
-	row := r.db.QueryRow(query, id)
+func (r *JawabanGulihRepository) GetByUUID(uuid string) (*dto.JawabanGulihResponse, error) {
+	query := jawabanGulihSelectQuery + ` WHERE jg.uuid = ?`
+	row := r.db.QueryRow(query, uuid)
 	item, err := scanJawabanGulih(row)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -284,7 +288,7 @@ func (r *JawabanGulihRepository) GetByPertanyaanAndPerusahaan(pertanyaanID int, 
 	return results, nil
 }
 
-func (r *JawabanGulihRepository) Update(id int, req dto.UpdateJawabanGulihRequest) error {
+func (r *JawabanGulihRepository) Update(uuid string, req dto.UpdateJawabanGulihRequest) error {
 	var updates []string
 	var args []interface{}
 
@@ -309,8 +313,8 @@ func (r *JawabanGulihRepository) Update(id int, req dto.UpdateJawabanGulihReques
 		return nil
 	}
 
-	query := "UPDATE jawaban_gulih SET " + strings.Join(updates, ", ") + " WHERE id = ?"
-	args = append(args, id)
+	query := "UPDATE jawaban_gulih SET " + strings.Join(updates, ", ") + " WHERE uuid = ?"
+	args = append(args, uuid)
 
 	_, err := r.db.Exec(query, args...)
 	if err != nil {
@@ -319,8 +323,8 @@ func (r *JawabanGulihRepository) Update(id int, req dto.UpdateJawabanGulihReques
 	return err
 }
 
-func (r *JawabanGulihRepository) Delete(id int) error {
-	_, err := r.db.Exec(`DELETE FROM jawaban_gulih WHERE id = ?`, id)
+func (r *JawabanGulihRepository) Delete(uuid string) error {
+	_, err := r.db.Exec(`DELETE FROM jawaban_gulih WHERE uuid = ?`, uuid)
 	if err != nil {
 		rollbar.Error(err)
 	}
@@ -482,8 +486,8 @@ func (r *JawabanGulihRepository) UpsertToBuffer(req dto.CreateJawabanGulihReques
 
 	// 3. Jika belum ada di utama, baru masukkan ke buffer seperti biasa
 	query := `INSERT INTO jawaban_gulih_buffer 
-		(pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan)
-		VALUES (?, ?, ?, ?, ?, ?)
+		(uuid, pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE 
 		jawaban_gulih = VALUES(jawaban_gulih),
 		evidence = VALUES(evidence),
@@ -491,6 +495,7 @@ func (r *JawabanGulihRepository) UpsertToBuffer(req dto.CreateJawabanGulihReques
 		keterangan = VALUES(keterangan)`
 
 	_, err = r.db.Exec(query,
+		utils.GenerateUUID(),
 		req.PertanyaanGulihID,
 		req.IkasID,
 		req.JawabanGulih,
@@ -516,8 +521,8 @@ func (r *JawabanGulihRepository) FlushBuffer(ikasID string) error {
 	defer tx.Rollback()
 
 	moveQuery := `INSERT INTO jawaban_gulih 
-		(pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan)
-		SELECT pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan
+		(uuid, pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan)
+		SELECT uuid, pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan
 		FROM jawaban_gulih_buffer WHERE ikas_id = ?
 		ON DUPLICATE KEY UPDATE 
 		jawaban_gulih = VALUES(jawaban_gulih),
@@ -539,9 +544,9 @@ func (r *JawabanGulihRepository) FlushBuffer(ikasID string) error {
 func (r *JawabanGulihRepository) CloneByIkasID(sourceID, targetID string) error {
 	query := `
 		INSERT INTO jawaban_gulih 
-			(pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan)
+			(uuid, pertanyaan_gulih_id, ikas_id, jawaban_gulih, evidence, validasi, keterangan)
 		SELECT 
-			pertanyaan_gulih_id, ?, jawaban_gulih, evidence, validasi, keterangan
+			uuid, pertanyaan_gulih_id, ?, jawaban_gulih, evidence, validasi, keterangan
 		FROM jawaban_gulih 
 		WHERE ikas_id = ?`
 

@@ -24,11 +24,11 @@ func NewJawabanIdentifikasiHandler(service *services.JawabanIdentifikasiService)
 }
 
 func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	id, _ := utils.ExtractIntID(r.URL.Path, "jawaban-identifikasi")
+	uuid := utils.ExtractID(r.URL.Path, "jawaban-identifikasi")
 
 	switch r.Method {
 	case http.MethodGet:
-		if id == 0 {
+		if uuid == "" {
 			// Cek query params untuk filter
 			ikasID := r.URL.Query().Get("ikas_id")
 			pertanyaanID := r.URL.Query().Get("pertanyaan_identifikasi_id")
@@ -48,26 +48,26 @@ func (h *JawabanIdentifikasiHandler) ServeHTTP(w http.ResponseWriter, r *http.Re
 				h.handleGetAll(w, r)
 			}
 		} else {
-			h.handleGetByID(w, r, id)
+			h.handleGetByUUID(w, r, uuid)
 		}
 	case http.MethodPost:
-		if id != 0 {
+		if uuid != "" {
 			utils.RespondError(w, 400, "ID tidak diperlukan untuk create")
 			return
 		}
 		h.handleCreate(w, r)
 	case http.MethodPut:
-		if id == 0 {
+		if uuid == "" {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
-		h.handleUpdate(w, r, id)
+		h.handleUpdate(w, r, uuid)
 	case http.MethodDelete:
-		if id == 0 {
+		if uuid == "" {
 			utils.RespondError(w, 400, "ID wajib")
 			return
 		}
-		h.handleDelete(w, r, id)
+		h.handleDelete(w, r, uuid)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
@@ -158,19 +158,19 @@ func (h *JawabanIdentifikasiHandler) handleGetByPertanyaan(w http.ResponseWriter
 	utils.RespondListData(w, 200, "Berhasil mengambil data jawaban identifikasi", data, len(data))
 }
 
-// @Summary		Ambil jawaban identifikasi berdasarkan ID
+// @Summary		Ambil jawaban identifikasi berdasarkan UUID
 // @Description	Mengambil satu data jawaban identifikasi
 // @Tags			JawabanIdentifikasi
 // @Produce		json
-// @Param			id	path		int	true	"JawabanIdentifikasi ID"
+// @Param			id	path		string	true	"JawabanIdentifikasi UUID"
 // @Success		200	{object}	dto.JawabanIdentifikasiResponse
 // @Failure		404	{object}	dto.ErrorResponse
 // @Router			/api/maturity/jawaban-identifikasi/{id} [get]
-func (h *JawabanIdentifikasiHandler) handleGetByID(w http.ResponseWriter, r *http.Request, id int) {
+func (h *JawabanIdentifikasiHandler) handleGetByUUID(w http.ResponseWriter, r *http.Request, uuid string) {
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	data, err := h.service.GetByID(id, userRole, userPerusahaanID)
+	data, err := h.service.GetByUUID(uuid, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		if err.Error() == "data tidak ditemukan" {
@@ -239,17 +239,17 @@ func (h *JawabanIdentifikasiHandler) handleCreate(w http.ResponseWriter, r *http
 }
 
 // @Summary		Update jawaban identifikasi
-// @Description	Mengubah data jawaban identifikasi berdasarkan ID
+// @Description	Mengubah data jawaban identifikasi berdasarkan UUID
 // @Tags			JawabanIdentifikasi
 // @Accept			json
 // @Produce		json
-// @Param			id		path		int										true	"JawabanIdentifikasi ID"
+// @Param			id		path		string									true	"JawabanIdentifikasi UUID"
 // @Param			body	body		dto.UpdateJawabanIdentifikasiRequest	true	"Data update"
 // @Success		200		{object}	utils.JSONResponse
 // @Failure		400		{object}	dto.ErrorResponse
 // @Failure		404		{object}	dto.ErrorResponse
 // @Router			/api/maturity/jawaban-identifikasi/{id} [put]
-func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, id int) {
+func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http.Request, uuid string) {
 	var req dto.UpdateJawabanIdentifikasiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		rollbar.Error(err)
@@ -276,7 +276,7 @@ func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http
 		userPerusahaanID = val.(string)
 	}
 
-	updatedID, msg, err := h.service.Update(id, req, userID, userRole, userPerusahaanID)
+	updatedUUID, msg, err := h.service.Update(uuid, req, userID, userRole, userPerusahaanID)
 	if err != nil {
 		rollbar.Error(err)
 		switch err.Error() {
@@ -294,20 +294,20 @@ func (h *JawabanIdentifikasiHandler) handleUpdate(w http.ResponseWriter, r *http
 	}
 
 	utils.RespondSuccess(w, 200, msg, map[string]interface{}{
-		"id": updatedID,
+		"id": updatedUUID,
 	})
 }
 
 // @Summary		Hapus jawaban identifikasi
-// @Description	Menghapus data jawaban identifikasi berdasarkan ID
+// @Description	Menghapus data jawaban identifikasi berdasarkan UUID
 // @Tags			JawabanIdentifikasi
 // @Produce		json
-// @Param			id	path		int	true	"JawabanIdentifikasi ID"
+// @Param			id	path		string	true	"JawabanIdentifikasi UUID"
 // @Success		200	{object}	utils.JSONResponse
 // @Failure		404	{object}	dto.ErrorResponse
 // @Failure		500	{object}	dto.ErrorResponse
 // @Router			/api/maturity/jawaban-identifikasi/{id} [delete]
-func (h *JawabanIdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http.Request, id int) {
+func (h *JawabanIdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http.Request, uuid string) {
 	userID := ""
 	if val := r.Context().Value(middleware.UserIDKey); val != nil {
 		userID = val.(string)
@@ -316,7 +316,7 @@ func (h *JawabanIdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http
 	userRole, _ := r.Context().Value(middleware.Role).(string)
 	userPerusahaanID, _ := r.Context().Value(middleware.PerusahaanIDKey).(string)
 
-	if err := h.service.Delete(id, userID, userRole, userPerusahaanID); err != nil {
+	if err := h.service.Delete(uuid, userID, userRole, userPerusahaanID); err != nil {
 		rollbar.Error(err)
 		if err.Error() == "data tidak ditemukan" {
 			utils.RespondError(w, 404, err.Error())
@@ -327,6 +327,6 @@ func (h *JawabanIdentifikasiHandler) handleDelete(w http.ResponseWriter, r *http
 	}
 
 	utils.RespondSuccess(w, 200, "Berhasil menghapus data", map[string]interface{}{
-		"id": id,
+		"id": uuid,
 	})
 }
