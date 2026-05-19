@@ -39,54 +39,13 @@ const docTemplate = `{
             }
         },
         "/api/survey/edit-requests": {
-            "get": {
+            "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Get survey edit requests. Admin/Staff see all, User sees their own.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Survey Edit Request"
-                ],
-                "summary": "Get Edit Requests",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/dto.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/dto.EditRequestItemResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/survey/edit-requests/{id}": {
-            "post": {
-                "description": "Approve or reject a request to edit survey data. Admin specifies action (\"approve\" or \"reject\").",
+                "description": "Request permission to edit a survey that has already been submitted.",
                 "consumes": [
                     "application/json"
                 ],
@@ -94,56 +53,108 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Survey Edit Request"
+                    "Survey Progress"
                 ],
-                "summary": "Review Edit Request",
+                "summary": "Request to edit a submitted survey",
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Respondent ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Provide 'action' (approve/reject) and optional 'response' string",
+                        "description": "Edit Request Data",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.ReviewEditRequest"
+                            "$ref": "#/definitions/survey_internal_dto.RequestEditRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Success",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/dto.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.ProgressResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Invalid body or respondent ID",
+                        "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/survey/edit-requests/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Approve or reject a user's request to edit their survey.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Survey Progress"
+                ],
+                "summary": "Review survey edit request (Admin/Staff)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Respondent UUID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Review Data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.ReviewEditRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "403": {
-                        "description": "Forbidden - Admin or Staff only",
+                        "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -151,25 +162,42 @@ const docTemplate = `{
         },
         "/api/survey/finish": {
             "post": {
-                "description": "Mark survey as completed",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Submit and finish the survey.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Survey Progress"
                 ],
-                "summary": "Finish Survey",
+                "summary": "Finish survey",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Survey berhasil diselesaikan",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -177,7 +205,12 @@ const docTemplate = `{
         },
         "/api/survey/navigate": {
             "post": {
-                "description": "Navigate to next or previous risk",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Navigate between steps (prev/next) in the survey.",
                 "consumes": [
                     "application/json"
                 ],
@@ -187,41 +220,37 @@ const docTemplate = `{
                 "tags": [
                     "Survey Progress"
                 ],
-                "summary": "Navigate Survey",
+                "summary": "Navigate survey",
                 "parameters": [
                     {
-                        "description": "Navigation request",
+                        "description": "Navigation Data",
                         "name": "request",
                         "in": "body",
-                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.NavigateRequest"
+                            "$ref": "#/definitions/survey_internal_dto.NavigateRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Success",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/dto.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.ProgressResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -229,45 +258,12 @@ const docTemplate = `{
         },
         "/api/survey/progress": {
             "get": {
-                "description": "Get current survey progress for the user",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Survey Progress"
-                ],
-                "summary": "Get Survey Progress",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/dto.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.ProgressResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
+                "security": [
+                    {
+                        "BearerAuth": []
                     }
-                }
-            }
-        },
-        "/api/survey/request-edit": {
-            "post": {
-                "description": "Request to edit survey data",
+                ],
+                "description": "Retrieve the survey progress of the currently authenticated user.",
                 "consumes": [
                     "application/json"
                 ],
@@ -275,43 +271,22 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Survey Edit Request"
+                    "Survey Progress"
                 ],
-                "summary": "Request Edit",
-                "parameters": [
-                    {
-                        "description": "Edit request reason",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.RequestEditRequest"
-                        }
-                    }
-                ],
+                "summary": "Get current survey progress",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Success",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/dto.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.ProgressResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
-                    "400": {
-                        "description": "Bad Request",
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -319,46 +294,49 @@ const docTemplate = `{
         },
         "/api/survey/responden": {
             "get": {
-                "description": "Get all survey respondents (Admin/Staff only)",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of all survey respondents.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Responden"
+                    "Survey Responden"
                 ],
-                "summary": "Get All Responden",
+                "summary": "Get all responden (Admin/Staff)",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Berhasil mengambil data responden",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/dto.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/definitions/dto.RespondenResponse"
-                                            }
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -366,49 +344,12 @@ const docTemplate = `{
         },
         "/api/survey/responden/me": {
             "get": {
-                "description": "Get current user's respondent profile",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Responden"
-                ],
-                "summary": "Get My Responden Profile",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/dto.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.RespondenResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
-                        }
+                "security": [
+                    {
+                        "BearerAuth": []
                     }
-                }
-            },
-            "post": {
-                "description": "Create or update current user's respondent profile",
+                ],
+                "description": "Retrieve the respondent profile of the currently authenticated user.",
                 "consumes": [
                     "application/json"
                 ],
@@ -416,49 +357,102 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Responden"
+                    "Survey Responden"
                 ],
-                "summary": "Upsert My Responden Profile",
-                "parameters": [
-                    {
-                        "description": "Respondent data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateRespondenRequest"
-                        }
-                    }
-                ],
+                "summary": "Get my respondent profile (User/User PIC)",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Berhasil mengambil data profil survey",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/dto.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.RespondenResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Data responden belum tersedia",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates or updates the respondent profile of the currently authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Survey Responden"
+                ],
+                "summary": "Update or create my respondent profile (User/User PIC)",
+                "parameters": [
+                    {
+                        "description": "Responden Data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/survey_internal_dto.CreateRespondenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Berhasil memperbarui data profil survey",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid body or Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -466,18 +460,26 @@ const docTemplate = `{
         },
         "/api/survey/responden/{id}": {
             "get": {
-                "description": "Get details of a specific respondent (Admin/Staff only)",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve specific respondent details by their UUID.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Responden"
+                    "Survey Responden"
                 ],
-                "summary": "Get Responden by ID",
+                "summary": "Get responden by ID (Admin/Staff)",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Responden ID",
+                        "description": "Responden UUID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -485,33 +487,45 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Berhasil mengambil detail responden",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/dto.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.RespondenResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Data tidak ditemukan",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -519,25 +533,35 @@ const docTemplate = `{
         },
         "/api/survey/risiko": {
             "get": {
-                "description": "Get all active risks for survey",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve a list of all master risks available for the survey.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Risiko"
                 ],
-                "summary": "Get All Risiko Aktif",
+                "summary": "Get all reference risks",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Berhasil mengambil data risiko",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -545,7 +569,12 @@ const docTemplate = `{
         },
         "/api/survey/risiko/dampak": {
             "post": {
-                "description": "Submit impact of risk",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Submit the impacts of the risk.",
                 "consumes": [
                     "application/json"
                 ],
@@ -553,31 +582,40 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Risiko"
                 ],
-                "summary": "Submit Dampak",
+                "summary": "Submit risk impacts",
                 "parameters": [
                     {
-                        "description": "Dampak request",
+                        "description": "Impact Data",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.DampakRequest"
+                            "$ref": "#/definitions/survey_internal_dto.DampakRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Success",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -585,7 +623,12 @@ const docTemplate = `{
         },
         "/api/survey/risiko/eligibility": {
             "post": {
-                "description": "Submit eligibility for risk assessment",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Submit whether a risk has occurred.",
                 "consumes": [
                     "application/json"
                 ],
@@ -593,31 +636,40 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Risiko"
                 ],
-                "summary": "Submit Eligibility",
+                "summary": "Submit eligibility answer",
                 "parameters": [
                     {
-                        "description": "Eligibility request",
+                        "description": "Eligibility Data",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.EligibilityRequest"
+                            "$ref": "#/definitions/survey_internal_dto.EligibilityRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Success",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -625,25 +677,42 @@ const docTemplate = `{
         },
         "/api/survey/risiko/me": {
             "get": {
-                "description": "Get current user's risk assessment data",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve the risk items for the currently authenticated user.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Risiko"
                 ],
-                "summary": "Get My Risiko Data",
+                "summary": "Get my risks",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Berhasil mengambil data risiko",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Data risiko belum ditemukan",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -651,7 +720,12 @@ const docTemplate = `{
         },
         "/api/survey/risiko/pengendalian": {
             "post": {
-                "description": "Submit mitigation/control for risk",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Submit risk mitigation controls.",
                 "consumes": [
                     "application/json"
                 ],
@@ -659,31 +733,40 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Risiko"
                 ],
-                "summary": "Submit Pengendalian",
+                "summary": "Submit risk control",
                 "parameters": [
                     {
-                        "description": "Pengendalian request",
+                        "description": "Control Data",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.PengendalianRequest"
+                            "$ref": "#/definitions/survey_internal_dto.PengendalianRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Success",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -691,7 +774,12 @@ const docTemplate = `{
         },
         "/api/survey/risiko/reason": {
             "post": {
-                "description": "Submit reason for not having risk",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Submit the reason why a risk occurred.",
                 "consumes": [
                     "application/json"
                 ],
@@ -699,31 +787,40 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Risiko"
                 ],
-                "summary": "Submit Alasan",
+                "summary": "Submit reason for risk",
                 "parameters": [
                     {
-                        "description": "Alasan request",
+                        "description": "Reason Data",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.AlasanRequest"
+                            "$ref": "#/definitions/survey_internal_dto.AlasanRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Success",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -731,18 +828,26 @@ const docTemplate = `{
         },
         "/api/survey/risiko/{id}": {
             "get": {
-                "description": "Get risk assessment data for a specific respondent (Admin/Staff only)",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve the risk items for a specific respondent.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Risiko"
+                    "Survey Risiko"
                 ],
-                "summary": "Get Risiko Data by Respondent ID",
+                "summary": "Get risks by respondent ID (Admin/Staff)",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Respondent ID",
+                        "description": "Respondent UUID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -750,27 +855,38 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Berhasil mengambil data risiko responden",
                         "schema": {
-                            "$ref": "#/definitions/dto.APIResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "ID tidak valid",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "404": {
-                        "description": "Not Found",
+                        "description": "Data tidak ditemukan",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -778,7 +894,12 @@ const docTemplate = `{
         },
         "/api/survey/save-progress": {
             "post": {
-                "description": "Save current risk progress",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Save current state and progress.",
                 "consumes": [
                     "application/json"
                 ],
@@ -788,41 +909,37 @@ const docTemplate = `{
                 "tags": [
                     "Survey Progress"
                 ],
-                "summary": "Save Survey Progress",
+                "summary": "Save survey progress",
                 "parameters": [
                     {
-                        "description": "Save progress request",
+                        "description": "Progress Data",
                         "name": "request",
                         "in": "body",
-                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.NavigateRequest"
+                            "$ref": "#/definitions/survey_internal_dto.NavigateRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Success",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/dto.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/dto.ProgressResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/dto.ErrorResponse"
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -830,28 +947,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.APIResponse": {
-            "type": "object",
-            "properties": {
-                "data": {},
-                "error": {
-                    "type": "string"
-                },
-                "errors": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "dto.AlasanRequest": {
+        "survey_internal_dto.AlasanRequest": {
             "type": "object",
             "properties": {
                 "alasan": {
@@ -865,7 +961,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.CreateRespondenRequest": {
+        "survey_internal_dto.CreateRespondenRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -888,23 +984,23 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.DampakRequest": {
+        "survey_internal_dto.DampakRequest": {
             "type": "object",
             "properties": {
                 "dampak_finansial": {
-                    "$ref": "#/definitions/models.ImpactLevel"
+                    "$ref": "#/definitions/survey_internal_models.ImpactLevel"
                 },
                 "dampak_hukum": {
-                    "$ref": "#/definitions/models.ImpactLevel"
+                    "$ref": "#/definitions/survey_internal_models.ImpactLevel"
                 },
                 "dampak_operasional": {
-                    "$ref": "#/definitions/models.ImpactLevel"
+                    "$ref": "#/definitions/survey_internal_models.ImpactLevel"
                 },
                 "dampak_reputasi": {
-                    "$ref": "#/definitions/models.ImpactLevel"
+                    "$ref": "#/definitions/survey_internal_models.ImpactLevel"
                 },
                 "frekuensi": {
-                    "$ref": "#/definitions/models.FrequencyLevel"
+                    "$ref": "#/definitions/survey_internal_models.FrequencyLevel"
                 },
                 "responden_id": {
                     "type": "string"
@@ -914,48 +1010,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.EditRequestItemResponse": {
-            "type": "object",
-            "properties": {
-                "edit_approved_at": {
-                    "type": "string"
-                },
-                "edit_approved_by": {
-                    "type": "string"
-                },
-                "edit_rejected_at": {
-                    "type": "string"
-                },
-                "edit_rejected_by": {
-                    "type": "string"
-                },
-                "edit_request_reason": {
-                    "type": "string"
-                },
-                "edit_request_response": {
-                    "type": "string"
-                },
-                "edit_requested_at": {
-                    "type": "string"
-                },
-                "nama_lengkap": {
-                    "type": "string"
-                },
-                "nama_perusahaan": {
-                    "type": "string"
-                },
-                "responden_id": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.EligibilityRequest": {
+        "survey_internal_dto.EligibilityRequest": {
             "type": "object",
             "properties": {
                 "pernah_terjadi": {
@@ -969,18 +1024,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "dto.NavigateRequest": {
+        "survey_internal_dto.NavigateRequest": {
             "type": "object",
             "properties": {
                 "current_risk": {
@@ -994,7 +1038,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.PengendalianRequest": {
+        "survey_internal_dto.PengendalianRequest": {
             "type": "object",
             "properties": {
                 "ada_pengendalian": {
@@ -1011,54 +1055,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ProgressResponse": {
-            "type": "object",
-            "properties": {
-                "edit_approved_at": {
-                    "type": "string"
-                },
-                "edit_approved_by": {
-                    "type": "string"
-                },
-                "edit_rejected_at": {
-                    "type": "string"
-                },
-                "edit_rejected_by": {
-                    "type": "string"
-                },
-                "edit_request_reason": {
-                    "type": "string"
-                },
-                "edit_request_response": {
-                    "type": "string"
-                },
-                "edit_requested_at": {
-                    "type": "string"
-                },
-                "is_rejected": {
-                    "type": "boolean"
-                },
-                "langkah_saat_ini": {
-                    "type": "string"
-                },
-                "responden_id": {
-                    "type": "string"
-                },
-                "risiko_id": {
-                    "type": "string"
-                },
-                "selesai": {
-                    "type": "boolean"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "submitted_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.RequestEditRequest": {
+        "survey_internal_dto.RequestEditRequest": {
             "type": "object",
             "properties": {
                 "reason": {
@@ -1066,55 +1063,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.RespondenResponse": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "id_perusahaan": {
-                    "description": "dari PERUSAHAAN",
-                    "type": "string"
-                },
-                "jabatan": {
-                    "type": "string"
-                },
-                "nama_lengkap": {
-                    "description": "dari RESPONDEN",
-                    "type": "string"
-                },
-                "nama_perusahaan": {
-                    "type": "string"
-                },
-                "nama_sektor": {
-                    "type": "string"
-                },
-                "nama_sub_sektor": {
-                    "description": "dari JOIN (opsional)",
-                    "type": "string"
-                },
-                "no_telepon": {
-                    "type": "string"
-                },
-                "sertifikat_training": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "description": "dari backend (JWT)",
-                    "type": "string"
-                }
-            }
-        },
-        "dto.ReviewEditRequest": {
+        "survey_internal_dto.ReviewEditRequest": {
             "type": "object",
             "properties": {
                 "action": {
@@ -1128,7 +1077,7 @@ const docTemplate = `{
                 }
             }
         },
-        "models.FrequencyLevel": {
+        "survey_internal_models.FrequencyLevel": {
             "type": "integer",
             "enum": [
                 1,
@@ -1143,7 +1092,7 @@ const docTemplate = `{
                 "FrequencyVeryLarge"
             ]
         },
-        "models.ImpactLevel": {
+        "survey_internal_models.ImpactLevel": {
             "type": "integer",
             "enum": [
                 1,

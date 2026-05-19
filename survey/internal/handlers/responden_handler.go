@@ -77,7 +77,18 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// handleGetAll handles GET /api/survey/responden
+// handleGetAll godoc
+// @Summary Get all responden (Admin/Staff)
+// @Description Retrieve a list of all survey respondents.
+// @Tags Survey Responden
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "Berhasil mengambil data responden"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 403 {object} map[string]interface{} "Forbidden"
+// @Failure 500 {object} map[string]interface{} "Internal Server Error"
+// @Router /api/survey/responden [get]
 func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -88,7 +99,21 @@ func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
 	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil data responden", data)
 }
 
-// handleGetByID handles GET /api/survey/responden/{id}
+// handleGetByID godoc
+// @Summary Get responden by ID (Admin/Staff)
+// @Description Retrieve specific respondent details by their UUID.
+// @Tags Survey Responden
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path string true "Responden UUID"
+// @Success 200 {object} map[string]interface{} "Berhasil mengambil detail responden"
+// @Failure 400 {object} map[string]interface{} "Bad Request"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 403 {object} map[string]interface{} "Forbidden"
+// @Failure 404 {object} map[string]interface{} "Data tidak ditemukan"
+// @Failure 500 {object} map[string]interface{} "Internal Server Error"
+// @Router /api/survey/responden/{id} [get]
 func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -103,7 +128,19 @@ func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil detail responden", data)
 }
 
-// GetMe handles GET /api/survey/responden/me
+// GetMe godoc
+// @Summary Get my respondent profile (User/User PIC)
+// @Description Retrieve the respondent profile of the currently authenticated user.
+// @Tags Survey Responden
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} map[string]interface{} "Berhasil mengambil data profil survey"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 403 {object} map[string]interface{} "Forbidden"
+// @Failure 404 {object} map[string]interface{} "Data responden belum tersedia"
+// @Failure 500 {object} map[string]interface{} "Internal Server Error"
+// @Router /api/survey/responden/me [get]
 func (h *RespondenHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	if userID == "" {
@@ -124,7 +161,19 @@ func (h *RespondenHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil data profil survey", data)
 }
 
-// UpsertMe handles POST /api/survey/responden/me
+// UpsertMe godoc
+// @Summary Update or create my respondent profile (User/User PIC)
+// @Description Creates or updates the respondent profile of the currently authenticated user.
+// @Tags Survey Responden
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body dto.CreateRespondenRequest true "Responden Data"
+// @Success 200 {object} map[string]interface{} "Berhasil memperbarui data profil survey"
+// @Failure 400 {object} map[string]interface{} "Invalid body or Bad Request"
+// @Failure 401 {object} map[string]interface{} "Unauthorized"
+// @Failure 403 {object} map[string]interface{} "Forbidden"
+// @Router /api/survey/responden/me [post]
 func (h *RespondenHandler) UpsertMe(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	if userID == "" {
