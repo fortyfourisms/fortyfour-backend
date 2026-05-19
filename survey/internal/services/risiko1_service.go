@@ -418,8 +418,6 @@ func progressToResponse(progress *models.SurveyProgress) dto.ProgressResponse {
 	}
 }
 
-
-
 func (s *RisikoService) Navigate(userID string, req dto.NavigateRequest) (dto.ProgressResponse, error) {
 	respondenID, err := s.getRespondenID(userID)
 	if err != nil {

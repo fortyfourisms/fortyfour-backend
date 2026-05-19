@@ -109,7 +109,7 @@ const docTemplate = `{
                 "tags": [
                     "Survey Progress"
                 ],
-                "summary": "Review survey edit request (Admin/Staff)",
+                "summary": "Review survey edit request (Admin)",
                 "parameters": [
                     {
                         "type": "string",

@@ -349,7 +349,7 @@ func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
 }
 
 // ReviewEditRequest godoc
-// @Summary Review survey edit request (Admin/Staff)
+// @Summary Review survey edit request (Admin)
 // @Description Approve or reject a user's request to edit their survey.
 // @Tags Survey Progress
 // @Accept json
@@ -364,7 +364,7 @@ func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
 // @Router /api/survey/edit-requests/{id} [put]
 func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request) {
 	role := strings.ToLower(strings.TrimSpace(middleware.GetRole(r.Context())))
-	if role != "admin" && role != "staff" {
+	if role != "admin" {
 		utils.RespondError(w, http.StatusForbidden, "Forbidden")
 		return
 	}

@@ -208,7 +208,7 @@ paths:
             type: object
       security:
       - BearerAuth: []
-      summary: Review survey edit request (Admin/Staff)
+      summary: Review survey edit request (Admin)
       tags:
       - Survey Progress
   /api/survey/finish:
