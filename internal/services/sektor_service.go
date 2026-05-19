@@ -11,6 +11,7 @@ type SektorServiceInterface interface {
 	GetByID(id string) (*dto.SektorResponse, error)
 	Create(req dto.SektorRequest) (*dto.SektorResponse, error)
 	Update(id string, req dto.SektorRequest) (*dto.SektorResponse, error)
+	Delete(id string) error
 }
 
 type SektorService struct {
@@ -71,4 +72,14 @@ func (s *SektorService) Update(id string, req dto.SektorRequest) (*dto.SektorRes
 	cacheDelete(s.rc, keyList("sektor"))
 	cacheDelete(s.rc, keyDetail("sektor", id))
 	return data, nil
+}
+
+func (s *SektorService) Delete(id string) error {
+	err := s.repo.Delete(id)
+	if err != nil {
+		return err
+	}
+	cacheDelete(s.rc, keyList("sektor"))
+	cacheDelete(s.rc, keyDetail("sektor", id))
+	return nil
 }

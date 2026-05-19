@@ -17,11 +17,11 @@ import (
 
 // MOCK SERVICE
 type mockRisikoService struct {
-	GetAllRisikoFunc        func() ([]models.RisikoResponse, error)
 	ProcessEligibilityFunc  func(string, dto.EligibilityRequest) (map[string]interface{}, error)
 	ProcessAlasanFunc       func(string, dto.AlasanRequest) (map[string]interface{}, error)
 	ProcessDampakFunc       func(string, dto.DampakRequest) (map[string]interface{}, error)
 	ProcessPengendalianFunc func(string, dto.PengendalianRequest) (map[string]interface{}, error)
+	GetAllRisikoFunc        func() ([]models.RisikoResponse, error)
 	GetByUserIDFunc         func(string) (map[string]interface{}, error)
 	GetByRespondentIDFunc   func(string) (map[string]interface{}, error)
 	GetProgressFunc         func(string) (dto.ProgressResponse, error)
@@ -30,16 +30,8 @@ type mockRisikoService struct {
 	FinishSurveyFunc        func(string) error
 	RequestEditFunc         func(string, dto.RequestEditRequest) (dto.ProgressResponse, error)
 	ReviewEditRequestFunc   func(string, string, dto.ReviewEditRequest) (dto.ProgressResponse, error)
-	GetAllEditRequestsFunc  func() ([]dto.EditRequestItemResponse, error)
-	GetMyEditRequestFunc    func(string) (*dto.EditRequestItemResponse, error)
 }
 
-func (m *mockRisikoService) GetAllRisiko() ([]models.RisikoResponse, error) {
-	if m.GetAllRisikoFunc != nil {
-		return m.GetAllRisikoFunc()
-	}
-	return nil, nil
-}
 func (m *mockRisikoService) ProcessEligibility(userID string, r dto.EligibilityRequest) (map[string]interface{}, error) {
 	return m.ProcessEligibilityFunc(userID, r)
 }
@@ -51,6 +43,9 @@ func (m *mockRisikoService) ProcessDampak(userID string, r dto.DampakRequest) (m
 }
 func (m *mockRisikoService) ProcessPengendalian(userID string, r dto.PengendalianRequest) (map[string]interface{}, error) {
 	return m.ProcessPengendalianFunc(userID, r)
+}
+func (m *mockRisikoService) GetAllRisiko() ([]models.RisikoResponse, error) {
+	return m.GetAllRisikoFunc()
 }
 func (m *mockRisikoService) GetByUserID(userID string) (map[string]interface{}, error) {
 	return m.GetByUserIDFunc(userID)
@@ -76,18 +71,6 @@ func (m *mockRisikoService) RequestEdit(userID string, r dto.RequestEditRequest)
 func (m *mockRisikoService) ReviewEditRequest(adminID string, respondenID string, r dto.ReviewEditRequest) (dto.ProgressResponse, error) {
 	return m.ReviewEditRequestFunc(adminID, respondenID, r)
 }
-func (m *mockRisikoService) GetAllEditRequests() ([]dto.EditRequestItemResponse, error) {
-	if m.GetAllEditRequestsFunc != nil {
-		return m.GetAllEditRequestsFunc()
-	}
-	return nil, nil
-}
-func (m *mockRisikoService) GetMyEditRequest(userID string) (*dto.EditRequestItemResponse, error) {
-	if m.GetMyEditRequestFunc != nil {
-		return m.GetMyEditRequestFunc(userID)
-	}
-	return nil, nil
-}
 
 // helper: inject role and userID into request context
 func withRisikoCtx(req *http.Request, userID, role string) *http.Request {
@@ -109,7 +92,7 @@ func TestSubmitEligibility_Success(t *testing.T) {
 
 	body, _ := json.Marshal(dto.EligibilityRequest{})
 	req := httptest.NewRequest(http.MethodPost, "/eligibility", bytes.NewBuffer(body))
-	req = withRisikoCtx(req, "user1", "user_pic")
+	req = withRisikoCtx(req, "user1", "user")
 	w := httptest.NewRecorder()
 
 	h.SubmitEligibility(w, req)
@@ -123,7 +106,6 @@ func TestSubmitEligibility_InvalidBody(t *testing.T) {
 	h := NewRisikoHandler(&mockRisikoService{})
 
 	req := httptest.NewRequest(http.MethodPost, "/eligibility", bytes.NewBuffer([]byte("invalid")))
-	req = withRisikoCtx(req, "user1", "user_pic")
 	w := httptest.NewRecorder()
 
 	h.SubmitEligibility(w, req)
@@ -143,7 +125,7 @@ func TestGetByRespondentID_Success(t *testing.T) {
 
 	h := NewRisikoHandler(mock)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/survey/risiko/uuid-1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/survey/risiko/1", nil)
 	req = withRisikoCtx(req, "admin1", "admin")
 	w := httptest.NewRecorder()
 
@@ -163,7 +145,7 @@ func TestGetByRespondentID_NotFound(t *testing.T) {
 
 	h := NewRisikoHandler(mock)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/survey/risiko/uuid-1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/survey/risiko/1", nil)
 	req = withRisikoCtx(req, "admin1", "admin")
 	w := httptest.NewRecorder()
 
@@ -174,8 +156,8 @@ func TestGetByRespondentID_NotFound(t *testing.T) {
 	}
 }
 
-// GET BY RESPONDENT EMPTY (REPLACES INVALID ID)
-func TestGetByRespondentID_EmptyID(t *testing.T) {
+func TestGetByRespondentID_InvalidID(t *testing.T) {
+	// ID is missing in URL (just /api/survey/risiko/)
 	h := NewRisikoHandler(&mockRisikoService{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/survey/risiko/", nil)
@@ -200,7 +182,7 @@ func TestFinishSurvey_Success(t *testing.T) {
 	h := NewRisikoHandler(mock)
 
 	req := httptest.NewRequest(http.MethodPost, "/finish", nil)
-	req = withRisikoCtx(req, "user1", "user_pic")
+	req = withRisikoCtx(req, "user1", "user")
 	w := httptest.NewRecorder()
 
 	h.FinishSurvey(w, req)
@@ -220,7 +202,7 @@ func TestFinishSurvey_Error(t *testing.T) {
 	h := NewRisikoHandler(mock)
 
 	req := httptest.NewRequest(http.MethodPost, "/finish", nil)
-	req = withRisikoCtx(req, "user1", "user_pic")
+	req = withRisikoCtx(req, "user1", "user")
 	w := httptest.NewRecorder()
 
 	h.FinishSurvey(w, req)

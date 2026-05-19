@@ -30,7 +30,13 @@ func NewAuthMiddleware(internalKey string) *AuthMiddleware {
 
 func (m *AuthMiddleware) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Check for internal gateway key first
+		// Prevent empty key bypass
+		if m.internalGatewayKey == "" {
+			utils.RespondError(w, http.StatusInternalServerError, "Configuration Error: Gateway key is not configured")
+			return
+		}
+
+		// Check for internal gateway key
 		internalKey := r.Header.Get("X-Internal-Key")
 		if internalKey != m.internalGatewayKey {
 			utils.RespondError(w, http.StatusUnauthorized, "Unauthorized: Direct access not allowed or invalid internal key")

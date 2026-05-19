@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/google/uuid"
 	"survey/internal/models"
 )
 
@@ -25,17 +24,13 @@ func nullToString(ns sql.NullString) *string {
 }
 
 // CREATE
-func (r *RespondenRepository) Create(m models.Responden) (string, error) {
-	if m.ID == "" {
-		m.ID = uuid.New().String()
-	}
+func (r *RespondenRepository) Create(m models.Responden) (int64, error) {
 
-	_, err := r.db.Exec(`
+	res, err := r.db.Exec(`
 		INSERT INTO responden
-		(id, user_id, id_perusahaan, nama_lengkap, jabatan, email, no_telepon, sertifikat_training)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		(user_id, id_perusahaan, nama_lengkap, jabatan, email, no_telepon, sertifikat_training)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`,
-		m.ID,
 		m.UserID,
 		m.IdPerusahaan,
 		m.NamaLengkap,
@@ -46,19 +41,19 @@ func (r *RespondenRepository) Create(m models.Responden) (string, error) {
 	)
 
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
-	return m.ID, nil
+	return res.LastInsertId()
 }
 
 // UPSERT BY USER ID
 func (r *RespondenRepository) UpsertByUserID(userID string, m models.Responden) error {
-	newID := uuid.New().String()
+
 	_, err := r.db.Exec(`
 		INSERT INTO responden
-		(id, user_id, id_perusahaan, nama_lengkap, jabatan, email, no_telepon, sertifikat_training)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		(user_id, id_perusahaan, nama_lengkap, jabatan, email, no_telepon, sertifikat_training)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE
 			id_perusahaan = VALUES(id_perusahaan),
 			nama_lengkap = VALUES(nama_lengkap),
@@ -68,7 +63,6 @@ func (r *RespondenRepository) UpsertByUserID(userID string, m models.Responden) 
 			sertifikat_training = VALUES(sertifikat_training),
 			updated_at = NOW()
 	`,
-		newID,
 		userID,
 		m.IdPerusahaan,
 		m.NamaLengkap,

@@ -22,6 +22,7 @@ type mockSubSektorRepositoryStandalone struct {
 	GetBySektorIDFn func(sektorID string) ([]dto.SubSektorResponse, error)
 	CreateFn        func(req dto.SubSektorRequest) (*dto.SubSektorResponse, error)
 	UpdateFn        func(id string, req dto.SubSektorRequest) (*dto.SubSektorResponse, error)
+	DeleteFn        func(id string) error
 }
 
 func (m *mockSubSektorRepositoryStandalone) GetAll() ([]dto.SubSektorResponse, error) {
@@ -48,6 +49,13 @@ func (m *mockSubSektorRepositoryStandalone) Update(id string, req dto.SubSektorR
 		return m.UpdateFn(id, req)
 	}
 	return nil, nil
+}
+
+func (m *mockSubSektorRepositoryStandalone) Delete(id string) error {
+	if m.DeleteFn != nil {
+		return m.DeleteFn(id)
+	}
+	return nil
 }
 
 /*

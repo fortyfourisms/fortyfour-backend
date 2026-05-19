@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -91,23 +92,23 @@ func TestGetByID_Success(t *testing.T) {
 	}
 }
 
-// GET BY ID EMPTY (REPLACES INVALID ID)
-func TestGetByID_EmptyID(t *testing.T) {
+// GET BY ID INVALID
+func TestGetByID_InvalidID(t *testing.T) {
 	mock := &mockService{
-		GetAllFunc: func() ([]dto.RespondenResponse, error) {
-			return []dto.RespondenResponse{}, nil
+		GetByIDFunc: func(id string) (*dto.RespondenResponse, error) {
+			return nil, errors.New("data tidak ditemukan")
 		},
 	}
 	handler := NewRespondenHandler(mock)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/survey/responden/", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/survey/responden/abc", nil)
 	req = withContext(req, "admin1", "admin")
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Errorf("expected 200 (GetAll), got %d", w.Code)
+	if w.Code != http.StatusNotFound {
+		t.Errorf("expected 404, got %d", w.Code)
 	}
 }
 
@@ -144,7 +145,7 @@ func TestUpsertMe_Success(t *testing.T) {
 
 	body, _ := json.Marshal(dto.CreateRespondenRequest{})
 	req := httptest.NewRequest(http.MethodPost, "/api/survey/responden/me", bytes.NewBuffer(body))
-	req = withContext(req, "user1", "user_pic")
+	req = withContext(req, "user1", "user")
 	w := httptest.NewRecorder()
 
 	handler.ServeHTTP(w, req)

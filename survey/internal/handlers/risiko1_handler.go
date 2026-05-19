@@ -17,6 +17,7 @@ import (
 // SERVICE INTERFACE
 type RisikoServiceInterface interface {
 	GetAllRisiko() ([]models.RisikoResponse, error)
+
 	ProcessEligibility(userID string, req dto.EligibilityRequest) (map[string]interface{}, error)
 	ProcessAlasan(userID string, req dto.AlasanRequest) (map[string]interface{}, error)
 	ProcessDampak(userID string, req dto.DampakRequest) (map[string]interface{}, error)
@@ -33,9 +34,6 @@ type RisikoServiceInterface interface {
 	FinishSurvey(userID string) error
 	RequestEdit(userID string, req dto.RequestEditRequest) (dto.ProgressResponse, error)
 	ReviewEditRequest(adminID string, respondenID string, req dto.ReviewEditRequest) (dto.ProgressResponse, error)
-
-	GetAllEditRequests() ([]dto.EditRequestItemResponse, error)
-	GetMyEditRequest(userID string) (*dto.EditRequestItemResponse, error)
 }
 
 // HANDLER STRUCT
@@ -47,13 +45,7 @@ func NewRisikoHandler(svc RisikoServiceInterface) *RisikoHandler {
 	return &RisikoHandler{svc: svc}
 }
 
-// @Summary Get All Risiko Aktif
-// @Description Get all active risks for survey
-// @Tags Risiko
-// @Produce json
-// @Success 200 {object} dto.APIResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /api/survey/risiko [get]
+// GetAllRisiko handles GET /api/survey/risiko
 func (h *RisikoHandler) GetAllRisiko(w http.ResponseWriter, r *http.Request) {
 	data, err := h.svc.GetAllRisiko()
 	if err != nil {
@@ -64,20 +56,8 @@ func (h *RisikoHandler) GetAllRisiko(w http.ResponseWriter, r *http.Request) {
 	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil data risiko", data)
 }
 
-// @Summary Submit Eligibility
-// @Description Submit eligibility for risk assessment
-// @Tags Risiko
-// @Accept json
-// @Produce json
-// @Param request body dto.EligibilityRequest true "Eligibility request"
-// @Success 200 {object} dto.APIResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/survey/risiko/eligibility [post]
+// SubmitEligibility handles POST /api/survey/risiko/eligibility
 func (h *RisikoHandler) SubmitEligibility(w http.ResponseWriter, r *http.Request) {
-	if !middleware.HasRole(r.Context(), "user_pic") {
-		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi survey")
-		return
-	}
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.EligibilityRequest
@@ -90,20 +70,8 @@ func (h *RisikoHandler) SubmitEligibility(w http.ResponseWriter, r *http.Request
 	handleResult(w, res, err)
 }
 
-// @Summary Submit Alasan
-// @Description Submit reason for not having risk
-// @Tags Risiko
-// @Accept json
-// @Produce json
-// @Param request body dto.AlasanRequest true "Alasan request"
-// @Success 200 {object} dto.APIResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/survey/risiko/reason [post]
+// SubmitAlasan handles POST /api/survey/risiko/reason
 func (h *RisikoHandler) SubmitAlasan(w http.ResponseWriter, r *http.Request) {
-	if !middleware.HasRole(r.Context(), "user_pic") {
-		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi survey")
-		return
-	}
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.AlasanRequest
@@ -116,20 +84,8 @@ func (h *RisikoHandler) SubmitAlasan(w http.ResponseWriter, r *http.Request) {
 	handleResult(w, res, err)
 }
 
-// @Summary Submit Dampak
-// @Description Submit impact of risk
-// @Tags Risiko
-// @Accept json
-// @Produce json
-// @Param request body dto.DampakRequest true "Dampak request"
-// @Success 200 {object} dto.APIResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/survey/risiko/dampak [post]
+// SubmitDampak handles POST /api/survey/risiko/dampak
 func (h *RisikoHandler) SubmitDampak(w http.ResponseWriter, r *http.Request) {
-	if !middleware.HasRole(r.Context(), "user_pic") {
-		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi survey")
-		return
-	}
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.DampakRequest
@@ -142,20 +98,8 @@ func (h *RisikoHandler) SubmitDampak(w http.ResponseWriter, r *http.Request) {
 	handleResult(w, res, err)
 }
 
-// @Summary Submit Pengendalian
-// @Description Submit mitigation/control for risk
-// @Tags Risiko
-// @Accept json
-// @Produce json
-// @Param request body dto.PengendalianRequest true "Pengendalian request"
-// @Success 200 {object} dto.APIResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/survey/risiko/pengendalian [post]
+// SubmitPengendalian handles POST /api/survey/risiko/pengendalian
 func (h *RisikoHandler) SubmitPengendalian(w http.ResponseWriter, r *http.Request) {
-	if !middleware.HasRole(r.Context(), "user_pic") {
-		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi survey")
-		return
-	}
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.PengendalianRequest
@@ -168,13 +112,7 @@ func (h *RisikoHandler) SubmitPengendalian(w http.ResponseWriter, r *http.Reques
 	handleResult(w, res, err)
 }
 
-// @Summary Get My Risiko Data
-// @Description Get current user's risk assessment data
-// @Tags Risiko
-// @Produce json
-// @Success 200 {object} dto.APIResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Router /api/survey/risiko/me [get]
+// GetMe handles GET /api/survey/risiko/me
 func (h *RisikoHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
@@ -191,18 +129,11 @@ func (h *RisikoHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil data risiko", data)
 }
 
-// @Summary Get Risiko Data by Respondent ID
-// @Description Get risk assessment data for a specific respondent (Admin/Staff only)
-// @Tags Risiko
-// @Produce json
-// @Param id path string true "Respondent ID"
-// @Success 200 {object} dto.APIResponse
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 403 {object} dto.ErrorResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Router /api/survey/risiko/{id} [get]
+// GetByRespondentID handles GET /api/survey/risiko/{id}
 func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request) {
-	if !middleware.HasRole(r.Context(), "admin", "staff") {
+	role := strings.ToLower(strings.TrimSpace(middleware.GetRole(r.Context())))
+
+	if role != "admin" && role != "staff" {
 		utils.RespondError(w, http.StatusForbidden, "Forbidden")
 		return
 	}
@@ -227,13 +158,7 @@ func (h *RisikoHandler) GetByRespondentID(w http.ResponseWriter, r *http.Request
 	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil data risiko responden", data)
 }
 
-// @Summary Get Survey Progress
-// @Description Get current survey progress for the user
-// @Tags Survey Progress
-// @Produce json
-// @Success 200 {object} dto.APIResponse{data=dto.ProgressResponse}
-// @Failure 404 {object} dto.ErrorResponse
-// @Router /api/survey/progress [get]
+// GetProgress handles GET /api/survey/progress
 func (h *RisikoHandler) GetProgress(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 
@@ -241,20 +166,8 @@ func (h *RisikoHandler) GetProgress(w http.ResponseWriter, r *http.Request) {
 	handleResult(w, res, err)
 }
 
-// @Summary Navigate Survey
-// @Description Navigate to next or previous risk
-// @Tags Survey Progress
-// @Accept json
-// @Produce json
-// @Param request body dto.NavigateRequest true "Navigation request"
-// @Success 200 {object} dto.APIResponse{data=dto.ProgressResponse}
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/survey/navigate [post]
+// Navigate handles POST /api/survey/navigate
 func (h *RisikoHandler) Navigate(w http.ResponseWriter, r *http.Request) {
-	if !middleware.HasRole(r.Context(), "user_pic") {
-		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi survey")
-		return
-	}
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.NavigateRequest
@@ -267,20 +180,8 @@ func (h *RisikoHandler) Navigate(w http.ResponseWriter, r *http.Request) {
 	handleResult(w, res, err)
 }
 
-// @Summary Save Survey Progress
-// @Description Save current risk progress
-// @Tags Survey Progress
-// @Accept json
-// @Produce json
-// @Param request body dto.NavigateRequest true "Save progress request"
-// @Success 200 {object} dto.APIResponse{data=dto.ProgressResponse}
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/survey/save-progress [post]
+// SaveProgress handles POST /api/survey/save-progress
 func (h *RisikoHandler) SaveProgress(w http.ResponseWriter, r *http.Request) {
-	if !middleware.HasRole(r.Context(), "user_pic") {
-		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi survey")
-		return
-	}
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.NavigateRequest
@@ -293,18 +194,8 @@ func (h *RisikoHandler) SaveProgress(w http.ResponseWriter, r *http.Request) {
 	handleResult(w, res, err)
 }
 
-// @Summary Finish Survey
-// @Description Mark survey as completed
-// @Tags Survey Progress
-// @Produce json
-// @Success 200 {object} dto.APIResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /api/survey/finish [post]
+// FinishSurvey handles POST /api/survey/finish
 func (h *RisikoHandler) FinishSurvey(w http.ResponseWriter, r *http.Request) {
-	if !middleware.HasRole(r.Context(), "user_pic") {
-		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi survey")
-		return
-	}
 	userID := middleware.GetUserID(r.Context())
 
 	if err := h.svc.FinishSurvey(userID); err != nil {
@@ -315,20 +206,7 @@ func (h *RisikoHandler) FinishSurvey(w http.ResponseWriter, r *http.Request) {
 	utils.RespondSuccess(w, http.StatusOK, "Survey berhasil diselesaikan", nil)
 }
 
-// @Summary Request Edit
-// @Description Request to edit survey data
-// @Tags Survey Edit Request
-// @Accept json
-// @Produce json
-// @Param request body dto.RequestEditRequest true "Edit request reason"
-// @Success 200 {object} dto.APIResponse{data=dto.ProgressResponse}
-// @Failure 400 {object} dto.ErrorResponse
-// @Router /api/survey/request-edit [post]
 func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
-	if !middleware.HasRole(r.Context(), "user_pic") {
-		utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengajukan edit request")
-		return
-	}
 	userID := middleware.GetUserID(r.Context())
 
 	var req dto.RequestEditRequest
@@ -341,20 +219,10 @@ func (h *RisikoHandler) RequestEdit(w http.ResponseWriter, r *http.Request) {
 	handleResult(w, res, err)
 }
 
-// @Summary Review Edit Request
-// @Description Approve or reject a request to edit survey data. Admin specifies action ("approve" or "reject").
-// @Tags Survey Edit Request
-// @Accept json
-// @Produce json
-// @Param id path string true "Respondent ID"
-// @Param request body dto.ReviewEditRequest true "Provide 'action' (approve/reject) and optional 'response' string"
-// @Success 200 {object} dto.APIResponse{data=dto.ProgressResponse}
-// @Failure 400 {object} dto.ErrorResponse "Invalid body or respondent ID"
-// @Failure 403 {object} dto.ErrorResponse "Forbidden - Admin or Staff only"
-// @Router /api/survey/edit-requests/{id} [post]
 func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request) {
-	if !middleware.HasRole(r.Context(), "admin") {
-		utils.RespondError(w, http.StatusForbidden, "Hanya Admin yang dapat memproses edit request")
+	role := strings.ToLower(strings.TrimSpace(middleware.GetRole(r.Context())))
+	if role != "admin" && role != "staff" {
+		utils.RespondError(w, http.StatusForbidden, "Forbidden")
 		return
 	}
 
@@ -374,36 +242,6 @@ func (h *RisikoHandler) ReviewEditRequest(w http.ResponseWriter, r *http.Request
 
 	res, err := h.svc.ReviewEditRequest(adminID, respondenID, req)
 	handleResult(w, res, err)
-}
-
-// @Summary Get Edit Requests
-// @Description Get survey edit requests. Admin/Staff see all, User sees their own.
-// @Tags Survey Edit Request
-// @Produce json
-// @Security BearerAuth
-// @Success 200 {object} dto.APIResponse{data=[]dto.EditRequestItemResponse}
-// @Failure 401 {object} dto.ErrorResponse
-// @Router /api/survey/edit-requests [get]
-func (h *RisikoHandler) GetEditRequests(w http.ResponseWriter, r *http.Request) {
-	userID := middleware.GetUserID(r.Context())
-
-	if middleware.HasRole(r.Context(), "admin", "staff") {
-		res, err := h.svc.GetAllEditRequests()
-		handleResult(w, res, err)
-		return
-	}
-
-	// For User/UserPIC, get only their own
-	res, err := h.svc.GetMyEditRequest(userID)
-	if err != nil {
-		handleResult(w, nil, err)
-		return
-	}
-
-	// Wrap single item in array for consistency if needed,
-	// but the DTO return for MyEditRequest is a single object.
-	// Let's keep it as is or wrap it.
-	utils.RespondSuccess(w, http.StatusOK, "Success", []interface{}{res})
 }
 
 // HELPERS

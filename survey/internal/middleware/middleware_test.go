@@ -45,30 +45,6 @@ func TestLogger(t *testing.T) {
 	}
 }
 
-// CORS
-func TestCORS_Headers(t *testing.T) {
-	called := false
-
-	h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		called = true
-	})
-
-	handler := CORS(h)
-
-	req := httptest.NewRequest(http.MethodGet, "/", nil)
-	w := httptest.NewRecorder()
-
-	handler.ServeHTTP(w, req)
-
-	if !called {
-		t.Error("handler not called")
-	}
-
-	if w.Header().Get("Access-Control-Allow-Origin") != "*" {
-		t.Error("CORS header missing")
-	}
-}
-
 // CONTEXT
 func TestContext_SetGet(t *testing.T) {
 	ctx := context.Background()

@@ -32,16 +32,20 @@ func InitRouter(
 	respondenH *handlers.RespondenHandler,
 	risikoH *handlers.RisikoHandler,
 	authM *middleware.AuthMiddleware,
-) http.Handler {
+) *http.ServeMux {
 
 	mux := http.NewServeMux()
 
 	// PUBLIC
 	mux.HandleFunc("/api/health", healthHandler)
 
-	// WRAPPERS
+	// MIDDLEWARE WRAPPER
 	protected := func(h http.Handler) http.Handler {
-		return authM.Authenticate(h)
+		return middleware.Logger(
+			middleware.Recovery(
+				authM.Authenticate(h),
+			),
+		)
 	}
 	getOnly := func(h http.HandlerFunc) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +87,6 @@ func InitRouter(
 
 	// RESPONDEN
 	mux.Handle("/api/survey/responden", protected(respondenH))
-	mux.Handle("/api/survey/responden/me", protected(respondenH))
 	mux.Handle("/api/survey/responden/", protected(respondenH))
 
 	// RISIKO
@@ -101,18 +104,10 @@ func InitRouter(
 	mux.Handle("/api/survey/save-progress", protected(postOnly(risikoH.SaveProgress)))
 	mux.Handle("/api/survey/finish", protected(postOnly(risikoH.FinishSurvey)))
 	mux.Handle("/api/survey/request-edit", protected(postOnly(risikoH.RequestEdit)))
-	mux.Handle("/api/survey/edit-requests", protected(getOnly(risikoH.GetEditRequests)))
 	mux.Handle("/api/survey/edit-requests/", protected(postOnly(risikoH.ReviewEditRequest)))
 
 	// Swagger UI
 	mux.HandleFunc("/swagger/survey/", httpSwagger.WrapHandler)
 
-	// GLOBAL MIDDLEWARE
-	return middleware.Logger(
-		middleware.Recovery(
-			middleware.CORS(
-				mux,
-			),
-		),
-	)
+	return mux
 }

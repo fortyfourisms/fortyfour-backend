@@ -21,7 +21,7 @@ type RespondenRepositoryInterface interface {
 
 	GetByUserID(userID string) (*models.RespondenDetail, error)
 
-	Create(m models.Responden) (string, error)
+	Create(m models.Responden) (int64, error)
 	UpsertByUserID(userID string, m models.Responden) error
 	CanEditByUserID(userID string) (bool, string, error)
 }

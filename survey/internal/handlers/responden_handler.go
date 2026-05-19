@@ -29,13 +29,14 @@ func NewRespondenHandler(service RespondenServiceInterface) *RespondenHandler {
 
 // ROUTER
 func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	role := strings.ToLower(strings.TrimSpace(middleware.GetRole(r.Context())))
 	path := strings.TrimPrefix(r.URL.Path, "/api/survey/responden")
 	path = strings.Trim(path, "/")
 
 	switch r.Method {
 	case http.MethodGet:
 		if path == "me" {
-			if !middleware.HasRole(r.Context(), "user", "user_pic", "admin", "staff") {
+			if role != "user" && role != "user_pic" {
 				utils.RespondError(w, http.StatusForbidden, "Forbidden")
 				return
 			}
@@ -44,7 +45,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if path == "" {
-			if !middleware.HasRole(r.Context(), "admin", "staff") {
+			if role != "admin" && role != "staff" {
 				utils.RespondError(w, http.StatusForbidden, "Forbidden")
 				return
 			}
@@ -52,20 +53,20 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if !middleware.HasRole(r.Context(), "admin", "staff") {
+		if role != "admin" && role != "staff" {
 			utils.RespondError(w, http.StatusForbidden, "Forbidden")
 			return
 		}
 		h.handleGetByID(w, path)
 
 	case http.MethodPost:
-		if path != "me" && path != "" {
-			utils.RespondError(w, http.StatusForbidden, "Hanya /me atau base path yang diizinkan")
+		if path != "me" {
+			utils.RespondError(w, http.StatusForbidden, "Only /me allowed")
 			return
 		}
 
-		if !middleware.HasRole(r.Context(), "user_pic") {
-			utils.RespondError(w, http.StatusForbidden, "Hanya user_pic yang dapat mengisi data responden")
+		if role != "user" && role != "user_pic" {
+			utils.RespondError(w, http.StatusForbidden, "Forbidden")
 			return
 		}
 
@@ -76,14 +77,7 @@ func (h *RespondenHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// @Summary Get All Responden
-// @Description Get all survey respondents (Admin/Staff only)
-// @Tags Responden
-// @Produce json
-// @Success 200 {object} dto.APIResponse{data=[]dto.RespondenResponse}
-// @Failure 403 {object} dto.ErrorResponse
-// @Failure 500 {object} dto.ErrorResponse
-// @Router /api/survey/responden [get]
+// handleGetAll handles GET /api/survey/responden
 func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
 	data, err := h.service.GetAll()
 	if err != nil {
@@ -94,15 +88,7 @@ func (h *RespondenHandler) handleGetAll(w http.ResponseWriter) {
 	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil data responden", data)
 }
 
-// @Summary Get Responden by ID
-// @Description Get details of a specific respondent (Admin/Staff only)
-// @Tags Responden
-// @Produce json
-// @Param id path string true "Responden ID"
-// @Success 200 {object} dto.APIResponse{data=dto.RespondenResponse}
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Router /api/survey/responden/{id} [get]
+// handleGetByID handles GET /api/survey/responden/{id}
 func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 	data, err := h.service.GetByID(id)
 	if err != nil {
@@ -117,14 +103,7 @@ func (h *RespondenHandler) handleGetByID(w http.ResponseWriter, id string) {
 	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil detail responden", data)
 }
 
-// @Summary Get My Responden Profile
-// @Description Get current user's respondent profile
-// @Tags Responden
-// @Produce json
-// @Success 200 {object} dto.APIResponse{data=dto.RespondenResponse}
-// @Failure 401 {object} dto.ErrorResponse
-// @Failure 404 {object} dto.ErrorResponse
-// @Router /api/survey/responden/me [get]
+// GetMe handles GET /api/survey/responden/me
 func (h *RespondenHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	if userID == "" {
@@ -145,16 +124,7 @@ func (h *RespondenHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	utils.RespondSuccess(w, http.StatusOK, "Berhasil mengambil data profil survey", data)
 }
 
-// @Summary Upsert My Responden Profile
-// @Description Create or update current user's respondent profile
-// @Tags Responden
-// @Accept json
-// @Produce json
-// @Param request body dto.CreateRespondenRequest true "Respondent data"
-// @Success 200 {object} dto.APIResponse{data=dto.RespondenResponse}
-// @Failure 400 {object} dto.ErrorResponse
-// @Failure 401 {object} dto.ErrorResponse
-// @Router /api/survey/responden/me [post]
+// UpsertMe handles POST /api/survey/responden/me
 func (h *RespondenHandler) UpsertMe(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserID(r.Context())
 	if userID == "" {

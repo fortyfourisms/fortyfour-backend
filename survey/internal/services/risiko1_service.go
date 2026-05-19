@@ -42,12 +42,9 @@ type RisikoRepositoryInterface interface {
 
 	GetProgress(string) (*models.SurveyProgress, error)
 	UpsertProgress(models.SurveyProgress) error
-	InsertCustomRisiko(string, string) (string, error)
+	InsertCustomRisiko(string, string) (int, error)
 
 	GetRespondentIDByUserID(userID string) (string, error)
-
-	GetAllEditRequests() ([]models.EditRequestItem, error)
-	GetEditRequestByUserID(userID string) (*models.EditRequestItem, error)
 }
 
 // SERVICE
@@ -129,7 +126,7 @@ func markDraft(progress *models.SurveyProgress, step string, risikoID string) {
 	}
 }
 
-func toString(ptr *string) (string, error) {
+func toStr(ptr *string) (string, error) {
 	if ptr == nil {
 		return "", validation.ErrMissingRisikoID
 	}
@@ -183,7 +180,7 @@ func (s *RisikoService) ProcessEligibility(userID string, req dto.EligibilityReq
 		return nil, err
 	}
 
-	risikoID, err := toString(req.RisikoID)
+	risikoID, err := toStr(req.RisikoID)
 	if err != nil {
 		return nil, err
 	}
@@ -195,7 +192,7 @@ func (s *RisikoService) ProcessEligibility(userID string, req dto.EligibilityReq
 
 	data := models.RisikoEligibility{
 		RespondenID:   respondenID,
-		RisikoID:      &risikoID,
+		RisikoID:      req.RisikoID,
 		PernahTerjadi: req.PernahTerjadi,
 	}
 
@@ -232,7 +229,7 @@ func (s *RisikoService) ProcessAlasan(userID string, req dto.AlasanRequest) (map
 		return nil, err
 	}
 
-	risikoID, err := toString(req.RisikoID)
+	risikoID, err := toStr(req.RisikoID)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +241,7 @@ func (s *RisikoService) ProcessAlasan(userID string, req dto.AlasanRequest) (map
 
 	data := models.RisikoAlasan{
 		RespondenID: respondenID,
-		RisikoID:    &risikoID,
+		RisikoID:    req.RisikoID,
 		Alasan:      strings.TrimSpace(req.Alasan),
 	}
 
@@ -276,7 +273,7 @@ func (s *RisikoService) ProcessDampak(userID string, req dto.DampakRequest) (map
 		return nil, err
 	}
 
-	risikoID, err := toString(req.RisikoID)
+	risikoID, err := toStr(req.RisikoID)
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +285,7 @@ func (s *RisikoService) ProcessDampak(userID string, req dto.DampakRequest) (map
 
 	data := models.RisikoDampak{
 		RespondenID:       respondenID,
-		RisikoID:          &risikoID,
+		RisikoID:          req.RisikoID,
 		DampakReputasi:    models.MapImpactIntToString(req.DampakReputasi),
 		DampakOperasional: models.MapImpactIntToString(req.DampakOperasional),
 		DampakFinansial:   models.MapImpactIntToString(req.DampakFinansial),
@@ -324,7 +321,7 @@ func (s *RisikoService) ProcessPengendalian(userID string, req dto.PengendalianR
 		return nil, err
 	}
 
-	risikoID, err := toString(req.RisikoID)
+	risikoID, err := toStr(req.RisikoID)
 	if err != nil {
 		return nil, err
 	}
@@ -336,7 +333,7 @@ func (s *RisikoService) ProcessPengendalian(userID string, req dto.PengendalianR
 
 	data := models.RisikoPengendalian{
 		RespondenID:           respondenID,
-		RisikoID:              &risikoID,
+		RisikoID:              req.RisikoID,
 		AdaPengendalian:       req.AdaPengendalian,
 		DeskripsiPengendalian: toNullableTrimmedString(req.DeskripsiPengendalian),
 	}
@@ -410,65 +407,18 @@ func progressToResponse(progress *models.SurveyProgress) dto.ProgressResponse {
 		status = SurveyStatusDraft
 	}
 
-	var submittedAt *string
-	if progress.SubmittedAt.Valid {
-		s := progress.SubmittedAt.Time.Format(time.RFC3339)
-		submittedAt = &s
-	}
-
-	var editRequestedAt *string
-	if progress.EditRequestedAt.Valid {
-		s := progress.EditRequestedAt.Time.Format(time.RFC3339)
-		editRequestedAt = &s
-	}
-
-	var editApprovedAt *string
-	if progress.EditApprovedAt.Valid {
-		s := progress.EditApprovedAt.Time.Format(time.RFC3339)
-		editApprovedAt = &s
-	}
-
-	var editApprovedBy *string
-	if progress.EditApprovedBy.Valid {
-		editApprovedBy = &progress.EditApprovedBy.String
-	}
-
-	var editRejectedAt *string
-	if progress.EditRejectedAt.Valid {
-		s := progress.EditRejectedAt.Time.Format(time.RFC3339)
-		editRejectedAt = &s
-	}
-
-	var editRejectedBy *string
-	if progress.EditRejectedBy.Valid {
-		editRejectedBy = &progress.EditRejectedBy.String
-	}
-
 	return dto.ProgressResponse{
-		RespondenID:     progress.RespondenID,
-		RisikoID:        risikoID,
-		LangkahSaatIni:  langkahSaatIni,
-		Selesai:         progress.Selesai,
-		Status:          status,
-		IsRejected:      status == SurveyStatusEditRejected,
-		EditReason:      editReason,
-		EditResponse:    editResponse,
-		SubmittedAt:     submittedAt,
-		EditRequestedAt: editRequestedAt,
-		EditApprovedAt:  editApprovedAt,
-		EditApprovedBy:  editApprovedBy,
-		EditRejectedAt:  editRejectedAt,
-		EditRejectedBy:  editRejectedBy,
+		RespondenID:    progress.RespondenID,
+		RisikoID:       risikoID,
+		LangkahSaatIni: langkahSaatIni,
+		Selesai:        progress.Selesai,
+		Status:         status,
+		EditReason:     editReason,
+		EditResponse:   editResponse,
 	}
 }
 
-// HELPER SQL
-func sqlString(v string) sql.NullString {
-	return sql.NullString{
-		String: v,
-		Valid:  true,
-	}
-}
+
 
 func (s *RisikoService) Navigate(userID string, req dto.NavigateRequest) (dto.ProgressResponse, error) {
 	respondenID, err := s.getRespondenID(userID)
@@ -528,10 +478,10 @@ func (s *RisikoService) SaveProgress(userID string, req dto.NavigateRequest) (dt
 	return progressToResponse(progress), nil
 }
 
-func (s *RisikoService) CreateCustomRisiko(req dto.CustomRisikoRequest) (string, error) {
+func (s *RisikoService) CreateCustomRisiko(req dto.CustomRisikoRequest) (int, error) {
 	nama := strings.TrimSpace(req.NamaRisiko)
 	if nama == "" {
-		return "", errors.New("nama risiko wajib diisi")
+		return 0, errors.New("nama risiko wajib diisi")
 	}
 
 	return s.repo.InsertCustomRisiko(req.RespondenID, nama)
@@ -603,7 +553,7 @@ func (s *RisikoService) ReviewEditRequest(adminID string, respondenID string, re
 	if strings.TrimSpace(adminID) == "" {
 		return dto.ProgressResponse{}, errors.New("admin_id wajib diisi")
 	}
-	if respondenID == "" {
+	if strings.TrimSpace(respondenID) == "" {
 		return dto.ProgressResponse{}, errors.New("responden_id tidak valid")
 	}
 
@@ -618,21 +568,18 @@ func (s *RisikoService) ReviewEditRequest(adminID string, respondenID string, re
 	response := strings.TrimSpace(req.Response)
 	progress.EditResponse = sql.NullString{String: response, Valid: response != ""}
 
-	switch req.Action {
-	case "approve":
+	if req.Action == "approve" {
 		progress.Status = SurveyStatusEditApproved
 		progress.Selesai = false
 		progress.LangkahSaatIni = sql.NullString{String: "edit-approved", Valid: true}
 		progress.EditApprovedAt = sql.NullTime{Time: time.Now(), Valid: true}
 		progress.EditApprovedBy = sql.NullString{String: adminID, Valid: true}
-	case "reject":
+	} else {
 		progress.Status = SurveyStatusEditRejected
 		progress.Selesai = true
 		progress.LangkahSaatIni = sql.NullString{String: "edit-rejected", Valid: true}
 		progress.EditRejectedAt = sql.NullTime{Time: time.Now(), Valid: true}
 		progress.EditRejectedBy = sql.NullString{String: adminID, Valid: true}
-	default:
-		return dto.ProgressResponse{}, errors.New("action tidak valid, gunakan 'approve' atau 'reject'")
 	}
 
 	if err := s.repo.UpsertProgress(*progress); err != nil {
@@ -640,71 +587,4 @@ func (s *RisikoService) ReviewEditRequest(adminID string, respondenID string, re
 	}
 
 	return progressToResponse(progress), nil
-}
-
-// EDIT REQUEST LIST
-
-func editRequestItemToResponse(item models.EditRequestItem) dto.EditRequestItemResponse {
-	resp := dto.EditRequestItemResponse{
-		RespondenID: item.RespondenID,
-		UserID:      item.UserID,
-		NamaLengkap: item.NamaLengkap,
-		Status:      item.Status,
-	}
-	if item.NamaPerusahaan.Valid {
-		resp.NamaPerusahaan = &item.NamaPerusahaan.String
-	}
-	if item.EditReason.Valid {
-		resp.EditReason = &item.EditReason.String
-	}
-	if item.EditResponse.Valid {
-		resp.EditResponse = &item.EditResponse.String
-	}
-	if item.EditRequestedAt.Valid {
-		s := item.EditRequestedAt.Time.Format(time.RFC3339)
-		resp.EditRequestedAt = &s
-	}
-	if item.EditApprovedAt.Valid {
-		s := item.EditApprovedAt.Time.Format(time.RFC3339)
-		resp.EditApprovedAt = &s
-	}
-	if item.EditApprovedBy.Valid {
-		resp.EditApprovedBy = &item.EditApprovedBy.String
-	}
-	if item.EditRejectedAt.Valid {
-		s := item.EditRejectedAt.Time.Format(time.RFC3339)
-		resp.EditRejectedAt = &s
-	}
-	if item.EditRejectedBy.Valid {
-		resp.EditRejectedBy = &item.EditRejectedBy.String
-	}
-	return resp
-}
-
-func (s *RisikoService) GetAllEditRequests() ([]dto.EditRequestItemResponse, error) {
-	items, err := s.repo.GetAllEditRequests()
-	if err != nil {
-		return nil, err
-	}
-
-	var result []dto.EditRequestItemResponse
-	for _, item := range items {
-		result = append(result, editRequestItemToResponse(item))
-	}
-
-	return result, nil
-}
-
-func (s *RisikoService) GetMyEditRequest(userID string) (*dto.EditRequestItemResponse, error) {
-	if strings.TrimSpace(userID) == "" {
-		return nil, errors.New("user_id wajib diisi")
-	}
-
-	item, err := s.repo.GetEditRequestByUserID(userID)
-	if err != nil {
-		return nil, err
-	}
-
-	resp := editRequestItemToResponse(*item)
-	return &resp, nil
 }

@@ -89,7 +89,6 @@ func (h *chatHandlerTestable) Stream(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	flusher, ok := w.(http.Flusher)
 	if !ok {
@@ -294,7 +293,6 @@ func TestChatHandler_Stream_SetsSSEHeaders(t *testing.T) {
 	assert.Equal(t, "text/event-stream", w.Header().Get("Content-Type"))
 	assert.Equal(t, "no-cache", w.Header().Get("Cache-Control"))
 	assert.Equal(t, "keep-alive", w.Header().Get("Connection"))
-	assert.Equal(t, "*", w.Header().Get("Access-Control-Allow-Origin"))
 }
 
 // ================================================================

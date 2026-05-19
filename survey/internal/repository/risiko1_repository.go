@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"errors"
-	"github.com/google/uuid"
 	"survey/internal/models"
 )
 
@@ -105,14 +104,11 @@ func (r *RisikoRepository) GetUrutanByRisikoID(id string) (int, error) {
 
 // STEP 1 - ELIGIBILITY
 func (r *RisikoRepository) UpsertEligibility(m models.RisikoEligibility) error {
-	if m.ID == "" {
-		m.ID = uuid.New().String()
-	}
 
 	query := `
 	INSERT INTO risiko_eligibility 
-	(id, responden_id, risiko_id, pernah_terjadi)
-	VALUES (?, ?, ?, ?)
+	(responden_id, risiko_id, pernah_terjadi)
+	VALUES (?, ?, ?)
 	ON DUPLICATE KEY UPDATE 
 	pernah_terjadi = VALUES(pernah_terjadi)
 	`
@@ -123,7 +119,6 @@ func (r *RisikoRepository) UpsertEligibility(m models.RisikoEligibility) error {
 	}
 
 	_, err := r.db.Exec(query,
-		m.ID,
 		m.RespondenID,
 		risikoID,
 		m.PernahTerjadi,
@@ -134,14 +129,11 @@ func (r *RisikoRepository) UpsertEligibility(m models.RisikoEligibility) error {
 
 // STEP 2A - ALASAN
 func (r *RisikoRepository) UpsertAlasan(m models.RisikoAlasan) error {
-	if m.ID == "" {
-		m.ID = uuid.New().String()
-	}
 
 	query := `
 	INSERT INTO risiko_alasan 
-	(id, responden_id, risiko_id, alasan)
-	VALUES (?, ?, ?, ?)
+	(responden_id, risiko_id, alasan)
+	VALUES (?, ?, ?)
 	ON DUPLICATE KEY UPDATE 
 	alasan = VALUES(alasan)
 	`
@@ -152,7 +144,6 @@ func (r *RisikoRepository) UpsertAlasan(m models.RisikoAlasan) error {
 	}
 
 	_, err := r.db.Exec(query,
-		m.ID,
 		m.RespondenID,
 		risikoID,
 		m.Alasan,
@@ -163,16 +154,13 @@ func (r *RisikoRepository) UpsertAlasan(m models.RisikoAlasan) error {
 
 // STEP 2B - DAMPAK
 func (r *RisikoRepository) UpsertDampak(m models.RisikoDampak) error {
-	if m.ID == "" {
-		m.ID = uuid.New().String()
-	}
 
 	query := `
 	INSERT INTO risiko_dampak
-	(id, responden_id, risiko_id,
+	(responden_id, risiko_id,
 	dampak_reputasi, dampak_operasional, dampak_finansial, dampak_hukum,
 	frekuensi)
-	VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+	VALUES (?, ?, ?, ?, ?, ?, ?)
 	ON DUPLICATE KEY UPDATE
 	dampak_reputasi = VALUES(dampak_reputasi),
 	dampak_operasional = VALUES(dampak_operasional),
@@ -187,7 +175,6 @@ func (r *RisikoRepository) UpsertDampak(m models.RisikoDampak) error {
 	}
 
 	_, err := r.db.Exec(query,
-		m.ID,
 		m.RespondenID,
 		risikoID,
 		m.DampakReputasi,
@@ -202,14 +189,11 @@ func (r *RisikoRepository) UpsertDampak(m models.RisikoDampak) error {
 
 // STEP 2C - PENGENDALIAN
 func (r *RisikoRepository) UpsertPengendalian(m models.RisikoPengendalian) error {
-	if m.ID == "" {
-		m.ID = uuid.New().String()
-	}
 
 	query := `
 	INSERT INTO risiko_pengendalian
-	(id, responden_id, risiko_id, ada_pengendalian, deskripsi_pengendalian)
-	VALUES (?, ?, ?, ?, ?)
+	(responden_id, risiko_id, ada_pengendalian, deskripsi_pengendalian)
+	VALUES (?, ?, ?, ?)
 	ON DUPLICATE KEY UPDATE
 	ada_pengendalian = VALUES(ada_pengendalian),
 	deskripsi_pengendalian = VALUES(deskripsi_pengendalian)
@@ -221,7 +205,6 @@ func (r *RisikoRepository) UpsertPengendalian(m models.RisikoPengendalian) error
 	}
 
 	_, err := r.db.Exec(query,
-		m.ID,
 		m.RespondenID,
 		risikoID,
 		m.AdaPengendalian,
@@ -350,14 +333,11 @@ func (r *RisikoRepository) FindByRespondentID(respondenID string) (map[string]in
 
 // PROGRESS
 func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
-	if p.ID == "" {
-		p.ID = uuid.New().String()
-	}
 
 	query := `
 	INSERT INTO survey_progress
-	(id, responden_id, risiko_id, langkah_saat_ini, selesai, status, edit_request_reason, edit_request_response, submitted_at, edit_requested_at, edit_approved_at, edit_approved_by, edit_rejected_at, edit_rejected_by)
-	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	(responden_id, risiko_id, langkah_saat_ini, selesai, status, edit_request_reason, edit_request_response, submitted_at, edit_requested_at, edit_approved_at, edit_approved_by, edit_rejected_at, edit_rejected_by)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	ON DUPLICATE KEY UPDATE
 	risiko_id = VALUES(risiko_id),
 	langkah_saat_ini = VALUES(langkah_saat_ini),
@@ -429,7 +409,6 @@ func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 	}
 
 	_, err := r.db.Exec(query,
-		p.ID,
 		p.RespondenID,
 		risikoID,
 		langkah,
@@ -488,11 +467,10 @@ func (r *RisikoRepository) GetProgress(respondenID string) (*models.SurveyProgre
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			newID := uuid.New().String()
 			_, err := r.db.Exec(`
-				INSERT INTO survey_progress (id, responden_id, langkah_saat_ini, selesai, status)
-				VALUES (?, ?, 'eligibility', false, 'draft')
-			`, newID, respondenID)
+				INSERT INTO survey_progress (responden_id, langkah_saat_ini, selesai, status)
+				VALUES (?, 'eligibility', false, 'draft')
+			`, respondenID)
 			if err != nil {
 				return nil, err
 			}
@@ -519,17 +497,21 @@ func (r *RisikoRepository) GetRespondentIDByUserID(userID string) (string, error
 	return id, nil
 }
 
-func (r *RisikoRepository) InsertCustomRisiko(respondenID string, nama string) (string, error) {
-	newID := uuid.New().String()
-	_, err := r.db.Exec(`
-		INSERT INTO risiko_custom (id, responden_id, nama)
-		VALUES (?, ?, ?)
-	`, newID, respondenID, nama)
+func (r *RisikoRepository) InsertCustomRisiko(respondenID string, nama string) (int, error) {
+	result, err := r.db.Exec(`
+		INSERT INTO risiko_custom (responden_id, nama)
+		VALUES (?, ?)
+	`, respondenID, nama)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 
-	return newID, nil
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return int(id), nil
 }
 
 // EXISTS
@@ -543,72 +525,4 @@ func (r *RisikoRepository) ExistsResponden(id string) (bool, error) {
 	var exists bool
 	err := r.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM responden WHERE id = ?)`, id).Scan(&exists)
 	return exists, err
-}
-
-// EDIT REQUESTS
-
-const editRequestSelectQuery = `
-	SELECT sp.responden_id, resp.user_id, resp.nama_lengkap,
-		p.nama,
-		sp.status, sp.edit_request_reason, sp.edit_request_response,
-		sp.edit_requested_at, sp.edit_approved_at, sp.edit_approved_by,
-		sp.edit_rejected_at, sp.edit_rejected_by
-	FROM survey_progress sp
-	JOIN responden resp ON sp.responden_id = resp.id
-	LEFT JOIN perusahaan p ON resp.id_perusahaan = p.id
-`
-
-func scanEditRequestItem(scanner interface{ Scan(...interface{}) error }) (*models.EditRequestItem, error) {
-	var item models.EditRequestItem
-	err := scanner.Scan(
-		&item.RespondenID, &item.UserID, &item.NamaLengkap,
-		&item.NamaPerusahaan,
-		&item.Status, &item.EditReason, &item.EditResponse,
-		&item.EditRequestedAt, &item.EditApprovedAt, &item.EditApprovedBy,
-		&item.EditRejectedAt, &item.EditRejectedBy,
-	)
-	return &item, err
-}
-
-// GetAllEditRequests returns all survey edit requests with status 'edit_requested' (pending).
-func (r *RisikoRepository) GetAllEditRequests() ([]models.EditRequestItem, error) {
-	query := editRequestSelectQuery + `
-		WHERE sp.status = 'edit_requested'
-		ORDER BY sp.edit_requested_at DESC
-	`
-
-	rows, err := r.db.Query(query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var items []models.EditRequestItem
-	for rows.Next() {
-		item, err := scanEditRequestItem(rows)
-		if err != nil {
-			return nil, err
-		}
-		items = append(items, *item)
-	}
-
-	return items, nil
-}
-
-// GetEditRequestByUserID returns the edit request for a specific user.
-func (r *RisikoRepository) GetEditRequestByUserID(userID string) (*models.EditRequestItem, error) {
-	query := editRequestSelectQuery + `
-		WHERE resp.user_id = ?
-		AND sp.status IN ('edit_requested', 'edit_approved', 'edit_rejected')
-	`
-
-	item, err := scanEditRequestItem(r.db.QueryRow(query, userID))
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, ErrNotFound
-		}
-		return nil, err
-	}
-
-	return item, nil
 }

@@ -13,7 +13,6 @@ import (
 )
 
 // helper
-func stringPtr(v string) *string { return &v }
 
 // GET ALL RISIKO
 func TestGetAllRisiko_Success(t *testing.T) {
@@ -23,7 +22,7 @@ func TestGetAllRisiko_Success(t *testing.T) {
 	repo := NewRisikoRepository(db)
 
 	rows := sqlmock.NewRows([]string{"id", "nama", "deskripsi"}).
-		AddRow("uuid-1", "Risiko A", "Deskripsi A")
+		AddRow(1, "Risiko A", "Deskripsi A")
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, nama, COALESCE(deskripsi, '')")).
 		WillReturnRows(rows)
@@ -47,19 +46,19 @@ func TestGetRisikoByID_Success(t *testing.T) {
 	repo := NewRisikoRepository(db)
 
 	rows := sqlmock.NewRows([]string{"id", "kode", "nama", "deskripsi", "urutan", "aktif", "created_at", "updated_at"}).
-		AddRow("uuid-1", "R01", "Risiko A", nil, 1, true, time.Now(), time.Now())
+		AddRow(1, "R01", "Risiko A", nil, 1, true, time.Now(), time.Now())
 
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, kode, nama, deskripsi")).
-		WithArgs("uuid-1").
+		WithArgs("1").
 		WillReturnRows(rows)
 
-	res, err := repo.GetByID("uuid-1")
+	res, err := repo.GetByID("1")
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if res.ID != "uuid-1" {
+	if res.ID != "1" {
 		t.Error("invalid ID")
 	}
 }
@@ -72,12 +71,12 @@ func TestUpsertEligibility(t *testing.T) {
 	repo := NewRisikoRepository(db)
 
 	mock.ExpectExec("INSERT INTO risiko_eligibility").
-		WithArgs(sqlmock.AnyArg(), "uuid-resp", "uuid-risk", true).
+		WithArgs("1", strPtr("2"), true).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	err := repo.UpsertEligibility(models.RisikoEligibility{
-		RespondenID:   "uuid-resp",
-		RisikoID:      stringPtr("uuid-risk"),
+		RespondenID:   "1",
+		RisikoID:      strPtr("2"),
 		PernahTerjadi: true,
 	})
 
@@ -101,13 +100,13 @@ func TestFindByRespondentID_Success(t *testing.T) {
 		"frekuensi",
 		"ada_pengendalian", "deskripsi_pengendalian",
 	}).AddRow(
-		"uuid-resp", "uuid-risk-1",
+		"1", "2",
 		true, "alasan",
 		"tinggi", "sedang", "rendah", "tinggi",
 		"sering",
 		true, "kontrol",
 	).AddRow(
-		"uuid-resp", "uuid-risk-2",
+		"1", "3",
 		false, "",
 		nil, nil, nil, nil,
 		nil,
@@ -115,10 +114,10 @@ func TestFindByRespondentID_Success(t *testing.T) {
 	)
 
 	mock.ExpectQuery("SELECT").
-		WithArgs("uuid-resp").
+		WithArgs("1").
 		WillReturnRows(rows)
 
-	result, err := repo.FindByRespondentID("uuid-resp")
+	result, err := repo.FindByRespondentID("1")
 
 	if err != nil {
 		t.Fatal(err)
@@ -127,10 +126,10 @@ func TestFindByRespondentID_Success(t *testing.T) {
 	if result["pernah_terjadi"] != true {
 		t.Error("invalid mapping")
 	}
-	if result["responden_id"] != "uuid-resp" {
+	if result["responden_id"] != "1" {
 		t.Error("invalid responden_id mapping")
 	}
-	if result["risiko_id"] != "uuid-risk-1" {
+	if result["risiko_id"] != "2" {
 		t.Error("invalid risiko_id mapping")
 	}
 	items, ok := result["items"].([]map[string]interface{})
@@ -150,7 +149,7 @@ func TestFindByRespondentID_NotFound(t *testing.T) {
 	repo := NewRisikoRepository(db)
 
 	mock.ExpectQuery("SELECT").
-		WithArgs("uuid-resp").
+		WithArgs("1").
 		WillReturnRows(sqlmock.NewRows([]string{
 			"responden_id", "risiko_id",
 			"pernah_terjadi", "alasan",
@@ -160,7 +159,7 @@ func TestFindByRespondentID_NotFound(t *testing.T) {
 			"ada_pengendalian", "deskripsi_pengendalian",
 		}))
 
-	_, err := repo.FindByRespondentID("uuid-resp")
+	_, err := repo.FindByRespondentID("1")
 
 	if !errors.Is(err, ErrNotFound) {
 		t.Error("expected ErrNotFound")
@@ -176,12 +175,12 @@ func TestGetProgress_InsertDefault(t *testing.T) {
 
 	// first query -> no rows
 	mock.ExpectQuery("SELECT id, responden_id").
-		WithArgs("uuid-resp").
+		WithArgs("1").
 		WillReturnError(sql.ErrNoRows)
 
 	// insert default
 	mock.ExpectExec("INSERT INTO survey_progress").
-		WithArgs(sqlmock.AnyArg(), "uuid-resp").
+		WithArgs("1").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	// second query (after insert)
@@ -189,23 +188,23 @@ func TestGetProgress_InsertDefault(t *testing.T) {
 		"id", "responden_id", "risiko_id",
 		"langkah_saat_ini", "selesai", "status",
 		"edit_request_reason", "edit_request_response",
-		"submitted_at", "edit_requested_at",
+		"submitted_at", "edit_requested_at", 
 		"edit_approved_at", "edit_approved_by",
 		"edit_rejected_at", "edit_rejected_by",
 		"terakhir_update",
-	}).AddRow("uuid-prog", "uuid-resp", nil, "eligibility", false, "draft", nil, nil, nil, nil, nil, nil, nil, nil, time.Now())
+	}).AddRow("1", "1", nil, "eligibility", false, "draft", nil, nil, nil, nil, nil, nil, nil, nil, time.Now())
 
 	mock.ExpectQuery("SELECT id, responden_id").
-		WithArgs("uuid-resp").
+		WithArgs("1").
 		WillReturnRows(rows)
 
-	res, err := repo.GetProgress("uuid-resp")
+	res, err := repo.GetProgress("1")
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if res.RespondenID != "uuid-resp" {
+	if res.RespondenID != "1" {
 		t.Error("invalid responden id")
 	}
 }
@@ -218,10 +217,10 @@ func TestExistsRisiko(t *testing.T) {
 	repo := NewRisikoRepository(db)
 
 	mock.ExpectQuery("SELECT EXISTS").
-		WithArgs("uuid-risk").
+		WithArgs("1").
 		WillReturnRows(sqlmock.NewRows([]string{"exists"}).AddRow(true))
 
-	exists, err := repo.ExistsRisiko("uuid-risk")
+	exists, err := repo.ExistsRisiko("1")
 
 	if err != nil || !exists {
 		t.Error("expected true")
@@ -236,16 +235,16 @@ func TestInsertCustomRisiko(t *testing.T) {
 	repo := NewRisikoRepository(db)
 
 	mock.ExpectExec("INSERT INTO risiko_custom").
-		WithArgs(sqlmock.AnyArg(), "uuid-resp", "custom").
-		WillReturnResult(sqlmock.NewResult(0, 1))
+		WithArgs("1", "custom").
+		WillReturnResult(sqlmock.NewResult(10, 1))
 
-	id, err := repo.InsertCustomRisiko("uuid-resp", "custom")
+	id, err := repo.InsertCustomRisiko("1", "custom")
 
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if id == "" {
+	if id != 10 {
 		t.Error("invalid id")
 	}
 }

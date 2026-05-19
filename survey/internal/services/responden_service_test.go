@@ -11,7 +11,7 @@ import (
 )
 
 type mockRepo struct {
-	createFn        func(m models.Responden) (string, error)
+	createFn        func(m models.Responden) (int64, error)
 	getAllFn        func() ([]models.RespondenDetail, error)
 	getDetailByIDFn func(id string) (*models.RespondenDetail, error)
 	getByUserIDFn   func(userID string) (*models.RespondenDetail, error)
@@ -19,7 +19,7 @@ type mockRepo struct {
 	canEditByUserFn func(userID string) (bool, string, error)
 }
 
-func (m *mockRepo) Create(r models.Responden) (string, error) {
+func (m *mockRepo) Create(r models.Responden) (int64, error) {
 	return m.createFn(r)
 }
 func (m *mockRepo) GetAllDetail() ([]models.RespondenDetail, error) {
@@ -71,7 +71,7 @@ func TestUpsertByUserID_Success(t *testing.T) {
 		getByUserIDFn: func(userID string) (*models.RespondenDetail, error) {
 			return &models.RespondenDetail{
 				Responden: models.Responden{
-					ID:           "uuid-1",
+					ID:           "1",
 					UserID:       userID,
 					IdPerusahaan: "perusahaan1",
 					NamaLengkap:  "Nama Lengkap",
@@ -114,7 +114,7 @@ func TestGetAll_Success(t *testing.T) {
 	mock := &mockRepo{
 		getAllFn: func() ([]models.RespondenDetail, error) {
 			return []models.RespondenDetail{
-				{Responden: models.Responden{ID: "uuid-1", CreatedAt: time.Now(), UpdatedAt: time.Now()}},
+				{Responden: models.Responden{ID: "1", CreatedAt: time.Now(), UpdatedAt: time.Now()}},
 			}, nil
 		},
 	}

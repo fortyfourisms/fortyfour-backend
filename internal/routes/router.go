@@ -141,7 +141,7 @@ func InitRouter(
 	mux.HandleFunc("/api/sdm_csirt/", authM.Authenticate(casbinM.Authorize(utils.AdaptHandler(sdmCsirtH))))
 
 	// Route Sektor
-	// GET → semua user authenticated, POST/PUT → admin/staff (casbin)
+	// GET → semua user authenticated, POST/PUT → admin/staff (casbin), DELETE → admin only (casbin)
 	mux.HandleFunc("/api/sektor", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			utils.AdaptHandler(sektorH)(w, r)
@@ -158,7 +158,7 @@ func InitRouter(
 	}))
 
 	// Route SubSektor
-	// GET → semua user authenticated, POST/PUT → admin/staff (casbin)
+	// GET → semua user authenticated, POST/PUT → admin/staff (casbin), DELETE → admin only (casbin)
 	mux.HandleFunc("/api/sub_sektor", authM.Authenticate(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
 			utils.AdaptHandler(subsectorH)(w, r)

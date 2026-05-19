@@ -12,14 +12,14 @@ import (
 type JawabanIdentifikasiRepositoryInterface interface {
 	Create(req dto.CreateJawabanIdentifikasiRequest) (int64, error)
 	GetAll() ([]dto.JawabanIdentifikasiResponse, error)
-	GetByID(id int) (*dto.JawabanIdentifikasiResponse, error)
+	GetByUUID(uuid string) (*dto.JawabanIdentifikasiResponse, error)
 	GetByIkasID(ikasID string) ([]dto.JawabanIdentifikasiResponse, error)
 	GetByIkasIDFromBuffer(ikasID string) ([]dto.JawabanIdentifikasiResponse, error)
 	GetByPerusahaanID(perusahaanID string) ([]dto.JawabanIdentifikasiResponse, error)
 	GetByPertanyaan(pertanyaanID int) ([]dto.JawabanIdentifikasiResponse, error)
 	GetByPertanyaanAndPerusahaan(pertanyaanID int, perusahaanID string) ([]dto.JawabanIdentifikasiResponse, error)
-	Update(id int, req dto.UpdateJawabanIdentifikasiRequest) error
-	Delete(id int) error
+	Update(uuid string, req dto.UpdateJawabanIdentifikasiRequest) error
+	Delete(uuid string) error
 	CheckPertanyaanExists(pertanyaanID int) (bool, error)
 	CheckIkasExists(ikasID string) (bool, error)
 	CheckDuplicate(ikasID string, pertanyaanID int, excludeID int) (bool, error)
@@ -42,6 +42,7 @@ func NewJawabanIdentifikasiRepository(db *sql.DB) *JawabanIdentifikasiRepository
 const jawabanIdentifikasiSelectQuery = `
 	SELECT
 		ji.id,
+		ji.uuid,
 		ji.ikas_id,
 		ji.jawaban_identifikasi,
 		ji.evidence,
@@ -63,6 +64,7 @@ const jawabanIdentifikasiSelectQuery = `
 const jawabanIdentifikasiBufferSelectQuery = `
 	SELECT
 		ji.id,
+		ji.uuid,
 		ji.ikas_id,
 		ji.jawaban_identifikasi,
 		ji.evidence,
@@ -87,6 +89,7 @@ func scanJawaban(row interface {
 	var item dto.JawabanIdentifikasiResponse
 	err := row.Scan(
 		&item.ID,
+		&item.UUID,
 		&item.IkasID,
 		&item.JawabanIdentifikasi,
 		&item.Evidence,
@@ -108,10 +111,11 @@ func scanJawaban(row interface {
 
 func (r *JawabanIdentifikasiRepository) Create(req dto.CreateJawabanIdentifikasiRequest) (int64, error) {
 	query := `INSERT INTO jawaban_identifikasi
-		(pertanyaan_identifikasi_id, ikas_id, jawaban_identifikasi, evidence, validasi, keterangan)
-		VALUES (?, ?, ?, ?, ?, ?)`
+		(uuid, pertanyaan_identifikasi_id, ikas_id, jawaban_identifikasi, evidence, validasi, keterangan)
+		VALUES (?, ?, ?, ?, ?, ?, ?)`
 
 	res, err := r.db.Exec(query,
+		utils.GenerateUUID(),
 		req.PertanyaanIdentifikasiID,
 		req.IkasID,
 		req.JawabanIdentifikasi,
@@ -149,10 +153,10 @@ func (r *JawabanIdentifikasiRepository) GetAll() ([]dto.JawabanIdentifikasiRespo
 	return result, nil
 }
 
-func (r *JawabanIdentifikasiRepository) GetByID(id int) (*dto.JawabanIdentifikasiResponse, error) {
-	query := jawabanIdentifikasiSelectQuery + ` WHERE ji.id = ?`
+func (r *JawabanIdentifikasiRepository) GetByUUID(uuid string) (*dto.JawabanIdentifikasiResponse, error) {
+	query := jawabanIdentifikasiSelectQuery + ` WHERE ji.uuid = ?`
 
-	item, err := scanJawaban(r.db.QueryRow(query, id))
+	item, err := scanJawaban(r.db.QueryRow(query, uuid))
 	if err != nil {
 		rollbar.Error(err)
 		return nil, err
@@ -283,7 +287,7 @@ func (r *JawabanIdentifikasiRepository) GetByPertanyaanAndPerusahaan(pertanyaanI
 	return result, nil
 }
 
-func (r *JawabanIdentifikasiRepository) Update(id int, req dto.UpdateJawabanIdentifikasiRequest) error {
+func (r *JawabanIdentifikasiRepository) Update(uuid string, req dto.UpdateJawabanIdentifikasiRequest) error {
 	query := "UPDATE jawaban_identifikasi SET "
 	args := []interface{}{}
 	updates := []string{}
@@ -310,8 +314,8 @@ func (r *JawabanIdentifikasiRepository) Update(id int, req dto.UpdateJawabanIden
 	}
 
 	query += strings.Join(updates, ", ")
-	query += " WHERE id=?"
-	args = append(args, id)
+	query += " WHERE uuid=?"
+	args = append(args, uuid)
 
 	_, err := r.db.Exec(query, args...)
 	if err != nil {
@@ -321,8 +325,8 @@ func (r *JawabanIdentifikasiRepository) Update(id int, req dto.UpdateJawabanIden
 	return nil
 }
 
-func (r *JawabanIdentifikasiRepository) Delete(id int) error {
-	_, err := r.db.Exec(`DELETE FROM jawaban_identifikasi WHERE id=?`, id)
+func (r *JawabanIdentifikasiRepository) Delete(uuid string) error {
+	_, err := r.db.Exec(`DELETE FROM jawaban_identifikasi WHERE uuid=?`, uuid)
 	if err != nil {
 		rollbar.Error(err)
 		return err
@@ -490,8 +494,8 @@ func (r *JawabanIdentifikasiRepository) UpsertToBuffer(req dto.CreateJawabanIden
 
 	// 3. Jika belum ada di utama, baru masukkan ke buffer seperti biasa
 	query := `INSERT INTO jawaban_identifikasi_buffer 
-		(pertanyaan_identifikasi_id, ikas_id, jawaban_identifikasi, evidence, validasi, keterangan)
-		VALUES (?, ?, ?, ?, ?, ?)
+		(uuid, pertanyaan_identifikasi_id, ikas_id, jawaban_identifikasi, evidence, validasi, keterangan)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE 
 		jawaban_identifikasi = VALUES(jawaban_identifikasi),
 		evidence = VALUES(evidence),
@@ -499,6 +503,7 @@ func (r *JawabanIdentifikasiRepository) UpsertToBuffer(req dto.CreateJawabanIden
 		keterangan = VALUES(keterangan)`
 
 	_, err = r.db.Exec(query,
+		utils.GenerateUUID(),
 		req.PertanyaanIdentifikasiID,
 		req.IkasID,
 		req.JawabanIdentifikasi,
@@ -525,8 +530,8 @@ func (r *JawabanIdentifikasiRepository) FlushBuffer(ikasID string) error {
 
 	// 1. Move from buffer to main table
 	moveQuery := `INSERT INTO jawaban_identifikasi 
-		(pertanyaan_identifikasi_id, ikas_id, jawaban_identifikasi, evidence, validasi, keterangan)
-		SELECT pertanyaan_identifikasi_id, ikas_id, jawaban_identifikasi, evidence, validasi, keterangan
+		(uuid, pertanyaan_identifikasi_id, ikas_id, jawaban_identifikasi, evidence, validasi, keterangan)
+		SELECT uuid, pertanyaan_identifikasi_id, ikas_id, jawaban_identifikasi, evidence, validasi, keterangan
 		FROM jawaban_identifikasi_buffer WHERE ikas_id = ?
 		ON DUPLICATE KEY UPDATE 
 		jawaban_identifikasi = VALUES(jawaban_identifikasi),
@@ -549,9 +554,9 @@ func (r *JawabanIdentifikasiRepository) FlushBuffer(ikasID string) error {
 func (r *JawabanIdentifikasiRepository) CloneByIkasID(sourceID, targetID string) error {
 	query := `
 		INSERT INTO jawaban_identifikasi 
-			(pertanyaan_identifikasi_id, ikas_id, jawaban_identifikasi, evidence, validasi, keterangan)
+			(uuid, pertanyaan_identifikasi_id, ikas_id, jawaban_identifikasi, evidence, validasi, keterangan)
 		SELECT 
-			pertanyaan_identifikasi_id, ?, jawaban_identifikasi, evidence, validasi, keterangan
+			uuid, pertanyaan_identifikasi_id, ?, jawaban_identifikasi, evidence, validasi, keterangan
 		FROM jawaban_identifikasi 
 		WHERE ikas_id = ?`
 
