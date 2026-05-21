@@ -23,13 +23,13 @@ type mockRisikoService struct {
 	ProcessPengendalianFunc func(string, dto.PengendalianRequest) (map[string]interface{}, error)
 	GetAllRisikoFunc        func() ([]models.RisikoResponse, error)
 	GetByUserIDFunc         func(string) (map[string]interface{}, error)
-	GetByRespondentIDFunc   func(int64) (map[string]interface{}, error)
+	GetByRespondentIDFunc   func(string) (map[string]interface{}, error)
 	GetProgressFunc         func(string) (dto.ProgressResponse, error)
 	NavigateFunc            func(string, dto.NavigateRequest) (dto.ProgressResponse, error)
 	SaveProgressFunc        func(string, dto.NavigateRequest) (dto.ProgressResponse, error)
 	FinishSurveyFunc        func(string) error
 	RequestEditFunc         func(string, dto.RequestEditRequest) (dto.ProgressResponse, error)
-	ReviewEditRequestFunc   func(string, int64, dto.ReviewEditRequest) (dto.ProgressResponse, error)
+	ReviewEditRequestFunc   func(string, string, dto.ReviewEditRequest) (dto.ProgressResponse, error)
 }
 
 func (m *mockRisikoService) ProcessEligibility(userID string, r dto.EligibilityRequest) (map[string]interface{}, error) {
@@ -50,7 +50,7 @@ func (m *mockRisikoService) GetAllRisiko() ([]models.RisikoResponse, error) {
 func (m *mockRisikoService) GetByUserID(userID string) (map[string]interface{}, error) {
 	return m.GetByUserIDFunc(userID)
 }
-func (m *mockRisikoService) GetByRespondentID(id int64) (map[string]interface{}, error) {
+func (m *mockRisikoService) GetByRespondentID(id string) (map[string]interface{}, error) {
 	return m.GetByRespondentIDFunc(id)
 }
 func (m *mockRisikoService) GetProgress(userID string) (dto.ProgressResponse, error) {
@@ -68,7 +68,7 @@ func (m *mockRisikoService) FinishSurvey(userID string) error {
 func (m *mockRisikoService) RequestEdit(userID string, r dto.RequestEditRequest) (dto.ProgressResponse, error) {
 	return m.RequestEditFunc(userID, r)
 }
-func (m *mockRisikoService) ReviewEditRequest(adminID string, respondenID int64, r dto.ReviewEditRequest) (dto.ProgressResponse, error) {
+func (m *mockRisikoService) ReviewEditRequest(adminID string, respondenID string, r dto.ReviewEditRequest) (dto.ProgressResponse, error) {
 	return m.ReviewEditRequestFunc(adminID, respondenID, r)
 }
 
@@ -118,7 +118,7 @@ func TestSubmitEligibility_InvalidBody(t *testing.T) {
 // GET BY RESPONDENT
 func TestGetByRespondentID_Success(t *testing.T) {
 	mock := &mockRisikoService{
-		GetByRespondentIDFunc: func(int64) (map[string]interface{}, error) {
+		GetByRespondentIDFunc: func(string) (map[string]interface{}, error) {
 			return map[string]interface{}{"data": "ok"}, nil
 		},
 	}
@@ -138,7 +138,7 @@ func TestGetByRespondentID_Success(t *testing.T) {
 
 func TestGetByRespondentID_NotFound(t *testing.T) {
 	mock := &mockRisikoService{
-		GetByRespondentIDFunc: func(int64) (map[string]interface{}, error) {
+		GetByRespondentIDFunc: func(string) (map[string]interface{}, error) {
 			return nil, repository.ErrNotFound
 		},
 	}
@@ -157,9 +157,10 @@ func TestGetByRespondentID_NotFound(t *testing.T) {
 }
 
 func TestGetByRespondentID_InvalidID(t *testing.T) {
+	// ID is missing in URL (just /api/survey/risiko/)
 	h := NewRisikoHandler(&mockRisikoService{})
 
-	req := httptest.NewRequest(http.MethodGet, "/api/survey/risiko/abc", nil)
+	req := httptest.NewRequest(http.MethodGet, "/api/survey/risiko/", nil)
 	req = withRisikoCtx(req, "admin1", "admin")
 	w := httptest.NewRecorder()
 

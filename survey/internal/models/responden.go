@@ -4,7 +4,7 @@ import "time"
 
 // BASE
 type Responden struct {
-	ID int64 `json:"id" db:"id"`
+	ID string `json:"id" db:"id"`
 
 	UserID       string `json:"user_id" db:"user_id"`
 	IdPerusahaan string `json:"id_perusahaan" db:"id_perusahaan"`

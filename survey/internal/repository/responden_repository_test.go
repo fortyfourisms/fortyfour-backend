@@ -94,10 +94,10 @@ func TestGetDetailByID_NotFound(t *testing.T) {
 	repo := NewRespondenRepository(db)
 
 	mock.ExpectQuery(regexp.QuoteMeta(baseDetailQuery + " WHERE r.id = ?")).
-		WithArgs(1).
+		WithArgs("1").
 		WillReturnError(sql.ErrNoRows)
 
-	_, err := repo.GetDetailByID(1)
+	_, err := repo.GetDetailByID("1")
 
 	if err == nil || err.Error() != "data tidak ditemukan" {
 		t.Errorf("expected not found error")

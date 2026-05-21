@@ -1,27 +1,13 @@
 basePath: /
 definitions:
-  survey_internal_dto.APIResponse:
-    properties:
-      data: {}
-      error:
-        type: string
-      errors:
-        additionalProperties:
-          type: string
-        type: object
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   survey_internal_dto.AlasanRequest:
     properties:
       alasan:
         type: string
       responden_id:
-        type: integer
+        type: string
       risiko_id:
-        type: integer
+        type: string
     type: object
   survey_internal_dto.CreateRespondenRequest:
     properties:
@@ -51,25 +37,18 @@ definitions:
       frekuensi:
         $ref: '#/definitions/survey_internal_models.FrequencyLevel'
       responden_id:
-        type: integer
+        type: string
       risiko_id:
-        type: integer
+        type: string
     type: object
   survey_internal_dto.EligibilityRequest:
     properties:
       pernah_terjadi:
         type: boolean
       responden_id:
-        type: integer
-      risiko_id:
-        type: integer
-    type: object
-  survey_internal_dto.ErrorResponse:
-    properties:
-      message:
         type: string
-      success:
-        type: boolean
+      risiko_id:
+        type: string
     type: object
   survey_internal_dto.NavigateRequest:
     properties:
@@ -78,7 +57,7 @@ definitions:
       direction:
         type: string
       responden_id:
-        type: integer
+        type: string
     type: object
   survey_internal_dto.PengendalianRequest:
     properties:
@@ -87,20 +66,24 @@ definitions:
       deskripsi_pengendalian:
         type: string
       responden_id:
-        type: integer
-      risiko_id:
-        type: integer
-    type: object
-  survey_internal_dto.ProgressResponse:
-    properties:
-      langkah_saat_ini:
         type: string
-      responden_id:
-        type: integer
       risiko_id:
-        type: integer
-      selesai:
-        type: boolean
+        type: string
+    type: object
+  survey_internal_dto.RequestEditRequest:
+    properties:
+      reason:
+        type: string
+    type: object
+  survey_internal_dto.ReviewEditRequest:
+    properties:
+      action:
+        description: '"approve" or "reject"'
+        example: approve
+        type: string
+      response:
+        example: Alasan persetujuan atau penolakan
+        type: string
     type: object
   survey_internal_models.FrequencyLevel:
     enum:
@@ -148,142 +131,299 @@ paths:
       summary: Health check
       tags:
       - Health
-  /api/survey/finish:
+  /api/survey/edit-requests:
     post:
       consumes:
       - application/json
-      description: Complete the survey
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Finish Survey
-      tags:
-      - Risiko
-  /api/survey/navigate:
-    post:
-      consumes:
-      - application/json
-      description: Navigate through survey steps
+      description: Request permission to edit a survey that has already been submitted.
       parameters:
-      - description: Navigate request
+      - description: Edit Request Data
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/survey_internal_dto.NavigateRequest'
+          $ref: '#/definitions/survey_internal_dto.RequestEditRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/survey_internal_dto.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/survey_internal_dto.ProgressResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Navigate Survey
-      tags:
-      - Risiko
-  /api/survey/responden:
-    get:
-      description: Hanya admin yang dapat melihat semua data responden
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              additionalProperties: true
-              type: object
-            type: array
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Ambil semua responden
-      tags:
-      - Responden
-  /api/survey/responden/{id}:
-    get:
-      description: Hanya admin yang dapat melihat detail responden
-      parameters:
-      - description: Responden ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
+          description: Success
           schema:
             additionalProperties: true
             type: object
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      security:
-      - BearerAuth: []
-      summary: Ambil responden berdasarkan ID
-      tags:
-      - Responden
-  /api/survey/responden/me:
-    get:
-      description: User hanya dapat melihat data dirinya sendiri
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
           schema:
             additionalProperties: true
             type: object
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
-      summary: Ambil data responden milik user login
+      summary: Request to edit a submitted survey
       tags:
-      - Responden
+      - Survey Progress
+  /api/survey/edit-requests/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Approve or reject a user's request to edit their survey.
+      parameters:
+      - description: Respondent UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Review Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/survey_internal_dto.ReviewEditRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Review survey edit request (Admin)
+      tags:
+      - Survey Progress
+  /api/survey/finish:
     post:
       consumes:
       - application/json
-      description: Jika belum ada maka create, jika sudah ada maka update (upsert)
+      description: Submit and finish the survey.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Survey berhasil diselesaikan
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Finish survey
+      tags:
+      - Survey Progress
+  /api/survey/navigate:
+    post:
+      consumes:
+      - application/json
+      description: Navigate between steps (prev/next) in the survey.
       parameters:
-      - description: Data Responden
+      - description: Navigation Data
+        in: body
+        name: request
+        schema:
+          $ref: '#/definitions/survey_internal_dto.NavigateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Navigate survey
+      tags:
+      - Survey Progress
+  /api/survey/progress:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the survey progress of the currently authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current survey progress
+      tags:
+      - Survey Progress
+  /api/survey/responden:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a list of all survey respondents.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Berhasil mengambil data responden
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all responden (Admin/Staff)
+      tags:
+      - Survey Responden
+  /api/survey/responden/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve specific respondent details by their UUID.
+      parameters:
+      - description: Responden UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Berhasil mengambil detail responden
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Data tidak ditemukan
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get responden by ID (Admin/Staff)
+      tags:
+      - Survey Responden
+  /api/survey/responden/me:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the respondent profile of the currently authenticated
+        user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Berhasil mengambil data profil survey
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Data responden belum tersedia
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get my respondent profile (User/User PIC)
+      tags:
+      - Survey Responden
+    post:
+      consumes:
+      - application/json
+      description: Creates or updates the respondent profile of the currently authenticated
+        user.
+      parameters:
+      - description: Responden Data
         in: body
         name: request
         required: true
@@ -293,111 +433,104 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Berhasil memperbarui data profil survey
           schema:
             additionalProperties: true
             type: object
         "400":
-          description: Bad Request
+          description: Invalid body or Bad Request
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            additionalProperties: true
+            type: object
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties: true
+            type: object
       security:
       - BearerAuth: []
-      summary: Create / Update responden milik user login
+      summary: Update or create my respondent profile (User/User PIC)
       tags:
-      - Responden
+      - Survey Responden
   /api/survey/risiko:
     get:
       consumes:
       - application/json
-      description: Get all active master risk data
+      description: Retrieve a list of all master risks available for the survey.
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Berhasil mengambil data risiko
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
-      summary: Get All Risiko
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get all reference risks
       tags:
-      - Risiko
+      - Survey Risiko
   /api/survey/risiko/{id}:
     get:
       consumes:
       - application/json
-      description: Get risk data by respondent ID (admin only)
+      description: Retrieve the risk items for a specific respondent.
       parameters:
-      - description: Respondent ID
+      - description: Respondent UUID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Berhasil mengambil data risiko responden
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            additionalProperties: true
+            type: object
+        "400":
+          description: ID tidak valid
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
+            additionalProperties: true
+            type: object
         "404":
-          description: Not Found
+          description: Data tidak ditemukan
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get Risiko by Respondent ID
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get risks by respondent ID (Admin/Staff)
       tags:
-      - Risiko
-  /api/survey/risiko/me:
-    get:
-      consumes:
-      - application/json
-      description: Get current user's risk answer data
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get My Risiko Data
-      tags:
-      - Risiko
+      - Survey Risiko
   /api/survey/risiko/dampak:
-    get:
-      consumes:
-      - application/json
-      description: Get current user's risk answer data
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get My Dampak Risiko Data
-      tags:
-      - Risiko
     post:
       consumes:
       - application/json
-      description: Submit impact assessment for risk
+      description: Submit the impacts of the risk.
       parameters:
-      - description: Dampak request
+      - description: Impact Data
         in: body
         name: request
         required: true
@@ -407,41 +540,32 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Success
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Submit Dampak
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Submit risk impacts
       tags:
-      - Risiko
+      - Survey Risiko
   /api/survey/risiko/eligibility:
-    get:
-      consumes:
-      - application/json
-      description: Get current user's risk answer data
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get My Eligibility Risiko Data
-      tags:
-      - Risiko
     post:
       consumes:
       - application/json
-      description: Submit eligibility for risk assessment
+      description: Submit whether a risk has occurred.
       parameters:
-      - description: Eligibility request
+      - description: Eligibility Data
         in: body
         name: request
         required: true
@@ -451,41 +575,60 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Success
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Submit Eligibility
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Submit eligibility answer
       tags:
-      - Risiko
-  /api/survey/risiko/pengendalian:
+      - Survey Risiko
+  /api/survey/risiko/me:
     get:
       consumes:
       - application/json
-      description: Get current user's risk answer data
+      description: Retrieve the risk items for the currently authenticated user.
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Berhasil mengambil data risiko
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
         "404":
-          description: Not Found
+          description: Data risiko belum ditemukan
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get My Pengendalian Risiko Data
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get my risks
       tags:
-      - Risiko
+      - Survey Risiko
+  /api/survey/risiko/pengendalian:
     post:
       consumes:
       - application/json
-      description: Submit control measures for risk
+      description: Submit risk mitigation controls.
       parameters:
-      - description: Pengendalian request
+      - description: Control Data
         in: body
         name: request
         required: true
@@ -495,41 +638,32 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Success
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Submit Pengendalian
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Submit risk control
       tags:
-      - Risiko
+      - Survey Risiko
   /api/survey/risiko/reason:
-    get:
-      consumes:
-      - application/json
-      description: Get current user's risk answer data
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Get My Alasan Risiko Data
-      tags:
-      - Risiko
     post:
       consumes:
       - application/json
-      description: Submit reason for risk
+      description: Submit the reason why a risk occurred.
       parameters:
-      - description: Alasan request
+      - description: Reason Data
         in: body
         name: request
         required: true
@@ -539,47 +673,59 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Success
           schema:
-            $ref: '#/definitions/survey_internal_dto.APIResponse'
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Submit Alasan
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Submit reason for risk
       tags:
-      - Risiko
+      - Survey Risiko
   /api/survey/save-progress:
     post:
       consumes:
       - application/json
-      description: Save current survey progress
+      description: Save current state and progress.
       parameters:
-      - description: Save progress request
+      - description: Progress Data
         in: body
         name: request
-        required: true
         schema:
           $ref: '#/definitions/survey_internal_dto.NavigateRequest'
       produces:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Success
           schema:
-            allOf:
-            - $ref: '#/definitions/survey_internal_dto.APIResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/survey_internal_dto.ProgressResponse'
-              type: object
+            additionalProperties: true
+            type: object
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/survey_internal_dto.ErrorResponse'
-      summary: Save Progress
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Save survey progress
       tags:
-      - Risiko
+      - Survey Progress
 securityDefinitions:
   BearerAuth:
     in: header

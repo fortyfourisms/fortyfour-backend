@@ -28,23 +28,23 @@ const (
 // REPOSITORY
 type RisikoRepositoryInterface interface {
 	GetAllRisiko() ([]models.RisikoResponse, error)
-	ExistsResponden(int64) (bool, error)
-	ExistsRisiko(int64) (bool, error)
-	GetRisikoIDByUrutan(int) (int64, error)
-	GetUrutanByRisikoID(int64) (int, error)
+	ExistsResponden(string) (bool, error)
+	ExistsRisiko(string) (bool, error)
+	GetRisikoIDByUrutan(int) (string, error)
+	GetUrutanByRisikoID(string) (int, error)
 
 	UpsertEligibility(models.RisikoEligibility) error
 	UpsertAlasan(models.RisikoAlasan) error
 	UpsertDampak(models.RisikoDampak) error
 	UpsertPengendalian(models.RisikoPengendalian) error
 
-	FindByRespondentID(int64) (map[string]interface{}, error)
+	FindByRespondentID(string) (map[string]interface{}, error)
 
-	GetProgress(int64) (*models.SurveyProgress, error)
+	GetProgress(string) (*models.SurveyProgress, error)
 	UpsertProgress(models.SurveyProgress) error
-	InsertCustomRisiko(int64, string) (int, error)
+	InsertCustomRisiko(string, string) (int, error)
 
-	GetRespondentIDByUserID(userID string) (int64, error)
+	GetRespondentIDByUserID(userID string) (string, error)
 }
 
 // SERVICE
@@ -62,12 +62,12 @@ func (s *RisikoService) GetAllRisiko() ([]models.RisikoResponse, error) {
 }
 
 // CACHE
-func progressKey(id int64) string {
-	return fmt.Sprintf("risiko:progress:%d", id)
+func progressKey(id string) string {
+	return fmt.Sprintf("risiko:progress:%s", id)
 }
 
-func respondentKey(id int64) string {
-	return fmt.Sprintf("risiko:data:%d", id)
+func respondentKey(id string) string {
+	return fmt.Sprintf("risiko:data:%s", id)
 }
 
 func (s *RisikoService) setCache(key string, val any) {
@@ -78,7 +78,7 @@ func (s *RisikoService) setCache(key string, val any) {
 	_ = s.cache.Set(context.Background(), key, string(b), int(risikoCacheTTL.Seconds()))
 }
 
-func (s *RisikoService) invalidate(id int64) {
+func (s *RisikoService) invalidate(id string) {
 	if s.cache == nil {
 		return
 	}
@@ -87,13 +87,13 @@ func (s *RisikoService) invalidate(id int64) {
 }
 
 // HELPER
-func (s *RisikoService) getRespondenID(userID string) (int64, error) {
+func (s *RisikoService) getRespondenID(userID string) (string, error) {
 	if strings.TrimSpace(userID) == "" {
-		return 0, errors.New("user_id wajib diisi")
+		return "", errors.New("user_id wajib diisi")
 	}
 	id, err := s.repo.GetRespondentIDByUserID(userID)
 	if err != nil {
-		return 0, errors.New("responden tidak ditemukan")
+		return "", errors.New("responden tidak ditemukan")
 	}
 	return id, nil
 }
@@ -106,7 +106,7 @@ func canEditProgress(progress *models.SurveyProgress) bool {
 	return !progress.Selesai || status == SurveyStatusDraft || status == SurveyStatusEditApproved
 }
 
-func (s *RisikoService) ensureEditable(respondenID int64) (*models.SurveyProgress, error) {
+func (s *RisikoService) ensureEditable(respondenID string) (*models.SurveyProgress, error) {
 	progress, err := s.repo.GetProgress(respondenID)
 	if err != nil {
 		return nil, err
@@ -117,25 +117,20 @@ func (s *RisikoService) ensureEditable(respondenID int64) (*models.SurveyProgres
 	return progress, nil
 }
 
-func markDraft(progress *models.SurveyProgress, step string, risikoID int) {
+func markDraft(progress *models.SurveyProgress, step string, risikoID string) {
 	progress.Selesai = false
 	progress.Status = SurveyStatusDraft
 	progress.LangkahSaatIni = sql.NullString{String: step, Valid: true}
-	if risikoID > 0 {
-		progress.RisikoID = sqlInt64(risikoID)
+	if risikoID != "" {
+		progress.RisikoID = sql.NullString{String: risikoID, Valid: true}
 	}
 }
 
-func toInt(ptr *int) (int, error) {
+func toStr(ptr *string) (string, error) {
 	if ptr == nil {
-		return 0, validation.ErrMissingRisikoID
+		return "", validation.ErrMissingRisikoID
 	}
 	return *ptr, nil
-}
-
-func toInt64Ptr(v int) *int64 {
-	val := int64(v)
-	return &val
 }
 
 func toNullableTrimmedString(s string) *string {
@@ -146,22 +141,22 @@ func toNullableTrimmedString(s string) *string {
 	return &trimmed
 }
 
-func (s *RisikoService) resolveRisikoIDByUrutan(currentRisk int) sql.NullInt64 {
+func (s *RisikoService) resolveRisikoIDByUrutan(currentRisk int) sql.NullString {
 	if currentRisk <= 0 {
-		return sql.NullInt64{Valid: false}
+		return sql.NullString{Valid: false}
 	}
 
 	risikoID, err := s.repo.GetRisikoIDByUrutan(currentRisk)
-	if err != nil || risikoID <= 0 {
-		return sql.NullInt64{Valid: false}
+	if err != nil || risikoID == "" {
+		return sql.NullString{Valid: false}
 	}
 
-	return sqlInt64(int(risikoID))
+	return sql.NullString{String: risikoID, Valid: true}
 }
 
 func (s *RisikoService) resolveCurrentUrutan(progress *models.SurveyProgress, fallback int) int {
 	if progress != nil && progress.RisikoID.Valid {
-		if urutan, err := s.repo.GetUrutanByRisikoID(progress.RisikoID.Int64); err == nil && urutan > 0 {
+		if urutan, err := s.repo.GetUrutanByRisikoID(progress.RisikoID.String); err == nil && urutan > 0 {
 			return urutan
 		}
 	}
@@ -185,7 +180,7 @@ func (s *RisikoService) ProcessEligibility(userID string, req dto.EligibilityReq
 		return nil, err
 	}
 
-	risikoID, err := toInt(req.RisikoID)
+	risikoID, err := toStr(req.RisikoID)
 	if err != nil {
 		return nil, err
 	}
@@ -196,8 +191,8 @@ func (s *RisikoService) ProcessEligibility(userID string, req dto.EligibilityReq
 	}
 
 	data := models.RisikoEligibility{
-		RespondenID:   int64(respondenID),
-		RisikoID:      toInt64Ptr(risikoID),
+		RespondenID:   respondenID,
+		RisikoID:      req.RisikoID,
 		PernahTerjadi: req.PernahTerjadi,
 	}
 
@@ -234,7 +229,7 @@ func (s *RisikoService) ProcessAlasan(userID string, req dto.AlasanRequest) (map
 		return nil, err
 	}
 
-	risikoID, err := toInt(req.RisikoID)
+	risikoID, err := toStr(req.RisikoID)
 	if err != nil {
 		return nil, err
 	}
@@ -245,8 +240,8 @@ func (s *RisikoService) ProcessAlasan(userID string, req dto.AlasanRequest) (map
 	}
 
 	data := models.RisikoAlasan{
-		RespondenID: int64(respondenID),
-		RisikoID:    toInt64Ptr(risikoID),
+		RespondenID: respondenID,
+		RisikoID:    req.RisikoID,
 		Alasan:      strings.TrimSpace(req.Alasan),
 	}
 
@@ -278,7 +273,7 @@ func (s *RisikoService) ProcessDampak(userID string, req dto.DampakRequest) (map
 		return nil, err
 	}
 
-	risikoID, err := toInt(req.RisikoID)
+	risikoID, err := toStr(req.RisikoID)
 	if err != nil {
 		return nil, err
 	}
@@ -289,8 +284,8 @@ func (s *RisikoService) ProcessDampak(userID string, req dto.DampakRequest) (map
 	}
 
 	data := models.RisikoDampak{
-		RespondenID:       int64(respondenID),
-		RisikoID:          toInt64Ptr(risikoID),
+		RespondenID:       respondenID,
+		RisikoID:          req.RisikoID,
 		DampakReputasi:    models.MapImpactIntToString(req.DampakReputasi),
 		DampakOperasional: models.MapImpactIntToString(req.DampakOperasional),
 		DampakFinansial:   models.MapImpactIntToString(req.DampakFinansial),
@@ -326,7 +321,7 @@ func (s *RisikoService) ProcessPengendalian(userID string, req dto.PengendalianR
 		return nil, err
 	}
 
-	risikoID, err := toInt(req.RisikoID)
+	risikoID, err := toStr(req.RisikoID)
 	if err != nil {
 		return nil, err
 	}
@@ -337,8 +332,8 @@ func (s *RisikoService) ProcessPengendalian(userID string, req dto.PengendalianR
 	}
 
 	data := models.RisikoPengendalian{
-		RespondenID:           int64(respondenID),
-		RisikoID:              toInt64Ptr(risikoID),
+		RespondenID:           respondenID,
+		RisikoID:              req.RisikoID,
 		AdaPengendalian:       req.AdaPengendalian,
 		DeskripsiPengendalian: toNullableTrimmedString(req.DeskripsiPengendalian),
 	}
@@ -367,7 +362,7 @@ func (s *RisikoService) GetByUserID(userID string) (map[string]interface{}, erro
 	return s.repo.FindByRespondentID(respondenID)
 }
 
-func (s *RisikoService) GetByRespondentID(id int64) (map[string]interface{}, error) {
+func (s *RisikoService) GetByRespondentID(id string) (map[string]interface{}, error) {
 	return s.repo.FindByRespondentID(id)
 }
 
@@ -386,9 +381,9 @@ func (s *RisikoService) GetProgress(userID string) (dto.ProgressResponse, error)
 }
 
 func progressToResponse(progress *models.SurveyProgress) dto.ProgressResponse {
-	var risikoID *int
+	var risikoID *string
 	if progress.RisikoID.Valid {
-		val := int(progress.RisikoID.Int64)
+		val := progress.RisikoID.String
 		risikoID = &val
 	}
 
@@ -420,14 +415,6 @@ func progressToResponse(progress *models.SurveyProgress) dto.ProgressResponse {
 		Status:         status,
 		EditReason:     editReason,
 		EditResponse:   editResponse,
-	}
-}
-
-// HELPER SQL
-func sqlInt64(v int) sql.NullInt64 {
-	return sql.NullInt64{
-		Int64: int64(v),
-		Valid: true,
 	}
 }
 
@@ -476,7 +463,7 @@ func (s *RisikoService) SaveProgress(userID string, req dto.NavigateRequest) (dt
 	if err != nil {
 		return dto.ProgressResponse{}, err
 	}
-	progress.RespondenID = int64(respondenID)
+	progress.RespondenID = respondenID
 	progress.RisikoID = s.resolveRisikoIDByUrutan(req.CurrentRisk)
 	progress.LangkahSaatIni = sql.NullString{String: "save-progress", Valid: true}
 	progress.Selesai = false
@@ -548,8 +535,10 @@ func (s *RisikoService) RequestEdit(userID string, req dto.RequestEditRequest) (
 	progress.EditReason = sql.NullString{String: reason, Valid: true}
 	progress.EditResponse = sql.NullString{Valid: false}
 	progress.EditRequestedAt = sql.NullTime{Time: time.Now(), Valid: true}
-	progress.EditReviewedAt = sql.NullTime{Valid: false}
-	progress.EditReviewedBy = sql.NullString{Valid: false}
+	progress.EditApprovedAt = sql.NullTime{Valid: false}
+	progress.EditApprovedBy = sql.NullString{Valid: false}
+	progress.EditRejectedAt = sql.NullTime{Valid: false}
+	progress.EditRejectedBy = sql.NullString{Valid: false}
 
 	if err := s.repo.UpsertProgress(*progress); err != nil {
 		return dto.ProgressResponse{}, err
@@ -558,11 +547,11 @@ func (s *RisikoService) RequestEdit(userID string, req dto.RequestEditRequest) (
 	return progressToResponse(progress), nil
 }
 
-func (s *RisikoService) ReviewEditRequest(adminID string, respondenID int64, req dto.ReviewEditRequest) (dto.ProgressResponse, error) {
+func (s *RisikoService) ReviewEditRequest(adminID string, respondenID string, req dto.ReviewEditRequest) (dto.ProgressResponse, error) {
 	if strings.TrimSpace(adminID) == "" {
 		return dto.ProgressResponse{}, errors.New("admin_id wajib diisi")
 	}
-	if respondenID <= 0 {
+	if strings.TrimSpace(respondenID) == "" {
 		return dto.ProgressResponse{}, errors.New("responden_id tidak valid")
 	}
 
@@ -576,17 +565,19 @@ func (s *RisikoService) ReviewEditRequest(adminID string, respondenID int64, req
 
 	response := strings.TrimSpace(req.Response)
 	progress.EditResponse = sql.NullString{String: response, Valid: response != ""}
-	progress.EditReviewedAt = sql.NullTime{Time: time.Now(), Valid: true}
-	progress.EditReviewedBy = sql.NullString{String: adminID, Valid: true}
 
-	if req.Approved {
+	if req.Action == "approve" {
 		progress.Status = SurveyStatusEditApproved
 		progress.Selesai = false
 		progress.LangkahSaatIni = sql.NullString{String: "edit-approved", Valid: true}
+		progress.EditApprovedAt = sql.NullTime{Time: time.Now(), Valid: true}
+		progress.EditApprovedBy = sql.NullString{String: adminID, Valid: true}
 	} else {
 		progress.Status = SurveyStatusEditRejected
 		progress.Selesai = true
 		progress.LangkahSaatIni = sql.NullString{String: "edit-rejected", Valid: true}
+		progress.EditRejectedAt = sql.NullTime{Time: time.Now(), Valid: true}
+		progress.EditRejectedBy = sql.NullString{String: adminID, Valid: true}
 	}
 
 	if err := s.repo.UpsertProgress(*progress); err != nil {

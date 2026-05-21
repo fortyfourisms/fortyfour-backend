@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func intPtr(v int) *int { return &v }
+func stringPtr(v string) *string { return &v }
 
 // STEP 1 — ELIGIBILITY
 func TestValidateEligibilityRequest(t *testing.T) {
@@ -17,22 +17,22 @@ func TestValidateEligibilityRequest(t *testing.T) {
 		{
 			name: "valid request",
 			req: dto.EligibilityRequest{
-				RisikoID: intPtr(1),
+				RisikoID: stringPtr("uuid-1"),
 			},
 			wantErr: nil,
 		},
 		{
 			name: "missing responden_id is allowed for owned endpoint",
 			req: dto.EligibilityRequest{
-				RespondenID: 0,
-				RisikoID:    intPtr(1),
+				RespondenID: "uuid-resp",
+				RisikoID:    stringPtr("uuid-1"),
 			},
 			wantErr: nil,
 		},
 		{
 			name: "missing risiko_id",
 			req: dto.EligibilityRequest{
-				RespondenID: 1,
+				RespondenID: "uuid-resp",
 				RisikoID:    nil,
 			},
 			wantErr: ErrMissingRisikoID,
@@ -59,7 +59,7 @@ func TestValidateAlasanRequest(t *testing.T) {
 		{
 			name: "valid request",
 			req: dto.AlasanRequest{
-				RisikoID: intPtr(1),
+				RisikoID: stringPtr("uuid-1"),
 				Alasan:   "Valid alasan",
 			},
 			wantErr: nil,
@@ -67,7 +67,7 @@ func TestValidateAlasanRequest(t *testing.T) {
 		{
 			name: "missing alasan",
 			req: dto.AlasanRequest{
-				RisikoID: intPtr(1),
+				RisikoID: stringPtr("uuid-1"),
 				Alasan:   "",
 			},
 			wantErr: ErrMissingReason,
@@ -87,7 +87,7 @@ func TestValidateAlasanRequest(t *testing.T) {
 // STEP 2B — DAMPAK
 func TestValidateDampakRequest(t *testing.T) {
 	validReq := dto.DampakRequest{
-		RisikoID:          intPtr(1),
+		RisikoID:          stringPtr("uuid-1"),
 		DampakReputasi:    2,
 		DampakOperasional: 2,
 		DampakFinansial:   2,
@@ -145,7 +145,7 @@ func TestValidatePengendalianRequest(t *testing.T) {
 		{
 			name: "valid tanpa pengendalian",
 			req: dto.PengendalianRequest{
-				RisikoID:        intPtr(1),
+				RisikoID:        stringPtr("uuid-1"),
 				AdaPengendalian: false,
 			},
 			wantErr: nil,
@@ -153,7 +153,7 @@ func TestValidatePengendalianRequest(t *testing.T) {
 		{
 			name: "valid dengan pengendalian",
 			req: dto.PengendalianRequest{
-				RisikoID:              intPtr(1),
+				RisikoID:              stringPtr("uuid-1"),
 				AdaPengendalian:       true,
 				DeskripsiPengendalian: "Kontrol tersedia",
 			},
@@ -162,7 +162,7 @@ func TestValidatePengendalianRequest(t *testing.T) {
 		{
 			name: "missing deskripsi saat ada pengendalian",
 			req: dto.PengendalianRequest{
-				RisikoID:              intPtr(1),
+				RisikoID:              stringPtr("uuid-1"),
 				AdaPengendalian:       true,
 				DeskripsiPengendalian: "",
 			},

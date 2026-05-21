@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -15,7 +16,7 @@ import (
 // MOCK SERVICE
 type mockService struct {
 	GetAllFunc         func() ([]dto.RespondenResponse, error)
-	GetByIDFunc        func(int) (*dto.RespondenResponse, error)
+	GetByIDFunc        func(string) (*dto.RespondenResponse, error)
 	GetByUserIDFunc    func(string) (*dto.RespondenResponse, error)
 	UpsertByUserIDFunc func(string, dto.CreateRespondenRequest) (*dto.RespondenResponse, error)
 }
@@ -24,7 +25,7 @@ func (m *mockService) GetAll() ([]dto.RespondenResponse, error) {
 	return m.GetAllFunc()
 }
 
-func (m *mockService) GetByID(id int) (*dto.RespondenResponse, error) {
+func (m *mockService) GetByID(id string) (*dto.RespondenResponse, error) {
 	return m.GetByIDFunc(id)
 }
 
@@ -73,7 +74,7 @@ func TestGetAllResponden(t *testing.T) {
 // GET BY ID SUCCESS
 func TestGetByID_Success(t *testing.T) {
 	mock := &mockService{
-		GetByIDFunc: func(id int) (*dto.RespondenResponse, error) {
+		GetByIDFunc: func(id string) (*dto.RespondenResponse, error) {
 			return &dto.RespondenResponse{}, nil
 		},
 	}
@@ -93,7 +94,12 @@ func TestGetByID_Success(t *testing.T) {
 
 // GET BY ID INVALID
 func TestGetByID_InvalidID(t *testing.T) {
-	handler := NewRespondenHandler(&mockService{})
+	mock := &mockService{
+		GetByIDFunc: func(id string) (*dto.RespondenResponse, error) {
+			return nil, errors.New("data tidak ditemukan")
+		},
+	}
+	handler := NewRespondenHandler(mock)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/survey/responden/abc", nil)
 	req = withContext(req, "admin1", "admin")
@@ -101,8 +107,8 @@ func TestGetByID_InvalidID(t *testing.T) {
 
 	handler.ServeHTTP(w, req)
 
-	if w.Code != http.StatusBadRequest {
-		t.Errorf("expected 400, got %d", w.Code)
+	if w.Code != http.StatusNotFound {
+		t.Errorf("expected 404, got %d", w.Code)
 	}
 }
 

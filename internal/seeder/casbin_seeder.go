@@ -155,12 +155,15 @@ var defaultPolicies = []Policy{
 	{"user_pic", "/api/survey/save-progress", "POST"},
 	{"user_pic", "/api/survey/finish", "POST"},
 	{"user_pic", "/api/survey/request-edit", "POST"},
+	{"user_pic", "/api/survey/edit-requests/me", "GET"},
 
 	// Admin hanya membaca data survey dan memproses request edit.
 	{"admin", "/api/survey/responden", "GET"},
 	{"admin", "/api/survey/responden/:id", "GET"},
+	{"admin", "/api/survey/risiko", "GET"},
 	{"admin", "/api/survey/risiko/:id", "GET"},
 	{"admin", "/api/survey/edit-requests/:id", "POST"},
+	{"admin", "/api/survey/edit-requests", "GET"},
 
 	// ── LMS (user_pic juga bisa akses LMS) ──────────────────────────────────
 
@@ -379,6 +382,7 @@ var defaultPolicies = []Policy{
 	{"staff", "/api/survey/responden/:id", "GET"},
 	{"staff", "/api/survey/risiko", "GET"},
 	{"staff", "/api/survey/risiko/:id", "GET"},
+	{"staff", "/api/survey/edit-requests", "GET"},
 
 	// LMS — staff bisa manage kelas, materi, kuis, soal (GET, POST, PUT)
 	{"staff", "/api/kelas", "GET"},

@@ -181,7 +181,7 @@ func (r *RespondenRepository) GetAllDetail() ([]models.RespondenDetail, error) {
 }
 
 // GET BY ID (ADMIN)
-func (r *RespondenRepository) GetDetailByID(id int64) (*models.RespondenDetail, error) {
+func (r *RespondenRepository) GetDetailByID(id string) (*models.RespondenDetail, error) {
 
 	row := r.db.QueryRow(baseDetailQuery+" WHERE r.id = ?", id)
 
@@ -271,7 +271,7 @@ func (r *RespondenRepository) GetByUserID(userID string) (*models.RespondenDetai
 }
 
 // BASIC GET
-func (r *RespondenRepository) GetByID(id int64) (*models.Responden, error) {
+func (r *RespondenRepository) GetByID(id string) (*models.Responden, error) {
 
 	row := r.db.QueryRow(`
 		SELECT id, user_id, id_perusahaan, nama_lengkap, jabatan, email, no_telepon, sertifikat_training, created_at, updated_at

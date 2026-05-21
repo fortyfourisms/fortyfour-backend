@@ -22,7 +22,7 @@ type UpdateRespondenRequest struct {
 
 // RESPONSE
 type RespondenResponse struct {
-	ID int64 `json:"id"`
+	ID string `json:"id"`
 
 	// dari backend (JWT)
 	UserID string `json:"user_id"`

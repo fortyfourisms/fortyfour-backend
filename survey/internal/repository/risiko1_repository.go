@@ -42,7 +42,7 @@ func (r *RisikoRepository) GetAllRisiko() ([]models.RisikoResponse, error) {
 	return result, nil
 }
 
-func (r *RisikoRepository) GetByID(id int64) (*models.Risiko, error) {
+func (r *RisikoRepository) GetByID(id string) (*models.Risiko, error) {
 
 	row := r.db.QueryRow(`
 		SELECT id, kode, nama, deskripsi, urutan, aktif, created_at, updated_at
@@ -70,7 +70,7 @@ func (r *RisikoRepository) GetByID(id int64) (*models.Risiko, error) {
 	return &m, nil
 }
 
-func (r *RisikoRepository) GetRisikoIDByUrutan(urutan int) (int64, error) {
+func (r *RisikoRepository) GetRisikoIDByUrutan(urutan int) (string, error) {
 	row := r.db.QueryRow(`
 		SELECT id
 		FROM risiko
@@ -78,15 +78,15 @@ func (r *RisikoRepository) GetRisikoIDByUrutan(urutan int) (int64, error) {
 		LIMIT 1
 	`, urutan)
 
-	var id int64
+	var id string
 	if err := row.Scan(&id); err != nil {
-		return 0, err
+		return "", err
 	}
 
 	return id, nil
 }
 
-func (r *RisikoRepository) GetUrutanByRisikoID(id int64) (int, error) {
+func (r *RisikoRepository) GetUrutanByRisikoID(id string) (int, error) {
 	row := r.db.QueryRow(`
 		SELECT urutan
 		FROM risiko
@@ -215,7 +215,7 @@ func (r *RisikoRepository) UpsertPengendalian(m models.RisikoPengendalian) error
 }
 
 // GET FULL RISIKO
-func (r *RisikoRepository) FindByRespondentID(respondenID int64) (map[string]interface{}, error) {
+func (r *RisikoRepository) FindByRespondentID(respondenID string) (map[string]interface{}, error) {
 
 	query := `
 	SELECT 
@@ -247,8 +247,8 @@ func (r *RisikoRepository) FindByRespondentID(respondenID int64) (map[string]int
 
 	for rows.Next() {
 		var (
-			respondentID  int64
-			risikoID      sql.NullInt64
+			respondentID  string
+			risikoID      sql.NullString
 			pernahTerjadi bool
 			alasan        sql.NullString
 
@@ -287,7 +287,7 @@ func (r *RisikoRepository) FindByRespondentID(respondenID int64) (map[string]int
 		}
 
 		if risikoID.Valid {
-			item["risiko_id"] = risikoID.Int64
+			item["risiko_id"] = risikoID.String
 		}
 		if dampakReputasi.Valid {
 			item["dampak_reputasi"] = dampakReputasi.String
@@ -336,8 +336,8 @@ func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 
 	query := `
 	INSERT INTO survey_progress
-	(responden_id, risiko_id, langkah_saat_ini, selesai, status, edit_request_reason, edit_request_response, submitted_at, edit_requested_at, edit_reviewed_at, edit_reviewed_by)
-	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	(responden_id, risiko_id, langkah_saat_ini, selesai, status, edit_request_reason, edit_request_response, submitted_at, edit_requested_at, edit_approved_at, edit_approved_by, edit_rejected_at, edit_rejected_by)
+	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	ON DUPLICATE KEY UPDATE
 	risiko_id = VALUES(risiko_id),
 	langkah_saat_ini = VALUES(langkah_saat_ini),
@@ -347,13 +347,15 @@ func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 	edit_request_response = VALUES(edit_request_response),
 	submitted_at = VALUES(submitted_at),
 	edit_requested_at = VALUES(edit_requested_at),
-	edit_reviewed_at = VALUES(edit_reviewed_at),
-	edit_reviewed_by = VALUES(edit_reviewed_by)
+	edit_approved_at = VALUES(edit_approved_at),
+	edit_approved_by = VALUES(edit_approved_by),
+	edit_rejected_at = VALUES(edit_rejected_at),
+	edit_rejected_by = VALUES(edit_rejected_by)
 	`
 
 	var risikoID interface{}
 	if p.RisikoID.Valid {
-		risikoID = p.RisikoID.Int64
+		risikoID = p.RisikoID.String
 	}
 
 	var langkah interface{}
@@ -386,14 +388,24 @@ func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 		editRequestedAt = p.EditRequestedAt.Time
 	}
 
-	var editReviewedAt interface{}
-	if p.EditReviewedAt.Valid {
-		editReviewedAt = p.EditReviewedAt.Time
+	var editApprovedAt interface{}
+	if p.EditApprovedAt.Valid {
+		editApprovedAt = p.EditApprovedAt.Time
 	}
 
-	var editReviewedBy interface{}
-	if p.EditReviewedBy.Valid {
-		editReviewedBy = p.EditReviewedBy.String
+	var editApprovedBy interface{}
+	if p.EditApprovedBy.Valid {
+		editApprovedBy = p.EditApprovedBy.String
+	}
+
+	var editRejectedAt interface{}
+	if p.EditRejectedAt.Valid {
+		editRejectedAt = p.EditRejectedAt.Time
+	}
+
+	var editRejectedBy interface{}
+	if p.EditRejectedBy.Valid {
+		editRejectedBy = p.EditRejectedBy.String
 	}
 
 	_, err := r.db.Exec(query,
@@ -406,14 +418,16 @@ func (r *RisikoRepository) UpsertProgress(p models.SurveyProgress) error {
 		editResponse,
 		submittedAt,
 		editRequestedAt,
-		editReviewedAt,
-		editReviewedBy,
+		editApprovedAt,
+		editApprovedBy,
+		editRejectedAt,
+		editRejectedBy,
 	)
 
 	return err
 }
 
-func (r *RisikoRepository) GetProgress(respondenID int64) (*models.SurveyProgress, error) {
+func (r *RisikoRepository) GetProgress(respondenID string) (*models.SurveyProgress, error) {
 
 	row := r.db.QueryRow(`
 		SELECT id, responden_id, risiko_id, langkah_saat_ini, selesai,
@@ -422,8 +436,10 @@ func (r *RisikoRepository) GetProgress(respondenID int64) (*models.SurveyProgres
 			edit_request_response,
 			submitted_at,
 			edit_requested_at,
-			edit_reviewed_at,
-			edit_reviewed_by,
+			edit_approved_at,
+			edit_approved_by,
+			edit_rejected_at,
+			edit_rejected_by,
 			terakhir_update
 		FROM survey_progress
 		WHERE responden_id = ?
@@ -442,8 +458,10 @@ func (r *RisikoRepository) GetProgress(respondenID int64) (*models.SurveyProgres
 		&p.EditResponse,
 		&p.SubmittedAt,
 		&p.EditRequestedAt,
-		&p.EditReviewedAt,
-		&p.EditReviewedBy,
+		&p.EditApprovedAt,
+		&p.EditApprovedBy,
+		&p.EditRejectedAt,
+		&p.EditRejectedBy,
 		&p.TerakhirUpdate,
 	)
 
@@ -464,22 +482,22 @@ func (r *RisikoRepository) GetProgress(respondenID int64) (*models.SurveyProgres
 	return &p, nil
 }
 
-func (r *RisikoRepository) GetRespondentIDByUserID(userID string) (int64, error) {
+func (r *RisikoRepository) GetRespondentIDByUserID(userID string) (string, error) {
 	row := r.db.QueryRow(`
 		SELECT id
 		FROM responden
 		WHERE user_id = ?
 	`, userID)
 
-	var id int64
+	var id string
 	if err := row.Scan(&id); err != nil {
-		return 0, err
+		return "", err
 	}
 
 	return id, nil
 }
 
-func (r *RisikoRepository) InsertCustomRisiko(respondenID int64, nama string) (int, error) {
+func (r *RisikoRepository) InsertCustomRisiko(respondenID string, nama string) (int, error) {
 	result, err := r.db.Exec(`
 		INSERT INTO risiko_custom (responden_id, nama)
 		VALUES (?, ?)
@@ -497,13 +515,13 @@ func (r *RisikoRepository) InsertCustomRisiko(respondenID int64, nama string) (i
 }
 
 // EXISTS
-func (r *RisikoRepository) ExistsRisiko(id int64) (bool, error) {
+func (r *RisikoRepository) ExistsRisiko(id string) (bool, error) {
 	var exists bool
 	err := r.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM risiko WHERE id = ?)`, id).Scan(&exists)
 	return exists, err
 }
 
-func (r *RisikoRepository) ExistsResponden(id int64) (bool, error) {
+func (r *RisikoRepository) ExistsResponden(id string) (bool, error) {
 	var exists bool
 	err := r.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM responden WHERE id = ?)`, id).Scan(&exists)
 	return exists, err
