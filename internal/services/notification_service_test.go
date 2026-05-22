@@ -309,3 +309,32 @@ func TestNotificationService_MarkAllRead_Admin_AllUsers(t *testing.T) {
 	assert.True(t, repo.data["u1"][0].Read, "u1 harus ter-mark read oleh admin")
 	assert.True(t, repo.data["u2"][0].Read, "u2 harus ter-mark read oleh admin")
 }
+
+// ============================================================
+// TEST: Staff permissions (GetAll & MarkAllRead)
+// ============================================================
+
+func TestNotificationService_GetAll_StaffReturnsAll(t *testing.T) {
+	repo := newMockNotifRepo()
+	repo.data["u1"] = []models.Notification{{ID: 1, UserID: "u1"}}
+	repo.data["u2"] = []models.Notification{{ID: 2, UserID: "u2"}}
+
+	svc := NewNotificationService(repo)
+	result, err := svc.GetAll("staff-id", "staff")
+
+	require.NoError(t, err)
+	assert.Len(t, result, 2, "staff harus melihat semua notifikasi")
+}
+
+func TestNotificationService_MarkAllRead_Staff_AllUsers(t *testing.T) {
+	repo := newMockNotifRepo()
+	repo.data["u1"] = []models.Notification{{ID: 1, Read: false}}
+	repo.data["u2"] = []models.Notification{{ID: 2, Read: false}}
+
+	svc := NewNotificationService(repo)
+	err := svc.MarkAllRead("staff-id", "staff")
+
+	require.NoError(t, err)
+	assert.True(t, repo.data["u1"][0].Read, "u1 harus ter-mark read oleh staff")
+	assert.True(t, repo.data["u2"][0].Read, "u2 harus ter-mark read oleh staff")
+}

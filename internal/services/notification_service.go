@@ -18,7 +18,7 @@ func NewNotificationService(repo repository.NotificationRepositoryInterface) *No
 
 // GetAll mengambil semua notifikasi milik user dari database
 func (s *NotificationService) GetAll(userID string, role string) ([]models.Notification, error) {
-	if role == "admin" {
+	if role == "admin" || role == "staff" {
 		return s.repo.FindAll()
 	}
 	return s.repo.FindAllByUserID(userID)
@@ -43,10 +43,10 @@ func (s *NotificationService) MarkRead(userID string, notifID int64) error {
 }
 
 // MarkAllRead menandai semua notifikasi sebagai sudah dibaca
-// Jika role admin: tandai semua notif dari semua user
+// Jika role admin atau staff: tandai semua notif dari semua user
 // Jika user biasa: tandai milik user sendiri saja
 func (s *NotificationService) MarkAllRead(userID string, role string) error {
-	if role == "admin" {
+	if role == "admin" || role == "staff" {
 		return s.repo.MarkAllReadGlobal()
 	}
 	return s.repo.MarkAllRead(userID)

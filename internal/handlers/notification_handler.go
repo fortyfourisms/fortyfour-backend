@@ -144,7 +144,7 @@ func (h *NotificationHandler) MarkAllRead(w http.ResponseWriter, r *http.Request
 	}
 
 	msg := "semua notifikasi ditandai sudah dibaca"
-	if role == "admin" {
+	if role == "admin" || role == "staff" {
 		msg = "semua notifikasi seluruh user ditandai sudah dibaca"
 	}
 	utils.RespondJSON(w, http.StatusOK, map[string]string{"message": msg})
